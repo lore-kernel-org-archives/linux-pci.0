@@ -1,218 +1,91 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Thu, 12 May 2016 13:04:58 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: helgaas@kernel.org, pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
-Message-ID: <20160512110456.GA8681@agordeev.lab.eng.brq.redhat.com>
-References: <1462457096-19795-1-git-send-email-hch@lst.de>
- <1462457096-19795-2-git-send-email-hch@lst.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:34746 "EHLO
+	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719AbcEPPPj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 May 2016 11:15:39 -0400
+Received: by mail-lf0-f54.google.com with SMTP id m64so117868789lfd.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 May 2016 08:15:38 -0700 (PDT)
+Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
+To: Robin Murphy <robin.murphy@arm.com>,
+	Timur Tabi <timur@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+ <CAOZdJXXtZq6uyE+5sseX7M_6Kq8wFG+37qd5TNSusKj=0gd8zA@mail.gmail.com>
+ <5714BA5A.2040008@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, vikrams@codeaurora.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	lkml <linux-kernel@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Masters <jcm@redhat.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5739E416.6000501@semihalf.com>
+Date: Mon, 16 May 2016 17:15:34 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462457096-19795-2-git-send-email-hch@lst.de>
+In-Reply-To: <5714BA5A.2040008@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 05, 2016 at 04:04:55PM +0200, Christoph Hellwig wrote:
-> Add a new pci_alloc_irq_vectors helper that allocates MSI-X or multi-MSI
-> vectors for PCI device while isolating the driver from the arcane details.
-> 
-> This include handling both MSI-X, MSI and legacy interrupt fallbacks
-> transparently, automatic capping to the available vectors as well as storing
-> the information needed for request_irq in the PCI device itself so that
-> a lot of boiler plate code in the driver can be removed.
-> 
-> In the future this will also allow us to automatically set up spreading
-> for interrupt vectors without having to duplicate it in all the drivers.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/msi.c   | 108 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  19 +++++++++
->  2 files changed, 127 insertions(+)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a080f44..a510484 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -4,6 +4,7 @@
->   *
->   * Copyright (C) 2003-2004 Intel
->   * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
-> + * Copyright (c) 2016 Christoph Hellwig.
->   */
->  
->  #include <linux/err.h>
-> @@ -1120,6 +1121,113 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
->  }
->  EXPORT_SYMBOL(pci_enable_msix_range);
->  
-> +static int __pci_enable_msix(struct pci_dev *dev, int nr_vecs)
-> +{
-> +	struct msix_entry *msix_entries;
-> +	int ret, i;
-> +
-> +	msix_entries = kcalloc(nr_vecs, sizeof(struct msix_entry), GFP_KERNEL);
-> +	if (!msix_entries)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < nr_vecs; i++)
-> +		msix_entries[i].entry = i;
-> +
-> +	ret = msix_capability_init(dev, msix_entries, nr_vecs);
-> +	if (ret == 0) {
-> +		for (i = 0; i < nr_vecs; i++)
-> +			dev->irqs[i] = msix_entries[i].vector;
-> +	}
-> +
-> +	kfree(msix_entries);
-> +	return ret;
-> +}
-> +
-> +static int __pci_enable_msi(struct pci_dev *dev, int nr_vecs)
-> +{
-> +	int ret, i;
-> +
-> +	ret = msi_capability_init(dev, nr_vecs);
-> +	if (ret == 0) {
-> +		for (i = 0; i < nr_vecs; i++)
-> +			dev->irqs[i] = dev->irq + i;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-> + * pci_alloc_irq_vectors - allocate multiple IRQs for a device
-> + * @dev:		PCI device to operate on
-> + * @nr_vecs:		number of vectors to operate on
-> + * @flags:		flags or quirks for the allocation
-> + *
-> + * Allocate @nr_vecs interrupt vectors for @dev, using MSI-X or MSI
-> + * vectors if available, and fall back to a single legacy vector
-> + * if neither is available.  Return the number of vectors allocated
-> + * (which might be smaller than @nr_vecs) if successful, or a negative
-> + * error code on error.  The Linux irq numbers for the allocated
-> + * vectors are stored in pdev->irqs.
+On 18.04.2016 12:43, Robin Murphy wrote:
+> On 15/04/16 19:29, Timur Tabi wrote:
+>> On Thu, Apr 14, 2016 at 12:25 PM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>>> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+>>> +{
+>>> +       struct iommu_ops *iommu;
+>>> +
+>>> +       iommu = iort_iommu_configure(dev);
+>>> +
+>>> +       /*
+>>> +        * Assume dma valid range starts at 0 and covers the whole
+>>> +        * coherent_dma_mask.
+>>> +        */
+>>> +       arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+>>> +                          attr == DEV_DMA_COHERENT);
+>>> +}
+>>
+>> I have a network driver that is impacted by this code, so thank you
+>> for posting this. (See
+>> https://www.mail-archive.com/netdev@vger.kernel.org/msg106249.html).
+>>
+>> One one SOC, the driver needs to set the mask to 32 bits.  On another
+>> SOC, it needs to set it to 64 bits.  On device tree, the driver will
+>> use dma-ranges.
+>
+> That's the wrong way to look at it - the driver isn't _using_
+> dma-ranges, you're merely relying on the OF code setting the _default_
+> DMA mask differently based on the property. If your driver is in the
+> minority of those which actually care about DMA masks, then it should be
+> calling dma_set_mask_and_coherent() appropriately and not relying on the
+> default.
 
-Because MSI vectors are allocated sequentially we do not really
-need pdev->irqs[] for MSI. It is 32 items at most, but still.
+I don't see the clear strategy for setting DMA mask as well.
 
-> + */
-> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
-> +		unsigned int flags)
-> +{
-> +	unsigned int ret;
-> +
-> +	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
-> +		return -EINVAL;
-> +
-> +	if (!pci_msi_supported(dev, 1))
-> +		goto use_legacy_irq;
-> +
-> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
-> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msix_vec_count(dev));
-> +	else if (dev->msi_cap)
-> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msi_vec_count(dev));
-> +	else
-> +		goto use_legacy_irq;
-> +
-> +	dev->irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
-> +	if (!dev->irqs)
-> +		return -ENOMEM;
-> +
-> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
-> +		ret = __pci_enable_msix(dev, nr_vecs);
-> +	else
-> +		ret = __pci_enable_msi(dev, nr_vecs);
-> +	if (ret)
-> +		goto out_free_irqs;
-> +
-> +	return 0;
-> +
-> +out_free_irqs:
-> +	kfree(dev->irqs);
-> +use_legacy_irq:
-> +	dev->irqs = &dev->irq;
-> +	return 1;
-> +}
-> +EXPORT_SYMBOL(pci_alloc_irq_vectors);
-> +
-> +/**
-> + * pci_free_irq_vectors - free previously allocated IRQs for a device
-> + * @dev:		PCI device to operate on
-> + *
-> + * Undoes the allocations and enabling in pci_alloc_irq_vectors().
-> + */
-> +void pci_free_irq_vectors(struct pci_dev *dev)
-> +{
-> +	if (dev->msix_enabled)
-> +		pci_disable_msix(dev);
-> +	else if (dev->msi_enabled)
-> +		pci_disable_msi(dev);
-> +
-> +	if (dev->irqs != &dev->irq)
-> +		kfree(dev->irqs);
-> +	dev->irqs = NULL;
-> +}
-> +EXPORT_SYMBOL(pci_free_irq_vectors);
-> +
-> +
->  struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
->  {
->  	return to_pci_dev(desc->dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 932ec74..e201d0d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -322,6 +322,7 @@ struct pci_dev {
->  	 * directly, use the values stored here. They might be different!
->  	 */
->  	unsigned int	irq;
-> +	unsigned int	*irqs;
->  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
->  
->  	bool match_driver;		/* Skip attaching driver */
-> @@ -1255,6 +1256,8 @@ struct msix_entry {
->  	u16	entry;	/* driver uses to specify entry, OS writes */
->  };
->  
-> +#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
-> +
->  #ifdef CONFIG_PCI_MSI
->  int pci_msi_vec_count(struct pci_dev *dev);
->  void pci_msi_shutdown(struct pci_dev *dev);
-> @@ -1283,6 +1286,10 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
->  		return rc;
->  	return 0;
->  }
-> +
-> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
-> +		unsigned int flags);
-> +void pci_free_irq_vectors(struct pci_dev *dev);
->  #else
->  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
->  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
-> @@ -1306,6 +1313,18 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
->  static inline int pci_enable_msix_exact(struct pci_dev *dev,
->  		      struct msix_entry *entries, int nvec)
->  { return -ENOSYS; }
-> +
-> +static inline int pci_alloc_irq_vectors(struct pci_dev *dev,
-> +		unsigned int nr_vecs, unsigned int flags)
-> +{
-> +	dev->irqs = &dev->irq;
-> +	return 1;
-> +}
-> +
-> +static inline void pci_free_irq_vectors(struct pci_dev *dev)
-> +{
-> +	dev->irqs = NULL;
-> +}
->  #endif
->  
->  #ifdef CONFIG_PCIEPORTBUS
-> -- 
-> 2.1.4
-> 
+Lets consider DT boot method example:
+1. SMMUv2 supports 48bit translation and 1:1 address map
+dma-ranges = <0x0 0x0 0x0 0x0 0x00010000 0x0>;
+and we are adding PCI device:
+
+pci_device_add -> DMA_BIT_MASK(32) by default
+   pci_dma_configure
+     of_dma_configure -> reads dma-ranges and calculates 48bit DMA mask, 
+but it picks minimum, we stay with DMA_BIT_MASK(32)
+
+now PCI dev turns out to be e1000e NIC:
+e1000_probe
+   dma_set_mask_and_coherent -> tries to set DMA_BIT_MASK(64)
+     dma_set_mask -> there is no set_dma_mask ops for SMMUv2 so we let 
+it be DMA_BIT_MASK(64). From that point on, we let to use memory which 
+SMMUv2 cannot work with.
+
+Does lack of set_dma_mask is the only missing thing here?
+
+Thanks,
+Tomasz
