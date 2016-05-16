@@ -1,128 +1,121 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH V8 5/9] pci, acpi: add acpi hook to assign domain number.
-Date: Mon, 30 May 2016 17:14:18 +0200
-Message-Id: <1464621262-26770-6-git-send-email-tn@semihalf.com>
-In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+Return-Path: <sean.stalley@intel.com>
+Return-Path: <sean.stalley@intel.com>
+From: "Stalley, Sean" <sean.stalley@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "mj@ucw.cz"
+	<mj@ucw.cz>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"david.daney@cavium.com" <david.daney@cavium.com>
+Subject: RE: [PATCH v4 1/2] pci: Identify Enhanced Allocation (EA) BAR
+ Equivalent resources
+Date: Mon, 16 May 2016 22:07:54 +0000
+Message-ID: <5FE5E296BC647B42A2509AB982F88C1322A9FB06@ORSMSX116.amr.corp.intel.com>
+References: <1455238345-5602-1-git-send-email-sean.stalley@intel.com>
+ <1455238345-5602-2-git-send-email-sean.stalley@intel.com>
+ <20160516203144.GC20759@localhost>
+In-Reply-To: <20160516203144.GC20759@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI core code provides a config option (CONFIG_PCI_DOMAINS_GENERIC)
-that allows assigning the PCI bus domain number generically by
-relying on device tree bindings, and falling back to a simple counter
-when the respective DT properties (ie "linux,pci-domain") are not
-specified in the host bridge device tree node.
+Thanks Bjorn & Martin!
 
-In a similar way, when a system is booted through ACPI, architectures
-that are selecting CONFIG_PCI_DOMAINS_GENERIC (ie ARM64) require kernel
-hooks to retrieve the domain number so that the PCI bus domain number
-set-up can be handled seamlessly with DT and ACPI in generic core code
-when CONFIG_PCI_DOMAINS_GENERIC is selected.
+-Sean
 
-Since currently it is not possible to retrieve a pointer to the PCI
-host bridge ACPI device backing the host bridge from core PCI code
-(which would allow retrieving the domain number in an arch agnostic
-way through the ACPI _SEG method), an arch specific ACPI hook has to
-be declared and implemented by all arches that rely on
-CONFIG_PCI_DOMAINS_GENERIC to retrieve the domain number and set it
-up in core PCI code.
-
-For the aforementioned reasons, this patch introduces a dummy
-acpi_pci_bus_domain_nr() hook in preparation for per-arch implementation
-of the same to retrieve the domain number on a per-arch basis when
-the system boots through ACPI.
-
-For the sake of code clarity the current code implementing generic
-domain number assignment (ie pci_bus_assign_domain_nr(), selected by
-CONFIG_PCI_DOMAINS_GENERIC) is reshuffled so that the code implementing
-the DT domain assignment function is stubbed out into a corresponding
-helper, so that DT and ACPI functions are clearly separated in
-preparation for arches acpi_pci_bus_domain_nr() implementations.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/pci.c   | 11 +++++++++--
- include/linux/pci.h |  1 +
- 2 files changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index eb431b5..2b52178 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -7,6 +7,7 @@
-  *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
-  */
- 
-+#include <linux/acpi.h>
- #include <linux/kernel.h>
- #include <linux/delay.h>
- #include <linux/init.h>
-@@ -4941,7 +4942,7 @@ int pci_get_new_domain_nr(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+static int of_pci_bus_domain_nr(struct device *parent)
- {
- 	static int use_dt_domains = -1;
- 	int domain = -1;
-@@ -4985,7 +4986,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 		domain = -1;
- 	}
- 
--	bus->domain_nr = domain;
-+	return domain;
-+}
-+
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
-+					 acpi_pci_bus_domain_nr(bus);
- }
- #endif
- #endif
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 12349de..bba4053 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1390,6 +1390,7 @@ static inline int pci_domain_nr(struct pci_bus *bus)
- {
- 	return bus->domain_nr;
- }
-+static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus) { return -1; }
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
- #else
- static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--- 
-1.9.1
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Monday, May 16, 2016 1:32 PM
+> To: Stalley, Sean <sean.stalley@intel.com>
+> Cc: linux-pci@vger.kernel.org; mj@ucw.cz; bhelgaas@google.com;
+> alex.williamson@redhat.com; david.daney@cavium.com
+> Subject: Re: [PATCH v4 1/2] pci: Identify Enhanced Allocation (EA) BAR
+> Equivalent resources
+>=20
+> On Thu, Feb 11, 2016 at 04:52:24PM -0800, Sean O. Stalley wrote:
+> > From: Alex Williamson <alex.williamson@redhat.com>
+> >
+> > Resource flags are exposed to userspace via the sysfs "resource" file.
+> > lspci reads the sysfs file to determine resource properties.
+> > Adding this flag allows lspci to distinguish between [virtual] and
+> > [enhanced] resources.
+> >
+> > If the resource is not aligned, userspace could deduce where the
+> > resource is EA based on the size & address fields.
+> > However, a flag indicating whether a PCI resource is a traditional BAR
+> > or BAR equivalent seems like a much simpler solution and works if the
+> > EA resource is aligned.
+> >
+> > Although this patchset only improves lspci, other uses for this flag
+> > have been identified. For example, vfio makes assumptions about
+> > alignment and sizing, and runs into problems when attempting to
+> > emulate a BAR Equivalent EA resource.
+> >
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+>=20
+> I applied this to pci/resource and intend to merge it for v4.7.
+>=20
+> > ---
+> >  drivers/pci/pci.c      | 2 +-
+> >  include/linux/ioport.h | 7 +++++++
+> >  2 files changed, 8 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index
+> > d1a7105..8ff678c 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
+> >
+> >  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)  {
+> > -	unsigned long flags =3D IORESOURCE_PCI_FIXED;
+> > +	unsigned long flags =3D IORESOURCE_PCI_FIXED |
+> IORESOURCE_PCI_EA_BEI;
+> >
+> >  	switch (prop) {
+> >  	case PCI_EA_P_MEM:
+> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h index
+> > 24bea08..88816f9 100644
+> > --- a/include/linux/ioport.h
+> > +++ b/include/linux/ioport.h
+> > @@ -25,7 +25,11 @@ struct resource {
+> >
+> >  /*
+> >   * IO resources have these defined flags.
+> > + *
+> > + * PCI devices expose these flags to userspace in the "resource"
+> > + sysfs file,
+> > + * Moving them around could break stuff, so don't do it.
+> >   */
+> > +
+> >  #define IORESOURCE_BITS		0x000000ff	/* Bus-specific bits */
+> >
+> >  #define IORESOURCE_TYPE_BITS	0x00001f00	/* Resource type */
+> > @@ -97,6 +101,7 @@ struct resource {
+> >  #define IORESOURCE_IO_SPARSE		(1<<2)
+> >
+> >  /* PCI ROM control bits (IORESOURCE_BITS) */
+> > +
+> >  #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled,
+> same as PCI_ROM_ADDRESS_ENABLE */
+> >  #define IORESOURCE_ROM_SHADOW		(1<<1)	/* ROM is copy at
+> C000:0 */
+> >  #define IORESOURCE_ROM_COPY		(1<<2)	/* ROM is alloc'd copy,
+> resource field overlaid */
+> > @@ -105,6 +110,8 @@ struct resource {
+> >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+> >  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move
+> resource */
+> >
+> > +/* PCI Enhanced Allocation defined BAR equivalent resource */
+> > +#define IORESOURCE_PCI_EA_BEI		(1<<5)
+> >
+> >  /* helpers to define resources */
+> >  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)
+> 	\
+> > --
+> > 1.9.1
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
