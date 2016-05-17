@@ -1,72 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39106 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755017AbcETGnR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:17 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 20 May 2016 16:43:15 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 4698D357805A
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:13 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6h5lt58982596
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:13 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gd9H032391
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:40 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v10 04/18] powerpc/powernv: Move pnv_pci_ioda_setup_opal_tce_kill() around
-Date: Fri, 20 May 2016 16:41:28 +1000
-Message-Id: <1463726502-14679-5-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jacek.lawrynowicz@intel.com>
+Return-Path: <jacek.lawrynowicz@intel.com>
+From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+To: helgaas@kernel.org
+Cc: lukas@wunner.de,
+	jroedel@suse.de,
+	alex.williamson@redhat.com,
+	linux-pci@vger.kernel.org,
+	Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Subject: [PATCH] PCI: Fix merge conflict in amd_iommu.c
+Date: Tue, 17 May 2016 11:55:35 +0200
+Message-Id: <1463478935-7253-1-git-send-email-jacek.lawrynowicz@intel.com>
+In-Reply-To: <20160516201000.GB20759@localhost>
+References: <20160516201000.GB20759@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-pnv_pci_ioda_setup_opal_tce_kill() called by pnv_ioda_setup_dma()
-to remap the TCE kill regiter. What's done in pnv_ioda_setup_dma()
-will be covered in pcibios_setup_bridge() which is invoked on each
-PCI bridge. It means we will possibly remap the TCE kill register
-for multiple times and it's unnecessary.
-
-This moves pnv_pci_ioda_setup_opal_tce_kill() to where the PHB is
-initialized (pnv_pci_init_ioda_phb()) to avoid above issue.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/iommu/amd_iommu.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 3a5ea82..3ce9867 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2702,8 +2702,6 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- 	pr_info("PCI: Domain %04x has %d available 32-bit DMA segments\n",
- 		hose->global_number, phb->ioda.dma32_count);
- 
--	pnv_pci_ioda_setup_opal_tce_kill(phb);
--
- 	/* Walk our PE list and configure their DMA segments */
- 	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
- 		weight = pnv_pci_ioda_pe_dma_weight(pe);
-@@ -3480,6 +3478,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (phb->regs == NULL)
- 		pr_err("  Failed to map registers !\n");
- 
-+	/* Initialize TCE kill register */
-+	pnv_pci_ioda_setup_opal_tce_kill(phb);
-+
- 	/* Initialize more IODA stuff */
- 	phb->ioda.total_pe_num = 1;
- 	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 5efadad..3839fd2 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -263,8 +263,7 @@ static u16 get_alias(struct device *dev)
+ 	 */
+ 	if (pci_alias == devid &&
+ 	    PCI_BUS_NUM(ivrs_alias) == pdev->bus->number) {
+-		pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+-		pdev->dma_alias_devfn = ivrs_alias & 0xff;
++		pci_add_dma_alias(pdev, ivrs_alias & 0xff);
+ 		pr_info("AMD-Vi: Added PCI DMA alias %02x.%d for %s\n",
+ 			PCI_SLOT(ivrs_alias), PCI_FUNC(ivrs_alias),
+ 			dev_name(dev));
 -- 
-2.1.0
-
+1.8.3.1
