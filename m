@@ -1,76 +1,70 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:8758 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752055AbcEQTAj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 May 2016 15:00:39 -0400
+Date: Tue, 17 May 2016 13:00:31 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/2] x86/vmd: Select device dma ops to override
+Message-ID: <20160517190030.GA2126@localhost.localdomain>
+References: <1463505205-30431-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <CAE9FiQUC3i=MkLnFi563T7rDVFiLXxk764WUQjktnPMJqXa93g@mail.gmail.com>
-References: <1460074573-7481-5-git-send-email-yinghai@kernel.org>
-	<20160422204920.GA17215@localhost>
-	<CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
-	<20160428135607.GA12470@localhost>
-	<CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
-	<CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
-	<1462322260.30470.76.camel@kernel.crashing.org>
-	<20160504012531.GB17170@localhost>
-	<CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
-	<CAE9FiQV19OUsSL34GzDXYtVG=Xs724CpwHNfu3HCmYMUqbmrqQ@mail.gmail.com>
-	<20160504151722.GA22051@localhost>
-	<CAE9FiQXEBkVak0No9dfOidzCrR+UVu44WyBEK8SqTUSiJKeJbg@mail.gmail.com>
-	<CAE9FiQUEMq4aj2iAq=P0xu4=1MGuOWgOubpkn=2h+YLXgwJKRQ@mail.gmail.com>
-	<CAE9FiQWJ0VH-PNsz96qW8_u14x6bJ6cd66+Zg=j3L4zXWvhq0Q@mail.gmail.com>
-	<1462485774.20290.34.camel@kernel.crashing.org>
-	<CAE9FiQUC3i=MkLnFi563T7rDVFiLXxk764WUQjktnPMJqXa93g@mail.gmail.com>
-Date: Thu, 5 May 2016 21:18:35 -0700
-Message-ID: <CAE9FiQV7a1Dj6BA7YW1HHR+PU57Ybp9_hJobYBe2xQOKaQL8LA@mail.gmail.com>
-Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
- to resource
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, David Miller <davem@davemloft.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1463505205-30431-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 5, 2016 at 5:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, May 5, 2016 at 3:02 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
->> On Thu, 2016-05-05 at 08:53 -0700, Yinghai Lu wrote:
->>> For powerpc io port, we still need extra offset from resource address
->>> to final address.
->>>
->>>      resource_size_t offset =
->>>          ((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
->>>
->>> +    if (mmap_state == pci_mmap_io) {
->>> +        struct pci_controller *hose = pci_bus_to_host(dev->bus);
->>> +
->>> +        /* hose should never be NULL */
->>> +        offset += hose->io_base_phys -
->>> +              ((unsigned long)hose->io_base_virt - _IO_BASE);
->>> +    }
->>>
->>>      vma->vm_pgoff = offset >> PAGE_SHIFT;
->>>
->>> but sparc does not need that trick.
->>
->> I'm not sure how sparc handles IO space but on powerpc, the IO resource
->> is not a physical address, it's a virtual address (coming from
->> ioremap).
->
-> That is interesting. Any reason for that ?
->
-> why just cpu_addr in resource directly ?
+Looks fine
 
-Never mind, I figured it out. sparc64 could use cpu_addr to access
-io_port directly.
+Acked-by Jon Derrick: <jonathan.derrick@intel.com>
 
-powerpc64 need to ioremap cpu_addr to virt then use that ioport.
-so ioremap early and use virt address as resource value.
-otherwise every outb in powerpc64 will need iormap and access then unmap.
-
-Thanks
-
-Yinghai
+On Tue, May 17, 2016 at 11:13:24AM -0600, Keith Busch wrote:
+> VMD device doesn't usually have device archdata specific dma_ops, so we
+> need to override the default ops for VMD devices.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  arch/x86/pci/vmd.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index 7792aba..b1662bf 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -261,7 +261,7 @@ static struct device *to_vmd_dev(struct device *dev)
+>  
+>  static struct dma_map_ops *vmd_dma_ops(struct device *dev)
+>  {
+> -	return to_vmd_dev(dev)->archdata.dma_ops;
+> +	return get_dma_ops(to_vmd_dev(dev));
+>  }
+>  
+>  static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *addr,
+> @@ -367,7 +367,7 @@ static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
+>  {
+>  	struct dma_domain *domain = &vmd->dma_domain;
+>  
+> -	if (vmd->dev->dev.archdata.dma_ops)
+> +	if (get_dma_ops(&vmd->dev->dev))
+>  		del_dma_domain(domain);
+>  }
+>  
+> @@ -379,7 +379,7 @@ static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
+>  
+>  static void vmd_setup_dma_ops(struct vmd_dev *vmd)
+>  {
+> -	const struct dma_map_ops *source = vmd->dev->dev.archdata.dma_ops;
+> +	const struct dma_map_ops *source = get_dma_ops(&vmd->dev->dev);
+>  	struct dma_map_ops *dest = &vmd->dma_ops;
+>  	struct dma_domain *domain = &vmd->dma_domain;
+>  
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
