@@ -1,108 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: next-20160517 - lockdep splat in pcie code
-From: Valdis.Kletnieks@vt.edu
-In-reply-to: <20160518085459.GD1994@lahna>
-References: <4249.1463510162@turing-police.cc.vt.edu> <20160517193742.GA10755@localhost> <20160517221248.GA3068@wunner.de>
- <20160518085459.GD1994@lahna>
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38879 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753159AbcEQO1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 May 2016 10:27:22 -0400
+Date: Tue, 17 May 2016 09:27:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Martin Mares <mj@ucw.cz>
+Cc: Martin Mansfield <mrmansfield@ntlworld.com>,
+	Linux-PCI Mailing List <linux-pci@vger.kernel.org>
+Subject: Re: Reason for hang after running lspci -vv as root
+Message-ID: <20160517142711.GA19170@localhost>
+References: <05A7667AE5A84EFC87D025E140351A4C@pc1>
+ <mj+md-20160514.100302.61929.camelot@ucw.cz>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Date: Thu, 19 May 2016 17:19:15 -0400
-Message-ID: <14501.1463692755@turing-police.cc.vt.edu>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <mj+md-20160514.100302.61929.camelot@ucw.cz>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 18 May 2016 11:54:59 +0300, Mika Westerberg said:
+On Sat, May 14, 2016 at 12:07:44PM +0200, Martin Mares wrote:
+> Hello!
+> 
+> > I have been using lspci (v3.2.1) on Centos 7.2 to find out why a LSI 9420-4i
+> > raid controller did not work with the linux driver but when I used lspci
+> > with the -vv option as root the machine locked up completely and even the
+> > reset button did not work. lspci v3.4.1 does the same.
+> > As I was curious as to the reason why this could happen I compiled and ran
+> > it under gdb and found that the cap_vpd() function caused the problem. The
+> > raid card said that it supported vpd but the first call of read_vpd()
+> > returned a value of FFh for the variable "tag" and the next call of
+> > read_vpd() would hang the pc.
+> > I added code to return from the function after the first read_vpd but when
+> > the subsequent capability structures were read the values were different
+> > from those previously dumped using the -xxx option and lspci would crash as
+> > it followed the modified linked list off into oblivion.
+> > I commented out the call to cap_vpd() and it worked correctly and I could
+> > then see all the capability details.
+> > 
+> > I would like to make a request that the call to cap_vpd be disabled by
+> > default and enabled by a command line parameter if necessary as it is very
+> > likely that it is the cause of problems with the -vv and -vvv options. As
+> > this incident has shown, the consequences of reading the vpd can be very
+> > dangerous.
+> 
+> It smells of faulty hardware. Reading the VPD should not have any side
+> effects.
+> 
+> It seems to be a rather singular problem (your report was the first one
+> I received since we added dumping of VPD in 2009) and it is not limited
+> to lspci anyway -- other programs could crash your system by accessing
+> the particular file in sysfs.
+> 
+> I would recommend blacklisting your device in the kernel, so that VPD
+> will not be provided by sysfs at all.
 
-> Can you check if the patch fixes the issue?
+We do have some devices blacklisted in the kernel, including several
+LSI devices.  This commit appeared in v4.6:
 
-Tested, no complaints at boot, and everything seems to be working.
+  http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=7c20078a8197
 
-Feel free to add this to the patch and send it upstream:
+Based on the v4.6-rc6 dmesg log you (martinman3) attached at
+https://bugs.centos.org/view.php?id=10818, I think your LSI 9420-4i
+device is "pci 0000:05:00.0: [1000:0073]".  v4.6-rc6 includes
+7c20078a8197, and [1000:0073] is included in that blacklist.
 
-Tested-By: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+Did you still see the system hang with v4.6-rc6?  If so, we still have
+work to do.  The blacklist should make it safe to dump the VPD via
+sysfs, e.g.,
 
-> -----8<-----8<-----8<-----8<-----8<-----8<-----8<------8<-----8<------
->
-> From: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Date: Wed, 18 May 2016 11:35:09 +0300
-> Subject: [PATCH] PCI: pcie: Call pm_runtime_no_callbacks() after device is registered
->
-> Commit 0195d2813547 ("PCI: Add runtime PM support for PCIe ports") added
-> call to pm_runtime_no_callbacks() for each port service device to prevent
-> them exposing unnecessary runtime PM sysfs files. However, that function
-> tries to acquire dev->power.lock which is not yet initialized.
->
-> This triggers following splat:
->
->  BUG: spinlock bad magic on CPU#0, swapper/0/1
->   lock: 0xffff8801be2aa8e8, .magic: 00000000, .owner: <none>/-1, .owner_cpu: 0
->  CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.6.0+ #820
->   0000000000000000 ffff8801beb97be0 ffffffff812cf42d 0000000000000000
->   ffff8801be2aa8e8 ffff8801beb97c00 ffffffff8109ee58 ffff8801be2aa8e8
->   ffff8801be2aa8e8 ffff8801beb97c30 ffffffff8109efd9 ffff8801be2aa8e8
->  Call Trace:
->   [<ffffffff812cf42d>] dump_stack+0x4f/0x72
->   [<ffffffff8109ee58>] spin_dump+0x78/0xc0
->   [<ffffffff8109efd9>] do_raw_spin_lock+0xf9/0x150
->   [<ffffffff81674e10>] _raw_spin_lock_irq+0x20/0x30
->   [<ffffffff813d738e>] pm_runtime_no_callbacks+0x1e/0x40
->   [<ffffffff81322cad>] pcie_port_device_register+0x1fd/0x4e0
->   [<ffffffff813232f8>] pcie_portdrv_probe+0x38/0xa0
->   [<ffffffff81314fb5>] local_pci_probe+0x45/0xa0
->   [<ffffffff81315fe0>] ? pci_match_device+0xe0/0x110
->   [<ffffffff813163ab>] pci_device_probe+0xdb/0x130
->   [<ffffffff813ccefc>] driver_probe_device+0x22c/0x440
->   [<ffffffff813cd1e1>] __driver_attach+0xd1/0xf0
->   [<ffffffff813cd110>] ? driver_probe_device+0x440/0x440
->   [<ffffffff813caab4>] bus_for_each_dev+0x64/0xa0
->   [<ffffffff813cc60e>] driver_attach+0x1e/0x20
->   [<ffffffff813cc0cb>] bus_add_driver+0x1eb/0x280
->   [<ffffffff81d36cdc>] ? pcie_port_setup+0x7c/0x7c
->   [<ffffffff813cdb90>] driver_register+0x60/0xe0
->   [<ffffffff813148e0>] __pci_register_driver+0x60/0x70
->   [<ffffffff81d36d3f>] pcie_portdrv_init+0x63/0x75
->   [<ffffffff810003db>] do_one_initcall+0xab/0x1c0
->   [<ffffffff81cff083>] kernel_init_freeable+0x153/0x1d9
->   [<ffffffff8166dfce>] kernel_init+0xe/0x100
->   [<ffffffff81675612>] ret_from_fork+0x22/0x40
->   [<ffffffff8166dfc0>] ? rest_init+0x90/0x90
->
-> Fix this by calling pm_runtime_no_callbacks() after device_register() just
-> like other buses, like I2C is doing already.
->
-> Reported-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
-> Suggested-by: Lukas Wunner <lukas@wunner.de>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 65b1a624826b..97927dfbbf5f 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -344,7 +344,6 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->  		     get_descriptor_id(pci_pcie_type(pdev), service));
->  	device->parent = &pdev->dev;
->  	device_enable_async_suspend(device);
-> -	pm_runtime_no_callbacks(device);
->  
->  	retval = device_register(device);
->  	if (retval) {
-> @@ -352,6 +351,8 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->  		return retval;
->  	}
->  
-> +	pm_runtime_no_callbacks(device);
-> +
->  	return 0;
->  }
->  
-> -- 
-> 2.8.1
->
->
+  # xxd /sys/devices/pci0000:00/0000:00:05:00.0/vpd
+
+You shouldn't see any VPD data, and the machine should not hang.
+
+I don't know whether lspci reads VPD using sysfs or a different way.
+If it reads it differently, it's possible it could still cause a hang,
+even with the kernel blacklist.
+
+But at the hardware level, reading VPD requires access to two
+registers on the device, and I don't think that can be done safely
+without kernel support, so I hope lspci is using sysfs.
+
+Bjorn
