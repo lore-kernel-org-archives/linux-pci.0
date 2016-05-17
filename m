@@ -1,121 +1,182 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Tue, 3 May 2016 15:55:12 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jayachandran C <jchandra@broadcom.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	Wangyijing <wangyijing@huawei.com>, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>
-Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
- domain number.
-Message-ID: <20160503145512.GA2429@red-moon>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-3-git-send-email-tn@semihalf.com>
- <20160427022649.GD6789@localhost>
- <20160427111758.GA6234@red-moon>
- <57274B8C.5030304@semihalf.com>
- <CAKc_7PU1AszF4y0OjZ3KVGaTEx9OL1cuT5YgOxQKhAQgQom7tA@mail.gmail.com>
- <20160503110225.GA1055@red-moon>
- <CAKc_7PXBrVduNkdVr13argTNekvhV+XJFB7XD6aYOnP1CY6A6w@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ iommu@lists.linux-foundation.org
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <573AD142.6020107@semihalf.com>
+Date: Tue, 17 May 2016 10:07:30 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKc_7PXBrVduNkdVr13argTNekvhV+XJFB7XD6aYOnP1CY6A6w@mail.gmail.com>
+In-Reply-To: <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ Hanjun Guo <hanjun.guo@linaro.org>, Jon Masters <jcm@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 03, 2016 at 07:52:52PM +0530, Jayachandran C wrote:
-> On Tue, May 3, 2016 at 4:32 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Mon, May 02, 2016 at 06:56:13PM +0530, Jayachandran C wrote:
-> >> On Mon, May 2, 2016 at 6:13 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> >> > On 04/27/2016 01:17 PM, Lorenzo Pieralisi wrote:
-> >> >>
-> >> >> On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
-> >> >>>
-> >> >>> On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
-> >> >
-> >> > [...]
-> >> >
-> >> >>>   +int acpi_pci_bus_domain_nr(struct device *parent)
-> >> >>> +{
-> >> >>> +       struct acpi_device *acpi_dev = to_acpi_device(parent);
-> >> >>> +       unsigned long long segment = 0;
-> >> >>> +       acpi_status status;
-> >> >>> +
-> >> >>> +       /*
-> >> >>> +        * If _SEG method does not exist, following ACPI spec (6.5.6)
-> >> >>> +        * all PCI buses belong to domain 0.
-> >> >>> +        */
-> >> >>> +       status = acpi_evaluate_integer(acpi_dev->handle,
-> >> >>> METHOD_NAME__SEG, NULL,
-> >> >>> +                                      &segment);
-> >> >>> We already have code in acpi_pci_root_add() to evaluate _SEG.  We
-> >> >>> don't want to evaluate it *twice*, do we?
-> >> >>>
-> >> >>> I was sort of expecting that if you added it here, we'd remove the
-> >> >>> existing call, but it looks like you're keeping both?
-> >> >>
-> >> >> We can't remove the existing call, since it is used on X86 and IA64
-> >> >> to store the segment number that, in the process, is used in their
-> >> >> pci_domain_nr() arch specific callback to retrieve the domain nr.
-> >> >>
-> >> >> On ARM64, that selects PCI_DOMAINS_GENERIC, we have to find a way
-> >> >> to retrieve the domain number that is not arch dependent, since
-> >> >> this is generic code, we can't rely on any bus->sysdata format (unless
-> >> >> we do something like JC did below), therefore the only way is to call
-> >> >> the _SEG method *again* here, which also forced Tomasz to go through
-> >> >> the ACPI_COMPANION setting song and dance and pass the parent pointer
-> >> >> to pci_create_root_bus() (see patch 1), which BTW is a source of
-> >> >> trouble on its own as you noticed.
-> >> >
-> >> > What trouble in patch 1 do you mean? I may miss something.
-> >> >
-> >> > I agree that patch 1 is not necessary if we decide to use sysdata or rework
-> >> > root bus scanning to move domain to host bridge. Nevertheless, patch 1 is
-> >> > still a cleanup IMO.
-> >>
-> >> In this case, getting the domain should be trivial since the ACPI
-> >> companion on parent is already set, this should work
-> >>
-> >> int acpi_pci_bus_domain_nr(struct device *parent)
-> >> {
-> >>         struct acpi_device *acpi_dev = to_acpi_device(parent);
-> >>         struct acpi_pci_root *root = acpi_dev->driver_data;
-> >>
-> >>         return root->segment;
-> >> }
-> >>
-> >> Or am I missing something here?
-> >
-> > Well, I thought that the whole idea behind this exercise was to move
-> > the domain number into struct pci_host_bridge (Arnd did not do it with
-> > his first set but this does not mean we can't add it as Bjorn suggested),
-> > so that the domain number could be read from there straight away in an
-> > arch (and FW) independent manner, right ?
-> 
-> The original issue was using _SEG call again instead of using
-> the value from acpi_pci_root, and the solution for that problem
-> is very simple.
-> 
-> The pci host bridge work is of course very useful, but creating a
-> dependency with that work for an issue that can be so easily solved
-> is unnecessary.
+Hi Lorenzo,
 
-It can be easily solved if we do not drop patch 1 (I understood the
-additional call to _SEG was only part of the problem). If we keep patch
-1 the code above is fine by me, if we have to drop patch 1 (IIRC by
-passing the parent pointer to pci_create_root_bus() we are affecting
-IA64 and X86 code, if that's acceptable that's fine by me) I do not
-think we can use the code above anymore, that's what my comment was
-all about because Bjorn was concerned about the fragility of the code
-setting the ACPI companion.
+On 14.04.2016 19:25, Lorenzo Pieralisi wrote:
+> On DT based systems, the of_dma_configure() API implements DMA configuration
+> for a given device. On ACPI systems an API equivalent to of_dma_configure()
+> is missing which implies that it is currently not possible to set-up DMA
+> operations for devices through the ACPI generic kernel layer.
+>
+> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+> calls, that carry out IOMMU configuration through IORT (on systems where
+> it is present) and call arch_setup_dma_ops(...) with the retrieved
+> parameters.
+>
+> The DMA range size passed to arch_setup_dma_ops() is sized according
+> to the device coherent_dma_mask (starting at address 0x0), mirroring the
+> DT probing path behaviour when a dma-ranges property is not provided
+> for the device being probed; this changes the current arch_setup_dma_ops()
+> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
+> is a NOP on all architectures but ARM/ARM64 this patch does not change
+> the current kernel behaviour on them.
+>
+> This patch updates ACPI and PCI core code to use the newly introduced
+> acpi_dma_configure function, providing the same functionality
+> as of_dma_configure on ARM systems and leaving behaviour unchanged
+> for all other arches.
+>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>   drivers/acpi/glue.c     |  4 +--
+>   drivers/acpi/iort.c     | 85 +++++++++++++++++++++++++++++++++++++++++++++++++
+>   drivers/acpi/scan.c     | 29 +++++++++++++++++
+>   drivers/pci/probe.c     |  3 +-
+>   include/acpi/acpi_bus.h |  2 ++
+>   include/linux/acpi.h    |  5 +++
+>   include/linux/iort.h    |  9 ++++++
+>   7 files changed, 133 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> index 5ea5dc2..f8d6564 100644
+> --- a/drivers/acpi/glue.c
+> +++ b/drivers/acpi/glue.c
+> @@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>
+>   	attr = acpi_get_dma_attr(acpi_dev);
+>   	if (attr != DEV_DMA_NOT_SUPPORTED)
+> -		arch_setup_dma_ops(dev, 0, 0, NULL,
+> -				   attr == DEV_DMA_COHERENT);
+> +		acpi_dma_configure(dev, attr);
+>
+>   	acpi_physnode_link_name(physical_node_name, node_id);
+>   	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+> @@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>   	return 0;
+>
+>    err:
+> +	acpi_dma_deconfigure(dev);
+>   	ACPI_COMPANION_SET(dev, NULL);
+>   	put_device(dev);
+>   	put_device(&acpi_dev->dev);
+> diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+> index 2b5ce65..b1bb8fb 100644
+> --- a/drivers/acpi/iort.c
+> +++ b/drivers/acpi/iort.c
+> @@ -72,6 +72,31 @@ int iort_iommu_set_node(struct iommu_ops *ops, struct acpi_iort_node *node,
+>   	return 0;
+>   }
+>
+> +/**
+> + * iort_iommu_get_node - Retrieve iort_iommu_node associated with an IORT node.
+> + *
+> + * @node: IORT table node to be looked-up
+> + *
+> + * Returns: iort_iommu_node pointer on success
+> + *          NULL on failure
+> + */
+> +static struct iort_iommu_node *iort_iommu_get_node(struct acpi_iort_node *node)
+> +{
+> +	struct iort_iommu_node *iommu_node;
+> +
+> +	spin_lock(&iort_iommu_lock);
+> +	list_for_each_entry(iommu_node, &iort_iommu_list, list) {
+> +		if (iommu_node->node == node)
+> +			goto found;
+> +	}
+> +
+> +	iommu_node = NULL;
+> +found:
+> +	spin_unlock(&iort_iommu_lock);
+> +
+> +	return iommu_node;
+> +}
+> +
+>   typedef acpi_status (*iort_find_node_callback)
+>   	(struct acpi_iort_node *node, void *context);
+>
+> @@ -405,6 +430,66 @@ iort_pci_get_domain(struct pci_dev *pdev, u32 req_id)
+>   	return domain_handle;
+>   }
+>
+> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+> +{
+> +	u32 *rid = data;
+> +
+> +	*rid = alias;
+> +	return 0;
+> +}
+> +
+> +/**
+> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
+> + *
+> + * @dev: device that requires IOMMU set-up
+> + *
+> + * Returns: iommu_ops pointer on configuration success
+> + *          NULL on configuration failure
+> + */
+> +struct iommu_ops *iort_iommu_configure(struct device *dev)
+> +{
+> +	struct acpi_iort_node *node, *parent;
+> +	struct iommu_ops *ops = NULL;
+> +	struct iommu_fwspec fwspec;
+> +	struct iort_iommu_node *iommu_node;
+> +	u32 rid = 0, devid = 0;
+> +
+> +	if (dev_is_pci(dev)) {
+> +		struct pci_bus *bus = to_pci_dev(dev)->bus;
+> +
+> +		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
+> +				       &rid);
+> +
+> +		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> +				      iort_find_dev_callback, &bus->dev);
+> +	} else
+> +		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> +				      iort_find_dev_callback, dev);
 
-Lorenzo
+I think this will not work for finding host bridge stream ID. We still 
+need to use ACPI_IORT_NODE_PCI_ROOT_COMPLEX but 'dev' is not PCI device, 
+right?
+
+Thanks,
+Tomasz
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
