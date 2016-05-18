@@ -1,19 +1,44 @@
-Return-Path: <hch@lst.de>
-Return-Path: <hch@lst.de>
-Date: Tue, 17 May 2016 18:45:18 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, agordeev@redhat.com, pjw@netapp.com,
-	axboe@fb.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
-	routines
-Message-ID: <20160517164518.GA12518@lst.de>
-References: <1462457096-19795-1-git-send-email-hch@lst.de> <1462457096-19795-2-git-send-email-hch@lst.de> <20160509224631.GB18501@localhost> <20160516193929.GA20759@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from xes-mad.com ([216.165.139.218]:20042 "EHLO xes-mad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932107AbcEROVp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 May 2016 10:21:45 -0400
+Date: Wed, 18 May 2016 09:04:19 -0500 (CDT)
+From: Aaron Sierra <asierra@xes-inc.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Steven Graham <sgraham@xes-inc.com>
+Message-ID: <1362465642.29195.1463580259749.JavaMail.zimbra@xes-inc.com>
+In-Reply-To: <1302254871.144378.1463521541328.JavaMail.zimbra@xes-inc.com>
+Subject: [PATCH] PCI: Add function 1 DMA alias quirk for 88SE9182
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160516193929.GA20759@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ok, I'll have an updated version ready early for the next merge
-window.
+We found this quirk reported in the same thread as other Marvell
+devices, but no patch resulted:
+
+  https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78
+
+Signed-off-by: Steven Graham <sgraham@xes-inc.com>
+Signed-off-by: Aaron Sierra <asierra@xes-inc.com>
+---
+ drivers/pci/quirks.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8e67802..90ac106 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3651,6 +3651,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9172,
+ /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c59 */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
+ 			 quirk_dma_func1_alias);
++/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78 */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9182,
++			 quirk_dma_func1_alias);
+ /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
+ 			 quirk_dma_func1_alias);
+-- 
+1.9.1
