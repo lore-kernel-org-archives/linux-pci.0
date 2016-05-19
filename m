@@ -1,251 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 11 May 2016 10:10:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com, kevin.tian@intel.com
-Subject: Re: [PATCH v2] vfio-pci: Allow to mmap sub-page MMIO BARs if the
- mmio page is exclusive
-Message-ID: <20160511151034.GB21753@localhost>
-References: <1462966459-12459-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:48855 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754225AbcESQBA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 May 2016 12:01:00 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [193.165.110.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 364491C0156
+	for <linux-pci@vger.kernel.org>; Thu, 19 May 2016 18:00:52 +0200 (CEST)
+Date: Thu, 19 May 2016 18:00:50 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Linux-PCI Mailing List <linux-pci@vger.kernel.org>
+Subject: Released pciutils-3.5.0
+Message-ID: <mj+md-20160519.160023.4433.albireo@ucw.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462966459-12459-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 11, 2016 at 07:34:19PM +0800, Yongji Xie wrote:
-> Current vfio-pci implementation disallows to mmap
-> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
-> page may be shared with other BARs. This will cause some
-> performance issues when we passthrough a PCI device with
-> this kind of BARs. Guest will be not able to handle the mmio
-> accesses to the BARs which leads to mmio emulations in host.
-> 
-> However, not all sub-page BARs will share page with other BARs.
-> We should allow to mmap the sub-page MMIO BARs which we can
-> make sure will not share page with other BARs.
-> 
-> This patch adds support for this case. And we try to add some
-> dummy resources to reserve the remaind of the page which
-> hot-add device's BAR might be assigned into.
+Hello, world!\n
 
-This is starting to look more reasonable from a safety perspective.
-At least I don't have an allergic reaction to mapping a page that may
-contain BARs from other random devices :)
+I have just released pciutils-3.5.0.
 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  drivers/vfio/pci/vfio_pci.c         |   85 ++++++++++++++++++++++++++++++++---
->  drivers/vfio/pci/vfio_pci_private.h |    8 ++++
->  2 files changed, 86 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 98059df..33282b8 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -110,16 +110,77 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->  	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
->  }
->  
-> +static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
-> +{
-> +	struct resource *res = vdev->pdev->resource + index;
-> +	struct vfio_pci_dummy_resource *dummy_res1 = NULL;
-> +	struct vfio_pci_dummy_resource *dummy_res2 = NULL;
-> +
-> +	if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) && res->flags & IORESOURCE_MEM &&
-> +		resource_size(res) > 0) {
-> +		if (resource_size(res) >= PAGE_SIZE)
-> +			return true;
-> +
-> +		if ((res->start & ~PAGE_MASK)) {
-> +			/*
-> +			 * Add a dummy resource to reserve the portion
-> +			 * before res->start in exclusive page in case
-> +			 * that hot-add device's bar is assigned into it.
-> +			 */
-> +			dummy_res1 = kzalloc(sizeof(*dummy_res1), GFP_KERNEL);
+>From the ChangeLog:
 
-Should check for kzalloc() failure here.
+	* New capabilities decoded: Downstream Port Containment,
+	  Precision Time Measurement. Thanks to Keith Busch and
+	  Jonathan Yong.
 
-> +			dummy_res1->resource.start = res->start & PAGE_MASK;
-> +			dummy_res1->resource.end = res->start - 1;
-> +			dummy_res1->resource.flags = res->flags;
-> +			if (request_resource(res->parent,
-> +						&dummy_res1->resource)) {
-> +				kfree(dummy_res1);
-> +				return false;
-> +			}
-> +			dummy_res1->index = index;
-> +			list_add(&dummy_res1->res_next,
-> +					&vdev->dummy_resources_list);
+	* Domain numbers extended to 31 bits. This will be used by the
+	  Linux kernel on some machines in near future.
 
-The main body of this function is unnecessarily indented.  If you did
-this it would be less indented:
+	* Enhanced allocation regions are now decoded on Linux.
 
-  if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP))
-    return false;
+	* The NetBSD back-end supports PCIe extended configuration space.
 
-  if (!res->flags & IORESOURCE_MEM)
-    return false;
+	* Updated pci.ids to the current snapshot of the database.
 
-  /*
-   * Not sure this is necessary; the PCI core *shouldn't* set up a
-   * resource with a type but zero size.  But there may be bugs that
-   * cause us to do that.
-   */
-  if (!resource_size(res))
-    return false;
-
-  if (resource_size(res) >= PAGE_SIZE)
-    return true;
-
-  if ((res->start & ~PAGE_MASK)) {
-    ...
-
-> +		}
-> +		if (((res->end + 1) & ~PAGE_MASK)) {
-> +			/*
-> +			 * Add a dummy resource to reserve the portion
-> +			 * after res->end.
-> +			 */
-> +			dummy_res2 = kzalloc(sizeof(*dummy_res2), GFP_KERNEL);
-> +			dummy_res2->resource.start = res->end + 1;
-> +			dummy_res2->resource.end = (res->start & PAGE_MASK) +
-> +							PAGE_SIZE - 1;
-> +			dummy_res2->resource.flags = res->flags;
-> +			if (request_resource(res->parent,
-> +						&dummy_res2->resource)) {
-> +				if (dummy_res1) {
-> +					list_del(&dummy_res1->res_next);
-> +					release_resource(&dummy_res1->resource);
-> +					kfree(dummy_res1);
-> +				}
-> +				kfree(dummy_res2);
-> +				return false;
-> +			}
-> +			dummy_res2->index = index;
-> +			list_add(&dummy_res2->res_next,
-> +					&vdev->dummy_resources_list);
-> +		}
-> +		return true;
-> +	}
-> +	return false;
-> +}
-> +
->  static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
->  static void vfio_pci_disable(struct vfio_pci_device *vdev);
->  
->  static int vfio_pci_enable(struct vfio_pci_device *vdev)
->  {
->  	struct pci_dev *pdev = vdev->pdev;
-> -	int ret;
-> +	int ret, bar;
->  	u16 cmd;
->  	u8 msix_pos;
->  
-> +	INIT_LIST_HEAD(&vdev->dummy_resources_list);
-> +
->  	pci_set_power_state(pdev, PCI_D0);
->  
->  	/* Don't allow our initial saved state to include busmaster */
-> @@ -183,12 +244,17 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
->  		}
->  	}
->  
-> +	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
-> +		vdev->bar_mmap_supported[bar] =
-> +				vfio_pci_bar_mmap_supported(vdev, bar);
-> +	}
->  	return 0;
->  }
->  
->  static void vfio_pci_disable(struct vfio_pci_device *vdev)
->  {
->  	struct pci_dev *pdev = vdev->pdev;
-> +	struct vfio_pci_dummy_resource *dummy_res, *tmp;
->  	int i, bar;
->  
->  	/* Stop the device from further DMA */
-> @@ -217,6 +283,13 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
->  		vdev->barmap[bar] = NULL;
->  	}
->  
-> +	list_for_each_entry_safe(dummy_res, tmp,
-> +				 &vdev->dummy_resources_list, res_next) {
-> +		list_del(&dummy_res->res_next);
-> +		release_resource(&dummy_res->resource);
-> +		kfree(dummy_res);
-> +	}
-> +
->  	vdev->needs_reset = true;
->  
->  	/*
-> @@ -587,9 +660,7 @@ static long vfio_pci_ioctl(void *device_data,
->  
->  			info.flags = VFIO_REGION_INFO_FLAG_READ |
->  				     VFIO_REGION_INFO_FLAG_WRITE;
-> -			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
-> -			    pci_resource_flags(pdev, info.index) &
-> -			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
-> +			if (vdev->bar_mmap_supported[info.index]) {
->  				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
->  				if (info.index == vdev->msix_bar) {
->  					ret = msix_sparse_mmap_cap(vdev, &caps);
-> @@ -1011,16 +1082,16 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
->  		return -EINVAL;
->  	if (index >= VFIO_PCI_ROM_REGION_INDEX)
->  		return -EINVAL;
-> -	if (!(pci_resource_flags(pdev, index) & IORESOURCE_MEM))
-> +	if (!vdev->bar_mmap_supported[index])
->  		return -EINVAL;
->  
-> -	phys_len = pci_resource_len(pdev, index);
-> +	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
->  	req_len = vma->vm_end - vma->vm_start;
->  	pgoff = vma->vm_pgoff &
->  		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
->  	req_start = pgoff << PAGE_SHIFT;
->  
-> -	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
-> +	if (req_start + req_len > phys_len)
->  		return -EINVAL;
->  
->  	if (index == vdev->msix_bar) {
-> diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-> index 8a7d546..a4233a8 100644
-> --- a/drivers/vfio/pci/vfio_pci_private.h
-> +++ b/drivers/vfio/pci/vfio_pci_private.h
-> @@ -57,9 +57,16 @@ struct vfio_pci_region {
->  	u32				flags;
->  };
->  
-> +struct vfio_pci_dummy_resource {
-> +	struct resource		resource;
-> +	int			index;
-> +	struct list_head	res_next;
-> +};
-> +
->  struct vfio_pci_device {
->  	struct pci_dev		*pdev;
->  	void __iomem		*barmap[PCI_STD_RESOURCE_END + 1];
-> +	bool			bar_mmap_supported[PCI_STD_RESOURCE_END + 1];
->  	u8			*pci_config_map;
->  	u8			*vconfig;
->  	struct perm_bits	*msi_perm;
-> @@ -87,6 +94,7 @@ struct vfio_pci_device {
->  	int			refcnt;
->  	struct eventfd_ctx	*err_trigger;
->  	struct eventfd_ctx	*req_trigger;
-> +	struct list_head	dummy_resources_list;
->  };
->  
->  #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
-> -- 
-> 1.7.9.5
-> 
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Weather forecast for tonight: dark.
