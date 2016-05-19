@@ -1,126 +1,185 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55604 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756881AbcEEPFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 May 2016 11:05:21 -0400
-Date: Thu, 5 May 2016 09:05:13 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: Re: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Message-ID: <20160505090513.56886c12@t450s.home>
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
-	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
-	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
+Return-Path: <mbrugger@suse.com>
+Return-Path: <mbrugger@suse.com>
+Subject: Re: [PATCH V7 08/11] pci, acpi: Support for ACPI based generic PCI
+ host controller
+To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org, arnd@arndb.de,
+ will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+ hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+ jchandra@broadcom.com
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <1462893601-8937-9-git-send-email-tn@semihalf.com>
+Cc: jcm@redhat.com, linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+ dhdang@apm.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+ jeremy.linton@arm.com, linux-kernel@vger.kernel.org,
+ linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+ cov@codeaurora.org, Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ wangyijing@huawei.com, mw@semihalf.com, andrea.gallo@linaro.org,
+ linux-arm-kernel@lists.infradead.org, liudongdong3@huawei.com
+From: Matthias Brugger <mbrugger@suse.com>
+Message-ID: <573DF039.5040405@suse.com>
+Date: Thu, 19 May 2016 18:56:25 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1462893601-8937-9-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 5 May 2016 12:15:46 +0000
-"Tian, Kevin" <kevin.tian@intel.com> wrote:
 
-> > From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
-> > Sent: Thursday, May 05, 2016 7:43 PM
-> > 
-> > Hi David and Kevin,
-> > 
-> > On 2016/5/5 17:54, David Laight wrote:
-> >   
-> > > From: Tian, Kevin  
-> > >> Sent: 05 May 2016 10:37  
-> > > ...  
-> > >>> Acutually, we are not aimed at accessing MSI-X table from
-> > >>> guest. So I think it's safe to passthrough MSI-X table if we
-> > >>> can make sure guest kernel would not touch MSI-X table in
-> > >>> normal code path such as para-virtualized guest kernel on PPC64.
-> > >>>  
-> > >> Then how do you prevent malicious guest kernel accessing it?  
-> > > Or a malicious guest driver for an ethernet card setting up
-> > > the receive buffer ring to contain a single word entry that
-> > > contains the address associated with an MSI-X interrupt and
-> > > then using a loopback mode to cause a specific packet be
-> > > received that writes the required word through that address.
-> > >
-> > > Remember the PCIe cycle for an interrupt is a normal memory write
-> > > cycle.
-> > >
-> > > 	David
-> > >  
-> > 
-> > If we have enough permission to load a malicious driver or
-> > kernel, we can easily break the guest without exposed
-> > MSI-X table.
-> > 
-> > I think it should be safe to expose MSI-X table if we can
-> > make sure that malicious guest driver/kernel can't use
-> > the MSI-X table to break other guest or host. The
-> > capability of IRQ remapping could provide this
-> > kind of protection.
-> >   
-> 
-> With IRQ remapping it doesn't mean you can pass through MSI-X
-> structure to guest. I know actual IRQ remapping might be platform
-> specific, but at least for Intel VT-d specification, MSI-X entry must
-> be configured with a remappable format by host kernel which
-> contains an index into IRQ remapping table. The index will find a
-> IRQ remapping entry which controls interrupt routing for a specific
-> device. If you allow a malicious program random index into MSI-X 
-> entry of assigned device, the hole is obvious...
-> 
-> Above might make sense only for a IRQ remapping implementation 
-> which doesn't rely on extended MSI-X format (e.g. simply based on 
-> BDF). If that's the case for PPC, then you should build MSI-X 
-> passthrough based on this fact instead of general IRQ remapping 
-> enabled or not.
 
-I don't think anyone is expecting that we can expose the MSI-X vector
-table to the guest and the guest can make direct use of it.  The end
-goal here is that the guest on a power system is already
-paravirtualized to not program the device MSI-X by directly writing to
-the MSI-X vector table.  They have hypercalls for this since they
-always run virtualized.  Therefore a) they never intend to touch the
-MSI-X vector table and b) they have sufficient isolation that a guest
-can only hurt itself by doing so.
+On 10/05/16 17:19, Tomasz Nowicki wrote:
+> This patch is going to implement generic PCI host controller for
+> ACPI world, similar to what pci-host-generic.c driver does for DT world.
+>
+> All such drivers, which we have seen so far, were implemented within
+> arch/ directory since they had some arch assumptions (x86 and ia64).
+> However, they all are doing similar thing, so it makes sense to find
+> some common code and abstract it into the generic driver.
+>
+> In order to handle PCI config space regions properly, we define new
+> MCFG interface which does sanity checks on MCFG table and keeps its
+> root pointer. User is able to lookup MCFG regions based on that root
+> pointer and specified domain:bus_start:bus_end touple. We are using
+> pci_mmcfg_late_init old prototype to avoid another function name.
+>
+> The implementation of pci_acpi_scan_root() looks up the MCFG entries
+> and sets up a new mapping (regions are not mapped until host controller ask
+> for it). Generic PCI functions are used for accessing config space.
+> Driver selects PCI_ECAM and uses functions from drivers/pci/ecam.h
+> to create and access ECAM mappings.
+>
+> As mentioned in Kconfig help section, ACPI_PCI_HOST_GENERIC choice
+> should be made on a per-architecture basis.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> ---
+>   drivers/acpi/Kconfig            |   8 +++
+>   drivers/acpi/Makefile           |   1 +
+>   drivers/acpi/pci_mcfg.c         |  97 ++++++++++++++++++++++++++
+>   drivers/acpi/pci_root_generic.c | 149 ++++++++++++++++++++++++++++++++++++++++
+>   drivers/pci/ecam.h              |   5 ++
+>   include/linux/pci-acpi.h        |   5 ++
+>   include/linux/pci.h             |   5 +-
+>   7 files changed, 269 insertions(+), 1 deletion(-)
+>   create mode 100644 drivers/acpi/pci_mcfg.c
+>   create mode 100644 drivers/acpi/pci_root_generic.c
+>
+> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+> index 183ffa3..44afc76 100644
+> --- a/drivers/acpi/Kconfig
+> +++ b/drivers/acpi/Kconfig
+> @@ -346,6 +346,14 @@ config ACPI_PCI_SLOT
+>   	  i.e., segment/bus/device/function tuples, with physical slots in
+>   	  the system.  If you are unsure, say N.
+>
+> +config ACPI_PCI_HOST_GENERIC
+> +	bool
+> +	select PCI_ECAM
+> +	help
+> +	  Select this config option from the architecture Kconfig,
+> +	  if it is preferred to enable ACPI PCI host controller driver which
+> +	  has no arch-specific assumptions.
+> +
+>   config X86_PM_TIMER
+>   	bool "Power Management Timer Support" if EXPERT
+>   	depends on X86
+> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+> index 81e5cbc..627a2b7 100644
+> --- a/drivers/acpi/Makefile
+> +++ b/drivers/acpi/Makefile
+> @@ -40,6 +40,7 @@ acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
+>   acpi-y				+= ec.o
+>   acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
+>   acpi-y				+= pci_root.o pci_link.o pci_irq.o
+> +obj-$(CONFIG_ACPI_PCI_HOST_GENERIC)	+= pci_root_generic.o pci_mcfg.o
+>   acpi-y				+= acpi_lpss.o acpi_apd.o
+>   acpi-y				+= acpi_platform.o
+>   acpi-y				+= acpi_pnp.o
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> new file mode 100644
+> index 0000000..373d079
+> --- /dev/null
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -0,0 +1,97 @@
+> +/*
+> + * Copyright (C) 2016 Broadcom
+> + *	Author: Jayachandran C <jchandra@broadcom.com>
+> + * Copyright (C) 2016 Semihalf
+> + * 	Author: Tomasz Nowicki <tn@semihalf.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License, version 2, as
+> + * published by the Free Software Foundation (the "GPL").
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> + * General Public License version 2 (GPLv2) for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * version 2 (GPLv2) along with this source code.
+> + */
+> +#include <linux/kernel.h>
+> +#include <linux/pci.h>
+> +#include <linux/pci-acpi.h>
+> +
+> +#define PREFIX	"ACPI: "
+> +
+> +/* Root pointer to the mapped MCFG table */
+> +static struct acpi_table_mcfg *mcfg_table;
+> +
+> +#define MCFG_ENTRIES(mcfg_ptr)	(((mcfg_ptr)->header.length -		\
+> +				sizeof(struct acpi_table_mcfg)) /	\
+> +				sizeof(struct acpi_mcfg_allocation))
+> +
+> +static phys_addr_t pci_mcfg_lookup_static(u16 seg, u8 bus_start, u8 bus_end)
+> +{
+> +	struct acpi_mcfg_allocation *mptr;
+> +	int i;
+> +
+> +	if (!mcfg_table) {
+> +		pr_err(PREFIX "MCFG table not available, lookup failed\n");
+> +		return -ENXIO;
+> +	}
+> +
+> +	mptr = (struct acpi_mcfg_allocation *) &mcfg_table[1];
+> +
+> +	/*
+> +	 * We expect exact match, unless MCFG entry end bus covers more than
+> +	 * specified by caller.
+> +	 */
+> +	for (i = 0; i < MCFG_ENTRIES(mcfg_table); i++, mptr++) {
+> +		if (mptr->pci_segment == seg &&
+> +		    mptr->start_bus_number == bus_start &&
+> +		    mptr->end_bus_number >= bus_end) {
+> +			return mptr->address;
+> +		}
+> +	}
+> +
+> +	return -ENXIO;
+> +}
+> +
+> +phys_addr_t pci_mcfg_lookup(struct acpi_device *device, u16 seg,
+> +			    struct resource *bus_res)
+> +{
+> +	phys_addr_t addr;
+> +
+> +	addr = acpi_pci_root_get_mcfg_addr(device->handle);
+> +	if (addr)
+> +		return addr;
+> +
+> +	return pci_mcfg_lookup_static(seg, bus_res->start, bus_res->end);
+> +}
+> +
+> +static __init int pci_mcfg_parse(struct acpi_table_header *header)
+> +{
+> +	struct acpi_table_mcfg *mcfg;
+> +	int n;
+> +
+> +	if (!header)
+> +		return -EINVAL;
 
-On x86 we don't have a), our method of programming the MSI-X vector
-table is to directly write to it. Therefore we will always require QEMU
-to place a MemoryRegion over the vector table to intercept those
-accesses.  However with interrupt remapping, we do have b) on x86, which
-means that we don't need to be so strict in disallowing user accesses
-to the MSI-X vector table.  It's not useful for configuring MSI-X on
-the device, but the user should only be able to hurt themselves by
-writing it directly.  x86 doesn't really get anything out of this
-change, but it helps this special case on power pretty significantly
-aiui.  Thanks,
+Maybe that's bike shedding, but acpi_table_parse already checks that the 
+table passed to the handler exists, so this is redundant.
 
-Alex
+Regards,
+Matthias
