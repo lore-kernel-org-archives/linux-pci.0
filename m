@@ -1,83 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40062 "EHLO mx1.redhat.com"
+Received: from gloria.sntech.de ([95.129.55.99]:60015 "EHLO gloria.sntech.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751338AbcEKKwR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 May 2016 06:52:17 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
-Subject: [PATCH 2/2] x86/PCI: Disable IO/MEM decoding for ROM BARs for devices with non-compliant BARs
-Date: Wed, 11 May 2016 06:52:10 -0400
-Message-Id: <1462963930-18506-3-git-send-email-prarit@redhat.com>
-In-Reply-To: <1462963930-18506-1-git-send-email-prarit@redhat.com>
-References: <1462963930-18506-1-git-send-email-prarit@redhat.com>
+	id S1754218AbcETLUY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 May 2016 07:20:24 -0400
+From: Heiko Stuebner <heiko@sntech.de>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] Documentation: add binding description of Rockchip PCIe controller
+Date: Fri, 20 May 2016 13:20:06 +0200
+Message-ID: <3930626.4a3xBnzHhK@phil>
+In-Reply-To: <1463740146-7106-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com> <1463740146-7106-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After executing quirk patches for the Broadwell-EP Home Agents,
-the following errors are in the boot log:
+Hi Shawn,
 
-pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
-pci 0000:ff:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
-pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
-pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
-pci 0000:7f:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
-pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+Am Freitag, 20. Mai 2016, 18:29:06 schrieb Shawn Lin:
+> This patch add some required and optional properties for Rockchip
+> PCIe controller. Also we add a example for how to use it.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+> 
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 93
+> ++++++++++++++++++++++ 1 file changed, 93 insertions(+)
+>  create mode 100644
+> Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt new file mode
+> 100644
+> index 0000000..69a0804
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -0,0 +1,93 @@
+> +* Rockchip AXI PCIe Root Port Bridge DT description
+> +
+> +Required properties:
+> +- #address-cells: Address representation for root ports, set to <3>
+> +- #size-cells: Size representation for root ports, set to <2>
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +		interrupt source. The value must be 1.
+> +- compatible: Should contain "rockchip,rk3399-pcie"
+> +- reg: Two register ranges as listed in the reg-names property
+> +- reg-names: The first entry must be "axi-base" for the core registers
+> +	The second entry must be "apb-base" for the client pcie registers
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +		See ../clocks/clock-bindings.txt for details.
+> +- clock-names: Must include the following entries:
+> +	- "aclk_pcie"
+> +	- "aclk_perf_pcie"
+> +	- "hclk_pcie"
+> +	- "clk_pciephy_ref"
 
-For the PCI ROM device's memory resource (BAR 6), pci_read_bases()
-initializes the value of res->flags.  Later in the boot,
-pcibios_assign_resources() attempts to assign uninitialized resources, and
-calls pcibios_allocate_dev_rom_resource().  That function uses the
-res->flags field to determine if the rom resource has been initialized.
-The code then attempts to assign a resource to the rom BAR and the "failed
-to assign" messages are output to the log.
+clock names are always in the scope of the node/driver, so the names could 
+easily be "aclk", "aclk-perf", "hclk", "phy".
 
-This patch moves the non_compliant_bars check to pci_read_bases() so it
-covers all the BARs of a non-compliant device.
+Although from my cursory-glance at the phy-related code, it looks more like 
+it shouldn't be in the pcie-driver itself, but in a an actual phy-driver 
+(together with the phy reset and clock)?
 
-Fixes: b84106b4e229 ("PCI: Disable IO/MEM decoding for devices with non-compliant BARs")
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: Andi Kleen <ak@linux.intel.com>
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+> +- interrupts: Three interrupt entries must be specified.
+> +- interrupt-names: Must include the following names
+> +	- "pcie-sys"
+> +	- "pcie-legacy"
+> +	- "pcie-client"
 
----
- drivers/pci/probe.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Same as above, names could simply be "sys", "legacy", "client"
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8004f67c57ec..bf8405fb4ace 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -179,9 +179,6 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	u16 orig_cmd;
- 	struct pci_bus_region region, inverted_region;
- 
--	if (dev->non_compliant_bars)
--		return 0;
--
- 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
- 
- 	/* No printks while decoding is disabled! */
-@@ -322,6 +319,9 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
- {
- 	unsigned int pos, reg;
- 
-+	if (dev->non_compliant_bars)
-+		return;
-+
- 	for (pos = 0; pos < howmany; pos++) {
- 		struct resource *res = &dev->resource[pos];
- 		reg = PCI_BASE_ADDRESS_0 + (pos << 2);
--- 
-1.7.9.3
 
+> +- resets: Must contain five entries for each entry in reset-names.
+> +	   See ../reset/reset.txt for details.
+> +- reset-names: Must include the following names
+> +	- "phy-rst"
+> +	- "core-rst"
+> +	- "mgmt-rst"
+> +	- "mgmt-sticky-rst"
+> +	- "pipe-rst"
+
+and again (= without the "-rst")
+
+
+> +- rockchip,grf: phandle to the syscon managing the "general register
+> files" 
+
+> +- pcie-conf: offset of pcie client block for  configuration
+> +- pcie-status: offset of pcie client block for status
+> +- pcie-laneoff: offset of pcie client block for lane
+
+These are GRF offsets (GRF_SOC_CON8, GRF_SOC_CON5_PCIE, GRF_SOC_STATUS1)
+Those registers are generally prone to change (even their layout) for future 
+socs and I'd suggest instead of declaring them in the devicetree, move them 
+to the per-soc data in the rockchip_pcie_of_match struct.
+
+But it looks as if they're pretty phy-specific, so see comment about possible 
+separate phy driver above.
+
+
+> +- msi-parent: Link to the hardware entity that serves as the Message
+> +- pinctrl-names : The pin control state names
+> +- pinctrl-0: The "default" pinctrl state
+
+I'm not sure if pinctrl-properties need to be described when you don't need 
+special handling in the form of additional pin states. The pcie part does 
+not do any pin-handling of its own.
+
+
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +- interrupt-controller: identifies the node as an interrupt controller
+> +
+> +Optional Property:
+> +- ep-gpios: contain the entry for pre-reset gpio
+> +- num-lanes: number of lanes to use
+> +- assigned-clocks, assigned-clock-parents and assigned-clock-rates:
+> standard +		   clock bindings. See ../clock/clock-bindings.txt
+
+Again that (assigned-clocks handling) is not actual part of the pci-
+controllers actions, but other parts and also described already elsewhere.
+
+
+Heiko
