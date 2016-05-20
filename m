@@ -1,112 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:11158 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755274AbcEYFsb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 May 2016 01:48:31 -0400
-Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4P5hrDe048199
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 01:48:30 -0400
-Message-Id: <201605250548.u4P5hrDe048199@mx0a-001b2d01.pphosted.com>
-Received: from e28smtp04.in.ibm.com (e28smtp04.in.ibm.com [125.16.236.4])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 234qj1fvc4-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 01:48:30 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Wed, 25 May 2016 11:18:25 +0530
-Subject: Re: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller
- supports IRQ remapping
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160524210434.GB16463@localhost>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Wed, 25 May 2016 13:48:00 +0800
+Return-Path: <jcm@redhat.com>
+Return-Path: <jcm@redhat.com>
+Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
+ controller
+To: Tomasz Nowicki <tn@semihalf.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+ <57331290.7070104@semihalf.com>
+Cc: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+        Wangyijing <wangyijing@huawei.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        "jcm@redhat.com" <jcm@redhat.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "dhdang@apm.com" <dhdang@apm.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <3d4aae09-51c4-f007-5100-191a4a85e27a@redhat.com>
+Date: Fri, 20 May 2016 00:41:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160524210434.GB16463@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <57331290.7070104@semihalf.com>
+Content-Type: text/plain; charset=gbk
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/25 5:04, Bjorn Helgaas wrote:
+Hi Tomasz, all,
 
-> On Wed, Apr 27, 2016 at 08:43:28PM +0800, Yongji Xie wrote:
->> On ARM HW the capability of IRQ remapping is abstracted on
->> MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
->> this [1].
->>
->> To have a universal flag to test this capability for different
->> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
->> when MSI_FLAG_IRQ_REMAPPING is set.
->>
->> [1] http://www.spinics.net/lists/kvm/msg130256.html
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/pci/msi.c   |   12 ++++++++++++
->>   drivers/pci/probe.c |    3 +++
->>   include/linux/msi.h |    6 +++++-
->>   3 files changed, 20 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index a080f44..1661cdf 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
->>   }
->>   EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
->>   
->> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
->> +				 struct irq_domain *domain)
->> +{
->> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
->> +	struct msi_domain_info *info;
->> +
->> +	info = msi_get_domain_info(domain);
->> +	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
->> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
->> +#endif
->> +}
-> Functions named "check_foo" are a pet peeve of mine because the name
-> doesn't tell us anything about what the function *does*.  In this
-> case, we know it checks something about MSI remapping, but we don't
-> know whether we're checking whether it's enabled, disabled, or some
-> other property.
->
-> I'd prefer something like:
->
->    int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
->    {
->      struct msi_domain_info *info;
->
->      if (!domain)
->        return 0;
->
->      info = msi_get_domain_info(domain);
->      if (info->flags & MSI_FLAG_IRQ_REMAPPING)
->        return 1;
->
->      return 0;
->    }
->
->    void pci_set_bus_msi_domain(struct pci_bus *bus)
->    {
->      ...
->      if (b == bus && pci_bus_msi_isolated(bus, d))
->        bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+On 05/11/2016 07:08 AM, Tomasz Nowicki wrote:
 
-Yes. This looks more reasonable. Thank you!
+> On 11.05.2016 12:41, Gabriele Paoloni wrote:
 
-Regards,
-Yongji
+>>> v6 -> v7
+>>> - drop quirks handling
+>>
+>> Maybe I missed something in the v6 discussion thread; when was it
+>> decided to drop quirk handling?
+> 
+> I had such requests in previous series.
 
+A quick note on quirk handling. This, I believe, applies post-merge of
+the base infrastructure, which I realize will likely not have quirks.
+
+We've some "gen1" ARMv8 server platforms where we end up doing quirks
+(for things like forcing 32-bit config space accessors and the like) due
+to people repurposing existing embedded PCIe IP blocks or using them for
+the first time (especially in servers), and those being involved in the
+design not necessarily seeing this problem ahead of time, or not
+realizing that it would be an issue for servers. In the early days of
+ARM server designs 3-4 years ago, many of us had never really played
+with ECAM or realized how modern topologies are built.
+
+Anyway. We missed this one in our SBSA requirements. They say (words to
+the effect of) "thou shalt do PCIe the way it is done on servers" but
+they aren't prescriptive, and they don't tell people how that actually
+is in reality. That is being fixed. A lot of things are happening behind
+the scenes - especially with third party IP block providers (all of whom
+myself and others are speaking with directly about this) - to ensure
+that the next wave of designs won't repeat these mistakes. We don't have
+a time machine, but we can contain this from becoming an ongoing mess
+for upstream, and we will do so. It won't be a zoo.
+
+Various proposals have arisen for how to handle quirks in the longer
+term, including elaborate frameworks and tables to describe them
+generically. I would like to caution against such approaches, especially
+in the case that they deviate from practice on x86, or prior to being
+standardized fully with other Operating System vendors. I don't expect
+there to be too many more than the existing initial set of quirks we
+have seen posted. A number of "future" server SoCs have already been
+fixed prior to silicon, and new design starts are being warned not to
+make this a problem for us to have to clean up later.
+
+So, I would like to suggest that the eventual framework mirror the
+existing approach on x86 systems (matching DMI, etc.) and not be made
+into some kind of generic, utopia. This is a case where we want there to
+be pain involved (and upstream patches required) when people screw up,
+so that they have a level of pain in response to ever making this
+mistake in the future. If we try to create too grand a generic scheme
+and make it too easy to handle this kind of situation beyond the small
+number of existing offenders, we undermine efforts to force vendors to
+ensure that their IP blocks are compliant going forward.
+
+Side note: if you're a third party IP vendor and we didn't already speak
+about this one, drop me a line, and let's collaborate also on your test
+frameworks to make sure you're covered as well.
+
+Jon.
+
+-- 
+Computer Architect | Sent from my Fedora powered laptop
