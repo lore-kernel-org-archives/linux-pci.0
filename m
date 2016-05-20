@@ -1,125 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:16343 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754653AbcE3Nhz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:37:55 -0400
-Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY3W2026702
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:54 -0400
-Message-Id: <201605301337.u4UDY3W2026702@mx0a-001b2d01.pphosted.com>
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 238jhvp7mm-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:54 -0400
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:40864 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754962AbcETGn7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:59 -0400
 Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 30 May 2016 23:37:50 +1000
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-Subject: [PATCH v2 2/6] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
-Date: Mon, 30 May 2016 21:32:09 +0800
-In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:43:57 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5A2492BB005E
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:50 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6hYvx52297788
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:42 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6h4cO010518
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:04 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 10/18] powerpc/powernv: Make pnv_ioda_deconfigure_pe() visible
+Date: Fri, 20 May 2016 16:41:34 +1000
+Message-Id: <1463726502-14679-11-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM HW the capability of IRQ remapping is abstracted on
-MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
-this [1].
+pnv_ioda_deconfigure_pe() is visible only when CONFIG_PCI_IOV is
+enabled. The function will be used to tear down PE's associated
+mapping in PCI hotplug path that doesn't depend on CONFIG_PCI_IOV.
 
-To have a universal flag to test this capability for different
-archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
-when MSI_FLAG_IRQ_REMAPPING is set.
+This makes pnv_ioda_deconfigure_pe() visible and not depend on
+CONFIG_PCI_IOV.
 
-[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/msi.c   |   15 +++++++++++++++
- drivers/pci/probe.c |    3 +++
- include/linux/msi.h |    5 ++++-
- 3 files changed, 22 insertions(+), 1 deletion(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a080f44..dbdb5c3 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1134,6 +1134,21 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index e97a5fa..ba7b3a0 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -712,7 +712,6 @@ static int pnv_ioda_set_peltv(struct pnv_phb *phb,
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
  
-+int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
-+{
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	struct msi_domain_info *info;
-+
-+	if (!domain)
-+		return 0;
-+
-+	info = msi_get_domain_info(domain);
-+	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
-+		return 1;
+-#ifdef CONFIG_PCI_IOV
+ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+ {
+ 	struct pci_dev *parent;
+@@ -747,9 +746,11 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+ 		}
+ 		rid_end = pe->rid + (count << 8);
+ 	} else {
++#ifdef CONFIG_PCI_IOV
+ 		if (pe->flags & PNV_IODA_PE_VF)
+ 			parent = pe->parent_dev;
+ 		else
 +#endif
-+	return 0;
-+}
-+
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- /**
-  * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8004f67..2b9e3ba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -713,6 +713,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
- 	if (!d)
- 		d = pci_host_bridge_msi_domain(b);
+ 			parent = pe->pdev->bus->self;
+ 		bcomp = OpalPciBusAll;
+ 		dcomp = OPAL_COMPARE_RID_DEVICE_NUMBER;
+@@ -787,11 +788,12 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
  
-+	if (b == bus && pci_bus_msi_isolated(bus, d))
-+		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+
- 	dev_set_msi_domain(&bus->dev, d);
+ 	pe->pbus = NULL;
+ 	pe->pdev = NULL;
++#ifdef CONFIG_PCI_IOV
+ 	pe->parent_dev = NULL;
++#endif
+ 
+ 	return 0;
  }
+-#endif /* CONFIG_PCI_IOV */
  
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 08441b1..04cc749 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
- struct irq_data;
- struct msi_desc;
- struct pci_dev;
-+struct pci_bus;
-+struct irq_domain;
- struct platform_msi_priv_data;
- void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-@@ -164,6 +166,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
- 
-+int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain);
-+
- struct msi_controller {
- 	struct module *owner;
- 	struct device *dev;
-@@ -182,7 +186,6 @@ struct msi_controller {
- #include <linux/irqhandler.h>
- #include <asm/msi.h>
- 
--struct irq_domain;
- struct irq_domain_ops;
- struct irq_chip;
- struct device_node;
+ static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+ {
 -- 
-1.7.9.5
+2.1.0
 
