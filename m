@@ -1,37 +1,68 @@
-Return-Path: <jacek.lawrynowicz@intel.com>
-Return-Path: <jacek.lawrynowicz@intel.com>
-From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-To: helgaas@kernel.org
-Cc: lukas@wunner.de,
-	jroedel@suse.de,
-	alex.williamson@redhat.com,
-	linux-pci@vger.kernel.org,
-	Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-Subject: [PATCH] PCI: Fix merge conflict in amd_iommu.c
-Date: Tue, 17 May 2016 11:55:35 +0200
-Message-Id: <1463478935-7253-1-git-send-email-jacek.lawrynowicz@intel.com>
-In-Reply-To: <20160516201000.GB20759@localhost>
-References: <20160516201000.GB20759@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56607 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754920AbcETGnP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:15 -0400
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:43:12 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 090242BB0062
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:08 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gxDt19792046
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gYnm025791
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:35 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 12/18] powerpc/pci: Update bridge windows on PCI plug
+Date: Fri, 20 May 2016 16:41:36 +1000
+Message-Id: <1463726502-14679-13-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
----
- drivers/iommu/amd_iommu.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On the PCI plugging event, PCI slot's subordinate devices are
+scanned and their (IO and MMIO) resources are assigned. Platform
+dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
+created on updating windows of the slot's upstream bridge.
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 5efadad..3839fd2 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -263,8 +263,7 @@ static u16 get_alias(struct device *dev)
- 	 */
- 	if (pci_alias == devid &&
- 	    PCI_BUS_NUM(ivrs_alias) == pdev->bus->number) {
--		pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
--		pdev->dma_alias_devfn = ivrs_alias & 0xff;
-+		pci_add_dma_alias(pdev, ivrs_alias & 0xff);
- 		pr_info("AMD-Vi: Added PCI DMA alias %02x.%d for %s\n",
- 			PCI_SLOT(ivrs_alias), PCI_FUNC(ivrs_alias),
- 			dev_name(dev));
+This updates the windows of the hot plugged slot's upstream bridge
+in pcibios_finish_adding_to_bus() so that the platform resources
+(PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 40df3a5..be9e515 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
+ 
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
 -- 
-1.8.3.1
+2.1.0
+
