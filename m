@@ -1,41 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60652 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756430AbcECViA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 May 2016 17:38:00 -0400
-Date: Tue, 3 May 2016 16:37:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH 6/8] pci: provide sensible irq vector alloc/free routines
-Message-ID: <20160503213756.GA17170@localhost>
-References: <1460770552-31260-1-git-send-email-hch@lst.de>
- <1460770552-31260-7-git-send-email-hch@lst.de>
- <20160429211638.GB28261@localhost>
- <20160501180149.GA11131@lst.de>
- <20160502131124.GA18527@localhost>
- <20160502144203.GA32221@lst.de>
- <20160502152929.GA24851@localhost>
- <20160503211945.GA25167@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160503211945.GA25167@lst.de>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:43009 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754962AbcETGoL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:44:11 -0400
+Received: from localhost
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:44:09 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 47D372BB0054
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:44:07 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6hxTB9896238
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:44:07 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6hTJr000941
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:30 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 14/18] powerpc/powernv: Support PCI slot ID
+Date: Fri, 20 May 2016 16:41:38 +1000
+Message-Id: <1463726502-14679-15-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 03, 2016 at 11:19:46PM +0200, Christoph Hellwig wrote:
-> Hi Bjorn,
-> 
-> I've implemented your suggestion and I'm getting ready to send out
-> a new version.  One thing that came to mind is:  do you prefer this
-> code in irq.c or would you rather have it in msi.c?  While it
-> also has a legacy irq fallback most of it tied pretty closely to
-> the msi.c code, so I wonder if we should group them together.
+The reset and poll functionality from (OPAL) firmware supports
+PHB and PCI slot at same time. They are identified by ID. This
+supports PCI slot ID by:
 
-Good question.  There isn't much in irq.c, and the interesting bits
-are the MSI-related things, so maybe msi.c would make more sense.
+   * Rename the argument name for opal_pci_reset() and opal_pci_poll()
+     accordingly
+   * Rename pnv_eeh_phb_poll() to pnv_eeh_poll() and adjust its argument
+     name.
+   * One macro is added to produce PCI slot ID.
 
-Bjorn
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/opal.h              | 4 ++--
+ arch/powerpc/include/asm/pnv-pci.h           | 4 ++++
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 8 ++++----
+ 3 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+index 9d86c66..348132c 100644
+--- a/arch/powerpc/include/asm/opal.h
++++ b/arch/powerpc/include/asm/opal.h
+@@ -131,7 +131,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
+ int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
+ 					uint16_t dma_window_number, uint64_t pci_start_addr,
+ 					uint64_t pci_mem_size);
+-int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
++int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
+ 
+ int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
+ 				   uint64_t diag_buffer_len);
+@@ -148,7 +148,7 @@ int64_t opal_get_dpo_status(__be64 *dpo_timeout);
+ int64_t opal_set_system_attention_led(uint8_t led_action);
+ int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
+ 			    __be16 *pci_error_type, __be16 *severity);
+-int64_t opal_pci_poll(uint64_t phb_id);
++int64_t opal_pci_poll(uint64_t id);
+ int64_t opal_return_cpu(void);
+ int64_t opal_check_token(uint64_t token);
+ int64_t opal_reinit_cpus(uint64_t flags);
+diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
+index 6f77f71..c607902 100644
+--- a/arch/powerpc/include/asm/pnv-pci.h
++++ b/arch/powerpc/include/asm/pnv-pci.h
+@@ -13,6 +13,10 @@
+ #include <linux/pci.h>
+ #include <misc/cxl-base.h>
+ 
++#define PCI_SLOT_ID_PREFIX	0x8000000000000000
++#define PCI_SLOT_ID(phb_id, bdfn)	\
++	(PCI_SLOT_ID_PREFIX | ((uint64_t)(bdfn) << 16) | (phb_id))
++
+ int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
+ int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
+ 			   unsigned int virq);
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 9226df1..26bb60b 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -717,12 +717,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
+ 	return ret;
+ }
+ 
+-static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
++static s64 pnv_eeh_poll(unsigned long id)
+ {
+ 	s64 rc = OPAL_HARDWARE;
+ 
+ 	while (1) {
+-		rc = opal_pci_poll(phb->opal_id);
++		rc = opal_pci_poll(id);
+ 		if (rc <= 0)
+ 			break;
+ 
+@@ -762,7 +762,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+ 	 * reset followed by hot reset on root bus. So we also
+ 	 * need the PCI bus settlement delay.
+ 	 */
+-	rc = pnv_eeh_phb_poll(phb);
++	rc = pnv_eeh_poll(phb->opal_id);
+ 	if (option == EEH_RESET_DEACTIVATE) {
+ 		if (system_state < SYSTEM_RUNNING)
+ 			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
+@@ -805,7 +805,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+ 		goto out;
+ 
+ 	/* Poll state of the PHB until the request is done */
+-	rc = pnv_eeh_phb_poll(phb);
++	rc = pnv_eeh_poll(phb->opal_id);
+ 	if (option == EEH_RESET_DEACTIVATE)
+ 		msleep(EEH_PE_RST_SETTLE_TIME);
+ out:
+-- 
+2.1.0
+
