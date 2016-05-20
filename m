@@ -1,97 +1,170 @@
-Return-Path: <m-karicheri2@ti.com>
-Return-Path: <m-karicheri2@ti.com>
-Subject: Re: PCIe issue with NIC card that has 64bit BARs
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <5730E5DA.4020906@ti.com> <20160509203436.GC18166@localhost>
- <5730FADF.7000009@ti.com> <20160509152351.17389748@t450s.home>
- <57310353.5020802@ti.com> <20160509171246.3c33478b@t450s.home>
- <5733A849.7020508@ti.com> <20160511225515.GE28812@localhost>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <57348C97.5000002@ti.com>
-Date: Thu, 12 May 2016 10:00:55 -0400
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jon Masters <jcm@redhat.com>
+CC: Tomasz Nowicki <tn@semihalf.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org"
+	<hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com"
+	<Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dhdang@apm.com"
+	<dhdang@apm.com>,
+        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        Wangyijing
+	<wangyijing@huawei.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
+ controller
+Date: Fri, 20 May 2016 08:11:27 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EDAF540@lhreml503-mbs>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+	<EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+	<57331290.7070104@semihalf.com>
+	<3d4aae09-51c4-f007-5100-191a4a85e27a@redhat.com>
+ <CAKv+Gu8fdeJ9OvRSmtu9zyvcjK3O-4WU=jG=6-7t4xZwvV8d2g@mail.gmail.com>
+In-Reply-To: <CAKv+Gu8fdeJ9OvRSmtu9zyvcjK3O-4WU=jG=6-7t4xZwvV8d2g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20160511225515.GE28812@localhost>
-Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
-
-On 05/11/2016 06:55 PM, Bjorn Helgaas wrote:
-> On Wed, May 11, 2016 at 05:46:49PM -0400, Murali Karicheri wrote:
->> Bjorn, Alex,
-
->> 500200D0:00000000 00000000 00000000 00000000
->> 500200E0:00000000 00000000 00000000 00000000
->> 500200F0:00000000 00000000 00000000 00000000
->>
->> Corresponding PCI boot log
->>
->> [    2.310465] PCI host bridge /soc/pcie@21800000 ranges:
->> [    2.316146]   No bus range found for /soc/pcie@21800000, using [bus 00-ff]
->> [    2.323302]    IO 0x23250000..0x23253fff -> 0x00000000
->> [    2.328455]   MEM 0x50000000..0x5fffffff -> 0x50000000
->> [    2.335406] keystone-pcie 21801000.pcie: PCI host bridge to bus 0000:00
->> [    2.342206] pci_bus 0000:00: root bus resource [bus 00-ff]
->> [    2.347691] pci_bus 0000:00: root bus resource [io  0x0000-0x3fff]
->> [    2.353937] pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
->> [    2.361483] PCI: bus0: Fast back to back transfers disabled
->> [    2.368357] pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
->> [    2.378560] PCI: bus1: Fast back to back transfers disabled
->> [    2.384366] pci 0000:00:00.0: BAR 8: assigned [mem 0x50000000-0x500fffff]
->> [    2.391314] pci 0000:00:00.0: BAR 9: assigned [mem 0x50100000-0x501fffff pref]
->> [    2.398534] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
->> [    2.404699] pci 0000:01:00.0: BAR 0: assigned [mem 0x50000000-0x5001ffff]
->> [    2.411555] pci 0000:01:00.0: BAR 1: assigned [mem 0x50020000-0x5003ffff]
->> [    2.418348] pci 0000:01:00.0: BAR 6: assigned [mem 0x50100000-0x5011ffff pref]
->> [    2.425591] pci 0000:01:00.0: BAR 2: assigned [io  0x1000-0x101f]
->> [    2.431712] pci 0000:00:00.0: PCI bridge to [bus 01]
->> [    2.436675] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
->> [    2.442788] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x500fffff]
->> [    2.449572] pci 0000:00:00.0:   bridge window [mem 0x50100000-0x501fffff pref]
->> [    2.457313] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
->> [    2.464412] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
->>
->>
->> Any idea where to start to debug this issue? Suggestion?
-> 
-> If I understand correctly, K2G is the platform where these NICs don't
-> work. 
-
-Yes.
-
-> Do *any* PCI devices work correctly on that platform? 
-
-No. I am trying to test a SATA controller and see if that works.
-Marvel SATA controller works fine using Keystone PCIe controller, but this
-is on K2E EVM and this shares the same PCIe controller hardware (designware).
-
-> Maybe
-> there's some host controller configuration problem related to the MMIO
-> aperture?
-> 
-> If you have an analyzer, I guess you could look for your Read Requests
-> and Completions, but I doubt you'd learn anything.  I assume the NICs
-> are sending data over the link correctly, and something is happening
-> to the data between the device and the CPU.
-> 
-> I would suspect something in the host controller.  Most controllers
-> would give you 0xffffffff back instead of zeros if there's a problem,
-> but maybe yours is special.
-I will work with our hardware folks to see if they can suggest something
-to debug.
-
-Thanks for you response.
-
-Murali
-> 
-> Bjorn
-> 
-
-
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+SGkgQXJkLCBKb24NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBcmQg
+Qmllc2hldXZlbCBbbWFpbHRvOmFyZC5iaWVzaGV1dmVsQGxpbmFyby5vcmddDQo+IFNlbnQ6IDIw
+IE1heSAyMDE2IDA4OjM4DQo+IFRvOiBKb24gTWFzdGVycw0KPiBDYzogVG9tYXN6IE5vd2lja2k7
+IEdhYnJpZWxlIFBhb2xvbmk7IGhlbGdhYXNAa2VybmVsLm9yZzsgYXJuZEBhcm5kYi5kZTsNCj4g
+d2lsbC5kZWFjb25AYXJtLmNvbTsgY2F0YWxpbi5tYXJpbmFzQGFybS5jb207IHJhZmFlbEBrZXJu
+ZWwub3JnOw0KPiBoYW5qdW4uZ3VvQGxpbmFyby5vcmc7IExvcmVuem8uUGllcmFsaXNpQGFybS5j
+b207IG9rYXlhQGNvZGVhdXJvcmEub3JnOw0KPiBqY2hhbmRyYUBicm9hZGNvbS5jb207IGxpbmFy
+by1hY3BpQGxpc3RzLmxpbmFyby5vcmc7IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBk
+aGRhbmdAYXBtLmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbTsNCj4gZGRhbmV5QGNhdml1bW5ldHdv
+cmtzLmNvbTsgamVyZW15LmxpbnRvbkBhcm0uY29tOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2Vy
+bmVsLm9yZzsgbGludXgtYWNwaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IHJvYmVydC5yaWNodGVyQGNh
+dml1bW5ldHdvcmtzLmNvbTsgU3VyYXZlZS5TdXRoaWt1bHBhbml0QGFtZC5jb207DQo+IG1zYWx0
+ZXJAcmVkaGF0LmNvbTsgV2FuZ3lpamluZzsgbXdAc2VtaWhhbGYuY29tOw0KPiBhbmRyZWEuZ2Fs
+bG9AbGluYXJvLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnDQo+IFN1
+YmplY3Q6IFJlOiBbUEFUQ0ggVjcgMDAvMTFdIFN1cHBvcnQgZm9yIGdlbmVyaWMgQUNQSSBiYXNl
+ZCBQQ0kgaG9zdA0KPiBjb250cm9sbGVyDQo+IA0KPiBPbiAyMCBNYXkgMjAxNiBhdCAwNjo0MSwg
+Sm9uIE1hc3RlcnMgPGpjbUByZWRoYXQuY29tPiB3cm90ZToNCj4gPiBIaSBUb21hc3osIGFsbCwN
+Cj4gPg0KPiA+IE9uIDA1LzExLzIwMTYgMDc6MDggQU0sIFRvbWFzeiBOb3dpY2tpIHdyb3RlOg0K
+PiA+DQo+ID4+IE9uIDExLjA1LjIwMTYgMTI6NDEsIEdhYnJpZWxlIFBhb2xvbmkgd3JvdGU6DQo+
+ID4NCj4gPj4+PiB2NiAtPiB2Nw0KPiA+Pj4+IC0gZHJvcCBxdWlya3MgaGFuZGxpbmcNCj4gPj4+
+DQo+ID4+PiBNYXliZSBJIG1pc3NlZCBzb21ldGhpbmcgaW4gdGhlIHY2IGRpc2N1c3Npb24gdGhy
+ZWFkOyB3aGVuIHdhcyBpdA0KPiA+Pj4gZGVjaWRlZCB0byBkcm9wIHF1aXJrIGhhbmRsaW5nPw0K
+PiA+Pg0KPiA+PiBJIGhhZCBzdWNoIHJlcXVlc3RzIGluIHByZXZpb3VzIHNlcmllcy4NCj4gPg0K
+PiA+IEEgcXVpY2sgbm90ZSBvbiBxdWlyayBoYW5kbGluZy4gVGhpcywgSSBiZWxpZXZlLCBhcHBs
+aWVzIHBvc3QtbWVyZ2UNCj4gb2YNCj4gPiB0aGUgYmFzZSBpbmZyYXN0cnVjdHVyZSwgd2hpY2gg
+SSByZWFsaXplIHdpbGwgbGlrZWx5IG5vdCBoYXZlIHF1aXJrcy4NCj4gPg0KPiA+IFdlJ3ZlIHNv
+bWUgImdlbjEiIEFSTXY4IHNlcnZlciBwbGF0Zm9ybXMgd2hlcmUgd2UgZW5kIHVwIGRvaW5nIHF1
+aXJrcw0KPiA+IChmb3IgdGhpbmdzIGxpa2UgZm9yY2luZyAzMi1iaXQgY29uZmlnIHNwYWNlIGFj
+Y2Vzc29ycyBhbmQgdGhlIGxpa2UpDQo+IGR1ZQ0KPiA+IHRvIHBlb3BsZSByZXB1cnBvc2luZyBl
+eGlzdGluZyBlbWJlZGRlZCBQQ0llIElQIGJsb2NrcyBvciB1c2luZyB0aGVtDQo+IGZvcg0KPiA+
+IHRoZSBmaXJzdCB0aW1lIChlc3BlY2lhbGx5IGluIHNlcnZlcnMpLCBhbmQgdGhvc2UgYmVpbmcg
+aW52b2x2ZWQgaW4NCj4gdGhlDQo+ID4gZGVzaWduIG5vdCBuZWNlc3NhcmlseSBzZWVpbmcgdGhp
+cyBwcm9ibGVtIGFoZWFkIG9mIHRpbWUsIG9yIG5vdA0KPiA+IHJlYWxpemluZyB0aGF0IGl0IHdv
+dWxkIGJlIGFuIGlzc3VlIGZvciBzZXJ2ZXJzLiBJbiB0aGUgZWFybHkgZGF5cyBvZg0KPiA+IEFS
+TSBzZXJ2ZXIgZGVzaWducyAzLTQgeWVhcnMgYWdvLCBtYW55IG9mIHVzIGhhZCBuZXZlciByZWFs
+bHkgcGxheWVkDQo+ID4gd2l0aCBFQ0FNIG9yIHJlYWxpemVkIGhvdyBtb2Rlcm4gdG9wb2xvZ2ll
+cyBhcmUgYnVpbHQuDQo+ID4NCj4gPiBBbnl3YXkuIFdlIG1pc3NlZCB0aGlzIG9uZSBpbiBvdXIg
+U0JTQSByZXF1aXJlbWVudHMuIFRoZXkgc2F5ICh3b3Jkcw0KPiB0bw0KPiA+IHRoZSBlZmZlY3Qg
+b2YpICJ0aG91IHNoYWx0IGRvIFBDSWUgdGhlIHdheSBpdCBpcyBkb25lIG9uIHNlcnZlcnMiIGJ1
+dA0KPiA+IHRoZXkgYXJlbid0IHByZXNjcmlwdGl2ZSwgYW5kIHRoZXkgZG9uJ3QgdGVsbCBwZW9w
+bGUgaG93IHRoYXQNCj4gYWN0dWFsbHkNCj4gPiBpcyBpbiByZWFsaXR5LiBUaGF0IGlzIGJlaW5n
+IGZpeGVkLiBBIGxvdCBvZiB0aGluZ3MgYXJlIGhhcHBlbmluZw0KPiBiZWhpbmQNCj4gPiB0aGUg
+c2NlbmVzIC0gZXNwZWNpYWxseSB3aXRoIHRoaXJkIHBhcnR5IElQIGJsb2NrIHByb3ZpZGVycyAo
+YWxsIG9mDQo+IHdob20NCj4gPiBteXNlbGYgYW5kIG90aGVycyBhcmUgc3BlYWtpbmcgd2l0aCBk
+aXJlY3RseSBhYm91dCB0aGlzKSAtIHRvIGVuc3VyZQ0KPiA+IHRoYXQgdGhlIG5leHQgd2F2ZSBv
+ZiBkZXNpZ25zIHdvbid0IHJlcGVhdCB0aGVzZSBtaXN0YWtlcy4gV2UgZG9uJ3QNCj4gaGF2ZQ0K
+PiA+IGEgdGltZSBtYWNoaW5lLCBidXQgd2UgY2FuIGNvbnRhaW4gdGhpcyBmcm9tIGJlY29taW5n
+IGFuIG9uZ29pbmcgbWVzcw0KPiA+IGZvciB1cHN0cmVhbSwgYW5kIHdlIHdpbGwgZG8gc28uIEl0
+IHdvbid0IGJlIGEgem9vLg0KPiA+DQo+ID4gVmFyaW91cyBwcm9wb3NhbHMgaGF2ZSBhcmlzZW4g
+Zm9yIGhvdyB0byBoYW5kbGUgcXVpcmtzIGluIHRoZSBsb25nZXINCj4gPiB0ZXJtLCBpbmNsdWRp
+bmcgZWxhYm9yYXRlIGZyYW1ld29ya3MgYW5kIHRhYmxlcyB0byBkZXNjcmliZSB0aGVtDQo+ID4g
+Z2VuZXJpY2FsbHkuIEkgd291bGQgbGlrZSB0byBjYXV0aW9uIGFnYWluc3Qgc3VjaCBhcHByb2Fj
+aGVzLA0KPiBlc3BlY2lhbGx5DQo+ID4gaW4gdGhlIGNhc2UgdGhhdCB0aGV5IGRldmlhdGUgZnJv
+bSBwcmFjdGljZSBvbiB4ODYsIG9yIHByaW9yIHRvIGJlaW5nDQo+ID4gc3RhbmRhcmRpemVkIGZ1
+bGx5IHdpdGggb3RoZXIgT3BlcmF0aW5nIFN5c3RlbSB2ZW5kb3JzLiBJIGRvbid0DQo+IGV4cGVj
+dA0KPiA+IHRoZXJlIHRvIGJlIHRvbyBtYW55IG1vcmUgdGhhbiB0aGUgZXhpc3RpbmcgaW5pdGlh
+bCBzZXQgb2YgcXVpcmtzIHdlDQo+ID4gaGF2ZSBzZWVuIHBvc3RlZC4gQSBudW1iZXIgb2YgImZ1
+dHVyZSIgc2VydmVyIFNvQ3MgaGF2ZSBhbHJlYWR5IGJlZW4NCj4gPiBmaXhlZCBwcmlvciB0byBz
+aWxpY29uLCBhbmQgbmV3IGRlc2lnbiBzdGFydHMgYXJlIGJlaW5nIHdhcm5lZCBub3QgdG8NCj4g
+PiBtYWtlIHRoaXMgYSBwcm9ibGVtIGZvciB1cyB0byBoYXZlIHRvIGNsZWFuIHVwIGxhdGVyLg0K
+PiA+DQo+ID4gU28sIEkgd291bGQgbGlrZSB0byBzdWdnZXN0IHRoYXQgdGhlIGV2ZW50dWFsIGZy
+YW1ld29yayBtaXJyb3IgdGhlDQo+ID4gZXhpc3RpbmcgYXBwcm9hY2ggb24geDg2IHN5c3RlbXMg
+KG1hdGNoaW5nIERNSSwgZXRjLikgYW5kIG5vdCBiZSBtYWRlDQo+ID4gaW50byBzb21lIGtpbmQg
+b2YgZ2VuZXJpYywgdXRvcGlhLiBUaGlzIGlzIGEgY2FzZSB3aGVyZSB3ZSB3YW50IHRoZXJlDQo+
+IHRvDQo+ID4gYmUgcGFpbiBpbnZvbHZlZCAoYW5kIHVwc3RyZWFtIHBhdGNoZXMgcmVxdWlyZWQp
+IHdoZW4gcGVvcGxlIHNjcmV3IHVwLA0KPiA+IHNvIHRoYXQgdGhleSBoYXZlIGEgbGV2ZWwgb2Yg
+cGFpbiBpbiByZXNwb25zZSB0byBldmVyIG1ha2luZyB0aGlzDQo+ID4gbWlzdGFrZSBpbiB0aGUg
+ZnV0dXJlLiBJZiB3ZSB0cnkgdG8gY3JlYXRlIHRvbyBncmFuZCBhIGdlbmVyaWMgc2NoZW1lDQo+
+ID4gYW5kIG1ha2UgaXQgdG9vIGVhc3kgdG8gaGFuZGxlIHRoaXMga2luZCBvZiBzaXR1YXRpb24g
+YmV5b25kIHRoZQ0KPiBzbWFsbA0KPiA+IG51bWJlciBvZiBleGlzdGluZyBvZmZlbmRlcnMsIHdl
+IHVuZGVybWluZSBlZmZvcnRzIHRvIGZvcmNlIHZlbmRvcnMNCj4gdG8NCj4gPiBlbnN1cmUgdGhh
+dCB0aGVpciBJUCBibG9ja3MgYXJlIGNvbXBsaWFudCBnb2luZyBmb3J3YXJkLg0KPiA+DQo+IA0K
+PiBJIHVuZGVyc3RhbmQgdGhhdCB0aGVyZSBpcyBhIGRlc2lyZSBmcm9tIHRoZSBSZWRIYXQgc2lk
+ZSB0byBtaW1pYyB4ODYNCj4gYXMgY2xvc2VseSBhcyBwb3NzaWJsZSwgYnV0IEkgbmV2ZXIgc2F3
+IGFueSB0ZWNobmljYWwganVzdGlmaWNhdGlvbg0KPiBmb3IgdGhhdC4gRE1JIGNvbnRhaW5zIHN0
+cmluZ3MgdGhhdCBhcmUgdmlzaWJsZSB0byB1c2VybGFuZCwgYW5kIHlvdQ0KPiBlZmZlY3RpdmVs
+eSBsb2NrIHRob3NlIGRvd24gdG8gY2VydGFpbiB2YWx1ZXMganVzdCBzbyB0aGF0IHRoZSBrZXJu
+ZWwNCj4gY2FuIGRpc3Rpbmd1aXNoIGEgYnJva2VuIFBDSWUgcm9vdCBjb21wbGV4IGZyb20gYSB3
+b3JraW5nIG9uZS4gTGludXgNCj4gb24geDg2IGhhZCBubyBjaG9pY2UsIHNpbmNlIHRoZSBvdmVy
+d2hlbG1pbmcgbWFqb3JpdHkgb2YgZXhpc3RpbmcNCj4gaGFyZHdhcmUgbWlzcmVwcmVzZW50ZWQg
+aXRzZWxmIGFzIGdlbmVyaWMsIGFuZCBETUkgd2FzIHRoZSBvbmx5IHRoaW5nDQo+IGF2YWlsYWJs
+ZSB0byBhY3R1YWxseSBkaXN0aW5ndWlzaCB0aGVzZSBicm9rZW4gaW1wbGVtZW50YXRpb25zIGZy
+b20NCj4gb25lIGFub3RoZXIuIFRoaXMgZG9lcyBub3QgbWVhbiB3ZSBzaG91bGQgYWxsb3cgYW5k
+L29yIGVuY291cmFnZSB0aGlzDQo+IGZpcnN0IGdlbiBoYXJkd2FyZSB0byBtaXNyZXByZXNlbnQg
+bm9uLWNvbXBsaWFudCBoYXJkd2FyZSBhcyBjb21wbGlhbnQNCj4gYXMgd2VsbC4NCj4gDQo+IFNp
+bmNlIHlvdSBhcmUgdGFsa2luZyB0byBhbGwgdGhlIHBlb3BsZSBpbnZvbHZlZCwgaG93IGFib3V0
+IHlvdQ0KPiBjb252aW5jZSB0aGVtIHRvIHB1dCBzb21ldGhpbmcgaW4gdGhlIEFDUEkgdGFibGVz
+IHRoYXQgYWxsb3dzIHRoZQ0KPiBrZXJuZWwgdG8gZGlzdGluZ3Vpc2ggdGhvc2Ugbm9uLXN0YW5k
+YXJkIFBDSWUgaW1wbGVtZW50YXRpb25zIGZyb20NCj4gaGFyZHdhcmUgdGhhdCBpcyByZWFsbHkg
+Z2VuZXJpYz8gVGhpcyB3YXksIHdlIGNhbiBzaWRlc3RlcCB0aGUgcXVpcmtzDQo+IGRlYmF0ZSBl
+bnRpcmVseSwgc2luY2UgaXQgd2lsbCBzaW1wbHkgYmUgYSBkaWZmZXJlbnQgZGV2aWNlIGFzIGZh
+ciBhcw0KPiB0aGUga2VybmVsIGlzIGNvbmNlcm5lZC4gVGhpcyBpcyBubyB3b3JzZSB0aGFuIGEg
+cXVpcmsgZnJvbSBhDQo+IHByYWN0aWNhbCBwb2ludCBvZiB2aWV3LCBzaW5jZSBhbiBvbGRlciBP
+UyB3aWxsIGJlIGVxdWFsbHkgdW5hYmxlIHRvDQo+IHJ1biBvbiBuZXdlciBoYXJkd2FyZSwgYnV0
+IGl0IGlzIGFyZ3VhYmx5IG1vcmUgdHJ1ZSB0byB0aGUgc3RhbmRhcmRzDQo+IGNvbXBsaWFuY2Ug
+eW91IHRlbmQgdG8gcHJlYWNoIGFib3V0LCBlc3BlY2lhbGx5IHNpbmNlIHRoaXMgc21hbGwgcG9v
+bA0KPiBvZiB0aGlyZCBwYXJ0eSBJUCBjb3VsZCBwb3RlbnRpYWxseSBiZSBpZGVudGlmaWVkIGRp
+cmVjdGx5IHJhdGhlciB0aGFuDQo+IGJhc2VkIG9uIHNvbWUgZGl2aW5hdGlvbiBvZiB0aGUgU29D
+IHdlIG1heSBvciBtYXkgbm90IGJlIHJ1bm5pbmcgb24uIEkNCj4gYW0gYWxzbyBjb252aW5jZWQg
+dGhhdCBhZGRpbmcgc3VwcG9ydCBmb3IgYW4gYWRkaXRpb25hbCBISUQoKSB0byB0aGUNCj4gQUNQ
+SSBFQ0FNIGRyaXZlciB3aXRoIHNvbWUgc3BlY2lhbCBjb25maWcgc3BhY2UgaGFuZGxpbmcgd2ly
+ZWQgaW4gaXMNCj4gYW4gZWFzaWVyIHNlbGwgdXBzdHJlYW0gdGhhbiBtYWtpbmcgdGhlIHNhbWUg
+dWdseSBtZXNzIHg4NiBoYXMgaGFkIHRvDQo+IG1ha2UgYmVjYXVzZSB0aGV5IGRpZCBub3QgaGF2
+ZSBhbnkgY2hvaWNlIHRvIGJlZ2luIHdpdGguDQoNCkluIG91ciBjYXNlIChIaVNpbGljb24gSGlw
+MDUvSGlwMDYpIHdlIGFyZSB1c2luZyB0aGUgRGVzaWdud2FyZSBJUA0KdGhhdCB1bmZvcnR1bmF0
+ZWx5IGlzIG5vbi1FQ0FNIGZvciB0aGUgUkMgY29uZmlnIHNwYWNlLg0KDQpBIHBvc3NpYmxlIEFD
+UEkgdGFibGUgc29sdXRpb24gd2FzIGRpc2N1c3NlZCBhbHJlYWR5IGluIHRoaXMgdGhyZWFkDQoN
+Cmh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE2LzMvMTQvNzIyDQoNCndoZXJlIDw8TmFtZSAoX0NJ
+RCwgIlBOUDBDMDIiKSAgLy8gTW90aGVyYm9hcmQgcmVzZXJ2ZWQgcmVzb3VyY2U+Pg0KaXMgdXNl
+ZCB0byBzcGVjaWZ5IGFuIEhvc3QgQ29udHJvbGxlciBzcGVjaWZpYyByZXNvdXJjZS4NCkl0IGxv
+b2tzIHRvIG1lIHRoYXQgdGhpcyBjYW4gYmUgYW4gYXBwcm9hY2ggdGhhdCBjYW4gYWNjb21tb2Rh
+dGUNCmRpZmZlcmVudCB2ZW5kb3JzL3NjZW5hcmlvcyBhbmQgQmpvcm4gc2VlbWVkIHRvIGJlIHF1
+aXRlIG9rIHdpdGgNCml0Lg0KDQpJdCBjb21lcyB3aXRob3V0IHNheWluZyB0aGF0IGZvciBmdXR1
+cmUgSFcgcmVsZWFzZXMgd2UgYWxsIHNob3VsZA0KbWFrZSBhbiBlZmZvcnQgdG8gZGVsaXZlciBm
+dWxseSBFQ0FNIGNvbXBsaWFudCBjb250cm9sbGVycy4NCg0KV2hhdCdzIHlvdXIgdmlldyBhYm91
+dCB0aGlzIGFwcHJvYWNoPw0KDQpUaGFua3MNCg0KR2FiDQoNCj4gDQo+IElmIHdlIGRvIG5lZWQg
+YSBxdWlya3MgaGFuZGxpbmcgbWVjaGFuaXNtLCBJIHN0aWxsIGRvbid0IHNlZSBob3cgdGhlDQo+
+IHg4NiBzaXR1YXRpb24gZXh0cmFwb2xhdGVzIHRvIEFSTS4gQUNQSSBvZmZlcnMgcGxlbnR5IG9m
+IHdheXMgZm9yIGENCj4gU29DIHZlbmRvciB0byBpZGVudGlmeSB0aGUgbWFrZSBhbmQgcGFydGlj
+dWxhciByZXZpc2lvbiwgYW5kIHF1aXJrcw0KPiBjb3VsZCBiZSBrZXllZCBvZmYgb2YgdGhhdC4N
+Cj4gDQo+IC0tDQo+IEFyZC4NCg==
