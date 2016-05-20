@@ -1,60 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:33094 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751741AbcEMLRY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:17:24 -0400
-Message-Id: <47f9e4a9ca09e854d2d01812a4c05b7c6df02259.1463134231.git.lukas@wunner.de>
-In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 13 May 2016 13:15:31 +0200
-Subject: [PATCH v2 08/13] PCI: Allow runtime PM for Thunderbolt hotplug ports
- on Macs
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39106 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755017AbcETGnR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:17 -0400
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:43:15 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 4698D357805A
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:13 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6h5lt58982596
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:13 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gd9H032391
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:40 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 04/18] powerpc/powernv: Move pnv_pci_ioda_setup_opal_tce_kill() around
+Date: Fri, 20 May 2016 16:41:28 +1000
+Message-Id: <1463726502-14679-5-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thunderbolt controllers have a pin to signal plug events while the
-controller is powered down.  On Macs this pin is wired to the
-southbridge and causes a GPE to be fired.  The OS may then power up the
-controller to probe the newly connected device.  It is thus okay to let
-Thunderbolt hotplug ports go to D3 on Macs.
+pnv_pci_ioda_setup_opal_tce_kill() called by pnv_ioda_setup_dma()
+to remap the TCE kill regiter. What's done in pnv_ioda_setup_dma()
+will be covered in pcibios_setup_bridge() which is invoked on each
+PCI bridge. It means we will possibly remap the TCE kill register
+for multiple times and it's unnecessary.
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+This moves pnv_pci_ioda_setup_opal_tce_kill() to where the PHB is
+initialized (pnv_pci_init_ioda_phb()) to avoid above issue.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 ---
- drivers/pci/pcie/portdrv_pci.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index f75d4b5..7860ab3 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -224,9 +224,12 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	 * to enumerate devices behind this port properly (the port is
- 	 * powered down preventing all config space accesses to the
- 	 * subordinate devices).  We can't be sure for native PCIe hotplug
--	 * either so prevent that as well.
-+	 * either so prevent that as well.  However Thunderbolt controllers
-+	 * on Macs are capable of side-band signaling plug events while
-+	 * powered down, so allow them to suspend.
- 	 */
--	if (!dev->is_hotplug_bridge) {
-+	if (!dev->is_hotplug_bridge ||
-+	    (dev->is_thunderbolt && dmi_match(DMI_SYS_VENDOR, "Apple Inc."))) {
- 		/*
- 		 * Keep the port resumed 10ms to make sure things like
- 		 * config space accesses from userspace (lspci) will not
-@@ -243,7 +246,8 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 3a5ea82..3ce9867 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2702,8 +2702,6 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+ 	pr_info("PCI: Domain %04x has %d available 32-bit DMA segments\n",
+ 		hose->global_number, phb->ioda.dma32_count);
  
- static void pcie_portdrv_remove(struct pci_dev *dev)
- {
--	if (!dev->is_hotplug_bridge) {
-+	if (!dev->is_hotplug_bridge ||
-+	    (dev->is_thunderbolt && dmi_match(DMI_SYS_VENDOR, "Apple Inc."))) {
- 		pm_runtime_forbid(&dev->dev);
- 		pm_runtime_get_noresume(&dev->dev);
- 		pm_runtime_dont_use_autosuspend(&dev->dev);
+-	pnv_pci_ioda_setup_opal_tce_kill(phb);
+-
+ 	/* Walk our PE list and configure their DMA segments */
+ 	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+ 		weight = pnv_pci_ioda_pe_dma_weight(pe);
+@@ -3480,6 +3478,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	if (phb->regs == NULL)
+ 		pr_err("  Failed to map registers !\n");
+ 
++	/* Initialize TCE kill register */
++	pnv_pci_ioda_setup_opal_tce_kill(phb);
++
+ 	/* Initialize more IODA stuff */
+ 	phb->ioda.total_pe_num = 1;
+ 	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
 -- 
-2.8.1
+2.1.0
 
