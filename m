@@ -1,149 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60995 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752581AbcEXVEj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 May 2016 17:04:39 -0400
-Date: Tue, 24 May 2016 16:04:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
-Subject: Re: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller
- supports IRQ remapping
-Message-ID: <20160524210434.GB16463@localhost>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:42628 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754422AbcETGms (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:42:48 -0400
+Received: from localhost
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:42:46 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 7DC292CE8054
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:43 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gZBH63570088
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:43 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6g9FO031444
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:11 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 03/18] powerpc/powernv: Remove PCI_RESET_DELAY_US
+Date: Fri, 20 May 2016 16:41:27 +1000
+Message-Id: <1463726502-14679-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 27, 2016 at 08:43:28PM +0800, Yongji Xie wrote:
-> On ARM HW the capability of IRQ remapping is abstracted on
-> MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
-> this [1].
-> 
-> To have a universal flag to test this capability for different
-> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
-> when MSI_FLAG_IRQ_REMAPPING is set.
-> 
-> [1] http://www.spinics.net/lists/kvm/msg130256.html
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  drivers/pci/msi.c   |   12 ++++++++++++
->  drivers/pci/probe.c |    3 +++
->  include/linux/msi.h |    6 +++++-
->  3 files changed, 20 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a080f44..1661cdf 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
->  }
->  EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
->  
-> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
-> +				 struct irq_domain *domain)
-> +{
-> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-> +	struct msi_domain_info *info;
-> +
-> +	info = msi_get_domain_info(domain);
-> +	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
-> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-> +#endif
-> +}
+The macro defined in arch/powerpc/platforms/powernv/pci.c isn't
+used by anyone. Just remove it.
 
-Functions named "check_foo" are a pet peeve of mine because the name
-doesn't tell us anything about what the function *does*.  In this
-case, we know it checks something about MSI remapping, but we don't
-know whether we're checking whether it's enabled, disabled, or some
-other property.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-I'd prefer something like:
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 1d92bd9..b1ee631 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -36,9 +36,6 @@
+ #include "powernv.h"
+ #include "pci.h"
+ 
+-/* Delay in usec */
+-#define PCI_RESET_DELAY_US	3000000
+-
+ #ifdef CONFIG_PCI_MSI
+ int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ {
+-- 
+2.1.0
 
-  int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
-  {
-    struct msi_domain_info *info;
-
-    if (!domain)
-      return 0;
-
-    info = msi_get_domain_info(domain);
-    if (info->flags & MSI_FLAG_IRQ_REMAPPING)
-      return 1;
-
-    return 0;
-  }
-
-  void pci_set_bus_msi_domain(struct pci_bus *bus)
-  {
-    ...
-    if (b == bus && pci_bus_msi_isolated(bus, d))
-      bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-
->  #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
->  /**
->   * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6d7ab9b..25cf1b1 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -696,6 +696,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
->  	if (!d)
->  		d = pci_host_bridge_msi_domain(b);
->  
-> +	if (d && b == bus)
-> +		pci_bus_check_msi_remapping(bus, d);
-> +
->  	dev_set_msi_domain(&bus->dev, d);
->  }
->  
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 03eda72..b4c649e 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
->  struct irq_data;
->  struct msi_desc;
->  struct pci_dev;
-> +struct pci_bus;
-> +struct irq_domain;
->  struct platform_msi_priv_data;
->  void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->  void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-> @@ -155,6 +157,9 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
->  void default_teardown_msi_irqs(struct pci_dev *dev);
->  void default_restore_msi_irqs(struct pci_dev *dev);
->  
-> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
-> +				 struct irq_domain *domain);
-> +
->  struct msi_controller {
->  	struct module *owner;
->  	struct device *dev;
-> @@ -173,7 +178,6 @@ struct msi_controller {
->  #include <linux/irqhandler.h>
->  #include <asm/msi.h>
->  
-> -struct irq_domain;
->  struct irq_domain_ops;
->  struct irq_chip;
->  struct device_node;
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
