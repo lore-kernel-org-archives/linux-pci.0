@@ -1,127 +1,129 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Mon, 23 May 2016 11:56:55 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jon Masters <jcm@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"rafael@kernel.org" <rafael@kernel.org>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	"okaya@codeaurora.org" <okaya@codeaurora.org>,
-	"jchandra@broadcom.com" <jchandra@broadcom.com>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-	"jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	Wangyijing <wangyijing@huawei.com>,
-	"mw@semihalf.com" <mw@semihalf.com>,
-	"andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-Message-ID: <20160523105655.GA22902@red-moon>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
- <57331290.7070104@semihalf.com>
- <3d4aae09-51c4-f007-5100-191a4a85e27a@redhat.com>
- <CAKv+Gu8fdeJ9OvRSmtu9zyvcjK3O-4WU=jG=6-7t4xZwvV8d2g@mail.gmail.com>
- <95b1d06e-f9c5-39f3-1003-f536b65eef60@redhat.com>
- <CAKv+Gu-_xp_t_Ze3Pw_-82-fmy=tCy-h=4FbP98eLbuXVk2hHQ@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EDAF6AC@lhreml503-mbs>
- <CAKv+Gu_zpoFsDr7e8zPCDKPpRdKDVH+vnC0nfvmGaJ7xcP3Zng@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu_zpoFsDr7e8zPCDKPpRdKDVH+vnC0nfvmGaJ7xcP3Zng@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Heiko Stuebner <heiko@sntech.de>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 1/2] Documentation: add binding description of Rockchip PCIe controller
+Date: Fri, 20 May 2016 18:29:06 +0800
+Message-Id: <1463740146-7106-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 20, 2016 at 11:14:03AM +0200, Ard Biesheuvel wrote:
-> On 20 May 2016 at 10:40, Gabriele Paoloni <gabriele.paoloni@huawei.com> wrote:
-> > Hi Ard
-> >
-> >> -----Original Message-----
-> >> From: Ard Biesheuvel [mailto:ard.biesheuvel@linaro.org]
-> [...]
-> >>
-> >> Is the PCIe root complex so special that you cannot simply describe an
-> >> implementation that is not PNP0408 compatible as something else, under
-> >> its own unique HID? If everybody is onboard with using ACPI, how is
-> >> this any different from describing other parts of the platform
-> >> topology? Even if the SBSA mandates generic PCI, they already deviated
-> >> from that when they built the hardware, so pretending that it is a
-> >> PNP0408 with quirks really does not buy us anything.
-> >
-> > From my understanding we want to avoid this as this would allow each
-> > vendor to come up with his own code and it would be much more effort
-> > for the PCI maintainer to rework the PCI framework to accommodate X86
-> > and "all" ARM64 Host Controllers...
-> >
-> > I guess this approach is too risky and we want to avoid this. Through
-> > standardization we can more easily maintain the code and scale it to
-> > multiple SoCs...
-> >
-> > So this is my understanding; maybe Jon, Tomasz or Lorenzo can give
-> > a bit more explanation...
-> >
-> 
-> OK, so that boils down to recommending to vendors to represent known
-> non-compliant hardware as compliant, just so that we don't have to
-> change the code to support additional flavors of ECAM ? It's fine to
-> be pragmatic, but that sucks.
-> 
-> We keep confusing the x86 case with the ARM case here: for x86, they
-> needed to deal with broken hardware *after* the fact, and all they
-> could do is find /some/ distinguishing feature in order to guess which
-> exact hardware they might be running on. For arm64, it is the opposite
-> case. We are currently in a position where we can demand vendors to
-> comply with the standards they endorsed themselves, and (ab)using ACPI
-> + DMI as a de facto platform description rather than plain ACPI makes
-> me think the DT crowd were actually right from the beginning. It
-> *directly* violates the standardization principle, since it requires a
-> priori knowledge inside the OS that a certain 'generic' device must be
-> driven in a special way.
-> 
-> So can anyone comment on the feasibility of adding support for devices
-> with vendor specific HIDs (and no generic CIDs) to the current ACPI
-> ECAM driver in Linux?
+This patch add some required and optional properties for Rockchip
+PCIe controller. Also we add a example for how to use it.
 
-Host bridges in ACPI are handled through PNP0A08/PNP0A03 ids, and
-most of the arch specific code is handled in the respective arch
-directories (X86 and IA64, even though IA64 does not rely on ECAM/MCFG for
-PCI ops), it is not a driver per-se, PNP0A08/PNP0A03 are detected through
-ACPI scan handlers and the respective arch code (ie pci_acpi_scan_root)
-sets-up resources AND config space on an arch specific basis.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-X86 deals with that with code in arch/x86 that sets-up the pci_raw_ops
-on a platform specific basis (and it is not nice, but it works because
-as you all know the number of platforms in X86 world is contained).
+---
 
-Will this happen for ARM64 in arch/arm64 based on vendor specific
-HIDs ?
+ .../devicetree/bindings/pci/rockchip-pcie.txt      | 93 ++++++++++++++++++++++
+ 1 file changed, 93 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
 
-No.
-
-So given the current state of play (we were requested to move the
-arch/arm64 specific ACPI PCI bits to arch/arm64), we would end up
-with arch/arm64 code requiring code in /drivers to set-up pci_ops
-in a platform specific way, it is horrible, if feasible at all.
-
-The only way this can be implemented is by pretending that the
-ACPI/PCI arch/arm64 implementation is generic code (that's what this
-series does), move it to /drivers (where it is in this series), and
-implement _DSD vendor specific bindings (per HID) to set-up the pci
-operations; whether this solution should go upstream, given that it
-is just a short-term solution for early platforms bugs, it is another
-story and my personal answer is no.
-
-Lorenzo
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+new file mode 100644
+index 0000000..69a0804
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -0,0 +1,93 @@
++* Rockchip AXI PCIe Root Port Bridge DT description
++
++Required properties:
++- #address-cells: Address representation for root ports, set to <3>
++- #size-cells: Size representation for root ports, set to <2>
++- #interrupt-cells: specifies the number of cells needed to encode an
++		interrupt source. The value must be 1.
++- compatible: Should contain "rockchip,rk3399-pcie"
++- reg: Two register ranges as listed in the reg-names property
++- reg-names: The first entry must be "axi-base" for the core registers
++	The second entry must be "apb-base" for the client pcie registers
++- clocks: Must contain an entry for each entry in clock-names.
++		See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++	- "aclk_pcie"
++	- "aclk_perf_pcie"
++	- "hclk_pcie"
++	- "clk_pciephy_ref"
++- interrupts: Three interrupt entries must be specified.
++- interrupt-names: Must include the following names
++	- "pcie-sys"
++	- "pcie-legacy"
++	- "pcie-client"
++- resets: Must contain five entries for each entry in reset-names.
++	   See ../reset/reset.txt for details.
++- reset-names: Must include the following names
++	- "phy-rst"
++	- "core-rst"
++	- "mgmt-rst"
++	- "mgmt-sticky-rst"
++	- "pipe-rst"
++- rockchip,grf: phandle to the syscon managing the "general register files"
++- pcie-conf: offset of pcie client block for  configuration
++- pcie-status: offset of pcie client block for status
++- pcie-laneoff: offset of pcie client block for lane
++- msi-parent: Link to the hardware entity that serves as the Message
++- pinctrl-names : The pin control state names
++- pinctrl-0: The "default" pinctrl state
++- interrupt-map-mask and interrupt-map: standard PCI properties
++- interrupt-controller: identifies the node as an interrupt controller
++
++Optional Property:
++- ep-gpios: contain the entry for pre-reset gpio
++- num-lanes: number of lanes to use
++- assigned-clocks, assigned-clock-parents and assigned-clock-rates: standard
++		   clock bindings. See ../clock/clock-bindings.txt
++
++Example:
++
++pci_express: axi-pcie@f8000000 {
++	#address-cells = <3>;
++	#size-cells = <2>;
++	compatible = "rockchip,rk3399-pcie";
++	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
++		 <&cru PCLK_PCIE>, <&cru SCLK_PCIEPHY_REF>;
++	clock-names = "aclk_pcie", "aclk_perf_pcie",
++		      "hclk_pcie", "clk_pciephy_ref";
++	bus-range = <0x0 0x1>;
++	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
++		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
++	interrupt-names: "pcie-sys", "pcie-legacy", "pcie-client";
++	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
++	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
++	assigned-clock-rates = <100000000>;
++	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
++	ranges = < 0x82000000 0 0xfa000000 0x0 0xfa000000 0 0x600000
++		   0x81000000 0 0xfa600000 0x0 0xfa600000 0 0x100000 >;
++	num-lanes = <4>;
++	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
++	reg-name = "axi-base", "apb-base";
++	resets = <&cru SRST_PCIEPHY>, <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
++		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
++	reset-names = "phy-rst", "core-rst", "mgmt-rst", "mgmt-sticky-rst", "pipe-rst";
++	rockchip,grf = <&grf>;
++	pcie-conf = <0xe220>;
++	pcie-status = <0xe2a4>;
++	pcie-laneoff = <0xe214>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_clkreq>;
++	msi-parent = <&its>;
++	#interrupt-cells = <1>;
++	interrupt-map-mask = <0 0 0 7>;
++	interrupt-map = <0 0 0 1 &pcie_0 1>,
++			<0 0 0 2 &pcie_0 2>,
++			<0 0 0 3 &pcie_0 3>,
++			<0 0 0 4 &pcie_0 4>;
++	pcie_0: interrupt-controller {
++		interrupt-controller;
++		#address-cells = <0>;
++		#interrupt-cells = <1>;
++	};
++
++};
+-- 
+2.3.7
