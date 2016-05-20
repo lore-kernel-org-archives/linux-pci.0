@@ -1,68 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41710 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933252AbcE3NEp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:04:45 -0400
-Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UD4Gso013394
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:45 -0400
-Message-Id: <201605301304.u4UD4Gso013394@mx0a-001b2d01.pphosted.com>
-Received: from e28smtp02.in.ibm.com (e28smtp02.in.ibm.com [125.16.236.2])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 238jhvng9k-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:44 -0400
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:38910 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754344AbcETGmr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:42:47 -0400
 Received: from localhost
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 30 May 2016 18:34:40 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v2 0/4] PCI: Add support for enforcing all MMIO BARs not to share PAGE_SIZE
-Date: Mon, 30 May 2016 21:00:14 +0800
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:42:44 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 6FDC52BB005A
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:42 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gYlj000466
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:42 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6g9hF008963
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:10 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 01/18] PCI: Add pcibios_setup_bridge()
+Date: Fri, 20 May 2016 16:41:25 +1000
+Message-Id: <1463726502-14679-2-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series aims to add an option for PCI resource allocator to  
-force BARs not to share PAGE_SIZE. This would make sense to VFIO 
-driver. Because current VFIO implementation disallows to mmap 
-sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page 
-with other BARs for security reasons. Thus, we have to handle mmio 
-access to these BARs in QEMU emulation rather than in guest which 
-will cause some performance loss.
+Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
+which is called for once after PCI probing and resource assignment
+are completed, to allocate platform required resources for PCI devices:
+PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
+Obviously, it's not hotplug friendly.
 
-To achieve that, we would like to make use of the existing 
-resource_alignment kernel parameter and force a minimum alignment 
-of PAGE_SIZE. It's flexible. And we can default to enable it on  
-some archs which may easily hit the performance issue because of  
-their 64K page.
+This adds weak function pcibios_setup_bridge(), which is called by
+pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
+to assign above platform required resources to newly plugged PCI devices
+during PCI hotplug in subsequent patches.
 
-In this series, patch 1 fixed a bug of resource_alignment; patch 2,3 
-tried to add a new option for resource_alignment to use 
-IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 4 
-modified resource_alignment to support syntax which can be used to  
-enforce the alignment of all MMIO BARs to be at least PAGE_SIZE.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/setup-bus.c | 5 +++++
+ include/linux/pci.h     | 1 +
+ 2 files changed, 6 insertions(+)
 
-Changelog v2:
-- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
-
-Yongji Xie (4):
-  PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
-  PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
-  PCI: Add a new option for resource_alignment to reassign alignment
-  PCI: Add support for enforcing all MMIO BARs to be page aligned
-
- Documentation/kernel-parameters.txt |    7 ++-
- arch/powerpc/include/asm/pci.h      |    2 +
- drivers/pci/pci.c                   |  109 ++++++++++++++++++++++++++++-------
- drivers/pci/setup-bus.c             |    9 ++-
- 4 files changed, 102 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..d678c46 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -695,11 +695,16 @@ static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+ 	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bus->bridge_ctl);
+ }
+ 
++void __weak pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
++{
++}
++
+ void pci_setup_bridge(struct pci_bus *bus)
+ {
+ 	unsigned long type = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 
++	pcibios_setup_bridge(bus, type);
+ 	__pci_setup_bridge(bus, type);
+ }
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..c40ac91 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -854,6 +854,7 @@ void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev);
+ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
++void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type);
+ void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+ #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
 -- 
-1.7.9.5
+2.1.0
 
