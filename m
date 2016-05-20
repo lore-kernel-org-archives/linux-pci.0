@@ -1,80 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:43340 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbcEMLYS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:24:18 -0400
-Message-Id: <9f0713b23baf7c6139a4b476cd9637d96e18cc95.1463134232.git.lukas@wunner.de>
-In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 13 May 2016 13:15:31 +0200
-Subject: [PATCH v2 11/13] PM / sleep: Allow opt-out from runtime resume after
- direct-complete
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:49711 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754858AbcETGnQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:16 -0400
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:43:12 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 6D2BD3578060
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gxDB63045748
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gYSY032170
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:35 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 16/18] powerpc/powernv: Introduce pnv_pci_get_slot_id()
+Date: Fri, 20 May 2016 16:41:40 +1000
+Message-Id: <1463726502-14679-17-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit aae4518b3124 ("PM / sleep: Mechanism to avoid resuming
-runtime-suspended devices unnecessarily"), we no longer wake up devices
-which are already runtime suspended upon entering system sleep
-("direct-complete").
+This introduces pnv_pci_get_slot_id() to get the hotpluggable PCI
+slot ID from the corresponding device node. It will be used by
+hotplug driver.
 
-However commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might
-have been reset by firmware") changed this to mandatorily runtime resume
-such devices after the system is woken.  The motivation was to ensure
-that devices do not remain in a reset-power-on state after system
-resume, potentially preventing deep SoC-wide low-power states from being
-entered on idle.
-
-This is counter-productive for devices of which we know that the
-mandatory runtime resume is unnecessary.  Thunderbolt on the Mac is a
-case in point: Runtime resume not just powers up the controller, but
-multiple adjacent chips, including a 15V boost converter, multiplexers
-and an eeprom.  Gratuitously powering this up after every system sleep
-burns a not insignificant amount of energy and needlessly strains the
-hardware.
-
-Perhaps it would have been better to carry out the mandatory runtime
-resume only for those devices that actually need it, but at least we
-should allow an opt-out.
-
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Requested-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/base/power/generic_ops.c | 3 ++-
- include/linux/pm.h               | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ arch/powerpc/include/asm/pnv-pci.h   |  2 ++
+ arch/powerpc/platforms/powernv/pci.c | 38 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/drivers/base/power/generic_ops.c b/drivers/base/power/generic_ops.c
-index 07c3c4a..6e88f55 100644
---- a/drivers/base/power/generic_ops.c
-+++ b/drivers/base/power/generic_ops.c
-@@ -316,7 +316,8 @@ void pm_complete_with_resume_check(struct device *dev)
- 	 * the sleep state it is going out of and it has never been resumed till
- 	 * now, resume it in case the firmware powered it up.
- 	 */
--	if (dev->power.direct_complete && pm_resume_via_firmware())
-+	if (dev->power.direct_complete && pm_resume_via_firmware() &&
-+	    !dev->power.direct_complete_noresume)
- 		pm_request_resume(dev);
- }
- EXPORT_SYMBOL_GPL(pm_complete_with_resume_check);
-diff --git a/include/linux/pm.h b/include/linux/pm.h
-index 6a5d654..023de94 100644
---- a/include/linux/pm.h
-+++ b/include/linux/pm.h
-@@ -596,6 +596,7 @@ struct dev_pm_info {
- 	unsigned int		use_autosuspend:1;
- 	unsigned int		timer_autosuspends:1;
- 	unsigned int		memalloc_noio:1;
-+	unsigned int		direct_complete_noresume:1;
- 	enum rpm_request	request;
- 	enum rpm_status		runtime_status;
- 	int			runtime_error;
+diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
+index c607902..810cc9a 100644
+--- a/arch/powerpc/include/asm/pnv-pci.h
++++ b/arch/powerpc/include/asm/pnv-pci.h
+@@ -17,6 +17,8 @@
+ #define PCI_SLOT_ID(phb_id, bdfn)	\
+ 	(PCI_SLOT_ID_PREFIX | ((uint64_t)(bdfn) << 16) | (phb_id))
+ 
++extern int pnv_pci_get_slot_id(struct device_node *np, uint64_t *id);
++
+ int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
+ int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
+ 			   unsigned int virq);
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 0f1b8bf..2607d29 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -26,6 +26,7 @@
+ #include <asm/machdep.h>
+ #include <asm/msi_bitmap.h>
+ #include <asm/ppc-pci.h>
++#include <asm/pnv-pci.h>
+ #include <asm/opal.h>
+ #include <asm/iommu.h>
+ #include <asm/tce.h>
+@@ -36,6 +37,43 @@
+ #include "powernv.h"
+ #include "pci.h"
+ 
++int pnv_pci_get_slot_id(struct device_node *np, uint64_t *id)
++{
++	struct device_node *parent = np;
++	u32 bdfn;
++	u64 phbid;
++	int ret;
++
++	ret = of_property_read_u32(np, "reg", &bdfn);
++	if (ret)
++		return -ENXIO;
++
++	bdfn = ((bdfn & 0x00ffff00) >> 8);
++	while ((parent = of_get_parent(parent))) {
++		if (!PCI_DN(parent)) {
++			of_node_put(parent);
++			break;
++		}
++
++		if (!of_device_is_compatible(parent, "ibm,ioda2-phb")) {
++			of_node_put(parent);
++			continue;
++		}
++
++		ret = of_property_read_u64(parent, "ibm,opal-phbid", &phbid);
++		if (ret) {
++			of_node_put(parent);
++			return -ENXIO;
++		}
++
++		*id = PCI_SLOT_ID(phbid, bdfn);
++		return 0;
++	}
++
++	return -ENODEV;
++}
++EXPORT_SYMBOL_GPL(pnv_pci_get_slot_id);
++
+ #ifdef CONFIG_PCI_MSI
+ int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ {
 -- 
-2.8.1
+2.1.0
 
