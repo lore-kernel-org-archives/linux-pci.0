@@ -1,77 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:39756 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066AbcEITcj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 May 2016 15:32:39 -0400
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Subject: PCIe issue with NIC card that has 64bit BARs
-Message-ID: <5730E5DA.4020906@ti.com>
-Date: Mon, 9 May 2016 15:32:42 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39069 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754835AbcETGnN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:13 -0400
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 20 May 2016 16:43:11 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 042D92BB0057
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:08 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gxrc1311170
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gYhG032197
+	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:35 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v10 09/18] powerpc/powernv: Extend PCI bridge resources
+Date: Fri, 20 May 2016 16:41:33 +1000
+Message-Id: <1463726502-14679-10-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+The PCI slots are associated with root port or downstream ports
+of the PCIe switch connected to root port. When adapter is hot
+added to the PCI slot, it usually requests more IO or memory
+resource from the directly connected parent bridge (port) and
+update the bridge's windows accordingly. The resource windows
+of upstream bridges can't be updated automatically. It possibly
+leads to unbalanced resource across the bridges: The window of
+downstream bridge is overruning that of upstream bridge. The
+IO or MMIO path won't work.
 
-I am running into an issue with using a rtk8168 GiB NIC card with Keystone PCIe.
-It works for 32bit BARs such as the Marvel SATA controller on K2E. On another
-recent SoC (K2G) that re-uses the same driver and hardware, I have issues
-bringing up PCIe.
+This resolves the above issue by extending bridge windows of
+root port and upstream port of the PCIe switch connected to
+the root port to PHB's windows.
 
-The rtk8168 NIC gets detected, but all read values are zeros. Based on the boot
-log, it appears to be getting assigned 64bit BARs. See the log on K2E with Marvell
-controller and that on K2G with rtk8168. Is there way we can get it assigned
-32Bit BAR and get it functional? Keystone is a 32bit ARM A15 SoC.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 46 +++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-Here are the logs.
-
-K2E log with Marvel controller (Good working case).
-===================================================
-[    0.236353] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
-[    0.236364] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
-[    0.236373] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-[    0.236385] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
-[    0.236394] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
-[    0.236406] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x100f]
-[    0.236418] pci 0000:01:00.0: BAR 0: assigned [io  0x1010-0x1017]
-[    0.236429] pci 0000:01:00.0: BAR 2: assigned [io  0x1018-0x101f]
-[    0.236441] pci 0000:01:00.0: BAR 1: assigned [io  0x1020-0x1023]
-[    0.236452] pci 0000:01:00.0: BAR 3: assigned [io  0x1024-0x1027]
-[    0.236464] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    0.236472] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    0.236481] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
-[    0.236490] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff pref]
-
-K2G log with Tealtek NIC card
-=============================
-[    2.311572] keystone-pcie 21801000.pcie: PCI host bridge to bus 0000:00
-[    2.318188] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    2.323844] pci_bus 0000:00: root bus resource [io  0x0000-0x3fff]
-[    2.330023] pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
-[    2.337567] PCI: bus0: Fast back to back transfers disabled
-[    2.361159] PCI: bus1: Fast back to back transfers disabled
-[    2.366889] pci 0000:00:00.0: BAR 8: assigned [mem 0x50000000-0x500fffff]
-[    2.373841] pci 0000:00:00.0: BAR 9: assigned [mem 0x50100000-0x501fffff pref]
-[    2.381061] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-[    2.387225] pci 0000:01:00.0: BAR 6: assigned [mem 0x50100000-0x5011ffff pref]
-[    2.394505] pci 0000:01:00.0: BAR 4: assigned [mem 0x50120000-0x5012ffff 64bit pref]
-[    2.402288] pci 0000:01:00.0: BAR 2: assigned [mem 0x50000000-0x50000fff 64bit]
-[    2.409610] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
-[    2.415729] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    2.420693] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    2.426806] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x500fffff]
-[    2.433610] pci 0000:00:00.0:   bridge window [mem 0x50100000-0x501fffff pref]
-[    2.441365] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
-[    2.448323] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
-[    2.455567] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
-[    2.461332] r8169 0000:01:00.0: enabling device (0140 -> 0143)
-[    2.468789] r8169 0000:01:00.0 eth0: RTL8169 at 0xf0d6a000, 00:00:00:00:00:00, XID 00000000 IRQ 286
-[    2.478169] r8169 0000:01:00.0 eth0: jumbo features [frames: 7152 bytes, tx checksumming: ok]
-
-
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 3186a29..e97a5fa 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -3221,6 +3221,49 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+ 	return phb->ioda.io_segsize;
+ }
+ 
++/*
++ * We are updating root port or the upstream port of the
++ * bridge behind the root port with PHB's windows in order
++ * to accommodate the changes on required resources during
++ * PCI (slot) hotplug, which is connected to either root
++ * port or the downstream ports of PCIe switch behind the
++ * root port.
++ */
++static void pnv_pci_fixup_bridge_resources(struct pci_bus *bus,
++					   unsigned long type)
++{
++	struct pci_controller *hose = pci_bus_to_host(bus);
++	struct pnv_phb *phb = hose->private_data;
++	struct pci_dev *bridge = bus->self;
++	struct resource *r, *w;
++	int i;
++
++	/* Check if we need apply fixup to the bridge's windows */
++	if (!pci_is_root_bus(bridge->bus) &&
++	    !pci_is_root_bus(bridge->bus->self->bus))
++		return;
++
++	/* Fixup the resources */
++	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
++		r = &bridge->resource[PCI_BRIDGE_RESOURCES + i];
++		if (!r->flags || !r->parent)
++			continue;
++
++		w = NULL;
++		if (r->flags & type & IORESOURCE_IO)
++			w = &hose->io_resource;
++		else if (pnv_pci_is_mem_pref_64(r->flags) &&
++			 (type & IORESOURCE_PREFETCH) &&
++			 phb->ioda.m64_segsize)
++			w = &hose->mem_resources[1];
++		else if (r->flags & type & IORESOURCE_MEM)
++			w = &hose->mem_resources[0];
++
++		r->start = w->start;
++		r->end = w->end;
++	}
++}
++
+ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+@@ -3229,6 +3272,9 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+ 	struct pnv_ioda_pe *pe;
+ 	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
+ 
++	/* Extend bridge's windows if necessary */
++	pnv_pci_fixup_bridge_resources(bus, type);
++
+ 	/* The PE for root bus should be realized before any one else */
+ 	if (!phb->ioda.root_pe_populated) {
+ 		pe = pnv_ioda_setup_bus_PE(phb->hose->bus, false);
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+2.1.0
+
