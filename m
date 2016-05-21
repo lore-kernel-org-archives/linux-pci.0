@@ -1,106 +1,39 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V7 04/11] pci: Add new function to unmap IO resources.
-Date: Tue, 10 May 2016 17:19:54 +0200
-Message-Id: <1462893601-8937-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34102 "EHLO
+	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752157AbcEUMPq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 May 2016 08:15:46 -0400
+Received: by mail-lf0-f66.google.com with SMTP id 65so37213lfq.1
+        for <linux-pci@vger.kernel.org>; Sat, 21 May 2016 05:15:46 -0700 (PDT)
+From: Andrea Gelmini <andrea.gelmini@gelma.net>
+To: andrea.gelmini@gelma.net
+Cc: trivial@kernel.org, bhelgaas@google.com, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 0289/1529] Fix typo
+Date: Sat, 21 May 2016 14:15:39 +0200
+Message-Id: <20160521121539.15485-1-andrea.gelmini@gelma.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is very useful to release I/O resources so that the same I/O resources
-can be allocated again (pci_remap_iospace), like in PCI hotplug removal
-scenario. Therefore this patch implements new pci_unmap_iospace call which
-unmaps I/O space as the symmetry to pci_remap_iospace.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Andrea Gelmini <andrea.gelmini@gelma.net>
 ---
- drivers/pci/pci.c   | 24 ++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 25 insertions(+)
+ arch/x86/pci/common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bc0c914..ff97a0b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -25,6 +25,7 @@
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci_hotplug.h>
-+#include <linux/vmalloc.h>
- #include <asm/setup.h>
- #include <linux/aer.h>
- #include "pci.h"
-@@ -3167,6 +3168,29 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
- #endif
- }
- 
-+/**
-+ *	pci_unmap_iospace - Unmap the memory mapped I/O space
-+ *	@res: resource to be unmapped
-+ *
-+ *	Unmap the CPU virtual address @res from virtual address space.
-+ *	Only architectures that have memory mapped IO functions defined
-+ *	(and the PCI_IOBASE value defined) should call this function.
-+ */
-+void  pci_unmap_iospace(struct resource *res)
-+{
-+#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-+	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
-+
-+	unmap_kernel_range(vaddr, resource_size(res));
-+#else
-+	/*
-+	 * This architecture does not have memory mapped I/O space,
-+	 * so this function should never be called.
-+	 */
-+	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
-+#endif
-+}
-+
- static void __pci_set_master(struct pci_dev *dev, bool enable)
- {
- 	u16 old_cmd, cmd;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d2a57f3..d6ea6ce 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1169,6 +1169,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
- unsigned long pci_address_to_pio(phys_addr_t addr);
- phys_addr_t pci_pio_to_address(unsigned long pio);
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-+void pci_unmap_iospace(struct resource *res);
- 
- static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
- {
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 8196054..7b6a9d1 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -133,7 +133,7 @@ static void pcibios_fixup_device_resources(struct pci_dev *dev)
+ 	if (pci_probe & PCI_NOASSIGN_BARS) {
+ 		/*
+ 		* If the BIOS did not assign the BAR, zero out the
+-		* resource so the kernel doesn't attmept to assign
++		* resource so the kernel doesn't attempt to assign
+ 		* it later on in pci_assign_unassigned_resources
+ 		*/
+ 		for (bar = 0; bar <= PCI_STD_RESOURCE_END; bar++) {
 -- 
-1.9.1
+2.8.2.534.g1f66975
+
