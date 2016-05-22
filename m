@@ -1,123 +1,49 @@
-Return-Path: <hdegoede@redhat.com>
-Return-Path: <hdegoede@redhat.com>
-Subject: Re: [Nouveau] [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe
- runtime PM
-To: Peter Wu <peter@lekensteyn.nl>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <20160525135535.GN1789@lahna.fi.intel.com> <20160527111037.GA1436@al>
-Cc: linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Bjorn Helgaas <helgaas@kernel.org>,
-        nouveau@lists.freedesktop.org, Dave Airlie <airlied@redhat.com>
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <d329650d-c0b9-c40d-a647-f9de09b7b848@redhat.com>
-Date: Fri, 27 May 2016 13:55:14 +0200
+Return-Path: <airlied@gmail.com>
+Return-Path: <airlied@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160527111037.GA1436@al>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20160519154946.GA20036@localhost>
+References: <20160519154946.GA20036@localhost>
+Date: Mon, 23 May 2016 06:46:20 +1000
+Message-ID: <CAPM=9ty9k2e_QLQXLztUSFiDxN8-a7xiGG9USSc=nu1-vNcUyQ@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI changes for v4.7
+From: Dave Airlie <airlied@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, Joerg Roedel <jroedel@suse.de>,
+	Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
+
+On 20 May 2016 at 01:49, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Hi Linus,
+>
+> Here are the PCI changes I intend for v4.7.
+>
+> There is a silent conflict that needs to be resolved when you pull this:
+>
+>   - e3156048346c ("iommu/amd: Fix checking of pci dma aliases"), which is
+>     already in your tree, added a use of PCI_DEV_FLAGS_DMA_ALIAS_DEVFN.
+>
+>   - 338c3149a221 ("PCI: Add support for multiple DMA aliases"), which is
+>     included in this pull request, replaces PCI_DEV_FLAGS_DMA_ALIAS_DEVFN
+>     with pdev->dma_alias_mask to support multiple aliases.
+>
+> The conflict resolution I suggest is attached below.  The identical patch
+> has been in linux-next and was supplied by both Jacek Lawrynowicz and Joerg
+> Roedel (and probably Stephen as well).
+>
 
 Hi,
 
-On 27-05-16 13:10, Peter Wu wrote:
-> On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
->> On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
->>> Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
->>> can be runtime-suspended which disables power resources via ACPI. This
->>> is incompatible with DSM, resulting in a GPU device which is still in D3
->>> and locks up the kernel on resume.
->>>
->>> Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
->>> debugger trace) and stop using the DSM functions for D3cold when power
->>> resources are available on the parent PCIe port.
->>>
->>>  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
->>>
->>> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
->>> ---
->>>  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
->>>  1 file changed, 30 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
->>> index df9f73e..e469df7 100644
->>> --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
->>> +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
->>> @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
->>>  	bool dsm_detected;
->>>  	bool optimus_detected;
->>>  	bool optimus_flags_detected;
->>> +	bool optimus_skip_dsm;
->>>  	acpi_handle dhandle;
->>>  	acpi_handle rom_handle;
->>>  } nouveau_dsm_priv;
->>> @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
->>>  	.get_client_id = nouveau_dsm_get_client_id,
->>>  };
->>>
->>> +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
->>> + * D3cold, they instead rely on disabling power resources on the parent. */
->>> +static bool nouveau_pr3_present(struct pci_dev *pdev)
->>> +{
->>> +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
->>> +	struct acpi_device *ad;
->>
->> Nit: please call this adev instead of ad.
->
-> Will do.
->
->>> +
->>> +	if (!parent_pdev)
->>> +		return false;
->>> +
->>> +	ad = ACPI_COMPANION(&parent_pdev->dev);
->>> +	if (!ad)
->>> +		return false;
->>> +
->>> +	return ad->power.flags.power_resources;
->>
->> Is this sufficient to tell if the parent device has _PR3? I thought it
->> returns true if it has power resources in general, not necessarily _PR3.
->>
->> Otherwise this looks okay to me.
->
-> It is indeed set whenever there is any _PRx method. I wonder if it is
-> appropriate to access fields directly like this, perhaps this would be
-> more accurate (based on device_pm.c):
->
->     /* Check whether the _PR3 method is available. */
->     return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
->
-> I am also considering adding a check in case the pcieport driver does
-> not support D3cold via runtime PM, what do you think of this?
->
->     if (!parent_pdev)
->         return false;
->     /* If the PCIe port does not support D3cold via runtime PM, allow a
->      * fallback to the Optimus DSM method to put the device in D3cold. */
->     if (parent_pdev->no_d3cold)
->         return false;
->
-> This is needed to avoid the regression reported in the cover letter, but
-> also allows pre-2015 systems to (still) have the D3cold possibility.
->
->
-> Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
-> apparently from November 2013, Windows 8.1) and extracted the ACPI
-> tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
-> for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
-> related NVP3 device) when _OSI("Windows 2013") is true. (This is added
-> as alternative for the old DSM interface.)
->
-> Maybe 2014 is also an appropriate cutoff date? I wonder if it is
-> feasible to detect firmware use of _OSI("Windows 2013") and use that
-> instead of the BIOS year.
+can we consider pulling in Mika's changes again for this merge window,
+they fix a
+pretty serious power management regression since we started
+advertising Windows 2013
+ACPI compat, as lots of dual GPU laptops can no longer switch off
+their secondary GPUs.
 
-It is definitely possible to check if the firmware uses _OSI("Windows 2013")
-we do something similar to check for windows-8 ready laptops in the backlight
-code, see acpi_osi_is_win8() in drivers/acpi/osl.c, or if you actually
-want to test for Windows 8 or newer, just use acpi_osi_is_win8()  :)
+I know they had an issue, but Mika seems to have fixed it promptly,
+and those patches
+aren't going to get much more testing out of tree.
 
-Regards,
-
-Hans
+Dave.
