@@ -1,77 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38192 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933251AbcE3NEt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:04:49 -0400
-Received: from pps.filterd (m0082756.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UD4HEf018292
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:48 -0400
-Message-Id: <201605301304.u4UD4HEf018292@mx0a-001b2d01.pphosted.com>
-Received: from e28smtp01.in.ibm.com (e28smtp01.in.ibm.com [125.16.236.1])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 2376ceej8q-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:47 -0400
-Received: from localhost
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 30 May 2016 18:34:44 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v2 2/4] PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
-Date: Mon, 30 May 2016 21:00:16 +0800
-In-Reply-To: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Heiko Stuebner <heiko@sntech.de>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] Documentation: add binding description of Rockchip PCIe controller
+Date: Mon, 23 May 2016 21:53:06 +0200
+Message-ID: <35714508.Tep5CcJBvk@phil>
+In-Reply-To: <766c3fc9-7e92-6235-76d5-803cc116845a@rock-chips.com>
+References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com> <3930626.4a3xBnzHhK@phil> <766c3fc9-7e92-6235-76d5-803cc116845a@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we use the IORESOURCE_STARTALIGN to identify bridge resources
-in __assign_resources_sorted(). That's quite fragile. We can't
-make sure that the PCI devices' resources will not use
-IORESOURCE_STARTALIGN any more.
+Am Samstag, 21. Mai 2016, 11:55:35 schrieb Shawn Lin:
+> On 2016/5/20 19:20, Heiko Stuebner wrote:
+> > Hi Shawn,
+> > 
+> > Am Freitag, 20. Mai 2016, 18:29:06 schrieb Shawn Lin:
+> >> This patch add some required and optional properties for Rockchip
+> >> PCIe controller. Also we add a example for how to use it.
+> >> 
+> >> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >> 
+> >> ---
 
-In this patch, we try to use a more robust way to identify
-bridge resources.
+[...]
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+> >> +- msi-parent: Link to the hardware entity that serves as the Message
+> >> +- pinctrl-names : The pin control state names
+> >> +- pinctrl-0: The "default" pinctrl state
+> > 
+> > I'm not sure if pinctrl-properties need to be described when you don't
+> > need special handling in the form of additional pin states. The pcie
+> > part does not do any pin-handling of its own.
+> 
+> We need it in prevention of any firmwares change the default state
+> of #CLKREQ which is useful for ASPM. Also we have a backup pin for
+> clkreqn called clkreqnb, which should be taken more consideration since
+> when refering to any one of these two, pinctrl should configure the
+> bit[14] of GRF_SOC_CON7 automatically. But it is unfortunately beyound
+> the implementation of pinctrl-rk3399.
+> 
+> BTW, I don't know if we wanna support this action inside the pinctrl
+> code?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 55641a3..216ddbc 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -390,6 +390,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
- 	unsigned long fail_type;
- 	resource_size_t add_align, align;
-+	int index;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -410,11 +411,13 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
-+		 * 1. bridge resource
-+		 * 2. SR-IOV resource
- 		 * Here just fix the additional alignment for bridge
- 		 */
--		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+		index = dev_res->res - dev_res->dev->resource;
-+		if (index < PCI_BRIDGE_RESOURCES ||
-+			index > PCI_BRIDGE_RESOURCE_END)
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
--- 
-1.7.9.5
+The TRM says for me for that bit only "pcie_clkreq_sel port control" and 
+that naming really suggests that it is a property of the pcie controller, 
+not the generic pinctrl. So if this needs to be touched the pcie controller 
+needs to do it.
 
+
+> >> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> >> +- interrupt-controller: identifies the node as an interrupt controller
+> >> +
+> >> +Optional Property:
+> >> +- ep-gpios: contain the entry for pre-reset gpio
+> >> +- num-lanes: number of lanes to use
+> >> +- assigned-clocks, assigned-clock-parents and assigned-clock-rates:
+> >> standard +		   clock bindings. See ../clock/clock-bindings.txt
+> > 
+> > Again that (assigned-clocks handling) is not actual part of the pci-
+> > controllers actions, but other parts and also described already
+> > elsewhere.
+> Basically it does. But this is an alternative choice for pcie-phy to
+> generate the ref_clk. When we want 100MHz src clk for PLL inside the
+> pcie-phy，we should add them, otherwise it's taken from xin 24MHz.
+> 
+> This is useful for SI testing or some others special cases. So should we
+> add it as an option and leave a sample here?
+
+What I meant was that while clock handling is important when looking at the 
+whole system, the pcie controller itself does only care that it gets a 
+clock, but not that much where you get it from.
+
+So while assigned-clocks has its place in the real devicetree, I don't think 
+it is an element of the actual pcie-controller binding.
+
+
+Heiko
