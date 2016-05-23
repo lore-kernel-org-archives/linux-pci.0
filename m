@@ -1,239 +1,83 @@
-Return-Path: <jayachandran.c@broadcom.com>
-Return-Path: <jayachandran.c@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:42406 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751545AbcEWKKQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 May 2016 06:10:16 -0400
+From: "Shevchenko, Andriy" <andriy.shevchenko@intel.com>
+To: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "Svahn, Kai" <kai.svahn@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Jamet, Michael" <michael.jamet@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	"Alloun, Dan" <dan.alloun@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>
+Subject: Re: [PATCH 1/6] thunderbolt: Updating the register definitions
+Date: Mon, 23 May 2016 10:10:11 +0000
+Message-ID: <1463998286.31269.24.camel@intel.com>
+References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
+	 <1463993336-2750-2-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1463993336-2750-2-git-send-email-amir.jer.levy@intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1462893601-8937-9-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com> <1462893601-8937-9-git-send-email-tn@semihalf.com>
-From: Jayachandran C <jchandra@broadcom.com>
-Date: Sat, 14 May 2016 14:37:45 +0530
-Message-ID: <CAKc_7PVz8rgCTqMVuR7g944nonSHExAhx5rNsjiP3J=9LfA99g@mail.gmail.com>
-Subject: Re: [PATCH V7 08/11] pci, acpi: Support for ACPI based generic PCI
- host controller
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, robert.richter@caviumnetworks.com,
-	Marcin Wojtas <mw@semihalf.com>, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>, Wangyijing <wangyijing@huawei.com>,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>, Duc Dang <dhdang@apm.com>,
-	jeremy.linton@arm.com, liudongdong3@huawei.com,
-	Christopher Covington <cov@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 10, 2016 at 8:49 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> This patch is going to implement generic PCI host controller for
-> ACPI world, similar to what pci-host-generic.c driver does for DT world.
->
-> All such drivers, which we have seen so far, were implemented within
-> arch/ directory since they had some arch assumptions (x86 and ia64).
-> However, they all are doing similar thing, so it makes sense to find
-> some common code and abstract it into the generic driver.
->
-> In order to handle PCI config space regions properly, we define new
-> MCFG interface which does sanity checks on MCFG table and keeps its
-> root pointer. User is able to lookup MCFG regions based on that root
-> pointer and specified domain:bus_start:bus_end touple. We are using
-> pci_mmcfg_late_init old prototype to avoid another function name.
->
-> The implementation of pci_acpi_scan_root() looks up the MCFG entries
-> and sets up a new mapping (regions are not mapped until host controller ask
-> for it). Generic PCI functions are used for accessing config space.
-> Driver selects PCI_ECAM and uses functions from drivers/pci/ecam.h
-> to create and access ECAM mappings.
->
-> As mentioned in Kconfig help section, ACPI_PCI_HOST_GENERIC choice
-> should be made on a per-architecture basis.
+T24gTW9uLCAyMDE2LTA1LTIzIGF0IDExOjQ4ICswMzAwLCBBbWlyIExldnkgd3JvdGU6DQo+IFRo
+aXMgZmlyc3QgcGF0Y2ggYWRkcyBtb3JlIFRodW5kZXJib2x0KFRNKSByZWdpc3RlciBkZWZpbml0
+aW9ucw0KPiBhbmQgc29tZSBoZWxwZXIgbWFjcm9zLg0KPiBJdCBhbHNvIGFkZHMgV2luIFJpZGdl
+IGRldmljZSBJRC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEFtaXIgTGV2eSA8YW1pci5qZXIubGV2
+eUBpbnRlbC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IE1pY2hhZWwgSmFtZXQgPG1pY2hhZWwuamFt
+ZXRAaW50ZWwuY29tPg0KDQpGcm9tIEFtaXIsIFNvQi1ieSBBbWlyLCB3aG8gaXMgTWljaGFlbCB3
+cnQgdGhpcyBwYXRjaD8NCg0KPiAtLS0gYS9kcml2ZXJzL3RodW5kZXJib2x0L25oaV9yZWdzLmgN
+Cj4gKysrIGIvZHJpdmVycy90aHVuZGVyYm9sdC9uaGlfcmVncy5oDQo+IEBAIC0xLDE0ICsxLDI2
+IEBADQo+IMKgLyoNCj4gLSAqIFRodW5kZXJib2x0IENhY3R1cyBSaWRnZSBkcml2ZXIgLSBOSEkg
+cmVnaXN0ZXJzDQo+ICsgKiBUaHVuZGVyYm9sdCBkcml2ZXIgLSBOSEkgcmVnaXN0ZXJzDQo+IMKg
+ICoNCj4gwqAgKiBDb3B5cmlnaHQgKGMpIDIwMTQgQW5kcmVhcyBOb2V2ZXIgPGFuZHJlYXMubm9l
+dmVyQGdtYWlsLmNvbT4NCj4gwqAgKi8NCj4gwqANCj4gLSNpZm5kZWYgRFNMMzUxMF9SRUdTX0hf
+DQo+IC0jZGVmaW5lIERTTDM1MTBfUkVHU19IXw0KPiArI2lmbmRlZiBOSElfUkVHU19IXw0KPiAr
+I2RlZmluZSBOSElfUkVHU19IXw0KPiDCoA0KPiDCoCNpbmNsdWRlIDxsaW51eC90eXBlcy5oPg0K
+PiDCoA0KPiArI2RlZmluZSBEUlZfVkVSU0lPTiAiMTYuMS40Ny4xIg0KDQpJIHN1cHBvc2UgdGhl
+IHZlcnNpb24gaXMgdGhlIHNhbWUgYXMgZ2l0IGhhc2guIFBlcmhhcHMgbmVlZHMgdG8gYmUNCmNv
+bW1lbnRlZCB3aHkgZG8geW91IG5lZWQgYSBzcGVjaWFsIHZlcnNpb24gc3RyaW5nLg0KDQo+ICsj
+ZGVmaW5lIERSVl9OQU1FICJ0aHVuZGVyYm9sdCINCj4gKw0KPiArI2RlZmluZSBOSElfTU1JT19C
+QVIgMA0KPiArDQo+ICsjZGVmaW5lIFRCVF9SSU5HX01JTl9OVU1fQlVGRkVSUwkyDQo+ICsjZGVm
+aW5lIFRCVF9JQ01fUklOR19NQVhfRlJBTUVfU0laRQkyNTYNCj4gKyNkZWZpbmUgVEJUX0lDTV9S
+SU5HX05VTQkJMA0KPiArI2RlZmluZSBUQlRfUklOR19NQVhfRlJBTUVfU0laRQkJKDQgKiAxMDI0
+KQ0KPiArI2RlZmluZSBUQlRfUklOR19NQVhfRlJNX0RBVEFfU1oJKFRCVF9SSU5HX01BWF9GUkFN
+RV9TSVpFIC0gXA0KPiArCQkJCQnCoHNpemVvZihzdHJ1Y3QNCj4gdGJ0X2ZyYW1lX2hlYWRlcikp
+DQo+ICsNCj4gwqBlbnVtIHJpbmdfZmxhZ3Mgew0KPiDCoAlSSU5HX0ZMQUdfSVNPQ0hfRU5BQkxF
+ID0gMSA8PCAyNywgLyogVFggb25seT8gKi8NCj4gwqAJUklOR19GTEFHX0UyRV9GTE9XX0NPTlRS
+T0wgPSAxIDw8IDI4LA0KPiBAQCAtMjQsNiArMzYsMTMgQEAgZW51bSByaW5nX2Rlc2NfZmxhZ3Mg
+ew0KPiDCoAlSSU5HX0RFU0NfSU5URVJSVVBUID0gMHg4LCAvKiByZXF1ZXN0IGFuIGludGVycnVw
+dCBvbg0KPiBjb21wbGV0aW9uICovDQo+IMKgfTsNCj4gwqANCj4gK2VudW0gaWNtX29wZXJhdGlv
+bl9tb2RlIHsNCj4gKwlTQUZFX01PREUsDQo+ICsJQVVUSEVOVElDQVRJT05fTU9ERV9GVU5DVElP
+TkFMSVRZLA0KPiArCUVORFBPSU5UX09QRVJBVElPTl9NT0RFLA0KPiArCUZVTExfRlVOQ1RJT05B
+TElUWSwNCg0KTG9va3MgbXVjaCBiZXR0ZXIgaWYgeW91IGRvIGxpa2UNCg0KSUNNX01PREVfU0FG
+RQ0KSUNNX01PREVfQVVUSF9GVU5DDQpJQ01fTU9ERV9FTkRQT0lOVA0KSUNNX01PREVfRlVMTF9G
+VU5DDQoNClNlZSB0aGUgYWR2YW50YWdlcz8NCg0KPiArfTsNCj4gKw0KDQo+IC0tLSBhL2luY2x1
+ZGUvbGludXgvcGNpX2lkcy5oDQo+ICsrKyBiL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oDQo+IEBA
+IC0yNjE4LDYgKzI2MTgsOCBAQA0KPiDCoCNkZWZpbmUgUENJX0RFVklDRV9JRF9JTlRFTF9GQUxD
+T05fUklER0VfMkNfQlJJREdFwqDCoDB4MTU2Yg0KPiDCoCNkZWZpbmUgUENJX0RFVklDRV9JRF9J
+TlRFTF9GQUxDT05fUklER0VfNENfTkhJwqDCoMKgwqDCoDB4MTU2Yw0KPiDCoCNkZWZpbmUgUENJ
+X0RFVklDRV9JRF9JTlRFTF9GQUxDT05fUklER0VfNENfQlJJREdFwqDCoDB4MTU2ZA0KDQo+ICsj
+ZGVmaW5lIFBDSV9ERVZJQ0VfSURfSU5URUxfV0lOX1JJREdFXzJDX05IScKgwqDCoMKgwqDCoMKg
+wqAweDE1N2QNCj4gKyNkZWZpbmUgUENJX0RFVklDRV9JRF9JTlRFTF9XSU5fUklER0VfMkNfQlJJ
+REdFwqDCoMKgwqDCoDB4MTU3ZQ0KDQpBcmUgdGhvc2UgSURzIGdvaW5nIHRvIGJlIHVzZWQgc29t
+ZXdoZXJlIGVsc2UgdGhhbiBvbmUgZHJpdmVyPw0KDQo+IMKgI2RlZmluZSBQQ0lfREVWSUNFX0lE
+X0lOVEVMX0FMUElORV9SSURHRV8yQ19OSEnCoMKgwqDCoMKgMHgxNTc1IC8qDQo+IFRodW5kZXJi
+b2x0IDMgKi8NCj4gwqAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfSU5URUxfQUxQSU5FX1JJREdFXzJD
+X0JSSURHRcKgwqAweDE1NzYNCj4gwqAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfSU5URUxfQUxQSU5F
+X1JJREdFXzRDX05IScKgwqDCoMKgwqAweDE1NzcNCg0KLS0gDQpBbmR5IFNoZXZjaGVua28gPGFu
+ZHJpeS5zaGV2Y2hlbmtvQGludGVsLmNvbT4NCkludGVsIEZpbmxhbmQgT3kKLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+CkludGVsIEZpbmxhbmQgT3kKUmVnaXN0ZXJlZCBBZGRyZXNzOiBQTCAyODEsIDAwMTgxIEhlbHNp
+bmtpIApCdXNpbmVzcyBJZGVudGl0eSBDb2RlOiAwMzU3NjA2IC0gNCAKRG9taWNpbGVkIGluIEhl
+bHNpbmtpIAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25m
+aWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBp
+ZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkg
+cHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNl
+IGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
 
-Looking thru the new code, I see a few issues, please see below
-
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> ---
->  drivers/acpi/Kconfig            |   8 +++
->  drivers/acpi/Makefile           |   1 +
->  drivers/acpi/pci_mcfg.c         |  97 ++++++++++++++++++++++++++
->  drivers/acpi/pci_root_generic.c | 149 ++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/ecam.h              |   5 ++
->  include/linux/pci-acpi.h        |   5 ++
->  include/linux/pci.h             |   5 +-
->  7 files changed, 269 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/acpi/pci_mcfg.c
->  create mode 100644 drivers/acpi/pci_root_generic.c
->
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index 183ffa3..44afc76 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -346,6 +346,14 @@ config ACPI_PCI_SLOT
->           i.e., segment/bus/device/function tuples, with physical slots in
->           the system.  If you are unsure, say N.
->
-> +config ACPI_PCI_HOST_GENERIC
-> +       bool
-> +       select PCI_ECAM
-> +       help
-> +         Select this config option from the architecture Kconfig,
-> +         if it is preferred to enable ACPI PCI host controller driver which
-> +         has no arch-specific assumptions.
-> +
->  config X86_PM_TIMER
->         bool "Power Management Timer Support" if EXPERT
->         depends on X86
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index 81e5cbc..627a2b7 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -40,6 +40,7 @@ acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
->  acpi-y                         += ec.o
->  acpi-$(CONFIG_ACPI_DOCK)       += dock.o
->  acpi-y                         += pci_root.o pci_link.o pci_irq.o
-> +obj-$(CONFIG_ACPI_PCI_HOST_GENERIC)    += pci_root_generic.o pci_mcfg.o
->  acpi-y                         += acpi_lpss.o acpi_apd.o
->  acpi-y                         += acpi_platform.o
->  acpi-y                         += acpi_pnp.o
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> new file mode 100644
-> index 0000000..373d079
-> --- /dev/null
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -0,0 +1,97 @@
-> +/*
-> + * Copyright (C) 2016 Broadcom
-> + *     Author: Jayachandran C <jchandra@broadcom.com>
-> + * Copyright (C) 2016 Semihalf
-> + *     Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +#include <linux/kernel.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci-acpi.h>
-> +
-> +#define PREFIX "ACPI: "
-> +
-> +/* Root pointer to the mapped MCFG table */
-> +static struct acpi_table_mcfg *mcfg_table;
-> +
-> +#define MCFG_ENTRIES(mcfg_ptr) (((mcfg_ptr)->header.length -           \
-> +                               sizeof(struct acpi_table_mcfg)) /       \
-> +                               sizeof(struct acpi_mcfg_allocation))
-
-It would be better if you used static inline function here.
-
-> +static phys_addr_t pci_mcfg_lookup_static(u16 seg, u8 bus_start, u8 bus_end)
-> +{
-> +       struct acpi_mcfg_allocation *mptr;
-> +       int i;
-> +
-> +       if (!mcfg_table) {
-> +               pr_err(PREFIX "MCFG table not available, lookup failed\n");
-> +               return -ENXIO;
-> +       }
-> +
-> +       mptr = (struct acpi_mcfg_allocation *) &mcfg_table[1];
-> +
-> +       /*
-> +        * We expect exact match, unless MCFG entry end bus covers more than
-> +        * specified by caller.
-> +        */
-> +       for (i = 0; i < MCFG_ENTRIES(mcfg_table); i++, mptr++) {
-> +               if (mptr->pci_segment == seg &&
-> +                   mptr->start_bus_number == bus_start &&
-> +                   mptr->end_bus_number >= bus_end) {
-> +                       return mptr->address;
-> +               }
-> +       }
-
-There is an issue here, the bus range is obtained if different
-ways. If the _CRS has it, this should be fine. But if it is _BBN-0xff
-or the default 0-0xff, then I would think taking the MCFG entry end
-would be better. This would require updating the bus resource end.
-
-Also (trivial), the braces are not needed.
-
-> +       return -ENXIO;
-> +}
-> +
-> +phys_addr_t pci_mcfg_lookup(struct acpi_device *device, u16 seg,
-> +                           struct resource *bus_res)
-> +{
-> +       phys_addr_t addr;
-> +
-> +       addr = acpi_pci_root_get_mcfg_addr(device->handle);
-> +       if (addr)
-> +               return addr;
-
-When you have address from _CBA, you are assuming that the
-bus range is also set correctly (from _CRS or as _BBN-0xff). Is
-this assumption correct?
-
-(this was discussed earlier)  you are doing the _CBA call again,
-I think cleaning up the _CBA, _BBN, _CRS and MCFG based
-ECAM area resources and defaults should be a different patch,
-which would need changes to pci_root.c. We should use
-root->mcfg_addr in this patchset.
-
-> +
-> +       return pci_mcfg_lookup_static(seg, bus_res->start, bus_res->end);
-
-There is no need to have a separate function for this, based on by
-above comment, you might need to change bus_res, so having it here
-would be better.
-
-> +}
-> +
-> +static __init int pci_mcfg_parse(struct acpi_table_header *header)
-> +{
-> +       struct acpi_table_mcfg *mcfg;
-> +       int n;
-> +
-> +       if (!header)
-> +               return -EINVAL;
-
-This is not needed, the handler is not called if header is NULL
-
-> +
-> +       mcfg = (struct acpi_table_mcfg *)header;
-> +       n = MCFG_ENTRIES(mcfg);
-> +       if (n <= 0 || n > 255) {
-> +               pr_err(PREFIX "MCFG has incorrect entries (%d).\n", n);
-> +               return -EINVAL;
-> +       }
->
-> +       mcfg_table = mcfg;
-
-Saving a reference of ACPI mapping seems dangerous, acpi_parse_table
-calles early_acpi_os_unmap_memory() after calling handler, which does
-not do anything since acpi_gbl_permanent_mmap is set.
-
-I would suggest copying the entries.
-
-> +       pr_info(PREFIX "MCFG table loaded, %d entries detected\n", n);
-> +       return 0;
-> +}
-> +
-> +/* Interface called by ACPI - parse and save MCFG table */
-> +void __init pci_mmcfg_late_init(void)
-> +{
-> +       int err = acpi_table_parse(ACPI_SIG_MCFG, pci_mcfg_parse);
-> +       if (err)
-> +               pr_err(PREFIX "Failed to parse MCFG (%d)\n", err);
-> +}
-
-
-JC.
