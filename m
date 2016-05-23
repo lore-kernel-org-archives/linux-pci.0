@@ -1,164 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:49614 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399AbcEDT5a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 May 2016 15:57:30 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: jim2101024@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, bhelgaas@google.com
-Subject: Re: [PATCH 2/2] pci: host: Add Broadcom STB PCIE RC controller
-Date: Wed, 04 May 2016 21:56:58 +0200
-Message-ID: <4199321.vpfzMt0zhT@wuerfel>
-In-Reply-To: <572A4F31.8010802@gmail.com>
-References: <1462238749-19715-1-git-send-email-f.fainelli@gmail.com> <2339405.90vXV1p6zU@wuerfel> <572A4F31.8010802@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:56584 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751065AbcEWVwB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 May 2016 17:52:01 -0400
+Date: Mon, 23 May 2016 16:51:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] nvme/pci: Enable SR-IOV capabilities
+Message-ID: <20160523215157.GB31479@localhost>
+References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
+ <1463521199-16604-2-git-send-email-keith.busch@intel.com>
+ <20160523170652.GA12826@localhost>
+ <20160523172144.GD17208@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160523172144.GD17208@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 04 May 2016 12:36:17 Florian Fainelli wrote:
-> On 03/05/16 02:57, Arnd Bergmann wrote:
-> >> +static const struct pcie_cfg_data generic_cfg = {
-> >> +	.offsets	= pcie_offsets,
-> >> +	.type		= GENERIC,
-> >> +};
-> > 
-> > The way you access the config space here seems very indirect. I'd
-> > suggest instead writing two sets of pci_ops, with hardcoded registers
-> > offsets in them, and a function pointer to access the RGR1_SW_INIT_1
-> > register.
+On Mon, May 23, 2016 at 01:21:44PM -0400, Keith Busch wrote:
+> On Mon, May 23, 2016 at 12:06:52PM -0500, Bjorn Helgaas wrote:
+> > I do not subscribe to the belief that every function should have a
+> > single exit.  In this case, I think it makes the function much harder
+> > to understand than this:
 > 
-> How about introducing helper functions but keeping the same set of
-> read/write pci_ops instead, would that seem more acceptable? I agree
-> that the macros are not the friendliest thing.
-
-I can't think of how that would look right now. My impression was that
-the macros here are mainly used to implement pci_ops, so I suggested
-having two copies of those. Of course the two copies could call the
-same implementation and just pass in some constant that the compiler
-can then optimize again in any possible way.
-
-> >> +struct brcm_msi {
-> >> +	struct irq_domain *domain;
-> >> +	struct irq_chip irq_chip;
-> >> +	struct msi_controller chip;
-> >> +	struct mutex lock;
-> >> +	int irq;
-> >> +	/* intr_base is the base pointer for interrupt status/set/clr regs */
-> >> +	void __iomem *intr_base;
-> >> +	/* intr_legacy_mask indicates how many bits are MSI interrupts */
-> >> +	u32 intr_legacy_mask;
-> >> +	/* intr_legacy_offset indicates bit position of MSI_01 */
-> >> +	u32 intr_legacy_offset;
-> >> +	/* used indicates which MSI interrupts have been alloc'd */
-> >> +	unsigned long used;
-> >> +	/* working indicates that on boot we have brought up MSI */
-> >> +	bool working;
-> >> +};
+> No problem with multiple exists. 
+>  
+> >   if (numvfs == 0)
+> >     pci_disable_sriov(pdev);
+> >     return 0;
+> >   }
 > > 
-> > I'd move the MSI controller stuff into a separate file, and add a way to
-> > override it. It's likely that at some point the same PCIe implementation
-> > will be used with a modern GICv3 or GICv2m, so you should be able to
-> > look up the msi controller from a property.
+> >   return pci_enable_sriov(pdev, numvfs);
 > 
-> Good point, let's do that, though all controllers actually do support
-> MSI, so I wonder.
+> Slight change to the above: pci_enable_sriov returns 0 on success,
+> but a driver's .sriov_configure is supposed to return the number of
+> VF's successfully configured, so need to return 'numvfs' on success.
 
-The point is more that you might have more than one MSI implementation
-in a future SoC, if you have both a GICv3 and this PCIe block, you
-could use either one of them, but presumably using the GIC will be more
-efficient because it actually allows doing IRQ affinity and having
-low-latency interrupts when you don't need an expensive readl().
-
-> >> +
-> >> +	/* set up 4GB PCIE->SCB memory window on BAR2 */
-> >> +	bpcie_writel(0x00000011, base + PCIE_MISC_RC_BAR2_CONFIG_LO);
-> >> +	bpcie_writel(0x00000000, base + PCIE_MISC_RC_BAR2_CONFIG_HI);
-> > 
-> > Where does this window come from? It's not in the DT as far as I can see.
-> 
-> This is an architectural maximum value which is baked into the PCIE Root
-> Complex hardware, on all generations that this driver supports. We
-> configure the largest address match rang size here, just to be safe,
-> AFAICT there is no point in looking at the inbound or outbound window
-> sizes to re-program that differently.
-
-Ok, makes sense. In theory you could limit this to isolate PCI
-bus masters from doing things you don't want them to (e.g. for
-a hypervisor that assigns the entire PCI host bridge to a VM),
-but I can't think of a use case for Linux here.
-
-> >> +	INIT_LIST_HEAD(&pcie->pwr_supplies);
-> >> +	INIT_LIST_HEAD(&pcie->resource);
-> >> +
-> >> +	supplies = of_property_count_strings(dn, "supply-names");
-> >> +	if (supplies <= 0)
-> >> +		supplies = 0;
-> >> +
-> >> +	for (i = 0; i < supplies; i++) {
-> >> +		if (of_property_read_string_index(dn, "supply-names", i,
-> >> +						  &name))
-> >> +			continue;
-> >> +		supply = devm_kzalloc(&pdev->dev, sizeof(*supply), GFP_KERNEL);
-> >> +		if (!supply)
-> >> +			return -ENOMEM;
-> >> +
-> >> +		strncpy(supply->name, name, sizeof(supply->name));
-> >> +		supply->name[sizeof(supply->name) - 1] = '\0';
-> >> +		supply->regulator = devm_regulator_get(&pdev->dev, name);
-> >> +		if (IS_ERR(supply->regulator)) {
-> >> +			dev_err(&pdev->dev, "Unable to get %s supply, err=%d\n",
-> >> +				name, (int)PTR_ERR(supply->regulator));
-> >> +			continue;
-> >> +		}
-> >> +
-> >> +		if (regulator_enable(supply->regulator))
-> >> +			dev_err(&pdev->dev, "Unable to enable %s supply.\n",
-> >> +				name);
-> >> +		list_add_tail(&supply->node, &pcie->pwr_supplies);
-> >> +	}
-> > 
-> > Don't parse the regulator properties yourself here, use the proper APIs.
-> 
-> I will probably drop this for now, and  add it later, there are only a
-> handful of boards which requires this, and ultimately, I think we should
-> be seaking for a more generic solutions, we can't be the only ones doing
-> that.
-
-So is this the supply for the slots attached to the PCI host rather than
-the host bridge itself?
-
-> > 
-> >> +	/* 'num_memc' will be set only by the first controller, and all
-> >> +	 * other controllers will use the value set by the first.
-> >> +	 */
-> >> +	if (num_memc == 0)
-> >> +		for_each_compatible_node(mdn, NULL, "brcm,brcmstb-memc")
-> >> +			if (of_device_is_available(mdn))
-> >> +				num_memc++;
-> > 
-> > Why is this?
-> 
-> This is so we do not end-up programming the PCIe RC which is agnostic of
-> the number of
-
-You didn't complete this sentence, but I think I've gotten a better
-idea of what is going on from the code now. It looks like this
-is used to program a set of default DMA ranges into the host
-bridge, so there are now three ways of finding out what it
-should be:
-
-a) count the memory controllers, assume that each one has 1GB of
-   address space
-b) read the "brcm,log2-scb-sizes" property to find out the
-   actual sizes
-c) interpret the dma-ranges property
-
-The first two seem to things in a rather nonstandard way (the binding
-mentions neither of them), while the third is not implemented yet.
-I think we have to improve this.
-
-	Arnd
+Oops, sorry, excuse me while I wipe the egg off my face :)
