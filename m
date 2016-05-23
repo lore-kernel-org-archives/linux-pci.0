@@ -1,112 +1,100 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 23 May 2016 14:55:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Lukas Wunner <lukas@wunner.de>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: pcie: Call pm_runtime_no_callbacks() after device
+ is registered
+Message-ID: <20160523195500.GA24375@localhost>
+References: <14501.1463692755@turing-police.cc.vt.edu>
+ <1463991115-64820-1-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <20160504012531.GB17170@localhost>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-	<1460074573-7481-5-git-send-email-yinghai@kernel.org>
-	<20160422204920.GA17215@localhost>
-	<CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
-	<20160428135607.GA12470@localhost>
-	<CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
-	<CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
-	<1462322260.30470.76.camel@kernel.crashing.org>
-	<20160504012531.GB17170@localhost>
-Date: Tue, 3 May 2016 22:08:07 -0700
-Message-ID: <CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
-Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
- to resource
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>, Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1463991115-64820-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 3, 2016 at 6:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, May 04, 2016 at 10:37:40AM +1000, Benjamin Herrenschmidt wrote:
->>
->> The problem tends to be old Xserver expectations...
->>
->> That stuff has been a can of worms over the years and we did things in
->> the kernel to work around X limitations. I'm not that keen on touching
->> /proc at all in that regard. Leave it there do what it does today, it's
->> a user visible ABI, don't change it.
->
-> I did not propose changing any user-visible ABI.  To recap what I did
-> propose:
+On Mon, May 23, 2016 at 11:11:55AM +0300, Mika Westerberg wrote:
+> Commit 0195d2813547 ("PCI: Add runtime PM support for PCIe ports") added
+> call to pm_runtime_no_callbacks() for each port service device to prevent
+> them exposing unnecessary runtime PM sysfs files. However, that function
+> tries to acquire dev->power.lock which is not yet initialized.
+> 
+> This triggers following splat:
+> 
+>  BUG: spinlock bad magic on CPU#0, swapper/0/1
+>   lock: 0xffff8801be2aa8e8, .magic: 00000000, .owner: <none>/-1, .owner_cpu: 0
+>  CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.6.0+ #820
+>   0000000000000000 ffff8801beb97be0 ffffffff812cf42d 0000000000000000
+>   ffff8801be2aa8e8 ffff8801beb97c00 ffffffff8109ee58 ffff8801be2aa8e8
+>   ffff8801be2aa8e8 ffff8801beb97c30 ffffffff8109efd9 ffff8801be2aa8e8
+>  Call Trace:
+>   [<ffffffff812cf42d>] dump_stack+0x4f/0x72
+>   [<ffffffff8109ee58>] spin_dump+0x78/0xc0
+>   [<ffffffff8109efd9>] do_raw_spin_lock+0xf9/0x150
+>   [<ffffffff81674e10>] _raw_spin_lock_irq+0x20/0x30
+>   [<ffffffff813d738e>] pm_runtime_no_callbacks+0x1e/0x40
+>   [<ffffffff81322cad>] pcie_port_device_register+0x1fd/0x4e0
+>   [<ffffffff813232f8>] pcie_portdrv_probe+0x38/0xa0
+>   [<ffffffff81314fb5>] local_pci_probe+0x45/0xa0
+>   [<ffffffff81315fe0>] ? pci_match_device+0xe0/0x110
+>   [<ffffffff813163ab>] pci_device_probe+0xdb/0x130
+>   [<ffffffff813ccefc>] driver_probe_device+0x22c/0x440
+>   [<ffffffff813cd1e1>] __driver_attach+0xd1/0xf0
+>   [<ffffffff813cd110>] ? driver_probe_device+0x440/0x440
+>   [<ffffffff813caab4>] bus_for_each_dev+0x64/0xa0
+>   [<ffffffff813cc60e>] driver_attach+0x1e/0x20
+>   [<ffffffff813cc0cb>] bus_add_driver+0x1eb/0x280
+>   [<ffffffff81d36cdc>] ? pcie_port_setup+0x7c/0x7c
+>   [<ffffffff813cdb90>] driver_register+0x60/0xe0
+>   [<ffffffff813148e0>] __pci_register_driver+0x60/0x70
+>   [<ffffffff81d36d3f>] pcie_portdrv_init+0x63/0x75
+>   [<ffffffff810003db>] do_one_initcall+0xab/0x1c0
+>   [<ffffffff81cff083>] kernel_init_freeable+0x153/0x1d9
+>   [<ffffffff8166dfce>] kernel_init+0xe/0x100
+>   [<ffffffff81675612>] ret_from_fork+0x22/0x40
+>   [<ffffffff8166dfc0>] ? rest_init+0x90/0x90
+> 
+> Fix this by calling pm_runtime_no_callbacks() after device_register() just
+> like other buses, like I2C is doing already.
+> 
+> Reported-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+> Tested-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
+> Suggested-by: Lukas Wunner <lukas@wunner.de>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-I want to avoid introduce one strange pci_user_to_resource.
+I think this is a bugfix for "PCI: Add runtime PM support for PCIe
+ports", so I folded this into that patch since it hasn't been merged
+yet.  Is that the right place for it?
 
->
->   - The sysfs path uses offsets between 0 and BAR size on all arches.
->     It uses pci_resource_to_user() today, but I think it should not.
->
->   - The procfs path uses offsets of resource values (CPU physical
->     addresses) on most architectures, but uses something else, e.g.,
->     BAR values, on others.  pci_resource_to_user() does this
->     translation.  The procfs path does not use pci_resource_to_user()
->     today, but I think it should.
-
-current powerpc pci_resource_to_user is strange:
-it will return resource start for io mem.
-but will return BAR (?) start for io port.
-
-sparc pci_resource_to_user does return BAR value for iomem.
-
->
->   - This implies that pci_mmap_page_range() should deal with resource
->     values (CPU physical addresses), and proc_bus_pci_mmap() should do
->     any necessary arch-specific translation from BAR values to
->     resource values.
-
-so will need one different version pci_user_to_resource.
-and can not use pcibios_bus_to_resource directly, and will be another mess.
-
-Can you reconsider to keep the pci_mmap_page_range still use BAR value
-and only touch pci_mmap_fits() ?
-
-like i suggested before, and it does not conflict with the patchset.
-
-Subject: [PATCH] PCI: Fix pci_mmap_fits() with proc interface
-
-Passed value is user address, so need to compare it with
-user addr that is converted from dev resource.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/pci-sysfs.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-Index: linux-2.6/drivers/pci/pci-sysfs.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pci-sysfs.c
-+++ linux-2.6/drivers/pci/pci-sysfs.c
-@@ -969,15 +969,19 @@ void pci_remove_legacy_files(struct pci_
- int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
-           enum pci_mmap_api mmap_api)
- {
--    unsigned long nr, start, size, pci_start;
-+    unsigned long nr, start, size;
-+    resource_size_t pci_start = 0, pci_end;
-
-     if (pci_resource_len(pdev, resno) == 0)
-         return 0;
-     nr = vma_pages(vma);
-     start = vma->vm_pgoff;
-     size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
--    pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
--            pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
-+    if (mmap_api == PCI_MMAP_PROCFS) {
-+        pci_resource_to_user(pdev, resno, &pdev->resource[resno],
-+                     &pci_start, &pci_end);
-+        pci_start >>= PAGE_SHIFT;
-+    }
-     if (start >= pci_start && start < pci_start + size &&
-             start + nr <= pci_start + size)
-         return 1;
+> ---
+>  drivers/pci/pcie/portdrv_core.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index 65b1a624826b..97927dfbbf5f 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -344,7 +344,6 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+>  		     get_descriptor_id(pci_pcie_type(pdev), service));
+>  	device->parent = &pdev->dev;
+>  	device_enable_async_suspend(device);
+> -	pm_runtime_no_callbacks(device);
+>  
+>  	retval = device_register(device);
+>  	if (retval) {
+> @@ -352,6 +351,8 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+>  		return retval;
+>  	}
+>  
+> +	pm_runtime_no_callbacks(device);
+> +
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.8.1
+> 
