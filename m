@@ -1,112 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:39048 "EHLO
-	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752409AbcEXB3J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2016 21:29:09 -0400
-Subject: Re: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
- <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
- <8520D5D51A55D047800579B094147198258ACE47@XAP-PVEXMBX01.xlnx.xilinx.com>
-Cc: shawn.lin@rock-chips.com, Heiko Stuebner <heiko@sntech.de>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Doug Anderson <dianders@chromium.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-rockchip@lists.infradead.org"
-	<linux-rockchip@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <0f470ba9-78ac-4822-2cd0-6f028123271d@rock-chips.com>
-Date: Tue, 24 May 2016 09:28:55 +0800
-MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258ACE47@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:19681 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752948AbcEWIxk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 May 2016 04:53:40 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, amir.jer.levy@intel.com,
+	michael.jamet@intel.com, dan.alloun@intel.com,
+	mika.westerberg@intel.com, kai.svahn@intel.com,
+	andriy.shevchenko@intel.com, tomas.winkler@intel.com
+Subject: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM) networking
+Date: Mon, 23 May 2016 11:48:50 +0300
+Message-Id: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bharat,
+Thunderbolt(TM) generation 3 provides USB, charging, Display Port and
+Thunderbolt connectivity over a single physical port.
 
-On 2016/5/23 23:15, Bharat Kumar Gogada wrote:
->> +
->> +	irq = platform_get_irq_byname(pdev, "pcie-sys");
->> +	if (irq < 0) {
->> +		dev_err(dev, "missing pcie_sys IRQ resource\n");
->> +		return -EINVAL;
->> +	}
->> +	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
->> +			       IRQF_SHARED, "pcie-sys", port);
->> +	if (err) {
->> +		dev_err(dev, "failed to request pcie subsystem irq\n");
->> +		return err;
->> +	}
->> +
->> +	port->irq = platform_get_irq_byname(pdev, "pcie-legacy");
->> +	if (port->irq < 0) {
->> +		dev_err(dev, "missing pcie_legacy IRQ resource\n");
->> +		return -EINVAL;
->> +	}
->> +	err = devm_request_irq(dev, port->irq,
->> +			       rockchip_pcie_legacy_int_handler,
->> +			       IRQF_SHARED,
->> +			       "pcie-legacy",
->> +			       port);
->> +	if (err) {
->> +		dev_err(&pdev->dev, "failed to request pcie-legacy irq\n");
->> +		return err;
->> +	}
->> +
->> +	irq = platform_get_irq_byname(pdev, "pcie-client");
->> +	if (irq < 0) {
->> +		dev_err(dev, "missing pcie-client IRQ resource\n");
->> +		return -EINVAL;
->> +	}
->> +	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
->> +			       IRQF_SHARED, "pcie-client", port);
->> +	if (err) {
->> +		dev_err(dev, "failed to request pcie client irq\n");
->> +		return err;
->> +	}
->> +
->
-> All of the above interrupt number details are being obtained from device tree, why not move above API's to rockchip_pcie_parse_dt.
+Thunderbolt(TM) networking, introduced in these patches, provides the
+capability of connecting hosts together by emulating an Ethernet adapter.
+It provides the same networking benefits with the advantage of the fast
+Thunderbolt medium capabilities.
+Thunderbolt(TM) networking is capable of operating in the last position
+in the Thunderbolt(TM) device daisy chain.
 
-Ok, I will move these above into parse_dt function.
+It is also compatible with Thunderbolt(TM) Networking in OS X and Windows
+implementations, and supports both Thunderbolt(TM) generation 2 and 3.
 
->
->> +	port->dev = dev;
->> +	err = rockchip_pcie_parse_dt(port);
->> +	if (err) {
->> +		dev_err(dev, "Parsing DT failed\n");
->> +		return err;
->> +	}
->> +
->> +	pcie_write(port, 0x6040000, PCIE_RC_CONFIG_BASE + 0x8);
->> +	pcie_write(port, 0x0, PCIE_CORE_CTRL_MGMT_BASE + 0x300);
->> +
->> +	pcie_write(port, (RC_REGION_0_ADDR_TRANS_L +
->> RC_REGION_0_PASS_BITS),
->> +		   PCIE_CORE_AXI_CONF_BASE);
->> +	pcie_write(port, RC_REGION_0_ADDR_TRANS_H,
->> +		   PCIE_CORE_AXI_CONF_BASE + 0x4);
->> +	pcie_write(port, 0x0080000a, PCIE_CORE_AXI_CONF_BASE + 0x8);
->> +	pcie_write(port, 0x00000000, PCIE_CORE_AXI_CONF_BASE + 0xc);
->
-> Why not move the above steps to rockchip_pcie_init_port function ?
-> Please use macros instead of using values.
+The kernel code operates in coordination with the Thunderbolt(TM)
+user-space daemon. Together, they implement full Thunderbolt(TM) networking
+functionality.
+This implementation runs on ICM (firmware) based 
+Thunderbolt(TM) controllers.
 
-okay, will improve them.
+Note that the Thunderbolt(TM) Hardware specs have not been published yet and
+were partially used for register definitions.
 
-Thanks for comment.
+Information
+===========
+Mailing list:
+	thunderbolt-software@lists.01.org
+	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
+	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
 
->
->
->
+For additional information about Thunderbolt technology visit:
+	https://01.org/thunderbolt-sw
+	https://thunderbolttechnology.net/
 
+Daemon code:
+	https://github.com/01org/thunderbolt-software
 
+Amir Levy, Michael Jamet (6):
+  thunderbolt: Updating the register definitions
+  thunderbolt: Communication with the ICM (firmware)
+  thunderbolt: Networking state machine
+  thunderbolt: Networking transmit and receive
+  thunderbolt: Kconfig for Thunderbolt(TM) networking
+  thunderbolt: Networking doc
+
+ Documentation/00-INDEX         |    2 +
+ Documentation/thunderbolt.txt  |  135 +++
+ drivers/thunderbolt/Kconfig    |    9 +-
+ drivers/thunderbolt/Makefile   |    3 +-
+ drivers/thunderbolt/icm_nhi.c  | 1540 +++++++++++++++++++++++++++
+ drivers/thunderbolt/icm_nhi.h  |   53 +
+ drivers/thunderbolt/net.c      | 2273 ++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/net.h      |  276 +++++
+ drivers/thunderbolt/nhi.c      |  195 ++--
+ drivers/thunderbolt/nhi_regs.h |  164 ++-
+ drivers/thunderbolt/tb.h       |   14 +-
+ include/linux/pci_ids.h        |    2 +
+ 12 files changed, 4580 insertions(+), 86 deletions(-)
+ create mode 100644 Documentation/thunderbolt.txt
+ create mode 100644 drivers/thunderbolt/icm_nhi.c
+ create mode 100644 drivers/thunderbolt/icm_nhi.h
+ create mode 100644 drivers/thunderbolt/net.c
+ create mode 100644 drivers/thunderbolt/net.h
 -- 
-Best Regards
-Shawn Lin
+1.9.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
