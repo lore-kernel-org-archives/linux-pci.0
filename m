@@ -1,115 +1,47 @@
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio
- page is exclusive
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1462966459-12459-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160511151034.GB21753@localhost>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, alex.williamson@redhat.com,
-        bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-        zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-        gwshan@linux.vnet.ibm.com, kevin.tian@intel.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <6be14833-2a0f-8dd8-5bb1-b932850521f2@linux.vnet.ibm.com>
-Date: Thu, 12 May 2016 13:56:45 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:53708 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752704AbcEWKzd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2016 06:55:33 -0400
+Date: Mon, 23 May 2016 03:55:32 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
+Message-ID: <20160523105532.GB26331@infradead.org>
+References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
+ <20160517160832.51fc0304@t450s.home>
 MIME-Version: 1.0
-In-Reply-To: <20160511151034.GB21753@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160517160832.51fc0304@t450s.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/11 23:10, Bjorn Helgaas wrote:
+On Tue, May 17, 2016 at 04:08:32PM -0600, Alex Williamson wrote:
+> On Tue, 17 May 2016 15:39:58 -0600
+> Keith Busch <keith.busch@intel.com> wrote:
+> 
+> > Every sriov capable driver has to check if any guest is using a virtual
+> > function prior to disabling, so let's make it common code.
+> 
+> This is not true, the PCI_DEV_FLAGS_ASSIGNED flag is inherently racy,
+> so checking it is really only a courtesy for broken drivers that
+> still make use of it.  I don't object to adding it here, though I
+> wish the entire interface was deprecated, but it's only a minimal amount
+> of insurance as a VF might get assigned immediately following your added
+> test or might not participate in the assigned device flagging at all.
 
-> On Wed, May 11, 2016 at 07:34:19PM +0800, Yongji Xie wrote:
->> Current vfio-pci implementation disallows to mmap
->> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
->> page may be shared with other BARs. This will cause some
->> performance issues when we passthrough a PCI device with
->> this kind of BARs. Guest will be not able to handle the mmio
->> accesses to the BARs which leads to mmio emulations in host.
->>
->> However, not all sub-page BARs will share page with other BARs.
->> We should allow to mmap the sub-page MMIO BARs which we can
->> make sure will not share page with other BARs.
->>
->> This patch adds support for this case. And we try to add some
->> dummy resources to reserve the remaind of the page which
->> hot-add device's BAR might be assigned into.
-> This is starting to look more reasonable from a safety perspective.
-> At least I don't have an allergic reaction to mapping a page that may
-> contain BARs from other random devices :)
->
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/vfio/pci/vfio_pci.c         |   85 ++++++++++++++++++++++++++++++++---
->>   drivers/vfio/pci/vfio_pci_private.h |    8 ++++
->>   2 files changed, 86 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->> index 98059df..33282b8 100644
->> --- a/drivers/vfio/pci/vfio_pci.c
->> +++ b/drivers/vfio/pci/vfio_pci.c
->> @@ -110,16 +110,77 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->>   	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
->>   }
->>   
->> +static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
->> +{
->> +	struct resource *res = vdev->pdev->resource + index;
->> +	struct vfio_pci_dummy_resource *dummy_res1 = NULL;
->> +	struct vfio_pci_dummy_resource *dummy_res2 = NULL;
->> +
->> +	if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) && res->flags & IORESOURCE_MEM &&
->> +		resource_size(res) > 0) {
->> +		if (resource_size(res) >= PAGE_SIZE)
->> +			return true;
->> +
->> +		if ((res->start & ~PAGE_MASK)) {
->> +			/*
->> +			 * Add a dummy resource to reserve the portion
->> +			 * before res->start in exclusive page in case
->> +			 * that hot-add device's bar is assigned into it.
->> +			 */
->> +			dummy_res1 = kzalloc(sizeof(*dummy_res1), GFP_KERNEL);
-> Should check for kzalloc() failure here.
->
->> +			dummy_res1->resource.start = res->start & PAGE_MASK;
->> +			dummy_res1->resource.end = res->start - 1;
->> +			dummy_res1->resource.flags = res->flags;
->> +			if (request_resource(res->parent,
->> +						&dummy_res1->resource)) {
->> +				kfree(dummy_res1);
->> +				return false;
->> +			}
->> +			dummy_res1->index = index;
->> +			list_add(&dummy_res1->res_next,
->> +					&vdev->dummy_resources_list);
-> The main body of this function is unnecessarily indented.  If you did
-> this it would be less indented:
->
->    if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP))
->      return false;
->
->    if (!res->flags & IORESOURCE_MEM)
->      return false;
->
->    /*
->     * Not sure this is necessary; the PCI core *shouldn't* set up a
->     * resource with a type but zero size.  But there may be bugs that
->     * cause us to do that.
->     */
->    if (!resource_size(res))
->      return false;
->
->    if (resource_size(res) >= PAGE_SIZE)
->      return true;
->
->    if ((res->start & ~PAGE_MASK)) {
->      ...
->
+Si should we just kill it? As far as I can tell it's only used in these
+kinds of boilerplate checks.
 
-Thanks for your comments. I'll send a v3 soon.
+> I
+> believe the better way to handle this is with proper host drivers for
+> assigned devices that manage the driver .remove callback properly while
+> devices are in use.  The only reason to handle assigned devices
+> specially in this case is when they don't have proper host drivers
+> managing them, which is a problem that we've fixed.  Thanks,
 
-Regards,
-Yongji
+We always use pci-stub now, don't we?
