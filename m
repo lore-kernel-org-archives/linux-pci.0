@@ -1,209 +1,94 @@
-Return-Path: <gpiccoli@linux.vnet.ibm.com>
-Return-Path: <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH v5] powerpc/pci: Assign fixed PHB number based on
- device-tree properties
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1460670924-16845-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <20160502165739.GD24851@localhost>
-Cc: mikey@neuling.org, frederic.barrat@fr.ibm.com, linux-pci@vger.kernel.org,
-        mrochs@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com, paulus@samba.org,
-        imunsie@au1.ibm.com, andrew.donnellan@au1.ibm.com, bhelgaas@google.com,
-        linuxppc-dev@lists.ozlabs.org
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Message-ID: <57321B4A.1000201@linux.vnet.ibm.com>
-Date: Tue, 10 May 2016 14:32:58 -0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36313 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751969AbcEXXZE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2016 19:25:04 -0400
+Received: by mail-oi0-f65.google.com with SMTP id x130so7514598oia.3
+        for <linux-pci@vger.kernel.org>; Tue, 24 May 2016 16:25:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160502165739.GD24851@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <E607265CB020454880711A6F96C05A0377FBD337@hasmsx107.ger.corp.intel.com>
+References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
+ <20160524105506.GB5396@wunner.de> <E607265CB020454880711A6F96C05A0377FBD337@hasmsx107.ger.corp.intel.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Wed, 25 May 2016 01:24:43 +0200
+Message-ID: <CAMxnaaUz8nhqVc8ubaOVhSjkcwMUUYZjn5NvJ=mTkGk_SvD8Qg@mail.gmail.com>
+Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM) networking
+To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Jamet, Michael" <michael.jamet@intel.com>,
+	"Alloun, Dan" <dan.alloun@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Svahn, Kai" <kai.svahn@intel.com>,
+	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/02/2016 01:57 PM, Bjorn Helgaas wrote:
-> On Thu, Apr 14, 2016 at 06:55:24PM -0300, Guilherme G. Piccoli wrote:
->> The domain/PHB field of PCI addresses has its value obtained from a
->> global variable, incremented each time a new domain (represented by
->> struct pci_controller) is added on the system. The domain addition
->> process happens during boot or due to PCI device hotplug.
+On Tue, May 24, 2016 at 3:58 PM, Levy, Amir (Jer)
+<amir.jer.levy@intel.com> wrote:
+>> -----Original Message-----
+>> From: Lukas Wunner [mailto:lukas@wunner.de]
+>> Sent: Tuesday, May 24, 2016 13:55
+>> To: Levy, Amir (Jer) <amir.jer.levy@intel.com>
+>> Cc: andreas.noever@gmail.com; gregkh@linuxfoundation.org;
+>> bhelgaas@google.com; linux-pci@vger.kernel.org; Jamet, Michael
+>> <michael.jamet@intel.com>; Alloun, Dan <dan.alloun@intel.com>;
+>> Westerberg, Mika <mika.westerberg@intel.com>; Svahn, Kai
+>> <kai.svahn@intel.com>; Shevchenko, Andriy
+>> <andriy.shevchenko@intel.com>; Winkler, Tomas
+>> <tomas.winkler@intel.com>
+>> Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM)
+>> networking
 >>
->> As recent kernels are using predictable naming for network interfaces,
->> the network stack is more tied to PCI naming. This can be a problem in
->> hotplug scenarios, because PCI addresses will change if devices are
->> removed and then re-added. This situation seems unusual, but it can
->> happen if a user wants to replace a NIC without rebooting the machine,
->> for example.
+>> Hi Amir,
 >>
->> This patch changes the way PCI domain values are generated: now, we use
->> device-tree properties to assign fixed PHB numbers to PCI addresses
->> when available (meaning pSeries and PowerNV cases). We also use a bitmap
->> to allow dynamic PHB numbering when device-tree properties are not
->> used. This bitmap keeps track of used PHB numbers and if a PHB is
->> released (by hotplug operations for example), it allows the reuse of
->> this PHB number, avoiding PCI address to change in case of device remove
->> and re-add soon after. No functional changes were introduced.
+>> On Mon, May 23, 2016 at 11:48:50AM +0300, Amir Levy wrote:
+>> > Thunderbolt(TM) networking, introduced in these patches, provides the
+>> > capability of connecting hosts together by emulating an Ethernet adapter.
 >>
->> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+>> Thank you for this contribution. I think it may take some time to review
+>> everything, for now just some general observations:
+>>
+>> - Up until now this driver was Mac-only. IIUC the functionality you're
+>>   adding will also be used on non-Macs. That's an important change that
+>>   should probably be made more explicit in the commit messages. Did you
+>>   test your patches on a Mac to see that nothing regresses?
 >
-> I assume the powerpc guys will take care of this.  Let me know if you
-> need me to do anything.
+> Yes, we did some tests on MacBook Pro with Falcon Ridge.
+> Note that (as written in the cover letter), the functionality that we are adding is based on ICM (Intel Connection Manager, firmware).
+> These patches will keep the current functionality on Mac and will add the networking functionality on non-Macs.
 
-Thanks very much Bjorn! I sent this to PCI list to let you know, since 
-this modification is PCI nearly related. But it is truly something 
-specific to powerpc, so you're right, the linuxpcc-dev list folks will 
-take care.
+Hi Amir,
 
-Cheers,
+First of all thanks for contributing this. It is certainly good to see
+Intel help out with the driver.
 
+I only did a cursory read, but already have a few questions concerning
+the ICM and its relation to the rest of the driver:
+- Is the ICM only responsible for networking or does it also handle
+pci tunnels, DP, ...?
+- Your code only supports TB2,3. Afaik Apple supports IP over TB also
+on TB 1. What are the obstacles to support first generation chips?
+- Related to the above: if some of the registers are available only
+for some chips then please document this in nhi_regs.h (and other
+places).
+- Is it possible to use the ICM on Apple hardware?
 
-Guilherme
+Your patch essentially splits the driver into two. You add an if
+statement to nhi_probe which either runs your code or the old one.
+This is just silly (you might as well add a separate driver). At least
+parts of the functionality are already implemented. For example patch
+2 has large overlap with what is currently handled by nhi.c/ctl.c
+(reading/writing the ring buffer and handling communication with the
+PDF). I understand that the interface provided by ring_rx/ring_tx is
+not a good match for high speed networking introduced in the later
+patches. But then you should refactor it to provide what you need
+instead of reimplementing all the functionality.
 
->
->> ---
->>   arch/powerpc/kernel/pci-common.c | 66 ++++++++++++++++++++++++++++++++++++++--
->>   1 file changed, 63 insertions(+), 3 deletions(-)
->>
->> v5:
->>    * Improved comments.
->>
->>    * Changed the the Fixed PHB Numbering to set the PHB number bit
->>    on the bitmap anyway, avoiding issues when system has virtual PHBs.
->>
->>    * Changed the device-tree check order - now, firstly we check for
->>    "ibm,opal-phbid" and if it's not available, we try the pSeries case.
->>
->> v4:
->>    * Minor change (if/else nesting rearranged).
->>
->> v3:
->>    * Made the bitmap static.
->>
->>    * Rearranged if/else statements of Fixed PHB checking.
->>
->>    * Improved bitmap checkings, by removing loop and using instead the
->>    find_first_zero_bit() function.
->>
->>    * Removed the single-statement function release_phb_number() by
->>    adding its logic directly into pcibios_free_controller().
->>
->>    *Added check for bitmap size before clearing bit, avoiding memory
->>    corruption.
->>
->> v2:
->>    * Added the Fixed PHB Numbering mechanism based on device-tree
->>    properties.
->>
->>    * Changed list approach to bitmap on the Dynamic PHB Numbering
->>    mechanism.
->>
->> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> index 0f7a60f..ad423c1 100644
->> --- a/arch/powerpc/kernel/pci-common.c
->> +++ b/arch/powerpc/kernel/pci-common.c
->> @@ -41,11 +41,17 @@
->>   #include <asm/ppc-pci.h>
->>   #include <asm/eeh.h>
->>
->> +/* hose_spinlock protects accesses to the the phb_bitmap. */
->>   static DEFINE_SPINLOCK(hose_spinlock);
->>   LIST_HEAD(hose_list);
->>
->> -/* XXX kill that some day ... */
->> -static int global_phb_number;		/* Global phb counter */
->> +/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
->> +#define	MAX_PHBS	8192
->> +
->> +/* For dynamic PHB numbering: used/free PHBs tracking bitmap.
->> + * Accesses to this bitmap should be protected by hose_spinlock.
->> + */
->> +static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
->>
->>   /* ISA Memory physical address */
->>   resource_size_t isa_mem_base;
->> @@ -64,6 +70,55 @@ struct dma_map_ops *get_pci_dma_ops(void)
->>   }
->>   EXPORT_SYMBOL(get_pci_dma_ops);
->>
->> +/* get_phb_number() function should run under locking
->> + * protection, specifically hose_spinlock.
->> + */
->> +static int get_phb_number(struct device_node *dn)
->> +{
->> +	const __be64 *prop64;
->> +	const __be32 *regs;
->> +	int phb_id = 0;
->> +
->> +	/* Try fixed PHB numbering first, by checking archs and reading
->> +	 * the respective device-tree properties. Firstly, try PowerNV by
->> +	 * reading "ibm,opal-phbid", only present in OPAL environment.
->> +	 */
->> +	prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
->> +	if (prop64) {
->> +		phb_id = (int)(be64_to_cpup(prop64) & 0xFFFF);
->> +
->> +	} else if (machine_is(pseries)) {
->> +		regs = of_get_property(dn, "reg", NULL);
->> +		if (regs)
->> +			phb_id = (int)(be32_to_cpu(regs[1]) & 0xFFFF);
->> +	} else {
->> +		goto dynamic_phb_numbering;
->> +	}
->> +
->> +	/* If we have a huge PHB number obtained from device-tree, no need
->> +	 * to worry with the bitmap. Otherwise, we need to be sure we're
->> +	 * not trying to use the same PHB number twice.
->> +	 */
->> +	if (phb_id < MAX_PHBS) {
->> +		if (test_bit(phb_id, phb_bitmap))
->> +			goto dynamic_phb_numbering;
->> +		set_bit(phb_id, phb_bitmap);
->> +	}
->> +
->> +	return phb_id;
->> +
->> +	/* If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
->> +	 * the same PHB number twice, then fallback to dynamic PHB numbering.
->> +	 */
->> +dynamic_phb_numbering:
->> +
->> +	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
->> +	BUG_ON(phb_id >= MAX_PHBS); /* Reached maximum number of PHBs. */
->> +	set_bit(phb_id, phb_bitmap);
->> +
->> +	return phb_id;
->> +}
->> +
->>   struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
->>   {
->>   	struct pci_controller *phb;
->> @@ -72,7 +127,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
->>   	if (phb == NULL)
->>   		return NULL;
->>   	spin_lock(&hose_spinlock);
->> -	phb->global_number = global_phb_number++;
->> +	phb->global_number = get_phb_number(dev);
->>   	list_add_tail(&phb->list_node, &hose_list);
->>   	spin_unlock(&hose_spinlock);
->>   	phb->dn = dev;
->> @@ -94,6 +149,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
->>   void pcibios_free_controller(struct pci_controller *phb)
->>   {
->>   	spin_lock(&hose_spinlock);
->> +
->> +	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
->> +	if (phb->global_number < MAX_PHBS)
->> +		clear_bit(phb->global_number, phb_bitmap);
->> +
->>   	list_del(&phb->list_node);
->>   	spin_unlock(&hose_spinlock);
->>
->> --
->> 2.1.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
->
+Lastly, why do you need a user mode component? What does it do?
+
+Andreas
