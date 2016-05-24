@@ -1,76 +1,265 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34840 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbcEFGei (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2016 02:34:38 -0400
-Received: by mail-pa0-f45.google.com with SMTP id iv1so44224243pac.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 May 2016 23:34:37 -0700 (PDT)
-Subject: Re: [PATCH 4/5] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host
- bridge
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, iommu@lists.linux-foundation.org
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-Cc: alex.williamson@redhat.com, bhelgaas@google.com,
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:59815 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752031AbcEXP6R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2016 11:58:17 -0400
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 25 May 2016 01:58:14 +1000
+Subject: Re: [PATCH v3] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio
+ page is exclusive
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1463048451-7086-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160519163319.0fdaf76a@ul30vt.home>
+ <201605230345.u4N3dJip043323@mx0a-001b2d01.pphosted.com>
+ <20160523092038.035dad06@ul30vt.home>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, aik@ozlabs.ru,
 	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
-	alistair@popple.id.au, ruscur@russell.cc
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <8bafc3ec-8ee1-db91-2835-6a77a5dd2539@ozlabs.ru>
-Date: Fri, 6 May 2016 16:34:21 +1000
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
+	kevin.tian@intel.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <1f880756-585d-28e9-9f7c-b823c370d7a0@linux.vnet.ibm.com>
+Date: Tue, 24 May 2016 23:57:21 +0800
 MIME-Version: 1.0
-In-Reply-To: <1461761010-5452-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+In-Reply-To: <20160523092038.035dad06@ul30vt.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/27/2016 10:43 PM, Yongji Xie wrote:
-> Any IODA host bridge have the capability of IRQ remapping.
-> So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
-> is detected.
+On 2016/5/23 23:20, Alex Williamson wrote:
+
+> On Mon, 23 May 2016 11:45:34 +0800
+> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
 >
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> On 2016/5/20 6:33, Alex Williamson wrote:
+>>
+>>> On Thu, 12 May 2016 18:20:51 +0800
+>>> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+>>>   
+>>>> Current vfio-pci implementation disallows to mmap
+>>>> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
+>>>> page may be shared with other BARs. This will cause some
+>>>> performance issues when we passthrough a PCI device with
+>>>> this kind of BARs. Guest will be not able to handle the mmio
+>>>> accesses to the BARs which leads to mmio emulations in host.
+>>>>
+>>>> However, not all sub-page BARs will share page with other BARs.
+>>>> We should allow to mmap the sub-page MMIO BARs which we can
+>>>> make sure will not share page with other BARs.
+>>>>
+>>>> This patch adds support for this case. And we try to add a
+>>>> dummy resource to reserve the remainder of the page which
+>>>> hot-add device's BAR might be assigned into. But it's not
+>>>> necessary to handle the case when the BAR is not page aligned.
+>>>> Because we can't expect the BAR will be assigned into the same
+>>>> location in a page in guest when we passthrough the BAR. And
+>>>> it's hard to access this BAR in userspace because we have
+>>>> no way to get the BAR's location in a page.
+>>>>
+>>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>>> ---
+>>>>    drivers/vfio/pci/vfio_pci.c         |   70 +++++++++++++++++++++++++++++++----
+>>>>    drivers/vfio/pci/vfio_pci_private.h |    8 ++++
+>>>>    2 files changed, 71 insertions(+), 7 deletions(-)
+>>>>
+>>>> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+>>>> index 188b1ff..253c22f 100644
+>>>> --- a/drivers/vfio/pci/vfio_pci.c
+>>>> +++ b/drivers/vfio/pci/vfio_pci.c
+>>>> @@ -110,6 +110,50 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+>>>>    	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
+>>>>    }
+>>>>    
+>>>> +static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
+>>>> +{
+>>>> +	struct resource *res = vdev->pdev->resource + index;
+>>>> +	struct vfio_pci_dummy_resource *dummy_res = NULL;
+>>>> +
+>>>> +	if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP))
+>>>> +		return false;
+>>>> +
+>>>> +	if (!(res->flags & IORESOURCE_MEM))
+>>>> +		return false;
+>>>> +
+>>>> +	/*
+>>>> +	 * The PCI core shouldn't set up a resource with a type but
+>>>> +	 * zero size. But there may be bugs that cause us to do that.
+>>>> +	 */
+>>>> +	if (!resource_size(res))
+>>>> +		return false;
+>>>> +
+>>>> +	if (resource_size(res) >= PAGE_SIZE)
+>>>> +		return true;
+>>>> +
+>>>> +	if (!(res->start & ~PAGE_MASK)) {
+>>>> +		/*
+>>>> +		 * Add a dummy resource to reserve the remainder
+>>>> +		 * of the exclusive page in case that hot-add
+>>>> +		 * device's bar is assigned into it.
+>>>> +		 */
+>>>> +		dummy_res = kzalloc(sizeof(*dummy_res), GFP_KERNEL);
+>>>> +		if (dummy_res == NULL)
+>>>> +			return false;
+>>>> +		dummy_res->resource.start = res->end + 1;
+>>>> +		dummy_res->resource.end = res->start + PAGE_SIZE - 1;
+>>>> +		dummy_res->resource.flags = res->flags;
+>>>> +		if (request_resource(res->parent, &dummy_res->resource)) {
+>>>> +			kfree(dummy_res);
+>>>> +			return false;
+>>>> +		}
+>>>> +		dummy_res->index = index;
+>>>> +		list_add(&dummy_res->res_next, &vdev->dummy_resources_list);
+>>>> +		return true;
+>>>> +	}
+>>>> +	return false;
+>>>> +}
+>>> The name of this function is vfio_pci_bar_mmap_supported(), which
+>>> suggests we should be able to call it at any point to test if mmap is
+>>> supported, but that's not what it does.  It's actually a one time setup
+>>> function, that also happens to return what it found or managed to
+>>> reserve.  If we were to call this a second time, we might get a
+>>> different result.  So I think this either needs to change to something
+>>> like:
+>>>
+>>> static void vfio_pci_probe_mmaps(struct vfio_pci_device *vdev)
+>>>
+>>> where it loops through all the BARs and results in a valid
+>>> bar_mmap_supported array, or the function should be made smart enough
+>>> to identify if the necessary resource has already been allocated such
+>>> that it can be call multiple times per BAR, at which point we could
+>>> remove the bar_mmap_supported array.
+>> Thanks for your comment. I would change the name of this function
+>> and reserve bar_mmap_supported array to cache the result.
+>>
+>>> A comment describing why we can only support sub-page mmaps for
+>>> resources aligned at the start of a page would also be helpful for
+>>> future maintenance here.
+>> OK. I will add this.
+>>
+>>>> +
+>>>>    static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
+>>>>    static void vfio_pci_disable(struct vfio_pci_device *vdev);
+>>>>    
+>>>> @@ -145,10 +189,12 @@ static bool vfio_pci_nointx(struct pci_dev *pdev)
+>>>>    static int vfio_pci_enable(struct vfio_pci_device *vdev)
+>>>>    {
+>>>>    	struct pci_dev *pdev = vdev->pdev;
+>>>> -	int ret;
+>>>> +	int ret, bar;
+>>>>    	u16 cmd;
+>>>>    	u8 msix_pos;
+>>>>    
+>>>> +	INIT_LIST_HEAD(&vdev->dummy_resources_list);
+>>>> +
+>>>>    	pci_set_power_state(pdev, PCI_D0);
+>>>>    
+>>>>    	/* Don't allow our initial saved state to include busmaster */
+>>>> @@ -218,12 +264,17 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+>>>>    		}
+>>>>    	}
+>>>>    
+>>>> +	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
+>>>> +		vdev->bar_mmap_supported[bar] =
+>>>> +				vfio_pci_bar_mmap_supported(vdev, bar);
+>>>> +	}
+>>>>    	return 0;
+>>>>    }
+>>>>    
+>>>>    static void vfio_pci_disable(struct vfio_pci_device *vdev)
+>>>>    {
+>>>>    	struct pci_dev *pdev = vdev->pdev;
+>>>> +	struct vfio_pci_dummy_resource *dummy_res, *tmp;
+>>>>    	int i, bar;
+>>>>    
+>>>>    	/* Stop the device from further DMA */
+>>>> @@ -252,6 +303,13 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+>>>>    		vdev->barmap[bar] = NULL;
+>>>>    	}
+>>>>    
+>>>> +	list_for_each_entry_safe(dummy_res, tmp,
+>>>> +				 &vdev->dummy_resources_list, res_next) {
+>>>> +		list_del(&dummy_res->res_next);
+>>>> +		release_resource(&dummy_res->resource);
+>>>> +		kfree(dummy_res);
+>>>> +	}
+>>>> +
+>>>>    	vdev->needs_reset = true;
+>>>>    
+>>>>    	/*
+>>>> @@ -623,9 +681,7 @@ static long vfio_pci_ioctl(void *device_data,
+>>>>    
+>>>>    			info.flags = VFIO_REGION_INFO_FLAG_READ |
+>>>>    				     VFIO_REGION_INFO_FLAG_WRITE;
+>>>> -			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
+>>>> -			    pci_resource_flags(pdev, info.index) &
+>>>> -			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
+>>>> +			if (vdev->bar_mmap_supported[info.index]) {
+>>>>    				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
+>>>>    				if (info.index == vdev->msix_bar) {
+>>>>    					ret = msix_sparse_mmap_cap(vdev, &caps);
+>>>> @@ -1049,16 +1105,16 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+>>>>    		return -EINVAL;
+>>>>    	if (index >= VFIO_PCI_ROM_REGION_INDEX)
+>>>>    		return -EINVAL;
+>>>> -	if (!(pci_resource_flags(pdev, index) & IORESOURCE_MEM))
+>>>> +	if (!vdev->bar_mmap_supported[index])
+>>>>    		return -EINVAL;
+>>>>    
+>>>> -	phys_len = pci_resource_len(pdev, index);
+>>>> +	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
+>>>>    	req_len = vma->vm_end - vma->vm_start;
+>>>>    	pgoff = vma->vm_pgoff &
+>>>>    		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+>>>>    	req_start = pgoff << PAGE_SHIFT;
+>>>>    
+>>>> -	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
+>>>> +	if (req_start + req_len > phys_len)
+>>>>    		return -EINVAL;
+>>> I'm only able to find your QEMU patch from last year, have you posted a
+>>> version making use of this latest proposal?  Is the expectation still
+>>> that QEMU modify the BAR size as seen from the guest to the host page
+>>> size for sub-page regions exposing the MMAP flag?  Does that result in
+>>> any known incompatibilities with drivers in the guest?  Thanks,
+>>>
+>>> Alex
+>> I will post the latest version soon. In QEMU, we would change the size of
+>> MemoryRegion instead of VFIORegion. So guest will see the real size. The
+>> only limit is that BAR must be in a exclusive page in guest too. Otherwise,
+>> we would not allow to passthrough this BAR. On Power, we have changed
+>> the SLOF to enforce all BARs to be page aligned in guest.
+> So the VM firmware will allocate page aligned BARs, but the guest OS is
+> free to realloc BARs as it sees fit.  VM firmware does not have the
+> final say in how BARs get mapped within the guest.
 
+Yes, the allocation of BARs in guest are uncertain. So we should
+detect whether the BAR is in an exclusive page in guest. This can
+be done by setting lower priority of sub-page BAR's MemoryRegion.
+If there is any overlap, the right BAR would have FlatRange.
 
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-
-
-> ---
->  arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+> Besides, it seems like a lot of hand waving and assumptions that QEMU gets a
+> MemoryListener region added with a sub-page size that magically gets
+> expanded because we think we know how the guest is mapping BARs.  I'm
+> not very confident in this solutions.  Thanks,
 >
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index f90dc04..9557638 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -3080,6 +3080,12 @@ static void pnv_pci_ioda_fixup(void)
->  	pnv_npu_ioda_fixup();
->  }
->
-> +int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
-> +{
-> +	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-> +	return 0;
-> +}
-> +
->  /*
->   * Returns the alignment for I/O or memory windows for P2P
->   * bridges. That actually depends on how PEs are segmented.
-> @@ -3364,6 +3370,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->  	 */
->  	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
->
-> +	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
-> +
->  	if (phb->type == PNV_PHB_NPU)
->  		hose->controller_ops = pnv_npu_ioda_controller_ops;
->  	else
->
 
+Sorry, I didn't get your point...
 
--- 
-Alexey
+In my opinion, QEMU patch need to do two things if we want to
+passthrough sub-page BARs to guest:
+
+1. Passing a valid size to KVM ioctl KVM_SET_USER_MEMORY_REGION
+because the size of BAR is still less than PAGE_SIZE. This could be done
+by expanding MemoryRegion of sub-page BARs.
+
+2. Handling the case that another BAR share the same page with
+other BAR the same page with in guest because guest may not
+allocate page aligned BARs. In this case, we should not passthrough
+the sub-page BAR. We could set lower priority of sub-page BAR's
+MemoryRegion to achieve that.
+
+Thanks,
+Yongji
+
