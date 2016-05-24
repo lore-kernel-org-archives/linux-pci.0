@@ -1,68 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605301337.u4UDY4J2026770@mx0a-001b2d01.pphosted.com>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-Subject: [PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X table
-Date: Mon, 30 May 2016 21:32:07 +0800
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.bemta12.messagelabs.com ([216.82.251.8]:31914 "EHLO
+	mail1.bemta12.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751686AbcEXGie convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 May 2016 02:38:34 -0400
+From: Ocean HY1 He <hehy1@lenovo.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"luto@kernel.org" <luto@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"prarit@redhat.com" <prarit@redhat.com>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	Nagananda Chumbalkar <nchumbalkar@lenovo.com>,
+	Ocean HY1 He <hehy1@lenovo.com>
+Subject: [PATCH] PCI/ASPM: fix reverse ASPM L0s assignment of upstream and
+ downstream
+Date: Tue, 24 May 2016 06:29:44 +0000
+Message-ID: <1464071269-79954-1-git-send-email-hehy1@lenovo.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap the page
-containing MSI-X table in case that users can write directly
-to MSI-X table and generate an incorrect MSIs.
+In pcie_config_aspm_link(), when convert ASPM state to
+upstream/downstream ASPM register state, the upstream variable and
+dwsream variable are reversed. This causes PCI/E link enter ASPM L0s
+even it should be disabled and PCI/E endpoint may reset randomly.
 
-However, this will cause some performance issue when there
-are some critical device registers in the same page as the 
-MSI-X table. We have to handle the mmio access to these
-registers in QEMU emulation rather than in guest.
+Signed-off-by: Ocean He <hehy1@lenovo.com>
+---
+ drivers/pci/pcie/aspm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-To solve this issue, this series allows to expose MSI-X table
-to userspace when hardware enables the capability of interrupt
-remapping which can ensure that a given PCI device can only
-shoot the MSIs assigned for it. And we introduce a new bus_flags
-PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
-for different archs.
-
-The patch 3 are based on the proposed patchset[1].
-
-Changelog v2: 
-- Make the commit log more clear
-- Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
-  so that we could clearly know what the function does
-- Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
-  of iommu_bus_notifier()
-- Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
-  table so that we can know whether we allow to mmap MSI-X table
-  in QEMU
-
-[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-
-Yongji Xie (6):
-  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
-  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
-  iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
-  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-  vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
-
- arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
- drivers/iommu/iommu.c                     |    8 ++++++++
- drivers/pci/msi.c                         |   15 +++++++++++++++
- drivers/pci/probe.c                       |    7 +++++++
- drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
- drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
- include/linux/msi.h                       |    5 ++++-
- include/linux/pci.h                       |    1 +
- 8 files changed, 59 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 2dfe7fd..3f8a44d 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -439,9 +439,9 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ 		return;
+ 	/* Convert ASPM state to upstream/downstream ASPM register state */
+ 	if (state & ASPM_STATE_L0S_UP)
+-		dwstream |= PCI_EXP_LNKCTL_ASPM_L0S;
+-	if (state & ASPM_STATE_L0S_DW)
+ 		upstream |= PCI_EXP_LNKCTL_ASPM_L0S;
++	if (state & ASPM_STATE_L0S_DW)
++		dwstream |= PCI_EXP_LNKCTL_ASPM_L0S;
+ 	if (state & ASPM_STATE_L1) {
+ 		upstream |= PCI_EXP_LNKCTL_ASPM_L1;
+ 		dwstream |= PCI_EXP_LNKCTL_ASPM_L1;
 -- 
-1.7.9.5
+1.8.3.1
