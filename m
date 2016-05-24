@@ -1,75 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0085.outbound.protection.outlook.com ([104.47.38.85]:49912
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751451AbcE0H3P convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 May 2016 03:29:15 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Wenrui Li <wenrui.li@rock-chips.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Shawn Lin" <shawn.lin@rock-chips.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	"Rob Herring" <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Doug Anderson <dianders@chromium.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-rockchip@lists.infradead.org"
-	<linux-rockchip@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
-Date: Fri, 27 May 2016 07:13:29 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258AF22F@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
- <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
- <9836736.6VjP1ug4kE@wuerfel> <5747EDC9.2080603@rock-chips.com>
-In-Reply-To: <5747EDC9.2080603@rock-chips.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Wed, 25 May 2016 00:13:09 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Peter Wu <peter@lekensteyn.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
+Message-ID: <20160524211309.GH1789@lahna.fi.intel.com>
+References: <20160519231234.GB1785@al>
+ <1463991648-85051-1-git-send-email-mika.westerberg@linux.intel.com>
+ <20160523200042.GB24375@localhost>
+ <20160523215015.GA31479@localhost>
+ <20160524122357.GA20453@localhost>
+ <20160524125323.GE1789@lahna.fi.intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160524125323.GE1789@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> >
-> >> +
-> >> +static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *pp,
-> >> +				       struct pci_bus *bus, u32 devfn,
-> >> +				       int where, int size, u32 *val)
-> >> +{
-> >> +	u32 busdev;
-> >> +
-> >> +	busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
-> >> +				PCI_FUNC(devfn), where);
-> >> +
-> >> +	if (busdev & (size - 1)) {
-> >> +		*val = 0;
-> >> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> >> +	}
-> >> +
-> >> +	if (size == 4) {
-> >> +		*val = readl(pp->reg_base + busdev);
-> >> +	} else if (size == 2) {
-> >> +		*val = readw(pp->reg_base + busdev);
-> >> +	} else if (size == 1) {
-> >> +		*val = readb(pp->reg_base + busdev);
-> >> +	} else {
-> >> +		*val = 0;
-> >> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> >> +	}
-> >> +	return PCIBIOS_SUCCESSFUL;
-> >> +}
-> >> +
-> >
-> > This looks like the normal ECAM operations, you could just call those.
+On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
+> > I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
+> > on the assumption that "PCI: Power on bridges before scanning new
+> > devices" is sufficient to cover both the ACPI and the generic PCi
+> > rescan cases, but I'd like some reassurance about that.
 > 
-> I read ECAM reference code, I found it not support ioremap config space
-> for each bus individually on 64-bit systems. Our soc is 64-bit system,
-> and bus0 config space base address is 0xfda00000, bus1 base address is
-> 0xf8100000. So I think it is not normal ECAM operations, I do not know
-> if I have understood correctly?
-> 
-Hi,
+> I agree with your reasoning that the patch should not be needed anymore.
+> However, I have the machine which needed that patch at home so I'm not
+> able to test it now. I'll do that later today when I get back home.
 
-I think Arnd was suggesting to use generic config read/write calls, pci_generic_config_read/pci_generic_config_write
-which does above functionality.
+I tried now on my Lenovo Yoga 900 laptop and unfortunately "PCI: Power
+on bridges before scanning new devices" seems not to be enough. This
+machine has SD-card reader connected to one PCIe port and once I unload
+the sdhci-pci driver and enable runtime PM for the device, next system
+suspend/resume cycle loses the SD-card reader PCI device.
 
-Bharat 
+I will investigate more tomorrow -- it is getting late here.
+
+Anyway, maybe it is safer to postpone this series for v4.8 to give it
+more testing time in -next.
