@@ -1,189 +1,363 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51346 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423076AbcE3VdL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 May 2016 17:33:11 -0400
-Date: Mon, 30 May 2016 16:33:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Yu <yu.c.chen@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
-Message-ID: <20160530213305.GA21322@localhost>
-References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ard Biesheuvel
+	<ard.biesheuvel@linaro.org>,
+        Jon Masters <jcm@redhat.com>, Tomasz Nowicki
+	<tn@semihalf.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org"
+	<hanjun.guo@linaro.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dhdang@apm.com"
+	<dhdang@apm.com>,
+        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        Wangyijing
+	<wangyijing@huawei.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
+ controller
+Date: Tue, 24 May 2016 07:23:08 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EDB438E@lhreml503-mbs>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+ <57331290.7070104@semihalf.com>
+ <3d4aae09-51c4-f007-5100-191a4a85e27a@redhat.com>
+ <CAKv+Gu8fdeJ9OvRSmtu9zyvcjK3O-4WU=jG=6-7t4xZwvV8d2g@mail.gmail.com>
+ <95b1d06e-f9c5-39f3-1003-f536b65eef60@redhat.com>
+ <CAKv+Gu-_xp_t_Ze3Pw_-82-fmy=tCy-h=4FbP98eLbuXVk2hHQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EDAF6AC@lhreml503-mbs>
+ <CAKv+Gu_zpoFsDr7e8zPCDKPpRdKDVH+vnC0nfvmGaJ7xcP3Zng@mail.gmail.com>
+ <20160523105655.GA22902@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EDB35A5@lhreml503-mbs>
+ <20160523233918.GA32555@localhost>
+In-Reply-To: <20160523233918.GA32555@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 06:33:24PM +0800, Chen Yu wrote:
-> Currently there are many people reported that they can not
-> do a poweroff nor a suspend to memory on their Mac Pro 11.
-> After some investigations it was found that, once the PCI bridge
-> 0000:00:1c.0 reassigns its mm windows([mem 0x7fa00000-0x7fbfffff]
-> and [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-> io resource 0x1804 becomes unaccessible immediately, where the
-> ACPI Sleep register is located, as a result neither poweroff(S5)
-> nor suspend to memory(S3) works.
-> 
-> I don't know why setting the base/limit of PCI bridge mem resource
-> would affect another io resource region, so this quirk just simply
-> bypass the assignment of these mm resources on 0000:00:1c.0, by
-> resetting the resource flag to 0 before updating the base/limit registers.
-> This patch also introduces a new pci fixup phase before the actual bridge
-> resource assignment.
+Hi Bjorn
 
-Split the new fixup phase into a separate patch.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 24 May 2016 00:39
+> To: Gabriele Paoloni
+> Cc: Lorenzo Pieralisi; Ard Biesheuvel; Jon Masters; Tomasz Nowicki;
+> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
+> rafael@kernel.org; hanjun.guo@linaro.org; okaya@codeaurora.org;
+> jchandra@broadcom.com; linaro-acpi@lists.linaro.org; linux-
+> pci@vger.kernel.org; dhdang@apm.com; Liviu.Dudau@arm.com;
+> ddaney@caviumnetworks.com; jeremy.linton@arm.com; linux-
+> kernel@vger.kernel.org; linux-acpi@vger.kernel.org;
+> robert.richter@caviumnetworks.com; Suravee.Suthikulpanit@amd.com;
+> msalter@redhat.com; Wangyijing; mw@semihalf.com;
+> andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
+> controller
+>=20
+> On Mon, May 23, 2016 at 03:16:01PM +0000, Gabriele Paoloni wrote:
+> > Hi Lorenzo
+> >
+> > > -----Original Message-----
+> > > From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> > > Sent: 23 May 2016 11:57
+> > > To: Ard Biesheuvel
+> > > Cc: Gabriele Paoloni; Jon Masters; Tomasz Nowicki;
+> helgaas@kernel.org;
+> > > arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
+> > > rafael@kernel.org; hanjun.guo@linaro.org; okaya@codeaurora.org;
+> > > jchandra@broadcom.com; linaro-acpi@lists.linaro.org; linux-
+> > > pci@vger.kernel.org; dhdang@apm.com; Liviu.Dudau@arm.com;
+> > > ddaney@caviumnetworks.com; jeremy.linton@arm.com; linux-
+> > > kernel@vger.kernel.org; linux-acpi@vger.kernel.org;
+> > > robert.richter@caviumnetworks.com; Suravee.Suthikulpanit@amd.com;
+> > > msalter@redhat.com; Wangyijing; mw@semihalf.com;
+> > > andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org
+> > > Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI
+> host
+> > > controller
+> > >
+> > > On Fri, May 20, 2016 at 11:14:03AM +0200, Ard Biesheuvel wrote:
+> > > > On 20 May 2016 at 10:40, Gabriele Paoloni
+> > > <gabriele.paoloni@huawei.com> wrote:
+> > > > > Hi Ard
+> > > > >
+> > > > >> -----Original Message-----
+> > > > >> From: Ard Biesheuvel [mailto:ard.biesheuvel@linaro.org]
+> > > > [...]
+> > > > >>
+> > > > >> Is the PCIe root complex so special that you cannot simply
+> > > describe an
+> > > > >> implementation that is not PNP0408 compatible as something
+> else,
+> > > under
+> > > > >> its own unique HID? If everybody is onboard with using ACPI,
+> how
+> > > is
+> > > > >> this any different from describing other parts of the platform
+> > > > >> topology? Even if the SBSA mandates generic PCI, they already
+> > > deviated
+> > > > >> from that when they built the hardware, so pretending that it
+> is a
+> > > > >> PNP0408 with quirks really does not buy us anything.
+> > > > >
+> > > > > From my understanding we want to avoid this as this would allow
+> > > each
+> > > > > vendor to come up with his own code and it would be much more
+> > > effort
+> > > > > for the PCI maintainer to rework the PCI framework to
+> accommodate
+> > > X86
+> > > > > and "all" ARM64 Host Controllers...
+> > > > >
+> > > > > I guess this approach is too risky and we want to avoid this.
+> > > Through
+> > > > > standardization we can more easily maintain the code and scale
+> it
+> > > to
+> > > > > multiple SoCs...
+> > > > >
+> > > > > So this is my understanding; maybe Jon, Tomasz or Lorenzo can
+> give
+> > > > > a bit more explanation...
+> > > > >
+> > > >
+> > > > OK, so that boils down to recommending to vendors to represent
+> known
+> > > > non-compliant hardware as compliant, just so that we don't have
+> to
+> > > > change the code to support additional flavors of ECAM ? It's fine
+> to
+> > > > be pragmatic, but that sucks.
+> > > >
+> > > > We keep confusing the x86 case with the ARM case here: for x86,
+> they
+> > > > needed to deal with broken hardware *after* the fact, and all
+> they
+> > > > could do is find /some/ distinguishing feature in order to guess
+> > > which
+> > > > exact hardware they might be running on. For arm64, it is the
+> > > opposite
+> > > > case. We are currently in a position where we can demand vendors
+> to
+> > > > comply with the standards they endorsed themselves, and (ab)using
+> > > ACPI
+> > > > + DMI as a de facto platform description rather than plain ACPI
+> makes
+> > > > me think the DT crowd were actually right from the beginning. It
+> > > > *directly* violates the standardization principle, since it
+> requires
+> > > a
+> > > > priori knowledge inside the OS that a certain 'generic' device
+> must
+> > > be
+> > > > driven in a special way.
+> > > >
+> > > > So can anyone comment on the feasibility of adding support for
+> > > devices
+> > > > with vendor specific HIDs (and no generic CIDs) to the current
+> ACPI
+> > > > ECAM driver in Linux?
+>=20
+> I don't think of ECAM support itself as a "driver".  It's just a
+> service available to drivers, similar to OF resource parsing.
+>=20
+> Per PCI Firmware r3.2, sec 4.1.5, "PNP0A03" means a PCI/PCI-X/PCIe
+> host bridge.  "PNP0A08" means a PCI-X Mode 2 or PCIe bridge that
+> supports extended config space.  It doesn't specify how we access that
+> config space, so I think hardware with non-standard ECAM should still
+> have PNP0A03 and PNP0A08 in _CID or _HID.
+>=20
+> "ECAM" as used in the specs (PCIe r3.0, sec 7.2.2, and PCI Firmware
+> r3.2, sec 4.1) means:
+>=20
+>   (a) a memory-mapped model for config space access, and
+>   (b) a specific mapping of address bits to bus/device/function/
+>       register
+>=20
+> MCFG and _CBA assume both (a) and (b), so I think a device with
+> non-standard ECAM mappings should not be described in MCFG or _CBA.
+>=20
+> If a bridge has ECAM with non-standard mappings, I think either a
+> vendor-specific _HID or a device-specific method, e.g., _DSM, could
+> communicate that.
+>=20
+> Jon, I agree that we should avoid describing non-standardized hardware
+> in Linux-specific ways.  Is there a mechanism in use already?  How
+> does Windows handle this?  DMI is a poor long-term solution because it
+> requires ongoing maintenance for new platforms, but I think it's OK
+> for getting started with platforms already shipping.
+>=20
+> A _DSM has the advantage that once it is defined and supported, OEMs
+> can ship new platforms without requiring a new quirk or a new _HID to
+> be added to a driver.
+>=20
+> There would still be the problem of config access before the namespace
+> is available, i.e., the MCFG use case.  I don't know how important
+> that is.  Defining an MCFG extension seems like the most obvious
+> solution.
+>=20
+> If we only expect a few non-standard devices, maybe it's enough to
+> have DMI quirks to statically set up ECAM and just live with the
+> inconvenience of requiring a kernel change for every new non-standard
+> device.
+>=20
+> > > Host bridges in ACPI are handled through PNP0A08/PNP0A03 ids, and
+> > > most of the arch specific code is handled in the respective arch
+> > > directories (X86 and IA64, even though IA64 does not rely on
+> ECAM/MCFG
+> > > for
+> > > PCI ops), it is not a driver per-se, PNP0A08/PNP0A03 are detected
+> > > through
+> > > ACPI scan handlers and the respective arch code (ie
+> pci_acpi_scan_root)
+> > > sets-up resources AND config space on an arch specific basis.
+> > >
+> > > X86 deals with that with code in arch/x86 that sets-up the
+> pci_raw_ops
+> > > on a platform specific basis (and it is not nice, but it works
+> because
+> > > as you all know the number of platforms in X86 world is contained).
+> > >
+> > > Will this happen for ARM64 in arch/arm64 based on vendor specific
+> > > HIDs ?
+> > >
+> > > No.
+> > >
+> > > So given the current state of play (we were requested to move the
+> > > arch/arm64 specific ACPI PCI bits to arch/arm64), we would end up
+> > > with arch/arm64 code requiring code in /drivers to set-up pci_ops
+> > > in a platform specific way, it is horrible, if feasible at all.
+> > >
+> > > The only way this can be implemented is by pretending that the
+> > > ACPI/PCI arch/arm64 implementation is generic code (that's what
+> this
+> > > series does), move it to /drivers (where it is in this series), and
+> > > implement _DSD vendor specific bindings (per HID) to set-up the pci
+> > > operations; whether this solution should go upstream, given that it
+> > > is just a short-term solution for early platforms bugs, it is
+> another
+> > > story and my personal answer is no.
+>=20
+> It seems like there should be a way to look for a _DSM before we call
+> acpi_pci_root_get_mcfg_addr() to look for _CBA.
+>=20
+> Currently we call acpi_pci_root_get_mcfg_addr() (to read _CBA) from
+> the generic acpi_pci_root_add(), but the result (root->mcfg_addr) is
+> only used in x86-specific code.  I think it would be nicer if the
+> lookup and the use were together.  Then it would be easier to override
+> it because the mapping assumptions would all be in one place.
+>=20
+> > I think it shouldn't be too bad to move quirk handling mechanism to
+> > arch/arm64. Effectively we would not move platform specific code into
+> > arch/arm64 but just the mechanism checking if there is any quirk that
+> > is defined.
+> >
+> > i.e.:
+> >
+> > extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
+> > extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
+> >
+> > static struct pci_ecam_ops *pci_acpi_get_ops(struct acpi_pci_root
+> *root)
+> > {
+> >         int bus_num =3D root->secondary.start;
+> >         int domain =3D root->segment;
+> >         struct pci_cfg_fixup *f;
+> >
+> >         /*
+> >          * Match against platform specific quirks and return
+> corresponding
+> >          * CAM ops.
+> >          *
+> >          * First match against PCI topology <domain:bus> then use DMI
+> or
+> >          * custom match handler.
+> >          */
+> >         for (f =3D __start_acpi_mcfg_fixups; f <
+> __end_acpi_mcfg_fixups; f++) {
+> >                 if ((f->domain =3D=3D domain || f->domain =3D=3D
+> PCI_MCFG_DOMAIN_ANY) &&
+> >                     (f->bus_num =3D=3D bus_num || f->bus_num =3D=3D
+> PCI_MCFG_BUS_ANY) &&
+> >                     (f->system ? dmi_check_system(f->system) : 1) &&
+> >                     (f->match ? f->match(f, root) : 1))
+> >                         return f->ops;
+> >         }
+> >         /* No quirks, use ECAM */
+> >         return &pci_generic_ecam_ops;
+> > }
+> >
+> > Such quirks will be defined anyway in drivers/pci/host/ in the vendor
+> > specific quirk implementations.
+> >
+> > e.g. in HiSilicon case we would have
+> >
+> > DECLARE_ACPI_MCFG_FIXUP(NULL, hisi_pcie_match, &hisi_pcie_ecam_ops,
+> > 			PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
+> >
+> > in "drivers/pci/host/pcie-hisi-acpi.c "
+> >
+> > Thanks
+> >
+> > Gab
+>=20
+> Sorry Gab, I guess I was really responding to earlier messages :)
+>=20
+> I don't really have much to say here, except that it doesn't seem
+> right to have an MCFG that describes a non-standard ECAM mapping.
 
-I'm doubtful about this because we don't understand the root cause.
+The ACPI table that this mechanism relies upon is the one discussed
+in:
+https://lkml.org/lkml/2016/3/9/91
 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-> Tested-by: Cedric Le Goater <clg@kaod.org>
-> Tested-by: pkozlov <pkozlov.vrn@gmail.com>
-> Tested-by: Zach Norman <zach@nor.mn>
-> Tested-by: Pablo Catalina <pablo.catalina@gmail.com>
-> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> ---
->  drivers/pci/quirks.c              | 25 +++++++++++++++++++++++++
->  drivers/pci/setup-bus.c           |  2 ++
->  include/asm-generic/vmlinux.lds.h |  3 +++
->  include/linux/pci.h               |  4 ++++
->  scripts/mod/modpost.c             |  1 +
->  5 files changed, 35 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ee72ebe..e347047 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3370,6 +3370,8 @@ extern struct pci_fixup __start_pci_fixups_header[];
->  extern struct pci_fixup __end_pci_fixups_header[];
->  extern struct pci_fixup __start_pci_fixups_final[];
->  extern struct pci_fixup __end_pci_fixups_final[];
-> +extern struct pci_fixup __start_pci_fixups_assign[];
-> +extern struct pci_fixup __end_pci_fixups_assign[];
->  extern struct pci_fixup __start_pci_fixups_enable[];
->  extern struct pci_fixup __end_pci_fixups_enable[];
->  extern struct pci_fixup __start_pci_fixups_resume[];
-> @@ -3405,6 +3407,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->  		end = __end_pci_fixups_final;
->  		break;
->  
-> +	case pci_fixup_assign:
-> +		start = __start_pci_fixups_assign;
-> +		end = __end_pci_fixups_assign;
-> +		break;
-> +
->  	case pci_fixup_enable:
->  		start = __start_pci_fixups_enable;
->  		end = __end_pci_fixups_enable;
-> @@ -4419,3 +4426,21 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
->  	}
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-> +
-> +/*
-> + * On Mac Pro 11, the allocation of pci bridge memory resource
-> + * broke ACPI Sleep Type register region.
-> + */
-> +static void quirk_mac_disable_mmio_bar(struct pci_dev *dev)
-> +{
-> +	struct resource *b_res;
-> +
-> +	dev_info(&dev->dev, "[Quirk] Disable mmio on Mac Pro 11\n");
-> +	if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
-> +		return;
+As you can see MCFG describes ECAM mappings, but we have a motherboard
+reserved resource outside the MCFG:
+Device (RES0)
+{
+	Name (_HID, "HISI0081") // HiSi PCIe RC config base address
+	Name (_CID, "PNP0C02") // Motherboard reserved resource
+	Name (_CRS, ResourceTemplate (){
+	Memory32Fixed (ReadWrite, 0xb0080000 , 0x10000)
+	})
+}
 
-Why test for PCI_CLASS_BRIDGE_PCI?  If you do need to test, why is the
-test after the dev_info()?
+This allows us to retrieve the address we need for accessing
+the config space on the RC (that is non-ECAM).
 
-> +	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
-> +	b_res[1].flags = 0;
-> +	b_res[2].flags = 0;
+I was thinking that such mechanism could fit different vendors
+and allow them define their own quirks without spoiling the=20
+official and standard MCFG; also from the thread discussion
+you seemed quite ok with such solution...?
 
-You're changing the resource flags but not the hardware itself.  I
-assume the window is still enabled and still claims address space, so
-we don't want to throw away the information about it, because then we
-don't know whether downstream devices can work, and we can't safely
-assign resources to peers.
+> I suppose there's already firmware in the field that does that,
+> though?
 
-> +}
-> +DECLARE_PCI_FIXUP_ASSIGN(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_mac_disable_mmio_bar);
+We have "experimental" firmware that is based on the ACPI table
+described above, however it is not widely distributed and, obviously,
+it is not supported by Linux mainline (so we have room to rework
+if we decide that another solution is more appropriate)
 
-Is this device *only* used on the Mac Pro 11?  http://pci-ids.ucs.cz
-says "8 Series/C220 Series Chipset Family PCI Express Root Port #1",
-which sounds pretty generic.
+Thanks and Regards
 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 55641a3..730d6fd 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1256,6 +1256,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
->  			additional_io_size  = pci_hotplug_io_size;
->  			additional_mem_size = pci_hotplug_mem_size;
->  		}
-> +
-> +		pci_fixup_device(pci_fixup_assign, bus->self);
->  		/* Fall through */
->  	default:
->  		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
-> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-> index 6a67ab9..3ba05f0 100644
-> --- a/include/asm-generic/vmlinux.lds.h
-> +++ b/include/asm-generic/vmlinux.lds.h
-> @@ -283,6 +283,9 @@
->  		VMLINUX_SYMBOL(__start_pci_fixups_final) = .;		\
->  		*(.pci_fixup_final)					\
->  		VMLINUX_SYMBOL(__end_pci_fixups_final) = .;		\
-> +		VMLINUX_SYMBOL(__start_pci_fixups_assign) = .;		\
-> +		*(.pci_fixup_assign)					\
-> +		VMLINUX_SYMBOL(__end_pci_fixups_assign) = .;		\
->  		VMLINUX_SYMBOL(__start_pci_fixups_enable) = .;		\
->  		*(.pci_fixup_enable)					\
->  		VMLINUX_SYMBOL(__end_pci_fixups_enable) = .;		\
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index b67e4df..14a35bb 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1584,6 +1584,7 @@ enum pci_fixup_pass {
->  	pci_fixup_early,	/* Before probing BARs */
->  	pci_fixup_header,	/* After reading configuration header */
->  	pci_fixup_final,	/* Final phase of device fixups */
-> +	pci_fixup_assign,	/* Before resource assignment */
->  	pci_fixup_enable,	/* pci_enable_device() time */
->  	pci_fixup_resume,	/* pci_device_resume() */
->  	pci_fixup_suspend,	/* pci_device_suspend() */
-> @@ -1644,6 +1645,9 @@ enum pci_fixup_pass {
->  #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
->  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
->  		hook, vendor, device, PCI_ANY_ID, 0, hook)
-> +#define DECLARE_PCI_FIXUP_ASSIGN(vendor, device, hook)			\
-> +	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_assign,			\
-> +		hook, vendor, device, PCI_ANY_ID, 0, hook)
->  #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
->  	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
->  		hook, vendor, device, PCI_ANY_ID, 0, hook)
-> diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
-> index 48958d3..248acdb 100644
-> --- a/scripts/mod/modpost.c
-> +++ b/scripts/mod/modpost.c
-> @@ -877,6 +877,7 @@ static void check_section(const char *modname, struct elf_info *elf,
->  
->  #define ALL_PCI_INIT_SECTIONS	\
->  	".pci_fixup_early", ".pci_fixup_header", ".pci_fixup_final", \
-> +	".pci_fixup_assign", \
->  	".pci_fixup_enable", ".pci_fixup_resume", \
->  	".pci_fixup_resume_early", ".pci_fixup_suspend"
->  
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Gab
+
+>=20
+> Bjorn
