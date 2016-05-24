@@ -1,103 +1,221 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH 2/2] aer: add support aer interrupt with none MSI/MSI-X/INTx
- mode
-Date: Thu, 26 May 2016 14:00:06 +0800
-Message-ID: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49302 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752127AbcEXQjD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 May 2016 12:39:03 -0400
+Date: Tue, 24 May 2016 11:38:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
+Message-ID: <20160524163848.GB30762@localhost>
+References: <20160519231234.GB1785@al>
+ <1463991648-85051-1-git-send-email-mika.westerberg@linux.intel.com>
+ <20160523200042.GB24375@localhost>
+ <20160523215015.GA31479@localhost>
+ <20160524122357.GA20453@localhost>
+ <20160524125323.GE1789@lahna.fi.intel.com>
+ <20160524142744.GA1553@al>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arnd Bergmann <arnd@arndb.de>, Roy Zang <roy.zang@nxp.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Po Liu <po.liu@nxp.com>,
- Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Minghuan Lian <minghuan.lian@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Shawn Guo <shawnguo@kernel.org>, Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160524142744.GA1553@al>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
-When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
-maybe there is interrupt line for aer pme etc. Search the interrupt
-number in the fdt file.
+On Tue, May 24, 2016 at 04:27:44PM +0200, Peter Wu wrote:
+> On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
+> > On Tue, May 24, 2016 at 07:23:57AM -0500, Bjorn Helgaas wrote:
+> > > On Mon, May 23, 2016 at 04:50:15PM -0500, Bjorn Helgaas wrote:
+> > > > [+cc Valdis, Dave]
+> > > > 
+> > > > On Mon, May 23, 2016 at 03:00:42PM -0500, Bjorn Helgaas wrote:
+> > > > > On Mon, May 23, 2016 at 11:20:48AM +0300, Mika Westerberg wrote:
+> > > > > > When a PCI device is removed through sysfs interface the upstream bridge
+> > > > > > (PCIe port) can be runtime suspended if it was the last device on that bus.
+> > > > > > Now, if the bridge is in D3 we cannot find devices below the bridge
+> > > > > > anymore. For example following fails to find the removed device again:
+> > > > > > 
+> > > > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/0000:01:00.0/remove
+> > > > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/rescan
+> > > > > > 
+> > > > > > Where 0000:00:01.0 is the bridge device.
+> > > > > > 
+> > > > > > In order to be able to rescan devices below the bridge add
+> > > > > > pm_runtime_get_sync()/pm_runtime_put() calls to pci_scan_bridge(). This
+> > > > > > should keep bridges powered on while their children devices are being
+> > > > > > scanned.
+> > > > > > 
+> > > > > > Reported-by: Peter Wu <peter@lekensteyn.nl>
+> > > > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > > 
+> > > > > This looks like basically the same idea as "ACPI / hotplug / PCI:
+> > > > > Runtime resume bridge before rescan".
+> > > > > 
+> > > > > The hotplug_event() path modified by that patch eventually calls
+> > > > > pci_scan_bridge():
+> > > > > 
+> > > > >   hotplug_event
+> > > > >     enable_slot
+> > > > >       pci_scan_bridge
+> > > > > 
+> > > > > so this patch looks a little more general.  Does it make "ACPI /
+> > > > > hotplug / PCI: Runtime resume bridge before rescan" unnecessary?  
+> > > > > Can I just replace that patch with this one?
+> > > > 
+> > > > I speculatively replaced "ACPI / hotplug / PCI: Runtime resume bridge
+> > > > before rescan" with this one and pushed the result to
+> > > > 
+> > > >   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pm
+> > > > 
+> > > > Please take a look, test it, and let me know if I need to add the ACPI
+> > > > patch back.
+> > > > 
+> > > > This branch also includes the fix for the lockdep splat reported by
+> > > > Valdis.  This is what I hope to get into v4.7-rc1.
+> > > 
+> > > Ping?  I'd like to ask Linus to pull this pci/pm branch before v4.7-rc1.
+> > > It currently has these changes:
+> > > 
+> > >   8b71f5652eea PCI: Add runtime PM support for PCIe ports
+> > >   af81f0fa638b PCI: Power on bridges before scanning new devices
+> > >   9741a01c9f55 PCI: Put PCIe ports into D3 during suspend
+> > >   b3a63ff7baf1 PCI: Don't clear d3cold_allowed for PCIe ports
+> > 
+> > Looks good to me. I've also tested those here and seems to work fine.
+> 
+> I have tested these patches for some time now on top of v4.6 (just
+> dropped the ACPI hotplug patch and re-tested just to be sure) and it
+> works for nouveau, but only if that one is patched to avoid calling the
+> device-specific Optimus method. 
 
-Signed-off-by: Po Liu <po.liu@nxp.com>
----
- drivers/pci/pcie/portdrv_core.c | 31 ++++++++++++++++++++++++++++---
- 1 file changed, 28 insertions(+), 3 deletions(-)
+I assume this nouveau issue is a driver problem unrelated to the
+pci/pm changes, and it wouldn't make any difference if I included the
+ACPI hotplug patch.  Right?
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 32d4d0a..64833e5 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -15,6 +15,7 @@
- #include <linux/slab.h>
- #include <linux/pcieport_if.h>
- #include <linux/aer.h>
-+#include <linux/of_irq.h>
- 
- #include "../pci.h"
- #include "portdrv.h"
-@@ -199,6 +200,28 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
- static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- {
- 	int i, irq = -1;
-+	int ret;
-+	struct device_node *np = NULL;
-+
-+	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-+		irqs[i] = 0;
-+
-+	if (dev->bus->dev.of_node)
-+		np = dev->bus->dev.of_node;
-+
-+	/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
-+	 * request irq for aer
-+	 */
-+	if (IS_ENABLED(CONFIG_OF_IRQ) && np &&
-+			(mask & PCIE_PORT_SERVICE_PME)) {
-+		ret = of_irq_get_byname(np, "aer");
-+		if (ret > 0) {
-+			irqs[PCIE_PORT_SERVICE_AER_SHIFT] = ret;
-+			if (dev->irq)
-+				irq = dev->irq;
-+			goto no_msi;
-+		}
-+	}
- 
- 	/*
- 	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
-@@ -224,11 +247,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 		irq = dev->irq;
- 
-  no_msi:
--	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
--		irqs[i] = irq;
-+	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
-+		if (!irqs[i])
-+			irqs[i] = irq;
-+	}
- 	irqs[PCIE_PORT_SERVICE_VC_SHIFT] = -1;
- 
--	if (irq < 0)
-+	if (irq < 0 && irqs[PCIE_PORT_SERVICE_AER_SHIFT] < 0)
- 		return -ENODEV;
- 	return 0;
- }
--- 
-2.1.0.27.g96db324
+> Without that patch (WIP below, I plan to
+> rebase it on a refactoring patch), the nvidia card stays disabled even
+> after the bridge returns into D0:
+> 
+>     nouveau 0000:01:00.0: power state changed by ACPI to D0
+>     nouveau 0000:01:00.0: Refused to change power state, currently in D3
+>     nouveau 0000:01:00.0: restoring config space at offset 0x3c (was 0xffffffff, writing 0x1ff)
+>     nouveau 0000:01:00.0: restoring config space at offset 0x38 (was 0xffffffff, writing 0x0)
+>     nouveau 0000:01:00.0: restoring config space at offset 0x34 (was 0xffffffff, writing 0x60)
+>     nouveau 0000:01:00.0: restoring config space at offset 0x30 (was 0xffffffff, writing 0xdf000000)
+>     ...
+>     INFO: rcu_sched self-detected stall on CPU
+> 
+> A workaround (until nouveau is fixed) is to disable runtime PM on the
+> bridge (or on nouveau with nouveau.runpm=0):
+> 
+>     # echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
+> 
+> This was tested on a Clevo P651RA laptop (with acpi_osi="!Windows 2013",
+> there is a weird PCIe PM issue for which I will fill a report later).
 
+This seems like a pretty significant problem: if we enable runtime PM
+on bridges by default, and Nvidia cards stay disabled when the bridge
+returns to D0, that sounds like a bad regression.  I don't think I
+could ask Linus to pull these changes with a known issue like that.
+Or am I misunderstanding something?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> index cdf5227..531d6be 100644
+> --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> @@ -45,6 +45,7 @@
+>  static struct nouveau_dsm_priv {
+>  	bool dsm_detected;
+>  	bool optimus_detected;
+> +	bool use_pr3;
+>  	acpi_handle dhandle;
+>  	acpi_handle rom_handle;
+>  } nouveau_dsm_priv;
+> @@ -246,6 +247,28 @@ static int nouveau_dsm_pci_probe(struct pci_dev *pdev)
+>  	return retval;
+>  }
+>  
+> +/* Windows 8/8.1/10 do not use DSM to put the device in D3cold state,
+> + * instead it disables power resources on the parent PCIe port device. */
+> +static bool nouveau_check_pr3(struct pci_dev *dis_dev)
+> +{
+> +	acpi_handle parent_handle;
+> +	struct acpi_device *ad = NULL;
+> +
+> +	if (ACPI_FAILURE(acpi_get_parent(nouveau_dsm_priv.dhandle,
+> +					 &parent_handle))) {
+> +		pr_warn("Failed to obtain the parent device\n");
+> +		return false;
+> +	}
+> +
+> +	acpi_bus_get_device(parent_handle, &ad);
+> +	if (!ad) {
+> +		pr_warn("Failed to obtain an ACPI device for handle\n");
+> +		return false;
+> +	}
+> +
+> +	return ad->power.flags.power_resources;
+> +}
+> +
+>  static bool nouveau_dsm_detect(void)
+>  {
+>  	char acpi_method_name[255] = { 0 };
+> @@ -253,6 +276,7 @@ static bool nouveau_dsm_detect(void)
+>  	struct pci_dev *pdev = NULL;
+>  	int has_dsm = 0;
+>  	int has_optimus = 0;
+> +	int has_pr3 = 0;
+>  	int vga_count = 0;
+>  	bool guid_valid;
+>  	int retval;
+> @@ -271,8 +295,10 @@ static bool nouveau_dsm_detect(void)
+>  		retval = nouveau_dsm_pci_probe(pdev);
+>  		if (retval & NOUVEAU_DSM_HAS_MUX)
+>  			has_dsm |= 1;
+> -		if (retval & NOUVEAU_DSM_HAS_OPT)
+> +		if (retval & NOUVEAU_DSM_HAS_OPT) {
+>  			has_optimus = 1;
+> +			has_pr3 |= nouveau_check_pr3(pdev);
+> +		}
+>  	}
+>  
+>  	while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_3D << 8, pdev)) != NULL) {
+> @@ -281,8 +307,10 @@ static bool nouveau_dsm_detect(void)
+>  		retval = nouveau_dsm_pci_probe(pdev);
+>  		if (retval & NOUVEAU_DSM_HAS_MUX)
+>  			has_dsm |= 1;
+> -		if (retval & NOUVEAU_DSM_HAS_OPT)
+> +		if (retval & NOUVEAU_DSM_HAS_OPT) {
+>  			has_optimus = 1;
+> +			has_pr3 |= nouveau_check_pr3(pdev);
+> +		}
+>  	}
+>  
+>  	/* find the optimus DSM or the old v1 DSM */
+> @@ -292,6 +320,10 @@ static bool nouveau_dsm_detect(void)
+>  		printk(KERN_INFO "VGA switcheroo: detected Optimus DSM method %s handle\n",
+>  			acpi_method_name);
+>  		nouveau_dsm_priv.optimus_detected = true;
+> +		if (has_pr3) {
+> +			pr_info("detected PR3 support\n");
+> +			nouveau_dsm_priv.use_pr3 = 1;
+> +		}
+>  		ret = true;
+>  	} else if (vga_count == 2 && has_dsm && guid_valid) {
+>  		acpi_get_name(nouveau_dsm_priv.dhandle, ACPI_FULL_PATHNAME,
+> @@ -321,7 +353,7 @@ void nouveau_register_dsm_handler(void)
+>  void nouveau_switcheroo_optimus_dsm(void)
+>  {
+>  	u32 result = 0;
+> -	if (!nouveau_dsm_priv.optimus_detected)
+> +	if (!nouveau_dsm_priv.optimus_detected || nouveau_dsm_priv.use_pr3)
+>  		return;
+>  
+>  	nouveau_optimus_dsm(nouveau_dsm_priv.dhandle, NOUVEAU_DSM_OPTIMUS_FLAGS,
