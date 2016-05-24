@@ -1,392 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bes.se.axis.com ([195.60.68.10]:47010 "EHLO bes.se.axis.com"
+Received: from mail.kernel.org ([198.145.29.136]:35499 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751252AbcEILtU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 May 2016 07:49:20 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: <bhelgaas@google.com>, <niklass@axis.com>, <jespern@axis.com>,
-	<akpm@linux-foundation.org>, <davem@davemloft.net>,
-	<gregkh@linuxfoundation.org>, <mchehab@osg.samsung.com>,
-	<linux@roeck-us.net>, <jslaby@suse.cz>, <robh@kernel.org>,
-	<marc.zyngier@arm.com>, <rjui@broadcom.com>, <arnd@arndb.de>,
-	<david.daney@cavium.com>, <geert+renesas@glider.be>,
-	<lftan@altera.com>, <bharat.kumar.gogada@xilinx.com>,
-	<hauke@hauke-m.de>, <thomas.petazzoni@free-electrons.com>,
-	<simon.horman@netronome.com>, <phil.edworthy@renesas.com>,
-	<svarbanov@mm-sol.com>, <dhdang@apm.com>, <wangzhou1@hisilicon.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@axis.com>
-Subject: [PATCH v2 2/2] pci: host: new driver for Axis ARTPEC-6 PCIe controller
-Date: Mon, 9 May 2016 13:49:03 +0200
-Message-ID: <1462794543-30317-1-git-send-email-niklass@axis.com>
+	id S932435AbcEXMYD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 May 2016 08:24:03 -0400
+Date: Tue, 24 May 2016 07:23:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Peter Wu <peter@lekensteyn.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
+Message-ID: <20160524122357.GA20453@localhost>
+References: <20160519231234.GB1785@al>
+ <1463991648-85051-1-git-send-email-mika.westerberg@linux.intel.com>
+ <20160523200042.GB24375@localhost>
+ <20160523215015.GA31479@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160523215015.GA31479@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Niklas Cassel <niklas.cassel@axis.com>
+On Mon, May 23, 2016 at 04:50:15PM -0500, Bjorn Helgaas wrote:
+> [+cc Valdis, Dave]
+> 
+> On Mon, May 23, 2016 at 03:00:42PM -0500, Bjorn Helgaas wrote:
+> > On Mon, May 23, 2016 at 11:20:48AM +0300, Mika Westerberg wrote:
+> > > When a PCI device is removed through sysfs interface the upstream bridge
+> > > (PCIe port) can be runtime suspended if it was the last device on that bus.
+> > > Now, if the bridge is in D3 we cannot find devices below the bridge
+> > > anymore. For example following fails to find the removed device again:
+> > > 
+> > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/0000:01:00.0/remove
+> > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/rescan
+> > > 
+> > > Where 0000:00:01.0 is the bridge device.
+> > > 
+> > > In order to be able to rescan devices below the bridge add
+> > > pm_runtime_get_sync()/pm_runtime_put() calls to pci_scan_bridge(). This
+> > > should keep bridges powered on while their children devices are being
+> > > scanned.
+> > > 
+> > > Reported-by: Peter Wu <peter@lekensteyn.nl>
+> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > 
+> > This looks like basically the same idea as "ACPI / hotplug / PCI:
+> > Runtime resume bridge before rescan".
+> > 
+> > The hotplug_event() path modified by that patch eventually calls
+> > pci_scan_bridge():
+> > 
+> >   hotplug_event
+> >     enable_slot
+> >       pci_scan_bridge
+> > 
+> > so this patch looks a little more general.  Does it make "ACPI /
+> > hotplug / PCI: Runtime resume bridge before rescan" unnecessary?  
+> > Can I just replace that patch with this one?
+> 
+> I speculatively replaced "ACPI / hotplug / PCI: Runtime resume bridge
+> before rescan" with this one and pushed the result to
+> 
+>   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pm
+> 
+> Please take a look, test it, and let me know if I need to add the ACPI
+> patch back.
+> 
+> This branch also includes the fix for the lockdep splat reported by
+> Valdis.  This is what I hope to get into v4.7-rc1.
 
-The Axis ARTPEC-6 SoC integrates a PCIe controller from Synopsys.
-This commit adds a new driver that provides the small glue
-needed to use the existing Designware driver to make it work on
-the Axis ARTPEC-6 SoC.
+Ping?  I'd like to ask Linus to pull this pci/pm branch before v4.7-rc1.
+It currently has these changes:
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-Changes since v1:
- - Rename syscon DT node to be more descriptive
- - Use module_platform_driver macro
+  8b71f5652eea PCI: Add runtime PM support for PCIe ports
+  af81f0fa638b PCI: Power on bridges before scanning new devices
+  9741a01c9f55 PCI: Put PCIe ports into D3 during suspend
+  b3a63ff7baf1 PCI: Don't clear d3cold_allowed for PCIe ports
 
- MAINTAINERS                     |   9 ++
- drivers/pci/host/Kconfig        |   6 +
- drivers/pci/host/Makefile       |   1 +
- drivers/pci/host/pcie-artpec6.c | 293 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 309 insertions(+)
- create mode 100644 drivers/pci/host/pcie-artpec6.c
+I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
+on the assumption that "PCI: Power on bridges before scanning new
+devices" is sufficient to cover both the ACPI and the generic PCi
+rescan cases, but I'd like some reassurance about that.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c18feb5..88d5443 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8772,6 +8772,15 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- F:	drivers/pci/host/pci-xgene-msi.c
- 
-+PCIE DRIVER FOR AXIS ARTPEC
-+M:	Niklas Cassel <niklas.cassel@axis.com>
-+M:	Jesper Nilsson <jesper.nilsson@axis.com>
-+L:	linux-arm-kernel@axis.com
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/axis,artpec*
-+F:	drivers/pci/host/*artpec*
-+
- PCIE DRIVER FOR HISILICON
- M:	Zhou Wang <wangzhou1@hisilicon.com>
- M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 5855f85..29e159a 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -244,4 +244,10 @@ config PCIE_ARMADA_8K
- 	  Designware hardware and therefore the driver re-uses the
- 	  Designware core functions to implement the driver.
- 
-+config PCIE_ARTPEC6
-+	bool "Axis ARTPEC-6 PCIe controller"
-+	depends on MACH_ARTPEC6
-+	select PCIE_DW
-+	select PCIEPORTBUS
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9c8698e..5bc0af2 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -29,3 +29,4 @@ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
-+obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/host/pcie-artpec6.c
-new file mode 100644
-index 0000000..d53dbaf
---- /dev/null
-+++ b/drivers/pci/host/pcie-artpec6.c
-@@ -0,0 +1,293 @@
-+/*
-+ * PCIe host controller driver for Axis ARTPEC-6 SoC
-+ *
-+ * Based on work done by Phil Edworthy <phil@edworthys.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+#include <linux/signal.h>
-+#include <linux/types.h>
-+#include <linux/interrupt.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/regmap.h>
-+
-+#include "pcie-designware.h"
-+
-+#define to_artpec6_pcie(x)	container_of(x, struct artpec6_pcie, pp)
-+
-+struct artpec6_pcie {
-+	struct pcie_port	pp;
-+	struct regmap		*regmap;
-+	void __iomem		*phy_base;
-+};
-+
-+/* PCIe Port Logic registers (memory-mapped) */
-+#define PL_OFFSET			0x700
-+#define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
-+#define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
-+
-+#define MISC_CONTROL_1_OFF		(PL_OFFSET + 0x1bc)
-+#define  DBI_RO_WR_EN			1
-+
-+/* ARTPEC-6 specific registers */
-+#define PCIECFG				0x18
-+#define  PCIECFG_DBG_OEN		(1 << 24)
-+#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
-+#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
-+#define  PCIECFG_CLKREQ_B		(1 << 11)
-+#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
-+#define  PCIECFG_PLL_ENABLE		(1 << 9)
-+#define  PCIECFG_PCLK_ENABLE		(1 << 8)
-+#define  PCIECFG_RISRCREN		(1 << 4)
-+#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
-+#define  PCIECFG_CISRREN		(1 << 2)
-+#define  PCIECFG_MACRO_ENABLE		(1 << 0)
-+
-+#define NOCCFG				0x40
-+#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
-+#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
-+#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
-+#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
-+
-+#define PHY_STATUS			0x118
-+#define PHY_COSPLLLOCK			(1 << 0)
-+
-+#define ARTPEC6_CPU_TO_BUS_ADDR		0x0FFFFFFF
-+
-+static int artpec6_pcie_establish_link(struct pcie_port *pp)
-+{
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pp);
-+	u32 val;
-+	unsigned int retries;
-+
-+	/* Hold DW core in reset */
-+	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	val |= PCIECFG_CORE_RESET_REQ;
-+	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+
-+	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
-+		PCIECFG_MODE_TX_DRV_EN |
-+		PCIECFG_CISRREN |	/* Reference clock term. 100 Ohm */
-+		PCIECFG_MACRO_ENABLE;
-+	val |= PCIECFG_REFCLK_ENABLE;
-+	val &= ~PCIECFG_DBG_OEN;
-+	val &= ~PCIECFG_CLKREQ_B;
-+	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	usleep_range(5000, 6000);
-+
-+	regmap_read(artpec6_pcie->regmap, NOCCFG, &val);
-+	val |= NOCCFG_ENABLE_CLK_PCIE;
-+	regmap_write(artpec6_pcie->regmap, NOCCFG, val);
-+	usleep_range(20, 30);
-+
-+	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	val |= PCIECFG_PCLK_ENABLE | PCIECFG_PLL_ENABLE;
-+	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	usleep_range(6000, 7000);
-+
-+	regmap_read(artpec6_pcie->regmap, NOCCFG, &val);
-+	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
-+	regmap_write(artpec6_pcie->regmap, NOCCFG, val);
-+
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		regmap_read(artpec6_pcie->regmap, NOCCFG, &val);
-+		retries--;
-+	} while (retries &&
-+		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
-+
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
-+		retries--;
-+	} while (retries && !(val & PHY_COSPLLLOCK));
-+
-+	/* Take DW core out of reset */
-+	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	val &= ~PCIECFG_CORE_RESET_REQ;
-+	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+	usleep_range(100, 200);
-+
-+	/*
-+	 * Enable writing to config regs. This is required as the Synopsys
-+	 * driver changes the class code. That register needs DBI write enable.
-+	 */
-+	writel(DBI_RO_WR_EN, pp->dbi_base + MISC_CONTROL_1_OFF);
-+
-+	pp->io_base &= ARTPEC6_CPU_TO_BUS_ADDR;
-+	pp->mem_base &= ARTPEC6_CPU_TO_BUS_ADDR;
-+	pp->cfg0_base &= ARTPEC6_CPU_TO_BUS_ADDR;
-+	pp->cfg1_base &= ARTPEC6_CPU_TO_BUS_ADDR;
-+
-+	/* setup root complex */
-+	dw_pcie_setup_rc(pp);
-+
-+	/* assert LTSSM enable */
-+	regmap_read(artpec6_pcie->regmap, PCIECFG, &val);
-+	val |= PCIECFG_LTSSM_ENABLE;
-+	regmap_write(artpec6_pcie->regmap, PCIECFG, val);
-+
-+	/* check if the link is up or not */
-+	if (!dw_pcie_wait_for_link(pp))
-+		return 0;
-+
-+	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-+		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-+		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static void artpec6_pcie_enable_interrupts(struct pcie_port *pp)
-+{
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+}
-+
-+static void artpec6_pcie_host_init(struct pcie_port *pp)
-+{
-+	artpec6_pcie_establish_link(pp);
-+	artpec6_pcie_enable_interrupts(pp);
-+}
-+
-+static int artpec6_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 rc;
-+
-+	/*
-+	 * Get status from Synopsys IP
-+	 * link is debug bit 36, debug register 1 starts at bit 32
-+	 */
-+	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << (36 - 32));
-+	if (rc)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static struct pcie_host_ops artpec6_pcie_host_ops = {
-+	.link_up = artpec6_pcie_link_up,
-+	.host_init = artpec6_pcie_host_init,
-+};
-+
-+static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+
-+	return dw_handle_msi_irq(pp);
-+}
-+
-+static int __init artpec6_add_pcie_port(struct pcie_port *pp,
-+					struct platform_device *pdev)
-+{
-+	int ret;
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
-+		if (pp->msi_irq <= 0) {
-+			dev_err(&pdev->dev, "failed to get MSI irq\n");
-+			return -ENODEV;
-+		}
-+
-+		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
-+				       artpec6_pcie_msi_handler,
-+				       IRQF_SHARED | IRQF_NO_THREAD,
-+				       "artpec6-pcie-msi", pp);
-+		if (ret) {
-+			dev_err(&pdev->dev, "failed to request MSI irq\n");
-+			return ret;
-+		}
-+	}
-+
-+	pp->root_bus_nr = -1;
-+	pp->ops = &artpec6_pcie_host_ops;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init artpec6_pcie_probe(struct platform_device *pdev)
-+{
-+	struct artpec6_pcie *artpec6_pcie;
-+	struct pcie_port *pp;
-+	struct resource *dbi_base;
-+	struct resource *phy_base;
-+	int ret;
-+
-+	artpec6_pcie = devm_kzalloc(&pdev->dev, sizeof(*artpec6_pcie),
-+				    GFP_KERNEL);
-+	if (!artpec6_pcie)
-+		return -ENOMEM;
-+
-+	pp = &artpec6_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
-+	if (IS_ERR(pp->dbi_base)) {
-+		ret = PTR_ERR(pp->dbi_base);
-+		goto fail;
-+	}
-+
-+	phy_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
-+	artpec6_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
-+	if (IS_ERR(artpec6_pcie->phy_base)) {
-+		ret = PTR_ERR(artpec6_pcie->phy_base);
-+		goto fail;
-+	}
-+
-+	artpec6_pcie->regmap =
-+		syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
-+						"axis,syscon-pcie");
-+	if (IS_ERR(artpec6_pcie->regmap)) {
-+		ret = PTR_ERR(artpec6_pcie->regmap);
-+		goto fail;
-+	}
-+
-+	ret = artpec6_add_pcie_port(pp, pdev);
-+	if (ret < 0)
-+		goto fail;
-+
-+	platform_set_drvdata(pdev, artpec6_pcie);
-+	return 0;
-+
-+fail:
-+	return ret;
-+}
-+
-+static const struct of_device_id artpec6_pcie_of_match[] = {
-+	{ .compatible = "axis,artpec6-pcie", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, artpec6_pcie_of_match);
-+
-+static struct platform_driver artpec6_pcie_driver = {
-+	.probe = artpec6_pcie_probe,
-+	.driver = {
-+		.name	= "artpec6-pcie",
-+		.of_match_table = artpec6_pcie_of_match,
-+	},
-+};
-+
-+module_platform_driver(artpec6_pcie_driver);
-+
-+MODULE_AUTHOR("Niklas Cassel <niklas.cassel@axis.com>");
-+MODULE_DESCRIPTION("Axis ARTPEC-6 PCIe host controller driver");
-+MODULE_LICENSE("GPL v2");
--- 
-2.1.4
+Lukas, you tested that acpiphp patch.  Would you be able to verify
+that your test case still works even with that patch replaced by the
+generic one?
 
+FWIW, my pci/pm branch with these updates is included in
+next-20160524.
+
+> > > ---
+> > >  drivers/pci/probe.c | 9 +++++++++
+> > >  1 file changed, 9 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > index 8004f67c57ec..15e77c92311e 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -16,6 +16,7 @@
+> > >  #include <linux/aer.h>
+> > >  #include <linux/acpi.h>
+> > >  #include <linux/irqdomain.h>
+> > > +#include <linux/pm_runtime.h>
+> > >  #include "pci.h"
+> > >  
+> > >  #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+> > > @@ -832,6 +833,12 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+> > >  	u8 primary, secondary, subordinate;
+> > >  	int broken = 0;
+> > >  
+> > > +	/*
+> > > +	 * Make sure the bridge is powered on to be able to access config
+> > > +	 * space of devices below it.
+> > > +	 */
+> > > +	pm_runtime_get_sync(&dev->dev);
+> > > +
+> > >  	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
+> > >  	primary = buses & 0xFF;
+> > >  	secondary = (buses >> 8) & 0xFF;
+> > > @@ -1012,6 +1019,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+> > >  out:
+> > >  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, bctl);
+> > >  
+> > > +	pm_runtime_put(&dev->dev);
+> > > +
+> > >  	return max;
+> > >  }
+> > >  EXPORT_SYMBOL(pci_scan_bridge);
+> > > -- 
+> > > 2.8.1
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
