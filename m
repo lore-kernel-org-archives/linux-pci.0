@@ -1,66 +1,112 @@
-Return-Path: <hch@lst.de>
-Return-Path: <hch@lst.de>
-Date: Thu, 12 May 2016 14:19:33 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, helgaas@kernel.org, pjw@netapp.com,
-	axboe@fb.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
-	routines
-Message-ID: <20160512121933.GA11084@lst.de>
-References: <1462457096-19795-1-git-send-email-hch@lst.de> <1462457096-19795-2-git-send-email-hch@lst.de> <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com> <20160511085049.GA20279@lst.de> <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com> <20160512073552.GA4027@lst.de> <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com> <20160512110318.GA9192@lst.de> <20160512121155.GB8681@agordeev.lab.eng.brq.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:39048 "EHLO
+	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752409AbcEXB3J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2016 21:29:09 -0400
+Subject: Re: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
+ <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
+ <8520D5D51A55D047800579B094147198258ACE47@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: shawn.lin@rock-chips.com, Heiko Stuebner <heiko@sntech.de>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Doug Anderson <dianders@chromium.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-rockchip@lists.infradead.org"
+	<linux-rockchip@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <0f470ba9-78ac-4822-2cd0-6f028123271d@rock-chips.com>
+Date: Tue, 24 May 2016 09:28:55 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160512121155.GB8681@agordeev.lab.eng.brq.redhat.com>
+In-Reply-To: <8520D5D51A55D047800579B094147198258ACE47@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 12, 2016 at 02:11:57PM +0200, Alexander Gordeev wrote:
-> Not this way. MSI vectors could be a scarce resource in a platform. So
-> even though devices could support more MSI-Xs than MSIs the underlying
-> platform might fail to fulfil a device request. 
+Hi Bharat,
 
-I can go back to just calling the existing exported functions like
-the first version did for now, that'll handle it for now.
+On 2016/5/23 23:15, Bharat Kumar Gogada wrote:
+>> +
+>> +	irq = platform_get_irq_byname(pdev, "pcie-sys");
+>> +	if (irq < 0) {
+>> +		dev_err(dev, "missing pcie_sys IRQ resource\n");
+>> +		return -EINVAL;
+>> +	}
+>> +	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
+>> +			       IRQF_SHARED, "pcie-sys", port);
+>> +	if (err) {
+>> +		dev_err(dev, "failed to request pcie subsystem irq\n");
+>> +		return err;
+>> +	}
+>> +
+>> +	port->irq = platform_get_irq_byname(pdev, "pcie-legacy");
+>> +	if (port->irq < 0) {
+>> +		dev_err(dev, "missing pcie_legacy IRQ resource\n");
+>> +		return -EINVAL;
+>> +	}
+>> +	err = devm_request_irq(dev, port->irq,
+>> +			       rockchip_pcie_legacy_int_handler,
+>> +			       IRQF_SHARED,
+>> +			       "pcie-legacy",
+>> +			       port);
+>> +	if (err) {
+>> +		dev_err(&pdev->dev, "failed to request pcie-legacy irq\n");
+>> +		return err;
+>> +	}
+>> +
+>> +	irq = platform_get_irq_byname(pdev, "pcie-client");
+>> +	if (irq < 0) {
+>> +		dev_err(dev, "missing pcie-client IRQ resource\n");
+>> +		return -EINVAL;
+>> +	}
+>> +	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
+>> +			       IRQF_SHARED, "pcie-client", port);
+>> +	if (err) {
+>> +		dev_err(dev, "failed to request pcie client irq\n");
+>> +		return err;
+>> +	}
+>> +
+>
+> All of the above interrupt number details are being obtained from device tree, why not move above API's to rockchip_pcie_parse_dt.
 
-> > > Another thing, pci_alloc_irq_vectors() tries to allocate vectors in a
-> > > range from 1 to nr_vecs now. So this function implicitly falls into
-> > > the other two range functions family and therefore:
-> > > 
-> > >   (a) pci_alloc_irq_vectors() name is not perfec;
-> > 
-> > What would you call it instead?
-> 
-> I do not know, really :( I would expect "range" within the name since
-> a range requested indeed, but I am just hinting here.
+Ok, I will move these above into parse_dt function.
 
-We're requesting multiple vectors, so I think the naming should be fine.
+>
+>> +	port->dev = dev;
+>> +	err = rockchip_pcie_parse_dt(port);
+>> +	if (err) {
+>> +		dev_err(dev, "Parsing DT failed\n");
+>> +		return err;
+>> +	}
+>> +
+>> +	pcie_write(port, 0x6040000, PCIE_RC_CONFIG_BASE + 0x8);
+>> +	pcie_write(port, 0x0, PCIE_CORE_CTRL_MGMT_BASE + 0x300);
+>> +
+>> +	pcie_write(port, (RC_REGION_0_ADDR_TRANS_L +
+>> RC_REGION_0_PASS_BITS),
+>> +		   PCIE_CORE_AXI_CONF_BASE);
+>> +	pcie_write(port, RC_REGION_0_ADDR_TRANS_H,
+>> +		   PCIE_CORE_AXI_CONF_BASE + 0x4);
+>> +	pcie_write(port, 0x0080000a, PCIE_CORE_AXI_CONF_BASE + 0x8);
+>> +	pcie_write(port, 0x00000000, PCIE_CORE_AXI_CONF_BASE + 0xc);
+>
+> Why not move the above steps to rockchip_pcie_init_port function ?
+> Please use macros instead of using values.
 
-> > >   (b) why not introduce 'minvec' minimal number of interrupts then?
-> > >       We could have a handy pci_enable_irq_range() as result;
-> > 
-> > That seems pretty pointless, when the caller can simply treat a too
-> > small number as failure and use the existing failure path for that.
-> 
-> There was a huge discussion on this few years ago, when the range
-> functions were introduced. Actually, the prototypes of these two is
-> the outcome of that discussion. I almost sure your point was expressed
-> by many at the time ;)
+okay, will improve them.
 
-A quick audit shows that there are indeed a few users of this
-interface.  I can add pci_alloc_irq_vectors_range that allows passing
-a minvec, and the old pci_alloc_irq_vectors interface for everyone
-who wants to keep it simple.
+Thanks for comment.
 
-> > pci_enable_msi_range still has a horrible API that forces the caller
-> > to deal with the irq numbers differently than the MSI-X case, so it
-> > should also go away in the long run.
-> 
-> Well, if we introduce pci_enable_irq_range() (or something) and
-> pci_get_dev_irq(int vector) (or something) that covers MSI-X, MSI and
-> legacy IRQs then we can get it done now. Your pci_alloc_irq_vectors()
-> is just few steps from there, huh?
+>
+>
+>
 
-Or we can just look at pdev->irqs as in my patch.  That'll work without
-much overhead for the single IRQ case as it can just point to ->irq,
-and gives a neat interface for MSI-X and the rare multi-MSI case.
+
+-- 
+Best Regards
+Shawn Lin
+
