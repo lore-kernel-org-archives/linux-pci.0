@@ -1,41 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34411 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbcE3M0s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 08:26:48 -0400
-Received: by mail-io0-f196.google.com with SMTP id l9so40111ioe.1
-        for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 05:26:48 -0700 (PDT)
-From: Chris Blake <chrisrblake93@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Chris Blake <chrisrblake93@gmail.com>
-Subject: [PATCH 2/2] Add Quirk for Qualcom Atheros QCA9882 No Bus Reset
-Date: Mon, 30 May 2016 07:26:38 -0500
-Message-Id: <1464611198-11494-3-git-send-email-chrisrblake93@gmail.com>
-In-Reply-To: <1464611198-11494-1-git-send-email-chrisrblake93@gmail.com>
-References: <1464611198-11494-1-git-send-email-chrisrblake93@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:60384 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752504AbcEXJy5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2016 05:54:57 -0400
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Jamet, Michael" <michael.jamet@intel.com>,
+	"Alloun, Dan" <dan.alloun@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Svahn, Kai" <kai.svahn@intel.com>,
+	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH 6/6] thunderbolt: Networking doc
+Date: Tue, 24 May 2016 09:54:53 +0000
+Message-ID: <E607265CB020454880711A6F96C05A0377FBC697@hasmsx107.ger.corp.intel.com>
+References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
+ <1463993336-2750-7-git-send-email-amir.jer.levy@intel.com>
+ <20160523153402.GA30137@kroah.com>
+In-Reply-To: <20160523153402.GA30137@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Similar to the AR93xx series, the Qualcom QCA988x also has the same
-quirk for the Bus Reset. Adding this will resolve the issue, and help in
-cases where PCI Passthrough is used.
+> -----Original Message-----
+> From: Greg KH [mailto:gregkh@linuxfoundation.org]
+> Sent: Monday, May 23, 2016 18:34
+> To: Levy, Amir (Jer) <amir.jer.levy@intel.com>
+> Cc: andreas.noever@gmail.com; bhelgaas@google.com; linux-
+> pci@vger.kernel.org; Jamet, Michael <michael.jamet@intel.com>; Alloun,
+> Dan <dan.alloun@intel.com>; Westerberg, Mika
+> <mika.westerberg@intel.com>; Svahn, Kai <kai.svahn@intel.com>;
+> Shevchenko, Andriy <andriy.shevchenko@intel.com>; Winkler, Tomas
+> <tomas.winkler@intel.com>
+> Subject: Re: [PATCH 6/6] thunderbolt: Networking doc
+> 
+> On Mon, May 23, 2016 at 11:48:56AM +0300, Amir Levy wrote:
+> > Adding Thunderbolt(TM) networking documentation.
+> >
+> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> > Signed-off-by: Michael Jamet <michael.jamet@intel.com>
+> > ---
+> >  Documentation/00-INDEX        |   2 +
+> >  Documentation/thunderbolt.txt | 135
+> > ++++++++++++++++++++++++++++++++++++++++++
+> 
+> This is networking with thunderbolt, you might want to name the
+> documentation file to reflect that otherwise people are going to think this is
+> describing all thunderbolt support in the kernel.
+> 
+> thanks,
+> 
+> greg k-h
 
-Signed-off-by: Chris Blake <chrisrblake93@gmail.com>
----
- drivers/pci/quirks.c | 1 +
- 1 file changed, 1 insertion(+)
+OK, I'll rename it.
+Our plan after this patch series is to provide more thunderbolt features that aren't related to networking.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 35c824d..7902fbf 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3197,6 +3197,7 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
-  */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
+Thanks,
+Amir
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
- static void quirk_no_pm_reset(struct pci_dev *dev)
- {
---
-1.9.1
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
