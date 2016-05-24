@@ -1,199 +1,123 @@
-Return-Path: <prarit@redhat.com>
-Return-Path: <prarit@redhat.com>
-Message-ID: <5731DCD5.4030208@redhat.com>
-Date: Tue, 10 May 2016 09:06:29 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-MIME-Version: 1.0
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Tue, 24 May 2016 15:53:23 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, Myron Stowe <mstowe@redhat.com>,
-        x86@kernel.org, Andi Kleen <ak@linux.intel.com>
-Subject: Re: [PATCH] x86/PCI: Fix Broadwell-EP Home Agent & PCU non-compliant
- BARs
-References: <1462818195-6533-1-git-send-email-prarit@redhat.com> <20160509192030.GA18166@localhost>
-In-Reply-To: <20160509192030.GA18166@localhost>
-Content-Type: text/plain; charset=windows-1252
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Peter Wu <peter@lekensteyn.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
+Message-ID: <20160524125323.GE1789@lahna.fi.intel.com>
+References: <20160519231234.GB1785@al>
+ <1463991648-85051-1-git-send-email-mika.westerberg@linux.intel.com>
+ <20160523200042.GB24375@localhost>
+ <20160523215015.GA31479@localhost>
+ <20160524122357.GA20453@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160524122357.GA20453@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 05/09/2016 03:20 PM, Bjorn Helgaas wrote:
-> [+cc Andi]
+On Tue, May 24, 2016 at 07:23:57AM -0500, Bjorn Helgaas wrote:
+> On Mon, May 23, 2016 at 04:50:15PM -0500, Bjorn Helgaas wrote:
+> > [+cc Valdis, Dave]
+> > 
+> > On Mon, May 23, 2016 at 03:00:42PM -0500, Bjorn Helgaas wrote:
+> > > On Mon, May 23, 2016 at 11:20:48AM +0300, Mika Westerberg wrote:
+> > > > When a PCI device is removed through sysfs interface the upstream bridge
+> > > > (PCIe port) can be runtime suspended if it was the last device on that bus.
+> > > > Now, if the bridge is in D3 we cannot find devices below the bridge
+> > > > anymore. For example following fails to find the removed device again:
+> > > > 
+> > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/0000:01:00.0/remove
+> > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/rescan
+> > > > 
+> > > > Where 0000:00:01.0 is the bridge device.
+> > > > 
+> > > > In order to be able to rescan devices below the bridge add
+> > > > pm_runtime_get_sync()/pm_runtime_put() calls to pci_scan_bridge(). This
+> > > > should keep bridges powered on while their children devices are being
+> > > > scanned.
+> > > > 
+> > > > Reported-by: Peter Wu <peter@lekensteyn.nl>
+> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > 
+> > > This looks like basically the same idea as "ACPI / hotplug / PCI:
+> > > Runtime resume bridge before rescan".
+> > > 
+> > > The hotplug_event() path modified by that patch eventually calls
+> > > pci_scan_bridge():
+> > > 
+> > >   hotplug_event
+> > >     enable_slot
+> > >       pci_scan_bridge
+> > > 
+> > > so this patch looks a little more general.  Does it make "ACPI /
+> > > hotplug / PCI: Runtime resume bridge before rescan" unnecessary?  
+> > > Can I just replace that patch with this one?
+> > 
+> > I speculatively replaced "ACPI / hotplug / PCI: Runtime resume bridge
+> > before rescan" with this one and pushed the result to
+> > 
+> >   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pm
+> > 
+> > Please take a look, test it, and let me know if I need to add the ACPI
+> > patch back.
+> > 
+> > This branch also includes the fix for the lockdep splat reported by
+> > Valdis.  This is what I hope to get into v4.7-rc1.
 > 
-> Hi Prarit,
+> Ping?  I'd like to ask Linus to pull this pci/pm branch before v4.7-rc1.
+> It currently has these changes:
 > 
-> On Mon, May 09, 2016 at 02:23:15PM -0400, Prarit Bhargava wrote:
->> commit b894157 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having
->> non-compliant BARs") marks Home Agent 0 & PCU has having non-compliant
->> BARs.
-> 
-> By convention, I use 12-char SHA1 ("[core] abbrev=12" in .git/config)
-> when citing commits.
-> 
->> Before commit b894157,
->>
->> pci 0000:ff:12.0: BAR 2: failed to assign [mem size 0x00000040]
->> pci 0000:ff:12.0: BAR 4: failed to assign [mem size 0x00000040]
->> pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
->> pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
->> pci 0000:ff:12.0: BAR 1: failed to assign [mem size 0x00000010]
->> pci 0000:ff:12.0: BAR 3: failed to assign [mem size 0x00000010]
->> pci 0000:ff:12.0: BAR 5: failed to assign [mem size 0x00000010]
->> pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
->> pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
->> pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
->> pci 0000:7f:12.0: BAR 2: failed to assign [mem size 0x00000040]
->> pci 0000:7f:12.0: BAR 4: failed to assign [mem size 0x00000040]
->> pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
->> pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
->> pci 0000:7f:12.0: BAR 1: failed to assign [mem size 0x00000010]
->> pci 0000:7f:12.0: BAR 3: failed to assign [mem size 0x00000010]
->> pci 0000:7f:12.0: BAR 5: failed to assign [mem size 0x00000010]
->> pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
->> pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
->> pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
->>
->> After commit b894157, there are still "failed to assign" messages,
->> as well as new "failed to assign" messages for ff:12.0, ff:1e.3,
->> 7f:12.0, and 7f:1e.3.
->>
->>  pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
->>  pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
->>  pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
->>  pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
->>  pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
->>  pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
->>  pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
->>  pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
->>  pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
->>  pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
->>  pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
->>  pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
->>  pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
->>  pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
->>
->> There are two issues with commit b894157.
->>
->> The first is that there is another device, Home Agent 1 & PCU, that must
->> also be quirked in the same way.
->>
->> \# lspci -n -s 7f:12.4
->> 7f:12.4 0880: 8086:6f60 (rev 01)
-> 
-> I think we should split this into two patches: one to add quirks for
-> the Home Agent 1 & PCU, and a second for the resource assignment
-> issue.
-> 
-> Can you dig up a spec for these devices?  I should have asked Andi for
-> that the first time around, but I didn't.  Maybe there's something
-> we're not interpreting correctly.  I still have a hard time believing
-> that Intel would produce a PCI device with non-BAR registers where the
-> BARs are supposed to be.  Maybe there's supposed to be an EA
-> capability or something that tells us to ignore these registers.
+>   8b71f5652eea PCI: Add runtime PM support for PCIe ports
+>   af81f0fa638b PCI: Power on bridges before scanning new devices
+>   9741a01c9f55 PCI: Put PCIe ports into D3 during suspend
+>   b3a63ff7baf1 PCI: Don't clear d3cold_allowed for PCIe ports
 
-It looks like Andi has provided this information in his reply.  I will add some
-of that info in my next post.
+Looks good to me. I've also tested those here and seems to work fine.
 
-> 
-> Can you collect "lspci -vvxxx" output for one of these devices?
+> I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
+> on the assumption that "PCI: Power on bridges before scanning new
+> devices" is sufficient to cover both the ACPI and the generic PCi
+> rescan cases, but I'd like some reassurance about that.
 
-# lspci -xxxvv -s 7f:12.4
-7f:12.4 System peripheral: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3
-v4/Xeon D Home Agent 1 (rev 01)
-        Subsystem: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D
-Home Agent 1
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
-<MAbort- >SERR- <PERR- INTx-
-00: 86 80 60 6f 00 00 00 00 01 00 80 08 00 00 80 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 60 6f
-30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-40: 04 f5 01 00 04 f5 21 00 00 f0 21 00 00 f0 21 00
-50: 00 f0 21 00 00 f0 21 00 00 f0 21 00 00 f0 21 00
-60: 00 f0 21 00 00 f0 21 00 00 f0 21 00 00 f0 21 00
-70: 00 00 02 00 00 00 00 00 00 00 88 44 04 00 00 00
-80: 02 82 30 03 88 4a 61 40 00 00 00 00 00 00 00 00
-90: 00 00 02 00 00 00 01 00 5c 00 00 00 18 00 00 00
-a0: 00 00 00 00 93 97 15 00 0d 34 90 00 00 30 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 0c 00 00 00
-c0: 00 00 00 00 00 00 00 00 2d 2d 00 00 f8 e3 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+I agree with your reasoning that the patch should not be needed anymore.
+However, I have the machine which needed that patch at home so I'm not
+able to test it now. I'll do that later today when I get back home.
 
+One thing I noticed, though. When a bridge is transitioned to D0 we only
+wait for 10ms which is requirement for PCI functions. However, PCI PM
+specification 1.2 (chapter 4.2) requires that for buses to transition
+from B2 to B0 we need to wait minimum of 50ms before accessing a
+function on that bus.
 
-> 
->> After applying the quirk patch, we end up with:
->>
->> pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
->> pci 0000:ff:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
->> pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
->> pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
->> pci 0000:7f:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
->> pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
->>
->> which drives us to the second issue.  Since the PCI devices now
->> have unnassigned resources (BARs), pcibios_assign_resources()
->> call pci_assign_unassigned_root_bus_resources().  This results in the
->> messages above.  I have added a non_compliant_bars check in
->> pbus_assign_resources_sorted() to avoid the unassigned device's resources
->> from being added to the failed resources list for the bus.
-> 
-> I don't understand this part yet.  If we mark a device with
-> non_compliant_bars, __pci_read_base() will return without doing
-> anything, so we should not fill in the struct resource at all.  It
-> wouldn't have the "mem" or "pref" bits shown above, and it shouldn't
-> participate in pcibios_assign_resources() at all.  All of these are
-> for BAR 6 (the ROM BAR), so maybe there's something wrong with the way
-> to handle that in particular.
+We even have PCI_PM_BUS_WAIT defined in include/linux/pci.h but it is
+not used anywhere. Maybe it was not needed originally because we never
+powered down bridges anyway but now when we do, I think it is good idea
+to do what the spec requires.
 
-I did some additional debugging after reading your comment.  I dumped out the
-contents of the resources for each bus's devices.  I concentrated on one
-particular device, 7f:12.4 (the output of lspci is above).
+What do you think? We could add a separate patch doing something like
+below to make sure the spec is followed.
 
-Before the call to pcibios_assign_resources(), 7f:12.4 has
-
-pci 0000:7f:12.4: PRARIT:    BAR 6: [mem 0x00000000 pref]
-
-so that means it the resource was not changed/modified in the call of
-pcibios_assign_resources().
-
-I took a closer look at the code, and I think I know what the issue is.  In
-pci_read_bases() the code does
-
-        if (rom) {
-                struct resource *res = &dev->resource[PCI_ROM_RESOURCE];
-                dev->rom_base_reg = rom;
-                res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH |
-                                IORESOURCE_READONLY | IORESOURCE_CACHEABLE |
-                                IORESOURCE_SIZEALIGN;
-                __pci_read_base(dev, pci_bar_mem32, res, rom);
-        }
-
-which initializes the res->flags field.  This field is later checked in
-pcibios_allocate_dev_rom_resource() which is called from
-pcibios_assign_resources(), and the resource is declared unassigned because it
-has a res->flags field.
-
-Perhaps (sorry for the cut-and-paste) this is a more correct fix which would
-avoid the setting of res->flags?  There is no point in setting
-dev->rom_base_reg, etc., if this is a non-compliant device.
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2384100..818731a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -361,7 +361,7 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int
-                pos += __pci_read_base(dev, pci_bar_unknown, res, reg);
-        }
-
--       if (rom) {
-+       if (rom && !dev->non_compliant_bars) {
-                struct resource *res = &dev->resource[PCI_ROM_RESOURCE];
-                dev->rom_base_reg = rom;
-                res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH |
-
-P.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e785dc260e72..b3b794caa380 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2361,7 +2361,12 @@ void pci_pm_init(struct pci_dev *dev)
+ 	}
+ 
+ 	dev->pm_cap = pm;
+-	dev->d3_delay = PCI_PM_D3_WAIT;
++	/*
++	 * PCI PM 1.2 specification requires minimum of 50ms before any
++	 * function on the bus is accessed after the bus is transitioned
++	 * from B2 to B0.
++	 */
++	dev->d3_delay = pci_is_bridge(dev) ? PCI_PM_BUS_WAIT : PCI_PM_D3_WAIT;
+ 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
+ 	dev->bridge_d3 = pci_bridge_d3_possible(dev);
+ 	dev->d3cold_allowed = true;
