@@ -1,71 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:33941 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbcEFGgT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2016 02:36:19 -0400
-Received: by mail-pf0-f169.google.com with SMTP id y69so46083795pfb.1
-        for <linux-pci@vger.kernel.org>; Thu, 05 May 2016 23:36:18 -0700 (PDT)
-Subject: Re: [PATCH v9 03/22] powerpc/powernv: Move
- pnv_pci_ioda_setup_opal_tce_kill() around
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1462281773-26438-4-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	robherring2@gmail.com, dja@axtens.net, alistair@popple.id.au
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <fa00763e-c425-cd49-b606-70ad0ce61fce@ozlabs.ru>
-Date: Fri, 6 May 2016 16:36:11 +1000
+Received: from mail.kernel.org ([198.145.29.136]:60995 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752581AbcEXVEj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 May 2016 17:04:39 -0400
+Date: Tue, 24 May 2016 16:04:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
+	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
+	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
+	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
+Subject: Re: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller
+ supports IRQ remapping
+Message-ID: <20160524210434.GB16463@localhost>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1462281773-26438-4-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/03/2016 11:22 PM, Gavin Shan wrote:
-> pnv_pci_ioda_setup_opal_tce_kill() called by pnv_ioda_setup_dma()
-> to remap the TCE kill regiter. What's done in pnv_ioda_setup_dma()
-> will be covered in pcibios_setup_bridge() which is invoked on each
-> PCI bridge. It means we will possibly remap the TCE kill register
-> for multiple times and it's unnecessary.
->
-> This moves pnv_pci_ioda_setup_opal_tce_kill() to where the PHB is
-> initialized (pnv_pci_init_ioda_phb()) to avoid above issue.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-
+On Wed, Apr 27, 2016 at 08:43:28PM +0800, Yongji Xie wrote:
+> On ARM HW the capability of IRQ remapping is abstracted on
+> MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
+> this [1].
+> 
+> To have a universal flag to test this capability for different
+> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+> when MSI_FLAG_IRQ_REMAPPING is set.
+> 
+> [1] http://www.spinics.net/lists/kvm/msg130256.html
+> 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 > ---
->  arch/powerpc/platforms/powernv/pci-ioda.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 5ee8a57..cbd4c0b 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -2599,8 +2599,6 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->  	pr_info("PCI: Domain %04x has %d available 32-bit DMA segments\n",
->  		hose->global_number, phb->ioda.dma32_count);
->
-> -	pnv_pci_ioda_setup_opal_tce_kill(phb);
-> -
->  	/* Walk our PE list and configure their DMA segments */
->  	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
->  		weight = pnv_pci_ioda_pe_dma_weight(pe);
-> @@ -3396,6 +3394,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->  	if (phb->regs == NULL)
->  		pr_err("  Failed to map registers !\n");
->
-> +	/* Initialize TCE kill register */
-> +	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>  drivers/pci/msi.c   |   12 ++++++++++++
+>  drivers/pci/probe.c |    3 +++
+>  include/linux/msi.h |    6 +++++-
+>  3 files changed, 20 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a080f44..1661cdf 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+>  }
+>  EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
+>  
+> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
+> +				 struct irq_domain *domain)
+> +{
+> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+> +	struct msi_domain_info *info;
 > +
->  	/* Initialize more IODA stuff */
->  	phb->ioda.total_pe_num = 1;
->  	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
->
+> +	info = msi_get_domain_info(domain);
+> +	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
+> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+> +#endif
+> +}
 
+Functions named "check_foo" are a pet peeve of mine because the name
+doesn't tell us anything about what the function *does*.  In this
+case, we know it checks something about MSI remapping, but we don't
+know whether we're checking whether it's enabled, disabled, or some
+other property.
 
--- 
-Alexey
+I'd prefer something like:
+
+  int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
+  {
+    struct msi_domain_info *info;
+
+    if (!domain)
+      return 0;
+
+    info = msi_get_domain_info(domain);
+    if (info->flags & MSI_FLAG_IRQ_REMAPPING)
+      return 1;
+
+    return 0;
+  }
+
+  void pci_set_bus_msi_domain(struct pci_bus *bus)
+  {
+    ...
+    if (b == bus && pci_bus_msi_isolated(bus, d))
+      bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+
+>  #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+>  /**
+>   * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6d7ab9b..25cf1b1 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -696,6 +696,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+>  	if (!d)
+>  		d = pci_host_bridge_msi_domain(b);
+>  
+> +	if (d && b == bus)
+> +		pci_bus_check_msi_remapping(bus, d);
+> +
+>  	dev_set_msi_domain(&bus->dev, d);
+>  }
+>  
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 03eda72..b4c649e 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
+>  struct irq_data;
+>  struct msi_desc;
+>  struct pci_dev;
+> +struct pci_bus;
+> +struct irq_domain;
+>  struct platform_msi_priv_data;
+>  void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>  void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+> @@ -155,6 +157,9 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
+>  void default_teardown_msi_irqs(struct pci_dev *dev);
+>  void default_restore_msi_irqs(struct pci_dev *dev);
+>  
+> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
+> +				 struct irq_domain *domain);
+> +
+>  struct msi_controller {
+>  	struct module *owner;
+>  	struct device *dev;
+> @@ -173,7 +178,6 @@ struct msi_controller {
+>  #include <linux/irqhandler.h>
+>  #include <asm/msi.h>
+>  
+> -struct irq_domain;
+>  struct irq_domain_ops;
+>  struct irq_chip;
+>  struct device_node;
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
