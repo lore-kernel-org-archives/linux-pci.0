@@ -1,68 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53481 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:55880 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750810AbcETSur (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 May 2016 14:50:47 -0400
-Date: Fri, 20 May 2016 13:50:41 -0500
+	id S1752253AbcEYRuq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 May 2016 13:50:46 -0400
+Date: Wed, 25 May 2016 12:50:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ian Stakenvicius <axs@gentoo.org>
-Cc: linux-pci@vger.kernel.org, Martin Mares <mj@ucw.cz>,
-	Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH] Fix lack of exposure of pci_init for LIBPCI_3.0 on
- pciutils-3.5.0
-Message-ID: <20160520185041.GA3818@localhost>
-References: <1c0deb86-fee3-4de3-fb00-baf6e71ac7fd@gentoo.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Ocean HY1 He <hehy1@lenovo.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"luto@kernel.org" <luto@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"prarit@redhat.com" <prarit@redhat.com>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	Nagananda Chumbalkar <nchumbalkar@lenovo.com>
+Subject: Re: [PATCH] PCI/ASPM: fix reverse ASPM L0s assignment of upstream
+ and downstream
+Message-ID: <20160525175039.GC3208@localhost>
+References: <1464071269-79954-1-git-send-email-hehy1@lenovo.com>
+ <20160525165726.GB3208@localhost>
+ <5745DF08.9040409@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1c0deb86-fee3-4de3-fb00-baf6e71ac7fd@gentoo.org>
+In-Reply-To: <5745DF08.9040409@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Martin, Keith]
-
-This is related to the pciutils commit
-ab61451d4751 ("pciutils: Add support for 32-bit PCI domains")
-
-On Fri, May 20, 2016 at 01:31:59PM -0400, Ian Stakenvicius wrote:
-> The changes included in commit ab61451d47514c473953a24aa4f4f816b77
-> were not sufficient to maintain ABI compatibility with older versions
-> of libpci.so.3, as pci_init is only exposed under symbol version
-> LIBPCI_3.5.
+On Wed, May 25, 2016 at 01:21:12PM -0400, Sinan Kaya wrote:
+> Hi Bjorn,
 > 
-> This patch uses the code pattern for the versioning of pci_fill_info()
-> to ensure a pci_init symbol is exposed with LIBPCI_3.0 version.
+> OK. I see that we are dealing with two different questions.
 > 
-> Bug: http://bugs.gentoo.org/583580
-> ---
->  lib/init.c     | 2 ++
->  lib/internal.h | 1 +
->  2 files changed, 3 insertions(+)
+> > I thought you were talking about booting with
+> > "pcie_aspm.policy=powersave", where pcie_aspm_set_policy() sets
+> > aspm_policy = POLICY_POWERSAVE, then configures each link with
+> > ASPM_STATE_ALL.  But pcie_config_aspm_link() does AND the desired
+> > state (ASPM_STATE_ALL) with link->aspm_capable, which only has
+> > ASPM_STATE_L0S set if both the upstream and downstream components
+> > advertised PCIE_LINK_STATE_L0S.
+> > This path is very complicated, but I don't *think* it will enable L0s
+> > if the other end of the link doesn't support it.
 > 
-> diff --git a/lib/init.c b/lib/init.c
-> index 9a043ee..c7800e0 100644
-> --- a/lib/init.c
-> +++ b/lib/init.c
-> @@ -214,6 +214,8 @@ pci_init_v35(struct pci_access *a)
->  }
->   STATIC_ALIAS(void pci_init(struct pci_access *a), pci_init_v35(a));
-> +DEFINE_ALIAS(void pci_init_v30(struct pci_access *a), pci_init_v35);
-> +SYMBOL_VERSION(pci_init_v30, pci_init@LIBPCI_3.0);
->  SYMBOL_VERSION(pci_init_v35, pci_init@@LIBPCI_3.5);
->   void
-> diff --git a/lib/internal.h b/lib/internal.h
-> index f2027f8..cbac2a7 100644
-> --- a/lib/internal.h
-> +++ b/lib/internal.h
-> @@ -61,6 +61,7 @@ void *pci_malloc(struct pci_access *, int);
->  void pci_mfree(void *);
->  char *pci_strdup(struct pci_access *a, const char *s);
->  +void pci_init_v30(struct pci_access *a) VERSIONED_ABI;
->  void pci_init_v35(struct pci_access *a) VERSIONED_ABI;
->   /* access.c */
-> -- 
-> 2.7.3
+> Thanks for clarifying this. You are saying that if one side of the
+> link doesn't support L0s, Linux doesn't enable L0s on the other side.
+> This makes sense.
+> 
+> I think there is a confusion between what supported means vs. when
+> L0s can be enabled on which side of the link.
+> 
+> You clarified the supported case above that code will not enable
+> L0s if the other side doesn't support L0s.
 > 
 > 
+> > Now we enable the downstream component's transmitter to enter L0s.
+> > Per PCIe spec r3.0, sec 7.8.7, the receiver, i.e., the upstream
+> > component, must be capable of entering L0s even when its transmitter
+> > is disabled from entering L0s.
+> 
+> Let's assume that both sides actually support L0s but the link parameters
+> on one side is not compatible.
+> 
+> You are saying that it is OK to enable L0s on just one side of the
+> link as long as both sides support L0s. 
 
+I'm not sure what you mean by the link parameters not being
+compatible, but I think it is legal to enable L0s on only one
+direction.
 
+> This part is a little bit misleading. I had HW people telling me
+> that both sides need to enable L0s at about the same time.
 
+I don't remember seeing anything like that in the spec.  Do they have
+a pointer?  "At about the same time" is too hand-wavey to be useful to
+software.
+
+> I'm actually seeing Linux enabling L0s on one side only as you
+> described and both supports L0s.
