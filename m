@@ -1,147 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40445 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750885AbcEaWC3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 May 2016 18:02:29 -0400
-Date: Tue, 31 May 2016 17:02:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	linux-kernel@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack
- overflow"
-Message-ID: <20160531220224.GA30841@localhost>
-References: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201605250554.u4P5sPdK018206@mx0a-001b2d01.pphosted.com>
+Subject: Re: [PATCH 2/5] iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have
+ capability of IRQ remapping
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1461761010-5452-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160524211149.GC16463@localhost>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
+	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
+	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
+	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Wed, 25 May 2016 13:54:23 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160524211149.GC16463@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Russell, linux-arm-kernel]
+On 2016/5/25 5:11, Bjorn Helgaas wrote:
 
-On Tue, May 31, 2016 at 04:58:02PM -0500, Bjorn Helgaas wrote:
-> This reverts commit 498a92d42596a7a32c042319eb62a4c3d8081cf1.
-> 
-> Krzysztof reported that this change broke Cavium CNS3xxx, ARMv6 (Laguna
-> GW-2388) because the MRRS setting is never written to the hardware.
+> On Wed, Apr 27, 2016 at 08:43:27PM +0800, Yongji Xie wrote:
+>> The capability of IRQ remapping is abstracted on IOMMU side on
+>> some archs. There is a existing flag IOMMU_CAP_INTR_REMAP for this.
+>>
+>> To have a universal flag to test this capability for different
+>> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+>> when IOMMU_CAP_INTR_REMAP is set.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>>   drivers/iommu/iommu.c |   15 +++++++++++++++
+>>   1 file changed, 15 insertions(+)
+>>
+>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+>> index 0e3b009..5d2b6f6 100644
+>> --- a/drivers/iommu/iommu.c
+>> +++ b/drivers/iommu/iommu.c
+>> @@ -813,6 +813,16 @@ struct iommu_group *pci_device_group(struct device *dev)
+>>   	return group;
+>>   }
+>>   
+>> +static void pci_check_msi_remapping(struct pci_dev *pdev,
+>> +					const struct iommu_ops *ops)
+>> +{
+>> +	struct pci_bus *bus = pdev->bus;
+>> +
+>> +	if (ops->capable(IOMMU_CAP_INTR_REMAP) &&
+>> +		!(bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP))
+>> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+>> +}
+> This looks an awful lot like the pci_bus_check_msi_remapping() you add
+> elsewhere.  Why do we need both?
 
-Krzysztof, can you test this and see whether it fixes the problem for
-you?
+I will modify this function as you suggested.  And we add this function
+here because some iommu drivers would be initialed after PCI probing.
 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Krzysztof Hałasa <khalasa@piap.pl>
-> ---
->  arch/arm/mach-cns3xxx/pcie.c |   71 ++++++++++++++++++++++++------------------
->  1 file changed, 41 insertions(+), 30 deletions(-)
-> 
-> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-> index 318394e..c622c30 100644
-> --- a/arch/arm/mach-cns3xxx/pcie.c
-> +++ b/arch/arm/mach-cns3xxx/pcie.c
-> @@ -65,9 +65,8 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
->  
->  	/*
->  	 * The CNS PCI bridge doesn't fit into the PCI hierarchy, though
-> -	 * we still want to access it.
-> -	 * We place the host bridge on bus 0, and the directly connected
-> -	 * device on bus 1, slot 0.
-> +	 * we still want to access it. For this to work, we must place
-> +	 * the first device on the same bus as the CNS PCI bridge.
->  	 */
->  	if (busno == 0) { /* internal PCIe bus, host bridge device */
->  		if (devfn == 0) /* device# and function# are ignored by hw */
-> @@ -212,46 +211,58 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
->  	}
->  }
->  
-> -static void cns3xxx_write_config(struct cns3xxx_pcie *cnspci,
-> -					 int where, int size, u32 val)
-> -{
-> -	void __iomem *base = cnspci->host_regs + (where & 0xffc);
-> -	u32 v;
-> -	u32 mask = (0x1ull << (size * 8)) - 1;
-> -	int shift = (where % 4) * 8;
-> -
-> -	v = readl_relaxed(base);
-> -
-> -	v &= ~(mask << shift);
-> -	v |= (val & mask) << shift;
-> -
-> -	writel_relaxed(v, base);
-> -	readl_relaxed(base);
-> -}
-> -
->  static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
->  {
-> +	int port = cnspci->port;
-> +	struct pci_sys_data sd = {
-> +		.private_data = cnspci,
-> +	};
-> +	struct pci_bus bus = {
-> +		.number = 0,
-> +		.ops = &cns3xxx_pcie_ops,
-> +		.sysdata = &sd,
-> +	};
->  	u16 mem_base  = cnspci->res_mem.start >> 16;
->  	u16 mem_limit = cnspci->res_mem.end   >> 16;
->  	u16 io_base   = cnspci->res_io.start  >> 16;
->  	u16 io_limit  = cnspci->res_io.end    >> 16;
-> +	u32 devfn = 0;
-> +	u8 tmp8;
-> +	u16 pos;
-> +	u16 dc;
-> +
-> +	pci_bus_write_config_byte(&bus, devfn, PCI_PRIMARY_BUS, 0);
-> +	pci_bus_write_config_byte(&bus, devfn, PCI_SECONDARY_BUS, 1);
-> +	pci_bus_write_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, 1);
->  
-> -	cns3xxx_write_config(cnspci, PCI_PRIMARY_BUS, 1, 0);
-> -	cns3xxx_write_config(cnspci, PCI_SECONDARY_BUS, 1, 1);
-> -	cns3xxx_write_config(cnspci, PCI_SUBORDINATE_BUS, 1, 1);
-> -	cns3xxx_write_config(cnspci, PCI_MEMORY_BASE, 2, mem_base);
-> -	cns3xxx_write_config(cnspci, PCI_MEMORY_LIMIT, 2, mem_limit);
-> -	cns3xxx_write_config(cnspci, PCI_IO_BASE_UPPER16, 2, io_base);
-> -	cns3xxx_write_config(cnspci, PCI_IO_LIMIT_UPPER16, 2, io_limit);
-> +	pci_bus_read_config_byte(&bus, devfn, PCI_PRIMARY_BUS, &tmp8);
-> +	pci_bus_read_config_byte(&bus, devfn, PCI_SECONDARY_BUS, &tmp8);
-> +	pci_bus_read_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, &tmp8);
-> +
-> +	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_BASE, mem_base);
-> +	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_LIMIT, mem_limit);
-> +	pci_bus_write_config_word(&bus, devfn, PCI_IO_BASE_UPPER16, io_base);
-> +	pci_bus_write_config_word(&bus, devfn, PCI_IO_LIMIT_UPPER16, io_limit);
->  
->  	if (!cnspci->linked)
->  		return;
->  
->  	/* Set Device Max_Read_Request_Size to 128 byte */
-> -	pcie_bus_config = PCIE_BUS_PEER2PEER;
-> -
-> +	bus.number = 1; /* directly connected PCIe device */
-> +	devfn = PCI_DEVFN(0, 0);
-> +	pos = pci_bus_find_capability(&bus, devfn, PCI_CAP_ID_EXP);
-> +	pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
-> +	if (dc & PCI_EXP_DEVCTL_READRQ) {
-> +		dc &= ~PCI_EXP_DEVCTL_READRQ;
-> +		pci_bus_write_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, dc);
-> +		pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
-> +		if (dc & PCI_EXP_DEVCTL_READRQ)
-> +			pr_warn("PCIe: Unable to set device Max_Read_Request_Size\n");
-> +		else
-> +			pr_info("PCIe: Max_Read_Request_Size set to 128 bytes\n");
-> +	}
->  	/* Disable PCIe0 Interrupt Mask INTA to INTD */
-> -	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(cnspci->port));
-> +	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(port));
->  }
->  
->  static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>   /**
+>>    * iommu_group_get_for_dev - Find or create the IOMMU group for a device
+>>    * @dev: target device
+>> @@ -871,6 +881,9 @@ static int add_iommu_group(struct device *dev, void *data)
+>>   	const struct iommu_ops *ops = cb->ops;
+>>   	int ret;
+>>   
+>> +	if (dev_is_pci(dev) && ops->capable)
+>> +		pci_check_msi_remapping(to_pci_dev(dev), ops);
+>> +
+>>   	if (!ops->add_device)
+>>   		return 0;
+>>   
+>> @@ -913,6 +926,8 @@ static int iommu_bus_notifier(struct notifier_block *nb,
+>>   	 * result in ADD/DEL notifiers to group->notifier
+>>   	 */
+>>   	if (action == BUS_NOTIFY_ADD_DEVICE) {
+>> +		if (dev_is_pci(dev) && ops->capable)
+>> +			pci_check_msi_remapping(to_pci_dev(dev), ops);
+> These calls don't smell right either.  Why do we need dev_is_pci()
+> checks here?
+
+Some platform devices may also call this.
+
+> Can't this be done in the PCI probe path somehow, e.g.,
+> in pci_set_bus_msi_domain() or something?
+>
+
+Yes, this can be done in pci_create_root_bus(). But it could only
+handle the case that iommu drivers are initialed before PCI probing.
+
+Regards,
+Yongji
