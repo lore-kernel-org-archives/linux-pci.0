@@ -1,117 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39069 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754835AbcETGnN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:13 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 20 May 2016 16:43:11 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 042D92BB0057
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:08 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gxrc1311170
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gYhG032197
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:35 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v10 09/18] powerpc/powernv: Extend PCI bridge resources
-Date: Fri, 20 May 2016 16:41:33 +1000
-Message-Id: <1463726502-14679-10-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from ozlabs.org ([103.22.144.67]:36725 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754800AbcEYFpT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 May 2016 01:45:19 -0400
+Message-ID: <1464155117.8573.2.camel@ellerman.id.au>
+Subject: Re: [v4] powerpc/pci: Assign fixed PHB number based on device-tree
+ properties
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+Cc: mikey@neuling.org, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, paulus@samba.org, imunsie@au1.ibm.com,
+	andrew.donnellan@au1.ibm.com, bhelgaas@google.com,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Wed, 25 May 2016 15:45:17 +1000
+In-Reply-To: <56F9255A.1040900@linux.vnet.ibm.com>
+References: <3qWdQC0MVDz9s9Y@ozlabs.org>
+	 <56F9255A.1040900@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI slots are associated with root port or downstream ports
-of the PCIe switch connected to root port. When adapter is hot
-added to the PCI slot, it usually requests more IO or memory
-resource from the directly connected parent bridge (port) and
-update the bridge's windows accordingly. The resource windows
-of upstream bridges can't be updated automatically. It possibly
-leads to unbalanced resource across the bridges: The window of
-downstream bridge is overruning that of upstream bridge. The
-IO or MMIO path won't work.
+Hi Guilherme,
 
-This resolves the above issue by extending bridge windows of
-root port and upstream port of the PCIe switch connected to
-the root port to PHB's windows.
+Sorry for the very late reply, this got lost in my email filters.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 46 +++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 3186a29..e97a5fa 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3221,6 +3221,49 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
- }
- 
-+/*
-+ * We are updating root port or the upstream port of the
-+ * bridge behind the root port with PHB's windows in order
-+ * to accommodate the changes on required resources during
-+ * PCI (slot) hotplug, which is connected to either root
-+ * port or the downstream ports of PCIe switch behind the
-+ * root port.
-+ */
-+static void pnv_pci_fixup_bridge_resources(struct pci_bus *bus,
-+					   unsigned long type)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bus);
-+	struct pnv_phb *phb = hose->private_data;
-+	struct pci_dev *bridge = bus->self;
-+	struct resource *r, *w;
-+	int i;
-+
-+	/* Check if we need apply fixup to the bridge's windows */
-+	if (!pci_is_root_bus(bridge->bus) &&
-+	    !pci_is_root_bus(bridge->bus->self->bus))
-+		return;
-+
-+	/* Fixup the resources */
-+	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
-+		r = &bridge->resource[PCI_BRIDGE_RESOURCES + i];
-+		if (!r->flags || !r->parent)
-+			continue;
-+
-+		w = NULL;
-+		if (r->flags & type & IORESOURCE_IO)
-+			w = &hose->io_resource;
-+		else if (pnv_pci_is_mem_pref_64(r->flags) &&
-+			 (type & IORESOURCE_PREFETCH) &&
-+			 phb->ioda.m64_segsize)
-+			w = &hose->mem_resources[1];
-+		else if (r->flags & type & IORESOURCE_MEM)
-+			w = &hose->mem_resources[0];
-+
-+		r->start = w->start;
-+		r->end = w->end;
-+	}
-+}
-+
- static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
-@@ -3229,6 +3272,9 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
- 	struct pnv_ioda_pe *pe;
- 	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
- 
-+	/* Extend bridge's windows if necessary */
-+	pnv_pci_fixup_bridge_resources(bus, type);
-+
- 	/* The PE for root bus should be realized before any one else */
- 	if (!phb->ioda.root_pe_populated) {
- 		pe = pnv_ioda_setup_bus_PE(phb->hose->bus, false);
--- 
-2.1.0
+On Mon, 2016-03-28 at 09:36 -0300, Guilherme G. Piccoli wrote:
+> On 03/25/2016 06:33 AM, Michael Ellerman wrote:
+
+> > > +static int get_phb_number(struct device_node *dn)
+> > > +{
+> > > +	const __be64 *prop64;
+> > > +	const __be32 *regs;
+> > > +	int phb_id = 0;
+> > > +
+> > > +	/* try fixed PHB numbering first, by checking archs and reading
+> > > +	 * the respective device-tree property. */
+> > > +	if (machine_is(pseries)) {
+> > 
+> > Firstly I don't see why this check needs to be conditional on pseries. Any
+> > machine where the PHB has a 'reg' property should be able to use 'reg' for
+> > numbering.
+> 
+> This is something I'm not sure for all the powerpc sub-architectures, 
+> like Cell - that's the reason of the check. If you are sure about this, 
+> I'll gladly remove this check =)
+
+Please do.
+
+I'll test on Cell & other platforms. If there are bugs we can fix them. Maybe
+if we can't get it to work on eg. Cell then we need a machine_is() check, but
+that should be the last resort.
+
+> > > +		regs = of_get_property(dn, "reg", NULL);
+> > > +		if (regs)
+> > > +			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
+> > 
+> > This should use of_property_read_u32().
+
+You missed this in v5 ^
+
+> > And finally in either case above, where you get a number from the device tree,
+> > you must check that it's not already allocated. Otherwise if you have a system
+> > where some PHBs have a property but others don't, you may give out the same
+> > number twice. Also you could have firmware give you the same number twice
+> > (which would be a firmware bug, but those happen).
+> > 
+> > If the number is allocated you fall back to dynamic numbering.
+> > 
+> > If it's not allocated you must mark it as allocated in the bitmap.
+> 
+> Hmm..interesting. I thought in performing such check, but I wasn't able 
+> to imagine a system in which we can have some PHBs indexed by 
+> device-tree properties and others don't, seemed impossible to me. The 
+> buggy fw case is an example, I can implement this modification if you 
+> think it's valid.
+> 
+> But, notice that for consistency in implementation, I'll might need to 
+> increase the MAX_PHBS value to 65536, otherwise we won't cover all the 
+> possible wrong cases, since I'm performing an AND with 0xFFFF mask 
+> (imagine if we can have a buggy fw exposing same value for two different 
+> PHBs, and this value is higher than 8192). What do you think about this?
+
+Yeah please increase the bitmap size to 65536. It will only take 8KB of memory,
+which is negligible.
+
+cheers
 
