@@ -1,62 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58187 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751280AbcEJLvK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 May 2016 07:51:10 -0400
-Date: Tue, 10 May 2016 06:51:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-pci@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: Build warning regression (104daa71b396 ("PCI: Determine actual
- VPD size on first access"))
-Message-ID: <20160510115103.GB29582@localhost>
-References: <20160509195410.GB18166@localhost>
- <57317B31.8030203@suse.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201605250548.u4P5i1tA003562@mx0a-001b2d01.pphosted.com>
+Subject: Re: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller
+ supports IRQ remapping
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160524210434.GB16463@localhost>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
+	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
+	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
+	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Wed, 25 May 2016 13:48:00 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57317B31.8030203@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160524210434.GB16463@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Geert]
+On 2016/5/25 5:04, Bjorn Helgaas wrote:
 
-On Tue, May 10, 2016 at 08:09:53AM +0200, Hannes Reinecke wrote:
-> On 05/09/2016 09:54 PM, Bjorn Helgaas wrote:
-> > Hi Hannes,
-> > 
-> > Geert's list of build regressions and improvements
-> > (http://lkml.kernel.org/r/1462782250-6231-1-git-send-email-geert@linux-m68k.org)
-> > shows these new warnings:
-> > 
-> >   drivers/pci/access.c: warning: format '%zu' expects argument of type 'size_t', but argument 4 has type 'unsigned int' [-Wformat=]:  => 318:8
-> >   drivers/pci/access.c: warning: format '%zu' expects argument of type 'size_t', but argument 5 has type 'unsigned int' [-Wformat=]:  => 340:6
-> > 
-> > which I think are due to 104daa71b396 ("PCI: Determine actual VPD size on
-> > first access").
-> > 
-> > Would you mind fixing those up and sending me a patch?  These were in
-> > the v4.6-rc1 regressions email, and I should have noticed then, but I
-> > didn't.
-> > 
-> This is curious.
-> The code has this:
-> 
-> size_t off = 0;
-> 
-> ...
-> 
-> dev_warn(&dev->dev,
-> 	"invalid large VPD tag %02x size at offset %zu",
-> 	tag, off + 1);
-> 
-> Which, as per my reading, suggests that the last argument to
-> dev_warn() is of type size_t.
-> 
-> Which tree has generated the above warning?
+> On Wed, Apr 27, 2016 at 08:43:28PM +0800, Yongji Xie wrote:
+>> On ARM HW the capability of IRQ remapping is abstracted on
+>> MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
+>> this [1].
+>>
+>> To have a universal flag to test this capability for different
+>> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+>> when MSI_FLAG_IRQ_REMAPPING is set.
+>>
+>> [1] http://www.spinics.net/lists/kvm/msg130256.html
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>>   drivers/pci/msi.c   |   12 ++++++++++++
+>>   drivers/pci/probe.c |    3 +++
+>>   include/linux/msi.h |    6 +++++-
+>>   3 files changed, 20 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index a080f44..1661cdf 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+>>   }
+>>   EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
+>>   
+>> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
+>> +				 struct irq_domain *domain)
+>> +{
+>> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+>> +	struct msi_domain_info *info;
+>> +
+>> +	info = msi_get_domain_info(domain);
+>> +	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
+>> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+>> +#endif
+>> +}
+> Functions named "check_foo" are a pet peeve of mine because the name
+> doesn't tell us anything about what the function *does*.  In this
+> case, we know it checks something about MSI remapping, but we don't
+> know whether we're checking whether it's enabled, disabled, or some
+> other property.
+>
+> I'd prefer something like:
+>
+>    int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
+>    {
+>      struct msi_domain_info *info;
+>
+>      if (!domain)
+>        return 0;
+>
+>      info = msi_get_domain_info(domain);
+>      if (info->flags & MSI_FLAG_IRQ_REMAPPING)
+>        return 1;
+>
+>      return 0;
+>    }
+>
+>    void pci_set_bus_msi_domain(struct pci_bus *bus)
+>    {
+>      ...
+>      if (b == bus && pci_bus_msi_isolated(bus, d))
+>        bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
 
-Yeah, it wasn't obvious to me how this would happen either.  From
-Geert's original email, I think the tree is v4.6-rc7, i.e.,
-44549e8f5eea4e0a41b487b63e616cb089922b99.
+Yes. This looks more reasonable. Thank you!
 
-Geert, can you tell which config generated this warning?
+Regards,
+Yongji
