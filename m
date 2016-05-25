@@ -1,256 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32975 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753726AbcEWKc0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 May 2016 06:32:26 -0400
-Message-ID: <1463999616.31269.34.camel@linux.intel.com>
-Subject: Re: [PATCH 2/6] thunderbolt: Communication with the ICM (firmware)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Amir Levy <amir.jer.levy@intel.com>, andreas.noever@gmail.com,
-	gregkh@linuxfoundation.org, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, michael.jamet@intel.com,
-	dan.alloun@intel.com, mika.westerberg@intel.com,
-	kai.svahn@intel.com, tomas.winkler@intel.com
-Date: Mon, 23 May 2016 13:33:36 +0300
-In-Reply-To: <1463993336-2750-3-git-send-email-amir.jer.levy@intel.com>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
-	 <1463993336-2750-3-git-send-email-amir.jer.levy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <hdegoede@redhat.com>
+Return-Path: <hdegoede@redhat.com>
+Subject: Re: [Nouveau] [PATCH 0/4] nouveau fixes for RPM/Optimus-related hangs
+To: Peter Wu <peter@lekensteyn.nl>, nouveau@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org
+References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+Cc: Dave Airlie <airlied@redhat.com>, linux-pm@vger.kernel.org,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <128b3153-9f27-fdff-084a-a792942e3eaf@redhat.com>
+Date: Wed, 25 May 2016 11:08:15 +0200
+MIME-Version: 1.0
+In-Reply-To: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2016-05-23 at 11:48 +0300, Amir Levy wrote:
-> Firmware-based (a.k.a ICM - Intel Connection Manager) controller is
-> used for establishing and maintaining the Thunderbolt Networking
-> connection. We need to be able to communicate with it.
+Hi,
 
-> --- a/drivers/thunderbolt/Makefile
-> +++ b/drivers/thunderbolt/Makefile
-> @@ -1,3 +1,2 @@
->  obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-> -thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o
-> tunnel_pci.o eeprom.o
-> -
-> +thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o
-> tunnel_pci.o eeprom.o icm_nhi.o
+On 25-05-16 00:52, Peter Wu wrote:
+> Hi,
+>
+> Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
+> due to unchecked function) and a more important fix to fix hanging Optimus
+> machines when runtime PM is enabled (with pm/pci patches).
+>
+> An older (obsolete) patch for the first issue was tested by the reporter:
+> https://bugzilla.kernel.org/show_bug.cgi?id=104791#c11
+> (it is replaced by "check for function 0x1B before using it").
+>
+> The second issue will occur when:
+>  - A modern Optimus laptop is in use (designed for Windows 8 or newer).
+>  - nouveau runtime PM is enabled (1 or the default -1).
+>  - The patch "PCI: Add runtime PM support for PCIe ports" from Mika is pulled
+>    into v4.7 (or v4.8[1]?) via the pci/pm branch,
+>    https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/pm&id=8b71f5652eeac561acf883da01ab4810f763ee42
+> (see also the discussion for "[PATCH] PCI: Power on bridges before scanning new
+> devices" at http://article.gmane.org/gmane.linux.power-management.general/76411)
+>
+> The first two patches are just refactoring to reduce code duplication (and
+> scratch an itch) and make the following patches possible. The next two patches
+> fix the problems reported above.
+>
+> I intend to get these patches in 4.7 (or the first version where pci/pm gets
+> merged) to avoid a lockup when runpm is enabled. Note:
+>  - If the fourth patch is merged before/without Mika's PCIe port patch, then
+>    those modern Optimus machines above will not be put into D3cold.
+>  - If the fourth patch is not merged (or merged after Mika's patch), then under
+>    the above conditions the affected machine can lock up.
+>  - The three other patches are unrelated to this issue and can safely be merged.
+>
+> Tested with:
+>  - Linux v4.6 + pci/pm + these four patches
+>  - Hardware: Clevo P651RA with acpi_osi="!Windows 2015" (the latter is a
+>    workaround for another PCIe issue).
+>  - Card is asleep, woke up with lspci, waited a bit and retried/suspended:
+>    - # lspci -xxxxnnvvvv >/dev/null; sleep 5
+>    - # lspci -xxxxnnvvvv >/dev/null; sleep 5; systemctl suspend
+>    - # lspci -xxxxnnvvvv >/dev/null; systemctl suspend
 
-> \ No newline at end of file
+Series looks good to me:
 
-Something wrong with an editor?
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
-> diff --git a/drivers/thunderbolt/icm_nhi.c
-> b/drivers/thunderbolt/icm_nhi.c
-> new file mode 100644
-> index 0000000..5b7e448
-> --- /dev/null
-> +++ b/drivers/thunderbolt/icm_nhi.c
-> @@ -0,0 +1,1241 @@
-> +/********************************************************************
-> ***********
-> + *
-> + * Intel Thunderbolt(TM) driver
-> + * Copyright(c) 2014 - 2016 Intel Corporation.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but
-> WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-> or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-> License for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> along
-> + * with this program.  If not, see <http://www.gnu.org/licenses/>.
-> + *
-> + * The full GNU General Public License is included in this
-> distribution in
-> + * the file called "COPYING".
-> + *
+Regards,
+
+Hans
 
 
-> + * Contact Information:
-> + * Intel Thunderbolt Mailing List <thunderbolt-software@lists.01.org>
-
-We have MAINTAINERS for that, have we?
-
-> + * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR
-> 97124-6497
-
-I doubt it makes sense here.
-
-> + *
-> +
-> **********************************************************************
-> ********/
-
-Not every maintainer likes long star lines.
-
-> +
-> +#include <linux/printk.h>
-> +#include <linux/crc32.h>
-> +#include <linux/delay.h>
-> +#include <linux/pci.h>
-
-+ empty line
-
-> +#include "nhi_regs.h"
-> +#include "icm_nhi.h"
-> +#include "net.h"
-> +
-> 
-
-> +#define NHI_CMD_MAX (__NHI_CMD_MAX - 1)
-
-MAX should be MAX¸ not MAX-1, otherwise the name is chosen poorly.
-
-> +
-> +/* NHI genetlink policy */
-> +static const struct nla_policy nhi_genl_policy[NHI_ATTR_MAX + 1] = {
-> +	[NHI_ATTR_DRV_VERSION]		= { .type =
-> NLA_NUL_STRING, },
-> +	[NHI_ATTR_NVM_VER_OFFSET]	= { .type = NLA_U16, },
-> +	[NHI_ATTR_NUM_PORTS]		= { .type = NLA_U8, },
-> +	[NHI_ATTR_DMA_PORT]		= { .type = NLA_U8, },
-> +	[NHI_ATTR_SUPPORT_FULL_E2E]	= { .type = NLA_FLAG, },
-> +	[NHI_ATTR_MAILBOX_CMD]		= { .type = NLA_U32, },
-> +	[NHI_ATTR_PDF]			= { .type = NLA_U32, },
-> +	[NHI_ATTR_MSG_TO_ICM]		= { .type = NLA_BINARY,
-> +					.len =
-> TBT_ICM_RING_MAX_FRAME_SIZE },
-> +	[NHI_ATTR_MSG_FROM_ICM]		= { .type =
-> NLA_BINARY,
-> +					.len =
-> TBT_ICM_RING_MAX_FRAME_SIZE },
-> +};
-> +
-> +/* NHI genetlink family */
-> +static struct genl_family nhi_genl_family = {
-> +	.id		= GENL_ID_GENERATE,
-> +	.hdrsize	= FIELD_SIZEOF(struct tbt_nhi_ctxt, id),
-> +	.name		= NHI_GENL_NAME,
-> +	.version	= NHI_GENL_VERSION,
-> +	.maxattr	= NHI_ATTR_MAX,
-> +};
-> +
-> +static LIST_HEAD(controllers_list);
-> +static DECLARE_RWSEM(controllers_list_rwsem);
-> +static atomic_t subscribers = ATOMIC_INIT(0);
-> +static u32 portid;
-> +
-> +static bool nhi_nvm_authenticated(struct tbt_nhi_ctxt *nhi_ctxt)
-> +{
-> +	enum icm_operation_mode op_mode;
-> +	u32 *msg_head, port_id, reg;
-> +	struct sk_buff *skb;
-> +	int i;
-> +
-> +	if (!nhi_ctxt->nvm_auth_on_boot)
-> +		return true;
-> +
-> +	for (i = 0; i < 5; i++) {
-
-5 is a magic number.
-
-> +		u32 status;
-> +
-> +		status = ioread32(nhi_ctxt->iobase + REG_FW_STS);
-
-So, can be registers represented as IO ports? Otherwise use plain
-writel() / readl() and friends.
-
-> +
-> +		if (status & REG_FW_STS_NVM_AUTH_DONE)
-> +			break;
-
-> +		msleep(30);
-
-Definitely needs comment why this is here.
 
 
-> +	}
-> +	/*
-> +	 * The check for authentication is done after checking if iCM
-> +	 * is present so it shouldn't reach the max tries (=5).
-> +	 * Anyway, the check for full functionality below covers the
-> error case.
-> +	 */
-> +	reg = ioread32(nhi_ctxt->iobase + REG_OUTMAIL_CMD);
-> +	op_mode = (reg & REG_OUTMAIL_CMD_OP_MODE_MASK) >>
-> +		  REG_OUTMAIL_CMD_OP_MODE_SHIFT;
-> +	if (op_mode == FULL_FUNCTIONALITY)
-> +		return true;
-> +
-> +	dev_warn(&nhi_ctxt->pdev->dev, "controller id %#x is in
-> operation mode %#x status %#lx\n",
-> +		 nhi_ctxt->id, op_mode,
-> +		 (reg &
-> REG_OUTMAIL_CMD_STS_MASK)>>REG_OUTMAIL_CMD_STS_SHIFT);
 
-Spaces are missed around >>.
-
-> +
-> +	skb = genlmsg_new(NLMSG_ALIGN(nhi_genl_family.hdrsize),
-> GFP_KERNEL);
-> +	if (!skb) {
-> +		dev_err(&nhi_ctxt->pdev->dev, "genlmsg_new failed:
-> not enough memory to send controller operational mode\n");
-
-Message can be located on the next line.
-
-> +		return false;
-> +	}
-> +
-> +	/* keeping port_id into a local variable for next use */
-
-keeping -> Keeping
-
-> +	port_id = portid;
-> +	msg_head = genlmsg_put(skb, port_id, 0, &nhi_genl_family, 0,
-> +			       NHI_CMD_ICM_IN_SAFE_MODE);
-> +	if (!msg_head) {
-> +		nlmsg_free(skb);
-> +		dev_err(&nhi_ctxt->pdev->dev, "genlmsg_put failed:
-> not enough memory to send controller operational mode\n");
-
-Message can be located on the next line.
-
-> +		return false;
-> +	}
-> +
-
->  static int __init nhi_init(void)
->  {
-> -	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc."))
-> -		return -ENOSYS;
-> -	return pci_register_driver(&nhi_driver);
-> +	int rc = nhi_genl_register();
-> +
-> +	if (rc)
-> +		goto failure;
-> +
-> +	rc = pci_register_driver(&nhi_driver);
-> +	if (rc)
-> +		goto failure_genl;
-> +
-> +	return 0;
-> +
-> +failure_genl:
-> +	nhi_genl_unregister();
-> +
-> +failure:
-
-> +	pr_debug("nhi: error %d occurred in %s\n", rc, __func__);
-
-Doesn't make much sense. We have a mechanism to get this code and
-function printed.
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+>
+> Kind regards,
+> Peter
+>
+>  [1]: https://lkml.kernel.org/r/20160524211309.GH1789@lahna.fi.intel.com
+>
+> Peter Wu (4):
+>   drm/nouveau/acpi: ensure matching ACPI handle and supported functions
+>   drm/nouveau/acpi: return supported DSM functions
+>   drm/nouveau/acpi: check for function 0x1B before using it
+>   drm/nouveau/acpi: fix lockup with PCIe runtime PM
+>
+>  drivers/gpu/drm/nouveau/nouveau_acpi.c | 100 +++++++++++++++++++++------------
+>  1 file changed, 63 insertions(+), 37 deletions(-)
+>
