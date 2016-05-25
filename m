@@ -1,45 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35648 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933337AbcECB0U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2016 21:26:20 -0400
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
-	bhelgaas@google.com, Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 0/2] pci: host: Broadcom STB PCIE RC controller support
-Date: Mon,  2 May 2016 18:25:47 -0700
-Message-Id: <1462238749-19715-1-git-send-email-f.fainelli@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Peter Wu <peter@lekensteyn.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI: Wait for 50ms after bridge is powered up
+Date: Wed, 25 May 2016 18:04:56 +0300
+Message-Id: <1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <20160524162833.GA30762@localhost>
+References: <20160524162833.GA30762@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+The PCI PM 1.2 specification requires minimum of 50ms before function on a
+bus is accessed after the bus is transitioned from B2 to B0. Now that we
+actually power down bridges we should make sure the specification is
+followed accordingly.
 
-This patch series adds support for Broadcom STB SoC's PCIe root complex driver.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+Hi Bjorn,
 
-This was primarily tested on BCM7445 (ARM) and BCM7435 (MIPS).
+Since this is only needed when bridges are powered down, I think it makes
+sense to put this to your pci/pm branch.
 
-Jim is the original author, and I picked up our downstream 4.1 driver and
-updated it to utilize the non-ARM hw_pci functions as well as made some
-stylistic changes.
+ drivers/pci/pci.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Thanks!
-
-Jim Quinlan (2):
-  Documentation: DT: bindings: Add Broadcom STB PCIe bindings
-  pci: host: Add Broadcom STB PCIE RC controller
-
- .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  |   81 ++
- MAINTAINERS                                        |    1 +
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pcie-brcmstb.c                    | 1243 ++++++++++++++++++++
- 5 files changed, 1335 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
- create mode 100644 drivers/pci/host/pcie-brcmstb.c
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e785dc260e72..e645a3d4f2e0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2361,7 +2361,12 @@ void pci_pm_init(struct pci_dev *dev)
+ 	}
+ 
+ 	dev->pm_cap = pm;
+-	dev->d3_delay = PCI_PM_D3_WAIT;
++	/*
++	 * PCI PM 1.2 specification requires minimum of 50ms before any
++	 * function on the bus is accessed after the bus is transitioned
++	 * from B2 to B0.
++	 */
++	dev->d3_delay = pci_is_bridge(dev) ? PCI_PM_BUS_WAIT : PCI_PM_D3_WAIT;
+ 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
+ 	dev->bridge_d3 = pci_bridge_d3_possible(dev);
+ 	dev->d3cold_allowed = true;
 -- 
-2.1.0
-
+2.8.1
