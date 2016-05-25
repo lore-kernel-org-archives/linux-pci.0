@@ -1,49 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:52112 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752666AbcEMLYK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:24:10 -0400
-Message-Id: <20ccb6cc38f872c3d56b44cc2b9776a4a39c7dc5.1463134232.git.lukas@wunner.de>
-In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 13 May 2016 13:15:31 +0200
-Subject: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for system
- sleep
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rjwysocki@gmail.com>
+Return-Path: <rjwysocki@gmail.com>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <20160524162833.GA30762@localhost>
+	<1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
+Date: Wed, 25 May 2016 22:44:14 +0200
+Message-ID: <CAJZ5v0gsgnPsMTMZFeZP5Y+bhjrwwm5qMk6JSPOssj_8HhLbSg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Lukas Wunner <lukas@wunner.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-There are devices wich are not power-managed by the platform, yet can be
-runtime suspended to D3cold with some other mechanism.  When putting the
-system to sleep, we currently handle such devices improperly by trying
-to transition them from D3cold to D3hot (the default power state defined
-at the beginning of pci_target_state()).  Avoid that.
+On Wed, May 25, 2016 at 5:04 PM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> The PCI PM 1.2 specification requires minimum of 50ms before function on a
+> bus is accessed after the bus is transitioned from B2 to B0. Now that we
+> actually power down bridges we should make sure the specification is
+> followed accordingly.
+>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-An example for devices affected by this are Thunderbolt controllers
-built into Macs which can be put into D3cold with nonstandard ACPI
-methods.
+ACK
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 791dfe7..6af9911 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
- 			      && !(dev->pme_support & (1 << target_state)))
- 				target_state--;
- 		}
-+	} else if (dev->current_state == PCI_D3cold) {
-+		target_state = PCI_D3cold;
- 	}
- 
- 	return target_state;
--- 
-2.8.1
-
+> ---
+> Hi Bjorn,
+>
+> Since this is only needed when bridges are powered down, I think it makes
+> sense to put this to your pci/pm branch.
+>
+>  drivers/pci/pci.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e785dc260e72..e645a3d4f2e0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2361,7 +2361,12 @@ void pci_pm_init(struct pci_dev *dev)
+>         }
+>
+>         dev->pm_cap = pm;
+> -       dev->d3_delay = PCI_PM_D3_WAIT;
+> +       /*
+> +        * PCI PM 1.2 specification requires minimum of 50ms before any
+> +        * function on the bus is accessed after the bus is transitioned
+> +        * from B2 to B0.
+> +        */
+> +       dev->d3_delay = pci_is_bridge(dev) ? PCI_PM_BUS_WAIT : PCI_PM_D3_WAIT;
+>         dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
+>         dev->bridge_d3 = pci_bridge_d3_possible(dev);
+>         dev->d3cold_allowed = true;
+> --
+> 2.8.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
