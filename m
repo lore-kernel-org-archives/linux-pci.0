@@ -1,108 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56140 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753063AbcEZCqA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 May 2016 22:46:00 -0400
-Date: Wed, 25 May 2016 20:45:58 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Mitchel Humpherys <mitchelh@codeaurora.org>
-Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	"Will Deacon" <will.deacon@arm.com>,
-	"Robin Murphy" <robin.murphy@arm.com>,
-	Tony Truong <truong@codeaurora.org>,
-	Yan He <yanhe@codeaurora.org>,
-	Pratik Patel <pratikp@codeaurora.org>,
-	"Hamad Kadmany" <hkadmany@codeaurora.org>,
-	"Maya Erez" <qca_merez@qca.qualcomm.com>
-Subject: Re: How to keep PCI-e endpoints and RCs in distinct IOMMU groups?
-Message-ID: <20160525204558.08c30a34@ul30vt.home>
-In-Reply-To: <vnkwoa7ty89k.fsf@codeaurora.org>
-References: <vnkwoa7ty89k.fsf@codeaurora.org>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Message-Id: <201605250548.u4P5huHx049044@mx0a-001b2d01.pphosted.com>
+Subject: Re: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller
+ supports IRQ remapping
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160524210434.GB16463@localhost>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
+        bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
+        warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+        nikunj@linux.vnet.ibm.com, eric.auger@linaro.org, will.deacon@arm.com,
+        gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
+        alistair@popple.id.au, ruscur@russell.cc
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Wed, 25 May 2016 13:48:00 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160524210434.GB16463@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 25 May 2016 17:26:15 -0700
-Mitchel Humpherys <mitchelh@codeaurora.org> wrote:
+On 2016/5/25 5:04, Bjorn Helgaas wrote:
 
-> Hey there,
-> 
-> We're experiencing an issue with IOMMU groups and PCI-e devices.  The
-> system in question has a WLAN DMA master behind a PCI-e root complex
-> which is, in turn, behind an IOMMU.  There are no there devices behind
-> the RC.  This is on an ARM platform using the arm-smmu and pci-msm
-> drivers (pci-msm is in the MSM vendor tree, sorry...).
-> 
-> What we're observing is that the WLAN endpoint device is being added to
-> the same IOMMU group as the root complex device itself.  I don't think
-> they should be in the same group though, since they each have different
-> BDFs, which, in our system, are translated to different SMMU Stream IDs,
-> so their traffic is split onto separate SMMU context banks.  Since their
-> traffic is isolated from one other I don't think they need to be in the
-> same IOMMU group (as I understand IOMMU groups).
-> 
-> The result is that when the WLAN driver tries to attach to their IOMMU
-> it errors out due to the following check in iommu_attach_device:
-> 
->         if (iommu_group_device_count(group) != 1)
->                 goto out_unlock;
-> 
-> I've come up with a few hacky workarounds:
-> 
->   - Forcing PCI-e ACS to be "enabled" unconditionally (even though our
->     platform doesn't actually support it).
-> 
->   - Call iommu_attach_group instead of iommu_attach_device in the arm64
->     DMA IOMMU mapping layer (yuck).
-> 
->   - Don't use the pci_device_group helper at all from the arm-smmu
->     driver.  Just allocate a new group for all PCI-e devices.
-> 
-> It seems like the proper solution would be to somehow make these devices
-> end up in separate IOMMU groups using the existing pci_device_group
-> helper, since that might be doing useful stuff for other configurations
-> (like detecting the DMA aliasing quirks).
-> 
-> Looking at pci_device_group, though, I'm not sure how we could tell that
-> these two devices are supposed to get separated.  I know very little
-> about PCI-e so maybe I'm just missing something simple.  The match
-> happens in the following loop where we walk up the PCI-e topology:
-> 
->         /*
->          * Continue upstream from the point of minimum IOMMU granularity
->          * due to aliases to the point where devices are protected from
->          * peer-to-peer DMA by PCI ACS.  Again, if we find an existing
->          * group, use it.
->          */
->         for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
->                 if (!bus->self)
->                         continue;
-> 
->                 if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
->                         break;
-> 
->                 pdev = bus->self;
-> 
->                 group = iommu_group_get(&pdev->dev);
->                 if (group)
->                         return group;
->         }
-> 
-> Why do we do that?  If the devices have different BDFs can't we safely
-> say that they're protected from peer-to-peer DMA (assuming no DMA
-> aliasing quirks)?  Even as I write that out it seems wrong though since
-> the RC can probably do whatever it wants...
-> 
-> Maybe the IOMMU framework can't actually know whether the devices should
-> be kept in separate groups and we just need to do something custom in
-> the arm-smmu driver?
+> On Wed, Apr 27, 2016 at 08:43:28PM +0800, Yongji Xie wrote:
+>> On ARM HW the capability of IRQ remapping is abstracted on
+>> MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
+>> this [1].
+>>
+>> To have a universal flag to test this capability for different
+>> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+>> when MSI_FLAG_IRQ_REMAPPING is set.
+>>
+>> [1] http://www.spinics.net/lists/kvm/msg130256.html
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>>   drivers/pci/msi.c   |   12 ++++++++++++
+>>   drivers/pci/probe.c |    3 +++
+>>   include/linux/msi.h |    6 +++++-
+>>   3 files changed, 20 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index a080f44..1661cdf 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+>>   }
+>>   EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
+>>   
+>> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
+>> +				 struct irq_domain *domain)
+>> +{
+>> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+>> +	struct msi_domain_info *info;
+>> +
+>> +	info = msi_get_domain_info(domain);
+>> +	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
+>> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+>> +#endif
+>> +}
+> Functions named "check_foo" are a pet peeve of mine because the name
+> doesn't tell us anything about what the function *does*.  In this
+> case, we know it checks something about MSI remapping, but we don't
+> know whether we're checking whether it's enabled, disabled, or some
+> other property.
+>
+> I'd prefer something like:
+>
+>    int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
+>    {
+>      struct msi_domain_info *info;
+>
+>      if (!domain)
+>        return 0;
+>
+>      info = msi_get_domain_info(domain);
+>      if (info->flags & MSI_FLAG_IRQ_REMAPPING)
+>        return 1;
+>
+>      return 0;
+>    }
+>
+>    void pci_set_bus_msi_domain(struct pci_bus *bus)
+>    {
+>      ...
+>      if (b == bus && pci_bus_msi_isolated(bus, d))
+>        bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
 
-You're only considering the visibility of devices to the IOMMU, not the
-isolation between devices.  Without ACS peer-to-peer can be re-routed
-between devices before the IOMMU even knows about it.  That's why the
-root port is included in the group.  I'm confused why your driver is
-using the IOMMU API instead of the much more common DMA API anyway
-though.  Thanks,
+Yes. This looks more reasonable. Thank you!
 
-Alex
+Regards,
+Yongji
