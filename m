@@ -1,75 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58817 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753429AbcEaMFa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 May 2016 08:05:30 -0400
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	Christoph Hellwig <hch@infradead.org>,
-	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme@lists.infradead.org
-Subject: [PATCH 2/5] NVMe: Use pci_(request|release)_mem_regions
-Date: Tue, 31 May 2016 14:05:10 +0200
-Message-Id: <1c28b653e543d25754e39f6294ab044ce73b2107.1464694724.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464694724.git.jthumshirn@suse.de>
-References: <cover.1464694724.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464694724.git.jthumshirn@suse.de>
-References: <cover.1464694724.git.jthumshirn@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <hehy1@lenovo.com>
+Return-Path: <hehy1@lenovo.com>
+From: Ocean HY1 He <hehy1@lenovo.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, "wangyijing@huawei.com"
+	<wangyijing@huawei.com>, "luto@kernel.org" <luto@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"prarit@redhat.com" <prarit@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>,
+	Nagananda Chumbalkar <nchumbalkar@lenovo.com>
+Subject: RE: [PATCH] PCI/ASPM: fix reverse ASPM L0s assignment of upstream
+ and downstream
+Date: Wed, 25 May 2016 12:58:38 +0000
+Message-ID: <BCBE834BAC19744BA2C3AC4D68DBF2198D82B9C8@CNMAILEX03.lenovo.com>
+References: <1464071269-79954-1-git-send-email-hehy1@lenovo.com>
+ <20160524115333.GA19140@localhost>
+In-Reply-To: <20160524115333.GA19140@localhost>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-hand, use it in the NVMe driver.
-
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: linux-nvme@lists.infradead.org
----
- drivers/nvme/host/pci.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 4fd733f..e7d17ae 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -1756,7 +1756,7 @@ static void nvme_dev_unmap(struct nvme_dev *dev)
- {
- 	if (dev->bar)
- 		iounmap(dev->bar);
--	pci_release_regions(to_pci_dev(dev->dev));
-+	pci_release_mem_regions(to_pci_dev(dev->dev));
- }
- 
- static void nvme_pci_disable(struct nvme_dev *dev)
-@@ -1979,13 +1979,9 @@ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
- 
- static int nvme_dev_map(struct nvme_dev *dev)
- {
--	int bars;
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
- 
--	bars = pci_select_bars(pdev, IORESOURCE_MEM);
--	if (!bars)
--		return -ENODEV;
--	if (pci_request_selected_regions(pdev, bars, "nvme"))
-+	if (pci_request_mem_regions(pdev, "nvme"))
- 		return -ENODEV;
- 
- 	dev->bar = ioremap(pci_resource_start(pdev, 0), 8192);
-@@ -1994,7 +1990,7 @@ static int nvme_dev_map(struct nvme_dev *dev)
- 
-        return 0;
-   release:
--       pci_release_regions(pdev);
-+       pci_release_mem_regions(pdev);
-        return -ENODEV;
- }
- 
--- 
-1.8.5.6
-
+SGkgQmpvcm4sDQoNCkkgZmlsZSBhIGJ1ZyB0b2RheTogaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwu
+b3JnL3Nob3dfYnVnLmNnaT9pZD0xMTg5NDENCg0KTXkgcGF0Y2ggcGFzc2VkIGluIG15IHRlc3Qg
+bWFjaGluZSwgYnV0IGl0J3Mgc2FkIHRoYXQgTGVub3ZvIFBBIHRlYW0gc3RpbGwgZmluZCByZXNl
+dCBpc3N1ZSB3aGVuIGRvIGJhdGNoIHRlc3QgZXZlbiBhcHBsaWVkIG15IHBhdGNoLg0KU28gcGxl
+YXNlIGlnbm9yZSBpdCBhdCB0aGlzIHRpbWUuIEkgYW0gc29ycnkgZm9yIGl0LiBCdXQgSSB3aWxs
+IHNwZW5kIG1vcmUgdGltZSB0byBmaW5kIGlmIHRoZSBwYXRjaCBpcyBzdGlsbCByaWdodCBidXQg
+aGFzIG5vIGltcGFjdCBvbiBhYm92ZSBidWcgcmVwb3J0Lg0KDQpUaGUgc2VjdGlvbiAiNS40LjEu
+MS4xLiBFbnRyeSBpbnRvIHRoZSBMMHMgU3RhdGUiIG9mIFBDSUUgc3BlYyBzYXlzOiAiU29mdHdh
+cmUgbXVzdCBub3QgZW5hYmxlIEwwcyBpbiBlaXRoZXIgZGlyZWN0aW9uIG9uIGEgZ2l2ZW4gTGlu
+ayB1bmxlc3MgY29tcG9uZW50cyBvbiBib3RoIHNpZGVzIG9mIHRoZSBMaW5rIGVhY2ggc3VwcG9y
+dCBMMHM7IG90aGVyd2lzZSwgdGhlIHJlc3VsdCBpcyB1bmRlZmluZWQuIg0KU28gSSB0aGluayB0
+aGUgaXNzdWUgbWF5IGJlIGNhdXNlZCBieSBkaWZmZXJlbnQgQVNQTSBMMHMgc2V0dGluZyBpbiBl
+YWNoIHNpZGUgb2YgdGhlIGxpbmsuIEFmdGVyIGRpc2FibGUgYm90aCBvZiB0aGVtLCB0aGUgaXNz
+dWUgZ29uZS4NCg0KQW5kIEkgZmluZCBib3RoIHNpZGVzIG9mIHRoZSBsaW5rIGFsd2F5cyBrZWVw
+IEFTUE0gTDEgdGhlIHNhbWUuIFdoeSBBU1BNIEwwcyBpcyB0cmVhdGVkIGluIGRpZmZlcmVudCB3
+YXkgZXZlbiBQQ0lFIHNwZWMgaGFzIGNvbmNlcm4/DQpJcyBpdCB2YWx1YWJsZSBhbmQgYWNjZXB0
+YWJsZSB0byBsZXQgQVNQTSBMMHMgYWx3YXlzIGtlZXAgdGhlIHNhbWUgaW4gYm90aCBzaWRlcyBv
+ZiBhIGxpbms/DQoNClRoYW5rcyENCg0KT2NlYW4gSGUgLyC6zrqj0fMNClNXIERldmVsb3BtZW50
+IERlcHQuIA0KQmVpamluZyBEZXNpZ24gQ2VudGVyDQpFbnRlcnByaXNlIFByb2R1Y3QgR3JvdXAN
+Ck1vYmlsZTogMTg5MTE3Nzg5MjYNCkUtbWFpbDogaGVoeTFAbGVub3ZvLmNvbQ0KTm8uNiBDaHVh
+bmcgWWUgUm9hZCwgSGFpZGlhbiBEaXN0cmljdCwgQmVpamluZywgQ2hpbmEgMTAwMDg1DQoNCg0K
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0bzpo
+ZWxnYWFzQGtlcm5lbC5vcmddIA0KU2VudDogVHVlc2RheSwgTWF5IDI0LCAyMDE2IDc6NTQgUE0N
+ClRvOiBPY2VhbiBIWTEgSGUNCkNjOiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyB3YW5neWlqaW5nQGh1
+YXdlaS5jb207IGx1dG9Aa2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGlu
+dXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgcHJhcml0QHJlZGhhdC5jb207IGpjbUByZWRoYXQu
+Y29tOyBOYWdhbmFuZGEgQ2h1bWJhbGthcg0KU3ViamVjdDogUmU6IFtQQVRDSF0gUENJL0FTUE06
+IGZpeCByZXZlcnNlIEFTUE0gTDBzIGFzc2lnbm1lbnQgb2YgdXBzdHJlYW0gYW5kIGRvd25zdHJl
+YW0NCg0KSGkgT2NlYW4sDQoNCk9uIFR1ZSwgTWF5IDI0LCAyMDE2IGF0IDA2OjI5OjQ0QU0gKzAw
+MDAsIE9jZWFuIEhZMSBIZSB3cm90ZToNCj4gSW4gcGNpZV9jb25maWdfYXNwbV9saW5rKCksIHdo
+ZW4gY29udmVydCBBU1BNIHN0YXRlIHRvDQo+IHVwc3RyZWFtL2Rvd25zdHJlYW0gQVNQTSByZWdp
+c3RlciBzdGF0ZSwgdGhlIHVwc3RyZWFtIHZhcmlhYmxlIGFuZA0KPiBkd3NyZWFtIHZhcmlhYmxl
+IGFyZSByZXZlcnNlZC4gVGhpcyBjYXVzZXMgUENJL0UgbGluayBlbnRlciBBU1BNIEwwcw0KPiBl
+dmVuIGl0IHNob3VsZCBiZSBkaXNhYmxlZCBhbmQgUENJL0UgZW5kcG9pbnQgbWF5IHJlc2V0IHJh
+bmRvbWx5Lg0KDQpSYW5kb20gcmVzZXRzIG9mIGFuIGVuZHBvaW50IHNvdW5kcyBsaWtlIGEgcHJl
+dHR5IGJhZCBwcm9ibGVtLiAgRG8geW91DQpoYXZlIGEgYnVnIHJlcG9ydD8gIFdlJ3ZlIGhhZCBs
+b3RzIG9mIGlzc3VlcyB3aXRoIEFTUE07IEkgd29uZGVyIGlmDQp0aGlzIGNvdWxkIGFjY291bnQg
+Zm9yIHNvbWUgb2YgdGhlbS4NCg0KPiBTaWduZWQtb2ZmLWJ5OiBPY2VhbiBIZSA8aGVoeTFAbGVu
+b3ZvLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3BjaS9wY2llL2FzcG0uYyB8IDQgKystLQ0KPiAg
+MSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4gDQo+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2llL2FzcG0uYyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNw
+bS5jDQo+IGluZGV4IDJkZmU3ZmQuLjNmOGE0NGQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNp
+L3BjaWUvYXNwbS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jDQo+IEBAIC00Mzks
+OSArNDM5LDkgQEAgc3RhdGljIHZvaWQgcGNpZV9jb25maWdfYXNwbV9saW5rKHN0cnVjdCBwY2ll
+X2xpbmtfc3RhdGUgKmxpbmssIHUzMiBzdGF0ZSkNCj4gIAkJcmV0dXJuOw0KPiAgCS8qIENvbnZl
+cnQgQVNQTSBzdGF0ZSB0byB1cHN0cmVhbS9kb3duc3RyZWFtIEFTUE0gcmVnaXN0ZXIgc3RhdGUg
+Ki8NCj4gIAlpZiAoc3RhdGUgJiBBU1BNX1NUQVRFX0wwU19VUCkNCj4gLQkJZHdzdHJlYW0gfD0g
+UENJX0VYUF9MTktDVExfQVNQTV9MMFM7DQo+IC0JaWYgKHN0YXRlICYgQVNQTV9TVEFURV9MMFNf
+RFcpDQo+ICAJCXVwc3RyZWFtIHw9IFBDSV9FWFBfTE5LQ1RMX0FTUE1fTDBTOw0KPiArCWlmIChz
+dGF0ZSAmIEFTUE1fU1RBVEVfTDBTX0RXKQ0KPiArCQlkd3N0cmVhbSB8PSBQQ0lfRVhQX0xOS0NU
+TF9BU1BNX0wwUzsNCj4gIAlpZiAoc3RhdGUgJiBBU1BNX1NUQVRFX0wxKSB7DQo+ICAJCXVwc3Ry
+ZWFtIHw9IFBDSV9FWFBfTE5LQ1RMX0FTUE1fTDE7DQo+ICAJCWR3c3RyZWFtIHw9IFBDSV9FWFBf
+TE5LQ1RMX0FTUE1fTDE7DQo+IC0tIA0KPiAxLjguMy4xDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
+IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGlu
+DQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+
+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21v
+LWluZm8uaHRtbA0K
