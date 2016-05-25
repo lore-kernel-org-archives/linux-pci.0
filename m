@@ -1,43 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:37591 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750790AbcEQVkB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 May 2016 17:40:01 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
-	Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
-Date: Tue, 17 May 2016 15:39:58 -0600
-Message-Id: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI/ASPM: fix reverse ASPM L0s assignment of upstream and
+ downstream
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1464071269-79954-1-git-send-email-hehy1@lenovo.com>
+ <20160525165726.GB3208@localhost> <5745DF08.9040409@codeaurora.org>
+ <20160525175039.GC3208@localhost> <5745EC95.1020506@codeaurora.org>
+ <20160525183316.GD3208@localhost>
+Cc: Ocean HY1 He <hehy1@lenovo.com>, "bhelgaas@google.com"
+ <bhelgaas@google.com>, "wangyijing@huawei.com" <wangyijing@huawei.com>,
+ "luto@kernel.org" <luto@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "prarit@redhat.com" <prarit@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>,
+ Nagananda Chumbalkar <nchumbalkar@lenovo.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <57460EAA.9040705@codeaurora.org>
+Date: Wed, 25 May 2016 16:44:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160525183316.GD3208@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Every sriov capable driver has to check if any guest is using a virtual
-function prior to disabling, so let's make it common code.
+On 5/25/2016 2:33 PM, Bjorn Helgaas wrote:
+> It looks like the code enforces this by clearing bits in
+> link->aspm_capable (effectively pretending L0s or L1 are unsupported)
+> if the latency is too high.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pci-sysfs.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Yes, this is what I was referring to. I think what Linux does is
+the right thing.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 342b691..5011fa9 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -487,6 +487,11 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 
- 	if (num_vfs == 0) {
- 		/* disable VFs */
-+		if (pci_vfs_assigned(pdev)) {
-+			dev_warn(&pdev->dev,
-+				"Cannot disable SR-IOV VFs while assigned\n");
-+			return -EPERM;
-+		}
- 		ret = pdev->driver->sriov_configure(pdev, 0);
- 		if (ret < 0)
- 			return ret;
 -- 
-2.7.2
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
