@@ -1,61 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58856 "EHLO mail.kernel.org"
+Received: from ozlabs.org ([103.22.144.67]:54840 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755316AbcECOzK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 May 2016 10:55:10 -0400
-Date: Tue, 3 May 2016 09:55:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Yong, Jonathan" <jonathan.yong@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [RFC v4] PCI: PTM Driver
-Message-ID: <20160503145506.GA30040@localhost>
-References: <1461047358-4736-1-git-send-email-jonathan.yong@intel.com>
- <20160429141750.GB949@localhost>
- <57286935.3090409@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57286935.3090409@intel.com>
+	id S1750985AbcEYG0E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 May 2016 02:26:04 -0400
+In-Reply-To: <201605180148.u4I1iVkr005251@mx0a-001b2d01.pphosted.com>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
+	paulus@samba.org
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: mikey@neuling.org, mrochs@linux.vnet.ibm.com,
+	gpiccoli@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	frederic.barrat@fr.ibm.com, gwshan@linux.vnet.ibm.com,
+	imunsie@au1.ibm.com, andrew.donnellan@au1.ibm.com,
+	bhelgaas@google.com
+Subject: Re: [v6] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Message-Id: <3rF2NB4btGz9sds@ozlabs.org>
+Date: Wed, 25 May 2016 16:26:02 +1000 (AEST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 03, 2016 at 05:02:45PM +0800, Yong, Jonathan wrote:
-> On 04/29/2016 22:17, Bjorn Helgaas wrote:
-> >On Tue, Apr 19, 2016 at 06:29:17AM +0000, Yong, Jonathan wrote:
-> >>Hello LKML,
-> >>
-> >>This is a preliminary implementation of the PTM[1] support driver. This driver
-> >>has only been tested against a virtual PCI bus since there are no known
-> >>endpoints utilizing it yet.
-> >
-> >What sort of testing is this, exactly?  Is this using a software model
-> >of devices that support PTM?
-> >
+On Wed, 2016-18-05 at 01:48:00 UTC, "Guilherme G. Piccoli" wrote:
+> The domain/PHB field of PCI addresses has its value obtained from a
+> global variable, incremented each time a new domain (represented by
+> struct pci_controller) is added on the system. The domain addition
+> process happens during boot or due to PHB hotplug add.
 > 
-> We wrote another driver to fake the PCI config space with
-> pci_scan_bus, with fake switches and fake devices. Convenient since
-> the driver only deals with the config space.
+> As recent kernels are using predictable naming for network interfaces,
+> the network stack is more tied to PCI naming. This can be a problem in
+> hotplug scenarios, because PCI addresses will change if devices are
+> removed and then re-added. This situation seems unusual, but it can
+> happen if a user wants to replace a NIC without rebooting the machine,
+> for example.
 > 
-> >When will hardware that supports PTM be available to you for testing?
-> >When will it be available on the market?
-> >
+> This patch changes the way PCI domain values are generated: now, we use
+> device-tree properties to assign fixed PHB numbers to PCI addresses
+> when available (meaning pSeries and PowerNV cases). We also use a bitmap
+> to allow dynamic PHB numbering when device-tree properties are not
+> used. This bitmap keeps track of used PHB numbers and if a PHB is
+> released (by hotplug operations for example), it allows the reuse of
+> this PHB number, avoiding PCI address to change in case of device remove
+> and re-add soon after. No functional changes were introduced.
 > 
-> I don't have any dates for when consumer endpoints will hit the
-> market. PTM aware FPGA device models might come around Q3/Q4 this
-> year, with exercisers around 2017.
-> 
-> >I'm trying to figure out whether there's any benefit to merging
-> >something before it is useful to anybody.
-> >
-> 
-> True it won't be useful to anybody until such a device is available.
-> What is the general policy for future hardware standards?
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
+> ---
+> v6:
+>     * Dropped the of_get_property() use to use instead
+> of_property_read_u64()/of_property_read_u32_array as per Michael's
+> suggestion. Since these 2 functions deal with endianness conversion,
+> no need to manually convert endianness anymore. Logic was simplified.
 
-I don't know if there is a real consensus about that.  In this case,
-the feature is relatively simple (at least compared to, say ASPM), and
-it's defined by a spec that's already been published, so I don't think
-there's really much reason to wait.
+Thanks.
 
-I think the most expedient thing is to get it merged now so it'll be
-easier to test and deploy it.
+>     * Changed MAX_PHBS to 64K as per Gavin's suggestion. Changed 0xFFFF
+> to (MAX_PHBS - 1) then.
 
-Bjorn
+Thanks.
+
+>     * Changed test_bit() and set_bit() to test_and_set_bit() as per
+> Gavin's suggestion.
+> 
+>     * Removed some obvious comments.
+> 
+>     * Didn't remove machine check for pSeries on "reg" property lookup.
+> It's worthy to keep it, since almost every platform (if not all of them)
+> contain the "reg" property on PHB node in device-tree, but only in
+> pSeries we're 100% sure it can be used as the PHB unique identifier.
+> Since the patch has a dynamic PHB numbering mechanism, the other platforms
+> won't have trouble with it.
+
+I'll drop it and test here on Cell & others.
+
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 0f7a60f..4afc9c1 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -41,11 +41,18 @@
+>  #include <asm/ppc-pci.h>
+>  #include <asm/eeh.h>
+>  
+> +/* hose_spinlock protects accesses to the the phb_bitmap. */
+>  static DEFINE_SPINLOCK(hose_spinlock);
+>  LIST_HEAD(hose_list);
+>  
+> -/* XXX kill that some day ... */
+> -static int global_phb_number;		/* Global phb counter */
+> +/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
+> +#define MAX_PHBS 0x10000
+> +
+> +/*
+> + * For dynamic PHB numbering: used/free PHBs tracking bitmap.
+> + * Accesses to this bitmap should be protected by hose_spinlock.
+> + */
+> +static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
+>  
+>  /* ISA Memory physical address */
+>  resource_size_t isa_mem_base;
+> @@ -64,6 +71,47 @@ struct dma_map_ops *get_pci_dma_ops(void)
+>  }
+>  EXPORT_SYMBOL(get_pci_dma_ops);
+>  
+> +/*
+> + * This function should run under locking protection, specifically
+> + * hose_spinlock.
+> + */
+> +static int get_phb_number(struct device_node *dn)
+> +{
+> +	u64 prop;
+> +	int ret;
+> +	int phb_id;
+> +
+> +	/*
+> +	 * Try fixed PHB numbering first, by checking archs and reading
+> +	 * the respective device-tree properties. Firstly, try PowerNV by
+> +	 * reading "ibm,opal-phbid", only present in OPAL environment.
+> +	 */
+> +	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
+> +	if (ret && machine_is(pseries))
+> +		ret = of_property_read_u32_array(dn, "reg", (u32 *)&prop, 2);
+> +	if (ret)
+> +		goto dynamic_phb_numbering;
+> +
+> +	phb_id = (int)(prop & (MAX_PHBS - 1));
+> +
+> +	/* We need to be sure to not use the same PHB number twice. */
+> +	if (test_and_set_bit(phb_id, phb_bitmap))
+> +		goto dynamic_phb_numbering;
+> +
+> +	return phb_id;
+> +
+> +	/*
+> +	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
+> +	 * the same PHB number twice, then fallback to dynamic PHB numbering.
+> +	 */
+> +dynamic_phb_numbering:
+> +	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
+> +	BUG_ON(phb_id >= MAX_PHBS);
+> +	set_bit(phb_id, phb_bitmap);
+> +
+> +	return phb_id;
+> +}
+
+You really shouldn't need a goto in a function this simple.
+
+Either rearrange it so you can do the logic once, or just put the dynamic case
+into a helper function.
+
+cheers
