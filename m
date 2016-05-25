@@ -1,46 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([125.16.236.4]:33118 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933297AbcECNds (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:48 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 18:53:31 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
-	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 21/22] drivers/of: Export of_detach_node()
-Date: Tue,  3 May 2016 23:22:52 +1000
-Message-Id: <1462281773-26438-22-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI/ASPM: fix reverse ASPM L0s assignment of upstream and
+ downstream
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1464071269-79954-1-git-send-email-hehy1@lenovo.com>
+ <20160525165726.GB3208@localhost> <5745DF08.9040409@codeaurora.org>
+ <20160525175039.GC3208@localhost>
+Cc: Ocean HY1 He <hehy1@lenovo.com>, "bhelgaas@google.com"
+ <bhelgaas@google.com>, "wangyijing@huawei.com" <wangyijing@huawei.com>,
+ "luto@kernel.org" <luto@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "prarit@redhat.com" <prarit@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>,
+ Nagananda Chumbalkar <nchumbalkar@lenovo.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5745EC95.1020506@codeaurora.org>
+Date: Wed, 25 May 2016 14:19:01 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160525175039.GC3208@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-This exports of_detach_node() for PowerPC PowerNV PCI hotplug
-driver. No functional changes introduced.
+On 5/25/2016 1:50 PM, Bjorn Helgaas wrote:
+>> > You are saying that it is OK to enable L0s on just one side of the
+>> > link as long as both sides support L0s. 
+> I'm not sure what you mean by the link parameters not being
+> compatible, but I think it is legal to enable L0s on only one
+> direction.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/of/dynamic.c | 1 +
- 1 file changed, 1 insertion(+)
+I'm talking about L0s acceptable and entry latency times used to
+determine when L0s can be enabled.
 
-diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
-index c647bd1..75ce30d 100644
---- a/drivers/of/dynamic.c
-+++ b/drivers/of/dynamic.c
-@@ -311,6 +311,7 @@ int of_detach_node(struct device_node *np)
- 
- 	return rc;
- }
-+EXPORT_SYMBOL_GPL(of_detach_node);
- 
- /**
-  * of_node_release() - release a dynamically allocated node
+> 
+>> > This part is a little bit misleading. I had HW people telling me
+>> > that both sides need to enable L0s at about the same time.
+> I don't remember seeing anything like that in the spec.  Do they have
+> a pointer?  "At about the same time" is too hand-wavey to be useful to
+> software.
+> 
+
+OK. Let me do some more push back. I wanted to understand the OS
+behavior and its reasoning.
+
+Your answers are sufficient.
+
 -- 
-2.1.0
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
