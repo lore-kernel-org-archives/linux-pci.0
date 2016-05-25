@@ -1,98 +1,67 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-Date: Mon, 30 May 2016 18:13:51 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	Dave Airlie <airlied@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:12489 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751305AbcEYN0F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 May 2016 09:26:05 -0400
+Date: Wed, 25 May 2016 16:25:30 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Peter Wu <peter@lekensteyn.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
-Message-ID: <20160530161351.GA1355@al>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <20160525135535.GN1789@lahna.fi.intel.com>
- <20160527111037.GA1436@al>
- <20160530095709.GK1789@lahna.fi.intel.com>
- <20160530122010.GB1149@al>
- <20160530130909.GA1743@lahna.fi.intel.com>
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
+Message-ID: <20160525132530.GM1789@lahna.fi.intel.com>
+References: <20160519231234.GB1785@al>
+ <1463991648-85051-1-git-send-email-mika.westerberg@linux.intel.com>
+ <20160523200042.GB24375@localhost>
+ <20160523215015.GA31479@localhost>
+ <20160524122357.GA20453@localhost>
+ <20160524125323.GE1789@lahna.fi.intel.com>
+ <20160525121626.GA6339@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160530130909.GA1743@lahna.fi.intel.com>
+In-Reply-To: <20160525121626.GA6339@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 04:09:09PM +0300, Mika Westerberg wrote:
-...
-> > > > > > +
-> > > > > > +	if (!parent_pdev)
-> > > > > > +		return false;
-> > > > > > +
-> > > > > > +	ad = ACPI_COMPANION(&parent_pdev->dev);
-> > > > > > +	if (!ad)
-> > > > > > +		return false;
-> > > > > > +
-> > > > > > +	return ad->power.flags.power_resources;
-> > > > > 
-> > > > > Is this sufficient to tell if the parent device has _PR3? I thought it
-> > > > > returns true if it has power resources in general, not necessarily _PR3.
-> > > > > 
-> > > > > Otherwise this looks okay to me.
-> > > > 
-> > > > It is indeed set whenever there is any _PRx method. I wonder if it is
-> > > > appropriate to access fields directly like this, perhaps this would be
-> > > > more accurate (based on device_pm.c):
-> > > > 
-> > > >     /* Check whether the _PR3 method is available. */
-> > > >     return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
-> > > > 
-> > > > I am also considering adding a check in case the pcieport driver does
-> > > > not support D3cold via runtime PM, what do you think of this?
-> > > > 
-> > > >     if (!parent_pdev)
-> > > >         return false;
-> > > >     /* If the PCIe port does not support D3cold via runtime PM, allow a
-> > > >      * fallback to the Optimus DSM method to put the device in D3cold. */
-> > > >     if (parent_pdev->no_d3cold)
-> > > >         return false;
-> > > > 
-> > > > This is needed to avoid the regression reported in the cover letter, but
-> > > > also allows pre-2015 systems to (still) have the D3cold possibility.
-> > > 
-> > > The _DSM method with 0 as index parameter should return a bit field
-> > > telling which functions are supported. Sane BIOS disables that
-> > > particular function if it detects Windows 8 and newer. Have you checked
-> > > if that's the case?
-> > > 
-> > > Then you can call _DSM only if it is supported and otherwise expect the
-> > > parent device's power resources to turn off power when runtime
-> > > suspended.
+On Wed, May 25, 2016 at 02:16:26PM +0200, Lukas Wunner wrote:
+> Hi Mika,
+> 
+> On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
+> > One thing I noticed, though. When a bridge is transitioned to D0 we only
+> > wait for 10ms which is requirement for PCI functions. However, PCI PM
+> > specification 1.2 (chapter 4.2) requires that for buses to transition
+> > from B2 to B0 we need to wait minimum of 50ms before accessing a
+> > function on that bus.
 > > 
-> > The _DSM methods (for the Nvidia device) are often still included and
-> > functions are reported as supported. I guess that vendors just check
-> > whether it is working and do not bother removing legacy functions. The
-> > Acer case below seems exceptional.
-> > 
-> > I suggested the no_d3cold check such that DSM can still be called even
-> > though the runtime PM on the PCIe port does nothing.
+> > We even have PCI_PM_BUS_WAIT defined in include/linux/pci.h but it is
+> > not used anywhere. Maybe it was not needed originally because we never
+> > powered down bridges anyway but now when we do, I think it is good idea
+> > to do what the spec requires.
 > 
-> Somehow it does not feel right to poke parent device's fields directly.
+> The macro was introduced with
 > 
-> What if you just check if it has the method like:
+>     commit aa8c6c93747f7b55fa11e1624fec8ca33763a805
+>     Author: Rafael J. Wysocki <rjw@sisk.pl>
+>     Date:   Fri Jan 16 21:54:43 2009 +0100
+>     PCI PM: Restore standard config registers of all devices early
 > 
-> 	bool no_dsm = acpi_has_method(parent_adev->handle, "_PR3");
+> but the only usage of it was removed with
 > 
-> That should follow what Windows is doing.
+>     commit 476e7faefc43f106a90b5c96166c59b75de19d30
+>     Author: Rafael J. Wysocki <rjw@sisk.pl>
+>     Date:   Thu Jan 22 23:39:57 2009 +0100
+>     PCI PM: Do not wait for buses in B2 or B3 during resume
+> 
 
-Checking for _PR3 was the intention, but it seems that the ACPI core
-does not really store it somewhere. Your check should be simple enough,
-I'll use that in the next version.
+Thanks for looking that up.
 
-Do you have any suggestions for the case where the pcieport driver
-refuses to put the bridge in D3 (because the BIOS is too old)? In that
-case the nouveau driver needs to fallback to the DSM method (but not
-when runtime PM is deliberately disabled by writing control=on).
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+If I understand correctly it was removed because we do not expect BIOS
+to put buses to B2/B3 so we do not need to wait the extra 50ms before
+accessing the device.
+
+However, now that we do that in the OS (and also during runtime), I
+think we need to take that into account again.
