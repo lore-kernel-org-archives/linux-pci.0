@@ -1,114 +1,227 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-Date: Tue, 31 May 2016 13:02:31 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	Dave Airlie <airlied@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
-Message-ID: <20160531110231.GB1308@al>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <20160525135535.GN1789@lahna.fi.intel.com>
- <20160527111037.GA1436@al>
- <20160530095709.GK1789@lahna.fi.intel.com>
- <20160530122010.GB1149@al>
- <20160530130909.GA1743@lahna.fi.intel.com>
- <20160530161351.GA1355@al>
- <20160531084356.GH1743@lahna.fi.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160531084356.GH1743@lahna.fi.intel.com>
+In-Reply-To: <20160526123459.GA23794@red-moon>
+References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
+ <1456330151.5681.46.camel@redhat.com> <56CDD767.6020103@arm.com>
+ <CADaLND=mrkxOWOzcEb8os16Rb=SDHfnn_8eSgB4bQYH3UguS3w@mail.gmail.com>
+ <20160225173822.GA6349@red-moon> <CADaLNDnywVPER9QhmK4C6JyCLhta_M_cVSOuSkEHnmnLPFo3JA@mail.gmail.com>
+ <20160526123459.GA23794@red-moon>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 26 May 2016 13:49:23 -0700
+Message-ID: <CADaLNDnf8SRbUkBN9fZMvrvsnTQs+DLyqnZfVpWqVyyY8Hk=1Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
+ for X-Gene v1
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	Mark Salter <msalter@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Feng Kan <fkan@apm.com>,
+	linux-pci@vger.kernel.org, patches <patches@apm.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Loc Ho <lho@apm.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 31, 2016 at 11:43:56AM +0300, Mika Westerberg wrote:
-> On Mon, May 30, 2016 at 06:13:51PM +0200, Peter Wu wrote:
-> > Do you have any suggestions for the case where the pcieport driver
-> > refuses to put the bridge in D3 (because the BIOS is too old)? In that
-> > case the nouveau driver needs to fallback to the DSM method (but not
-> > when runtime PM is deliberately disabled by writing control=on).
-> 
-> Do you know what Windows does then? I think we should do the same if
-> possible.
+Hi Lorenzo,
 
-If the BIOS is too old, then it probably does not have _PR3 objects nor
-calls to _OSI("Windows 2013"). See below.
+On Thu, May 26, 2016 at 5:34 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> Hi Duc,
+>
+> On Wed, May 25, 2016 at 04:13:35PM -0700, Duc Dang wrote:
+>> On Thu, Feb 25, 2016 at 9:38 AM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>> > On Wed, Feb 24, 2016 at 02:28:10PM -0800, Duc Dang wrote:
+>> >> On Wed, Feb 24, 2016 at 8:16 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> >> > On 24/02/16 16:09, Mark Salter wrote:
+>> >> >> On Tue, 2016-02-09 at 17:56 -0800, Duc Dang wrote:
+>> >> >>> This patch makes pci-xgene-msi driver ACPI-aware and provides
+>> >> >>> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+>> >> >>>
+>> >> >>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>> >> >>> ---
+>> >> >>>  drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
+>> >> >>>  1 file changed, 32 insertions(+), 3 deletions(-)
+>> >> >>>
+>> >> >>> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+>> >> >>> index a6456b5..466aa93 100644
+>> >> >>> --- a/drivers/pci/host/pci-xgene-msi.c
+>> >> >>> +++ b/drivers/pci/host/pci-xgene-msi.c
+>> >> >>> @@ -24,6 +24,7 @@
+>> >> >>>  #include <linux/pci.h>
+>> >> >>>  #include <linux/platform_device.h>
+>> >> >>>  #include <linux/of_pci.h>
+>> >> >>> +#include <linux/acpi.h>
+>> >> >>>
+>> >> >>>  #define MSI_IR0                     0x000000
+>> >> >>>  #define MSI_INT0            0x800000
+>> >> >>> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>> >> >>>  };
+>> >> >>>
+>> >> >>>  struct xgene_msi {
+>> >> >>> -    struct device_node      *node;
+>> >> >>> +    struct fwnode_handle    *fwnode;
+>> >> >>>      struct irq_domain       *inner_domain;
+>> >> >>>      struct irq_domain       *msi_domain;
+>> >> >>>      u64                     msi_addr;
+>> >> >>> @@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
+>> >> >>>      .free   = xgene_irq_domain_free,
+>> >> >>>  };
+>> >> >>>
+>> >> >>> +#ifdef CONFIG_ACPI
+>> >> >>> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+>> >> >>> +{
+>> >> >>> +    return xgene_msi_ctrl.fwnode;
+>> >> >>> +}
+>> >> >>> +#endif
+>> >> >>> +
+>> >> >>>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>> >> >>>  {
+>> >> >>>      msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+>> >> >>> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>> >> >>>      if (!msi->inner_domain)
+>> >> >>>              return -ENOMEM;
+>> >> >>>
+>> >> >>> -    msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+>> >> >>> +    msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>> >> >>>                                                  &xgene_msi_domain_info,
+>> >> >>>                                                  msi->inner_domain);
+>> >> >>
+>> >> >> This doesn't work for me (ACPI probing on Mustang) unless I change this
+>> >> >> to be pci_msi_create_default_irq_domain(). The problem seems to be that
+>> >> >> the MSI probe happens after the PCIe RC is probed so there is no MSI domain
+>> >> >> at the time the PCIe root is initialized by ACPI.
+>> >> >
+>> >> > pci_msi_create_default_irq_domain is the wrong thing do use, specially
+>> >> > if you have multiple MSI controllers in the system. I certainly wouldn't
+>> >> > want to see it being used on arm64.
+>> >> >
+>> >> > This is the usual dependency hell. You try moving the probing earlier,
+>> >> > but that may break something else in the process.
+>> >>
+>> >> Hi Mark and Marc,
+>> >>
+>> >> I have modified Tianocore firmware to have MSI node declared before
+>> >> PCIe node in Dsdt table. With this modification, the MSI driver will
+>> >> be loaded before PCIe driver and MSI domain is available at the time
+>> >> PCIe root is initialized.
+>> >
+>> > I am totally against this. We should not hack ACPI tables to make
+>> > the kernel work (on top of that with unwritten ordering rules that may
+>> > well require changes as kernel evolves), we should have a standard set
+>> > of bindings that people use to describe HW in the DSDT and the kernel(s)
+>> > has to cope with that. If there is a dependency problem in the description
+>> > we may solve it at bindings level, but I absolutely do not want to rely
+>> > on DSDT nodes ordering for things to work, that's fragile, no shortcuts
+>> > please.
+>>
+>> Hi Lorenzo, Bjorn,
+>>
+>> (Refresh this thread on this merge cycle)
+>>
+>> I tried to use _DEP method to describe the dependency of PCIe node to
+>> MSI node but it turns out that PCIe driver does not check for the
+>> dependency (only EC (ec.c) and I2C core (i2c-core.c) use
+>> acpi_walk_dep_device_list to check for dependency before loading
+>> dependent drivers)
+>>
+>> Do you have other suggestion/example about how to ensure strict
+>> ordering on driver loading in ACPI boot mode without changing the
+>> order of ACPI nodes in DSDT?
+>
+> Before doing anything else, I would like to ask you to report the code
+> paths leading to failures (what fails actually ?) please, and I want
+> to understand what "this does not work" means.
+>
+> In particular:
+>
+> - Why using pci_msi_create_default_irq_domain() works
+> - Why, if you change the DSDT nodes ordering, things work (please add
+>   some debugging to MSI allocation functions to detect the code paths
+>   leading to correct MSI allocation)
+> - What's the difference wrt the DT probe path
 
-> If user has disabled runtime PM from the root port deliberately, there
-> might be good reason to do so. Why we want to fallback to something that
-> could cause problems? I mean _DSM on such systems is probably not that
-> much tested because everybody runs Windows 8+ and using standard ACPI
-> power resources.
+The MSI allocation happens with following code path (I use PMC pm80xx
+SAS driver as an example (drivers/scsi/pm8001/pm8001_init.c)):
+pci_enable_msix_exact
+    pci_enable_msix_range
+        pci_enable_msix
+            msix_capbility_init
+                pci_msi_setup_msi_irqs
+                    pci_msi_get_domain
+                        dev_get_msi_domain
+                        arch_get_pci_msi_domain
+                            return pci_msi_default_domain;
 
-I agree that when runtime PM on the root port is disabled (control=on),
-then there should be no fallback to DSM. For devices without _PR3 it is
-clear that DSM will always be used (if available).
+In my failing case: pci_msi_get_domain return NULL, so MSI allocation
+function (pci_enable_msix_exact) fails.
 
-In other cases (where _PR3 is available) we can distinguish:
- - pre-Windows 8 machines. I have never seen this combination. Firmware
-   writers seems to prefer sticking to reference code which did not use
-   power resources before.
- - Machines targeting Windows 8 or newer. (Note that there exist
-   machines with Windows 8 support that do not have _PR3, DSM is used in
-   that case.)
+The expected MSI domain is registered when X-Gene MSI driver is
+initialized and is attached to each PCI bus by calling
+pci_set_bus_msi_domain during PCIe bus-scan:
+pci_scan_root_bus
+    pci_scan_root_bus_msi
+        pci_scan_child_bus
+            pci_scan_bridge
+                pci_add_new_bus
+                    pci_alloc_child_bus
+                        pci_set_bus_msi_domain
+                            pci_host_bridge_msi_domain
+                                pci_host_bridge_of_msi_domain
+                                pci_host_bridge_acpi_msi_domain
 
-If Windows 7 is running on a Windows 8 machine, PR3 will not be used
-anyway. If the Linux kernel claims support for Windows 8, but does not
-use PR3, then we are probably approaching an untested area. So far
-firmware seems fine with using *only* DSM *or* PR3, but at least my
-laptop gets confused when you use both at the same time.
++ When booting with DT: X-Gene MSI driver is initialized early
+(subsys_initcall level); X-Gene PCIe driver is initialized later at
+device_initcall level (using module_platform_driver). Because of that
+when PCIe enumeration happens, the X-Gene MSI domain was already
+registered and available. So when the driver of PCIe Endpoint devices
+gets loaded, the call to pci_enable_msix_exact (to allocate MSI)
+succeeds.
 
-The latter happens on pci/pm (8b71f565) without other patches:
++ When booting with ACPI: acpi_scan_init is called at subsys_initcall
+level (the same level with X-Gene MSI driver):
+acpi_init
+    acpi_bus_init (GIC is initialized here)
+        acpi_scan_init
+            acpi_pci_root_init
+            acpi_pci_link_init
+            ...
+            acpi_bus_scan
+                acpi_bus_check_add
+ ...
 
- 1. nouveau invokes _DSM and _PS3, device is put in D3cold.
- 2. pcieport driver calls PG00._OFF (PG00 is returned by _PR3).
- 3. Wake up Nvidia device (e.g. by power=on).
- 4. This will trigger PG00._ON (via pcieport) and _PS0 (via nouveau).
- 5. Nvidia card is not really ready (observed via "restoring config
-    space at offset ... (was 0xffffffff, writing ...)", a soft lockup
-    and RCU stall after that requiring a reboot to recover).
+Currently, in DSDT table, X-Gene MSI node is defined right after
+X-Gene PCIe nodes. So PCIe driver initialization and PCIe enumeration
+happens before MSI driver is initialized. During PCIe bus scan, the
+pci_set_bus_msi_domain gets a NULL  irq_domain value from
+pci_host_bridge_msi_domain (as MSI driver is not initialized), so
+there is no MSI support for PCIe bus.
 
-nouveau could be patched not to invoke DSM when PR3 is detected
-(proposal is ready) but will keep the device powered on in these cases:
- - nouveau is patched, but pci/pm patches are not.
- - PR3 is supported but due to the cutoff date (2015) it is not used.
- - Boot option pcie_port_pm=off.
- - runtime PM is disabled for pcieport (should be fine).
++ Using pci_msi_create_default_irq_domain() helps MSI allocation
+succeed as pci_msi_get_domain (in the code path of
+pci_enable_msix_exact above) can fall back to get a valid domain from
+arch_get_pci_msi_domain (please note that PCIe endpoint driver gets
+called later (at device_initcall level (using module_init)), so at the
+time PCIe endpoint driver probe function executes, the MSI driver
+already register the global MSI domain with
+pci_msi_create_default_irq_domain)
 
++ If changing DSDT node ordering, to define MSI node before PCIe
+nodes, then X-Gene MSI driver will be loaded before PCIe host driver.
+At the time PCIe enumeration happens, X-Gene MSI driver already
+registered a valid MSI domain (by calling
+pci_msi_register_fwnode_provider to register the fwnode provider
+function), so all the detected PCIe buses (and PCIe endpoint devices)
+will have a valid MSI domain attached to them (as a result of function
+pci_set_bus_msi_domain)
 
-There is a wealth of acpidumps on Launchpad bug 752542
-(https://bugs.launchpad.net/bugs/752542). Search for example for
-comments in early 2015 or before, those will likely be machine from 2014
-or before.
-
-Interesting to see is the _PR3 method of a HP Envy TS 15 (11/20/2014):
-
-    Method (_PR3, 0, NotSerialized) {
-        If (\_OSI ("Windows 2013")) {
-            Return (Package (0x01) {
-                \NVP3
-            })
-        } Else {
-            Return (Package (0x00) {})
-        }
-    }
-
-(Note for self: just checking for the _PR3 handle in the nouveau patch
-is apparently not sufficient, it must really be evaluated.)
-
-Other machines with _PR3:
- - Dell Inspiron 3543 (11/04/2014), comment 757.
- - Dell XPS 15 9530 (03/28/2014), comment 711.
- - Novatech 15.6 NSPIRE Laptop (01/20/2014), comment 695.
- - Lenovo ThinkPad T440p (10/27/2013), comment 659.
-
-There were many models from 2013 without _PR3 method but still checking
-for _OSI("Windows 2013"). Maybe some heuristics based on _PR3 would be
-more helpful than just a cutoff date?
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+Regards,
+Duc Dang.
+>
+> When we have a detailed view of MSI allocation code paths and failures
+> we can see what we can do to fix it in ACPI.
+>
+> Thanks,
+> Lorenzo
