@@ -1,69 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37680 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753598AbcEBREr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 May 2016 13:04:47 -0400
-Date: Mon, 2 May 2016 12:04:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Simon Horman <horms+renesas@verge.net.au>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar: select PCI_MSI_IRQ_DOMAIN
-Message-ID: <20160502170443.GE24851@localhost>
-References: <1460837798-1239513-1-git-send-email-arnd@arndb.de>
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Thu, 26 May 2016 11:16:43 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
+Message-ID: <20160526081643.GQ1789@lahna.fi.intel.com>
+References: <20160519231234.GB1785@al>
+ <20160524211309.GH1789@lahna.fi.intel.com>
+ <20160525131948.GL1789@lahna.fi.intel.com>
+ <2037523.0hP3Oc7Pg6@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460837798-1239513-1-git-send-email-arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2037523.0hP3Oc7Pg6@vostro.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 16, 2016 at 10:15:46PM +0200, Arnd Bergmann wrote:
-> The R-CAR PCIe driver requires the use of irq domains for its
-> MSI code:
+On Wed, May 25, 2016 at 10:45:48PM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, May 25, 2016 04:19:48 PM Mika Westerberg wrote:
+> > On Wed, May 25, 2016 at 12:13:09AM +0300, Mika Westerberg wrote:
+> > > On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
+> > > > > I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
+> > > > > on the assumption that "PCI: Power on bridges before scanning new
+> > > > > devices" is sufficient to cover both the ACPI and the generic PCi
+> > > > > rescan cases, but I'd like some reassurance about that.
+> > > > 
+> > > > I agree with your reasoning that the patch should not be needed anymore.
+> > > > However, I have the machine which needed that patch at home so I'm not
+> > > > able to test it now. I'll do that later today when I get back home.
+> > > 
+> > > I tried now on my Lenovo Yoga 900 laptop and unfortunately "PCI: Power
+> > > on bridges before scanning new devices" seems not to be enough. This
+> > > machine has SD-card reader connected to one PCIe port and once I unload
+> > > the sdhci-pci driver and enable runtime PM for the device, next system
+> > > suspend/resume cycle loses the SD-card reader PCI device.
+> > > 
+> > > I will investigate more tomorrow -- it is getting late here.
+> > 
+> > I think I found reason for the issue.
+> > 
+> > When the laptop resumes it will send ACPI BUS_CHECK event for the two
+> > PCIe root ports. This ends up in acpiphp_check_bridge() where it goes
+> > through all slots in that bridge checking if the devices are still
+> > present. This happens before we call pci_scan_bridge() for the bridge
+> > itself.
+> > 
+> > Since the bridge is in D3 config space of the device behind it is not
+> > available and we determine that the device is not there anymore.
+> > 
+> > It looks like we either need that ACPI hotplug patch or alternatively we
+> > could add pm_runtime_get/put() in acpiphp_check_bridge().
 > 
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_msi_irq':
-> drivers/pci/host/pcie-rcar.c:635:9: error: implicit declaration of function 'irq_find_mapping' [-Werror=implicit-function-declaration]
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_msi_setup_irq':
-> drivers/pci/host/pcie-rcar.c:666:8: error: implicit declaration of function 'irq_create_mapping' [-Werror=implicit-function-declaration]
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_enable_msi':
-> drivers/pci/host/pcie-rcar.c:725:16: error: implicit declaration of function 'irq_domain_add_linear' [-Werror=implicit-function-declaration]
-> drivers/pci/host/pcie-rcar.c:725:14: error: assignment makes pointer from integer without a cast [-Werror=int-conversion]
->   msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
->               ^
-> drivers/pci/host/pcie-rcar.c:762:2: error: implicit declaration of function 'irq_domain_remove' [-Werror=implicit-function-declaration]
-> 
-> This ensures that the feature is always enabled by adding a
-> Kconfig select statement. This is not consistent with what the
-> other drivers do at the moment, but I have another patch that
-> changes them to do it like this one, which is more logical.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Have you tried the latter?
 
-Applied with Simon's ack to pci/host-rcar for v4.7, thanks!
-
-> ---
->  drivers/pci/host/Kconfig | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 169c545bf70a..6d642aa390b0 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -72,6 +72,8 @@ config PCI_RCAR_GEN2
->  config PCI_RCAR_GEN2_PCIE
->  	bool "Renesas R-Car PCIe controller"
->  	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
-> +	select PCI_MSI
-> +	select PCI_MSI_IRQ_DOMAIN
->  	help
->  	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
->  
-> -- 
-> 2.7.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Indeed I tried and it worked fine. I can make formal patch doing that
+which then replaces the current ACPI hotplug patch, if that is the
+preferred way.
