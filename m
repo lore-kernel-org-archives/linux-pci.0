@@ -1,324 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:60569 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416AbcETGxZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:53:25 -0400
-Received: from localhost
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 20 May 2016 16:43:10 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 486332BB005B
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gxdX2621798
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gXFB009644
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:35 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v10 07/18] powerpc/powernv: Create PEs in pcibios_setup_bridge()
-Date: Fri, 20 May 2016 16:41:31 +1000
-Message-Id: <1463726502-14679-8-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Po Liu <po.liu@nxp.com>
+To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH 1/2] freescale/dts: add pcie aer interrupt-name property in
+ the dts
+Date: Thu, 26 May 2016 13:59:09 +0800
+Message-ID: <1464242349-15323-1-git-send-email-po.liu@nxp.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, Roy Zang <roy.zang@nxp.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Po Liu <po.liu@nxp.com>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ Minghuan Lian <minghuan.lian@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Shawn Guo <shawnguo@kernel.org>, Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, the PEs and their associated resources are assigned in
-ppc_md.pcibios_fixup() except those used by SRIOV VFs. The function
-is called for once after PCI probing and resources assignment is
-completed. So it's obviously not hotplug friendly.
+Freescale some platforms aer interrupt was not MSI/MSI-X/INTx
+but using interrupt line independently. This patch add a "aer"
+interrupt-names for aer interrupt.
 
-This creates PEs dynamically in pcibios_setup_bridge() that is
-called for the event during system bootup and PCI hotplug: updating
-PCI bridge's windows after resource assignment/reassignment are done.
-In partial hotplug case, not all PCI devices included to one particular
-PE are unplugged and plugged again, we just need unbinding/binding the
-hot added PCI devices with the corresponding PE without creating new
-one. The change is applied to IODA1 and IODA2 PHBs only. The behaviour
-on NPU PHBs aren't changed. There are no PCI bridges on NPU PHBs,
-meaning pcibios_setup_bridge() won't be invoked there. We have to use
-old path (pnv_pci_ioda_fixup()) to setup PEs on NPU PHBs.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Po Liu <po.liu@nxp.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 184 +++++++++++-------------------
- 1 file changed, 69 insertions(+), 115 deletions(-)
+ .../devicetree/bindings/pci/layerscape-pci.txt         |  2 +-
+ arch/arm/boot/dts/ls1021a.dtsi                         |  6 ++++--
+ arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi         | 18 +++++++++---------
+ arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi         | 16 ++++++++--------
+ 4 files changed, 22 insertions(+), 20 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 2dc64ca..cc6a7c4 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1022,6 +1022,15 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 				pci_name(dev));
- 			continue;
- 		}
-+
-+		/*
-+		 * In partial hotplug case, the PCI device might be still
-+		 * associated with the PE and needn't attach it to the PE
-+		 * again.
-+		 */
-+		if (pdn->pe_number != IODA_INVALID_PE)
-+			continue;
-+
- 		pdn->pcidev = dev;
- 		pdn->pe_number = pe->pe_number;
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
-@@ -1040,6 +1049,18 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
- 	struct pnv_ioda_pe *pe = NULL;
-+	unsigned int pe_num;
-+
-+	/*
-+	 * In partial hotplug case, the PE instance might be still alive.
-+	 * We should reuse it instead of allocating a new one.
-+	 */
-+	pe_num = phb->ioda.pe_rmap[bus->number << 8];
-+	if (pe_num != IODA_INVALID_PE) {
-+		pe = &phb->ioda.pe_array[pe_num];
-+		pnv_ioda_setup_same_PE(bus, pe);
-+		return NULL;
-+	}
- 
- 	/* Check if PE is determined by M64 */
- 	if (phb->pick_m64_pe)
-@@ -1154,30 +1175,6 @@ static void pnv_ioda_setup_npu_PEs(struct pci_bus *bus)
- 		pnv_ioda_setup_npu_PE(pdev);
- }
- 
--static void pnv_ioda_setup_PEs(struct pci_bus *bus)
--{
--	struct pci_dev *dev;
--
--	pnv_ioda_setup_bus_PE(bus, false);
--
--	list_for_each_entry(dev, &bus->devices, bus_list) {
--		if (dev->subordinate) {
--			if (pci_pcie_type(dev) == PCI_EXP_TYPE_PCI_BRIDGE)
--				pnv_ioda_setup_bus_PE(dev->subordinate, true);
--			else
--				pnv_ioda_setup_PEs(dev->subordinate);
--		}
--	}
--}
--
--/*
-- * Configure PEs so that the downstream PCI buses and devices
-- * could have their associated PE#. Unfortunately, we didn't
-- * figure out the way to identify the PLX bridge yet. So we
-- * simply put the PCI bus and the subordinate behind the root
-- * port to PE# here. The game rule here is expected to be changed
-- * as soon as we can detected PLX bridge correctly.
-- */
- static void pnv_pci_ioda_setup_PEs(void)
- {
- 	struct pci_controller *hose, *tmp;
-@@ -1185,22 +1182,11 @@ static void pnv_pci_ioda_setup_PEs(void)
- 
- 	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
- 		phb = hose->private_data;
--
--		/* M64 layout might affect PE allocation */
--		if (phb->reserve_m64_pe)
--			phb->reserve_m64_pe(hose->bus, NULL, true);
--
--		/*
--		 * On NPU PHB, we expect separate PEs for individual PCI
--		 * functions. PCI bus dependent PEs are required for the
--		 * remaining types of PHBs.
--		 */
- 		if (phb->type == PNV_PHB_NPU) {
- 			/* PE#0 is needed for error reporting */
- 			pnv_ioda_reserve_pe(phb, 0);
- 			pnv_ioda_setup_npu_PEs(hose->bus);
--		} else
--			pnv_ioda_setup_PEs(hose->bus);
-+		}
- 	}
- }
- 
-@@ -2655,6 +2641,9 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- {
- 	int64_t rc;
- 
-+	if (!pnv_pci_ioda_pe_dma_weight(pe))
-+		return;
-+
- 	/* TVE #1 is selected by PCI address bit 59 */
- 	pe->tce_bypass_base = 1ull << 59;
- 
-@@ -2686,47 +2675,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 		pnv_ioda_setup_bus_dma(pe, pe->pbus);
- }
- 
--static void pnv_ioda_setup_dma(struct pnv_phb *phb)
--{
--	struct pci_controller *hose = phb->hose;
--	struct pnv_ioda_pe *pe;
--	unsigned int weight;
--
--	/* If we have more PE# than segments available, hand out one
--	 * per PE until we run out and let the rest fail. If not,
--	 * then we assign at least one segment per PE, plus more based
--	 * on the amount of devices under that PE
--	 */
--	pr_info("PCI: Domain %04x has %d available 32-bit DMA segments\n",
--		hose->global_number, phb->ioda.dma32_count);
--
--	/* Walk our PE list and configure their DMA segments */
--	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
--		weight = pnv_pci_ioda_pe_dma_weight(pe);
--		if (!weight)
--			continue;
--
--		/*
--		 * For IODA2 compliant PHB3, we needn't care about the weight.
--		 * The all available 32-bits DMA space will be assigned to
--		 * the specific PE.
--		 */
--		if (phb->type == PNV_PHB_IODA1) {
--			pnv_pci_ioda1_setup_dma_pe(phb, pe);
--		} else if (phb->type == PNV_PHB_IODA2) {
--			pe_info(pe, "Assign DMA32 space\n");
--			pnv_pci_ioda2_setup_dma_pe(phb, pe);
--		} else if (phb->type == PNV_PHB_NPU) {
--			/*
--			 * We initialise the DMA space for an NPU PHB
--			 * after setup of the PHB is complete as we
--			 * point the NPU TVT to the the same location
--			 * as the PHB3 TVT.
--			 */
--		}
--	}
--}
--
- #ifdef CONFIG_PCI_MSI
- static void pnv_ioda2_msi_eoi(struct irq_data *d)
- {
-@@ -3193,41 +3141,6 @@ static void pnv_ioda_setup_pe_seg(struct pnv_ioda_pe *pe)
- 	}
- }
- 
--static void pnv_pci_ioda_setup_seg(void)
--{
--	struct pci_controller *tmp, *hose;
--	struct pnv_phb *phb;
--	struct pnv_ioda_pe *pe;
--
--	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
--		phb = hose->private_data;
--
--		/* NPU PHB does not support IO or MMIO segmentation */
--		if (phb->type == PNV_PHB_NPU)
--			continue;
--
--		list_for_each_entry(pe, &phb->ioda.pe_list, list) {
--			pnv_ioda_setup_pe_seg(pe);
--		}
--	}
--}
--
--static void pnv_pci_ioda_setup_DMA(void)
--{
--	struct pci_controller *hose, *tmp;
--	struct pnv_phb *phb;
--
--	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
--		pnv_ioda_setup_dma(hose->private_data);
--
--		/* Mark the PHB initialization done */
--		phb = hose->private_data;
--		phb->initialized = 1;
--	}
--
--	pnv_pci_ioda_setup_iommu_api();
--}
--
- static void pnv_pci_ioda_create_dbgfs(void)
- {
- #ifdef CONFIG_DEBUG_FS
-@@ -3238,6 +3151,9 @@ static void pnv_pci_ioda_create_dbgfs(void)
- 	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
- 		phb = hose->private_data;
- 
-+		/* Notify initialization of PHB done */
-+		phb->initialized = 1;
-+
- 		sprintf(name, "PCI%04x", hose->global_number);
- 		phb->dbgfs = debugfs_create_dir(name, powerpc_debugfs_root);
- 		if (!phb->dbgfs)
-@@ -3250,9 +3166,7 @@ static void pnv_pci_ioda_create_dbgfs(void)
- static void pnv_pci_ioda_fixup(void)
- {
- 	pnv_pci_ioda_setup_PEs();
--	pnv_pci_ioda_setup_seg();
--	pnv_pci_ioda_setup_DMA();
--
-+	pnv_pci_ioda_setup_iommu_api();
- 	pnv_pci_ioda_create_dbgfs();
- 
- #ifdef CONFIG_EEH
-@@ -3302,6 +3216,45 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
- }
- 
-+static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bus);
-+	struct pnv_phb *phb = hose->private_data;
-+	struct pci_dev *bridge = bus->self;
-+	struct pnv_ioda_pe *pe;
-+	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
-+
-+	/* Don't assign PE to PCI bus, which doesn't have subordinate devices */
-+	if (list_empty(&bus->devices))
-+		return;
-+
-+	/* Reserve PEs according to used M64 resources */
-+	if (phb->reserve_m64_pe)
-+		phb->reserve_m64_pe(bus, NULL, all);
-+
-+	/*
-+	 * Assign PE. We might run here because of partial hotplug.
-+	 * For the case, we just pick up the existing PE and should
-+	 * not allocate resources again.
-+	 */
-+	pe = pnv_ioda_setup_bus_PE(bus, all);
-+	if (!pe)
-+		return;
-+
-+	pnv_ioda_setup_pe_seg(pe);
-+	switch (phb->type) {
-+	case PNV_PHB_IODA1:
-+		pnv_pci_ioda1_setup_dma_pe(phb, pe);
-+		break;
-+	case PNV_PHB_IODA2:
-+		pnv_pci_ioda2_setup_dma_pe(phb, pe);
-+		break;
-+	default:
-+		pr_warn("%s: No DMA for PHB#%d (type %d)\n",
-+			__func__, phb->hose->global_number, phb->type);
-+	}
-+}
-+
- #ifdef CONFIG_PCI_IOV
- static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
- 						      int resno)
-@@ -3379,6 +3332,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
- #endif
- 	.enable_device_hook	= pnv_pci_enable_device_hook,
- 	.window_alignment	= pnv_pci_window_alignment,
-+	.setup_bridge		= pnv_pci_setup_bridge,
- 	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
- 	.dma_set_mask		= pnv_pci_ioda_dma_set_mask,
- 	.dma_get_required_mask	= pnv_pci_ioda_dma_get_required_mask,
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index ef683b2..858b407 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -19,7 +19,7 @@ Required properties:
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+ - interrupt-names: Must include the following entries:
+-  "intr": The interrupt that is asserted for controller interrupts
++  "aer" : The interrupt that is asserted for aer interrupts
+ - fsl,pcie-scfg: Must include two entries.
+   The first entry must be a link to the SCFG device node
+   The second entry must be '0' or '1' based on physical PCIe controller index.
+diff --git a/arch/arm/boot/dts/ls1021a.dtsi b/arch/arm/boot/dts/ls1021a.dtsi
+index 5ae8e92..b638697 100644
+--- a/arch/arm/boot/dts/ls1021a.dtsi
++++ b/arch/arm/boot/dts/ls1021a.dtsi
+@@ -633,7 +633,8 @@
+ 			reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
+ 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
++			interrupts = <GIC_SPI 183 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			fsl,pcie-scfg = <&scfg 0>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+@@ -656,7 +657,8 @@
+ 			reg = <0x00 0x03500000 0x0 0x00010000   /* controller registers */
+ 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>;
++			interrupts = <GIC_SPI 184 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			fsl,pcie-scfg = <&scfg 1>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
+index de0323b..4beb760 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
+@@ -473,9 +473,9 @@
+ 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
+ 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 118 0x4>, /* controller interrupt */
+-				     <0 117 0x4>; /* PME interrupt */
+-			interrupt-names = "intr", "pme";
++			interrupts = <0 117 0x4>, /* PME interrupt */
++					 <0 118 0x4>; /* aer interrupt */
++			interrupt-names = "pme", "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -497,9 +497,9 @@
+ 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
+ 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 128 0x4>,
+-				     <0 127 0x4>;
+-			interrupt-names = "intr", "pme";
++			interrupts = <0 127 0x4>,
++					 <0 128 0x4>;
++			interrupt-names = "pme", "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -521,9 +521,9 @@
+ 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
+ 			       0x50 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 162 0x4>,
+-				     <0 161 0x4>;
+-			interrupt-names = "intr", "pme";
++			interrupts = <0 161 0x4>,
++					 <0 162 0x4>;
++			interrupt-names = "pme", "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
+index 3187c82..6edf24b 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
+@@ -559,8 +559,8 @@
+ 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
+ 			       0x10 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 108 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 108 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -583,8 +583,8 @@
+ 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
+ 			       0x12 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 113 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 113 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -607,8 +607,8 @@
+ 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
+ 			       0x14 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 118 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 118 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -631,8 +631,8 @@
+ 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
+ 			       0x16 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 123 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 123 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
 -- 
-2.1.0
+2.1.0.27.g96db324
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
