@@ -1,247 +1,1337 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-Date: Tue, 24 May 2016 16:27:44 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-	Dave Airlie <airlied@gmail.com>
-Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
-Message-ID: <20160524142744.GA1553@al>
-References: <20160519231234.GB1785@al>
- <1463991648-85051-1-git-send-email-mika.westerberg@linux.intel.com>
- <20160523200042.GB24375@localhost>
- <20160523215015.GA31479@localhost>
- <20160524122357.GA20453@localhost>
- <20160524125323.GE1789@lahna.fi.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:33111 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755165AbcEZTCd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 May 2016 15:02:33 -0400
+Received: by mail-pf0-f181.google.com with SMTP id b124so33558598pfb.0
+        for <linux-pci@vger.kernel.org>; Thu, 26 May 2016 12:02:33 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Rajat Jain <rajatja@google.com>, Heiko Stuebner <heiko@sntech.de>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>, rajatxjain@gmail.com,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [2/2] pci: Add PCIe driver for Rockchip Soc
+Date: Thu, 26 May 2016 12:00:31 -0700
+Message-Id: <1464289231-12325-1-git-send-email-rajatja@google.com>
+In-Reply-To: <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160524125323.GE1789@lahna.fi.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
-> On Tue, May 24, 2016 at 07:23:57AM -0500, Bjorn Helgaas wrote:
-> > On Mon, May 23, 2016 at 04:50:15PM -0500, Bjorn Helgaas wrote:
-> > > [+cc Valdis, Dave]
-> > > 
-> > > On Mon, May 23, 2016 at 03:00:42PM -0500, Bjorn Helgaas wrote:
-> > > > On Mon, May 23, 2016 at 11:20:48AM +0300, Mika Westerberg wrote:
-> > > > > When a PCI device is removed through sysfs interface the upstream bridge
-> > > > > (PCIe port) can be runtime suspended if it was the last device on that bus.
-> > > > > Now, if the bridge is in D3 we cannot find devices below the bridge
-> > > > > anymore. For example following fails to find the removed device again:
-> > > > > 
-> > > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/0000:01:00.0/remove
-> > > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/rescan
-> > > > > 
-> > > > > Where 0000:00:01.0 is the bridge device.
-> > > > > 
-> > > > > In order to be able to rescan devices below the bridge add
-> > > > > pm_runtime_get_sync()/pm_runtime_put() calls to pci_scan_bridge(). This
-> > > > > should keep bridges powered on while their children devices are being
-> > > > > scanned.
-> > > > > 
-> > > > > Reported-by: Peter Wu <peter@lekensteyn.nl>
-> > > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > 
-> > > > This looks like basically the same idea as "ACPI / hotplug / PCI:
-> > > > Runtime resume bridge before rescan".
-> > > > 
-> > > > The hotplug_event() path modified by that patch eventually calls
-> > > > pci_scan_bridge():
-> > > > 
-> > > >   hotplug_event
-> > > >     enable_slot
-> > > >       pci_scan_bridge
-> > > > 
-> > > > so this patch looks a little more general.  Does it make "ACPI /
-> > > > hotplug / PCI: Runtime resume bridge before rescan" unnecessary?  
-> > > > Can I just replace that patch with this one?
-> > > 
-> > > I speculatively replaced "ACPI / hotplug / PCI: Runtime resume bridge
-> > > before rescan" with this one and pushed the result to
-> > > 
-> > >   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pm
-> > > 
-> > > Please take a look, test it, and let me know if I need to add the ACPI
-> > > patch back.
-> > > 
-> > > This branch also includes the fix for the lockdep splat reported by
-> > > Valdis.  This is what I hope to get into v4.7-rc1.
-> > 
-> > Ping?  I'd like to ask Linus to pull this pci/pm branch before v4.7-rc1.
-> > It currently has these changes:
-> > 
-> >   8b71f5652eea PCI: Add runtime PM support for PCIe ports
-> >   af81f0fa638b PCI: Power on bridges before scanning new devices
-> >   9741a01c9f55 PCI: Put PCIe ports into D3 during suspend
-> >   b3a63ff7baf1 PCI: Don't clear d3cold_allowed for PCIe ports
+> RK3399 has a PCIe controller which can be used as Root Complex.
+> This driver supports a PCIe controller as Root Complex mode.
+
+1 general feedback I have is that there are a lot of magic constants.
+I'd appreciate if they could be converted into macros for easy readability.
+
 > 
-> Looks good to me. I've also tested those here and seems to work fine.
-
-I have tested these patches for some time now on top of v4.6 (just
-dropped the ACPI hotplug patch and re-tested just to be sure) and it
-works for nouveau, but only if that one is patched to avoid calling the
-device-specific Optimus method. Without that patch (WIP below, I plan to
-rebase it on a refactoring patch), the nvidia card stays disabled even
-after the bridge returns into D0:
-
-    nouveau 0000:01:00.0: power state changed by ACPI to D0
-    nouveau 0000:01:00.0: Refused to change power state, currently in D3
-    nouveau 0000:01:00.0: restoring config space at offset 0x3c (was 0xffffffff, writing 0x1ff)
-    nouveau 0000:01:00.0: restoring config space at offset 0x38 (was 0xffffffff, writing 0x0)
-    nouveau 0000:01:00.0: restoring config space at offset 0x34 (was 0xffffffff, writing 0x60)
-    nouveau 0000:01:00.0: restoring config space at offset 0x30 (was 0xffffffff, writing 0xdf000000)
-    ...
-    INFO: rcu_sched self-detected stall on CPU
-
-A workaround (until nouveau is fixed) is to disable runtime PM on the
-bridge (or on nouveau with nouveau.runpm=0):
-
-    # echo on > /sys/bus/pci/devices/0000:00:01.0/power/control
-
-This was tested on a Clevo P651RA laptop (with acpi_osi="!Windows 2013",
-there is a weird PCIe PM issue for which I will fill a report later).
-
-Kind regards,
-Peter
-
-> > I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
-> > on the assumption that "PCI: Power on bridges before scanning new
-> > devices" is sufficient to cover both the ACPI and the generic PCi
-> > rescan cases, but I'd like some reassurance about that.
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
 > 
-> I agree with your reasoning that the patch should not be needed anymore.
-> However, I have the machine which needed that patch at home so I'm not
-> able to test it now. I'll do that later today when I get back home.
+>  drivers/pci/host/Kconfig         |   12 +
+>  drivers/pci/host/Makefile        |    1 +
+>  drivers/pci/host/pcie-rockchip.c | 1181 ++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 1194 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-rockchip.c
 > 
-> One thing I noticed, though. When a bridge is transitioned to D0 we only
-> wait for 10ms which is requirement for PCI functions. However, PCI PM
-> specification 1.2 (chapter 4.2) requires that for buses to transition
-> from B2 to B0 we need to wait minimum of 50ms before accessing a
-> function on that bus.
-> 
-> We even have PCI_PM_BUS_WAIT defined in include/linux/pci.h but it is
-> not used anywhere. Maybe it was not needed originally because we never
-> powered down bridges anyway but now when we do, I think it is good idea
-> to do what the spec requires.
-> 
-> What do you think? We could add a separate patch doing something like
-> below to make sure the spec is followed.
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e785dc260e72..b3b794caa380 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2361,7 +2361,12 @@ void pci_pm_init(struct pci_dev *dev)
->  	}
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 8e4f038..76447a8 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -245,4 +245,16 @@ config PCIE_ARMADA_8K
+>  	  Designware hardware and therefore the driver re-uses the
+>  	  Designware core functions to implement the driver.
 >  
->  	dev->pm_cap = pm;
-> -	dev->d3_delay = PCI_PM_D3_WAIT;
-> +	/*
-> +	 * PCI PM 1.2 specification requires minimum of 50ms before any
-> +	 * function on the bus is accessed after the bus is transitioned
-> +	 * from B2 to B0.
-> +	 */
-> +	dev->d3_delay = pci_is_bridge(dev) ? PCI_PM_BUS_WAIT : PCI_PM_D3_WAIT;
->  	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
->  	dev->bridge_d3 = pci_bridge_d3_possible(dev);
->  	dev->d3cold_allowed = true;
+> +config PCIE_ROCKCHIP
+> +	bool "Rockchip PCIe controller"
+> +	depends on ARM64 && ARCH_ROCKCHIP
+> +	depends on OF
+> +	select MFD_SYSCON
+> +	select PCI_MSI
+> +	select PCI_MSI_IRQ_DOMAIN
+> +	help
+> +	  Say Y here if you want internal PCI support on Rockchip SoC.
+> +	  There are 1 internal PCIe port available to support GEN2 with
+> +	  4 slots.
+> +
+>  endmenu
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index a6f85e3..fb3871e 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -29,3 +29,4 @@ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>  obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+>  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
+>  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+> +obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> new file mode 100644
+> index 0000000..4063fd3
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -0,0 +1,1181 @@
+> +/*
+> + * Rockchip AXI PCIe host controller driver
+> + *
+> + * Copyright (c) 2016 Rockchip, Inc.
+> + *
+> + * Author: Shawn Lin <shawn.lin@rock-chips.com>
+> + *         Wenrui Li <wenrui.li@rock-chips.com>
+> + * Bits taken from Synopsys Designware Host controller driver and
+> + * ARM PCI Host generic driver.
+> + *
+> + * This program is free software: you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation, either version 2 of the License, or
+> + * (at your option) any later version.
+> + */
+> +#include <linux/clk.h>
+> +#include <linux/delay.h>
+> +#include <linux/gpio/consumer.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/irq.h>
+> +#include <linux/irqdomain.h>
+> +#include <linux/kernel.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/module.h>
+> +#include <linux/msi.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_device.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/of_irq.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/reset.h>
+> +#include <linux/regmap.h>
+> +
+> +#define REF_CLK_100MHZ			(100 * 1000 * 1000)
+> +#define PCIE_CLIENT_BASE		0x0
+> +#define PCIE_RC_CONFIG_BASE		0xa00000
+> +#define PCIE_CORE_CTRL_MGMT_BASE	0x900000
+> +#define PCIE_CORE_AXI_CONF_BASE		0xc00000
+> +#define PCIE_CORE_AXI_INBOUND_BASE	0xc00800
+> +
+> +#define PCIE_CLIENT_BASIC_STATUS0	0x44
+> +#define PCIE_CLIENT_BASIC_STATUS1	0x48
+> +#define PCIE_CLIENT_INT_MASK		0x4c
+> +#define PCIE_CLIENT_INT_STATUS		0x50
+> +#define PCIE_CORE_INT_MASK		0x900210
+> +#define PCIE_CORE_INT_STATUS		0x90020c
+> +
+> +/** Size of one AXI Region (not Region 0) */
+> +#define	AXI_REGION_SIZE			(0x1 << 20)
+> +/** Overall size of AXI area */
+> +#define	AXI_OVERALL_SIZE		(64 * (0x1 << 20))
 
----
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index cdf5227..531d6be 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -45,6 +45,7 @@
- static struct nouveau_dsm_priv {
- 	bool dsm_detected;
- 	bool optimus_detected;
-+	bool use_pr3;
- 	acpi_handle dhandle;
- 	acpi_handle rom_handle;
- } nouveau_dsm_priv;
-@@ -246,6 +247,28 @@ static int nouveau_dsm_pci_probe(struct pci_dev *pdev)
- 	return retval;
- }
- 
-+/* Windows 8/8.1/10 do not use DSM to put the device in D3cold state,
-+ * instead it disables power resources on the parent PCIe port device. */
-+static bool nouveau_check_pr3(struct pci_dev *dis_dev)
-+{
-+	acpi_handle parent_handle;
-+	struct acpi_device *ad = NULL;
-+
-+	if (ACPI_FAILURE(acpi_get_parent(nouveau_dsm_priv.dhandle,
-+					 &parent_handle))) {
-+		pr_warn("Failed to obtain the parent device\n");
-+		return false;
-+	}
-+
-+	acpi_bus_get_device(parent_handle, &ad);
-+	if (!ad) {
-+		pr_warn("Failed to obtain an ACPI device for handle\n");
-+		return false;
-+	}
-+
-+	return ad->power.flags.power_resources;
-+}
-+
- static bool nouveau_dsm_detect(void)
- {
- 	char acpi_method_name[255] = { 0 };
-@@ -253,6 +276,7 @@ static bool nouveau_dsm_detect(void)
- 	struct pci_dev *pdev = NULL;
- 	int has_dsm = 0;
- 	int has_optimus = 0;
-+	int has_pr3 = 0;
- 	int vga_count = 0;
- 	bool guid_valid;
- 	int retval;
-@@ -271,8 +295,10 @@ static bool nouveau_dsm_detect(void)
- 		retval = nouveau_dsm_pci_probe(pdev);
- 		if (retval & NOUVEAU_DSM_HAS_MUX)
- 			has_dsm |= 1;
--		if (retval & NOUVEAU_DSM_HAS_OPT)
-+		if (retval & NOUVEAU_DSM_HAS_OPT) {
- 			has_optimus = 1;
-+			has_pr3 |= nouveau_check_pr3(pdev);
-+		}
- 	}
- 
- 	while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_3D << 8, pdev)) != NULL) {
-@@ -281,8 +307,10 @@ static bool nouveau_dsm_detect(void)
- 		retval = nouveau_dsm_pci_probe(pdev);
- 		if (retval & NOUVEAU_DSM_HAS_MUX)
- 			has_dsm |= 1;
--		if (retval & NOUVEAU_DSM_HAS_OPT)
-+		if (retval & NOUVEAU_DSM_HAS_OPT) {
- 			has_optimus = 1;
-+			has_pr3 |= nouveau_check_pr3(pdev);
-+		}
- 	}
- 
- 	/* find the optimus DSM or the old v1 DSM */
-@@ -292,6 +320,10 @@ static bool nouveau_dsm_detect(void)
- 		printk(KERN_INFO "VGA switcheroo: detected Optimus DSM method %s handle\n",
- 			acpi_method_name);
- 		nouveau_dsm_priv.optimus_detected = true;
-+		if (has_pr3) {
-+			pr_info("detected PR3 support\n");
-+			nouveau_dsm_priv.use_pr3 = 1;
-+		}
- 		ret = true;
- 	} else if (vga_count == 2 && has_dsm && guid_valid) {
- 		acpi_get_name(nouveau_dsm_priv.dhandle, ACPI_FULL_PATHNAME,
-@@ -321,7 +353,7 @@ void nouveau_register_dsm_handler(void)
- void nouveau_switcheroo_optimus_dsm(void)
- {
- 	u32 result = 0;
--	if (!nouveau_dsm_priv.optimus_detected)
-+	if (!nouveau_dsm_priv.optimus_detected || nouveau_dsm_priv.use_pr3)
- 		return;
- 
- 	nouveau_optimus_dsm(nouveau_dsm_priv.dhandle, NOUVEAU_DSM_OPTIMUS_FLAGS,
+Not used?
+
+> +/** Size of Region 0, equal to sum of sizes of other regions */
+> +#define	AXI_REGION_0_SIZE		(32 * (0x1 << 20))
+> +#define OB_REG_SIZE_SHIFT		5
+> +#define IB_ROOT_PORT_REG_SIZE_SHIFT	3
+> +
+> +#define AXI_WRAPPER_IO_WRITE		0x6
+> +#define AXI_WRAPPER_MEM_WRITE		0x2
+> +#define MAX_AXI_IB_ROOTPORT_REGION_NUM	3
+> +#define	MIN_AXI_ADDR_BITS_PASSED	8
+> +
+> +#define ROCKCHIP_PCIE_RPIFR1_INTR_MASK	GENMASK(8, 5)
+> +#define ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT	5
+> +#define CLIENT_INTERRUPTS \
+> +		(LOC_INT | INTA | INTB | INTC | INTD |\
+> +		 CORR_ERR | NFATAL_ERR | FATAL_ERR | DPA_INT | \
+> +		 HOT_RESET | MSG_DONE | LEGACY_DONE)
+> +#define CORE_INTERRUPTS	\
+> +		(PRFPE | CRFPE | RRPE | CRFO | RT | RTR | \
+> +		 PE | MTR | UCR | FCE | CT | UTC | MMVC)
+> +#define PWR_STCG			BIT(0)
+> +#define HOT_PLUG			BIT(1)
+> +#define PHY_INT				BIT(2)
+> +#define UDMA_INT			BIT(3)
+> +#define LOC_INT				BIT(4)
+> +#define INTA				BIT(5)
+> +#define INTB				BIT(6)
+> +#define INTC				BIT(7)
+> +#define INTD				BIT(8)
+> +#define CORR_ERR			BIT(9)
+> +#define NFATAL_ERR			BIT(10)
+> +#define FATAL_ERR			BIT(11)
+> +#define DPA_INT				BIT(12)
+> +#define HOT_RESET			BIT(13)
+> +#define MSG_DONE			BIT(14)
+> +#define LEGACY_DONE			BIT(15)
+> +#define PRFPE				BIT(0)
+> +#define CRFPE				BIT(1)
+> +#define RRPE				BIT(2)
+> +#define PRFO				BIT(3)
+> +#define CRFO				BIT(4)
+> +#define RT				BIT(5)
+> +#define RTR				BIT(6)
+> +#define PE				BIT(7)
+> +#define MTR				BIT(8)
+> +#define UCR				BIT(9)
+> +#define FCE				BIT(10)
+> +#define CT				BIT(11)
+> +#define UTC				BIT(18)
+> +#define MMVC				BIT(19)
+> +
+> +#define PCIE_ECAM_BUS(x)		(((x) & 0xFF) << 20)
+> +#define PCIE_ECAM_DEV(x)		(((x) & 0x1F) << 15)
+> +#define PCIE_ECAM_FUNC(x)		(((x) & 0x7) << 12)
+> +#define PCIE_ECAM_REG(x)		(((x) & 0xFFF) << 0)
+> +#define PCIE_ECAM_ADDR(bus, dev, func, reg) \
+> +	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
+> +	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
+> +
+> +#define RC_REGION_0_ADDR_TRANS_H	0x00000000
+> +#define RC_REGION_0_ADDR_TRANS_L	0x00000000
+> +#define RC_REGION_0_PASS_BITS		(25 - 1)
+> +#define RC_REGION_1_ADDR_TRANS_H	0x00000000
+> +#define RC_REGION_1_ADDR_TRANS_L	0x00400000
+> +#define RC_REGION_1_PASS_BITS		(20 - 1)
+> +#define MAX_AXI_WRAPPER_REGION_NUM	33
+> +#define PCIE_CLIENT_CONF_ENABLE		BIT(0)
+> +#define PCIE_CLIENT_CONF_LANE_NUM(x)	((x / 2) << 4)
+> +#define PCIE_CLIENT_MODE_RC		BIT(6)
+> +#define PCIE_CLIENT_GEN_SEL_2		BIT(7)
+> +#define PCIE_CLIENT_GEN_SEL_1		0x0
+> +
+> +struct rockchip_pcie_port {
+> +	void __iomem *reg_base;
+> +	void __iomem *apb_base;
+> +	struct regmap *grf;
+> +	unsigned int pcie_conf;
+> +	unsigned int pcie_status;
+> +	unsigned int pcie_laneoff;
+> +	struct reset_control *phy_rst;
+> +	struct reset_control *core_rst;
+> +	struct reset_control *mgmt_rst;
+> +	struct reset_control *mgmt_sticky_rst;
+> +	struct reset_control *pipe_rst;
+> +	struct clk *aclk_pcie;
+> +	struct clk *aclk_perf_pcie;
+> +	struct clk *hclk_pcie;
+> +	struct clk *clk_pciephy_ref;
+> +	struct gpio_desc *ep_gpio;
+> +	u32 lanes;
+> +	resource_size_t		io_base;
+> +	struct resource		*cfg;
+> +	struct resource		*io;
+> +	struct resource		*mem;
+
+Nit: It seems to me that these resource fields (cfg/io/mem) aren't really
+used, except for assignment and as temporary variables, so possibly
+can be get rid of, (unless you intend to use them in later patches, if any)
+
+> +	struct resource		*busn;
+> +	phys_addr_t		io_bus_addr;
+> +	u32			io_size;
+> +	phys_addr_t		mem_bus_addr;
+> +	u32			mem_size;
+> +	u8	root_bus_nr;
+> +	int irq;
+> +	struct msi_controller *msi;
+> +
+> +	struct device *dev;
+> +	struct irq_domain *irq_domain;
+> +};
+> +
+> +static inline u32 pcie_read(struct rockchip_pcie_port *port, u32 reg)
+> +{
+> +	return readl(port->apb_base + reg);
+> +}
+> +
+> +static inline void pcie_write(struct rockchip_pcie_port *port,
+> +			      u32 val, u32 reg)
+> +{
+> +	writel(val, port->apb_base + reg);
+> +}
+> +
+> +static inline void pcie_pb_wr_cfg(struct rockchip_pcie_port *port,
+> +				  u32 addr, u32 data)
+> +{
+> +	regmap_write(port->grf, port->pcie_conf,
+> +		     (0x3ff << 17) | (data << 7) | (addr << 1));
+> +	udelay(1);
+> +	regmap_write(port->grf, port->pcie_conf,
+> +		     (0x1 << 16) | (0x1 << 0));
+> +	udelay(1);
+> +	regmap_write(port->grf, port->pcie_conf,
+> +		     (0x1 << 16) | (0x0 << 0));
+> +}
+> +
+> +static inline u32 pcie_pb_rd_cfg(struct rockchip_pcie_port *port,
+> +				 u32 addr)
+> +{
+> +	u32 val;
+> +
+> +	regmap_write(port->grf, port->pcie_conf,
+> +		     (0x3ff << 17) | (addr << 1));
+
+Taking cue from pcie_pb_wr_cfg(), I'm wondering if there is any
+delay required here?
+
+> +	regmap_read(port->grf, port->pcie_status, &val);
+> +	return val;
+> +}
+> +
+> +static int rockchip_pcie_valid_config(struct rockchip_pcie_port *pp,
+> +				      struct pci_bus *bus, int dev)
+> +{
+> +	/* access only one slot on each root port */
+> +	if (bus->number == pp->root_bus_nr && dev > 0)
+> +		return 0;
+> +
+> +	/*
+> +	 * do not read more than one device on the bus directly attached
+> +	 * to RC's (Virtual Bridge's) DS side.
+> +	 */
+> +	if (bus->primary == pp->root_bus_nr && dev > 0)
+> +		return 0;
+> +
+> +	return 1;
+> +}
+> +
+> +static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *pp,
+> +				     int where, int size,
+> +				     u32 *val)
+> +{
+> +	void __iomem *addr = pp->apb_base + PCIE_RC_CONFIG_BASE + where;
+> +
+> +	if ((uintptr_t)addr & (size - 1)) {
+
+Use IS_ALIGNED()?
+
+> +		*val = 0;
+> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> +	}
+> +
+> +	if (size == 4) {
+> +		*val = readl(addr);
+> +	} else if (size == 2) {
+> +		*val = readw(addr);
+> +	} else if (size == 1) {
+> +		*val = readb(addr);
+> +	} else {
+> +		*val = 0;
+> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> +	}
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *pp,
+> +				     int where, int size, u32 val)
+> +{
+> +	u32 tmp;
+> +	int offset;
+> +
+> +	offset = (where & (~0x3));
+> +	tmp = readl(pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
+> +	if (size == 4) {
+> +		writel(val, pp->apb_base + PCIE_RC_CONFIG_BASE + where);
+> +	} else if (size == 2) {
+> +		if (where & 0x2)
+> +			tmp = ((tmp & 0xffff) | (val << 16));
+> +		else
+> +			tmp = ((tmp & 0xffff0000) | val);
+> +
+> +		writel(tmp, pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
+> +	} else if (size == 1) {
+> +		if ((where & 0x3) == 0)
+> +			tmp = ((tmp & (~0xff)) | val);
+> +		else if ((where & 0x3) == 1)
+> +			tmp = ((tmp & (~0xff00)) | (val << 8));
+> +		else if ((where & 0x3) == 2)
+> +			tmp = ((tmp & (~0xff0000)) | (val << 16));
+> +		else if ((where & 0x3) == 3)
+> +			tmp = ((tmp & (~0xff000000)) | (val << 24));
+> +
+> +		writel(tmp, pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
+
+Why not register sized writes instead of writels?
+
+> +	} else {
+> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> +	}
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *pp,
+> +				       struct pci_bus *bus, u32 devfn,
+> +				       int where, int size, u32 *val)
+> +{
+> +	u32 busdev;
+> +
+> +	busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
+> +				PCI_FUNC(devfn), where);
+> +
+> +	if (busdev & (size - 1)) {
+
+Use IS_ALIGNED() for here and the other occurences in
+above and below functions.
+
+> +		*val = 0;
+> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> +	}
+> +
+> +	if (size == 4) {
+> +		*val = readl(pp->reg_base + busdev);
+> +	} else if (size == 2) {
+> +		*val = readw(pp->reg_base + busdev);
+> +	} else if (size == 1) {
+> +		*val = readb(pp->reg_base + busdev);
+> +	} else {
+> +		*val = 0;
+> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> +	}
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *pp,
+> +				       struct pci_bus *bus, u32 devfn,
+> +				       int where, int size, u32 val)
+> +{
+> +	u32 busdev;
+> +
+> +	busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
+> +				PCI_FUNC(devfn), where);
+> +	if (busdev & (size - 1))
+> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> +
+> +	if (size == 4)
+> +		writel(val, pp->reg_base + busdev);
+> +	else if (size == 2)
+> +		writew(val, pp->reg_base + busdev);
+> +	else if (size == 1)
+> +		writeb(val, pp->reg_base + busdev);
+> +	else
+> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> +
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+> +				 int size, u32 *val)
+> +{
+> +	struct rockchip_pcie_port *pp = bus->sysdata;
+> +	int ret;
+> +
+> +	if (rockchip_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
+> +		*val = 0xffffffff;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+> +	if (bus->number != pp->root_bus_nr)
+> +		ret = rockchip_pcie_rd_other_conf(pp, bus, devfn,
+> +						  where, size, val);
+> +	else
+> +		ret = rockchip_pcie_rd_own_conf(pp, where, size, val);
+> +
+> +	return ret;
+> +}
+> +
+> +static int rockchip_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+> +				 int where, int size, u32 val)
+> +{
+> +	struct rockchip_pcie_port *pp = bus->sysdata;
+> +	int ret;
+> +
+> +	if (rockchip_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	if (bus->number != pp->root_bus_nr)
+> +		ret = rockchip_pcie_wr_other_conf(pp, bus, devfn,
+> +						  where, size, val);
+> +	else
+> +		ret = rockchip_pcie_wr_own_conf(pp, where, size, val);
+> +
+> +	return ret;
+> +}
+> +
+> +static struct pci_ops rockchip_pcie_ops = {
+> +	.read = rockchip_pcie_rd_conf,
+> +	.write = rockchip_pcie_wr_conf,
+> +};
+> +
+> +/**
+> + * rockchip_pcie_init_port - Initialize hardware
+> + * @port: PCIe port information
+> + */
+> +static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+> +{
+> +	int err;
+> +	u32 status;
+> +	unsigned long timeout = jiffies + msecs_to_jiffies(1000);
+
+The way you have currently implemented, would mean that you have set
+the cumulative timeout of 1000 msec for all the operations. So if PLL
+takes 990 msec to lock, there is only 10 msec for other steps. It may
+be better to have individual timeouts I think since you'd know from
+HW docs how much should the time out should be?
+
+> +
+> +	gpiod_set_value(port->ep_gpio, 0);
+> +
+> +	/* Make sure PCIe relate block is in reset state */
+> +	err = reset_control_assert(port->phy_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "assert phy_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	err = reset_control_assert(port->core_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "assert core_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	err = reset_control_assert(port->mgmt_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "assert mgmt_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	err = reset_control_assert(port->mgmt_sticky_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "assert mgmt_sticky_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	err = reset_control_assert(port->pipe_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "assert pipe_rst err %d\n", err);
+> +		return err;
+> +	}
+> +
+> +	pcie_write(port, (0xf << 20) | (0x1 << 16) | PCIE_CLIENT_GEN_SEL_2 |
+> +			  (0x1 << 19) | (0x1 << 3) |
+> +			  PCIE_CLIENT_MODE_RC |
+> +			  PCIE_CLIENT_CONF_LANE_NUM(port->lanes) |
+> +			  PCIE_CLIENT_CONF_ENABLE, PCIE_CLIENT_BASE);
+> +
+> +	err = reset_control_deassert(port->phy_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "deassert phy_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	regmap_write(port->grf, port->pcie_conf,
+> +		     (0x3f << 17) | (0x10 << 1));
+> +	err = -EINVAL;
+> +	while (time_before(jiffies, timeout)) {
+> +		regmap_read(port->grf, port->pcie_status, &status);
+> +		if ((status & (1 << 9))) {
+> +			dev_info(port->dev, "pll locked!\n");
+> +			err = 0;
+> +			break;
+> +		}
+> +	}
+> +	if (err) {
+> +		dev_err(port->dev, "pll lock timeout!\n");
+> +		return err;
+> +	}
+> +	pcie_pb_wr_cfg(port, 0x10, 0x8);
+> +	pcie_pb_wr_cfg(port, 0x12, 0x8);
+> +
+> +	err = -ETIMEDOUT;
+> +	while (time_before(jiffies, timeout)) {
+> +		regmap_read(port->grf, port->pcie_status, &status);
+> +		if (!(status & (1 << 10))) {
+> +			dev_info(port->dev, "pll output enable done!\n");
+> +			err = 0;
+> +			break;
+> +		}
+> +	}
+> +
+> +	if (err) {
+> +		dev_err(port->dev, "pll output enable timeout!\n");
+> +		return err;
+> +	}
+> +
+> +	regmap_write(port->grf, port->pcie_conf,
+> +		     (0x3f << 17) | (0x10 << 1));
+> +	err = -EINVAL;
+> +	while (time_before(jiffies, timeout)) {
+> +		regmap_read(port->grf, port->pcie_status, &status);
+> +		if ((status & (1 << 9))) {
+> +			dev_info(port->dev, "pll relocked!\n");
+> +			err = 0;
+> +			break;
+> +		}
+> +	}
+> +	if (err) {
+> +		dev_err(port->dev, "pll relock timeout!\n");
+> +		return err;
+> +	}
+
+There's a bunch of these "regmap_write, loop waiting for a bit, error check"(s)
+May be have an inline function for it?
+
+> +
+> +	err = reset_control_deassert(port->core_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "deassert core_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	err = reset_control_deassert(port->mgmt_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "deassert mgmt_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	err = reset_control_deassert(port->mgmt_sticky_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "deassert mgmt_sticky_rst err %d\n", err);
+> +		return err;
+> +	}
+> +	err = reset_control_deassert(port->pipe_rst);
+> +	if (err) {
+> +		dev_err(port->dev, "deassert pipe_rst err %d\n", err);
+> +		return err;
+> +	}
+> +
+> +	pcie_write(port, 1 << 17 | 1 << 1, PCIE_CLIENT_BASE);
+> +
+> +	gpiod_set_value(port->ep_gpio, 1);
+> +	err = -ETIMEDOUT;
+> +	while (time_before(jiffies, timeout)) {
+> +		status = pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
+> +		if (((status >> 20) & 0x3) == 0x3) {
+> +			dev_info(port->dev, "pcie link training gen1 pass!\n");
+> +			err = 0;
+> +			break;
+> +		}
+> +	}
+> +	if (err) {
+> +		dev_err(port->dev, "pcie link training gen1 timeout!\n");
+> +		return err;
+> +	}
+> +
+> +	status = pcie_read(port, 0x9000d0);
+> +	status |= 0x20;
+> +	pcie_write(port, status, 0x9000d0);
+> +	err = -ETIMEDOUT;
+> +	while (time_before(jiffies, timeout)) {
+> +		status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
+> +		if (((status >> 3) & 0x3) == 0x1) {
+> +			dev_info(port->dev, "pcie link training gen2 pass!\n");
+> +			err = 0;
+> +			break;
+> +		}
+> +	}
+> +	if (err)
+> +		dev_dbg(port->dev, "pcie link training gen2 timeout, force to gen1!\n");
+> +
+> +	if (((status >> 3) & 0x3) == 0x0)
+> +		dev_info(port->dev, "pcie link 2.5!\n");
+> +	if (((status >> 3) & 0x3) == 0x1)
+> +		dev_info(port->dev, "pcie link 5.0!\n");
+> +
+> +	status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
+> +	status =  0x1 << ((status >> 1) & 0x3);
+> +	dev_info(port->dev, "current link width is x%d\n", status);
+> +
+> +	status = pcie_pb_rd_cfg(port, 0x30);
+> +	if (!((status >> 11) & 0x1))
+> +		dev_dbg(port->dev, "lane A is used\n");
+> +	else
+> +		regmap_write(port->grf, port->pcie_laneoff,
+> +			     (0x1 << 19) | (0x1 << 3));
+> +
+> +	status = pcie_pb_rd_cfg(port, 0x31);
+> +	if (!((status >> 11) & 0x1))
+> +		dev_dbg(port->dev, "lane B is used\n");
+> +	else
+> +		regmap_write(port->grf, port->pcie_laneoff,
+> +			     (0x2 << 19) | (0x2 << 3));
+> +
+> +	status = pcie_pb_rd_cfg(port, 0x32);
+> +	if (!((status >> 11) & 0x1))
+> +		dev_dbg(port->dev, "lane C is used\n");
+> +	else
+> +		regmap_write(port->grf, port->pcie_laneoff,
+> +			     (0x4 << 19) | (0x4 << 3));
+> +
+> +	status = pcie_pb_rd_cfg(port, 0x33);
+> +	if (!((status >> 11) & 0x1))
+> +		dev_dbg(port->dev, "lane D is used\n");
+> +	else
+> +		regmap_write(port->grf, port->pcie_laneoff,
+> +			     (0x8 << 19) | (0x8 << 3));
+
+Can we have a loop looping over all the lanes instead of this?
+Also, you seem to be checking and initializing all lanes instead
+of referring to port->lanes?
+
+> +	return 0;
+> +}
+> +
+> +/**
+> + * rockchip_pcie_parse_dt - Parse Device tree
+> + * @port: PCIe port information
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *port)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct resource regs;
+> +	unsigned int pcie_conf;
+> +	unsigned int pcie_status;
+> +	unsigned int pcie_laneoff;
+> +	int err;
+> +
+> +	err = of_address_to_resource(node, 0, &regs);
+> +	if (err) {
+> +		dev_err(dev, "missing \"reg\" property\n");
+
+This error message is exactly the same as the one below.
+May be say reg0 or reg1?
+
+> +		return err;
+> +	}
+> +
+> +	port->reg_base = devm_ioremap_resource(dev, &regs);
+> +	if (IS_ERR(port->reg_base))
+> +		return PTR_ERR(port->reg_base);
+> +
+> +	err = of_address_to_resource(node, 1, &regs);
+> +	if (err) {
+> +		dev_err(dev, "missing \"reg\" property\n");
+> +		return err;
+> +	}
+> +
+> +	port->apb_base = devm_ioremap_resource(dev, &regs);
+> +	if (IS_ERR(port->apb_base))
+> +		return PTR_ERR(port->apb_base);
+> +
+> +	port->grf = syscon_regmap_lookup_by_phandle(dev->of_node,
+> +						    "rockchip,grf");
+> +	if (IS_ERR(port->grf)) {
+> +		dev_err(dev, "Missing rockchip,grf property\n");
+> +		return PTR_ERR(port->grf);
+> +	}
+> +
+> +	if (of_property_read_u32(node, "pcie-conf", &pcie_conf)) {
+> +		dev_err(dev, "missing pcie-conf property in node %s\n",
+> +			node->name);
+> +		return -EINVAL;
+> +	}
+> +
+> +	port->pcie_conf = pcie_conf;
+> +
+> +	if (of_property_read_u32(node, "pcie-status", &pcie_status)) {
+> +		dev_err(dev, "missing pcie-status property in node %s\n",
+> +			node->name);
+> +		return -EINVAL;
+> +	}
+> +
+> +	port->pcie_status = pcie_status;
+> +
+> +	if (of_property_read_u32(node, "pcie-laneoff", &pcie_laneoff)) {
+> +		dev_err(dev, "missing pcie-laneoff property in node %s\n",
+> +			node->name);
+> +		return -EINVAL;
+> +	}
+> +
+> +	port->pcie_laneoff = pcie_laneoff;
+> +
+> +	port->lanes = 1;
+> +	err = of_property_read_u32(node, "num-lanes", &port->lanes);
+> +	if (!err && ((port->lanes == 0) ||
+> +		     (port->lanes == 3) ||
+> +		     (port->lanes > 4))) {
+> +		dev_info(dev, "invalid num-lanes, default use one lane\n");
+> +		port->lanes = 1;
+> +	}
+> +
+> +	port->phy_rst = devm_reset_control_get(dev, "phy-rst");
+> +	if (IS_ERR(port->phy_rst)) {
+> +		if (PTR_ERR(port->phy_rst) != -EPROBE_DEFER)
+> +			dev_err(dev, "missing phy-rst property in node %s\n",
+> +				node->name);
+> +		err = PTR_ERR(port->phy_rst);
+> +		goto err_aclk_pcie;
+> +	}
+> +
+> +	port->core_rst = devm_reset_control_get(dev, "core-rst");
+> +	if (IS_ERR(port->core_rst)) {
+> +		if (PTR_ERR(port->core_rst) != -EPROBE_DEFER)
+> +			dev_err(dev, "missing core-rst property in node %s\n",
+> +				node->name);
+> +		err = PTR_ERR(port->core_rst);
+> +		goto err_aclk_pcie;
+> +	}
+> +
+> +	port->mgmt_rst = devm_reset_control_get(dev, "mgmt-rst");
+> +	if (IS_ERR(port->mgmt_rst)) {
+> +		if (PTR_ERR(port->mgmt_rst) != -EPROBE_DEFER)
+> +			dev_err(dev, "missing mgmt-rst property in node %s\n",
+> +				node->name);
+> +		err = PTR_ERR(port->mgmt_rst);
+> +		goto err_aclk_pcie;
+> +	}
+> +
+> +	port->mgmt_sticky_rst = devm_reset_control_get(dev, "mgmt-sticky-rst");
+> +	if (IS_ERR(port->mgmt_sticky_rst)) {
+> +		if (PTR_ERR(port->mgmt_sticky_rst) != -EPROBE_DEFER)
+> +			dev_err(dev, "missing mgmt-sticky-rst property in node %s\n",
+> +				node->name);
+> +		err = PTR_ERR(port->mgmt_sticky_rst);
+> +		goto err_aclk_pcie;
+> +	}
+> +
+> +	port->pipe_rst = devm_reset_control_get(dev, "pipe-rst");
+> +	if (IS_ERR(port->pipe_rst)) {
+> +		if (PTR_ERR(port->pipe_rst) != -EPROBE_DEFER)
+> +			dev_err(dev, "missing pipe-rst property in node %s\n",
+> +				node->name);
+> +		err = PTR_ERR(port->pipe_rst);
+> +		goto err_aclk_pcie;
+> +	}
+> +
+> +	port->ep_gpio = gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
+> +	if (IS_ERR(port->ep_gpio)) {
+> +		dev_err(dev, "missing ep-gpios property in node %s\n",
+> +			node->name);
+> +		return PTR_ERR(port->ep_gpio);
+> +	}
+> +
+> +	port->aclk_pcie = devm_clk_get(dev, "aclk_pcie");
+> +	if (IS_ERR(port->aclk_pcie)) {
+> +		dev_err(dev, "aclk_pcie clock not found.\n");
+> +		return PTR_ERR(port->aclk_pcie);
+> +	}
+> +
+> +	port->aclk_perf_pcie = devm_clk_get(dev, "aclk_perf_pcie");
+> +	if (IS_ERR(port->aclk_perf_pcie)) {
+> +		dev_err(dev, "aclk_perf_pcie clock not found.\n");
+> +		return PTR_ERR(port->aclk_perf_pcie);
+> +	}
+> +
+> +	port->hclk_pcie = devm_clk_get(dev, "hclk_pcie");
+> +	if (IS_ERR(port->hclk_pcie)) {
+> +		dev_err(dev, "hclk_pcie clock not found.\n");
+> +		return PTR_ERR(port->hclk_pcie);
+> +	}
+> +
+> +	port->clk_pciephy_ref = devm_clk_get(dev, "clk_pciephy_ref");
+> +	if (IS_ERR(port->clk_pciephy_ref)) {
+> +		dev_err(dev, "clk_pciephy_ref clock not found.\n");
+> +		return PTR_ERR(port->clk_pciephy_ref);
+> +	}
+> +
+> +	err = clk_prepare_enable(port->aclk_pcie);
+> +	if (err) {
+> +		dev_err(dev, "Unable to enable aclk_pcie clock.\n");
+> +		goto err_aclk_pcie;
+> +	}
+> +
+> +	err = clk_prepare_enable(port->aclk_perf_pcie);
+> +	if (err) {
+> +		dev_err(dev, "Unable to enable aclk_perf_pcie clock.\n");
+> +		goto err_aclk_perf_pcie;
+> +	}
+> +
+> +	err = clk_prepare_enable(port->hclk_pcie);
+> +	if (err) {
+> +		dev_err(dev, "Unable to enable hclk_pcie clock.\n");
+> +		goto err_hclk_pcie;
+> +	}
+> +
+> +	err = clk_prepare_enable(port->clk_pciephy_ref);
+> +	if (err) {
+> +		dev_err(dev, "Unable to enable hclk_pcie clock.\n");
+> +		goto err_pciephy_ref;
+> +	}
+
+IMHO, the code in rockchip_pcie_parse_dt() is doing much more than
+what the function name says i.e. "parsing the dt". May be move the
+clk_prepare_enable() calls out (and possibly others).
+
+> +
+> +	return 0;
+> +
+> +err_pciephy_ref:
+> +	clk_disable_unprepare(port->hclk_pcie);
+> +err_hclk_pcie:
+> +	clk_disable_unprepare(port->aclk_perf_pcie);
+> +err_aclk_perf_pcie:
+> +	clk_disable_unprepare(port->aclk_pcie);
+> +err_aclk_pcie:
+> +	return err;
+> +}
+> +
+> +static void rockchip_pcie_msi_enable(struct rockchip_pcie_port *pp)
+> +{
+
+This function seems to be (only) parsing the dt? If so we can move its
+code to parse_dt function?
+
+> +	struct device_node *msi_node;
+> +
+> +	msi_node = of_parse_phandle(pp->dev->of_node,
+> +				    "msi-parent", 0);
+> +	if (!msi_node)
+> +		return;
+> +
+> +	pp->msi = of_pci_find_msi_chip_by_node(msi_node);
+> +	of_node_put(msi_node);
+> +
+> +	if (pp->msi)
+> +		pp->msi->dev = pp->dev;
+> +}
+> +
+> +static void rockchip_pcie_enable_interrupts(struct rockchip_pcie_port *pp)
+> +{
+> +	pcie_write(pp, (CLIENT_INTERRUPTS << 16) &
+> +		   (~CLIENT_INTERRUPTS), PCIE_CLIENT_INT_MASK);
+> +	pcie_write(pp, CORE_INTERRUPTS, PCIE_CORE_INT_MASK);
+> +}
+> +
+> +static int rockchip_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> +				  irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct irq_domain_ops intx_domain_ops = {
+> +	.map = rockchip_pcie_intx_map,
+> +};
+> +
+> +static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *pp)
+> +{
+> +	struct device *dev = pp->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
+> +
+> +	if (!pcie_intc_node) {
+> +		dev_err(dev, "No PCIe Intc node found\n");
+> +		return PTR_ERR(pcie_intc_node);
+> +	}
+> +	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+> +					       &intx_domain_ops, pp);
+> +	if (!pp->irq_domain) {
+> +		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> +		return PTR_ERR(pp->irq_domain);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+> +{
+> +	struct rockchip_pcie_port *pp = arg;
+> +	u32 reg;
+> +	u32 sub_reg;
+> +
+> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
+> +	if (reg & LOC_INT) {
+> +		dev_dbg(pp->dev, "local interrupt recived\n");
+> +		sub_reg = pcie_read(pp, PCIE_CORE_INT_STATUS);
+> +		if (sub_reg & PRFPE)
+> +			dev_dbg(pp->dev, "Parity error detected while reading from the PNP Receive FIFO RAM\n");
+> +
+> +		if (sub_reg & CRFPE)
+> +			dev_dbg(pp->dev, "Parity error detected while reading from the Completion Receive FIFO RAM\n");
+> +
+> +		if (sub_reg & RRPE)
+> +			dev_dbg(pp->dev, "Parity error detected while reading from Replay Buffer RAM\n");
+> +
+> +		if (sub_reg & PRFO)
+> +			dev_dbg(pp->dev, "Overflow occurred in the PNP Receive FIFO\n");
+> +
+> +		if (sub_reg & CRFO)
+> +			dev_dbg(pp->dev, "Overflow occurred in the Completion Receive FIFO\n");
+> +
+> +		if (sub_reg & RT)
+> +			dev_dbg(pp->dev, "Replay timer timed out\n");
+> +
+> +		if (sub_reg & RTR)
+> +			dev_dbg(pp->dev, "Replay timer rolled over after 4 transmissions of the same TLP\n");
+> +
+> +		if (sub_reg & PE)
+> +			dev_dbg(pp->dev, "Phy error detected on receive side\n");
+> +
+> +		if (sub_reg & MTR)
+> +			dev_dbg(pp->dev, "Malformed TLP received from the link\n");
+> +
+> +		if (sub_reg & UCR)
+> +			dev_dbg(pp->dev, "Malformed TLP received from the link\n");
+> +
+> +		if (sub_reg & FCE)
+> +			dev_dbg(pp->dev, "An error was observed in the flow control advertisements from the other side\n");
+> +
+> +		if (sub_reg & CT)
+> +			dev_dbg(pp->dev, "A request timed out waiting for completion\n");
+> +
+> +		if (sub_reg & UTC)
+> +			dev_dbg(pp->dev, "Unmapped TC error\n");
+> +
+> +		if (sub_reg & MMVC)
+> +			dev_dbg(pp->dev, "MSI mask register changes\n");
+> +
+> +		pcie_write(pp, sub_reg, PCIE_CORE_INT_STATUS);
+> +	}
+> +
+> +	pcie_write(pp, reg, PCIE_CLIENT_INT_STATUS);
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+> +{
+> +	struct rockchip_pcie_port *pp = arg;
+> +	u32 reg;
+> +
+> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
+> +	if (reg & LEGACY_DONE)
+> +		dev_dbg(pp->dev, "legacy done interrupt recived\n");
+> +
+> +	if (reg & MSG_DONE)
+> +		dev_dbg(pp->dev, "message done interrupt recived\n");
+> +
+> +	if (reg & HOT_RESET)
+> +		dev_dbg(pp->dev, "hot reset interrupt recived\n");
+> +
+> +	if (reg & DPA_INT)
+> +		dev_dbg(pp->dev, "dpa interrupt recived\n");
+> +
+> +	if (reg & FATAL_ERR)
+> +		dev_dbg(pp->dev, "fatal error interrupt recived\n");
+> +
+> +	if (reg & DPA_INT)
+> +		dev_dbg(pp->dev, "no fatal error interrupt recived\n");
+> +
+> +	if (reg & CORR_ERR)
+> +		dev_dbg(pp->dev, "correctable error interrupt recived\n");
+> +
+> +	pcie_write(pp, reg, PCIE_CLIENT_INT_STATUS);
+
+This is a curosity question. You have 3 interrupt handlers, and in all 3 of them
+you are checking the same register (PCIE_CLIENT_INT_STATUS) and unconditionally
+clearing all the interrupts in that register. So I think if pci-sys and legacy
+are raised at the same time, the 1st interrupt handler that gets called may clear
+all interrupts and the second may find none to service. This may be OK, I'm wondering
+if this is the intention?
+
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static irqreturn_t rockchip_pcie_legacy_int_handler(int irq, void *arg)
+> +{
+> +	struct rockchip_pcie_port *pp = arg;
+> +	u32 reg;
+> +
+> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
+> +	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
+> +	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
+> +	generic_handle_irq(irq_find_mapping(pp->irq_domain, ffs(reg)));
+> +
+> +	pcie_write(pp, reg, PCIE_CLIENT_INT_STATUS);
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *pp,
+> +				     int region_no,
+> +				     int type, u8 num_pass_bits,
+> +				     u32 lower_addr, u32 upper_addr)
+> +{
+> +	u32 ob_addr_0 = 0;
+> +	u32 ob_addr_1 = 0;
+> +	u32 ob_desc_0 = 0;
+> +	u32 ob_desc_1 = 0;
+> +	void __iomem *aw_base;
+> +
+> +	if (!pp)
+> +		return -EINVAL;
+> +	if (region_no >= MAX_AXI_WRAPPER_REGION_NUM)
+> +		return -EINVAL;
+> +	if ((num_pass_bits + 1) < 8)
+> +		return -EINVAL;
+> +	if (num_pass_bits > 63)
+> +		return -EINVAL;
+> +	if (region_no == 0) {
+> +		if (AXI_REGION_0_SIZE < (2ULL << num_pass_bits))
+> +		return -EINVAL;
+> +	}
+> +	if (region_no != 0) {
+> +		if (AXI_REGION_SIZE < (2ULL << num_pass_bits))
+> +		return -EINVAL;
+> +	}
+> +	aw_base = pp->apb_base + PCIE_CORE_AXI_CONF_BASE;
+> +	aw_base += (region_no << OB_REG_SIZE_SHIFT);
+> +
+> +	ob_addr_0 = (ob_addr_0 &
+> +		     ~0x0000003fU) | (num_pass_bits &
+> +		     0x0000003fU);
+> +	ob_addr_0 = (ob_addr_0 &
+> +		     ~0xffffff00U) | (lower_addr & 0xffffff00U);
+> +	ob_addr_1 = upper_addr;
+> +	ob_desc_0 = (1 << 23 | type);
+> +
+> +	writel(ob_addr_0, aw_base);
+> +	writel(ob_addr_1, aw_base + 0x4);
+> +	writel(ob_desc_0, aw_base + 0x8);
+> +	writel(ob_desc_1, aw_base + 0xc);
+> +
+> +	return 0;
+> +}
+> +
+> +static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *pp,
+> +				     int region_no,
+> +				     u8 num_pass_bits,
+> +				     u32 lower_addr,
+> +				     u32 upper_addr)
+> +{
+> +	u32 ib_addr_0 = 0;
+> +	u32 ib_addr_1 = 0;
+> +	void __iomem *aw_base;
+> +
+> +	if (!pp)
+> +		return -EINVAL;
+> +	if (region_no > MAX_AXI_IB_ROOTPORT_REGION_NUM)
+> +		return -EINVAL;
+> +	if ((num_pass_bits + 1) < MIN_AXI_ADDR_BITS_PASSED)
+> +		return -EINVAL;
+> +	if (num_pass_bits > 63)
+> +		return -EINVAL;
+> +	aw_base = pp->apb_base + PCIE_CORE_AXI_INBOUND_BASE;
+> +	aw_base += (region_no << IB_ROOT_PORT_REG_SIZE_SHIFT);
+> +	ib_addr_0 = (ib_addr_0 &
+> +		     ~0x0000003fU) | (num_pass_bits &
+> +		     0x0000003fU);
+> +
+> +	ib_addr_0 = (ib_addr_0 & ~0xffffff00U) |
+> +		     ((lower_addr << 8) & 0xffffff00U);
+> +	ib_addr_1 = upper_addr;
+> +	writel(ib_addr_0, aw_base);
+> +	writel(ib_addr_1, aw_base + 0x4);
+> +
+> +	return 0;
+> +}
+> +
+> +static int rockchip_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct rockchip_pcie_port *port;
+> +	struct device *dev = &pdev->dev;
+> +	struct pci_bus *bus, *child;
+> +	struct resource_entry *win;
+> +	int reg_no;
+> +	int err = 0;
+> +	int irq;
+> +	LIST_HEAD(res);
+> +
+> +	if (!dev->of_node)
+> +		return -ENODEV;
+> +
+> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+> +	if (!port)
+> +		return -ENOMEM;
+> +
+> +	irq = platform_get_irq_byname(pdev, "pcie-sys");
+> +	if (irq < 0) {
+> +		dev_err(dev, "missing pcie_sys IRQ resource\n");
+> +		return -EINVAL;
+> +	}
+> +	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
+> +			       IRQF_SHARED, "pcie-sys", port);
+
+I am a little worried because you are installing all the 3
+interrupt handlers, passing "port *" as the argument - even
+though the struct port is not initialized yet. Specifically the
+pointers (port->apb_base) that irq handler would dereference. 
+Also, the irq domain is not initialized. May be I'm
+just cynical, but if there is an interrupt pending, I'm wondering
+if your interrupt handler can get called even before you get a
+chance to initialize your struct rockchip_pcie_port *port or irq domain?
+If so, it may crash. So may be better to first parse dt and initialize
+your structures before registering the interrupt handler(s)?
+
+> +	if (err) {
+> +		dev_err(dev, "failed to request pcie subsystem irq\n");
+> +		return err;
+> +	}
+> +
+> +	port->irq = platform_get_irq_byname(pdev, "pcie-legacy");
+> +	if (port->irq < 0) {
+> +		dev_err(dev, "missing pcie_legacy IRQ resource\n");
+> +		return -EINVAL;
+> +	}
+> +	err = devm_request_irq(dev, port->irq,
+> +			       rockchip_pcie_legacy_int_handler,
+> +			       IRQF_SHARED,
+> +			       "pcie-legacy",
+> +			       port);
+> +	if (err) {
+> +		dev_err(&pdev->dev, "failed to request pcie-legacy irq\n");
+> +		return err;
+> +	}
+> +
+> +	irq = platform_get_irq_byname(pdev, "pcie-client");
+> +	if (irq < 0) {
+> +		dev_err(dev, "missing pcie-client IRQ resource\n");
+> +		return -EINVAL;
+> +	}
+> +	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
+> +			       IRQF_SHARED, "pcie-client", port);
+> +	if (err) {
+> +		dev_err(dev, "failed to request pcie client irq\n");
+> +		return err;
+> +	}
+> +
+> +	port->dev = dev;
+> +	err = rockchip_pcie_parse_dt(port);
+> +	if (err) {
+> +		dev_err(dev, "Parsing DT failed\n");
+> +		return err;
+> +	}
+> +
+> +	err = rockchip_pcie_init_port(port);
+> +	if (err)
+> +		return err;
+
+What about clocks? Do you need to clk_disable_unprepare() them
+on this failure or any subsequent failure in probe?
+
+> +
+> +	platform_set_drvdata(pdev, port);
+> +
+> +	rockchip_pcie_enable_interrupts(port);
+> +	if (!IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		err = rockchip_pcie_init_irq_domain(port);
+> +		if (err < 0)
+> +			return err;
+> +	}
+> +
+> +	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
+> +					       &res, &port->io_base);
+> +	if (err)
+> +		return err;
+> +	/* Get the I/O and memory ranges from DT */
+> +	resource_list_for_each_entry(win, &res) {
+> +		switch (resource_type(win->res)) {
+> +		case IORESOURCE_IO:
+> +			port->io = win->res;
+> +			port->io->name = "I/O";
+> +			port->io_size = resource_size(port->io);
+> +			port->io_bus_addr = port->io->start - win->offset;
+> +			err = pci_remap_iospace(port->io, port->io_base);
+> +			if (err) {
+> +				dev_warn(port->dev, "error %d: failed to map resource %pR\n",
+> +					 err, port->io);
+> +				continue;
+> +			}
+> +			break;
+> +		case IORESOURCE_MEM:
+> +			port->mem = win->res;
+> +			port->mem->name = "MEM";
+> +			port->mem_size = resource_size(port->mem);
+> +			port->mem_bus_addr = port->mem->start - win->offset;
+> +			break;
+> +		case 0:
+> +			port->cfg = win->res;
+> +			break;
+> +		case IORESOURCE_BUS:
+> +			port->busn = win->res;
+> +			break;
+> +		default:
+> +			continue;
+> +		}
+> +	}
+> +
+> +	pcie_write(port, 0x6040000, PCIE_RC_CONFIG_BASE + 0x8);
+> +	pcie_write(port, 0x0, PCIE_CORE_CTRL_MGMT_BASE + 0x300);
+> +
+> +	pcie_write(port, (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
+> +		   PCIE_CORE_AXI_CONF_BASE);
+> +	pcie_write(port, RC_REGION_0_ADDR_TRANS_H,
+> +		   PCIE_CORE_AXI_CONF_BASE + 0x4);
+> +	pcie_write(port, 0x0080000a, PCIE_CORE_AXI_CONF_BASE + 0x8);
+> +	pcie_write(port, 0x00000000, PCIE_CORE_AXI_CONF_BASE + 0xc);
+> +
+> +	for (reg_no = 0; reg_no < (port->mem_size >> 20); reg_no++) {
+> +		err = rockchip_pcie_prog_ob_atu(port, reg_no + 1,
+> +						AXI_WRAPPER_MEM_WRITE,
+> +						20 - 1,
+> +						port->mem_bus_addr +
+> +							(reg_no << 20),
+> +						0);
+> +		if (err) {
+> +			dev_err(dev, "Program RC outbound atu failed\n");
+> +			return err;
+> +		}
+> +	}
+> +
+> +	err = rockchip_pcie_prog_ib_atu(port, 2, 32 - 1, 0x0, 0);
+> +	if (err) {
+> +		dev_err(dev, "Program RC inbound atu failed\n");
+> +		return err;
+> +	}
+> +
+> +	rockchip_pcie_msi_enable(port);
+> +
+> +	port->root_bus_nr = port->busn->start;
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		bus = pci_scan_root_bus_msi(port->dev, port->root_bus_nr,
+> +					    &rockchip_pcie_ops, port, &res,
+> +					    port->msi);
+> +	} else {
+> +		bus = pci_scan_root_bus(&pdev->dev, 0,
+> +					&rockchip_pcie_ops, port, &res);
+> +	}
+> +	if (!bus)
+> +		return -ENOMEM;
+> +
+> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> +		pci_bus_size_bridges(bus);
+> +		pci_bus_assign_resources(bus);
+> +		list_for_each_entry(child, &bus->children, node)
+> +			pcie_bus_configure_settings(child);
+> +	}
+> +
+> +	pci_bus_add_devices(bus);
+> +
+> +	return err;
+> +}
+> +
+> +static int rockchip_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct rockchip_pcie_port *port = platform_get_drvdata(pdev);
+> +
+> +	clk_disable_unprepare(port->hclk_pcie);
+> +	clk_disable_unprepare(port->aclk_perf_pcie);
+> +	clk_disable_unprepare(port->aclk_pcie);
+> +	clk_disable_unprepare(port->clk_pciephy_ref);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id rockchip_pcie_of_match[] = {
+> +	{ .compatible = "rockchip,rk3399-pcie", },
+> +	{}
+> +};
+
+Please add a MODULE_DEVICE_TABLE() here.
+
+> +
+> +static struct platform_driver rockchip_pcie_driver = {
+> +	.driver = {
+> +		.name = "rockchip-pcie",
+> +		.of_match_table = rockchip_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+> +	},
+> +	.probe = rockchip_pcie_probe,
+> +	.remove = rockchip_pcie_remove,
+> +};
+> +module_platform_driver(rockchip_pcie_driver);
+> +
+> +MODULE_AUTHOR("Rockchip Inc");
+> +MODULE_DESCRIPTION("Rockchip AXI PCIe driver");
+> +MODULE_LICENSE("GPL v2");
