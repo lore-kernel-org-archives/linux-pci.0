@@ -1,56 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59553 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751054AbcEJR2J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 May 2016 13:28:09 -0400
-Date: Tue, 10 May 2016 12:28:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lukas Wunner <lukas@wunner.de>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [GIT PULL] PCI fixes for v4.6
-Message-ID: <20160510172803.GA4325@localhost>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Thu, 26 May 2016 12:45:57 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
+Message-ID: <20160526104557.GA6816@wunner.de>
+References: <20160524162833.GA30762@localhost>
+ <1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
+ <20160526101006.GA6744@wunner.de>
+ <20160526102520.GV1789@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160526102520.GV1789@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Thu, May 26, 2016 at 01:25:20PM +0300, Mika Westerberg wrote:
+> On Thu, May 26, 2016 at 12:10:06PM +0200, Lukas Wunner wrote:
+> > On Wed, May 25, 2016 at 06:04:56PM +0300, Mika Westerberg wrote:
+> > > The PCI PM 1.2 specification requires minimum of 50ms before function on a
+> > > bus is accessed after the bus is transitioned from B2 to B0. Now that we
+> > > actually power down bridges we should make sure the specification is
+> > > followed accordingly.
+> > 
+> > This patch has the unfortunate side effect of increasing boot time on
+> > Macs with Thunderbolt by 320 ms. Granted, it's not much, but still
+> > noticeable:
+> 
+> Yes, that's the drawback.
+> 
+> > [    2.358041] pcieport 0000:06:03.0: enabling device (0000 -> 0002)
+> > [    2.358195] pcieport 0000:06:03.0: rpm_idle
+> > [    2.358222] pcieport 0000:06:03.0: rpm_suspend
+> > [    2.411664] pcieport 0000:06:04.0: enabling device (0000 -> 0003)
+> > [    2.411821] pcieport 0000:06:04.0: rpm_idle
+> > [    2.411848] pcieport 0000:06:04.0: rpm_suspend
+> > [    2.467664] pcieport 0000:06:05.0: enabling device (0000 -> 0003)
+> > [    2.467817] pcieport 0000:06:05.0: rpm_idle
+> > [    2.467843] pcieport 0000:06:05.0: rpm_suspend
+> > [    2.523664] pcieport 0000:06:06.0: enabling device (0000 -> 0002)
+> > [    2.523822] pcieport 0000:06:06.0: rpm_idle
+> > [    2.523848] pcieport 0000:06:06.0: rpm_suspend
+> > [    2.579685] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+> > [    2.579722] pcieport 0000:06:03.0: rpm_resume
+> > [    2.635750] pciehp 0000:06:03.0:pcie204: Slot #3 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+> > [    2.635853] pciehp 0000:06:03.0:pcie204: service driver pciehp loaded
+> > [    2.635858] pcieport 0000:06:03.0: rpm_idle
+> > [    2.635886] pcieport 0000:06:04.0: rpm_resume
+> > [    2.647645] pcieport 0000:06:03.0: rpm_suspend
+> > [    2.691747] pciehp 0000:06:04.0:pcie204: Slot #4 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+> > [    2.691856] pciehp 0000:06:04.0:pcie204: service driver pciehp loaded
+> > [    2.691859] pcieport 0000:06:04.0: rpm_idle
+> > [    2.691888] pcieport 0000:06:05.0: rpm_resume
+> > [    2.703649] pcieport 0000:06:04.0: rpm_suspend
+> > [    2.747748] pciehp 0000:06:05.0:pcie204: Slot #5 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+> > [    2.747842] pciehp 0000:06:05.0:pcie204: service driver pciehp loaded
+> > [    2.747845] pcieport 0000:06:06.0: rpm_resume
+> > [    2.749213] pcieport 0000:06:05.0: rpm_idle
+> > [    2.759650] pcieport 0000:06:05.0: rpm_suspend
+> > [    2.805049] pciehp 0000:06:06.0:pcie204: Slot #6 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+> > [    2.806464] pciehp 0000:06:06.0:pcie204: service driver pciehp loaded
+> > [    2.806471] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
+> > [    2.807876] intel_idle: MWAIT substates: 0x21120
+> > [    2.807878] intel_idle: v0.4.1 model 0x3A
+> > [    2.808170] intel_idle: lapic_timer_reliable_states 0xffffffff
+> > [    2.808201] GHES: HEST is not enabled!
+> > [    2.809613] pcieport 0000:06:06.0: rpm_idle
+> > [    2.809644] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
+> > [    2.810096] Linux agpgart interface v0.103
+> > [    2.810158] AMD IOMMUv2 driver by Joerg Roedel <jroedel@suse.de>
+> > [    2.810158] AMD IOMMUv2 functionality not available on this system
+> > [    2.816468] pcieport 0000:06:06.0: rpm_suspend
+> > 
+> > I've added debug messages whenever ->runtime_idle / _suspend / _resume
+> > is called for a device.
+> > 
+> > As can be seen, the PCI core now waits 50 ms after ->runtime_suspend.
+> > Also, the ports are resumed when the pciehp service driver is loaded,
+> > adding another 50 ms delay. For four hotplug ports, that's a total of
+> > 400 ms (versus 80 ms without the patch).
+> > 
+> > I'm wondering if the delay after ->runtime_suspend is really needed. Is
+> > this mandated by the spec? We could perhaps increase the autosuspend_delay
+> > in pcie_portdrv_probe() slightly to prevent the port from going to sleep
+> > between pci_enable_device() and loading the pciehp service driver.
+> 
+> The PCI PM specification version 1.2 says this in chapter 4.2 (page 37):
+> 
+>   There is a minimum time requirement of 50 ms which must be provided by
+>   system software between when the bus is switched from B2 to B0 and
+>   when a function on the bus is accessed to allow time for the clock to
+>   start up and the bus to settle.
 
-Since v4.5, we've WARNed during resume if a PCI device, including a
-Thunderbolt device, was added while we were suspended.  A change we merged
-for v4.6-rc1 turned that warning into a system hang.  These patches from
-Lukas fix this issue.
+But why do we wait 50 ms when *suspending*, i.e. going from B0 to B2?
 
-Bjorn
+(Assuming B2 is the state when the bridge goes to D3hot, which I'm not
+sure of. The spec says that the bus state may optionally be B3 if the
+bridge is in D3hot.)
 
 
-The following changes since commit 67e658794ca191b3221b143f2a1c10d002c40bc8:
+> Not sure how much of that still applies to modern hardware.
 
-  cxgb4: Set VPD size so we can read both VPD structures (2016-04-15 13:00:18 -0500)
+Could you ask hardware engineers at Intel what the bus state is on
+modern chipsets (say, ILK or newer) and Thunderbolt ports to clarify
+this?
 
-are available in the git repository at:
+Thanks,
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.6-fixes-3
+Lukas
 
-for you to fetch changes up to 9a2a5a638f8eb9c612a7a9af0afab93f506f6ba4:
-
-  PCI: Do not treat EPROBE_DEFER as device attach failure (2016-05-02 13:49:11 -0500)
-
-----------------------------------------------------------------
-PCI updates for v4.6:
-
-  Enumeration
-    Fix BUG on device attach failure (Lukas Wunner)
-    Do not treat EPROBE_DEFER as device attach failure (Lukas Wunner)
-
-----------------------------------------------------------------
-Lukas Wunner (2):
-      PCI: Fix BUG on device attach failure
-      PCI: Do not treat EPROBE_DEFER as device attach failure
-
- drivers/pci/bus.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> I don't see why we cannot increase autosuspend delay time, though.
