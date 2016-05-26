@@ -1,60 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:55832 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753786AbcEFAlZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2016 20:41:25 -0400
-Received: from localhost
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 6 May 2016 10:41:22 +1000
-Date: Fri, 6 May 2016 10:40:20 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, aik@ozlabs.ru, bhelgaas@google.com,
-	robherring2@gmail.com, dja@axtens.net, alistair@popple.id.au
-Subject: Re: [PATCH v9 21/22] drivers/of: Export of_detach_node()
-Message-ID: <20160506004020.GA14869@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1462281773-26438-22-git-send-email-gwshan@linux.vnet.ibm.com>
- <20160504133603.GA30081@gwshan>
- <20160505194235.GA13790@rob-hp-laptop>
+Received: from mx1.redhat.com ([209.132.183.28]:56140 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753063AbcEZCqA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 May 2016 22:46:00 -0400
+Date: Wed, 25 May 2016 20:45:58 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Mitchel Humpherys <mitchelh@codeaurora.org>
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	"Will Deacon" <will.deacon@arm.com>,
+	"Robin Murphy" <robin.murphy@arm.com>,
+	Tony Truong <truong@codeaurora.org>,
+	Yan He <yanhe@codeaurora.org>,
+	Pratik Patel <pratikp@codeaurora.org>,
+	"Hamad Kadmany" <hkadmany@codeaurora.org>,
+	"Maya Erez" <qca_merez@qca.qualcomm.com>
+Subject: Re: How to keep PCI-e endpoints and RCs in distinct IOMMU groups?
+Message-ID: <20160525204558.08c30a34@ul30vt.home>
+In-Reply-To: <vnkwoa7ty89k.fsf@codeaurora.org>
+References: <vnkwoa7ty89k.fsf@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160505194235.GA13790@rob-hp-laptop>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 05, 2016 at 02:42:35PM -0500, Rob Herring wrote:
->On Wed, May 04, 2016 at 11:36:03PM +1000, Gavin Shan wrote:
->> On Tue, May 03, 2016 at 11:22:52PM +1000, Gavin Shan wrote:
->> >This exports of_detach_node() for PowerPC PowerNV PCI hotplug
->> >driver. No functional changes introduced.
->> >
->> >Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> 
->> Rob, I'm not sure it's late to cache the 4.7 merge window.
->> Also, I was told this series is needed by new CAPI driver which
->> is being developed. The developers hope to push the new CAPI driver
->> in 4.8 merge window (perhaps) or linux-next before 4.8 merge window
->> is opened. It means the new CAPI driver depends on this series which
->> has to be pushed to linux-next before 4.8 merge window.
->> 
->> If it's fine, could you please merge 16 to 21? With them merged to
->> 4.7, the left patches won't depend on FDT changes. Thanks in advance
->> for your help.
->
->I've applied the 6 patches.
->
+On Wed, 25 May 2016 17:26:15 -0700
+Mitchel Humpherys <mitchelh@codeaurora.org> wrote:
 
-Rob, thank you very much for your helps!
+> Hey there,
+> 
+> We're experiencing an issue with IOMMU groups and PCI-e devices.  The
+> system in question has a WLAN DMA master behind a PCI-e root complex
+> which is, in turn, behind an IOMMU.  There are no there devices behind
+> the RC.  This is on an ARM platform using the arm-smmu and pci-msm
+> drivers (pci-msm is in the MSM vendor tree, sorry...).
+> 
+> What we're observing is that the WLAN endpoint device is being added to
+> the same IOMMU group as the root complex device itself.  I don't think
+> they should be in the same group though, since they each have different
+> BDFs, which, in our system, are translated to different SMMU Stream IDs,
+> so their traffic is split onto separate SMMU context banks.  Since their
+> traffic is isolated from one other I don't think they need to be in the
+> same IOMMU group (as I understand IOMMU groups).
+> 
+> The result is that when the WLAN driver tries to attach to their IOMMU
+> it errors out due to the following check in iommu_attach_device:
+> 
+>         if (iommu_group_device_count(group) != 1)
+>                 goto out_unlock;
+> 
+> I've come up with a few hacky workarounds:
+> 
+>   - Forcing PCI-e ACS to be "enabled" unconditionally (even though our
+>     platform doesn't actually support it).
+> 
+>   - Call iommu_attach_group instead of iommu_attach_device in the arm64
+>     DMA IOMMU mapping layer (yuck).
+> 
+>   - Don't use the pci_device_group helper at all from the arm-smmu
+>     driver.  Just allocate a new group for all PCI-e devices.
+> 
+> It seems like the proper solution would be to somehow make these devices
+> end up in separate IOMMU groups using the existing pci_device_group
+> helper, since that might be doing useful stuff for other configurations
+> (like detecting the DMA aliasing quirks).
+> 
+> Looking at pci_device_group, though, I'm not sure how we could tell that
+> these two devices are supposed to get separated.  I know very little
+> about PCI-e so maybe I'm just missing something simple.  The match
+> happens in the following loop where we walk up the PCI-e topology:
+> 
+>         /*
+>          * Continue upstream from the point of minimum IOMMU granularity
+>          * due to aliases to the point where devices are protected from
+>          * peer-to-peer DMA by PCI ACS.  Again, if we find an existing
+>          * group, use it.
+>          */
+>         for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
+>                 if (!bus->self)
+>                         continue;
+> 
+>                 if (pci_acs_path_enabled(bus->self, NULL, REQ_ACS_FLAGS))
+>                         break;
+> 
+>                 pdev = bus->self;
+> 
+>                 group = iommu_group_get(&pdev->dev);
+>                 if (group)
+>                         return group;
+>         }
+> 
+> Why do we do that?  If the devices have different BDFs can't we safely
+> say that they're protected from peer-to-peer DMA (assuming no DMA
+> aliasing quirks)?  Even as I write that out it seems wrong though since
+> the RC can probably do whatever it wants...
+> 
+> Maybe the IOMMU framework can't actually know whether the devices should
+> be kept in separate groups and we just need to do something custom in
+> the arm-smmu driver?
 
-Thanks,
-Gavin
+You're only considering the visibility of devices to the IOMMU, not the
+isolation between devices.  Without ACS peer-to-peer can be re-routed
+between devices before the IOMMU even knows about it.  That's why the
+root port is included in the group.  I'm confused why your driver is
+using the IOMMU API instead of the much more common DMA API anyway
+though.  Thanks,
 
->Rob
->
-
+Alex
