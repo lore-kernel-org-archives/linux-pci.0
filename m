@@ -1,79 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-To: David Laight <David.Laight@ACULAB.COM>,
-	"'Tian, Kevin'" <kevin.tian@intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
- <f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
- <e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
- <063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
-Date: Thu, 5 May 2016 19:42:38 +0800
+Return-Path: <peter@lekensteyn.nl>
+Return-Path: <peter@lekensteyn.nl>
+Date: Fri, 27 May 2016 13:10:37 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	Dave Airlie <airlied@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
+Message-ID: <20160527111037.GA1436@al>
+References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+ <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
+ <20160525135535.GN1789@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160525135535.GN1789@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David and Kevin,
+On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
+> On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
+> > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
+> > can be runtime-suspended which disables power resources via ACPI. This
+> > is incompatible with DSM, resulting in a GPU device which is still in D3
+> > and locks up the kernel on resume.
+> > 
+> > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
+> > debugger trace) and stop using the DSM functions for D3cold when power
+> > resources are available on the parent PCIe port.
+> > 
+> >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
+> > 
+> > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+> > ---
+> >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
+> >  1 file changed, 30 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > index df9f73e..e469df7 100644
+> > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
+> >  	bool dsm_detected;
+> >  	bool optimus_detected;
+> >  	bool optimus_flags_detected;
+> > +	bool optimus_skip_dsm;
+> >  	acpi_handle dhandle;
+> >  	acpi_handle rom_handle;
+> >  } nouveau_dsm_priv;
+> > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
+> >  	.get_client_id = nouveau_dsm_get_client_id,
+> >  };
+> >  
+> > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
+> > + * D3cold, they instead rely on disabling power resources on the parent. */
+> > +static bool nouveau_pr3_present(struct pci_dev *pdev)
+> > +{
+> > +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
+> > +	struct acpi_device *ad;
+> 
+> Nit: please call this adev instead of ad.
 
-On 2016/5/5 17:54, David Laight wrote:
+Will do.
 
-> From: Tian, Kevin
->> Sent: 05 May 2016 10:37
-> ...
->>> Acutually, we are not aimed at accessing MSI-X table from
->>> guest. So I think it's safe to passthrough MSI-X table if we
->>> can make sure guest kernel would not touch MSI-X table in
->>> normal code path such as para-virtualized guest kernel on PPC64.
->>>
->> Then how do you prevent malicious guest kernel accessing it?
-> Or a malicious guest driver for an ethernet card setting up
-> the receive buffer ring to contain a single word entry that
-> contains the address associated with an MSI-X interrupt and
-> then using a loopback mode to cause a specific packet be
-> received that writes the required word through that address.
->
-> Remember the PCIe cycle for an interrupt is a normal memory write
-> cycle.
->
-> 	David
->
+> > +
+> > +	if (!parent_pdev)
+> > +		return false;
+> > +
+> > +	ad = ACPI_COMPANION(&parent_pdev->dev);
+> > +	if (!ad)
+> > +		return false;
+> > +
+> > +	return ad->power.flags.power_resources;
+> 
+> Is this sufficient to tell if the parent device has _PR3? I thought it
+> returns true if it has power resources in general, not necessarily _PR3.
+> 
+> Otherwise this looks okay to me.
 
-If we have enough permission to load a malicious driver or
-kernel, we can easily break the guest without exposed
-MSI-X table.
+It is indeed set whenever there is any _PRx method. I wonder if it is
+appropriate to access fields directly like this, perhaps this would be
+more accurate (based on device_pm.c):
 
-I think it should be safe to expose MSI-X table if we can
-make sure that malicious guest driver/kernel can't use
-the MSI-X table to break other guest or host. The
-capability of IRQ remapping could provide this
-kind of protection.
+    /* Check whether the _PR3 method is available. */
+    return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
 
-Thanks,
-Yongji
+I am also considering adding a check in case the pcieport driver does
+not support D3cold via runtime PM, what do you think of this?
+
+    if (!parent_pdev)
+        return false;
+    /* If the PCIe port does not support D3cold via runtime PM, allow a
+     * fallback to the Optimus DSM method to put the device in D3cold. */
+    if (parent_pdev->no_d3cold)
+        return false;
+
+This is needed to avoid the regression reported in the cover letter, but
+also allows pre-2015 systems to (still) have the D3cold possibility.
+
+
+Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
+apparently from November 2013, Windows 8.1) and extracted the ACPI
+tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
+for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
+related NVP3 device) when _OSI("Windows 2013") is true. (This is added
+as alternative for the old DSM interface.)
+
+Maybe 2014 is also an appropriate cutoff date? I wonder if it is
+feasible to detect firmware use of _OSI("Windows 2013") and use that
+instead of the BIOS year.
+-- 
+Kind regards,
+Peter Wu
+https://lekensteyn.nl
