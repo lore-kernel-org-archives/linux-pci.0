@@ -1,129 +1,158 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Tue, 3 May 2016 09:46:28 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jayachandran C <jchandra@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	Wangyijing <wangyijing@huawei.com>, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>
-Subject: Re: [PATCH V6 09/13] pci, acpi: Support for ACPI based generic PCI
- host controller
-Message-ID: <20160503084628.GA31158@red-moon>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-10-git-send-email-tn@semihalf.com>
- <20160428214800.GG25125@localhost>
- <20160429083709.GA3249@red-moon>
- <CAKc_7PUcjKkCrCTj9q26P8a+Tb3N_MffynnTXnJRacm6VNmFRw@mail.gmail.com>
+Return-Path: <peter@lekensteyn.nl>
+Return-Path: <peter@lekensteyn.nl>
+Date: Fri, 27 May 2016 23:31:23 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Emil Velikov <emil.l.velikov@gmail.com>
+Cc: ML nouveau <nouveau@lists.freedesktop.org>,
+	ML dri-devel <dri-devel@lists.freedesktop.org>,
+	Dave Airlie <airlied@redhat.com>, linux-pm@vger.kernel.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [Nouveau] [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe
+ runtime PM
+Message-ID: <20160527213123.GB1777@al>
+References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+ <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
+ <CACvgo514AB=rkRGWrwmPHTX=hhEF8Jhzdg1hQkX1_C4A_zYkzg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKc_7PUcjKkCrCTj9q26P8a+Tb3N_MffynnTXnJRacm6VNmFRw@mail.gmail.com>
+In-Reply-To: <CACvgo514AB=rkRGWrwmPHTX=hhEF8Jhzdg1hQkX1_C4A_zYkzg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 29, 2016 at 11:05:34PM +0530, Jayachandran C wrote:
-> On Fri, Apr 29, 2016 at 2:07 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Thu, Apr 28, 2016 at 04:48:00PM -0500, Bjorn Helgaas wrote:
-> >
-> > [...]
-> >
-> >> > +static int pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root,
-> >> > +                                  struct acpi_pci_generic_root_info *ri)
-> >> > +{
-> >> > +   u16 seg = root->segment;
-> >> > +   u8 bus_start = root->secondary.start;
-> >> > +   u8 bus_end = root->secondary.end;
-> >> > +   struct pci_config_window *cfg;
-> >> > +   struct mcfg_entry *e;
-> >> > +   phys_addr_t addr;
-> >> > +   int err = 0;
-> >> > +
-> >> > +   mutex_lock(&pci_mcfg_lock);
-> >>
-> >> What does this lock protect?  The pci_mcfg_list should already be
-> >> initialized by the time we get there, and it should be immutable for
-> >> the life of the system.  In fact, I would prefer if we could just
-> >> search the static table itself whenever we need it rather than caching
-> >> it in our own list.  But I don't think we can easily do that because
-> >> acpi_table_parse() is __init.
-> >>
-> >> > +   e = pci_mcfg_lookup(seg, bus_start);
-> >>
-> >> I would argue that we should check for _CBA first, and fall back to
-> >> MCFG if _CBA doesn't exist.
-> >>
-> >> > +   if (!e) {
-> >> > +           addr = acpi_pci_root_get_mcfg_addr(root->device->handle);
-> >>
-> >> IMO, acpi_pci_root_get_mcfg_addr() is misnamed.  It should be
-> >> acpi_pci_config_base_addr() or similar.  It definitely is not related
-> >> to MCFG.  Not your fault, obviously.
-> >>
-> >> > +           if (addr == 0) {
-> >> > +                   pr_err(PREFIX"%04x:%02x-%02x bus range error\n",
-> >> > +                          seg, bus_start, bus_end);
-> >> > +                   err = -ENOENT;
-> >> > +                   goto err_out;
-> >> > +           }
-> >> > +   } else {
-> >> > +           if (bus_start != e->bus_start) {
-> >> > +                   pr_err("%04x:%02x-%02x bus range mismatch %02x\n",
-> >> > +                          seg, bus_start, bus_end, e->bus_start);
-> >> > +                   err = -EINVAL;
-> >> > +                   goto err_out;
-> >> > +           } else if (bus_end != e->bus_end) {
-> >> > +                   pr_warn("%04x:%02x-%02x bus end mismatch %02x\n",
-> >> > +                           seg, bus_start, bus_end, e->bus_end);
-> >> > +                   bus_end = min(bus_end, e->bus_end);
-> >> > +           }
-> >> > +           addr = e->addr;
-> >> > +   }
-> >>
-> >> I really don't think you need a lock around this, so you can factor
-> >> out the address lookup into something like:
-> >>
-> >>   addr = acpi_pci_config_base_addr(...);
-> >>   if (addr)
-> >>     return addr;
-> >>
-> >>   return acpi_pci_mcfg_lookup(seg, busn_res);
-> >>
-> >> You can check inside acpi_pci_mcfg_lookup() to make sure the entry you
-> >> find covers the entire [busn_res.start-busn_res.end] range and return
-> >> failure if it doesn't.  At this point, I'm not sure it's worth it to
-> >> truncate the host bridge bus range to match something we find in MCFG.
-> >>
-> >> If the MCFG entry covers *more* than the host bridge range from _CRS,
-> >> that's fine.  In any case, we have to be careful with the start address,
-> >> because the MCFG start address is always based on bus 0, but I think
-> >> pci_generic_ecam_create() expects the start address based on the
-> >> bus_start you pass to it.
-> >
-> > Yes, I spotted this too, it is unfortunate but DT and MCFG handle
-> > the ECAM regions differently. In DT the reg property is relative
-> > to bus_start - ie reg MMIO region maps config space starting at
-> > the first bus in bus-range:
-> >
-> > Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> >
-> > in ACPI(MCFG) as you said it is always relative to bus 0, it is
-> > unfortunate but the address to be mapped should be computed
-> > differently in the ECAM layer.
+On Fri, May 27, 2016 at 02:01:39PM +0100, Emil Velikov wrote:
+> Hi Peter,
 > 
-> Can't this be handled by fixing up the address before passing to
-> pci_generic_ecam_create?
+> On 24 May 2016 at 23:53, Peter Wu <peter@lekensteyn.nl> wrote:
+> > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
+> > can be runtime-suspended which disables power resources via ACPI. This
+> > is incompatible with DSM, resulting in a GPU device which is still in D3
+> > and locks up the kernel on resume.
+> >
+> > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
+> > debugger trace) and stop using the DSM functions for D3cold when power
+> > resources are available on the parent PCIe port.
+> >
+> >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
+> >
+> > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+> > ---
+> >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
+> >  1 file changed, 30 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > index df9f73e..e469df7 100644
+> > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
+> >         bool dsm_detected;
+> >         bool optimus_detected;
+> >         bool optimus_flags_detected;
+> > +       bool optimus_skip_dsm;
+> >         acpi_handle dhandle;
+> >         acpi_handle rom_handle;
+> >  } nouveau_dsm_priv;
+> > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
+> >         .get_client_id = nouveau_dsm_get_client_id,
+> >  };
+> >
+> > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
+> > + * D3cold, they instead rely on disabling power resources on the parent. */
+> > +static bool nouveau_pr3_present(struct pci_dev *pdev)
+> > +{
+> > +       struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
+> > +       struct acpi_device *ad;
+> > +
+> > +       if (!parent_pdev)
+> > +               return false;
+> > +
+> > +       ad = ACPI_COMPANION(&parent_pdev->dev);
+> > +       if (!ad)
+> > +               return false;
+> > +
+> > +       return ad->power.flags.power_resources;
+> > +}
+> > +
+> >  static void nouveau_dsm_pci_probe(struct pci_dev *pdev, bool *has_mux,
+> > -                                 bool *has_opt, bool *has_opt_flags)
+> > +                                 bool *has_opt, bool *has_opt_flags,
+> > +                                 bool *has_power_resources)
+> >  {
+> >         acpi_handle dhandle;
+> >         bool supports_mux;
+> > @@ -238,6 +257,7 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, bool *has_mux,
+> >         *has_mux = supports_mux;
+> >         *has_opt = !!optimus_funcs;
+> >         *has_opt_flags = optimus_funcs & (1 << NOUVEAU_DSM_OPTIMUS_FLAGS);
+> > +       *has_power_resources = false;
+> >
+> >         if (optimus_funcs) {
+> >                 uint32_t result;
+> > @@ -247,6 +267,8 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, bool *has_mux,
+> >                          (result & OPTIMUS_ENABLED) ? "enabled" : "disabled",
+> >                          (result & OPTIMUS_DYNAMIC_PWR_CAP) ? "dynamic power, " : "",
+> >                          (result & OPTIMUS_HDA_CODEC_MASK) ? "hda bios codec supported" : "");
+> > +
+> > +               *has_power_resources = nouveau_pr3_present(pdev);
+> >         }
+> >  }
+> >
+> > @@ -258,6 +280,7 @@ static bool nouveau_dsm_detect(void)
+> >         bool has_mux = false;
+> >         bool has_optimus = false;
+> >         bool has_optimus_flags = false;
+> > +       bool has_power_resources = false;
+> >         int vga_count = 0;
+> >         bool guid_valid;
+> >         bool ret = false;
+> > @@ -273,14 +296,14 @@ static bool nouveau_dsm_detect(void)
+> >                 vga_count++;
+> >
+> >                 nouveau_dsm_pci_probe(pdev, &has_mux, &has_optimus,
+> > -                                     &has_optimus_flags);
+> > +                                     &has_optimus_flags, &has_power_resources);
+> >         }
+> >
+> >         while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_3D << 8, pdev)) != NULL) {
+> >                 vga_count++;
+> >
+> >                 nouveau_dsm_pci_probe(pdev, &has_mux, &has_optimus,
+> > -                                     &has_optimus_flags);
+> > +                                     &has_optimus_flags, &has_power_resources);
+> >         }
+> >
+> This and earlier patch break things in a subtle way.
+> 
+> Namely: upon the second (and any later) call into the
+> nouveau_dsm_pci_probe() function, the had_foo flags are reset. Thus
+> only the specifics of the _final_ device are being used (at a later
+> stage). IMHO one should change that to "_any_ device", which will
+> match the original code and the actual intent further down in the
+> file.
 
-Yes it can, you just need to apply the bus shift, given that we know
-it is ECAM anyway you can even add a macro in the ecam generic header to
-compute it, anyway that's a minor detail, we just should not forget to
-fix it.
+The flags are only reset if any of the MUX or Optimus handles are found.
+If both are missing, the flags are not overridden. This is from patch 1:
 
-Lorenzo
++       /* Does not look like a Nvidia device. */
++       if (!supports_mux && !supports_opt)
++               return;
+
+The reason why later calls override early ones is because some Optimus
+laptops have the _DSM method on both the Intel GPU (00:02.0) and the
+Nvidia one (01:00.0).
+
+The previous detection method would fail in this scenario:
+ 1. One device reports support for X and Y (has_x = 1, has_y = 1). Write
+    ACPI handle A to nouveau_dsm_priv.dhandle.
+ 2. Another device reports support for X only (has_x = 1). Write
+    ACPI handle B to nouveau_dsm_priv.dhandle.
+ 3. End result: has_x = 1, has_y = 1, dhandle = B. But ACPI handle B
+    does not really support Y!
+This is theoretical since I don't think that such firmware occurs in
+practice, but then imo it would be better to enforce in code that the
+case cannot occur (as is done in patch 1). Unless the MUX DSM has some
+magic I am not aware of.
+-- 
+Kind regards,
+Peter Wu
+https://lekensteyn.nl
