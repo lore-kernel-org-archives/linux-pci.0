@@ -1,124 +1,87 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Thu, 26 May 2016 12:10:06 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-	Dave Airlie <airlied@gmail.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
-Message-ID: <20160526101006.GA6744@wunner.de>
-References: <20160524162833.GA30762@localhost>
- <1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.138]:51226 "EHLO
+	regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbcE0Kbe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 May 2016 06:31:34 -0400
+Subject: Re: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
+ <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
+ <9836736.6VjP1ug4kE@wuerfel> <5747EDC9.2080603@rock-chips.com>
+ <8520D5D51A55D047800579B094147198258AF22F@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Doug Anderson <dianders@chromium.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-rockchip@lists.infradead.org"
+	<linux-rockchip@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Wenrui Li <wenrui.li@rock-chips.com>
+Message-ID: <57482200.9090008@rock-chips.com>
+Date: Fri, 27 May 2016 18:31:28 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <8520D5D51A55D047800579B094147198258AF22F@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 Hi,
 
-On Wed, May 25, 2016 at 06:04:56PM +0300, Mika Westerberg wrote:
-> The PCI PM 1.2 specification requires minimum of 50ms before function on a
-> bus is accessed after the bus is transitioned from B2 to B0. Now that we
-> actually power down bridges we should make sure the specification is
-> followed accordingly.
+On 2016/5/27 15:13, Bharat Kumar Gogada wrote:
+>>>
+>>>> +
+>>>> +static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *pp,
+>>>> +				       struct pci_bus *bus, u32 devfn,
+>>>> +				       int where, int size, u32 *val)
+>>>> +{
+>>>> +	u32 busdev;
+>>>> +
+>>>> +	busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
+>>>> +				PCI_FUNC(devfn), where);
+>>>> +
+>>>> +	if (busdev & (size - 1)) {
+>>>> +		*val = 0;
+>>>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+>>>> +	}
+>>>> +
+>>>> +	if (size == 4) {
+>>>> +		*val = readl(pp->reg_base + busdev);
+>>>> +	} else if (size == 2) {
+>>>> +		*val = readw(pp->reg_base + busdev);
+>>>> +	} else if (size == 1) {
+>>>> +		*val = readb(pp->reg_base + busdev);
+>>>> +	} else {
+>>>> +		*val = 0;
+>>>> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+>>>> +	}
+>>>> +	return PCIBIOS_SUCCESSFUL;
+>>>> +}
+>>>> +
+>>>
+>>> This looks like the normal ECAM operations, you could just call those.
+>>
+>> I read ECAM reference code, I found it not support ioremap config space
+>> for each bus individually on 64-bit systems. Our soc is 64-bit system,
+>> and bus0 config space base address is 0xfda00000, bus1 base address is
+>> 0xf8100000. So I think it is not normal ECAM operations, I do not know
+>> if I have understood correctly?
+>>
+> Hi,
+>
+> I think Arnd was suggesting to use generic config read/write calls, pci_generic_config_read/pci_generic_config_write
+> which does above functionality.
 
-This patch has the unfortunate side effect of increasing boot time on
-Macs with Thunderbolt by 320 ms. Granted, it's not much, but still
-noticeable:
+Yeah, I seem the pci_generic_config_write use writew/writeb for byte and 
+word write. but our SOC not support byte and word write in RC config 
+spcace. So I redefine the the pci_ops.write
 
-[    2.358041] pcieport 0000:06:03.0: enabling device (0000 -> 0002)
-[    2.358195] pcieport 0000:06:03.0: rpm_idle
-[    2.358222] pcieport 0000:06:03.0: rpm_suspend
-[    2.411664] pcieport 0000:06:04.0: enabling device (0000 -> 0003)
-[    2.411821] pcieport 0000:06:04.0: rpm_idle
-[    2.411848] pcieport 0000:06:04.0: rpm_suspend
-[    2.467664] pcieport 0000:06:05.0: enabling device (0000 -> 0003)
-[    2.467817] pcieport 0000:06:05.0: rpm_idle
-[    2.467843] pcieport 0000:06:05.0: rpm_suspend
-[    2.523664] pcieport 0000:06:06.0: enabling device (0000 -> 0002)
-[    2.523822] pcieport 0000:06:06.0: rpm_idle
-[    2.523848] pcieport 0000:06:06.0: rpm_suspend
-[    2.579685] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
-[    2.579722] pcieport 0000:06:03.0: rpm_resume
-[    2.635750] pciehp 0000:06:03.0:pcie204: Slot #3 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-[    2.635853] pciehp 0000:06:03.0:pcie204: service driver pciehp loaded
-[    2.635858] pcieport 0000:06:03.0: rpm_idle
-[    2.635886] pcieport 0000:06:04.0: rpm_resume
-[    2.647645] pcieport 0000:06:03.0: rpm_suspend
-[    2.691747] pciehp 0000:06:04.0:pcie204: Slot #4 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-[    2.691856] pciehp 0000:06:04.0:pcie204: service driver pciehp loaded
-[    2.691859] pcieport 0000:06:04.0: rpm_idle
-[    2.691888] pcieport 0000:06:05.0: rpm_resume
-[    2.703649] pcieport 0000:06:04.0: rpm_suspend
-[    2.747748] pciehp 0000:06:05.0:pcie204: Slot #5 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-[    2.747842] pciehp 0000:06:05.0:pcie204: service driver pciehp loaded
-[    2.747845] pcieport 0000:06:06.0: rpm_resume
-[    2.749213] pcieport 0000:06:05.0: rpm_idle
-[    2.759650] pcieport 0000:06:05.0: rpm_suspend
-[    2.805049] pciehp 0000:06:06.0:pcie204: Slot #6 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-[    2.806464] pciehp 0000:06:06.0:pcie204: service driver pciehp loaded
-[    2.806471] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
-[    2.807876] intel_idle: MWAIT substates: 0x21120
-[    2.807878] intel_idle: v0.4.1 model 0x3A
-[    2.808170] intel_idle: lapic_timer_reliable_states 0xffffffff
-[    2.808201] GHES: HEST is not enabled!
-[    2.809613] pcieport 0000:06:06.0: rpm_idle
-[    2.809644] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
-[    2.810096] Linux agpgart interface v0.103
-[    2.810158] AMD IOMMUv2 driver by Joerg Roedel <jroedel@suse.de>
-[    2.810158] AMD IOMMUv2 functionality not available on this system
-[    2.816468] pcieport 0000:06:06.0: rpm_suspend
+>
+> Bharat
+>
+>
+>
 
-I've added debug messages whenever ->runtime_idle / _suspend / _resume
-is called for a device.
-
-As can be seen, the PCI core now waits 50 ms after ->runtime_suspend.
-Also, the ports are resumed when the pciehp service driver is loaded,
-adding another 50 ms delay. For four hotplug ports, that's a total of
-400 ms (versus 80 ms without the patch).
-
-I'm wondering if the delay after ->runtime_suspend is really needed. Is
-this mandated by the spec? We could perhaps increase the autosuspend_delay
-in pcie_portdrv_probe() slightly to prevent the port from going to sleep
-between pci_enable_device() and loading the pciehp service driver.
-
-Thanks,
-
-Lukas
-
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
-> Hi Bjorn,
-> 
-> Since this is only needed when bridges are powered down, I think it makes
-> sense to put this to your pci/pm branch.
-> 
->  drivers/pci/pci.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e785dc260e72..e645a3d4f2e0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2361,7 +2361,12 @@ void pci_pm_init(struct pci_dev *dev)
->  	}
->  
->  	dev->pm_cap = pm;
-> -	dev->d3_delay = PCI_PM_D3_WAIT;
-> +	/*
-> +	 * PCI PM 1.2 specification requires minimum of 50ms before any
-> +	 * function on the bus is accessed after the bus is transitioned
-> +	 * from B2 to B0.
-> +	 */
-> +	dev->d3_delay = pci_is_bridge(dev) ? PCI_PM_BUS_WAIT : PCI_PM_D3_WAIT;
->  	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
->  	dev->bridge_d3 = pci_bridge_d3_possible(dev);
->  	dev->d3cold_allowed = true;
-> -- 
-> 2.8.1
-> 
