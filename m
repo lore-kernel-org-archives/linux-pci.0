@@ -1,279 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45470 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752948AbcEWIxv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 May 2016 04:53:51 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, amir.jer.levy@intel.com,
-	michael.jamet@intel.com, dan.alloun@intel.com,
-	mika.westerberg@intel.com, kai.svahn@intel.com,
-	andriy.shevchenko@intel.com, tomas.winkler@intel.com
-Subject: [PATCH 1/6] thunderbolt: Updating the register definitions
-Date: Mon, 23 May 2016 11:48:51 +0300
-Message-Id: <1463993336-2750-2-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <hdegoede@redhat.com>
+Return-Path: <hdegoede@redhat.com>
+Subject: Re: [Nouveau] [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe
+ runtime PM
+To: Peter Wu <peter@lekensteyn.nl>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+ <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
+ <20160525135535.GN1789@lahna.fi.intel.com> <20160527111037.GA1436@al>
+Cc: linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, Bjorn Helgaas <helgaas@kernel.org>,
+        nouveau@lists.freedesktop.org, Dave Airlie <airlied@redhat.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <d329650d-c0b9-c40d-a647-f9de09b7b848@redhat.com>
+Date: Fri, 27 May 2016 13:55:14 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160527111037.GA1436@al>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-This first patch adds more Thunderbolt(TM) register definitions
-and some helper macros.
-It also adds Win Ridge device ID.
+Hi,
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Michael Jamet <michael.jamet@intel.com>
----
- drivers/thunderbolt/nhi_regs.h | 164 ++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci_ids.h        |   2 +
- 2 files changed, 163 insertions(+), 3 deletions(-)
+On 27-05-16 13:10, Peter Wu wrote:
+> On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
+>> On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
+>>> Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
+>>> can be runtime-suspended which disables power resources via ACPI. This
+>>> is incompatible with DSM, resulting in a GPU device which is still in D3
+>>> and locks up the kernel on resume.
+>>>
+>>> Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
+>>> debugger trace) and stop using the DSM functions for D3cold when power
+>>> resources are available on the parent PCIe port.
+>>>
+>>>  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
+>>>
+>>> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+>>> ---
+>>>  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
+>>>  1 file changed, 30 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+>>> index df9f73e..e469df7 100644
+>>> --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+>>> +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+>>> @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
+>>>  	bool dsm_detected;
+>>>  	bool optimus_detected;
+>>>  	bool optimus_flags_detected;
+>>> +	bool optimus_skip_dsm;
+>>>  	acpi_handle dhandle;
+>>>  	acpi_handle rom_handle;
+>>>  } nouveau_dsm_priv;
+>>> @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
+>>>  	.get_client_id = nouveau_dsm_get_client_id,
+>>>  };
+>>>
+>>> +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
+>>> + * D3cold, they instead rely on disabling power resources on the parent. */
+>>> +static bool nouveau_pr3_present(struct pci_dev *pdev)
+>>> +{
+>>> +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
+>>> +	struct acpi_device *ad;
+>>
+>> Nit: please call this adev instead of ad.
+>
+> Will do.
+>
+>>> +
+>>> +	if (!parent_pdev)
+>>> +		return false;
+>>> +
+>>> +	ad = ACPI_COMPANION(&parent_pdev->dev);
+>>> +	if (!ad)
+>>> +		return false;
+>>> +
+>>> +	return ad->power.flags.power_resources;
+>>
+>> Is this sufficient to tell if the parent device has _PR3? I thought it
+>> returns true if it has power resources in general, not necessarily _PR3.
+>>
+>> Otherwise this looks okay to me.
+>
+> It is indeed set whenever there is any _PRx method. I wonder if it is
+> appropriate to access fields directly like this, perhaps this would be
+> more accurate (based on device_pm.c):
+>
+>     /* Check whether the _PR3 method is available. */
+>     return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
+>
+> I am also considering adding a check in case the pcieport driver does
+> not support D3cold via runtime PM, what do you think of this?
+>
+>     if (!parent_pdev)
+>         return false;
+>     /* If the PCIe port does not support D3cold via runtime PM, allow a
+>      * fallback to the Optimus DSM method to put the device in D3cold. */
+>     if (parent_pdev->no_d3cold)
+>         return false;
+>
+> This is needed to avoid the regression reported in the cover letter, but
+> also allows pre-2015 systems to (still) have the D3cold possibility.
+>
+>
+> Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
+> apparently from November 2013, Windows 8.1) and extracted the ACPI
+> tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
+> for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
+> related NVP3 device) when _OSI("Windows 2013") is true. (This is added
+> as alternative for the old DSM interface.)
+>
+> Maybe 2014 is also an appropriate cutoff date? I wonder if it is
+> feasible to detect firmware use of _OSI("Windows 2013") and use that
+> instead of the BIOS year.
 
-diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
-index 86b996c..52592e3 100644
---- a/drivers/thunderbolt/nhi_regs.h
-+++ b/drivers/thunderbolt/nhi_regs.h
-@@ -1,14 +1,26 @@
- /*
-- * Thunderbolt Cactus Ridge driver - NHI registers
-+ * Thunderbolt driver - NHI registers
-  *
-  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-  */
- 
--#ifndef DSL3510_REGS_H_
--#define DSL3510_REGS_H_
-+#ifndef NHI_REGS_H_
-+#define NHI_REGS_H_
- 
- #include <linux/types.h>
- 
-+#define DRV_VERSION "16.1.47.1"
-+#define DRV_NAME "thunderbolt"
-+
-+#define NHI_MMIO_BAR 0
-+
-+#define TBT_RING_MIN_NUM_BUFFERS	2
-+#define TBT_ICM_RING_MAX_FRAME_SIZE	256
-+#define TBT_ICM_RING_NUM		0
-+#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
-+#define TBT_RING_MAX_FRM_DATA_SZ	(TBT_RING_MAX_FRAME_SIZE - \
-+					 sizeof(struct tbt_frame_header))
-+
- enum ring_flags {
- 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
- 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
-@@ -24,6 +36,13 @@ enum ring_desc_flags {
- 	RING_DESC_INTERRUPT = 0x8, /* request an interrupt on completion */
- };
- 
-+enum icm_operation_mode {
-+	SAFE_MODE,
-+	AUTHENTICATION_MODE_FUNCTIONALITY,
-+	ENDPOINT_OPERATION_MODE,
-+	FULL_FUNCTIONALITY,
-+};
-+
- /**
-  * struct ring_desc - TX/RX ring entry
-  *
-@@ -39,6 +58,44 @@ struct ring_desc {
- 	u32 time; /* write zero */
- } __packed;
- 
-+/**
-+ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
-+ * This is same as struct ring_desc, but without the use of bitfields and
-+ * with explicit endianity.
-+ */
-+struct tbt_buf_desc {
-+	__le64 phys;
-+	__le32 attributes;
-+	__le32 time;
-+};
-+
-+#define DESC_ATTR_LEN_SHIFT		0
-+#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
-+#define DESC_ATTR_EOF_SHIFT		12
-+#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
-+#define DESC_ATTR_SOF_SHIFT		16
-+#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
-+#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
-+#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
-+#define DESC_ATTR_DESC_DONE		BIT(21)
-+#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
-+#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
-+#define DESC_ATTR_INT_EN		BIT(23)
-+#define DESC_ATTR_OFFSET_SHIFT		24
-+#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
-+
-+#define TBT_ICM_RING_NUM_TX_BUFS TBT_RING_MIN_NUM_BUFFERS
-+#define TBT_ICM_RING_NUM_RX_BUFS ((PAGE_SIZE - (TBT_ICM_RING_NUM_TX_BUFS * \
-+	(sizeof(struct tbt_buf_desc) + TBT_ICM_RING_MAX_FRAME_SIZE))) / \
-+	(sizeof(struct tbt_buf_desc) + TBT_ICM_RING_MAX_FRAME_SIZE))
-+/* struct tbt_icm_ring_shared_memory - memory area for DMA */
-+struct tbt_icm_ring_shared_memory {
-+	u8 tx_buf[TBT_ICM_RING_NUM_TX_BUFS][TBT_ICM_RING_MAX_FRAME_SIZE];
-+	u8 rx_buf[TBT_ICM_RING_NUM_RX_BUFS][TBT_ICM_RING_MAX_FRAME_SIZE];
-+	struct tbt_buf_desc tx_buf_desc[TBT_ICM_RING_NUM_TX_BUFS];
-+	struct tbt_buf_desc rx_buf_desc[TBT_ICM_RING_NUM_RX_BUFS];
-+} __aligned(TBT_ICM_RING_MAX_FRAME_SIZE);
-+
- /* NHI registers in bar 0 */
- 
- /*
-@@ -60,6 +117,30 @@ struct ring_desc {
-  */
- #define REG_RX_RING_BASE	0x08000
- 
-+#define REG_RING_STEP			16
-+#define REG_RING_PHYS_LO_OFFSET		0
-+#define REG_RING_PHYS_HI_OFFSET		4
-+#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
-+#define REG_RING_CONS_SHIFT		0
-+#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
-+#define REG_RING_PROD_SHIFT		16
-+#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
-+#define REG_RING_SIZE_OFFSET		12
-+#define REG_RING_SIZE_SHIFT		0
-+#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
-+#define REG_RING_BUF_SIZE_SHIFT		16
-+#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
-+
-+#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
-+			      ((iobase) + (ringbase) + \
-+			      ((ringnumber) * REG_RING_STEP) + \
-+			      REG_RING_CONS_PROD_OFFSET)
-+
-+#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
-+				       REG_RING_PROD_SHIFT)
-+
-+#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
-+				       REG_RING_CONS_SHIFT)
- /*
-  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
-  * 00: enum_ring_flags
-@@ -77,6 +158,19 @@ struct ring_desc {
-  * ..: unknown
-  */
- #define REG_RX_OPTIONS_BASE	0x29800
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
-+				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
-+#define REG_RX_OPTS_MASK_OFFSET		4
-+#define REG_RX_OPTS_MASK_EOF_SHIFT	0
-+#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
-+#define REG_RX_OPTS_MASK_SOF_SHIFT	16
-+#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
-+
-+#define REG_OPTS_STEP			32
-+#define REG_OPTS_E2E_EN			BIT(28)
-+#define REG_OPTS_RAW			BIT(30)
-+#define REG_OPTS_VALID			BIT(31)
- 
- /*
-  * three bitfields: tx, rx, rx overflow
-@@ -86,6 +180,7 @@ struct ring_desc {
-  */
- #define REG_RING_NOTIFY_BASE	0x37800
- #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
-+#define REG_RING_NOTIFY_STEP	4
- 
- /*
-  * two bitfields: rx, tx
-@@ -94,8 +189,71 @@ struct ring_desc {
-  */
- #define REG_RING_INTERRUPT_BASE	0x38200
- #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
-+#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
-+#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
-+							    (num_paths))
-+#define RING_INT_DISABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_ENABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_DISABLE_TX(base, ring_num) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_ENABLE_TX(base, ring_num) \
-+	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
-+			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+
-+#define REG_RING_INTERRUPT_STEP	4
-+
-+#define REG_INT_THROTTLING_RATE	0x38c00
-+#define REG_INT_THROTTLING_RATE_STEP	4
-+#define NUM_INT_VECTORS			16
-+#define USEC_TO_256_NSECS(usec) DIV_ROUND_UP((usec) * NSEC_PER_USEC, 256)
-+
-+#define REG_INT_VEC_ALLOC_BASE	0x38c40
-+#define REG_INT_VEC_ALLOC_STEP		4
-+#define REG_INT_VEC_ALLOC_FIELD_BITS	4
-+#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
-+#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
-+					 REG_INT_VEC_ALLOC_FIELD_BITS)
- 
- /* The last 11 bits contain the number of hops supported by the NHI port. */
- #define REG_HOP_COUNT		0x39640
-+#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
-+
-+#define REG_HOST_INTERFACE_RST	0x39858
-+
-+#define REG_DMA_MISC		0x39864
-+#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
-+
-+/* mailbox data from SW */
-+#define REG_INMAIL_DATA		0x39900
-+
-+/* mailbox command from SW */
-+#define REG_INMAIL_CMD		0x39904
-+#define REG_INMAIL_CMD_CMD_SHIFT	0
-+#define REG_INMAIL_CMD_CMD_MASK		GENMASK(7, REG_INMAIL_CMD_CMD_SHIFT)
-+#define REG_INMAIL_CMD_ERROR		BIT(30)
-+#define REG_INMAIL_CMD_REQUEST		BIT(31)
-+
-+/* mailbox command from FW */
-+#define REG_OUTMAIL_CMD		0x3990C
-+#define REG_OUTMAIL_CMD_STS_SHIFT	0
-+#define REG_OUTMAIL_CMD_STS_MASK	GENMASK(7, REG_OUTMAIL_CMD_STS_SHIFT)
-+#define REG_OUTMAIL_CMD_OP_MODE_SHIFT	8
-+#define REG_OUTMAIL_CMD_OP_MODE_MASK	\
-+				GENMASK(11, REG_OUTMAIL_CMD_OP_MODE_SHIFT)
-+#define REG_OUTMAIL_CMD_REQUEST		BIT(31)
-+
-+#define REG_FW_STS		0x39944
-+#define REG_FW_STS_ICM_EN		GENMASK(1, 0)
-+#define REG_FW_STS_NVM_AUTH_DONE	BIT(31)
- 
- #endif
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c58752f..01edf07 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2618,6 +2618,8 @@
- #define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE  0x156b
- #define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI     0x156c
- #define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE  0x156d
-+#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_NHI        0x157d
-+#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_BRIDGE     0x157e
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI     0x1575 /* Thunderbolt 3 */
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
- #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
--- 
-1.9.1
+It is definitely possible to check if the firmware uses _OSI("Windows 2013")
+we do something similar to check for windows-8 ready laptops in the backlight
+code, see acpi_osi_is_win8() in drivers/acpi/osl.c, or if you actually
+want to test for Windows 8 or newer, just use acpi_osi_is_win8()  :)
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Regards,
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Hans
