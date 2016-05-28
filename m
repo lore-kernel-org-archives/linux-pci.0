@@ -1,249 +1,356 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54583 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbcEKWnT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 May 2016 18:43:19 -0400
-Date: Wed, 11 May 2016 17:43:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	wangyijing@huawei.com,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Andrea Gallo <andrea.gallo@linaro.org>,
-	Duc Dang <dhdang@apm.com>, jeremy.linton@arm.com,
-	liudongdong3@huawei.com, Christopher Covington <cov@codeaurora.org>
-Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
-Message-ID: <20160511224314.GD28812@localhost>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <1462893601-8937-8-git-send-email-tn@semihalf.com>
- <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
- <20160511101101.GA16101@red-moon>
- <CAJZ5v0hgw929W5PjF0PqT+ssiOHd8TeJoSQcz4NUiAovZY2pfQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 29 May 2016 01:35:28 +0200
+Subject: [PATCH] x86: Add early quirk to reset Apple AirPort card
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0hgw929W5PjF0PqT+ssiOHd8TeJoSQcz4NUiAovZY2pfQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+To: x86@kernel.org, linux-kernel@vger.kernel.org
+Cc: Chris Milsted <cmilsted@redhat.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Andi Kleen <ak@linux.intel.com>, Michael Buesch <m@bues.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matt Fleming <matt@codeblueprint.co.uk>,
+	Konstantin Simanov <k.simanov@stlk.ru>,
+	Bryan Paradis <bryan.paradis@gmail.com>,
+	Andrew Worsley <amworsley@gmail.com>,
+	Chris Bainbridge <chris.bainbridge@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, zajec5@gmail.com
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 11, 2016 at 10:30:51PM +0200, Rafael J. Wysocki wrote:
-> On Wed, May 11, 2016 at 12:11 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Tue, May 10, 2016 at 08:37:00PM +0200, Rafael J. Wysocki wrote:
-> >> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> >> > This patch provides a way to set the ACPI companion in PCI code.
-> >> > We define acpi_pci_set_companion() to set the ACPI companion pointer and
-> >> > call it from PCI core code. The function is stub for now.
-> >> >
-> >> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> >> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> >> > ---
-> >> >  drivers/pci/probe.c      | 2 ++
-> >> >  include/linux/pci-acpi.h | 4 ++++
-> >> >  2 files changed, 6 insertions(+)
-> >> >
-> >> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> > index 8004f67..fb0b752 100644
-> >> > --- a/drivers/pci/probe.c
-> >> > +++ b/drivers/pci/probe.c
-> >> > @@ -12,6 +12,7 @@
-> >> >  #include <linux/slab.h>
-> >> >  #include <linux/module.h>
-> >> >  #include <linux/cpumask.h>
-> >> > +#include <linux/pci-acpi.h>
-> >> >  #include <linux/pci-aspm.h>
-> >> >  #include <linux/aer.h>
-> >> >  #include <linux/acpi.h>
-> >> > @@ -2141,6 +2142,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >> >         bridge->dev.parent = parent;
-> >> >         bridge->dev.release = pci_release_host_bridge_dev;
-> >> >         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> >> > +       acpi_pci_set_companion(bridge);
-> >>
-> >> Yes, we'll probably add something similar here.
-> >>
-> >> Do I think now is the right time to do that?  No.
-> >>
-> >> >         error = pcibios_root_bridge_prepare(bridge);
-> >> >         if (error) {
-> >> >                 kfree(bridge);
-> >> > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> >> > index 09f9f02..1baa515 100644
-> >> > --- a/include/linux/pci-acpi.h
-> >> > +++ b/include/linux/pci-acpi.h
-> >> > @@ -111,6 +111,10 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-> >> >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-> >> >  #endif /* CONFIG_ACPI */
-> >> >
-> >> > +static inline void acpi_pci_set_companion(struct pci_host_bridge *bridge)
-> >> > +{
-> >> > +}
-> >> > +
-> >> >  static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
-> >> >  {
-> >> >         return 0;
-> >> > --
-> >>
-> >> Honestly, to me it looks like this series is trying very hard to avoid
-> >> doing any PCI host bridge configuration stuff from arch/arm64/
-> >> although (a) that might be simpler and (b) it would allow us to
-> >> identify the code that's common between *all* architectures using ACPI
-> >> support for host bridge configuration and to move *that* to a common
-> >> place later.  As done here it seems to be following the "ARM64 is
-> >> generic and the rest of the world is special" line which isn't really
-> >> helpful.
-> >
-> > I think patch [1-2] should be merged regardless (they may require minor
-> > tweaks if we decide to move pci_acpi_scan_root() to arch/arm64 though,
-> > for include files location). I guess you are referring to patch 8 in
-> > your comments above, which boils down to deciding whether:
-> >
-> > - pci_acpi_scan_root() (and unfortunately all the MCFG/ECAM handling that
-> >   goes with it) should live in arch/arm64 or drivers/acpi
-> 
-> To be precise, everything under #ifdef CONFIG_ACPI_PCI_HOST_GENERIC or
-> equivalent is de facto ARM64-specific, because (as it stands in the
-> patch series) ARM64 is the only architecture that will select that
-> option.  Unless you are aware of any more architectures planning to
-> use ACPI (and I'm not aware of any), it will stay the only
-> architecture selecting it in the foreseeable future.
-> 
-> Therefore you could replace CONFIG_ACPI_PCI_HOST_GENERIC with
-> CONFIG_ARM64 everywhere in that code which is why in my opinion the
-> code should live somewhere under arch/arm64/.
-> 
-> Going forward, it should be possible to identify common parts of the
-> PCI host bridge configuration code in arch/ and move it to
-> drivers/acpi/ or drivers/pci/, but I bet that won't be the entire code
-> this series puts under CONFIG_ACPI_PCI_HOST_GENERIC.
-> 
-> The above leads to a quite straightforward conclusion about the order
-> in which to do things: I'd add ACPI support for PCI host bridge on
-> ARM64 following what's been done on ia64 (as x86 is more quirky and
-> kludgy overall) as far as reasonably possible first and then think
-> about moving common stuff to a common place.
+The EFI firmware on Macs contains a full-fledged network stack for
+downloading OS X images from osrecovery.apple.com. Unfortunately
+on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
+wireless card on every boot and leaves it enabled even after
+ExitBootServices has been called. The card continues to assert its IRQ
+line, causing spurious interrupts if the IRQ is shared. It also corrupts
+memory by DMAing received packets, allowing for remote code execution
+over the air. This only stops when a driver is loaded for the wireless
+card, which may be never if the driver is not installed or blacklisted.
 
-That does seem like a reasonable approach.  I had hoped to get more of
-this in for v4.7, but we don't have much time left.  Maybe some of
-Rafael's comments can be addressed by moving and slight restructuring
-and we can still squeeze it in.
+The issue seems to be constrained to the Broadcom 4331. Chris Milsted
+has verified that the newer Broadcom 4360 built into the MacBookPro11,3
+(2013/2014) does not exhibit this behaviour. The chances that Apple will
+ever supply a firmware fix for the older machines appear to be zero.
 
-The first three patches:
+The solution is to reset the card on boot by writing to a reset bit in
+its mmio space. This must be done as an early quirk and not as a plain
+vanilla PCI quirk to successfully combat memory corruption by DMAed
+packets: Matthew Garrett found out in 2012 that the packets are written
+to EfiBootServicesData memory (http://mjg59.dreamwidth.org/11235.html).
+This type of memory is made available to the page allocator by
+efi_free_boot_services(). Plain vanilla PCI quirks run much later, in
+subsys initcall level. In-between a time window would be open for memory
+corruption. Random crashes occurring in this time window and attributed
+to DMAed packets have indeed been observed in the wild by Chris
+Bainbridge.
 
-  PCI: Provide common functions for ECAM mapping
-  PCI: generic, thunder: Use generic ECAM API
-  PCI, of: Move PCI I/O space management to PCI core code
+When Matthew Garrett analyzed the memory corruption issue in 2012, he
+sought to fix it with a grub quirk which transitions the card to D3hot:
+http://git.savannah.gnu.org/cgit/grub.git/commit/?id=9d34bb85da56
 
-seem relatively straightforward, and I applied them to pci/arm64 with
-the intent of merging them unless there are objections.  I made the
-following tweaks, mainly to try to improve some error messages:
+This approach does not help users with other bootloaders and while it
+may prevent DMAed packets, it does not cure the spurious interrupts
+emanating from the card. Unfortunately the card's mmio space is
+inaccessible in D3hot, so to reset it, we have to undo the effect of
+Matthew's grub patch and transition the card back to D0.
 
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 3d52005..e1add01 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -24,9 +24,9 @@
- #include "ecam.h"
+Since commit 8659c406ade3 ("x86: only scan the root bus in early PCI
+quirks"), early quirks can only be applied to devices on the root bus.
+However the Broadcom 4331 card is located on a secondary bus behind a
+PCIe root port. The present commit therefore reintroduces scanning of
+secondary buses. The primary motivation of 8659c406ade3 was to prevent
+application of the nvidia_bugs() quirk on secondary buses. Amend the
+quirk to open code this requirement.
+
+A secondary motivation was to speed up PCI scanning. The algorithm used
+prior to 8659c406ade3 was particularly time consuming because it scanned
+buses 0 to 31 brute force. The recursive algorithm used by the present
+commit only scans buses that are actually reachable from the root bus
+and should thus be a bit faster. If this algorithm is found to
+significantly impact boot time, it would be possible to limit its
+recursion depth: The Apple AirPort quirk applies at depth 1, all others
+at depth 0, so the bus need not be scanned deeper than that for now. An
+alternative approach would be to continue scanning only the root bus,
+and apply the AirPort quirk to the root ports 8086:1c12, 8086:1e12 and
+8086:1e16. Apple always positioned the Broadcom 4331 behind one of these
+three ports (see model list below). The quirk would then check presence
+of the Broadcom 4331 in slot 0 below the root port and do its deed.
+
+Note that the quirk takes a few shortcuts to reduce the amount of code:
+The size of BAR 0 and the location of the PM capability is identical
+on all affected machines and therefore hardcoded. Only the address of
+BAR 0 differs between models. Also, it is assumed that the BCMA core
+currently mapped is the 802.11 core. The EFI driver seems to always take
+care of this.
+
+Michael Büsch, Bjorn Helgaas and Matt Fleming contributed feedback
+towards finding the best solution to this problem.
+
+The following should be a comprehensive list of affected models:
+    iMac13,1        2012  21.5"       [Root Port 00:1c.3 = 8086:1e16]
+    iMac13,2        2012  27"         [Root Port 00:1c.3 = 8086:1e16]
+    Macmini5,1      2011  i5 2.3 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,2      2011  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,3      2011  i7 2.0 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini6,1      2012  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    Macmini6,2      2012  i7 2.3 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro8,1   2011  13"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,2   2011  15"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,3   2011  17"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro9,1   2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro9,2   2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,1  2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,2  2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+
+For posterity, spurious interrupts caused by the Broadcom 4331 wireless
+card resulted in splats like this (stacktrace omitted):
+    irq 17: nobody cared (try booting with the "irqpoll" option)
+    handlers:
+    [<ffffffff81374370>] pcie_isr
+    [<ffffffffc0704550>] sdhci_irq [sdhci] threaded [<ffffffffc07013c0>] sdhci_thread_irq [sdhci]
+    [<ffffffffc0a0b960>] azx_interrupt [snd_hda_codec]
+    Disabling IRQ #17
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111781
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=728916
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951#c16
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1098621
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632#c5
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1279130
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1332732
+Cc: Chris Milsted <cmilsted@redhat.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Andi Kleen <ak@linux.intel.com>
+Cc: Michael Buesch <m@bues.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matt Fleming <matt@codeblueprint.co.uk>
+Cc: x86@kernel.org
+Cc: stable@vger.kernel.org
+Tested-by: Konstantin Simanov <k.simanov@stlk.ru>        # [MacBookPro8,1]
+Tested-by: Lukas Wunner <lukas@wunner.de>                # [MacBookPro9,1]
+Tested-by: Bryan Paradis <bryan.paradis@gmail.com>       # [MacBookPro9,2]
+Tested-by: Andrew Worsley <amworsley@gmail.com>          # [MacBookPro10,1]
+Tested-by: Chris Bainbridge <chris.bainbridge@gmail.com> # [MacBookPro10,2]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ arch/x86/kernel/early-quirks.c | 98 ++++++++++++++++++++++++++++++++++++------
+ drivers/bcma/bcma_private.h    |  2 -
+ include/linux/bcma/bcma.h      |  1 +
+ 3 files changed, 86 insertions(+), 15 deletions(-)
+
+diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+index bca14c8..2d44f28 100644
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -11,7 +11,11 @@
  
- /*
-- * On 64 bit systems, we do a single ioremap for the whole config space
-- * since we have enough virtual address range available. On 32 bit, do an
-- * ioremap per bus.
-+ * On 64-bit systems, we do a single ioremap for the whole config space
-+ * since we have enough virtual address range available.  On 32-bit, we
-+ * ioremap the config space for each bus individually.
-  */
- static const bool per_bus_mapping = !config_enabled(CONFIG_64BIT);
+ #include <linux/pci.h>
+ #include <linux/acpi.h>
++#include <linux/delay.h>
++#include <linux/dmi.h>
+ #include <linux/pci_ids.h>
++#include <linux/bcma/bcma.h>
++#include <linux/bcma/bcma_regs.h>
+ #include <drm/i915_drm.h>
+ #include <asm/pci-direct.h>
+ #include <asm/dma.h>
+@@ -21,6 +25,7 @@
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
+ #include <asm/irq_remapping.h>
++#include <asm/early_ioremap.h>
  
-@@ -42,6 +42,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+ static void __init fix_hypertransport_config(int num, int slot, int func)
  {
- 	struct pci_config_window *cfg;
- 	unsigned int bus_range, bus_range_max, bsz;
-+	struct resource *conflict;
- 	int i, err;
+@@ -76,6 +81,13 @@ static void __init nvidia_bugs(int num, int slot, int func)
+ #ifdef CONFIG_ACPI
+ #ifdef CONFIG_X86_IO_APIC
+ 	/*
++	 * Only applies to Nvidia root ports (bus 0) and not to
++	 * Nvidia graphics cards with PCI ports on secondary buses.
++	 */
++	if (num)
++		return;
++
++	/*
+ 	 * All timer overrides on Nvidia are
+ 	 * wrong unless HPET is enabled.
+ 	 * Unfortunately that's not true on many Asus boards.
+@@ -590,6 +602,57 @@ static void __init force_disable_hpet(int num, int slot, int func)
+ #endif
+ }
  
- 	if (busr->start > busr->end)
-@@ -58,10 +59,10 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
- 	bus_range = resource_size(&cfg->busr);
- 	bus_range_max = resource_size(cfgres) >> ops->bus_shift;
- 	if (bus_range > bus_range_max) {
--		dev_warn(dev, "bus max %#x reduced to %#x",
--					bus_range, bus_range_max);
- 		bus_range = bus_range_max;
- 		cfg->busr.end = busr->start + bus_range - 1;
-+		dev_warn(dev, "ECAM area %pR can only accommodate %pR (reduced from %pR desired)\n",
-+			 cfgres, &cfg->busr, busr);
- 	}
- 	bsz = 1 << ops->bus_shift;
++#define BCM4331_MMIO_SIZE	16384
++#define BCM4331_PM_CAP		0x40
++#define bcma_aread32(reg)	ioread32(mmio + 1 * BCMA_CORE_SIZE + reg)
++#define bcma_awrite32(reg, val)	iowrite32(val, mmio + 1 * BCMA_CORE_SIZE + reg)
++
++static void __init apple_airport_reset(int bus, int slot, int func)
++{
++	void __iomem *mmio;
++	u16 pmcsr;
++	u64 addr;
++	int i;
++
++	if (!dmi_match(DMI_SYS_VENDOR, "Apple Inc."))
++		return;
++
++	/* Card may have been put into PCI_D3hot by grub quirk */
++	pmcsr = read_pci_config_16(bus, slot, func,
++				   BCM4331_PM_CAP + PCI_PM_CTRL);
++	if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
++		write_pci_config_16(bus, slot, func,
++				    BCM4331_PM_CAP + PCI_PM_CTRL, pmcsr);
++		mdelay(10);
++		pmcsr = read_pci_config_16(bus, slot, func,
++					   BCM4331_PM_CAP + PCI_PM_CTRL);
++		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++			pr_err("Cannot power up Apple AirPort card\n");
++			return;
++		}
++	}
++
++	addr  =      read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_0);
++	addr |= (u64)read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_1) << 32;
++	addr &= PCI_BASE_ADDRESS_MEM_MASK;
++	mmio = early_ioremap(addr, BCM4331_MMIO_SIZE);
++	if (!mmio) {
++		pr_err("Cannot iomap Apple AirPort card\n");
++		return;
++	}
++
++	pr_info("Resetting Apple AirPort card\n");
++	for (i = 0; bcma_aread32(BCMA_RESET_ST) && i < 30; i++)
++		udelay(10);
++	bcma_awrite32(BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(1);
++	bcma_awrite32(BCMA_RESET_CTL, 0);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(10);
++	early_iounmap(mmio, BCM4331_MMIO_SIZE);
++}
  
-@@ -70,9 +71,11 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
- 	cfg->res.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
- 	cfg->res.name = "PCI ECAM";
- 
--	err = request_resource(&iomem_resource, &cfg->res);
--	if (err) {
--		dev_err(dev, "request ECAM res %pR failed\n", &cfg->res);
-+	conflict = request_resource(&iomem_resource, &cfg->res);
-+	if (conflict) {
-+		err = -EBUSY;
-+		dev_err(dev, "can't claim ECAM area %pR: address conflict with %s %pR\n",
-+			&cfg->res, conflict->name, conflict);
- 		goto err_exit;
- 	}
- 
-diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
-index 1ad2176..9878beb 100644
---- a/drivers/pci/ecam.h
-+++ b/drivers/pci/ecam.h
-@@ -33,7 +33,7 @@ struct pci_ecam_ops {
- 
- /*
-  * struct to hold the mappings of a config space window. This
-- * is expected to be used as sysdata for PCI controlllers which
-+ * is expected to be used as sysdata for PCI controllers that
-  * use ECAM.
-  */
- struct pci_config_window {
-@@ -43,11 +43,11 @@ struct pci_config_window {
- 	struct pci_ecam_ops		*ops;
- 	union {
- 		void __iomem		*win;	/* 64-bit single mapping */
--		void __iomem		**winp; /* 32-bit per bus mapping */
-+		void __iomem		**winp; /* 32-bit per-bus mapping */
- 	};
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+@@ -603,12 +666,6 @@ struct chipset {
+ 	void (*f)(int num, int slot, int func);
  };
  
--/* create and free for pci_config_window */
-+/* create and free pci_config_window */
- struct pci_config_window *pci_ecam_create(struct device *dev,
- 		struct resource *cfgres, struct resource *busr,
- 		struct pci_ecam_ops *ops);
-@@ -56,11 +56,11 @@ void pci_ecam_free(struct pci_config_window *cfg);
- /* map_bus when ->sysdata is an instance of pci_config_window */
- void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where);
--/* default ECAM ops, bus shift 20, generic read and write */
-+/* default ECAM ops */
- extern struct pci_ecam_ops pci_generic_ecam_ops;
+-/*
+- * Only works for devices on the root bus. If you add any devices
+- * not on bus 0 readd another loop level in early_quirks(). But
+- * be careful because at least the Nvidia quirk here relies on
+- * only matching on bus 0.
+- */
+ static struct chipset early_qrk[] __initdata = {
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
+@@ -638,9 +695,13 @@ static struct chipset early_qrk[] __initdata = {
+ 	 */
+ 	{ PCI_VENDOR_ID_INTEL, 0x0f00,
+ 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
++	{ PCI_VENDOR_ID_BROADCOM, 0x4331,
++	  PCI_CLASS_NETWORK_OTHER, PCI_ANY_ID, 0, apple_airport_reset},
+ 	{}
+ };
  
- #ifdef CONFIG_PCI_HOST_GENERIC
--/* for DT based pci controllers that support ECAM */
-+/* for DT-based PCI controllers that support ECAM */
- int pci_host_common_probe(struct platform_device *pdev,
- 			  struct pci_ecam_ops *ops);
- #endif
++static void __init early_pci_scan_bus(int bus);
++
+ /**
+  * check_dev_quirk - apply early quirks to a given PCI device
+  * @num: bus number
+@@ -649,7 +710,7 @@ static struct chipset early_qrk[] __initdata = {
+  *
+  * Check the vendor & device ID against the early quirks table.
+  *
+- * If the device is single function, let early_quirks() know so we don't
++ * If the device is single function, let early_pci_scan_bus() know so we don't
+  * poke at this device again.
+  */
+ static int __init check_dev_quirk(int num, int slot, int func)
+@@ -658,6 +719,7 @@ static int __init check_dev_quirk(int num, int slot, int func)
+ 	u16 vendor;
+ 	u16 device;
+ 	u8 type;
++	u8 sec;
+ 	int i;
+ 
+ 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
+@@ -685,25 +747,35 @@ static int __init check_dev_quirk(int num, int slot, int func)
+ 
+ 	type = read_pci_config_byte(num, slot, func,
+ 				    PCI_HEADER_TYPE);
++
++	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
++		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
++		early_pci_scan_bus(sec);
++	}
++
+ 	if (!(type & 0x80))
+ 		return -1;
+ 
+ 	return 0;
+ }
+ 
+-void __init early_quirks(void)
++static void __init early_pci_scan_bus(int bus)
+ {
+ 	int slot, func;
+ 
+-	if (!early_pci_allowed())
+-		return;
+-
+ 	/* Poor man's PCI discovery */
+-	/* Only scan the root bus */
+ 	for (slot = 0; slot < 32; slot++)
+ 		for (func = 0; func < 8; func++) {
+ 			/* Only probe function 0 on single fn devices */
+-			if (check_dev_quirk(0, slot, func))
++			if (check_dev_quirk(bus, slot, func))
+ 				break;
+ 		}
+ }
++
++void __init early_quirks(void)
++{
++	if (!early_pci_allowed())
++		return;
++
++	early_pci_scan_bus(0);
++}
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index eda0909..f642c42 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -8,8 +8,6 @@
+ #include <linux/bcma/bcma.h>
+ #include <linux/delay.h>
+ 
+-#define BCMA_CORE_SIZE		0x1000
+-
+ #define bcma_err(bus, fmt, ...) \
+ 	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
+ #define bcma_warn(bus, fmt, ...) \
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 0367c63..5c37b58 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -158,6 +158,7 @@ struct bcma_host_ops {
+ #define BCMA_CORE_DEFAULT		0xFFF
+ 
+ #define BCMA_MAX_NR_CORES		16
++#define BCMA_CORE_SIZE			0x1000
+ 
+ /* Chip IDs of PCIe devices */
+ #define BCMA_CHIP_ID_BCM4313	0x4313
+-- 
+2.8.1
