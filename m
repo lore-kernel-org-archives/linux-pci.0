@@ -1,37 +1,72 @@
-Return-Path: <jonathan.yong@intel.com>
-Return-Path: <jonathan.yong@intel.com>
-Message-ID: <572FFFD8.30709@intel.com>
-Date: Mon, 09 May 2016 11:11:20 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Sat, 28 May 2016 14:27:01 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Emil Velikov <emil.l.velikov@gmail.com>,
+	ML nouveau <nouveau@lists.freedesktop.org>,
+	ML dri-devel <dri-devel@lists.freedesktop.org>,
+	Dave Airlie <airlied@redhat.com>, linux-pm@vger.kernel.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [Nouveau] [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe
+ runtime PM
+Message-ID: <20160528122701.GA11464@wunner.de>
+References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+ <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
+ <CACvgo514AB=rkRGWrwmPHTX=hhEF8Jhzdg1hQkX1_C4A_zYkzg@mail.gmail.com>
+ <20160527213123.GB1777@al>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: PTM preliminary implementation
-References: <1461047358-4736-1-git-send-email-jonathan.yong@intel.com> <1461047358-4736-2-git-send-email-jonathan.yong@intel.com> <20160508023821.GA13531@localhost>
-In-Reply-To: <20160508023821.GA13531@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160527213123.GB1777@al>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/2016 10:38, Bjorn Helgaas wrote:
-> On Tue, Apr 19, 2016 at 06:29:18AM +0000, Yong, Jonathan wrote:
->> Simplified Precision Time Measurement driver, activates PTM feature
->> if a PCIe PTM requester (as per PCI Express 3.1 Base Specification
->> section 7.32)is found, but not before checking if the rest of the
->> PCI hierarchy can support it.
->>
->> The driver does not take part in facilitating PTM conversations,
->> neither does it provide any useful services, it is only responsible
->> for setting up the required configuration space bits.
->>
->> As of writing, there aren't any PTM capable devices on the market
->> yet, but it is supported by the Intel Apollo Lake platform.
->
-> Can you also add lspci support for the PTM capability?  That will help
-> debugging.
->
-> Bjorn
->
+Hi Peter,
 
-Do I also send it to this list? Or directly to Martin?
+On Fri, May 27, 2016 at 11:31:23PM +0200, Peter Wu wrote:
+> On Fri, May 27, 2016 at 02:01:39PM +0100, Emil Velikov wrote:
+> > On 24 May 2016 at 23:53, Peter Wu <peter@lekensteyn.nl> wrote:
+[snip]
+> > > @@ -273,14 +296,14 @@ static bool nouveau_dsm_detect(void)
+> > >                 vga_count++;
+> > >
+> > >                 nouveau_dsm_pci_probe(pdev, &has_mux, &has_optimus,
+> > > -                                     &has_optimus_flags);
+> > > +                                     &has_optimus_flags, &has_power_resources);
+> > >         }
+> > >
+> > >         while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_3D << 8, pdev)) != NULL) {
+> > >                 vga_count++;
+> > >
+> > >                 nouveau_dsm_pci_probe(pdev, &has_mux, &has_optimus,
+> > > -                                     &has_optimus_flags);
+> > > +                                     &has_optimus_flags, &has_power_resources);
+> > >         }
+> > >
+> > This and earlier patch break things in a subtle way.
+> > 
+> > Namely: upon the second (and any later) call into the
+> > nouveau_dsm_pci_probe() function, the had_foo flags are reset. Thus
+> > only the specifics of the _final_ device are being used (at a later
+> > stage). IMHO one should change that to "_any_ device", which will
+> > match the original code and the actual intent further down in the
+> > file.
+> 
+> The flags are only reset if any of the MUX or Optimus handles are found.
+> If both are missing, the flags are not overridden. This is from patch 1:
+> 
+> +       /* Does not look like a Nvidia device. */
+> +       if (!supports_mux && !supports_opt)
+> +               return;
+> 
+> The reason why later calls override early ones is because some Optimus
+> laptops have the _DSM method on both the Intel GPU (00:02.0) and the
+> Nvidia one (01:00.0).
 
-As for the kernel code side, still cleaning things up.
+Sounds like you may want to check for pdev->vendor == PCI_VENDOR_ID_NVIDIA
+or export pci_get_dev_by_id() and use that to match for class and vendor.
+
+Best regards,
+
+Lukas
