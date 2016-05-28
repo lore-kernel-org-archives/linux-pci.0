@@ -1,137 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39266 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754474AbcEBReM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 May 2016 13:34:12 -0400
-Date: Mon, 2 May 2016 12:34:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH] pci, pci-thunder-pem: Don't clobber read-only bits in
- bridge config registers.
-Message-ID: <20160502173408.GG24851@localhost>
-References: <1460417372-13147-1-git-send-email-ddaney.cavm@gmail.com>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Valdis Kletnieks <valdis.kletnieks@vt.edu>, Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
+Date: Sat, 28 May 2016 14:21:11 +0200
+Message-ID: <9162683.GfsX7n9xoz@vostro.rjw.lan>
+In-Reply-To: <20160526081643.GQ1789@lahna.fi.intel.com>
+References: <20160519231234.GB1785@al> <2037523.0hP3Oc7Pg6@vostro.rjw.lan> <20160526081643.GQ1789@lahna.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460417372-13147-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 11, 2016 at 04:29:32PM -0700, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
+On Thursday, May 26, 2016 11:16:43 AM Mika Westerberg wrote:
+> On Wed, May 25, 2016 at 10:45:48PM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, May 25, 2016 04:19:48 PM Mika Westerberg wrote:
+> > > On Wed, May 25, 2016 at 12:13:09AM +0300, Mika Westerberg wrote:
+> > > > On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
+> > > > > > I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
+> > > > > > on the assumption that "PCI: Power on bridges before scanning new
+> > > > > > devices" is sufficient to cover both the ACPI and the generic PCi
+> > > > > > rescan cases, but I'd like some reassurance about that.
+> > > > > 
+> > > > > I agree with your reasoning that the patch should not be needed anymore.
+> > > > > However, I have the machine which needed that patch at home so I'm not
+> > > > > able to test it now. I'll do that later today when I get back home.
+> > > > 
+> > > > I tried now on my Lenovo Yoga 900 laptop and unfortunately "PCI: Power
+> > > > on bridges before scanning new devices" seems not to be enough. This
+> > > > machine has SD-card reader connected to one PCIe port and once I unload
+> > > > the sdhci-pci driver and enable runtime PM for the device, next system
+> > > > suspend/resume cycle loses the SD-card reader PCI device.
+> > > > 
+> > > > I will investigate more tomorrow -- it is getting late here.
+> > > 
+> > > I think I found reason for the issue.
+> > > 
+> > > When the laptop resumes it will send ACPI BUS_CHECK event for the two
+> > > PCIe root ports. This ends up in acpiphp_check_bridge() where it goes
+> > > through all slots in that bridge checking if the devices are still
+> > > present. This happens before we call pci_scan_bridge() for the bridge
+> > > itself.
+> > > 
+> > > Since the bridge is in D3 config space of the device behind it is not
+> > > available and we determine that the device is not there anymore.
+> > > 
+> > > It looks like we either need that ACPI hotplug patch or alternatively we
+> > > could add pm_runtime_get/put() in acpiphp_check_bridge().
+> > 
+> > Have you tried the latter?
 > 
-> The 32-bit addressing modes in the I/O and Prefetchable Memory
-> registers are required to be read-only.  Since the underlying access
-> method allows them to be set, we must emulate their read-only nature
-> and always set them.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
+> Indeed I tried and it worked fine. I can make formal patch doing that
+> which then replaces the current ACPI hotplug patch, if that is the
+> preferred way.
 
-Applied to pci/host-thunder for v4.7, thanks, David!
-
-> ---
->  drivers/pci/host/pci-thunder-pem.c | 42 ++++++++++++++++++++++++++++++--------
->  1 file changed, 34 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index cabb92a..196adf6 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -153,11 +153,11 @@ static int thunder_pem_config_read(struct pci_bus *bus, unsigned int devfn,
->   * reserved bits, this makes the code simpler and is OK as the bits
->   * are not affected by writing zeros to them.
->   */
-> -static u32 thunder_pem_bridge_w1c_bits(int where)
-> +static u32 thunder_pem_bridge_w1c_bits(u64 where_aligned)
->  {
->  	u32 w1c_bits = 0;
->  
-> -	switch (where & ~3) {
-> +	switch (where_aligned) {
->  	case 0x04: /* Command/Status */
->  	case 0x1c: /* Base and I/O Limit/Secondary Status */
->  		w1c_bits = 0xff000000;
-> @@ -184,12 +184,34 @@ static u32 thunder_pem_bridge_w1c_bits(int where)
->  	return w1c_bits;
->  }
->  
-> +/* Some bits must be written to one so they appear to be read-only. */
-> +static u32 thunder_pem_bridge_w1_bits(u64 where_aligned)
-> +{
-> +	u32 w1_bits;
-> +
-> +	switch (where_aligned) {
-> +	case 0x1c: /* I/O Base / I/O Limit, Secondary Status*/
-> +		/* Force 32-bit I/O addressing. */
-> +		w1_bits = 0x0101;
-> +		break;
-> +	case 0x24: /* Prefetchable Memory Base / Prefetchable Memory Limit */
-> +		/* Force 64-bit addressing */
-> +		w1_bits = 0x00010001;
-> +		break;
-> +	default:
-> +		w1_bits = 0;
-> +		break;
-> +	}
-> +	return w1_bits;
-> +}
-> +
->  static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
->  				    int where, int size, u32 val)
->  {
->  	struct gen_pci *pci = bus->sysdata;
->  	struct thunder_pem_pci *pem_pci;
->  	u64 write_val, read_val;
-> +	u64 where_aligned = where & ~3ull;
->  	u32 mask = 0;
->  
->  	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
-> @@ -205,8 +227,7 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
->  	 */
->  	switch (size) {
->  	case 1:
-> -		read_val = where & ~3ull;
-> -		writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-> +		writeq(where_aligned, pem_pci->pem_reg_base + PEM_CFG_RD);
->  		read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
->  		read_val >>= 32;
->  		mask = ~(0xff << (8 * (where & 3)));
-> @@ -215,8 +236,7 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
->  		val |= (u32)read_val;
->  		break;
->  	case 2:
-> -		read_val = where & ~3ull;
-> -		writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-> +		writeq(where_aligned, pem_pci->pem_reg_base + PEM_CFG_RD);
->  		read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
->  		read_val >>= 32;
->  		mask = ~(0xffff << (8 * (where & 3)));
-> @@ -244,11 +264,17 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
->  	}
->  
->  	/*
-> +	 * Some bits must be read-only with value of one.  Since the
-> +	 * access method allows these to be cleared if a zero is
-> +	 * written, force them to one before writing.
-> +	 */
-> +	val |= thunder_pem_bridge_w1_bits(where_aligned);
-> +
-> +	/*
->  	 * Low order bits are the config address, the high order 32
->  	 * bits are the data to be written.
->  	 */
-> -	write_val = where & ~3ull;
-> -	write_val |= (((u64)val) << 32);
-> +	write_val = (((u64)val) << 32) | where_aligned;
->  	writeq(write_val, pem_pci->pem_reg_base + PEM_CFG_WR);
->  	return PCIBIOS_SUCCESSFUL;
->  }
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It is somewhat cleaner, so I'd prefer it.
