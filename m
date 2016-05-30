@@ -1,35 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 9 May 2016 15:24:56 -0500
-From: Rob Herring <robh@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: niklass@axis.com, jespern@axis.com, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, linux-arm-kernel@axis.com,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] dt-bindings: pci: add DT binding for Axis
- ARTPEC-6 PCIe controller
-Message-ID: <20160509202456.GA23043@rob-hp-laptop>
-References: <1462794507-30262-1-git-send-email-niklass@axis.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462794507-30262-1-git-send-email-niklass@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V8 6/9] arm64, pci, acpi: ACPI support for legacy IRQs parsing and consolidation with DT code.
+Date: Mon, 30 May 2016 17:14:19 +0200
+Message-Id: <1464621262-26770-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 09, 2016 at 01:48:27PM +0200, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@axis.com>
-> 
-> This commit adds the Device Tree binding documentation that allows to
-> describe the PCIe controller found in the Axis ARTPEC-6 SoC.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
-> Changes since v1:
->  - Rename syscon node to be more descriptive
-> 
->  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  | 46 ++++++++++++++++++++++
->  1 file changed, 46 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+To enable PCI legacy IRQs on platforms booting with ACPI, arch code
+should include ACPI specific callbacks that parse and set-up the
+device IRQ number, equivalent to the DT boot path. Owing to the current
+ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
+cannot be parsed at device add time, since that would trigger ACPI scan
+handlers ordering issues depending on how the ACPI tables are defined.
 
-Acked-by: Rob Herring <robh@kernel.org>
+To solve this problem and consolidate FW PCI legacy IRQs parsing in
+one single pcibios callback (pending final removal), this patch moves
+DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
+PCI core code at device probe time) and adds ACPI PCI legacy IRQs
+parsing to the same callback too, so that FW PCI legacy IRQs parsing
+is confined in one single arch callback that can be easily removed
+when code parsing PCI legacy IRQs is consolidated and moved to core
+PCI code.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ arch/arm64/kernel/pci.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 3c4e308..336deef 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -50,11 +50,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ }
+ 
+ /*
+- * Try to assign the IRQ number from DT when adding a new device
++ * Try to assign the IRQ number when probing a new device
+  */
+-int pcibios_add_device(struct pci_dev *dev)
++int pcibios_alloc_irq(struct pci_dev *dev)
+ {
+-	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++	if (acpi_disabled)
++		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++#ifdef CONFIG_ACPI
++	else
++		return acpi_pci_irq_enable(dev);
++#endif
+ 
+ 	return 0;
+ }
+-- 
+1.9.1
