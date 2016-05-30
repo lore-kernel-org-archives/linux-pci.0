@@ -1,250 +1,125 @@
-Return-Path: <thierry.reding@gmail.com>
-Return-Path: <thierry.reding@gmail.com>
-Date: Mon, 2 May 2016 09:09:43 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, catalin.marinas@arm.com,
-	linux-pci@vger.kernel.org, will.deacon@arm.com,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>, ddaney@caviumnetworks.com,
-	robert.richter@caviumnetworks.com, msalter@redhat.com,
-	Liviu.Dudau@arm.com, jchandra@broadcom.com,
-	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
-	Suravee.Suthikulpanit@amd.com
-Subject: Re: [PATCH 1/3] [RFC] pci: add new method for register PCI hosts
-Message-ID: <20160502070943.GB27465@ulmo.ba.sec>
-References: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
- <1461970899-4150603-2-git-send-email-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="v9Ux+11Zm5mwPlX6"
-In-Reply-To: <1461970899-4150603-2-git-send-email-arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:16343 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754653AbcE3Nhz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:37:55 -0400
+Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY3W2026702
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:54 -0400
+Message-Id: <201605301337.u4UDY3W2026702@mx0a-001b2d01.pphosted.com>
+Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238jhvp7mm-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:54 -0400
+Received: from localhost
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 23:37:50 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 2/6] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
+Date: Mon, 30 May 2016 21:32:09 +0800
+In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On ARM HW the capability of IRQ remapping is abstracted on
+MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
+this [1].
 
---v9Ux+11Zm5mwPlX6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+To have a universal flag to test this capability for different
+archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+when MSI_FLAG_IRQ_REMAPPING is set.
 
-On Sat, Apr 30, 2016 at 01:01:37AM +0200, Arnd Bergmann wrote:
-> This patch makes the existing 'pci_host_bridge' structure a proper device
-> that is usable by PCI host drivers in a more standard way. In addition
-> to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
-> and pci_create_root_bus interfaces, this unfortunately means having to
-> add yet another interface doing basically the same thing, and add some
-> extra code in the initial step.
->=20
-> However, this time it's more likely to be extensible enough that we
-> won't have to do another one again in the future, and we should be
-> able to reduce code much more as a result.
->=20
-> The main idea is to pull the allocation of 'struct pci_host_bridge' out
-> of the registration, and let individual host drivers and architecture
-> code fill the members before calling the registration function.
->=20
-> There are a number of things we can do based on this:
->=20
-> * Use a single memory allocation for the driver-specific structure
->   and the generic PCI host bridge
-> * consolidate the contents of driver specific structures by moving
->   them into pci_host_bridge
-> * Add a consistent interface for removing a PCI host bridge again
->   when unloading a host driver module
-> * Replace the architecture specific __weak pcibios_* functions with
->   callbacks in a pci_host_bridge device
-> * Move common boilerplate code from host drivers into the generic
->   function, based on contents of the structure
-> * Extend pci_host_bridge with additional members when needed without
->   having to add arguments to pci_scan_*.
-> * Move members of struct pci_bus into pci_host_bridge to avoid
->   having lots of identical copies.
->=20
-> As mentioned in a previous email, one open question is whether we want
-> to export a function for allocating a pci_host_bridge device in
-> combination with the per-device structure or let the driver itself
-> call kzalloc.
+[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
 
-I think the most common pattern in other parts of the kernel is the
-latter. That gives drivers the most flexibility to do whatever they
-want or need.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/msi.c   |   15 +++++++++++++++
+ drivers/pci/probe.c |    3 +++
+ include/linux/msi.h |    5 ++++-
+ 3 files changed, 22 insertions(+), 1 deletion(-)
 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/pci/probe.c | 100 ++++++++++++++++++++++++++++++----------------=
-------
->  include/linux/pci.h |   7 +++-
->  2 files changed, 63 insertions(+), 44 deletions(-)
->=20
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ae7daeb83e21..fe9d9221b11e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -520,19 +520,6 @@ static void pci_release_host_bridge_dev(struct devic=
-e *dev)
->  	kfree(bridge);
->  }
-> =20
-> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> -{
-> -	struct pci_host_bridge *bridge;
-> -
-> -	bridge =3D kzalloc(sizeof(*bridge), GFP_KERNEL);
-> -	if (!bridge)
-> -		return NULL;
-> -
-> -	INIT_LIST_HEAD(&bridge->windows);
-> -	bridge->bus =3D b;
-> -	return bridge;
-> -}
-> -
->  static const unsigned char pcix_bus_speed[] =3D {
->  	PCI_SPEED_UNKNOWN,		/* 0 */
->  	PCI_SPEED_66MHz_PCIX,		/* 1 */
-> @@ -2108,51 +2095,47 @@ void __weak pcibios_remove_bus(struct pci_bus *bu=
-s)
->  {
->  }
-> =20
-> -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> +int pci_register_host(struct pci_host_bridge *bridge)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a080f44..dbdb5c3 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1134,6 +1134,21 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ }
+ EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
+ 
++int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
++{
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	struct msi_domain_info *info;
++
++	if (!domain)
++		return 0;
++
++	info = msi_get_domain_info(domain);
++	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
++		return 1;
++#endif
++	return 0;
++}
++
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ /**
+  * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8004f67..2b9e3ba 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -713,6 +713,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+ 	if (!d)
+ 		d = pci_host_bridge_msi_domain(b);
+ 
++	if (b == bus && pci_bus_msi_isolated(bus, d))
++		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++
+ 	dev_set_msi_domain(&bus->dev, d);
+ }
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 08441b1..04cc749 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
+ struct irq_data;
+ struct msi_desc;
+ struct pci_dev;
++struct pci_bus;
++struct irq_domain;
+ struct platform_msi_priv_data;
+ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+@@ -164,6 +166,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev);
+ 
++int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain);
++
+ struct msi_controller {
+ 	struct module *owner;
+ 	struct device *dev;
+@@ -182,7 +186,6 @@ struct msi_controller {
+ #include <linux/irqhandler.h>
+ #include <asm/msi.h>
+ 
+-struct irq_domain;
+ struct irq_domain_ops;
+ struct irq_chip;
+ struct device_node;
+-- 
+1.7.9.5
 
-Perhaps pci_register_host_bridge() to mirror the structure name in the
-registration function?
-
->  {
->  	int error;
-> -	struct pci_host_bridge *bridge;
->  	struct pci_bus *b, *b2;
->  	struct resource_entry *window, *n;
-> +	LIST_HEAD(resources);
->  	struct resource *res;
->  	resource_size_t offset;
->  	char bus_addr[64];
->  	char *fmt;
-> +	struct device *parent =3D bridge->dev.parent;
-> =20
->  	b =3D pci_alloc_bus(NULL);
->  	if (!b)
-> -		return NULL;
-> +		return -ENOMEM;
-> +	bridge->bus =3D b;
-> =20
-> -	b->sysdata =3D sysdata;
-> -	b->ops =3D ops;
-> -	b->number =3D b->busn_res.start =3D bus;
-> +	/* temporarily move resources off the list */
-
-Might be worth mentioning why we move the resources off the list.
-
-> +	list_splice_init(&bridge->windows, &resources);
-> +	b->sysdata =3D bridge->sysdata;
-
-Does the sysdata not become effectively obsolete after this series? My
-understanding is that it's primarily used to store driver-specific data
-along with a PCI bus, but if drivers can embed struct pci_host_bridge
-they can simply upcast bus->bridge. I do notice that bus->bridge is
-currently a struct device *, perhaps we can replace it by a back pointer
-to the parent struct pci_host_bridge, which would have to gain a struct
-device *parent to point at the device that instantiated the bridge. This
-is becoming somewhat complicated, but maybe that can be simplified at
-some point.
-
-> +	b->msi =3D bridge->msi;
-> +	b->ops =3D bridge->ops;
-> +	b->number =3D b->busn_res.start =3D bridge->busnr;
->  	pci_bus_assign_domain_nr(b, parent);
-> -	b2 =3D pci_find_bus(pci_domain_nr(b), bus);
-> +	b2 =3D pci_find_bus(pci_domain_nr(b), bridge->busnr);
->  	if (b2) {
->  		/* If we already got to this bus through a different bridge, ignore it=
- */
->  		dev_dbg(&b2->dev, "bus already known\n");
-> +		error =3D -EEXIST;
->  		goto err_out;
->  	}
-> =20
-> -	bridge =3D pci_alloc_host_bridge(b);
-> -	if (!bridge)
-> -		goto err_out;
-> -
-> -	bridge->dev.parent =3D parent;
-> -	bridge->dev.release =3D pci_release_host_bridge_dev;
-> -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> +	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bridge->bu=
-snr);
->  	error =3D pcibios_root_bridge_prepare(bridge);
-> -	if (error) {
-> -		kfree(bridge);
-> +	if (error)
->  		goto err_out;
-> -	}
-> =20
->  	error =3D device_register(&bridge->dev);
-> -	if (error) {
-> +	if (error)
->  		put_device(&bridge->dev);
-> -		goto err_out;
-> -	}
-> +
->  	b->bridge =3D get_device(&bridge->dev);
-
-I'm not sure I understand why we continue after failing to register the
-device. Is the usage model here that drivers set up bridge->dev with an
-initial set of values here, such as what the bridge->dev.parent is? One
-complication I can imagine with that is that drivers would need to have
-an implementation for the bridge device's ->release() callback. Perhaps
-this could be simplified by having a default release callback (maybe
-set up by pci_register_host() if none was specified by the driver) that
-calls a callback in struct pci_host_bridge which gets passed a struct
-pci_host_bridge. I think that would make usage more uniform from the
-driver perspective.
-
-On a side-note, perhaps it would be worth adding a structure that
-carries host bridge operations (struct pci_host_bridge_ops)?
-
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 81f070a47ee7..8bb5dff617a1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -400,10 +400,14 @@ static inline int pci_channel_offline(struct pci_de=
-v *pdev)
-> =20
->  struct pci_host_bridge {
->  	struct device dev;
-> -	struct pci_bus *bus;		/* root bus */
-> +	struct pci_ops *ops;
-> +	void *sysdata;
-> +	int busnr;
-
-While at it, is there any reason why this can't be made unsigned? I know
-this must sound pedantic, but whenever I see a signed integer variable I
-immediately ask myself what the meaning of negative values would be, and
-I can't think of any scenario where this one could possible be negative.
-But perhaps I'm missing something?
-
-Thierry
-
---v9Ux+11Zm5mwPlX6
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXJv01AAoJEN0jrNd/PrOhCrQP/Rar6mbtMb16gk6DZh6ARC0M
-zRExVZQIgPNcl1yRtA/io3M35wM+VjNZnW5yUmOLYjvM0T5NN7zeZh4ZZDAtc2CA
-SbhZV0zHoLC2uS7W0LNcb1J228Nvg5TvBOVP3p2zj/kT7R8M2zHgWM4rD2DoavuX
-4X82ZKMP9qXgFvNzGK3LSa2vShzgAolC08/YQHO7aQH9RjNFzvnKe2197yDmK2XA
-UKqNqepaIiODnYnaqhPp2CY5WAyAaS3IHPe1SJxyxqALjYyqJy1SfO4ZSP5mxvxX
-FnfIwQQs8bO/F6q5K6b4/oKMfVZvjBAuVpj+4C1/ifDy83hn6pievxE2VpSB58yk
-5FFQAVaJK50HajONuw5qlM1jkZMufEV2MKZu5ALULJ1ZSnXvfsuOwharnF5GHhck
-F5anBNWFwXH9717fiNW3NwA2Iz+dHGka3bu5aRwWAseFQlLS4kMmLJmVczkF5DtI
-hBQZPq0asZeiAGY9afVKZy9sfn8iu8uFZd72RmqTWI5nN+26+MP3uhischvXnqSa
-i4KIwMJ9FKnpBF3O0wEOAz95j6tfKsb/oylkrZ0x76sc1y23hgpwud+DSkmzm2wX
-IlFGEaNe0lkqs9i9uuQrBOdxsc+Aw+Sfj4yIej8LJ5qnQbZk0YkoVaEJ47jig0iH
-2whyLaUe3hS4gxvYOe0r
-=C3VJ
------END PGP SIGNATURE-----
-
---v9Ux+11Zm5mwPlX6--
