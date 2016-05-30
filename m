@@ -1,238 +1,157 @@
 Return-Path: <tn@semihalf.com>
 Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
- device companion assignment to core code.
-To: Bjorn Helgaas <helgaas@kernel.org>, rafael@kernel.org
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-2-git-send-email-tn@semihalf.com>
- <20160427024537.GH6789@localhost>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
- hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
- jiang.liu@linux.intel.com, jchandra@broadcom.com,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com,
- Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com
 From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5729AE92.2090106@semihalf.com>
-Date: Wed, 4 May 2016 10:10:58 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160427024537.GH6789@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host controller
+Date: Mon, 30 May 2016 17:14:13 +0200
+Message-Id: <1464621262-26770-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27.04.2016 04:45, Bjorn Helgaas wrote:
-> [question for Rafael below]
->
-> On Fri, Apr 15, 2016 at 07:06:36PM +0200, Tomasz Nowicki wrote:
->> Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
->> bridge initialization. They both use arch-specific sysdata to pass down
->> parent device reference and both rely on NULL parent in pci_create_root_bus()
->> to validate sysdata content.
->>
->> It looks hacky and prevents us from getting some firmware specific
->> info for PCI host controller based on its acpi_device structure
->> in generic pci_create_root_bus() function. However, we overcome that
->> blocker by passing down parent device via pci_create_root_bus parameter
->> (as the ACPI device type). Then we use ACPI_COMPANION_SET in core code
->> for ACPI boot method only. ACPI_COMPANION_SET is safe to run for all
->> cases DT, ACPI and DT&ACPI.
->>
->> Since now PCI core code is setting ACPI companion device for us,
->> x86 & ia64 specific ACPI companion device setting turns out to be dead now.
->> We can get rid of it, including related companion reference from
->> PCI sysdata structure. Aslo, PCI_CONTROLLER macro cannot return valid
->> companion device anymore. Therefore we need to convert its usage to
->> ACPI_COMPANION.
->>
->> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Tested-by: Duc Dang <dhdang@apm.com>
->> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
->> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
->> Tested-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>   arch/ia64/hp/common/sba_iommu.c    |  2 +-
->>   arch/ia64/include/asm/pci.h        |  1 -
->>   arch/ia64/pci/pci.c                | 16 ----------------
->>   arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
->>   arch/x86/include/asm/pci.h         |  3 ---
->>   arch/x86/pci/acpi.c                | 17 -----------------
->>   drivers/acpi/pci_root.c            |  7 ++++++-
->>   drivers/pci/probe.c                |  2 ++
->>   8 files changed, 11 insertions(+), 41 deletions(-)
->>
->> diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
->> index a6d6190..78e4444 100644
->> --- a/arch/ia64/hp/common/sba_iommu.c
->> +++ b/arch/ia64/hp/common/sba_iommu.c
->> @@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
->>   	if (PCI_CONTROLLER(bus)->iommu)
->>   		return;
->>
->> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
->> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
->>   	if (!handle)
->>   		return;
->>
->> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
->> index c0835b0..12423f4 100644
->> --- a/arch/ia64/include/asm/pci.h
->> +++ b/arch/ia64/include/asm/pci.h
->> @@ -63,7 +63,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
->>   #define pci_legacy_write platform_pci_legacy_write
->>
->>   struct pci_controller {
->> -	struct acpi_device *companion;
->>   	void *iommu;
->>   	int segment;
->>   	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
->> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
->> index 8f6ac2f..978d6af 100644
->> --- a/arch/ia64/pci/pci.c
->> +++ b/arch/ia64/pci/pci.c
->> @@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>   	}
->>
->>   	info->controller.segment = root->segment;
->> -	info->controller.companion = device;
->>   	info->controller.node = acpi_get_node(device->handle);
->>   	INIT_LIST_HEAD(&info->io_resources);
->>   	return acpi_pci_root_create(root, &pci_acpi_root_ops,
->>   				    &info->common, &info->controller);
->>   }
->>
->> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->> -{
->> -	/*
->> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
->> -	 * here, pci_create_root_bus() has been called by someone else and
->> -	 * sysdata is likely to be different from what we expect.  Let it go in
->> -	 * that case.
->> -	 */
->> -	if (!bridge->dev.parent) {
->> -		struct pci_controller *controller = bridge->bus->sysdata;
->> -		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
->> -	}
->> -	return 0;
->> -}
->> -
->>   void pcibios_fixup_device_resources(struct pci_dev *dev)
->>   {
->>   	int idx;
->> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
->> index 231234c..e454492 100644
->> --- a/arch/ia64/sn/kernel/io_acpi_init.c
->> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
->> @@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
->>   	struct acpi_resource_vendor_typed *vendor;
->>
->>
->> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
->> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
->>   	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
->>   					  &sn_uuid, &buffer);
->>   	if (ACPI_FAILURE(status)) {
->> @@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
->>   	acpi_status status;
->>   	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
->>
->> -	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
->> +	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
->>           status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
->>                                          &segment);
->>           if (ACPI_SUCCESS(status)) {
->> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
->> index 9ab7507..24de07d 100644
->> --- a/arch/x86/include/asm/pci.h
->> +++ b/arch/x86/include/asm/pci.h
->> @@ -14,9 +14,6 @@
->>   struct pci_sysdata {
->>   	int		domain;		/* PCI domain */
->>   	int		node;		/* NUMA node */
->> -#ifdef CONFIG_ACPI
->> -	struct acpi_device *companion;	/* ACPI companion device */
->> -#endif
->>   #ifdef CONFIG_X86_64
->>   	void		*iommu;		/* IOMMU private data */
->>   #endif
->> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->> index 3cd6983..f4ca17a 100644
->> --- a/arch/x86/pci/acpi.c
->> +++ b/arch/x86/pci/acpi.c
->> @@ -340,7 +340,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>   		struct pci_sysdata sd = {
->>   			.domain = domain,
->>   			.node = node,
->> -			.companion = root->device
->>   		};
->>
->>   		memcpy(bus->sysdata, &sd, sizeof(sd));
->> @@ -355,7 +354,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>   		else {
->>   			info->sd.domain = domain;
->>   			info->sd.node = node;
->> -			info->sd.companion = root->device;
->>   			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
->>   						   &info->common, &info->sd);
->>   		}
->> @@ -373,21 +371,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>   	return bus;
->>   }
->>
->> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->> -{
->> -	/*
->> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
->> -	 * here, pci_create_root_bus() has been called by someone else and
->> -	 * sysdata is likely to be different from what we expect.  Let it go in
->> -	 * that case.
->> -	 */
->> -	if (!bridge->dev.parent) {
->> -		struct pci_sysdata *sd = bridge->bus->sysdata;
->> -		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
->> -	}
->> -	return 0;
->> -}
->> -
->>   int __init pci_acpi_init(void)
->>   {
->>   	struct pci_dev *dev = NULL;
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index ae3fe4e..4581e0e 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -564,6 +564,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
->>   		}
->>   	}
->>
->> +	/*
->> +	 * pci_create_root_bus() needs to detect the parent device type,
->> +	 * so initialize its companion data accordingly.
->> +	 */
->> +	ACPI_COMPANION_SET(&device->dev, device);
->>   	root->device = device;
->>   	root->segment = segment & 0xFFFF;
->>   	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
->> @@ -846,7 +851,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->>
->>   	pci_acpi_root_add_resources(info);
->>   	pci_add_resource(&info->resources, &root->secondary);
->> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
->> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
->>   				  sysdata, &info->resources);
->
-> "device" here is a struct acpi_device *.  Rafael, is that the right
-> thing to do?  I dimly recall proposing something similar long ago and
-> that it turned out to be a bad idea.
->
+>From the functionality point of view this series may be split into the
+following logic parts:
+1. Export ECAM API and add parent device to pci_config_window
+2. Add IO resources handling to PCI core code
+3. Support for generic domain assignment based on ACPI
+4. New MCFG driver
+5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64/
 
-Joining Bjorn's question. Rafael, do you recall what was the issue here 
-from the past?
+Patches has been built on top of 4.7-rc1 and can be found here:
+git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v8)
 
-Thanks,
-Tomasz
+This has been tested on Cavium ThunderX server. Any help in reviewing and
+testing is very appreciated.
+
+v7 -> v8
+- move code from drivers/acpi/pci_root_generic.c to arch/arm64/kernel/pci.c
+- minor changes around domain assignment
+- pci_mcfg.c improvements for parsing MCFG tables and lookup its entries
+
+v6 -> v7
+- drop quirks handling
+- changes for ACPI companion and domain number assignment approach
+- implement arch pcibios_{add|remove}_bus and call acpi_pci_{add|remove}_bus from there
+- cleanups around nomenclature
+- use resources oriented API for ECAM
+- fix for based address calculation before mapping ECAM region
+- remove useless lock for MCFG lookup
+- move MCFG stuff to separated file pci_mcfg.c
+- drop MCFG entries caching
+- rebase against 4.6-rc7
+
+v5 -> v6
+- drop idea of x86 MMCONFIG code refactoring
+- integrate JC's patches which introduce new ECAM API:
+  https://lkml.org/lkml/2016/4/11/907
+  git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
+- integrate Sinan's fix for releasing IO resources, see patch [06/13]
+- added ACPI support for ThunderX ECAM and PEM drivers
+- rebase against 4.6-rc2
+
+v4 -> v5
+- drop MCFG refactoring group patches 1-6 from series v4 and integrate Jayachandran's patch
+  https://patchwork.ozlabs.org/patch/575525/
+- rewrite PCI legacy IRQs allocation
+- squash two patches 11 and 12 from series v4, fixed bisection issue
+- changelog improvements
+- rebase against 4.5-rc3
+
+v3 -> v4
+- drop Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
+- add Lorenzo's fix patch 19/24
+- ACPI PCI bus domain number assigning cleanup
+- change resource management, we now claim and reassign resources
+- improvements for applying quirks
+- drop Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
+- rebase against 4.5-rc1
+
+v2 -> v3
+- fix legacy IRQ assigning and IO ports registration
+- remove reference to arch specific companion device for ia64
+- move ACPI PCI host controller driver to pci_root.c
+- drop generic domain assignment for x86 and ia64 as I am not
+  able to run all necessary test variants
+- drop patch which cleaned legacy IRQ assignment since it belongs to
+  Mathew's series:
+  https://patchwork.ozlabs.org/patch/557504/
+- extend MCFG quirk code
+- rebase against 4.4
+
+v1 -> v2
+- move non-arch specific piece of code to dirver/acpi/ directory
+- fix IO resource handling
+- introduce PCI config accessors quirks matching
+- moved ACPI_COMPANION_SET to generic code
+
+v1 - https://lkml.org/lkml/2015/10/27/504
+v2 - https://lkml.org/lkml/2015/12/16/246
+v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
+v4 - https://lkml.org/lkml/2016/2/4/646
+v5 - https://lkml.org/lkml/2016/2/16/426
+v6 - https://lkml.org/lkml/2016/4/15/594
+
+Jayachandran C (2):
+  PCI: ecam: move ecam.h to linux/include/pci-ecam.h
+  PCI: ecam: Add parent device field to pci_config_window
+
+Tomasz Nowicki (7):
+  pci: Add new function to unmap IO resources.
+  acpi, pci: Support IO resources when parsing PCI host bridge
+    resources.
+  pci, acpi: add acpi hook to assign domain number.
+  arm64, pci, acpi: ACPI support for legacy IRQs parsing and
+    consolidation with DT code.
+  acpi: Add generic MCFG table handling
+  arm64, pci, acpi: Provide ACPI-specific prerequisites for PCI bus
+    enumeration.
+  pci, acpi: ARM64 support for ACPI based generic PCI host controller
+
+ arch/arm64/Kconfig                  |   2 +
+ arch/arm64/kernel/pci.c             | 143 ++++++++++++++++++++++++++++++++++--
+ drivers/acpi/Kconfig                |   3 +
+ drivers/acpi/Makefile               |   1 +
+ drivers/acpi/pci_mcfg.c             |  94 ++++++++++++++++++++++++
+ drivers/acpi/pci_root.c             |  39 ++++++++++
+ drivers/pci/ecam.c                  |   6 +-
+ drivers/pci/ecam.h                  |  67 -----------------
+ drivers/pci/host/pci-host-common.c  |   3 +-
+ drivers/pci/host/pci-host-generic.c |   3 +-
+ drivers/pci/host/pci-thunder-ecam.c |   3 +-
+ drivers/pci/host/pci-thunder-pem.c  |   6 +-
+ drivers/pci/pci.c                   |  29 +++++++-
+ include/linux/pci-acpi.h            |   2 +
+ include/linux/pci-ecam.h            |  67 +++++++++++++++++
+ include/linux/pci.h                 |   9 ++-
+ 16 files changed, 387 insertions(+), 90 deletions(-)
+ create mode 100644 drivers/acpi/pci_mcfg.c
+ delete mode 100644 drivers/pci/ecam.h
+ create mode 100644 include/linux/pci-ecam.h
+
+-- 
+1.9.1
