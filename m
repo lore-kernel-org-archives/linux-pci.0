@@ -1,47 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([217.30.184.167]:58094 "EHLO mail.kapsi.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755453AbcE0API (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 May 2016 20:15:08 -0400
-Subject: Re: How should I use kernel-defined i2c structs in this driver
-To: Andrey Utkin <andrey_utkin@fastmail.com>,
-	kernel-mentors@selenic.com, devel@driverdev.osuosl.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org
-References: <20160526135953.GA20697@zver>
-Cc: andrey.utkin@corp.bluecherry.net
-From: Antti Palosaari <crope@iki.fi>
-Message-ID: <85a38a7c-d970-426a-5710-bbdf955cab58@iki.fi>
-Date: Fri, 27 May 2016 03:14:59 +0300
-MIME-Version: 1.0
-In-Reply-To: <20160526135953.GA20697@zver>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201605301337.u4UDY4J2026770@mx0a-001b2d01.pphosted.com>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X table
+Date: Mon, 30 May 2016 21:32:07 +0800
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/26/2016 04:59 PM, Andrey Utkin wrote:
-> Could anybody please give a hint - which kernel-defined i2c objects, and how
-> many of them, I need to define and use to substitute these driver-defined
-> functions i2c_read(), i2c_write() ?
-> https://github.com/bluecherrydvr/linux/blob/release/tw5864/1.16/drivers/media/pci/tw5864/tw5864-config.c
-> In a word, there's 4 chips with different addresses, to which this code
-> communicates via main chip's dedicated registers.
-> Do i need a single i2c_adapter or several?
-> Do i need i2c_client entities?
-> where should I put what is named "devid" here?
->
-> Thanks in advance.
+Current vfio-pci implementation disallows to mmap the page
+containing MSI-X table in case that users can write directly
+to MSI-X table and generate an incorrect MSIs.
 
-It depends how those are connected at hardware level. Quickly looking I 
-think "devid" is here to select proper I2C adapter. So I think there is 
-4 I2C adapters and each of those adapter has 1 slave device. Is that 
-correct? If yes, then register 4 I2C adapters and register single client 
-for each of those adapters.
+However, this will cause some performance issue when there
+are some critical device registers in the same page as the 
+MSI-X table. We have to handle the mmio access to these
+registers in QEMU emulation rather than in guest.
 
-regards
-Antti
+To solve this issue, this series allows to expose MSI-X table
+to userspace when hardware enables the capability of interrupt
+remapping which can ensure that a given PCI device can only
+shoot the MSIs assigned for it. And we introduce a new bus_flags
+PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+for different archs.
 
+The patch 3 are based on the proposed patchset[1].
 
+Changelog v2: 
+- Make the commit log more clear
+- Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+  so that we could clearly know what the function does
+- Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+  of iommu_bus_notifier()
+- Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+  table so that we can know whether we allow to mmap MSI-X table
+  in QEMU
+
+[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+
+Yongji Xie (6):
+  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+  iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+  vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+ drivers/iommu/iommu.c                     |    8 ++++++++
+ drivers/pci/msi.c                         |   15 +++++++++++++++
+ drivers/pci/probe.c                       |    7 +++++++
+ drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
+ drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
+ include/linux/msi.h                       |    5 ++++-
+ include/linux/pci.h                       |    1 +
+ 8 files changed, 59 insertions(+), 5 deletions(-)
 
 -- 
-http://palosaari.fi/
+1.7.9.5
