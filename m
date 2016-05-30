@@ -1,84 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Date: Fri, 13 May 2016 02:36:27 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F853FC5@SHSMSX101.ccr.corp.intel.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
-	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
-	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-	<20160505090513.56886c12@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
-	<20160511095331.18436241@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F850046@SHSMSX101.ccr.corp.intel.com>
-	<20160511202042.77593861@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8507E8@SHSMSX101.ccr.corp.intel.com>
- <20160512114735.7ec61bd3@t450s.home>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33423 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933309AbcE3NiZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:38:25 -0400
+Received: from pps.filterd (m0048817.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY615030462
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:38:19 -0400
+Message-Id: <201605301338.u4UDY615030462@mx0a-001b2d01.pphosted.com>
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238k00whd5-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:38:18 -0400
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 23:38:15 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 3/6] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+Date: Mon, 30 May 2016 21:32:10 +0800
+In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Tian, Kevin
-> Sent: Friday, May 13, 2016 10:33 AM
-> 
-> > means.  The MSI-X vector table of a device is always considered
-> > untrusted which is why we require user opt-ins to subvert that
-> > protection.  Thanks,
-> >
-> 
-> I only partially agree with this statement since there is different
-> trust level for kernel space driver and user space driver.
-> 
-> OS may choose to trust kernel space driver then it can enable IRQ
-> remapping only for load balance purpose w/o source id verfification.
-> In such case MSI-X vector table is trusted and fully under kernel
-> control. Allowing to mmap MSI-X table in user space definitely
-> breaks that boundary.
-> 
-> Anyway my point is simple. Let's ignore how Linux kernel implements
-> IRQ remapping on x86 (which may change time to time), and just
-> focus on architectural possibility. Non-x86 platform may implement
-> IRQ remapping completely separate from device side, then checking
-> availability of IRQ remapping is enough to decide whether mmap
-> MSI-X table is safe. x86 with VT-d can be configured to a mode
-> requiring host control of both MSI-X entry and IRQ remapping hardware
-> (without source id check). In such case it's insufficient to make
-> decision simply based on IRQ remapping availability. We need a way
-> to query from IRQ remapping module whether it's actually safe to
-> mmap MSI-X.
-> 
+The capability of IRQ remapping is abstracted on IOMMU side on
+some archs. There is a existing flag IOMMU_CAP_INTR_REMAP for this.
 
-Or another way is to have VFIO explicitly request intel-iommu to
-enforce sid check when IRQ remapping is enabled...
+To have a universal flag to test this capability for different
+archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+when IOMMU_CAP_INTR_REMAP is set.
 
-Thanks
-Kevin
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/probe.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2b9e3ba..15a33e2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -16,6 +16,7 @@
+ #include <linux/aer.h>
+ #include <linux/acpi.h>
+ #include <linux/irqdomain.h>
++#include <linux/iommu.h>
+ #include "pci.h"
+ 
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+@@ -2160,6 +2161,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	pci_set_bus_of_node(b);
+ 	pci_set_bus_msi_domain(b);
+ 
++	if (iommu_capable(&pci_bus_type, IOMMU_CAP_INTR_REMAP))
++		b->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++
+ 	if (!parent)
+ 		set_dev_node(b->bridge, pcibus_to_node(b));
+ 
+-- 
+1.7.9.5
+
