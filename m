@@ -1,92 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39058 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753AbcETGnL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:11 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:65431 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933158AbcE3NiC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:38:02 -0400
+Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY3kD026717
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:38:01 -0400
+Message-Id: <201605301338.u4UDY3kD026717@mx0a-001b2d01.pphosted.com>
+Received: from e28smtp05.in.ibm.com (e28smtp05.in.ibm.com [125.16.236.5])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238jhvp7q2-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:38:01 -0400
 Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 20 May 2016 16:43:09 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 1BE4A357805D
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:06 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gwhg44695678
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:06 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gX8h031375
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:33 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v10 05/18] powerpc/powernv: Increase PE# capacity
-Date: Fri, 20 May 2016 16:41:29 +1000
-Message-Id: <1463726502-14679-6-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 19:07:57 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 5/6] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+Date: Mon, 30 May 2016 21:32:12 +0800
+In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains an array helping to translate 2-bytes Request
-ID (RID) to PE# with the assumption that PE# takes one byte, meaning
-that we can't have more than 256 PEs. However, pci_dn->pe_number
-already had 4-bytes for the PE#.
+Any IODA host bridge have the capability of IRQ remapping.
+So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
+is detected.
 
-This extends the PE# capacity for every PHB. After that, the PE number
-is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
-check the PE# in phb->pe_rmap[] is valid or not.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Daniel Axtens <dja@axtens.net>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
- arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
- 2 files changed, 7 insertions(+), 6 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 3ce9867..dea2595 100644
+index c5baaf3..9011268 100644
 --- a/arch/powerpc/platforms/powernv/pci-ioda.c
 +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -761,7 +761,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+@@ -3094,6 +3094,12 @@ static void pnv_pci_ioda_fixup(void)
+ 	pnv_npu_ioda_fixup();
+ }
  
- 	/* Clear the reverse map */
- 	for (rid = pe->rid; rid < rid_end; rid++)
--		phb->ioda.pe_rmap[rid] = 0;
-+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
- 
- 	/* Release from all parents PELT-V */
- 	while (parent) {
-@@ -3490,6 +3490,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (prop32)
- 		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
- 
-+	/* Invalidate RID to PE# mapping */
-+	for (segno = 0; segno < ARRAY_SIZE(phb->ioda.pe_rmap); segno++)
-+		phb->ioda.pe_rmap[segno] = IODA_INVALID_PE;
++int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++	return 0;
++}
 +
- 	/* Parse 64-bit MMIO range */
- 	pnv_ioda_parse_m64_window(phb);
+ /*
+  * Returns the alignment for I/O or memory windows for P2P
+  * bridges. That actually depends on how PEs are segmented.
+@@ -3395,6 +3401,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	 */
+ 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
  
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 7dee25e..de56ed2 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -152,11 +152,8 @@ struct pnv_phb {
- 		struct list_head	pe_list;
- 		struct mutex            pe_list_mutex;
- 
--		/* Reverse map of PEs, will have to extend if
--		 * we are to support more than 256 PEs, indexed
--		 * bus { bus, devfn }
--		 */
--		unsigned char		pe_rmap[0x10000];
-+		/* Reverse map of PEs, indexed by {bus, devfn} */
-+		unsigned int		pe_rmap[0x10000];
- 
- 		/* TCE cache invalidate registers (physical and
- 		 * remapped)
++	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
++
+ 	if (phb->type == PNV_PHB_NPU)
+ 		hose->controller_ops = pnv_npu_ioda_controller_ops;
+ 	else
 -- 
-2.1.0
+1.7.9.5
 
