@@ -1,152 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Date: Fri, 13 May 2016 06:50:25 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F854287@SHSMSX101.ccr.corp.intel.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
-	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-	<20160505090513.56886c12@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
-	<20160511095331.18436241@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F850046@SHSMSX101.ccr.corp.intel.com>
-	<20160511202042.77593861@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8507E8@SHSMSX101.ccr.corp.intel.com>
-	<20160512114735.7ec61bd3@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F853FA4@SHSMSX101.ccr.corp.intel.com>
- <20160512233246.347b8b3c@t450s.home>
-In-Reply-To: <20160512233246.347b8b3c@t450s.home>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60263 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754468AbcE3Nkj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:40:39 -0400
+Received: from pps.filterd (m0075420.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDeVNX026481
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:40:38 -0400
+Message-Id: <201605301340.u4UDeVNX026481@mx0a-001b2d01.pphosted.com>
+Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238j3ypsxq-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:40:36 -0400
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 23:39:02 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 6/6] vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+Date: Mon, 30 May 2016 21:32:13 +0800
+In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: Friday, May 13, 2016 1:33 PM
-> > >
-> > > As argued previously in this thread, there's nothing special about a
-> > > DMA write to memory versus a DMA write to a special address that
-> > > triggers an MSI vector.  If the device is DMA capable, which we assume
-> > > all are, it can be fooled into generating those DMA writes regardless
-> > > of whether we actively block access to the MSI-X vector table itself.
-> >
-> > But with DMA remapping above can be blocked.
-> 
-> How?  VT-d explicitly ignores DMA writes to 0xFEEx_xxxx, section 3.13:
-> 
->   Write requests without PASID of DWORD length are treated as interrupt
->   requests. Interrupt requests are not subjected to DMA remapping[...]
->   Instead, remapping hardware can be enabled to subject such interrupt
->   requests to interrupt remapping.
+This patch tries to expose MSI-X tables to userspace if hardware
+enables interrupt remapping. This capability can ensure that a
+given PCI device can only shoot the MSIs assigned for it. That
+means a userspace driver could never hurt other devices or system
+by writing to the exposed MSI-X table directly.
 
-Thanks for catching this!
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/vfio/pci/vfio_pci.c      |   17 ++++++++++++++---
+ drivers/vfio/pci/vfio_pci_rdwr.c |    3 ++-
+ 2 files changed, 16 insertions(+), 4 deletions(-)
 
-> 
-> > > MSI-X vector table access w/o interrupt remapping is to avoid obvious
-> > > collisions if it were to be programmed directly, it doesn't actually
-> > > prevent an identical DMA transaction from being generated by other
-> >
-> > Kernel can enable DMA remapping but disable IRQ remapping. In such
-> > case identical DMA transaction can be prevented.
-> 
-> Not according to the VT-d spec as quoted above.  If so, how?
-
-So my argument on this is wrong. sorry.
-
-> 
-> > Anyway my point is simple. Let's ignore how Linux kernel implements
-> > IRQ remapping on x86 (which may change time to time), and just
-> > focus on architectural possibility. Non-x86 platform may implement
-> > IRQ remapping completely separate from device side, then checking
-> > availability of IRQ remapping is enough to decide whether mmap
-> > MSI-X table is safe. x86 with VT-d can be configured to a mode
-> > requiring host control of both MSI-X entry and IRQ remapping hardware
-> > (without source id check). In such case it's insufficient to make
-> > decision simply based on IRQ remapping availability. We need a way
-> > to query from IRQ remapping module whether it's actually safe to
-> > mmap MSI-X.
-> 
-> We're going in circles here.  This patch is attempting to remove
-> protection from the MSI-X vector table that is really nothing more than
-> security theater already.  That "protection" only actually prevents
-> casual misuse of the API which is really only a problem when the
-> platform offers no form of interrupt isolation, such as VT-d with DMA
-> remapping but not interrupt remapping.  Disabling source-id checking in
-> VT-d should be handled as the equivalent of disabling interrupt
-> remapping altogether as far as the IOMMU API is concerned.  That's
-> a trivial gap that should be fixed.  There is no such thing as a secure
-
-That is the main change I'm asking against original patch, which has:
-
-+static void pci_check_msi_remapping(struct pci_dev *pdev,
-+					const struct iommu_ops *ops)
-+{
-+	struct pci_bus *bus = pdev->bus;
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 188b1ff..6bae388 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -487,8 +487,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 
+ 	end = pci_resource_len(vdev->pdev, vdev->msix_bar);
+ 
+-	/* If MSI-X table is aligned to the start or end, only one area */
+-	if (((vdev->msix_offset & PAGE_MASK) == 0) ||
++	/*
++	 * If MSI-X table is allowed to mmap because of the capability
++	 * of IRQ remapping or aligned to the start or end, only one area
++	 */
++	if ((vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) ||
++	    ((vdev->msix_offset & PAGE_MASK) == 0) ||
+ 	    (PAGE_ALIGN(vdev->msix_offset + vdev->msix_size) >= end))
+ 		nr_areas = 1;
+ 
+@@ -503,6 +507,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 			      struct vfio_region_info_cap_sparse_mmap, header);
+ 	sparse->nr_areas = nr_areas;
+ 
++	if (vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) {
++		sparse->areas[i].offset = 0;
++		sparse->areas[i].size = end;
++		return 0;
++	}
 +
-+	if (ops->capable(IOMMU_CAP_INTR_REMAP) &&
-+		!(bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP))
-+		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+}
-+
+ 	if (vdev->msix_offset & PAGE_MASK) {
+ 		sparse->areas[i].offset = 0;
+ 		sparse->areas[i].size = vdev->msix_offset & PAGE_MASK;
+@@ -1061,7 +1071,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
+ 		return -EINVAL;
+ 
+-	if (index == vdev->msix_bar) {
++	if (index == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		/*
+ 		 * Disallow mmaps overlapping the MSI-X table; users don't
+ 		 * get to touch this directly.  We could find somewhere
+diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
+index 5ffd1d9..dbf9cd0 100644
+--- a/drivers/vfio/pci/vfio_pci_rdwr.c
++++ b/drivers/vfio/pci/vfio_pci_rdwr.c
+@@ -164,7 +164,8 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
+ 	} else
+ 		io = vdev->barmap[bar];
+ 
+-	if (bar == vdev->msix_bar) {
++	if (bar == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		x_start = vdev->msix_offset;
+ 		x_end = vdev->msix_offset + vdev->msix_size;
+ 	}
+-- 
+1.7.9.5
 
-Above flag should be cleared when source-id checking is disabled on x86. 
-Yes, VFIO is part of OS but any assumption we made about other parts
-needs to be reflected accurately in the code.
-
-> MSI-X vector table when untrusted userspace drivers are involved, we
-> must always assume that a device can generate DMA writes that are
-> indistinguishable from actual interrupt requests and if the platform
-> does not provide interrupt isolation we should require the user to
-> opt-in to an unsafe mode.
-> 
-> Simply denying direct writes to the vector table or preventing mapping
-> of the vector table into the user address space does not provide any
-> tangible form of protection.  Many devices make use of window registers
-> that allow backdoors to arbitrary device registers.  Some drivers even
-> use this as the primary means for configuring MSI-X, which makes them
-> incompatible with device assignment without device specific quirks to
-> enable virtualization of these paths.
-> 
-> If you have an objection to this patch, please show me how preventing
-> direct CPU access to the MSI-X vector table provides any kind of
-> security guarantee of the contents of the vector table and also prove
-> to me that a device cannot spoof a DMA write that is indistinguishable
-> from one associated with an actual interrupt, regardless of the
-> contents of the MSI-X vector table.  Thanks,
-> 
-
-I'm not object to the whole patch series. As replied above, my point
-is just that current condition of allowing mmap MSI-X in this patch is not 
-accurate, but my argument on security manner is not correct. Thanks
-for your elaboration to make it clear.
-
-Thanks
-Kevin
