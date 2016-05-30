@@ -1,60 +1,84 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
-MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <CAKc_7PW8BqQSTn01zDVsec4KXunQUKfcEft8=MH-E0xsmheo3w@mail.gmail.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-	<1462893601-8937-8-git-send-email-tn@semihalf.com>
-	<CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
-	<20160511101101.GA16101@red-moon>
-	<CAJZ5v0hgw929W5PjF0PqT+ssiOHd8TeJoSQcz4NUiAovZY2pfQ@mail.gmail.com>
-	<20160511224314.GD28812@localhost>
-	<CAKc_7PW8BqQSTn01zDVsec4KXunQUKfcEft8=MH-E0xsmheo3w@mail.gmail.com>
-Date: Thu, 12 May 2016 13:27:23 +0200
-Message-ID: <CAJZ5v0jOAOWLNab0vMOVyciwOhtkuPdqZt3wkFbprq+PkEQNVg@mail.gmail.com>
-Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Jayachandran C <jchandra@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, robert.richter@caviumnetworks.com,
-	Marcin Wojtas <mw@semihalf.com>, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>, Wangyijing <wangyijing@huawei.com>,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>,
-	Andrea Gallo <andrea.gallo@linaro.org>, Duc Dang <dhdang@apm.com>, jeremy.linton@arm.com,
-	liudongdong3@huawei.com, Christopher Covington <cov@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:7088 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161358AbcE3Nhb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:37:31 -0400
+Received: from pps.filterd (m0082756.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY5wI028669
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:25 -0400
+Message-Id: <201605301337.u4UDY5wI028669@mx0a-001b2d01.pphosted.com>
+Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 2376cef9aj-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:25 -0400
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 23:37:23 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X table
+Date: Mon, 30 May 2016 21:32:07 +0800
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 12, 2016 at 12:43 PM, Jayachandran C <jchandra@broadcom.com> wrote:
-> On Thu, May 12, 2016 at 4:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Wed, May 11, 2016 at 10:30:51PM +0200, Rafael J. Wysocki wrote:
->>> On Wed, May 11, 2016 at 12:11 PM, Lorenzo Pieralisi
->>> <lorenzo.pieralisi@arm.com> wrote:
->>> > On Tue, May 10, 2016 at 08:37:00PM +0200, Rafael J. Wysocki wrote:
->>> >> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+Current vfio-pci implementation disallows to mmap the page
+containing MSI-X table in case that users can write directly
+to MSI-X table and generate an incorrect MSIs.
 
-[cut]
+However, this will cause some performance issue when there
+are some critical device registers in the same page as the 
+MSI-X table. We have to handle the mmio access to these
+registers in QEMU emulation rather than in guest.
 
->
-> If we are moving the ACPI/PCI code from drivers/acpi to
-> arch/arm64/ , there is an issue in having the header file
-> ecam.h in drivers/pci
->
-> The current include of "../pci/ecam.h" is slightly ugly (Arnd
-> and David had already noted this), but including the driver
-> header from arch code would be even worse.
->
-> I can either merge ecam.h into include/linux/pci.h
-> or move it to a new file include/linux/pci-ecam.h, any
-> suggestion on which is preferable?
+To solve this issue, this series allows to expose MSI-X table
+to userspace when hardware enables the capability of interrupt
+remapping which can ensure that a given PCI device can only
+shoot the MSIs assigned for it. And we introduce a new bus_flags
+PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+for different archs.
 
-My preference would be pci-ecam.h as we did a similar thing for
-pci-dma.h, for example, but basically this is up to Bjorn.
+The patch 3 are based on the proposed patchset[1].
+
+Changelog v2: 
+- Make the commit log more clear
+- Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+  so that we could clearly know what the function does
+- Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+  of iommu_bus_notifier()
+- Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+  table so that we can know whether we allow to mmap MSI-X table
+  in QEMU
+
+[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+
+Yongji Xie (6):
+  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+  iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+  vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+ drivers/iommu/iommu.c                     |    8 ++++++++
+ drivers/pci/msi.c                         |   15 +++++++++++++++
+ drivers/pci/probe.c                       |    7 +++++++
+ drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
+ drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
+ include/linux/msi.h                       |    5 ++++-
+ include/linux/pci.h                       |    1 +
+ 8 files changed, 59 insertions(+), 5 deletions(-)
+
+-- 
+1.7.9.5
+
