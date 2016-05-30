@@ -1,57 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:33420 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbcEMLRM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:17:12 -0400
-Message-Id: <98a243badc295903ec4cf7de5e2985b468c45907.1463134231.git.lukas@wunner.de>
-In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 13 May 2016 13:15:31 +0200
-Subject: [PATCH v2 07/13] PCI: pciehp: Ignore interrupts during D3cold
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47098 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754249AbcE3NEk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:04:40 -0400
+Received: from pps.filterd (m0048827.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UD4H5S019037
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:40 -0400
+Message-Id: <201605301304.u4UD4H5S019037@mx0a-001b2d01.pphosted.com>
+Received: from e28smtp08.in.ibm.com (e28smtp08.in.ibm.com [125.16.236.8])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238k6umfac-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:40 -0400
+Received: from localhost
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 18:34:36 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v2 1/4] PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+Date: Mon, 30 May 2016 21:00:15 +0800
+In-Reply-To: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If a hotplug port is suspended to D3cold, its slot status register
-cannot be read.  If that hotplug port happens to share its IRQ with
-other devices, then whenever an interrupt occurs for one of these
-devices, a "no response from device" message is logged with level
-KERN_INFO.  Apart from this annoyance, CPU time is needlessly spent
-trying to read the slot status register even though we know in advance
-that it will fail.
+The resource_alignment will releases memory resources allocated
+by firmware so that kernel can reassign new resources later on.
+But this will cause the problem that no resources can be
+allocated by kernel if PCI_PROBE_ONLY was set, e.g. on pSeries
+platform because PCI_PROBE_ONLY force kernel to use firmware
+setup and not to reassign any resources.
 
-On MacBook Pros introduced 2011 and 2012, the IRQ of a Thunderbolt
-hotplug port is unfortunately shared with a wireless card, an audio card
-and an SDXC controller.  When the Thunderbolt controller is powered
-down, the machine carries out at least one unneeded slot status register
-read for each wireless packet received and prints a corresponding error
-message to the system log.
+To solve this problem, this patch ignores resource_alignment
+if PCI_PROBE_ONLY was set.
 
-The hotplug port's current_state will be D3cold when it's powered down,
-so ignore interrupts that occur during that power state.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/pci.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 5c24e93..08e84d6 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -546,6 +546,10 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	u8 present;
- 	bool link;
- 
-+	/* Interrupts cannot originate from a controller that's asleep */
-+	if (pdev->current_state == PCI_D3cold)
-+		return IRQ_NONE;
-+
- 	/*
- 	 * In order to guarantee that all interrupt events are
- 	 * serviced, we need to re-inspect Slot Status register after
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c8b4dbd..a259394 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4761,6 +4761,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	while (*p) {
++		if (pci_has_flag(PCI_PROBE_ONLY)) {
++			printk(KERN_ERR "PCI: Ignore resource_alignment parameter: %s with PCI_PROBE_ONLY set\n",
++					p);
++			*p = 0;
++			break;
++		}
+ 		count = 0;
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+ 							p[count] == '@') {
 -- 
-2.8.1
+1.7.9.5
 
