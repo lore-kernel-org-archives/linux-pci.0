@@ -1,55 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: "'Tian, Kevin'" <kevin.tian@intel.com>,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Date: Thu, 5 May 2016 09:54:07 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
- <f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
- <e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Mon, 30 May 2016 12:33:26 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>,
+	Peter Wu <peter@lekensteyn.nl>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
+Message-ID: <20160530093326.GH1789@lahna.fi.intel.com>
+References: <20160524162833.GA30762@localhost>
+ <20160526104557.GA6816@wunner.de>
+ <20160526110308.GX1789@lahna.fi.intel.com>
+ <1576190.gfFb6HhZV6@vostro.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1576190.gfFb6HhZV6@vostro.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogVGlhbiwgS2V2aW4NCj4gU2VudDogMDUgTWF5IDIwMTYgMTA6MzcNCi4uLg0KPiA+IEFj
-dXR1YWxseSwgd2UgYXJlIG5vdCBhaW1lZCBhdCBhY2Nlc3NpbmcgTVNJLVggdGFibGUgZnJvbQ0K
-PiA+IGd1ZXN0LiBTbyBJIHRoaW5rIGl0J3Mgc2FmZSB0byBwYXNzdGhyb3VnaCBNU0ktWCB0YWJs
-ZSBpZiB3ZQ0KPiA+IGNhbiBtYWtlIHN1cmUgZ3Vlc3Qga2VybmVsIHdvdWxkIG5vdCB0b3VjaCBN
-U0ktWCB0YWJsZSBpbg0KPiA+IG5vcm1hbCBjb2RlIHBhdGggc3VjaCBhcyBwYXJhLXZpcnR1YWxp
-emVkIGd1ZXN0IGtlcm5lbCBvbiBQUEM2NC4NCj4gPg0KPiANCj4gVGhlbiBob3cgZG8geW91IHBy
-ZXZlbnQgbWFsaWNpb3VzIGd1ZXN0IGtlcm5lbCBhY2Nlc3NpbmcgaXQ/DQoNCk9yIGEgbWFsaWNp
-b3VzIGd1ZXN0IGRyaXZlciBmb3IgYW4gZXRoZXJuZXQgY2FyZCBzZXR0aW5nIHVwDQp0aGUgcmVj
-ZWl2ZSBidWZmZXIgcmluZyB0byBjb250YWluIGEgc2luZ2xlIHdvcmQgZW50cnkgdGhhdA0KY29u
-dGFpbnMgdGhlIGFkZHJlc3MgYXNzb2NpYXRlZCB3aXRoIGFuIE1TSS1YIGludGVycnVwdCBhbmQN
-CnRoZW4gdXNpbmcgYSBsb29wYmFjayBtb2RlIHRvIGNhdXNlIGEgc3BlY2lmaWMgcGFja2V0IGJl
-DQpyZWNlaXZlZCB0aGF0IHdyaXRlcyB0aGUgcmVxdWlyZWQgd29yZCB0aHJvdWdoIHRoYXQgYWRk
-cmVzcy4NCg0KUmVtZW1iZXIgdGhlIFBDSWUgY3ljbGUgZm9yIGFuIGludGVycnVwdCBpcyBhIG5v
-cm1hbCBtZW1vcnkgd3JpdGUNCmN5Y2xlLg0KDQoJRGF2aWQNCg0K
+On Sat, May 28, 2016 at 02:29:06PM +0200, Rafael J. Wysocki wrote:
+> On Thursday, May 26, 2016 02:03:08 PM Mika Westerberg wrote:
+> > On Thu, May 26, 2016 at 12:45:57PM +0200, Lukas Wunner wrote:
+> > > > The PCI PM specification version 1.2 says this in chapter 4.2 (page 37):
+> > > > 
+> > > >   There is a minimum time requirement of 50 ms which must be provided by
+> > > >   system software between when the bus is switched from B2 to B0 and
+> > > >   when a function on the bus is accessed to allow time for the clock to
+> > > >   start up and the bus to settle.
+> > > 
+> > > But why do we wait 50 ms when *suspending*, i.e. going from B0 to B2?
+> > 
+> > I guess because PCI requires delays of 10ms for both directions D0 <->
+> > D3hot (see pci_raw_set_power_state()).
+> > 
+> > > (Assuming B2 is the state when the bridge goes to D3hot, which I'm not
+> > > sure of. The spec says that the bus state may optionally be B3 if the
+> > > bridge is in D3hot.)
+> > 
+> > B3 is the state where the bus goes when it's power is removed so I would
+> > expect that to require also the 50ms even though the spec does not
+> > explicitly say so.
+> > 
+> > > > Not sure how much of that still applies to modern hardware.
+> > > 
+> > > Could you ask hardware engineers at Intel what the bus state is on
+> > > modern chipsets (say, ILK or newer) and Thunderbolt ports to clarify
+> > > this?
+> > 
+> > I can try but it is not always easy to find the right person in company
+> > as big as Intel.
+> 
+> Well, even if you find someone to tell you that, what about non-Intel?
+
+Indeed, I was hoping to find someone who knows more about PCIe in
+general and it turns out I found one :-)
+
+> Are we going to ever know a value that's going to work for everybody unless
+> that value is clearly stated in the spec?
+
+That is a good question and the person I managed to find tells me that
+the values are already in the spec.
+
+So there are really no B-states in PCIe. Closest thing is L-states which
+are defined in the PCIe spec. The spec has two timing limitations:
+
+ - After bringing the device to D0/L0 from D3hot/L1 there is a
+   required 10ms delay after the write to PMCSR before any other config
+   space access (5.3.1.4 in PCIe spec 3.1a).
+
+ - After bringing the device out of reset, which is the path to D0/L0
+   from D3cold, there is a required 100ms delay before accessing the
+   device's config space (6.6.1 in PCIe spec 3.1a).
+
+I also learned that both of these can be shortened with following
+mechanisms:
+
+ - PCIe readines notifications (6.23 in PCIe spec 3.1a)
+ - ACPI _DSM method returning readines durations from  (4.6.9 in PCI
+   firmware spec 3.2).
+
+I think it is actually worth looking into the two mechanisms and try to
+get Linux support them.
