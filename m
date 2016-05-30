@@ -1,77 +1,71 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Tue, 31 May 2016 13:07:57 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-	Dave Airlie <airlied@gmail.com>
-Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
-Message-ID: <20160531110757.GB14008@wunner.de>
-References: <20160526104557.GA6816@wunner.de>
- <20160526110308.GX1789@lahna.fi.intel.com>
- <1576190.gfFb6HhZV6@vostro.rjw.lan>
- <20160530093326.GH1789@lahna.fi.intel.com>
- <20160530144445.GC1743@lahna.fi.intel.com>
- <CAMxnaaXhapETZYMVe6EUoBGaMtxL_fP+uzc30SQpM+6EqPF3CQ@mail.gmail.com>
- <20160531083349.GG1743@lahna.fi.intel.com>
- <20160531085805.GI1743@lahna.fi.intel.com>
- <20160531104051.GA13958@wunner.de>
- <20160531104714.GL1743@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160531104714.GL1743@lahna.fi.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53953 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933060AbcE3OSH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 May 2016 10:18:07 -0400
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH 2/2] PCI: hv: handle all pending messages in hv_pci_onchannelcallback()
+Date: Mon, 30 May 2016 16:17:59 +0200
+Message-Id: <1464617879-19581-3-git-send-email-vkuznets@redhat.com>
+In-Reply-To: <1464617879-19581-1-git-send-email-vkuznets@redhat.com>
+References: <1464617879-19581-1-git-send-email-vkuznets@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 31, 2016 at 01:47:14PM +0300, Mika Westerberg wrote:
-> On Tue, May 31, 2016 at 12:40:51PM +0200, Lukas Wunner wrote:
-> > On Tue, May 31, 2016 at 11:58:05AM +0300, Mika Westerberg wrote:
-> > > To summarize the next steps. I will send new version of the
-> > > PCI PM patches with following changes.
-> > > 
-> > >   - Drop this 50ms patch, we should have the PCIe 100ms delay already
-> > >     covered.
-> > > 
-> > >   - Increase runtime PM autosuspend time from 10ms to 500ms (or whatever
-> > >     is the prefered default).
-> > 
-> > I did some tests, turns out the autosuspend delay need not be increased
-> > to prevent the Thunderbolt hotplug ports from suspending between
-> > "enabling device" and loading the pciehp driver, however the following
-> > is needed:
-> > 
-> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> > index 7860ab3..1d1fb1c 100644
-> > --- a/drivers/pci/pcie/portdrv_pci.c
-> > +++ b/drivers/pci/pcie/portdrv_pci.c
-> > @@ -238,6 +238,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
-> >  		pm_runtime_set_autosuspend_delay(&dev->dev, 10);
-> >  		pm_runtime_use_autosuspend(&dev->dev);
-> >  		pm_runtime_put_autosuspend(&dev->dev);
-> > +		pm_runtime_mark_last_busy(&dev->dev);
-> >  		pm_runtime_allow(&dev->dev);
-> >  	}
-> 
-> I still prefer increasing the autosuspend delay. The above looks hackish
-> and does not work if it takes more than 10ms to get to the tbt driver
-> probe.
-> 
-> Did you try if it also works with 500ms delay?
+When we have an interrupt from host we have a bit set in event page
+indicating there are messages for the particular channel. We need to read
+them all as we won't get signaled for what was on the queue before we
+cleared the bit in vmbus_on_event(). This applies to all Hyper-V drivers
+and the pass-through driver should do the same.
+I did non meet any bugs, the issue was found by code inspection. We don't
+have many events going through hv_pci_onchannelcallback(), this explains
+why nobody reported the issue before.
 
-I tried 150 ms and it didn't work. The pm_runtime_mark_last_busy()
-is needed no matter how much you increase the autosuspend delay.
-This isn't hackish. :-) The issue is that pm_runtime_mark_last_busy()
-has never been called so far, so dev->power.last_busy == 0.
-The PM core thinks that the device can suspend right away because it's
-last been busy more than 2 seconds ago.
+While on it, fix handling non-zero vmbus_recvpacket_raw() return values by
+dropping out. If the return value is not zero it is wrong to inspect
+buffer or bytes_recvd as these may contain invalid data.
 
-One could argue though if pm_runtime_mark_last_busy() should come
-before pm_runtime_put_autosuspend(). Usually it should, but in this
-case it doesn't matter because pm_runtime_allow() hasn't been called
-yet and the PCI core initializes devices to pm_runtime_forbid().
+Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+---
+ drivers/pci/host/pci-hyperv.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Lukas
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index a68ec49..7de341d 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1657,12 +1657,16 @@ static void hv_pci_onchannelcallback(void *context)
+ 			continue;
+ 		}
+ 
++		/* Zero length indicates there are no more packets. */
++		if (ret || !bytes_recvd)
++			break;
++
+ 		/*
+ 		 * All incoming packets must be at least as large as a
+ 		 * response.
+ 		 */
+ 		if (bytes_recvd <= sizeof(struct pci_response))
+-			break;
++			continue;
+ 		desc = (struct vmpacket_descriptor *)buffer;
+ 
+ 		switch (desc->type) {
+@@ -1724,7 +1728,6 @@ static void hv_pci_onchannelcallback(void *context)
+ 				desc->type, req_id, bytes_recvd);
+ 			break;
+ 		}
+-		break;
+ 	}
+ 
+ 	kfree(buffer);
+-- 
+2.5.5
+
