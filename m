@@ -1,111 +1,286 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37348 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752309AbcEBQx1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 May 2016 12:53:27 -0400
-Date: Mon, 2 May 2016 11:53:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krzysztof Halasa <khalasa@piap.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH REPOST] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix
- CNS3xxx BM DMA.
-Message-ID: <20160502165322.GC24851@localhost>
-References: <m3h9fghbfh.fsf@t19.piap.pl>
- <20160421154234.GB32739@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160421154234.GB32739@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org
+Subject: [PATCH V8 1/9] PCI: ecam: move ecam.h to linux/include/pci-ecam.h
+Date: Mon, 30 May 2016 17:14:14 +0200
+Message-Id: <1464621262-26770-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 21, 2016 at 10:42:34AM -0500, Bjorn Helgaas wrote:
-> On Mon, Mar 21, 2016 at 10:39:52AM +0100, Krzysztof Halasa wrote:
-> > I think this bug needs to be fixed, this way or another.
-> > 
-> > The platform in question is Cavium CNS3xxx, ARMv6.
-> > 
-> > A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
-> > potential stack overflow") converted an explicit setting of
-> > PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
-> > read request) to:
-> > +    pcie_bus_config = PCIE_BUS_PEER2PEER;
-> 
-> Any thoughts on this, Arnd?  I can (and will) look at this, but it's
-> a complicated area and it will take me quite a while to dig into it.
+From: Jayachandran C <jchandra@broadcom.com>
 
-What should we do here?  Should we revert 498a92d42596?  It appeared in
-v4.4, so this has been broken for a while.
+This header will be used from arch/arm64 for ACPI PCI implementation
+so it needs to be moved out of drivers/pci.
 
-It looks like 498a92d42596 merely fixed a warning, at the expense of
-breaking DMA on Cavium.  Reverting it would bring the warning back, but
-that's better than broken DMA.
+Update users of the header file to use the new name. No functional
+changes.
 
-> > with the following commentary:
-> >     "The second part is how the driver sets up the Max_Read_Request_Size
-> >     value for the first device/function on bus 1, i.e. the device
-> >     plugged directly into the PCIe root port.
-> >     For all I can tell, this is in fact incomplete, as it does not
-> >     perform the same setting on devices attached to a PCIe switch,
-> >     or multi-function devices.
-> >     The solution for this part fortunately is even easier: if we
-> >     just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
-> >     all PCIe devices in the system are limited to 128 byte MPS, which
-> >     in turn limits the MRRS to 128 bytes for all devices, and we
-> >     no longer even need to touch any devices."
-> > 
-> > The problem is the MRRS setting is never written to the hardware.
-> > I propose the following, though I'm not sure if we can do this safely,
-> > especially given the comments in probe.c. OTOH, this change may be
-> > required in other (all?) cases when the user requests
-> > PCIE_BUS_PEER2PEER.
-> > 
-> > On this Laguna GW-2388 the following patch fixes BM DMA with:
-> > 0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
-> > 0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
-> > 0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
-> > 0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
-> > 	     the second lane from the CPU)
-> > 
-> > pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-> > pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
-> > pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-> > 
-> > Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
-> > Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
-> > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 6d7ab9b..91713b6 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
-> >  	/* In the "safe" case, do not configure the MRRS.  There appear to be
-> >  	 * issues with setting MRRS to 0 on a number of devices.
-> >  	 */
-> > -	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
-> > +	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
-> > +	    pcie_bus_config != PCIE_BUS_PEER2PEER)
-> >  		return;
-> >  
-> >  	/* For Max performance, the MRRS must be set to the largest supported
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 2771625..6f5088a 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -756,7 +756,7 @@ enum pcie_bus_config_types {
-> >  	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
-> >  	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
-> >  	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
-> > -	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
-> > +	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
-> >  };
-> >  
-> >  extern enum pcie_bus_config_types pcie_bus_config;
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/pci/ecam.c                  |  3 +-
+ drivers/pci/ecam.h                  | 67 -------------------------------------
+ drivers/pci/host/pci-host-common.c  |  3 +-
+ drivers/pci/host/pci-host-generic.c |  3 +-
+ drivers/pci/host/pci-thunder-ecam.c |  3 +-
+ drivers/pci/host/pci-thunder-pem.c  |  3 +-
+ include/linux/pci-ecam.h            | 67 +++++++++++++++++++++++++++++++++++++
+ 7 files changed, 72 insertions(+), 77 deletions(-)
+ delete mode 100644 drivers/pci/ecam.h
+ create mode 100644 include/linux/pci-ecam.h
+
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index f9832ad..820e26b 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -19,10 +19,9 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
++#include <linux/pci-ecam.h>
+ #include <linux/slab.h>
+ 
+-#include "ecam.h"
+-
+ /*
+  * On 64-bit systems, we do a single ioremap for the whole config space
+  * since we have enough virtual address range available.  On 32-bit, we
+diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
+deleted file mode 100644
+index 9878beb..0000000
+--- a/drivers/pci/ecam.h
++++ /dev/null
+@@ -1,67 +0,0 @@
+-/*
+- * Copyright 2016 Broadcom
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License, version 2, as
+- * published by the Free Software Foundation (the "GPL").
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License version 2 (GPLv2) for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * version 2 (GPLv2) along with this source code.
+- */
+-#ifndef DRIVERS_PCI_ECAM_H
+-#define DRIVERS_PCI_ECAM_H
+-
+-#include <linux/kernel.h>
+-#include <linux/platform_device.h>
+-
+-/*
+- * struct to hold pci ops and bus shift of the config window
+- * for a PCI controller.
+- */
+-struct pci_config_window;
+-struct pci_ecam_ops {
+-	unsigned int			bus_shift;
+-	struct pci_ops			pci_ops;
+-	int				(*init)(struct device *,
+-						struct pci_config_window *);
+-};
+-
+-/*
+- * struct to hold the mappings of a config space window. This
+- * is expected to be used as sysdata for PCI controllers that
+- * use ECAM.
+- */
+-struct pci_config_window {
+-	struct resource			res;
+-	struct resource			busr;
+-	void				*priv;
+-	struct pci_ecam_ops		*ops;
+-	union {
+-		void __iomem		*win;	/* 64-bit single mapping */
+-		void __iomem		**winp; /* 32-bit per-bus mapping */
+-	};
+-};
+-
+-/* create and free pci_config_window */
+-struct pci_config_window *pci_ecam_create(struct device *dev,
+-		struct resource *cfgres, struct resource *busr,
+-		struct pci_ecam_ops *ops);
+-void pci_ecam_free(struct pci_config_window *cfg);
+-
+-/* map_bus when ->sysdata is an instance of pci_config_window */
+-void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+-			       int where);
+-/* default ECAM ops */
+-extern struct pci_ecam_ops pci_generic_ecam_ops;
+-
+-#ifdef CONFIG_PCI_HOST_GENERIC
+-/* for DT-based PCI controllers that support ECAM */
+-int pci_host_common_probe(struct platform_device *pdev,
+-			  struct pci_ecam_ops *ops);
+-#endif
+-#endif
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 8cba7ab..c18b9e3 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -20,10 +20,9 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
+ 
+-#include "../ecam.h"
+-
+ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
+ 		       struct list_head *resources, struct resource **bus_range)
+ {
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 6eaceab..f0ca6de 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -23,10 +23,9 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
+ 
+-#include "../ecam.h"
+-
+ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+ 	.bus_shift	= 16,
+ 	.pci_ops	= {
+diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
+index 540d030..a9fc1c9 100644
+--- a/drivers/pci/host/pci-thunder-ecam.c
++++ b/drivers/pci/host/pci-thunder-ecam.c
+@@ -11,10 +11,9 @@
+ #include <linux/ioport.h>
+ #include <linux/of_pci.h>
+ #include <linux/of.h>
++#include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
+ 
+-#include "../ecam.h"
+-
+ static void set_val(u32 v, int where, int size, u32 *val)
+ {
+ 	int shift = (where & 3) * 8;
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index 9b8ab94..5020d3d 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -18,10 +18,9 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
+ 
+-#include "../ecam.h"
+-
+ #define PEM_CFG_WR 0x28
+ #define PEM_CFG_RD 0x30
+ 
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+new file mode 100644
+index 0000000..9878beb
+--- /dev/null
++++ b/include/linux/pci-ecam.h
+@@ -0,0 +1,67 @@
++/*
++ * Copyright 2016 Broadcom
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License, version 2, as
++ * published by the Free Software Foundation (the "GPL").
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License version 2 (GPLv2) for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * version 2 (GPLv2) along with this source code.
++ */
++#ifndef DRIVERS_PCI_ECAM_H
++#define DRIVERS_PCI_ECAM_H
++
++#include <linux/kernel.h>
++#include <linux/platform_device.h>
++
++/*
++ * struct to hold pci ops and bus shift of the config window
++ * for a PCI controller.
++ */
++struct pci_config_window;
++struct pci_ecam_ops {
++	unsigned int			bus_shift;
++	struct pci_ops			pci_ops;
++	int				(*init)(struct device *,
++						struct pci_config_window *);
++};
++
++/*
++ * struct to hold the mappings of a config space window. This
++ * is expected to be used as sysdata for PCI controllers that
++ * use ECAM.
++ */
++struct pci_config_window {
++	struct resource			res;
++	struct resource			busr;
++	void				*priv;
++	struct pci_ecam_ops		*ops;
++	union {
++		void __iomem		*win;	/* 64-bit single mapping */
++		void __iomem		**winp; /* 32-bit per-bus mapping */
++	};
++};
++
++/* create and free pci_config_window */
++struct pci_config_window *pci_ecam_create(struct device *dev,
++		struct resource *cfgres, struct resource *busr,
++		struct pci_ecam_ops *ops);
++void pci_ecam_free(struct pci_config_window *cfg);
++
++/* map_bus when ->sysdata is an instance of pci_config_window */
++void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
++			       int where);
++/* default ECAM ops */
++extern struct pci_ecam_ops pci_generic_ecam_ops;
++
++#ifdef CONFIG_PCI_HOST_GENERIC
++/* for DT-based PCI controllers that support ECAM */
++int pci_host_common_probe(struct platform_device *pdev,
++			  struct pci_ecam_ops *ops);
++#endif
++#endif
+-- 
+1.9.1
