@@ -1,100 +1,84 @@
-Return-Path: <jcm@redhat.com>
-Return-Path: <jcm@redhat.com>
-Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
- <57331290.7070104@semihalf.com>
- <3d4aae09-51c4-f007-5100-191a4a85e27a@redhat.com>
- <CAKv+Gu8fdeJ9OvRSmtu9zyvcjK3O-4WU=jG=6-7t4xZwvV8d2g@mail.gmail.com>
- <95b1d06e-f9c5-39f3-1003-f536b65eef60@redhat.com>
- <CAKv+Gu-_xp_t_Ze3Pw_-82-fmy=tCy-h=4FbP98eLbuXVk2hHQ@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EDAF6AC@lhreml503-mbs>
- <CAKv+Gu_zpoFsDr7e8zPCDKPpRdKDVH+vnC0nfvmGaJ7xcP3Zng@mail.gmail.com>
- <20160523105655.GA22902@red-moon>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EDB35A5@lhreml503-mbs>
- <20160523233918.GA32555@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EDB438E@lhreml503-mbs>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Tomasz Nowicki
- <tn@semihalf.com>, "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dhdang@apm.com" <dhdang@apm.com>,
-        "Liviu.Dudau@arm.com"
- <Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
- <ddaney@caviumnetworks.com>,
-        "jeremy.linton@arm.com"
- <jeremy.linton@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        Wangyijing
- <wangyijing@huawei.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <de9e81d2-1aea-674a-97f2-b6caeab3cc47@redhat.com>
-Date: Tue, 24 May 2016 10:38:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EDB438E@lhreml503-mbs>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:29798 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161382AbcE3NhH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:37:07 -0400
+Received: from pps.filterd (m0075771.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY7vF002600
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:06 -0400
+Message-Id: <201605301337.u4UDY7vF002600@mx0a-001b2d01.pphosted.com>
+Received: from e28smtp02.in.ibm.com (e28smtp02.in.ibm.com [125.16.236.2])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238hnbqs39-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:06 -0400
+Received: from localhost
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 19:07:02 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 1/6] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+Date: Mon, 30 May 2016 21:32:08 +0800
+In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriele, all,
+We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
+which indicates interrupts of all devices on the bus are
+managed by the hardware enabling IRQ remapping(intel naming).
+When the capability is enabled, a given PCI device can only
+shoot the MSIs assigned for it. In other words, the hardware
+can protect system from invalid MSIs of the device by checking
+the target address and data when there is something wrong
+with MSI part in device or device driver.
 
-On 05/24/2016 03:23 AM, Gabriele Paoloni wrote:
+There is a existing flag for this capability in the IOMMU space:
 
->> Sorry Gab, I guess I was really responding to earlier messages :)
->>
->> I don't really have much to say here, except that it doesn't seem
->> right to have an MCFG that describes a non-standard ECAM mapping.
-> 
-> The ACPI table that this mechanism relies upon is the one discussed
-> in:
-> https://lkml.org/lkml/2016/3/9/91
-> 
-> As you can see MCFG describes ECAM mappings, but we have a motherboard
-> reserved resource outside the MCFG:
-> Device (RES0)
-> {
-> 	Name (_HID, "HISI0081") // HiSi PCIe RC config base address
-> 	Name (_CID, "PNP0C02") // Motherboard reserved resource
-> 	Name (_CRS, ResourceTemplate (){
-> 	Memory32Fixed (ReadWrite, 0xb0080000 , 0x10000)
-> 	})
-> }
-> 
-> This allows us to retrieve the address we need for accessing
-> the config space on the RC (that is non-ECAM).
-> 
-> I was thinking that such mechanism could fit different vendors
-> and allow them define their own quirks without spoiling the 
-> official and standard MCFG; also from the thread discussion
-> you seemed quite ok with such solution...?
+enum iommu_cap {
+	IOMMU_CAP_CACHE_COHERENCY,
+--->	IOMMU_CAP_INTR_REMAP,
+	IOMMU_CAP_NOEXEC,
+};
 
-This could have been useful 2-3 years ago (when myself and others first
-pulled the fire alarm concerning the lack of upstreaming of the ACPI
-enablement for PCIe - which should have been fully upstream before the
-first platforms ever even shipped) but at this time we have shipping
-platforms that don't have tables built in this way. While we can go back
-around to vendors and try to get them to rebuild firmware, it would be
-by far preferable to adopt a solution that works with what is already
-being deployed in the field today. Such as OEM match in MCFG.
+and Eric also posted a patchset [1] to abstract it on MSI
+controller side for ARM. But it would make sense to have a
+more common flag like PCI_BUS_FLAGS_MSI_REMAP so that we can
+use a universal flag to test this capability on PCI side for
+different archs.
 
-Jon.
+With this flag enabled, we can easily know whether it's safe
+to expose MSI-X tables of PCI BARs to userspace. Some usespace
+drivers such as VFIO may benefit from this.
 
+[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ include/linux/pci.h |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 932ec74..4ec37da 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -187,6 +187,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
+ enum pci_bus_flags {
+ 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+ 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
++	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 4,
+ };
+ 
+ /* These values come from the PCI Express Spec */
 -- 
-Computer Architect | Sent from my Fedora powered laptop
+1.7.9.5
+
