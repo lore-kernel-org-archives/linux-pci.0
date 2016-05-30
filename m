@@ -1,70 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:32926 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797AbcEXKvp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2016 06:51:45 -0400
-Date: Tue, 24 May 2016 12:55:06 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Amir Levy <amir.jer.levy@intel.com>
-Cc: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	michael.jamet@intel.com, dan.alloun@intel.com,
-	mika.westerberg@intel.com, kai.svahn@intel.com,
-	andriy.shevchenko@intel.com, tomas.winkler@intel.com
-Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM) networking
-Message-ID: <20160524105506.GB5396@wunner.de>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V8 3/9] pci: Add new function to unmap IO resources.
+Date: Mon, 30 May 2016 17:14:16 +0200
+Message-Id: <1464621262-26770-4-git-send-email-tn@semihalf.com>
+In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Amir,
+We need to release I/O resources so that the same I/O resources
+can be allocated again (pci_remap_iospace), like in PCI hotplug removal
+scenario. Therefore this patch implements new pci_unmap_iospace call which
+unmaps I/O space as the symmetry to pci_remap_iospace.
 
-On Mon, May 23, 2016 at 11:48:50AM +0300, Amir Levy wrote:
-> Thunderbolt(TM) networking, introduced in these patches, provides the
-> capability of connecting hosts together by emulating an Ethernet adapter.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/pci/pci.c   | 18 ++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 19 insertions(+)
 
-Thank you for this contribution. I think it may take some time to review
-everything, for now just some general observations:
-
-- Since this is networking-related, it would be good if you could cc
-  netdev@vger.kernel.org and possibly other relevant lists in future
-  submissions of this series so that all stakeholders get the chance
-  to comment.
-
-- You're including multiple networking related header files but you're not
-  adding any dependencies to Kconfig. I think you'll either have to add
-  dependencies to Kconfig or compile portions of your code conditionally
-  (using ifdefs in the code or conditions in the Makefile). Intel's
-  kbuild test robot can help you find missing dependencies.
-
-- Your github kernel directory only contains the raw patches. If you could
-  clone torvalds/linux and apply the patches, it would allow people to
-  browse the patches more comfortably with green/red highlighting.
-  Also, I think kbuild test robot will automatically test forks of
-  torvalds/linux.
-
-- Your patches contain spelling fixes, it would be good to have those in
-  a separate commit marked "No functional change intended" in the commit
-  message. Also, since the driver was originally developed for Cactus
-  Ridge but is now used for other controllers, you've changed comments
-  which made it appear that the driver is Cactus Ridge only. These should
-  go into a separate commit as well. Same for macro renames like
-  DSL3510_REGS_H_ => NHI_REGS_H_.
-
-- Up until now this driver was Mac-only. IIUC the functionality you're
-  adding will also be used on non-Macs. That's an important change that
-  should probably be made more explicit in the commit messages. Did you
-  test your patches on a Mac to see that nothing regresses? Andreas
-  Noever took on the Herculean task of writing this driver although no
-  public documentation was available from Intel, he's the maintainer and
-  needs to ack everything that goes into the driver. So in a sense it's
-  like you're being a guest in someone else's house even though it's your
-  own proprietary technology. E.g. adding an Intel-specific version
-  number to the driver seems a bit odd at first glance.
-
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c8b4dbd..eb431b5 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/vmalloc.h>
+ #include <asm/setup.h>
+ #include <linux/aer.h>
+ #include "pci.h"
+@@ -3165,6 +3166,23 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+ #endif
+ }
+ 
++/**
++ *	pci_unmap_iospace - Unmap the memory mapped I/O space
++ *	@res: resource to be unmapped
++ *
++ *	Unmap the CPU virtual address @res from virtual address space.
++ *	Only architectures that have memory mapped IO functions defined
++ *	(and the PCI_IOBASE value defined) should call this function.
++ */
++void pci_unmap_iospace(struct resource *res)
++{
++#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
++	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
++
++	unmap_kernel_range(vaddr, resource_size(res));
++#endif
++}
++
+ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ {
+ 	u16 old_cmd, cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..12349de 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1167,6 +1167,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ unsigned long pci_address_to_pio(phys_addr_t addr);
+ phys_addr_t pci_pio_to_address(unsigned long pio);
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
++void pci_unmap_iospace(struct resource *res);
+ 
+ static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+ {
+-- 
+1.9.1
