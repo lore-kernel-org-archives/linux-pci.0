@@ -1,363 +1,77 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ard Biesheuvel
-	<ard.biesheuvel@linaro.org>,
-        Jon Masters <jcm@redhat.com>, Tomasz Nowicki
-	<tn@semihalf.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dhdang@apm.com"
-	<dhdang@apm.com>,
-        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        Wangyijing
-	<wangyijing@huawei.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-Date: Tue, 24 May 2016 07:23:08 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EDB438E@lhreml503-mbs>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
- <57331290.7070104@semihalf.com>
- <3d4aae09-51c4-f007-5100-191a4a85e27a@redhat.com>
- <CAKv+Gu8fdeJ9OvRSmtu9zyvcjK3O-4WU=jG=6-7t4xZwvV8d2g@mail.gmail.com>
- <95b1d06e-f9c5-39f3-1003-f536b65eef60@redhat.com>
- <CAKv+Gu-_xp_t_Ze3Pw_-82-fmy=tCy-h=4FbP98eLbuXVk2hHQ@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EDAF6AC@lhreml503-mbs>
- <CAKv+Gu_zpoFsDr7e8zPCDKPpRdKDVH+vnC0nfvmGaJ7xcP3Zng@mail.gmail.com>
- <20160523105655.GA22902@red-moon>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EDB35A5@lhreml503-mbs>
- <20160523233918.GA32555@localhost>
-In-Reply-To: <20160523233918.GA32555@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38192 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933251AbcE3NEt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:04:49 -0400
+Received: from pps.filterd (m0082756.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UD4HEf018292
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:48 -0400
+Message-Id: <201605301304.u4UD4HEf018292@mx0a-001b2d01.pphosted.com>
+Received: from e28smtp01.in.ibm.com (e28smtp01.in.ibm.com [125.16.236.1])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 2376ceej8q-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:47 -0400
+Received: from localhost
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 18:34:44 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v2 2/4] PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
+Date: Mon, 30 May 2016 21:00:16 +0800
+In-Reply-To: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+Now we use the IORESOURCE_STARTALIGN to identify bridge resources
+in __assign_resources_sorted(). That's quite fragile. We can't
+make sure that the PCI devices' resources will not use
+IORESOURCE_STARTALIGN any more.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 24 May 2016 00:39
-> To: Gabriele Paoloni
-> Cc: Lorenzo Pieralisi; Ard Biesheuvel; Jon Masters; Tomasz Nowicki;
-> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
-> rafael@kernel.org; hanjun.guo@linaro.org; okaya@codeaurora.org;
-> jchandra@broadcom.com; linaro-acpi@lists.linaro.org; linux-
-> pci@vger.kernel.org; dhdang@apm.com; Liviu.Dudau@arm.com;
-> ddaney@caviumnetworks.com; jeremy.linton@arm.com; linux-
-> kernel@vger.kernel.org; linux-acpi@vger.kernel.org;
-> robert.richter@caviumnetworks.com; Suravee.Suthikulpanit@amd.com;
-> msalter@redhat.com; Wangyijing; mw@semihalf.com;
-> andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
-> controller
->=20
-> On Mon, May 23, 2016 at 03:16:01PM +0000, Gabriele Paoloni wrote:
-> > Hi Lorenzo
-> >
-> > > -----Original Message-----
-> > > From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-> > > Sent: 23 May 2016 11:57
-> > > To: Ard Biesheuvel
-> > > Cc: Gabriele Paoloni; Jon Masters; Tomasz Nowicki;
-> helgaas@kernel.org;
-> > > arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
-> > > rafael@kernel.org; hanjun.guo@linaro.org; okaya@codeaurora.org;
-> > > jchandra@broadcom.com; linaro-acpi@lists.linaro.org; linux-
-> > > pci@vger.kernel.org; dhdang@apm.com; Liviu.Dudau@arm.com;
-> > > ddaney@caviumnetworks.com; jeremy.linton@arm.com; linux-
-> > > kernel@vger.kernel.org; linux-acpi@vger.kernel.org;
-> > > robert.richter@caviumnetworks.com; Suravee.Suthikulpanit@amd.com;
-> > > msalter@redhat.com; Wangyijing; mw@semihalf.com;
-> > > andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org
-> > > Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI
-> host
-> > > controller
-> > >
-> > > On Fri, May 20, 2016 at 11:14:03AM +0200, Ard Biesheuvel wrote:
-> > > > On 20 May 2016 at 10:40, Gabriele Paoloni
-> > > <gabriele.paoloni@huawei.com> wrote:
-> > > > > Hi Ard
-> > > > >
-> > > > >> -----Original Message-----
-> > > > >> From: Ard Biesheuvel [mailto:ard.biesheuvel@linaro.org]
-> > > > [...]
-> > > > >>
-> > > > >> Is the PCIe root complex so special that you cannot simply
-> > > describe an
-> > > > >> implementation that is not PNP0408 compatible as something
-> else,
-> > > under
-> > > > >> its own unique HID? If everybody is onboard with using ACPI,
-> how
-> > > is
-> > > > >> this any different from describing other parts of the platform
-> > > > >> topology? Even if the SBSA mandates generic PCI, they already
-> > > deviated
-> > > > >> from that when they built the hardware, so pretending that it
-> is a
-> > > > >> PNP0408 with quirks really does not buy us anything.
-> > > > >
-> > > > > From my understanding we want to avoid this as this would allow
-> > > each
-> > > > > vendor to come up with his own code and it would be much more
-> > > effort
-> > > > > for the PCI maintainer to rework the PCI framework to
-> accommodate
-> > > X86
-> > > > > and "all" ARM64 Host Controllers...
-> > > > >
-> > > > > I guess this approach is too risky and we want to avoid this.
-> > > Through
-> > > > > standardization we can more easily maintain the code and scale
-> it
-> > > to
-> > > > > multiple SoCs...
-> > > > >
-> > > > > So this is my understanding; maybe Jon, Tomasz or Lorenzo can
-> give
-> > > > > a bit more explanation...
-> > > > >
-> > > >
-> > > > OK, so that boils down to recommending to vendors to represent
-> known
-> > > > non-compliant hardware as compliant, just so that we don't have
-> to
-> > > > change the code to support additional flavors of ECAM ? It's fine
-> to
-> > > > be pragmatic, but that sucks.
-> > > >
-> > > > We keep confusing the x86 case with the ARM case here: for x86,
-> they
-> > > > needed to deal with broken hardware *after* the fact, and all
-> they
-> > > > could do is find /some/ distinguishing feature in order to guess
-> > > which
-> > > > exact hardware they might be running on. For arm64, it is the
-> > > opposite
-> > > > case. We are currently in a position where we can demand vendors
-> to
-> > > > comply with the standards they endorsed themselves, and (ab)using
-> > > ACPI
-> > > > + DMI as a de facto platform description rather than plain ACPI
-> makes
-> > > > me think the DT crowd were actually right from the beginning. It
-> > > > *directly* violates the standardization principle, since it
-> requires
-> > > a
-> > > > priori knowledge inside the OS that a certain 'generic' device
-> must
-> > > be
-> > > > driven in a special way.
-> > > >
-> > > > So can anyone comment on the feasibility of adding support for
-> > > devices
-> > > > with vendor specific HIDs (and no generic CIDs) to the current
-> ACPI
-> > > > ECAM driver in Linux?
->=20
-> I don't think of ECAM support itself as a "driver".  It's just a
-> service available to drivers, similar to OF resource parsing.
->=20
-> Per PCI Firmware r3.2, sec 4.1.5, "PNP0A03" means a PCI/PCI-X/PCIe
-> host bridge.  "PNP0A08" means a PCI-X Mode 2 or PCIe bridge that
-> supports extended config space.  It doesn't specify how we access that
-> config space, so I think hardware with non-standard ECAM should still
-> have PNP0A03 and PNP0A08 in _CID or _HID.
->=20
-> "ECAM" as used in the specs (PCIe r3.0, sec 7.2.2, and PCI Firmware
-> r3.2, sec 4.1) means:
->=20
->   (a) a memory-mapped model for config space access, and
->   (b) a specific mapping of address bits to bus/device/function/
->       register
->=20
-> MCFG and _CBA assume both (a) and (b), so I think a device with
-> non-standard ECAM mappings should not be described in MCFG or _CBA.
->=20
-> If a bridge has ECAM with non-standard mappings, I think either a
-> vendor-specific _HID or a device-specific method, e.g., _DSM, could
-> communicate that.
->=20
-> Jon, I agree that we should avoid describing non-standardized hardware
-> in Linux-specific ways.  Is there a mechanism in use already?  How
-> does Windows handle this?  DMI is a poor long-term solution because it
-> requires ongoing maintenance for new platforms, but I think it's OK
-> for getting started with platforms already shipping.
->=20
-> A _DSM has the advantage that once it is defined and supported, OEMs
-> can ship new platforms without requiring a new quirk or a new _HID to
-> be added to a driver.
->=20
-> There would still be the problem of config access before the namespace
-> is available, i.e., the MCFG use case.  I don't know how important
-> that is.  Defining an MCFG extension seems like the most obvious
-> solution.
->=20
-> If we only expect a few non-standard devices, maybe it's enough to
-> have DMI quirks to statically set up ECAM and just live with the
-> inconvenience of requiring a kernel change for every new non-standard
-> device.
->=20
-> > > Host bridges in ACPI are handled through PNP0A08/PNP0A03 ids, and
-> > > most of the arch specific code is handled in the respective arch
-> > > directories (X86 and IA64, even though IA64 does not rely on
-> ECAM/MCFG
-> > > for
-> > > PCI ops), it is not a driver per-se, PNP0A08/PNP0A03 are detected
-> > > through
-> > > ACPI scan handlers and the respective arch code (ie
-> pci_acpi_scan_root)
-> > > sets-up resources AND config space on an arch specific basis.
-> > >
-> > > X86 deals with that with code in arch/x86 that sets-up the
-> pci_raw_ops
-> > > on a platform specific basis (and it is not nice, but it works
-> because
-> > > as you all know the number of platforms in X86 world is contained).
-> > >
-> > > Will this happen for ARM64 in arch/arm64 based on vendor specific
-> > > HIDs ?
-> > >
-> > > No.
-> > >
-> > > So given the current state of play (we were requested to move the
-> > > arch/arm64 specific ACPI PCI bits to arch/arm64), we would end up
-> > > with arch/arm64 code requiring code in /drivers to set-up pci_ops
-> > > in a platform specific way, it is horrible, if feasible at all.
-> > >
-> > > The only way this can be implemented is by pretending that the
-> > > ACPI/PCI arch/arm64 implementation is generic code (that's what
-> this
-> > > series does), move it to /drivers (where it is in this series), and
-> > > implement _DSD vendor specific bindings (per HID) to set-up the pci
-> > > operations; whether this solution should go upstream, given that it
-> > > is just a short-term solution for early platforms bugs, it is
-> another
-> > > story and my personal answer is no.
->=20
-> It seems like there should be a way to look for a _DSM before we call
-> acpi_pci_root_get_mcfg_addr() to look for _CBA.
->=20
-> Currently we call acpi_pci_root_get_mcfg_addr() (to read _CBA) from
-> the generic acpi_pci_root_add(), but the result (root->mcfg_addr) is
-> only used in x86-specific code.  I think it would be nicer if the
-> lookup and the use were together.  Then it would be easier to override
-> it because the mapping assumptions would all be in one place.
->=20
-> > I think it shouldn't be too bad to move quirk handling mechanism to
-> > arch/arm64. Effectively we would not move platform specific code into
-> > arch/arm64 but just the mechanism checking if there is any quirk that
-> > is defined.
-> >
-> > i.e.:
-> >
-> > extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
-> > extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
-> >
-> > static struct pci_ecam_ops *pci_acpi_get_ops(struct acpi_pci_root
-> *root)
-> > {
-> >         int bus_num =3D root->secondary.start;
-> >         int domain =3D root->segment;
-> >         struct pci_cfg_fixup *f;
-> >
-> >         /*
-> >          * Match against platform specific quirks and return
-> corresponding
-> >          * CAM ops.
-> >          *
-> >          * First match against PCI topology <domain:bus> then use DMI
-> or
-> >          * custom match handler.
-> >          */
-> >         for (f =3D __start_acpi_mcfg_fixups; f <
-> __end_acpi_mcfg_fixups; f++) {
-> >                 if ((f->domain =3D=3D domain || f->domain =3D=3D
-> PCI_MCFG_DOMAIN_ANY) &&
-> >                     (f->bus_num =3D=3D bus_num || f->bus_num =3D=3D
-> PCI_MCFG_BUS_ANY) &&
-> >                     (f->system ? dmi_check_system(f->system) : 1) &&
-> >                     (f->match ? f->match(f, root) : 1))
-> >                         return f->ops;
-> >         }
-> >         /* No quirks, use ECAM */
-> >         return &pci_generic_ecam_ops;
-> > }
-> >
-> > Such quirks will be defined anyway in drivers/pci/host/ in the vendor
-> > specific quirk implementations.
-> >
-> > e.g. in HiSilicon case we would have
-> >
-> > DECLARE_ACPI_MCFG_FIXUP(NULL, hisi_pcie_match, &hisi_pcie_ecam_ops,
-> > 			PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
-> >
-> > in "drivers/pci/host/pcie-hisi-acpi.c "
-> >
-> > Thanks
-> >
-> > Gab
->=20
-> Sorry Gab, I guess I was really responding to earlier messages :)
->=20
-> I don't really have much to say here, except that it doesn't seem
-> right to have an MCFG that describes a non-standard ECAM mapping.
+In this patch, we try to use a more robust way to identify
+bridge resources.
 
-The ACPI table that this mechanism relies upon is the one discussed
-in:
-https://lkml.org/lkml/2016/3/9/91
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-As you can see MCFG describes ECAM mappings, but we have a motherboard
-reserved resource outside the MCFG:
-Device (RES0)
-{
-	Name (_HID, "HISI0081") // HiSi PCIe RC config base address
-	Name (_CID, "PNP0C02") // Motherboard reserved resource
-	Name (_CRS, ResourceTemplate (){
-	Memory32Fixed (ReadWrite, 0xb0080000 , 0x10000)
-	})
-}
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..216ddbc 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -390,6 +390,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align, align;
++	int index;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -410,11 +411,13 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
++		 * 1. bridge resource
++		 * 2. SR-IOV resource
+ 		 * Here just fix the additional alignment for bridge
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		index = dev_res->res - dev_res->dev->resource;
++		if (index < PCI_BRIDGE_RESOURCES ||
++			index > PCI_BRIDGE_RESOURCE_END)
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+-- 
+1.7.9.5
 
-This allows us to retrieve the address we need for accessing
-the config space on the RC (that is non-ECAM).
-
-I was thinking that such mechanism could fit different vendors
-and allow them define their own quirks without spoiling the=20
-official and standard MCFG; also from the thread discussion
-you seemed quite ok with such solution...?
-
-> I suppose there's already firmware in the field that does that,
-> though?
-
-We have "experimental" firmware that is based on the ACPI table
-described above, however it is not widely distributed and, obviously,
-it is not supported by Linux mainline (so we have room to rework
-if we decide that another solution is more appropriate)
-
-Thanks and Regards
-
-Gab
-
->=20
-> Bjorn
