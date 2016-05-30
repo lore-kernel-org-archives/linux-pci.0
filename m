@@ -1,78 +1,156 @@
-Return-Path: <yu.c.chen@intel.com>
-Return-Path: <yu.c.chen@intel.com>
-Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
- <20160530213305.GA21322@localhost> <20160530221123.GA13535@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 From: Chen Yu <yu.c.chen@intel.com>
-Message-ID: <574D0523.3020009@intel.com>
-Date: Tue, 31 May 2016 11:29:39 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160530221123.GA13535@wunner.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linux-pci@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, Chen Yu <yu.c.chen@intel.com>
+Subject: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
+Date: Mon, 30 May 2016 18:33:24 +0800
+Message-Id: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lukas,
+Currently there are many people reported that they can not
+do a poweroff nor a suspend to memory on their Mac Pro 11.
+After some investigations it was found that, once the PCI bridge
+0000:00:1c.0 reassigns its mm windows([mem 0x7fa00000-0x7fbfffff]
+and [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+io resource 0x1804 becomes unaccessible immediately, where the
+ACPI Sleep register is located, as a result neither poweroff(S5)
+nor suspend to memory(S3) works.
 
-On 2016年05月31日 06:11, Lukas Wunner wrote:
-> On Mon, May 30, 2016 at 04:33:05PM -0500, Bjorn Helgaas wrote:
->> On Mon, May 30, 2016 at 06:33:24PM +0800, Chen Yu wrote:
->>> Currently there are many people reported that they can not
->>> do a poweroff nor a suspend to memory on their Mac Pro 11.
->>> After some investigations it was found that, once the PCI bridge
->>> 0000:00:1c.0 reassigns its mm windows([mem 0x7fa00000-0x7fbfffff]
->>> and [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
->>> io resource 0x1804 becomes unaccessible immediately, where the
->>> ACPI Sleep register is located, as a result neither poweroff(S5)
->>> nor suspend to memory(S3) works.
->>>
->>> I don't know why setting the base/limit of PCI bridge mem resource
->>> would affect another io resource region, so this quirk just simply
->>> bypass the assignment of these mm resources on 0000:00:1c.0, by
->>> resetting the resource flag to 0 before updating the base/limit registers.
->>> This patch also introduces a new pci fixup phase before the actual bridge
->>> resource assignment.
->> Split the new fixup phase into a separate patch.
->>
->> I'm doubtful about this because we don't understand the root cause.
-> Agreed.
->
->
->>> +}
->>> +DECLARE_PCI_FIXUP_ASSIGN(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_mac_disable_mmio_bar);
->> Is this device *only* used on the Mac Pro 11?  http://pci-ids.ucs.cz
->> says "8 Series/C220 Series Chipset Family PCI Express Root Port #1",
->> which sounds pretty generic.
-> It's a root port of a standard Haswell chipset.
->
-> This concerns the Mac*Book*Pro11 (not MacPro11), and apparently only
-> the two models introduced 2015, MacBookPro11,4 and MacBookPro11,5
-> (can be queried with DMI). I've never heard of issues like this on the
-> 2013/2014 models (MacBookPro11,1 to 11,3).
->
-> Looking at the lspci output of the MacBookPro11,4 I notice that the
-> root port in question, 00:1c.0, has secondary bus 02 below it, but
-> there are no devices listed on that bus:
-> https://bugzilla.kernel.org/attachment.cgi?id=218181
->
-> On the MacBookPro11,5, there's bus 03 below that port, but likewise
-> without any devices:
-> https://launchpadlibrarian.net/222477783/Lspci.txt
->
-> It looks like this root port is unused, so perhaps the best option
-> is to disable it as if it were an appendix. I.e., don't scan it at all,
-> put it into D3 and leave it alone.
+I don't know why setting the base/limit of PCI bridge mem resource
+would affect another io resource region, so this quirk just simply
+bypass the assignment of these mm resources on 0000:00:1c.0, by
+resetting the resource flag to 0 before updating the base/limit registers.
+This patch also introduces a new pci fixup phase before the actual bridge
+resource assignment.
 
-I used to bypass the probe for this pci bridge:
-https://bugzilla.kernel.org/attachment.cgi?id=216661
-, but it looks like although poweroff works however
-the wifi and facetime are broken:
-https://bugzilla.kernel.org/show_bug.cgi?id=103211#c109
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
+Tested-by: Cedric Le Goater <clg@kaod.org>
+Tested-by: pkozlov <pkozlov.vrn@gmail.com>
+Tested-by: Zach Norman <zach@nor.mn>
+Tested-by: Pablo Catalina <pablo.catalina@gmail.com>
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+---
+ drivers/pci/quirks.c              | 25 +++++++++++++++++++++++++
+ drivers/pci/setup-bus.c           |  2 ++
+ include/asm-generic/vmlinux.lds.h |  3 +++
+ include/linux/pci.h               |  4 ++++
+ scripts/mod/modpost.c             |  1 +
+ 5 files changed, 35 insertions(+)
 
-Thanks,
-Yu
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ee72ebe..e347047 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3370,6 +3370,8 @@ extern struct pci_fixup __start_pci_fixups_header[];
+ extern struct pci_fixup __end_pci_fixups_header[];
+ extern struct pci_fixup __start_pci_fixups_final[];
+ extern struct pci_fixup __end_pci_fixups_final[];
++extern struct pci_fixup __start_pci_fixups_assign[];
++extern struct pci_fixup __end_pci_fixups_assign[];
+ extern struct pci_fixup __start_pci_fixups_enable[];
+ extern struct pci_fixup __end_pci_fixups_enable[];
+ extern struct pci_fixup __start_pci_fixups_resume[];
+@@ -3405,6 +3407,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+ 		end = __end_pci_fixups_final;
+ 		break;
+ 
++	case pci_fixup_assign:
++		start = __start_pci_fixups_assign;
++		end = __end_pci_fixups_assign;
++		break;
++
+ 	case pci_fixup_enable:
+ 		start = __start_pci_fixups_enable;
+ 		end = __end_pci_fixups_enable;
+@@ -4419,3 +4426,21 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
+ 	}
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
++
++/*
++ * On Mac Pro 11, the allocation of pci bridge memory resource
++ * broke ACPI Sleep Type register region.
++ */
++static void quirk_mac_disable_mmio_bar(struct pci_dev *dev)
++{
++	struct resource *b_res;
++
++	dev_info(&dev->dev, "[Quirk] Disable mmio on Mac Pro 11\n");
++	if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
++		return;
++
++	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
++	b_res[1].flags = 0;
++	b_res[2].flags = 0;
++}
++DECLARE_PCI_FIXUP_ASSIGN(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_mac_disable_mmio_bar);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..730d6fd 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1256,6 +1256,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mem_size = pci_hotplug_mem_size;
+ 		}
++
++		pci_fixup_device(pci_fixup_assign, bus->self);
+ 		/* Fall through */
+ 	default:
+ 		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 6a67ab9..3ba05f0 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -283,6 +283,9 @@
+ 		VMLINUX_SYMBOL(__start_pci_fixups_final) = .;		\
+ 		*(.pci_fixup_final)					\
+ 		VMLINUX_SYMBOL(__end_pci_fixups_final) = .;		\
++		VMLINUX_SYMBOL(__start_pci_fixups_assign) = .;		\
++		*(.pci_fixup_assign)					\
++		VMLINUX_SYMBOL(__end_pci_fixups_assign) = .;		\
+ 		VMLINUX_SYMBOL(__start_pci_fixups_enable) = .;		\
+ 		*(.pci_fixup_enable)					\
+ 		VMLINUX_SYMBOL(__end_pci_fixups_enable) = .;		\
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..14a35bb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1584,6 +1584,7 @@ enum pci_fixup_pass {
+ 	pci_fixup_early,	/* Before probing BARs */
+ 	pci_fixup_header,	/* After reading configuration header */
+ 	pci_fixup_final,	/* Final phase of device fixups */
++	pci_fixup_assign,	/* Before resource assignment */
+ 	pci_fixup_enable,	/* pci_enable_device() time */
+ 	pci_fixup_resume,	/* pci_device_resume() */
+ 	pci_fixup_suspend,	/* pci_device_suspend() */
+@@ -1644,6 +1645,9 @@ enum pci_fixup_pass {
+ #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
+ 		hook, vendor, device, PCI_ANY_ID, 0, hook)
++#define DECLARE_PCI_FIXUP_ASSIGN(vendor, device, hook)			\
++	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_assign,			\
++		hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
+ 		hook, vendor, device, PCI_ANY_ID, 0, hook)
+diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
+index 48958d3..248acdb 100644
+--- a/scripts/mod/modpost.c
++++ b/scripts/mod/modpost.c
+@@ -877,6 +877,7 @@ static void check_section(const char *modname, struct elf_info *elf,
+ 
+ #define ALL_PCI_INIT_SECTIONS	\
+ 	".pci_fixup_early", ".pci_fixup_header", ".pci_fixup_final", \
++	".pci_fixup_assign", \
+ 	".pci_fixup_enable", ".pci_fixup_resume", \
+ 	".pci_fixup_resume_early", ".pci_fixup_suspend"
+ 
+-- 
+2.7.4
+
