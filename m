@@ -1,68 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56607 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754920AbcETGnP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:15 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58550 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933237AbcE3NiD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:38:03 -0400
+Received: from pps.filterd (m0075420.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY4ot016620
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:57 -0400
+Message-Id: <201605301337.u4UDY4ot016620@mx0a-001b2d01.pphosted.com>
+Received: from e28smtp06.in.ibm.com (e28smtp06.in.ibm.com [125.16.236.6])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238j3yps7x-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:57 -0400
 Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 20 May 2016 16:43:12 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 090242BB0062
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:08 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gxDt19792046
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:07 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gYnm025791
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:35 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v10 12/18] powerpc/pci: Update bridge windows on PCI plug
-Date: Fri, 20 May 2016 16:41:36 +1000
-Message-Id: <1463726502-14679-13-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 19:07:49 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [PATCH v2 4/6] iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+Date: Mon, 30 May 2016 21:32:11 +0800
+In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On the PCI plugging event, PCI slot's subordinate devices are
-scanned and their (IO and MMIO) resources are assigned. Platform
-dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
-created on updating windows of the slot's upstream bridge.
+Some iommu drivers would be initialized after PCI device
+enumeration. So PCI_BUS_FLAGS_MSI_REMAP would not be set
+when probing PCI devices although IOMMU enables capability
+of IRQ remapping. This patch tests this capability and
+set the flag when iommu driver is initialized.
 
-This updates the windows of the hot plugged slot's upstream bridge
-in pcibios_finish_adding_to_bus() so that the platform resources
-(PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- arch/powerpc/kernel/pci-common.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/iommu/iommu.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 40df3a5..be9e515 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
- 	/* Allocate bus and devices resources */
- 	pcibios_allocate_bus_resources(bus);
- 	pcibios_claim_one_bus(bus);
--	if (!pci_has_flag(PCI_PROBE_ONLY))
--		pci_assign_unassigned_bus_resources(bus);
-+	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-+		if (bus->self)
-+			pci_assign_unassigned_bridge_resources(bus->self);
-+		else
-+			pci_assign_unassigned_bus_resources(bus);
-+	}
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index b9df141..e6159ab 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -872,6 +872,14 @@ static int add_iommu_group(struct device *dev, void *data)
+ 	const struct iommu_ops *ops = cb->ops;
+ 	int ret;
  
- 	/* Fixup EEH */
- 	eeh_add_device_tree_late(bus);
++	/*
++	 * Set PCI_BUS_FLAGS_MSI_REMAP for all PCI buses when IOMMU
++	 * have capability of IRQ remapping.
++	 */
++	if (dev_is_pci(dev) && ops->capable &&
++			ops->capable(IOMMU_CAP_INTR_REMAP))
++		to_pci_dev(dev)->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++
+ 	if (!ops->add_device)
+ 		return 0;
+ 
 -- 
-2.1.0
+1.7.9.5
 
