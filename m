@@ -1,82 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57259 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751707AbcEKQ1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 May 2016 12:27:22 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
-Subject: [PATCH 1/2] x86/PCI: Add pci_bdwep_bar() quirk entry for Broadwell-EP Home Agent 1
-Date: Wed, 11 May 2016 12:27:15 -0400
-Message-Id: <1462984036-32084-2-git-send-email-prarit@redhat.com>
-In-Reply-To: <1462984036-32084-1-git-send-email-prarit@redhat.com>
-References: <1462984036-32084-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Mon, 30 May 2016 12:57:09 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	Dave Airlie <airlied@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
+Message-ID: <20160530095709.GK1789@lahna.fi.intel.com>
+References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+ <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
+ <20160525135535.GN1789@lahna.fi.intel.com>
+ <20160527111037.GA1436@al>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160527111037.GA1436@al>
 List-ID: <linux-pci.vger.kernel.org>
 
-commit b894157145e4 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having
-non-compliant BARs") marks Home Agent 0 & PCU has having non-compliant
-BARs.  The commit is missing device 0x6f60 for Home Agent 1.
++Rafael
 
-The problem with these devices is documented in the Xeon v4 specification
-update (but is unfortunately missing this ID):
+On Fri, May 27, 2016 at 01:10:37PM +0200, Peter Wu wrote:
+> On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
+> > On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
+> > > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
+> > > can be runtime-suspended which disables power resources via ACPI. This
+> > > is incompatible with DSM, resulting in a GPU device which is still in D3
+> > > and locks up the kernel on resume.
+> > > 
+> > > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
+> > > debugger trace) and stop using the DSM functions for D3cold when power
+> > > resources are available on the parent PCIe port.
+> > > 
+> > >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
+> > > 
+> > > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+> > > ---
+> > >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
+> > >  1 file changed, 30 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > > index df9f73e..e469df7 100644
+> > > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
+> > >  	bool dsm_detected;
+> > >  	bool optimus_detected;
+> > >  	bool optimus_flags_detected;
+> > > +	bool optimus_skip_dsm;
+> > >  	acpi_handle dhandle;
+> > >  	acpi_handle rom_handle;
+> > >  } nouveau_dsm_priv;
+> > > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
+> > >  	.get_client_id = nouveau_dsm_get_client_id,
+> > >  };
+> > >  
+> > > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
+> > > + * D3cold, they instead rely on disabling power resources on the parent. */
+> > > +static bool nouveau_pr3_present(struct pci_dev *pdev)
+> > > +{
+> > > +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
+> > > +	struct acpi_device *ad;
+> > 
+> > Nit: please call this adev instead of ad.
+> 
+> Will do.
+> 
+> > > +
+> > > +	if (!parent_pdev)
+> > > +		return false;
+> > > +
+> > > +	ad = ACPI_COMPANION(&parent_pdev->dev);
+> > > +	if (!ad)
+> > > +		return false;
+> > > +
+> > > +	return ad->power.flags.power_resources;
+> > 
+> > Is this sufficient to tell if the parent device has _PR3? I thought it
+> > returns true if it has power resources in general, not necessarily _PR3.
+> > 
+> > Otherwise this looks okay to me.
+> 
+> It is indeed set whenever there is any _PRx method. I wonder if it is
+> appropriate to access fields directly like this, perhaps this would be
+> more accurate (based on device_pm.c):
+> 
+>     /* Check whether the _PR3 method is available. */
+>     return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
+> 
+> I am also considering adding a check in case the pcieport driver does
+> not support D3cold via runtime PM, what do you think of this?
+> 
+>     if (!parent_pdev)
+>         return false;
+>     /* If the PCIe port does not support D3cold via runtime PM, allow a
+>      * fallback to the Optimus DSM method to put the device in D3cold. */
+>     if (parent_pdev->no_d3cold)
+>         return false;
+> 
+> This is needed to avoid the regression reported in the cover letter, but
+> also allows pre-2015 systems to (still) have the D3cold possibility.
 
-BDF2
-PCI BARs in the Home Agent Will Return Non-Zero Values During Enumeration
-Problem:
-During system initialization the Operating System may access the standard
-PCI BARs (Base Address Registers). Due to this erratum, accesses to the
-Home Agent BAR registers (Bus 1; Device 18; Function 0,4; Offsets (0x14-0x24)
-will return non-zero values.
-Implication:
-The operating system may issue a warning. Intel has not observed any
-functional failures due to this erratum.
-Workaround:
-None identified.
+The _DSM method with 0 as index parameter should return a bit field
+telling which functions are supported. Sane BIOS disables that
+particular function if it detects Windows 8 and newer. Have you checked
+if that's the case?
 
-Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
-Fixes: b894157145e4 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having non-compliant BARs")
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: Andi Kleen <ak@linux.intel.com>
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Then you can call _DSM only if it is supported and otherwise expect the
+parent device's power resources to turn off power when runtime
+suspended.
 
----
- arch/x86/pci/fixup.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+> Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
+> apparently from November 2013, Windows 8.1) and extracted the ACPI
+> tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
+> for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
+> related NVP3 device) when _OSI("Windows 2013") is true. (This is added
+> as alternative for the old DSM interface.)
+> 
+> Maybe 2014 is also an appropriate cutoff date? I wonder if it is
+> feasible to detect firmware use of _OSI("Windows 2013") and use that
+> instead of the BIOS year.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index b7de1929714b..6d8ab876b732 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -552,9 +552,18 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
- 
-+/*
-+ * Broadwell EP Home Agent BARs erroneously return non-zero values
-+ * during enumeration which cause bogus warnings during resource
-+ * allocation.
-+ *
-+ *   See: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
-+ *   entry BDF2.
-+ */
- static void pci_bdwep_bar(struct pci_dev *dev)
- {
- 	dev->non_compliant_bars = 1;
- }
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_bdwep_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_bar);
--- 
-1.7.9.3
+Using BIOS year works even if there is no ACPI available.
 
+What comes to the cutoff date, I discussed with Rafael and it was
+decided that we use the same year Windows 10 was released to be on the
+safe side. Reading the links you provided here:
+
+https://msdn.microsoft.com/fi-fi/windows/hardware/drivers/bringup/device-power-management
+https://msdn.microsoft.com/en-us/library/windows/hardware/hh967709(v=vs.85).aspx
+
+it seems that from Windows 8 they started transitioning devices into
+D3cold during runtime as well.
