@@ -1,263 +1,163 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Thu, 12 May 2016 11:01:03 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	wangyijing@huawei.com,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Andrea Gallo <andrea.gallo@linaro.org>, Duc Dang <dhdang@apm.com>,
-	jeremy.linton@arm.com, liudongdong3@huawei.com,
-	Christopher Covington <cov@codeaurora.org>
-Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
-Message-ID: <20160512100103.GA19460@red-moon>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <1462893601-8937-8-git-send-email-tn@semihalf.com>
- <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
- <20160511101101.GA16101@red-moon>
- <CAJZ5v0hgw929W5PjF0PqT+ssiOHd8TeJoSQcz4NUiAovZY2pfQ@mail.gmail.com>
- <20160511224314.GD28812@localhost>
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Mon, 30 May 2016 16:09:09 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	Dave Airlie <airlied@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
+Message-ID: <20160530130909.GA1743@lahna.fi.intel.com>
+References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
+ <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
+ <20160525135535.GN1789@lahna.fi.intel.com>
+ <20160527111037.GA1436@al>
+ <20160530095709.GK1789@lahna.fi.intel.com>
+ <20160530122010.GB1149@al>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160511224314.GD28812@localhost>
+In-Reply-To: <20160530122010.GB1149@al>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 11, 2016 at 05:43:14PM -0500, Bjorn Helgaas wrote:
-> On Wed, May 11, 2016 at 10:30:51PM +0200, Rafael J. Wysocki wrote:
-> > On Wed, May 11, 2016 at 12:11 PM, Lorenzo Pieralisi
-> > <lorenzo.pieralisi@arm.com> wrote:
-> > > On Tue, May 10, 2016 at 08:37:00PM +0200, Rafael J. Wysocki wrote:
-> > >> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> > >> > This patch provides a way to set the ACPI companion in PCI code.
-> > >> > We define acpi_pci_set_companion() to set the ACPI companion pointer and
-> > >> > call it from PCI core code. The function is stub for now.
-> > >> >
-> > >> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> > >> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > >> > ---
-> > >> >  drivers/pci/probe.c      | 2 ++
-> > >> >  include/linux/pci-acpi.h | 4 ++++
-> > >> >  2 files changed, 6 insertions(+)
-> > >> >
-> > >> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > >> > index 8004f67..fb0b752 100644
-> > >> > --- a/drivers/pci/probe.c
-> > >> > +++ b/drivers/pci/probe.c
-> > >> > @@ -12,6 +12,7 @@
-> > >> >  #include <linux/slab.h>
-> > >> >  #include <linux/module.h>
-> > >> >  #include <linux/cpumask.h>
-> > >> > +#include <linux/pci-acpi.h>
-> > >> >  #include <linux/pci-aspm.h>
-> > >> >  #include <linux/aer.h>
-> > >> >  #include <linux/acpi.h>
-> > >> > @@ -2141,6 +2142,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > >> >         bridge->dev.parent = parent;
-> > >> >         bridge->dev.release = pci_release_host_bridge_dev;
-> > >> >         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> > >> > +       acpi_pci_set_companion(bridge);
-> > >>
-> > >> Yes, we'll probably add something similar here.
-> > >>
-> > >> Do I think now is the right time to do that?  No.
-> > >>
-> > >> >         error = pcibios_root_bridge_prepare(bridge);
-> > >> >         if (error) {
-> > >> >                 kfree(bridge);
-> > >> > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> > >> > index 09f9f02..1baa515 100644
-> > >> > --- a/include/linux/pci-acpi.h
-> > >> > +++ b/include/linux/pci-acpi.h
-> > >> > @@ -111,6 +111,10 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-> > >> >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-> > >> >  #endif /* CONFIG_ACPI */
-> > >> >
-> > >> > +static inline void acpi_pci_set_companion(struct pci_host_bridge *bridge)
-> > >> > +{
-> > >> > +}
-> > >> > +
-> > >> >  static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
-> > >> >  {
-> > >> >         return 0;
-> > >> > --
-> > >>
-> > >> Honestly, to me it looks like this series is trying very hard to avoid
-> > >> doing any PCI host bridge configuration stuff from arch/arm64/
-> > >> although (a) that might be simpler and (b) it would allow us to
-> > >> identify the code that's common between *all* architectures using ACPI
-> > >> support for host bridge configuration and to move *that* to a common
-> > >> place later.  As done here it seems to be following the "ARM64 is
-> > >> generic and the rest of the world is special" line which isn't really
-> > >> helpful.
-> > >
-> > > I think patch [1-2] should be merged regardless (they may require minor
-> > > tweaks if we decide to move pci_acpi_scan_root() to arch/arm64 though,
-> > > for include files location). I guess you are referring to patch 8 in
-> > > your comments above, which boils down to deciding whether:
-> > >
-> > > - pci_acpi_scan_root() (and unfortunately all the MCFG/ECAM handling that
-> > >   goes with it) should live in arch/arm64 or drivers/acpi
+On Mon, May 30, 2016 at 02:20:10PM +0200, Peter Wu wrote:
+> On Mon, May 30, 2016 at 12:57:09PM +0300, Mika Westerberg wrote:
+> > +Rafael
 > > 
-> > To be precise, everything under #ifdef CONFIG_ACPI_PCI_HOST_GENERIC or
-> > equivalent is de facto ARM64-specific, because (as it stands in the
-> > patch series) ARM64 is the only architecture that will select that
-> > option.  Unless you are aware of any more architectures planning to
-> > use ACPI (and I'm not aware of any), it will stay the only
-> > architecture selecting it in the foreseeable future.
+> > On Fri, May 27, 2016 at 01:10:37PM +0200, Peter Wu wrote:
+> > > On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
+> > > > On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
+> > > > > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
+> > > > > can be runtime-suspended which disables power resources via ACPI. This
+> > > > > is incompatible with DSM, resulting in a GPU device which is still in D3
+> > > > > and locks up the kernel on resume.
+> > > > > 
+> > > > > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
+> > > > > debugger trace) and stop using the DSM functions for D3cold when power
+> > > > > resources are available on the parent PCIe port.
+> > > > > 
+> > > > >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
+> > > > > 
+> > > > > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+> > > > > ---
+> > > > >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
+> > > > >  1 file changed, 30 insertions(+), 4 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > > > > index df9f73e..e469df7 100644
+> > > > > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > > > > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> > > > > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
+> > > > >  	bool dsm_detected;
+> > > > >  	bool optimus_detected;
+> > > > >  	bool optimus_flags_detected;
+> > > > > +	bool optimus_skip_dsm;
+> > > > >  	acpi_handle dhandle;
+> > > > >  	acpi_handle rom_handle;
+> > > > >  } nouveau_dsm_priv;
+> > > > > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
+> > > > >  	.get_client_id = nouveau_dsm_get_client_id,
+> > > > >  };
+> > > > >  
+> > > > > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
+> > > > > + * D3cold, they instead rely on disabling power resources on the parent. */
+> > > > > +static bool nouveau_pr3_present(struct pci_dev *pdev)
+> > > > > +{
+> > > > > +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
+> > > > > +	struct acpi_device *ad;
+> > > > 
+> > > > Nit: please call this adev instead of ad.
+> > > 
+> > > Will do.
+> > > 
+> > > > > +
+> > > > > +	if (!parent_pdev)
+> > > > > +		return false;
+> > > > > +
+> > > > > +	ad = ACPI_COMPANION(&parent_pdev->dev);
+> > > > > +	if (!ad)
+> > > > > +		return false;
+> > > > > +
+> > > > > +	return ad->power.flags.power_resources;
+> > > > 
+> > > > Is this sufficient to tell if the parent device has _PR3? I thought it
+> > > > returns true if it has power resources in general, not necessarily _PR3.
+> > > > 
+> > > > Otherwise this looks okay to me.
+> > > 
+> > > It is indeed set whenever there is any _PRx method. I wonder if it is
+> > > appropriate to access fields directly like this, perhaps this would be
+> > > more accurate (based on device_pm.c):
+> > > 
+> > >     /* Check whether the _PR3 method is available. */
+> > >     return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
+> > > 
+> > > I am also considering adding a check in case the pcieport driver does
+> > > not support D3cold via runtime PM, what do you think of this?
+> > > 
+> > >     if (!parent_pdev)
+> > >         return false;
+> > >     /* If the PCIe port does not support D3cold via runtime PM, allow a
+> > >      * fallback to the Optimus DSM method to put the device in D3cold. */
+> > >     if (parent_pdev->no_d3cold)
+> > >         return false;
+> > > 
+> > > This is needed to avoid the regression reported in the cover letter, but
+> > > also allows pre-2015 systems to (still) have the D3cold possibility.
 > > 
-> > Therefore you could replace CONFIG_ACPI_PCI_HOST_GENERIC with
-> > CONFIG_ARM64 everywhere in that code which is why in my opinion the
-> > code should live somewhere under arch/arm64/.
+> > The _DSM method with 0 as index parameter should return a bit field
+> > telling which functions are supported. Sane BIOS disables that
+> > particular function if it detects Windows 8 and newer. Have you checked
+> > if that's the case?
 > > 
-> > Going forward, it should be possible to identify common parts of the
-> > PCI host bridge configuration code in arch/ and move it to
-> > drivers/acpi/ or drivers/pci/, but I bet that won't be the entire code
-> > this series puts under CONFIG_ACPI_PCI_HOST_GENERIC.
+> > Then you can call _DSM only if it is supported and otherwise expect the
+> > parent device's power resources to turn off power when runtime
+> > suspended.
+> 
+> The _DSM methods (for the Nvidia device) are often still included and
+> functions are reported as supported. I guess that vendors just check
+> whether it is working and do not bother removing legacy functions. The
+> Acer case below seems exceptional.
+> 
+> I suggested the no_d3cold check such that DSM can still be called even
+> though the runtime PM on the PCIe port does nothing.
+
+Somehow it does not feel right to poke parent device's fields directly.
+
+What if you just check if it has the method like:
+
+	bool no_dsm = acpi_has_method(parent_adev->handle, "_PR3");
+
+That should follow what Windows is doing.
+
+> > > Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
+> > > apparently from November 2013, Windows 8.1) and extracted the ACPI
+> > > tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
+> > > for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
+> > > related NVP3 device) when _OSI("Windows 2013") is true. (This is added
+> > > as alternative for the old DSM interface.)
+> > > 
+> > > Maybe 2014 is also an appropriate cutoff date? I wonder if it is
+> > > feasible to detect firmware use of _OSI("Windows 2013") and use that
+> > > instead of the BIOS year.
 > > 
-> > The above leads to a quite straightforward conclusion about the order
-> > in which to do things: I'd add ACPI support for PCI host bridge on
-> > ARM64 following what's been done on ia64 (as x86 is more quirky and
-> > kludgy overall) as far as reasonably possible first and then think
-> > about moving common stuff to a common place.
+> > Using BIOS year works even if there is no ACPI available.
 > 
-> That does seem like a reasonable approach.  I had hoped to get more of
-> this in for v4.7, but we don't have much time left.  Maybe some of
-> Rafael's comments can be addressed by moving and slight restructuring
-> and we can still squeeze it in.
+> I thought that you need support from ACPI to put a device in D3cold?
 
-Yes, it seems like a reasonable approach, as long as we accept that
-part of this series has to live in arch/arm64 otherwise we are going
-round in circles (because that's the gist of this discussion, to
-decide where this code has to live, I do not think there is any objection
-to the code per-se anymore).
+It is not just about D3cold but D3 in general (which includes also
+D3hot). Yes, you need platform support to put the device into D3cold.
 
-I suggest we post a v8 (with code move to arch/arm64) end of merge
-window (or you prefer seeing patches now to prevent any additional
-changes later ?), my aim is to get this into -next (whether via arm64 or
-pci tree it has to be decided) as early as possible for next cycle (-rc1)
-so that it can get exposure and testing, I do not think that missing the
-merge window is a big issue if we agree that the code is ready to go.
-
-> The first three patches:
+> > What comes to the cutoff date, I discussed with Rafael and it was
+> > decided that we use the same year Windows 10 was released to be on the
+> > safe side. Reading the links you provided here:
+> > 
+> > https://msdn.microsoft.com/fi-fi/windows/hardware/drivers/bringup/device-power-management
+> > https://msdn.microsoft.com/en-us/library/windows/hardware/hh967709(v=vs.85).aspx
+> > 
+> > it seems that from Windows 8 they started transitioning devices into
+> > D3cold during runtime as well.
 > 
->   PCI: Provide common functions for ECAM mapping
->   PCI: generic, thunder: Use generic ECAM API
->   PCI, of: Move PCI I/O space management to PCI core code
-> 
-> seem relatively straightforward, and I applied them to pci/arm64 with
-> the intent of merging them unless there are objections.  I made the
-> following tweaks, mainly to try to improve some error messages:
-
-Ok, thanks a lot !
-
-Lorenzo
-
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> index 3d52005..e1add01 100644
-> --- a/drivers/pci/ecam.c
-> +++ b/drivers/pci/ecam.c
-> @@ -24,9 +24,9 @@
->  #include "ecam.h"
->  
->  /*
-> - * On 64 bit systems, we do a single ioremap for the whole config space
-> - * since we have enough virtual address range available. On 32 bit, do an
-> - * ioremap per bus.
-> + * On 64-bit systems, we do a single ioremap for the whole config space
-> + * since we have enough virtual address range available.  On 32-bit, we
-> + * ioremap the config space for each bus individually.
->   */
->  static const bool per_bus_mapping = !config_enabled(CONFIG_64BIT);
->  
-> @@ -42,6 +42,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->  {
->  	struct pci_config_window *cfg;
->  	unsigned int bus_range, bus_range_max, bsz;
-> +	struct resource *conflict;
->  	int i, err;
->  
->  	if (busr->start > busr->end)
-> @@ -58,10 +59,10 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->  	bus_range = resource_size(&cfg->busr);
->  	bus_range_max = resource_size(cfgres) >> ops->bus_shift;
->  	if (bus_range > bus_range_max) {
-> -		dev_warn(dev, "bus max %#x reduced to %#x",
-> -					bus_range, bus_range_max);
->  		bus_range = bus_range_max;
->  		cfg->busr.end = busr->start + bus_range - 1;
-> +		dev_warn(dev, "ECAM area %pR can only accommodate %pR (reduced from %pR desired)\n",
-> +			 cfgres, &cfg->busr, busr);
->  	}
->  	bsz = 1 << ops->bus_shift;
->  
-> @@ -70,9 +71,11 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->  	cfg->res.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
->  	cfg->res.name = "PCI ECAM";
->  
-> -	err = request_resource(&iomem_resource, &cfg->res);
-> -	if (err) {
-> -		dev_err(dev, "request ECAM res %pR failed\n", &cfg->res);
-> +	conflict = request_resource(&iomem_resource, &cfg->res);
-> +	if (conflict) {
-> +		err = -EBUSY;
-> +		dev_err(dev, "can't claim ECAM area %pR: address conflict with %s %pR\n",
-> +			&cfg->res, conflict->name, conflict);
->  		goto err_exit;
->  	}
->  
-> diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
-> index 1ad2176..9878beb 100644
-> --- a/drivers/pci/ecam.h
-> +++ b/drivers/pci/ecam.h
-> @@ -33,7 +33,7 @@ struct pci_ecam_ops {
->  
->  /*
->   * struct to hold the mappings of a config space window. This
-> - * is expected to be used as sysdata for PCI controlllers which
-> + * is expected to be used as sysdata for PCI controllers that
->   * use ECAM.
->   */
->  struct pci_config_window {
-> @@ -43,11 +43,11 @@ struct pci_config_window {
->  	struct pci_ecam_ops		*ops;
->  	union {
->  		void __iomem		*win;	/* 64-bit single mapping */
-> -		void __iomem		**winp; /* 32-bit per bus mapping */
-> +		void __iomem		**winp; /* 32-bit per-bus mapping */
->  	};
->  };
->  
-> -/* create and free for pci_config_window */
-> +/* create and free pci_config_window */
->  struct pci_config_window *pci_ecam_create(struct device *dev,
->  		struct resource *cfgres, struct resource *busr,
->  		struct pci_ecam_ops *ops);
-> @@ -56,11 +56,11 @@ void pci_ecam_free(struct pci_config_window *cfg);
->  /* map_bus when ->sysdata is an instance of pci_config_window */
->  void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
->  			       int where);
-> -/* default ECAM ops, bus shift 20, generic read and write */
-> +/* default ECAM ops */
->  extern struct pci_ecam_ops pci_generic_ecam_ops;
->  
->  #ifdef CONFIG_PCI_HOST_GENERIC
-> -/* for DT based pci controllers that support ECAM */
-> +/* for DT-based PCI controllers that support ECAM */
->  int pci_host_common_probe(struct platform_device *pdev,
->  			  struct pci_ecam_ops *ops);
->  #endif
-> 
+> My impression from the ACPI tables I have seen so far is that power
+> resources support is enabled for Windows 2012 (Win8) or newer.
