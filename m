@@ -1,102 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34150 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbcEFHRc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2016 03:17:32 -0400
-Received: by mail-pa0-f53.google.com with SMTP id r5so45899145pag.1
-        for <linux-pci@vger.kernel.org>; Fri, 06 May 2016 00:17:32 -0700 (PDT)
-Subject: Re: [PATCH v9 04/22] powerpc/powernv: Increase PE# capacity
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1462281773-26438-5-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	robherring2@gmail.com, dja@axtens.net, alistair@popple.id.au
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <2f2282ae-c1dc-1870-4beb-d5e4e8233496@ozlabs.ru>
-Date: Fri, 6 May 2016 17:17:25 +1000
-MIME-Version: 1.0
-In-Reply-To: <1462281773-26438-5-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201605301305.u4UD4HOA018335@mx0a-001b2d01.pphosted.com>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v2 3/4] PCI: Add a new option for resource_alignment to reassign alignment
+Date: Mon, 30 May 2016 21:00:17 +0800
+In-Reply-To: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/03/2016 11:22 PM, Gavin Shan wrote:
-> Each PHB maintains an array helping to translate 2-bytes Request
-> ID (RID) to PE# with the assumption that PE# takes one byte, meaning
-> that we can't have more than 256 PEs. However, pci_dn->pe_number
-> already had 4-bytes for the PE#.
+When using resource_alignment kernel parameter, the current
+implement reassigns the alignment by changing resources' size
+which can potentially break some drivers. For example, the driver
+uses the size to locate some register whose length is related
+to the size.
 
-Can you possibly have more than 256 PEs? Or exactly 256? What patch in this 
-series makes use of it?
+This patch adds a new option "noresize" for the parameter to
+solve this problem.
 
-I probably asked but do not remember the answer :)
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ Documentation/kernel-parameters.txt |    5 ++++-
+ drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
+ 2 files changed, 29 insertions(+), 11 deletions(-)
 
-Looks like waste of memory - you only used a small fraction of 
-pe_rmap[0x10000] and now the waste is quadrupled.
-
-
->
-> This extends the PE# capacity for every PHB. After that, the PE number
-> is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
-> check the PE# in phb->pe_rmap[] is valid or not.
-
-Looks like using IODA_INVALID_PE is the only reason for this patch.
-
-
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Reviewed-by: Daniel Axtens <dja@axtens.net>
-> ---
->  arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
->  arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
->  2 files changed, 7 insertions(+), 6 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index cbd4c0b..cf96cb5 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -768,7 +768,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
->
->  	/* Clear the reverse map */
->  	for (rid = pe->rid; rid < rid_end; rid++)
-> -		phb->ioda.pe_rmap[rid] = 0;
-> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
->
->  	/* Release from all parents PELT-V */
->  	while (parent) {
-> @@ -3406,6 +3406,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->  	if (prop32)
->  		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
->
-> +	/* Invalidate RID to PE# mapping */
-> +	for (segno = 0; segno < ARRAY_SIZE(phb->ioda.pe_rmap); segno++)
-> +		phb->ioda.pe_rmap[segno] = IODA_INVALID_PE;
-> +
->  	/* Parse 64-bit MMIO range */
->  	pnv_ioda_parse_m64_window(phb);
->
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 904f60b..80f5326 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -156,11 +156,8 @@ struct pnv_phb {
->  		struct list_head	pe_list;
->  		struct mutex            pe_list_mutex;
->
-> -		/* Reverse map of PEs, will have to extend if
-> -		 * we are to support more than 256 PEs, indexed
-> -		 * bus { bus, devfn }
-> -		 */
-> -		unsigned char		pe_rmap[0x10000];
-> +		/* Reverse map of PEs, indexed by {bus, devfn} */
-> +		unsigned int		pe_rmap[0x10000];
->
->  		/* TCE cache invalidate registers (physical and
->  		 * remapped)
->
-
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 82b42c9..c4802f5 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2997,13 +2997,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				window. The default value is 64 megabytes.
+ 		resource_alignment=
+ 				Format:
+-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
++				[<order of align>@][<domain>:]<bus>:<slot>.<func>
++				[:noresize][; ...]
+ 				Specifies alignment and device to reassign
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
++				noresize: Don't change the resources' sizes when
++				reassigning alignment.
+ 		ecrc=		Enable/disable PCIe ECRC (transaction layer
+ 				end-to-end CRC checking).
+ 				bios: Use BIOS/firmware settings. This is the
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a259394..3ee13e5 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4748,11 +4748,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ /**
+  * pci_specified_resource_alignment - get resource alignment specified by user.
+  * @dev: the PCI device to get
++ * @resize: whether or not to change resources' size when reassigning alignment
+  *
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
+  */
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++		bool *resize)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	resource_size_t align = 0;
+@@ -4786,6 +4788,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 			}
+ 		}
+ 		p += count;
++		if (!strncmp(p, ":noresize", 9)) {
++			*resize = false;
++			p += 9;
++		} else
++			*resize = true;
+ 		if (seg == pci_domain_nr(dev->bus) &&
+ 			bus == dev->bus->number &&
+ 			slot == PCI_SLOT(dev->devfn) &&
+@@ -4818,11 +4825,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ {
+ 	int i;
+ 	struct resource *r;
++	bool resize = true;
+ 	resource_size_t align, size;
+ 	u16 command;
+ 
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
+ 
+@@ -4844,15 +4852,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
+ 		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
++		if (resize) {
++			if (size < align) {
++				size = align;
++				dev_info(&dev->dev,
++					"Rounding up size of resource #%d to %#llx.\n",
++					i, (unsigned long long)size);
++			}
++			r->flags |= IORESOURCE_UNSET;
++			r->end = size - 1;
++			r->start = 0;
++		} else {
++			r->flags &= ~IORESOURCE_SIZEALIGN;
++			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
++			r->start = max(align, size);
++			r->end = r->start + size - 1;
+ 		}
+-		r->flags |= IORESOURCE_UNSET;
+-		r->end = size - 1;
+-		r->start = 0;
+ 	}
+ 	/* Need to disable bridge's resource window,
+ 	 * to enable the kernel to reassign new resource
 -- 
-Alexey
+1.7.9.5
