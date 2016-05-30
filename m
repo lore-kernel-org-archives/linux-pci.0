@@ -1,50 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35967 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754682AbcEETPK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2016 15:15:10 -0400
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
-	bhelgaas@google.com, arnd@arndb.de,
-	Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH v2 0/2] pci: host: Broadcom STB PCIE RC controller support
-Date: Thu,  5 May 2016 12:14:58 -0700
-Message-Id: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201605301304.u4UD4FuG013363@mx0a-001b2d01.pphosted.com>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v2 1/4] PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+Date: Mon, 30 May 2016 21:00:15 +0800
+In-Reply-To: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+The resource_alignment will releases memory resources allocated
+by firmware so that kernel can reassign new resources later on.
+But this will cause the problem that no resources can be
+allocated by kernel if PCI_PROBE_ONLY was set, e.g. on pSeries
+platform because PCI_PROBE_ONLY force kernel to use firmware
+setup and not to reassign any resources.
 
-This patch series adds support for Broadcom STB SoC's PCIe root complex driver.
+To solve this problem, this patch ignores resource_alignment
+if PCI_PROBE_ONLY was set.
 
-This was primarily tested on BCM7445 (ARM) and BCM7435 (MIPS).
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Jim is the original author, and I picked up our downstream 4.1 driver and
-updated it to utilize the non-ARM hw_pci functions as well as made some
-stylistic changes.
-
-Thanks!
-
-Jim Quinlan (2):
-  Documentation: DT: bindings: Add Broadcom STB PCIe bindings
-  pci: host: Add Broadcom STB PCIE RC controller
-
- .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  |  98 +++
- MAINTAINERS                                        |   1 +
- drivers/pci/host/Kconfig                           |  17 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-brcmstb-msi.c                | 305 ++++++++
- drivers/pci/host/pcie-brcmstb.c                    | 772 +++++++++++++++++++++
- drivers/pci/host/pcie-brcmstb.h                    | 169 +++++
- 7 files changed, 1364 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
- create mode 100644 drivers/pci/host/pcie-brcmstb-msi.c
- create mode 100644 drivers/pci/host/pcie-brcmstb.c
- create mode 100644 drivers/pci/host/pcie-brcmstb.h
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c8b4dbd..a259394 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4761,6 +4761,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	while (*p) {
++		if (pci_has_flag(PCI_PROBE_ONLY)) {
++			printk(KERN_ERR "PCI: Ignore resource_alignment parameter: %s with PCI_PROBE_ONLY set\n",
++					p);
++			*p = 0;
++			break;
++		}
+ 		count = 0;
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+ 							p[count] == '@') {
 -- 
-2.1.0
-
+1.7.9.5
