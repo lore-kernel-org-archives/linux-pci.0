@@ -1,50 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34668 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbcEWPKO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2016 11:10:14 -0400
-Date: Mon, 23 May 2016 08:10:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Keith Busch <keith.busch@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
-Message-ID: <20160523151011.GA31504@infradead.org>
-References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
- <20160517160832.51fc0304@t450s.home>
- <20160523105532.GB26331@infradead.org>
- <20160523090711.12fa34f9@ul30vt.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160523090711.12fa34f9@ul30vt.home>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41710 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933252AbcE3NEp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:04:45 -0400
+Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UD4Gso013394
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:45 -0400
+Message-Id: <201605301304.u4UD4Gso013394@mx0a-001b2d01.pphosted.com>
+Received: from e28smtp02.in.ibm.com (e28smtp02.in.ibm.com [125.16.236.2])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 238jhvng9k-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:04:44 -0400
+Received: from localhost
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 30 May 2016 18:34:40 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v2 0/4] PCI: Add support for enforcing all MMIO BARs not to share PAGE_SIZE
+Date: Mon, 30 May 2016 21:00:14 +0800
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 23, 2016 at 09:07:11AM -0600, Alex Williamson wrote:
-> On Mon, 23 May 2016 03:55:32 -0700
-> Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> > On Tue, May 17, 2016 at 04:08:32PM -0600, Alex Williamson wrote:
-> > > On Tue, 17 May 2016 15:39:58 -0600
-> > > Keith Busch <keith.busch@intel.com> wrote:
-> > >   
-> > > > Every sriov capable driver has to check if any guest is using a virtual
-> > > > function prior to disabling, so let's make it common code.  
-> > > 
-> > > This is not true, the PCI_DEV_FLAGS_ASSIGNED flag is inherently racy,
-> > > so checking it is really only a courtesy for broken drivers that
-> > > still make use of it.  I don't object to adding it here, though I
-> > > wish the entire interface was deprecated, but it's only a minimal amount
-> > > of insurance as a VF might get assigned immediately following your added
-> > > test or might not participate in the assigned device flagging at all.  
-> > 
-> > Si should we just kill it? As far as I can tell it's only used in these
-> > kinds of boilerplate checks.
-> 
-> Long term, yes, but perhaps KVM legacy PCI device assignment needs to
-> be not only deprecated, but removed first.
+This series aims to add an option for PCI resource allocator to  
+force BARs not to share PAGE_SIZE. This would make sense to VFIO 
+driver. Because current VFIO implementation disallows to mmap 
+sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page 
+with other BARs for security reasons. Thus, we have to handle mmio 
+access to these BARs in QEMU emulation rather than in guest which 
+will cause some performance loss.
 
-Oh well.  In that case I'd like to at least move it to the PCI core
-so that drivers don't have to care about it.
+To achieve that, we would like to make use of the existing 
+resource_alignment kernel parameter and force a minimum alignment 
+of PAGE_SIZE. It's flexible. And we can default to enable it on  
+some archs which may easily hit the performance issue because of  
+their 64K page.
+
+In this series, patch 1 fixed a bug of resource_alignment; patch 2,3 
+tried to add a new option for resource_alignment to use 
+IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 4 
+modified resource_alignment to support syntax which can be used to  
+enforce the alignment of all MMIO BARs to be at least PAGE_SIZE.
+
+Changelog v2:
+- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
+
+Yongji Xie (4):
+  PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+  PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
+  PCI: Add a new option for resource_alignment to reassign alignment
+  PCI: Add support for enforcing all MMIO BARs to be page aligned
+
+ Documentation/kernel-parameters.txt |    7 ++-
+ arch/powerpc/include/asm/pci.h      |    2 +
+ drivers/pci/pci.c                   |  109 ++++++++++++++++++++++++++++-------
+ drivers/pci/setup-bus.c             |    9 ++-
+ 4 files changed, 102 insertions(+), 25 deletions(-)
+
+-- 
+1.7.9.5
+
