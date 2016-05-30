@@ -1,89 +1,66 @@
-Return-Path: <robin.murphy@arm.com>
-Return-Path: <robin.murphy@arm.com>
-Subject: Re: [PATCH v2 1/2] PCI: Add PCI device flag
- PCI_DEV_FLAGS_DMA_ALIAS_ROOT
-To: Jayachandran C <jchandra@broadcom.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <linux-pci@vger.kernel.org>
- <1462700001-30086-1-git-send-email-jchandra@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <5730621B.2050503@arm.com>
-Date: Mon, 9 May 2016 11:10:35 +0100
+Return-Path: <jayachandran.c@broadcom.com>
+Return-Path: <jayachandran.c@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1462700001-30086-1-git-send-email-jchandra@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <8385994.W7ve9PrvHG@wuerfel>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <1464621262-26770-10-git-send-email-tn@semihalf.com> <8385994.W7ve9PrvHG@wuerfel>
+From: Jayachandran C <jchandra@broadcom.com>
+Date: Mon, 30 May 2016 21:43:58 +0530
+Message-ID: <CAKc_7PW3Hdk9zTZ53yhGVdeeFVGFaFExZEvp456s16DnnMMjWg@mail.gmail.com>
+Subject: Re: [PATCH V8 9/9] pci, acpi: ARM64 support for ACPI based generic
+ PCI host controller
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Will Deacon <will.deacon@arm.com>, Catalin Marinas <catalin.marinas@arm.com>,
+	Rafael Wysocki <rafael@kernel.org>, Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>, Wangyijing <wangyijing@huawei.com>,
+	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linaro-acpi@lists.linaro.org,
+	Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>, Duc Dang <dhdang@apm.com>,
+	jeremy.linton@arm.com, liudongdong3@huawei.com,
+	Christopher Covington <cov@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/05/16 10:33, Jayachandran C via iommu wrote:
-> Add a new flag PCI_DEV_FLAGS_DMA_ALIAS_ROOT to limit the DMA alias
-> search to go no further than the bridge where the IOMMU is attached.
+On Mon, May 30, 2016 at 9:08 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday, May 30, 2016 5:14:22 PM CEST Tomasz Nowicki wrote:
+>> +       bsz = 1 << pci_generic_ecam_ops.bus_shift;
+>> +       cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+>> +       cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+>> +       cfgres.flags = IORESOURCE_MEM;
+>> +       cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+>> +                             &pci_generic_ecam_ops);
+>> +       if (IS_ERR(cfg)) {
+>> +               pr_err("%04x:%pR error %ld mapping CAM\n", seg, bus_res,
+>> +                      PTR_ERR(cfg));
+>> +               return PTR_ERR(cfg);
+>> +       }
+>> +
+>> +       ri->cfg = cfg;
+>> +       return 0;
+>> +}
 >
-> This has been added to support Broadcom's Vulcan which has the SMMUv3
-> and GIC ITS associated with an intermediate bridge in the PCI topology.
-> Traversing to buses above would hit internal glue bridges which will
-> change the RID.
+> I wonder if we could do this a little simpler and just put a pointer
+> to the mmconfig space into struct pci_host_bridge, and then have a trivial
+> map_bus function alongside pci_generic_config_read/pci_generic_config_write.
+>
+> As this code is specific to arch/arm64, we don't need any of the complexity
+> of drivers/pci/ecam.c, which basically only exists to work around the
+> limited virtual address space of 32-bit machines.
 
-Can you not just have the relevant callback function detect the relevant 
-node and terminate the walk of its own accord? That's what I was aiming 
-for in this patch for the IOMMU setup:
+The map_bus provided by pci-ecam.h is already trivial in 64bit case,
+it was written so that it could be optimized at compile time. The
+pci_ecam_create is a useful to have here instead of redoing the
+request_resource/ioremap sequence.
 
-http://article.gmane.org/gmane.linux.kernel.iommu/12456
+The struct pci_config_window can be moved into struct
+pci_host_bridge (or a wrapper of pci_host_bridge) when we have
+the setup to point bus->sysdata to something like that. The ECAM
+API can be fixed up to handle that case as well. I did not make
+any changes since the pci_host_bridge discussion is still going on.
 
-Is there some flaw in that approach I've missed?
-
-Robin.
-
-> Update the function pci_for_each_dma_alias() to stop when it see a
-> bridge with this flag set.
->
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> ---
->
-> Here is v2 of the patch, the previous discussion is at
-> http://lists.linuxfoundation.org/pipermail/iommu/2016-February/015668.html
->
-> v1->v2 changes:
->   - dropped the BAR quirk (not needed)
->   - moved from using the 'skip' flag for some bridges to using
->     similar approach to stop the traversal at the bridge with
->     PCI_DEV_FLAGS_DMA_ALIAS_ROOT
->
-> Comments and suggestions are welcome
->
-> JC.
->
->   drivers/pci/search.c | 4 ++++
->   include/linux/pci.h  | 2 ++
->   2 files changed, 6 insertions(+)
->
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index a20ce7d..3ea9c27 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -56,6 +56,10 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
->
->   		tmp = bus->self;
->
-> +		/* stop at bridge where translation unit is associated */
-> +		if (tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_ROOT)
-> +			return ret;
-> +
->   		/*
->   		 * PCIe-to-PCI/X bridges alias transactions from downstream
->   		 * devices using the subordinate bus number (PCI Express to
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 932ec74..b6f832b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -176,6 +176,8 @@ enum pci_dev_flags {
->   	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
->   	/* Get VPD from function 0 VPD */
->   	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-> +	/* a non-root bridge where translation occurs, stop alias search here */
-> +	PCI_DEV_FLAGS_DMA_ALIAS_ROOT = (__force pci_dev_flags_t) (1 << 9),
->   };
->
->   enum pci_irq_reroute_variant {
->
+JC.
