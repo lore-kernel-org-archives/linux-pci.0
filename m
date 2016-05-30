@@ -1,122 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([125.16.236.5]:55934 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbcEEN3I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2016 09:29:08 -0400
-Received: from localhost
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 5 May 2016 18:59:05 +0530
-Subject: Re: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-To: "Tian, Kevin" <kevin.tian@intel.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
- <f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
- <e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
- <063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
- <4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <90cc2e8c-be18-45de-ffff-fad313d49f81@linux.vnet.ibm.com>
-Date: Thu, 5 May 2016 21:28:55 +0800
-MIME-Version: 1.0
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH V8 5/9] pci, acpi: add acpi hook to assign domain number.
+Date: Mon, 30 May 2016 17:14:18 +0200
+Message-Id: <1464621262-26770-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/5 20:15, Tian, Kevin wrote:
+PCI core code provides a config option (CONFIG_PCI_DOMAINS_GENERIC)
+that allows assigning the PCI bus domain number generically by
+relying on device tree bindings, and falling back to a simple counter
+when the respective DT properties (ie "linux,pci-domain") are not
+specified in the host bridge device tree node.
 
->> From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
->> Sent: Thursday, May 05, 2016 7:43 PM
->>
->> Hi David and Kevin,
->>
->> On 2016/5/5 17:54, David Laight wrote:
->>
->>> From: Tian, Kevin
->>>> Sent: 05 May 2016 10:37
->>> ...
->>>>> Acutually, we are not aimed at accessing MSI-X table from
->>>>> guest. So I think it's safe to passthrough MSI-X table if we
->>>>> can make sure guest kernel would not touch MSI-X table in
->>>>> normal code path such as para-virtualized guest kernel on PPC64.
->>>>>
->>>> Then how do you prevent malicious guest kernel accessing it?
->>> Or a malicious guest driver for an ethernet card setting up
->>> the receive buffer ring to contain a single word entry that
->>> contains the address associated with an MSI-X interrupt and
->>> then using a loopback mode to cause a specific packet be
->>> received that writes the required word through that address.
->>>
->>> Remember the PCIe cycle for an interrupt is a normal memory write
->>> cycle.
->>>
->>> 	David
->>>
->> If we have enough permission to load a malicious driver or
->> kernel, we can easily break the guest without exposed
->> MSI-X table.
->>
->> I think it should be safe to expose MSI-X table if we can
->> make sure that malicious guest driver/kernel can't use
->> the MSI-X table to break other guest or host. The
->> capability of IRQ remapping could provide this
->> kind of protection.
->>
-> With IRQ remapping it doesn't mean you can pass through MSI-X
-> structure to guest. I know actual IRQ remapping might be platform
-> specific, but at least for Intel VT-d specification, MSI-X entry must
-> be configured with a remappable format by host kernel which
-> contains an index into IRQ remapping table. The index will find a
-> IRQ remapping entry which controls interrupt routing for a specific
-> device. If you allow a malicious program random index into MSI-X
-> entry of assigned device, the hole is obvious...
+In a similar way, when a system is booted through ACPI, architectures
+that are selecting CONFIG_PCI_DOMAINS_GENERIC (ie ARM64) require kernel
+hooks to retrieve the domain number so that the PCI bus domain number
+set-up can be handled seamlessly with DT and ACPI in generic core code
+when CONFIG_PCI_DOMAINS_GENERIC is selected.
 
-Do you mean we can trigger MSIs that correspond to interrupt
-IDs of other devices by writing to MSI-X table although IRQ
-remapping is enabled?
+Since currently it is not possible to retrieve a pointer to the PCI
+host bridge ACPI device backing the host bridge from core PCI code
+(which would allow retrieving the domain number in an arch agnostic
+way through the ACPI _SEG method), an arch specific ACPI hook has to
+be declared and implemented by all arches that rely on
+CONFIG_PCI_DOMAINS_GENERIC to retrieve the domain number and set it
+up in core PCI code.
 
-On PPC64, there is a mapping between MSIs and PE num
-which can be used to identify a PCI device on PHB. So the
-hardware can ensure a given pci device can only shoot the
-MSIs assigned for it.  Isn't there a similar mapping in IRQ
-remapping table on Intel.
+For the aforementioned reasons, this patch introduces a dummy
+acpi_pci_bus_domain_nr() hook in preparation for per-arch implementation
+of the same to retrieve the domain number on a per-arch basis when
+the system boots through ACPI.
 
-Thanks,
-Yongji
+For the sake of code clarity the current code implementing generic
+domain number assignment (ie pci_bus_assign_domain_nr(), selected by
+CONFIG_PCI_DOMAINS_GENERIC) is reshuffled so that the code implementing
+the DT domain assignment function is stubbed out into a corresponding
+helper, so that DT and ACPI functions are clearly separated in
+preparation for arches acpi_pci_bus_domain_nr() implementations.
 
-> Above might make sense only for a IRQ remapping implementation
-> which doesn't rely on extended MSI-X format (e.g. simply based on
-> BDF). If that's the case for PPC, then you should build MSI-X
-> passthrough based on this fact instead of general IRQ remapping
-> enabled or not.
->
-> Thanks
-> Kevin
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/pci/pci.c   | 11 +++++++++--
+ include/linux/pci.h |  1 +
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index eb431b5..2b52178 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -7,6 +7,7 @@
+  *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/init.h>
+@@ -4941,7 +4942,7 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++static int of_pci_bus_domain_nr(struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+ 	int domain = -1;
+@@ -4985,7 +4986,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
++					 acpi_pci_bus_domain_nr(bus);
+ }
+ #endif
+ #endif
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 12349de..bba4053 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1390,6 +1390,7 @@ static inline int pci_domain_nr(struct pci_bus *bus)
+ {
+ 	return bus->domain_nr;
+ }
++static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus) { return -1; }
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
+ #else
+ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+-- 
+1.9.1
