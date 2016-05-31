@@ -1,156 +1,147 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Chen Yu <yu.c.chen@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Chen Yu <yu.c.chen@intel.com>
-Subject: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
-Date: Mon, 30 May 2016 18:33:24 +0800
-Message-Id: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40445 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750885AbcEaWC3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 May 2016 18:02:29 -0400
+Date: Tue, 31 May 2016 17:02:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	linux-kernel@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack
+ overflow"
+Message-ID: <20160531220224.GA30841@localhost>
+References: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently there are many people reported that they can not
-do a poweroff nor a suspend to memory on their Mac Pro 11.
-After some investigations it was found that, once the PCI bridge
-0000:00:1c.0 reassigns its mm windows([mem 0x7fa00000-0x7fbfffff]
-and [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-io resource 0x1804 becomes unaccessible immediately, where the
-ACPI Sleep register is located, as a result neither poweroff(S5)
-nor suspend to memory(S3) works.
+[+cc Russell, linux-arm-kernel]
 
-I don't know why setting the base/limit of PCI bridge mem resource
-would affect another io resource region, so this quirk just simply
-bypass the assignment of these mm resources on 0000:00:1c.0, by
-resetting the resource flag to 0 before updating the base/limit registers.
-This patch also introduces a new pci fixup phase before the actual bridge
-resource assignment.
+On Tue, May 31, 2016 at 04:58:02PM -0500, Bjorn Helgaas wrote:
+> This reverts commit 498a92d42596a7a32c042319eb62a4c3d8081cf1.
+> 
+> Krzysztof reported that this change broke Cavium CNS3xxx, ARMv6 (Laguna
+> GW-2388) because the MRRS setting is never written to the hardware.
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-Tested-by: Cedric Le Goater <clg@kaod.org>
-Tested-by: pkozlov <pkozlov.vrn@gmail.com>
-Tested-by: Zach Norman <zach@nor.mn>
-Tested-by: Pablo Catalina <pablo.catalina@gmail.com>
-Signed-off-by: Chen Yu <yu.c.chen@intel.com>
----
- drivers/pci/quirks.c              | 25 +++++++++++++++++++++++++
- drivers/pci/setup-bus.c           |  2 ++
- include/asm-generic/vmlinux.lds.h |  3 +++
- include/linux/pci.h               |  4 ++++
- scripts/mod/modpost.c             |  1 +
- 5 files changed, 35 insertions(+)
+Krzysztof, can you test this and see whether it fixes the problem for
+you?
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ee72ebe..e347047 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3370,6 +3370,8 @@ extern struct pci_fixup __start_pci_fixups_header[];
- extern struct pci_fixup __end_pci_fixups_header[];
- extern struct pci_fixup __start_pci_fixups_final[];
- extern struct pci_fixup __end_pci_fixups_final[];
-+extern struct pci_fixup __start_pci_fixups_assign[];
-+extern struct pci_fixup __end_pci_fixups_assign[];
- extern struct pci_fixup __start_pci_fixups_enable[];
- extern struct pci_fixup __end_pci_fixups_enable[];
- extern struct pci_fixup __start_pci_fixups_resume[];
-@@ -3405,6 +3407,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
- 		end = __end_pci_fixups_final;
- 		break;
- 
-+	case pci_fixup_assign:
-+		start = __start_pci_fixups_assign;
-+		end = __end_pci_fixups_assign;
-+		break;
-+
- 	case pci_fixup_enable:
- 		start = __start_pci_fixups_enable;
- 		end = __end_pci_fixups_enable;
-@@ -4419,3 +4426,21 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 	}
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-+
-+/*
-+ * On Mac Pro 11, the allocation of pci bridge memory resource
-+ * broke ACPI Sleep Type register region.
-+ */
-+static void quirk_mac_disable_mmio_bar(struct pci_dev *dev)
-+{
-+	struct resource *b_res;
-+
-+	dev_info(&dev->dev, "[Quirk] Disable mmio on Mac Pro 11\n");
-+	if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
-+		return;
-+
-+	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
-+	b_res[1].flags = 0;
-+	b_res[2].flags = 0;
-+}
-+DECLARE_PCI_FIXUP_ASSIGN(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_mac_disable_mmio_bar);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 55641a3..730d6fd 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1256,6 +1256,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
- 		}
-+
-+		pci_fixup_device(pci_fixup_assign, bus->self);
- 		/* Fall through */
- 	default:
- 		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 6a67ab9..3ba05f0 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -283,6 +283,9 @@
- 		VMLINUX_SYMBOL(__start_pci_fixups_final) = .;		\
- 		*(.pci_fixup_final)					\
- 		VMLINUX_SYMBOL(__end_pci_fixups_final) = .;		\
-+		VMLINUX_SYMBOL(__start_pci_fixups_assign) = .;		\
-+		*(.pci_fixup_assign)					\
-+		VMLINUX_SYMBOL(__end_pci_fixups_assign) = .;		\
- 		VMLINUX_SYMBOL(__start_pci_fixups_enable) = .;		\
- 		*(.pci_fixup_enable)					\
- 		VMLINUX_SYMBOL(__end_pci_fixups_enable) = .;		\
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b67e4df..14a35bb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1584,6 +1584,7 @@ enum pci_fixup_pass {
- 	pci_fixup_early,	/* Before probing BARs */
- 	pci_fixup_header,	/* After reading configuration header */
- 	pci_fixup_final,	/* Final phase of device fixups */
-+	pci_fixup_assign,	/* Before resource assignment */
- 	pci_fixup_enable,	/* pci_enable_device() time */
- 	pci_fixup_resume,	/* pci_device_resume() */
- 	pci_fixup_suspend,	/* pci_device_suspend() */
-@@ -1644,6 +1645,9 @@ enum pci_fixup_pass {
- #define DECLARE_PCI_FIXUP_FINAL(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_final,			\
- 		hook, vendor, device, PCI_ANY_ID, 0, hook)
-+#define DECLARE_PCI_FIXUP_ASSIGN(vendor, device, hook)			\
-+	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_assign,			\
-+		hook, vendor, device, PCI_ANY_ID, 0, hook)
- #define DECLARE_PCI_FIXUP_ENABLE(vendor, device, hook)			\
- 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_enable,			\
- 		hook, vendor, device, PCI_ANY_ID, 0, hook)
-diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
-index 48958d3..248acdb 100644
---- a/scripts/mod/modpost.c
-+++ b/scripts/mod/modpost.c
-@@ -877,6 +877,7 @@ static void check_section(const char *modname, struct elf_info *elf,
- 
- #define ALL_PCI_INIT_SECTIONS	\
- 	".pci_fixup_early", ".pci_fixup_header", ".pci_fixup_final", \
-+	".pci_fixup_assign", \
- 	".pci_fixup_enable", ".pci_fixup_resume", \
- 	".pci_fixup_resume_early", ".pci_fixup_suspend"
- 
--- 
-2.7.4
-
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Krzysztof Hałasa <khalasa@piap.pl>
+> ---
+>  arch/arm/mach-cns3xxx/pcie.c |   71 ++++++++++++++++++++++++------------------
+>  1 file changed, 41 insertions(+), 30 deletions(-)
+> 
+> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+> index 318394e..c622c30 100644
+> --- a/arch/arm/mach-cns3xxx/pcie.c
+> +++ b/arch/arm/mach-cns3xxx/pcie.c
+> @@ -65,9 +65,8 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
+>  
+>  	/*
+>  	 * The CNS PCI bridge doesn't fit into the PCI hierarchy, though
+> -	 * we still want to access it.
+> -	 * We place the host bridge on bus 0, and the directly connected
+> -	 * device on bus 1, slot 0.
+> +	 * we still want to access it. For this to work, we must place
+> +	 * the first device on the same bus as the CNS PCI bridge.
+>  	 */
+>  	if (busno == 0) { /* internal PCIe bus, host bridge device */
+>  		if (devfn == 0) /* device# and function# are ignored by hw */
+> @@ -212,46 +211,58 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+>  	}
+>  }
+>  
+> -static void cns3xxx_write_config(struct cns3xxx_pcie *cnspci,
+> -					 int where, int size, u32 val)
+> -{
+> -	void __iomem *base = cnspci->host_regs + (where & 0xffc);
+> -	u32 v;
+> -	u32 mask = (0x1ull << (size * 8)) - 1;
+> -	int shift = (where % 4) * 8;
+> -
+> -	v = readl_relaxed(base);
+> -
+> -	v &= ~(mask << shift);
+> -	v |= (val & mask) << shift;
+> -
+> -	writel_relaxed(v, base);
+> -	readl_relaxed(base);
+> -}
+> -
+>  static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
+>  {
+> +	int port = cnspci->port;
+> +	struct pci_sys_data sd = {
+> +		.private_data = cnspci,
+> +	};
+> +	struct pci_bus bus = {
+> +		.number = 0,
+> +		.ops = &cns3xxx_pcie_ops,
+> +		.sysdata = &sd,
+> +	};
+>  	u16 mem_base  = cnspci->res_mem.start >> 16;
+>  	u16 mem_limit = cnspci->res_mem.end   >> 16;
+>  	u16 io_base   = cnspci->res_io.start  >> 16;
+>  	u16 io_limit  = cnspci->res_io.end    >> 16;
+> +	u32 devfn = 0;
+> +	u8 tmp8;
+> +	u16 pos;
+> +	u16 dc;
+> +
+> +	pci_bus_write_config_byte(&bus, devfn, PCI_PRIMARY_BUS, 0);
+> +	pci_bus_write_config_byte(&bus, devfn, PCI_SECONDARY_BUS, 1);
+> +	pci_bus_write_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, 1);
+>  
+> -	cns3xxx_write_config(cnspci, PCI_PRIMARY_BUS, 1, 0);
+> -	cns3xxx_write_config(cnspci, PCI_SECONDARY_BUS, 1, 1);
+> -	cns3xxx_write_config(cnspci, PCI_SUBORDINATE_BUS, 1, 1);
+> -	cns3xxx_write_config(cnspci, PCI_MEMORY_BASE, 2, mem_base);
+> -	cns3xxx_write_config(cnspci, PCI_MEMORY_LIMIT, 2, mem_limit);
+> -	cns3xxx_write_config(cnspci, PCI_IO_BASE_UPPER16, 2, io_base);
+> -	cns3xxx_write_config(cnspci, PCI_IO_LIMIT_UPPER16, 2, io_limit);
+> +	pci_bus_read_config_byte(&bus, devfn, PCI_PRIMARY_BUS, &tmp8);
+> +	pci_bus_read_config_byte(&bus, devfn, PCI_SECONDARY_BUS, &tmp8);
+> +	pci_bus_read_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, &tmp8);
+> +
+> +	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_BASE, mem_base);
+> +	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_LIMIT, mem_limit);
+> +	pci_bus_write_config_word(&bus, devfn, PCI_IO_BASE_UPPER16, io_base);
+> +	pci_bus_write_config_word(&bus, devfn, PCI_IO_LIMIT_UPPER16, io_limit);
+>  
+>  	if (!cnspci->linked)
+>  		return;
+>  
+>  	/* Set Device Max_Read_Request_Size to 128 byte */
+> -	pcie_bus_config = PCIE_BUS_PEER2PEER;
+> -
+> +	bus.number = 1; /* directly connected PCIe device */
+> +	devfn = PCI_DEVFN(0, 0);
+> +	pos = pci_bus_find_capability(&bus, devfn, PCI_CAP_ID_EXP);
+> +	pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
+> +	if (dc & PCI_EXP_DEVCTL_READRQ) {
+> +		dc &= ~PCI_EXP_DEVCTL_READRQ;
+> +		pci_bus_write_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, dc);
+> +		pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
+> +		if (dc & PCI_EXP_DEVCTL_READRQ)
+> +			pr_warn("PCIe: Unable to set device Max_Read_Request_Size\n");
+> +		else
+> +			pr_info("PCIe: Max_Read_Request_Size set to 128 bytes\n");
+> +	}
+>  	/* Disable PCIe0 Interrupt Mask INTA to INTD */
+> -	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(cnspci->port));
+> +	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(port));
+>  }
+>  
+>  static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
