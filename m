@@ -1,119 +1,55 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Wed, 11 May 2016 11:11:01 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	wangyijing@huawei.com,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org,
-	dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
-	Christopher Covington <cov@codeaurora.org>
-Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
-Message-ID: <20160511101101.GA16101@red-moon>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <1462893601-8937-8-git-send-email-tn@semihalf.com>
- <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
+Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <574D03F9.6050201@intel.com>
+References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
+	<20160530213305.GA21322@localhost>
+	<574D03F9.6050201@intel.com>
+Date: Tue, 31 May 2016 00:00:48 -0700
+Message-ID: <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
+Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
+From: Yinghai Lu <yinghai@kernel.org>
+To: Chen Yu <yu.c.chen@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 10, 2016 at 08:37:00PM +0200, Rafael J. Wysocki wrote:
-> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> > This patch provides a way to set the ACPI companion in PCI code.
-> > We define acpi_pci_set_companion() to set the ACPI companion pointer and
-> > call it from PCI core code. The function is stub for now.
-> >
-> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > ---
-> >  drivers/pci/probe.c      | 2 ++
-> >  include/linux/pci-acpi.h | 4 ++++
-> >  2 files changed, 6 insertions(+)
-> >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 8004f67..fb0b752 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -12,6 +12,7 @@
-> >  #include <linux/slab.h>
-> >  #include <linux/module.h>
-> >  #include <linux/cpumask.h>
-> > +#include <linux/pci-acpi.h>
-> >  #include <linux/pci-aspm.h>
-> >  #include <linux/aer.h>
-> >  #include <linux/acpi.h>
-> > @@ -2141,6 +2142,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >         bridge->dev.parent = parent;
-> >         bridge->dev.release = pci_release_host_bridge_dev;
-> >         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> > +       acpi_pci_set_companion(bridge);
-> 
-> Yes, we'll probably add something similar here.
-> 
-> Do I think now is the right time to do that?  No.
-> 
-> >         error = pcibios_root_bridge_prepare(bridge);
-> >         if (error) {
-> >                 kfree(bridge);
-> > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> > index 09f9f02..1baa515 100644
-> > --- a/include/linux/pci-acpi.h
-> > +++ b/include/linux/pci-acpi.h
-> > @@ -111,6 +111,10 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-> >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-> >  #endif /* CONFIG_ACPI */
-> >
-> > +static inline void acpi_pci_set_companion(struct pci_host_bridge *bridge)
-> > +{
-> > +}
-> > +
-> >  static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
-> >  {
-> >         return 0;
-> > --
-> 
-> Honestly, to me it looks like this series is trying very hard to avoid
-> doing any PCI host bridge configuration stuff from arch/arm64/
-> although (a) that might be simpler and (b) it would allow us to
-> identify the code that's common between *all* architectures using ACPI
-> support for host bridge configuration and to move *that* to a common
-> place later.  As done here it seems to be following the "ARM64 is
-> generic and the rest of the world is special" line which isn't really
-> helpful.
+On Mon, May 30, 2016 at 8:24 PM, Chen Yu <yu.c.chen@intel.com> wrote:
 
-I think patch [1-2] should be merged regardless (they may require minor
-tweaks if we decide to move pci_acpi_scan_root() to arch/arm64 though,
-for include files location). I guess you are referring to patch 8 in
-your comments above, which boils down to deciding whether:
+> and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
+> resource window and then update related base/limit registers:
+>
+> [    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to [bus
+> 02] add_size 1000
+> [    0.865343] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff
+> 64bit pref] to [bus 02] add_size 200000 add_align 100000
+> [    0.865344] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff]
+> to [bus 02] add_size 200000 add_align 100000
+>
 
-- pci_acpi_scan_root() (and unfortunately all the MCFG/ECAM handling that
-  goes with it) should live in arch/arm64 or drivers/acpi
+That is for hotplug bridge, then we could use following instead.
 
-acpi_pci_bus_domain_nr() is a bit more problematic since it is meant
-to be called from PCI core code (ARM64 selects PCI_DOMAINS_GENERIC for
-DT and same kernel has to work with OF and ACPI selected) and it is
-arch specific (because what we have in bus->sysdata is arch specific,
-waiting for the domain number to be embedded in struct pci_host_bridge).
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ee72ebe..d3ec833 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2775,6 +2775,13 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
 
-Your point is fair, I am not sure that moving the pci_acpi_scan_root()
-to arch/arm64 would make things much simpler though, it is just a matter
-of deciding where that code has to live.
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
 
-How do you want us to proceed ?
-
-Thanks,
-Lorenzo
++static void quirk_hotplug_bridge_skip(struct pci_dev *dev)
++{
++       dev->is_hotplug_bridge = 0;
++}
++
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10,
+quirk_hotplug_bridge_skip);
++
+ /*
+  * This is a quirk for the Ricoh MMC controller found as a part of
+  * some mulifunction chips.
