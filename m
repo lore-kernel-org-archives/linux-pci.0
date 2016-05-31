@@ -1,91 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:46040 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753AbcETGnM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:12 -0400
-Received: from localhost
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 20 May 2016 16:43:09 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 35CB02CE805C
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:06 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6gwoO54395030
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:06 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gWF0032123
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:33 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v10 06/18] powerpc/powernv: Allocate PE# in reverse order
-Date: Fri, 20 May 2016 16:41:30 +1000
-Message-Id: <1463726502-14679-7-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Tue, 31 May 2016 13:47:14 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
+Message-ID: <20160531104714.GL1743@lahna.fi.intel.com>
+References: <20160524162833.GA30762@localhost>
+ <20160526104557.GA6816@wunner.de>
+ <20160526110308.GX1789@lahna.fi.intel.com>
+ <1576190.gfFb6HhZV6@vostro.rjw.lan>
+ <20160530093326.GH1789@lahna.fi.intel.com>
+ <20160530144445.GC1743@lahna.fi.intel.com>
+ <CAMxnaaXhapETZYMVe6EUoBGaMtxL_fP+uzc30SQpM+6EqPF3CQ@mail.gmail.com>
+ <20160531083349.GG1743@lahna.fi.intel.com>
+ <20160531085805.GI1743@lahna.fi.intel.com>
+ <20160531104051.GA13958@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160531104051.GA13958@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-PE number for one particular PE can be allocated dynamically or
-reserved according to the consumed M64 (64-bits prefetchable)
-segments of the PE. The M64 segment can't be remapped to arbitrary
-PE, meaning the PE number is determined according to the index
-of the consumed M64 segment. As below figure shows, M64 resource
-grows from low to high end, meaning the PE (number) reserved
-according to M64 segment grows from low to high end as well,
-so does the dynamically allocated PE number. It will lead to
-conflict: PE number (M64 segment) reserved by dynamic allocation
-is required by hot added PCI adapter at later point. It fails
-the PCI hotplug because of the PE number can't be reserved
-based on the index of the consumed M64 segment.
+On Tue, May 31, 2016 at 12:40:51PM +0200, Lukas Wunner wrote:
+> On Tue, May 31, 2016 at 11:58:05AM +0300, Mika Westerberg wrote:
+> > To summarize the next steps. I will send new version of the
+> > PCI PM patches with following changes.
+> > 
+> >   - Drop this 50ms patch, we should have the PCIe 100ms delay already
+> >     covered.
+> > 
+> >   - Increase runtime PM autosuspend time from 10ms to 500ms (or whatever
+> >     is the prefered default).
+> 
+> I did some tests, turns out the autosuspend delay need not be increased
+> to prevent the Thunderbolt hotplug ports from suspending between
+> "enabling device" and loading the pciehp driver, however the following
+> is needed:
+> 
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 7860ab3..1d1fb1c 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -238,6 +238,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  		pm_runtime_set_autosuspend_delay(&dev->dev, 10);
+>  		pm_runtime_use_autosuspend(&dev->dev);
+>  		pm_runtime_put_autosuspend(&dev->dev);
+> +		pm_runtime_mark_last_busy(&dev->dev);
+>  		pm_runtime_allow(&dev->dev);
+>  	}
 
-  +---+---+---+---+---+--------------------------------+-----+
-  | 0 | 1 | 2 | 3 | 4 |      .......                   | 255 |
-  +---+---+---+---+---+--------------------------------+-----+
+I still prefer increasing the autosuspend delay. The above looks hackish
+and does not work if it takes more than 10ms to get to the tbt driver
+probe.
 
-  PE number for dynamic allocation          ----------------->
-  PE number reserved for M64 segment        ----------------->
-
-To resolve above conflicts, this forces the PE number to be
-allocated dynamically in reverse order. With this patch applied,
-the PE numbers are reserved in ascending order, but allocated
-dynamically in reverse order.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index dea2595..2dc64ca 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -141,16 +141,14 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- 
- static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
- {
--	unsigned long pe;
-+	unsigned long pe = phb->ioda.total_pe_num - 1;
- 
--	do {
--		pe = find_next_zero_bit(phb->ioda.pe_alloc,
--					phb->ioda.total_pe_num, 0);
--		if (pe >= phb->ioda.total_pe_num)
--			return NULL;
--	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
-+	for (pe = phb->ioda.total_pe_num - 1; pe >= 0; pe--) {
-+		if (!test_and_set_bit(pe, phb->ioda.pe_alloc))
-+			return pnv_ioda_init_pe(phb, pe);
-+	}
- 
--	return pnv_ioda_init_pe(phb, pe);
-+	return NULL;
- }
- 
- static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
--- 
-2.1.0
-
+Did you try if it also works with 500ms delay?
