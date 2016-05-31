@@ -1,199 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59490 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751431AbcEYMVS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 May 2016 08:21:18 -0400
-Received: from pps.filterd (m0075771.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4PCJLYM016476
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 08:21:18 -0400
-Message-Id: <201605251221.u4PCJLYM016476@mx0a-001b2d01.pphosted.com>
-Received: from e24smtp03.br.ibm.com (e24smtp03.br.ibm.com [32.104.18.24])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 234qhwfpce-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 08:21:17 -0400
-Received: from localhost
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Wed, 25 May 2016 09:21:15 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id D76021DC006D
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 08:21:05 -0400 (EDT)
-Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4PCLCTa4726804
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 09:21:12 -0300
-Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
-	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4PCLBBb006612
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 09:21:12 -0300
-Subject: Re: [v6] powerpc/pci: Assign fixed PHB number based on device-tree
- properties
-To: Michael Ellerman <mpe@ellerman.id.au>,
-	linuxppc-dev@lists.ozlabs.org
-References: <3rF2NB4btGz9sds@ozlabs.org>
-Cc: benh@kernel.crashing.org, paulus@samba.org, mikey@neuling.org,
-	frederic.barrat@fr.ibm.com, linux-pci@vger.kernel.org,
-	mrochs@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
-	imunsie@au1.ibm.com, andrew.donnellan@au1.ibm.com,
-	bhelgaas@google.com
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Date: Wed, 25 May 2016 09:21:10 -0300
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Tue, 31 May 2016 12:40:51 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+	Dave Airlie <airlied@gmail.com>
+Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
+Message-ID: <20160531104051.GA13958@wunner.de>
+References: <20160524162833.GA30762@localhost>
+ <20160526104557.GA6816@wunner.de>
+ <20160526110308.GX1789@lahna.fi.intel.com>
+ <1576190.gfFb6HhZV6@vostro.rjw.lan>
+ <20160530093326.GH1789@lahna.fi.intel.com>
+ <20160530144445.GC1743@lahna.fi.intel.com>
+ <CAMxnaaXhapETZYMVe6EUoBGaMtxL_fP+uzc30SQpM+6EqPF3CQ@mail.gmail.com>
+ <20160531083349.GG1743@lahna.fi.intel.com>
+ <20160531085805.GI1743@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <3rF2NB4btGz9sds@ozlabs.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160531085805.GI1743@lahna.fi.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/25/2016 03:26 AM, Michael Ellerman wrote:
-> On Wed, 2016-18-05 at 01:48:00 UTC, "Guilherme G. Piccoli" wrote:
->> The domain/PHB field of PCI addresses has its value obtained from a
->> global variable, incremented each time a new domain (represented by
->> struct pci_controller) is added on the system. The domain addition
->> process happens during boot or due to PHB hotplug add.
->>
->> As recent kernels are using predictable naming for network interfaces,
->> the network stack is more tied to PCI naming. This can be a problem in
->> hotplug scenarios, because PCI addresses will change if devices are
->> removed and then re-added. This situation seems unusual, but it can
->> happen if a user wants to replace a NIC without rebooting the machine,
->> for example.
->>
->> This patch changes the way PCI domain values are generated: now, we use
->> device-tree properties to assign fixed PHB numbers to PCI addresses
->> when available (meaning pSeries and PowerNV cases). We also use a bitmap
->> to allow dynamic PHB numbering when device-tree properties are not
->> used. This bitmap keeps track of used PHB numbers and if a PHB is
->> released (by hotplug operations for example), it allows the reuse of
->> this PHB number, avoiding PCI address to change in case of device remove
->> and re-add soon after. No functional changes were introduced.
->>
->> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
->> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
->> ---
->> v6:
->>      * Dropped the of_get_property() use to use instead
->> of_property_read_u64()/of_property_read_u32_array as per Michael's
->> suggestion. Since these 2 functions deal with endianness conversion,
->> no need to manually convert endianness anymore. Logic was simplified.
->
-> Thanks.
->
->>      * Changed MAX_PHBS to 64K as per Gavin's suggestion. Changed 0xFFFF
->> to (MAX_PHBS - 1) then.
->
-> Thanks.
->
+On Tue, May 31, 2016 at 11:58:05AM +0300, Mika Westerberg wrote:
+> To summarize the next steps. I will send new version of the
+> PCI PM patches with following changes.
+> 
+>   - Drop this 50ms patch, we should have the PCIe 100ms delay already
+>     covered.
+> 
+>   - Increase runtime PM autosuspend time from 10ms to 500ms (or whatever
+>     is the prefered default).
 
-Thanks very much for your review and comments Michael.
+I did some tests, turns out the autosuspend delay need not be increased
+to prevent the Thunderbolt hotplug ports from suspending between
+"enabling device" and loading the pciehp driver, however the following
+is needed:
 
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 7860ab3..1d1fb1c 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -238,6 +238,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 		pm_runtime_set_autosuspend_delay(&dev->dev, 10);
+ 		pm_runtime_use_autosuspend(&dev->dev);
+ 		pm_runtime_put_autosuspend(&dev->dev);
++		pm_runtime_mark_last_busy(&dev->dev);
+ 		pm_runtime_allow(&dev->dev);
+ 	}
+ 
 
->>      * Changed test_bit() and set_bit() to test_and_set_bit() as per
->> Gavin's suggestion.
->>
->>      * Removed some obvious comments.
->>
->>      * Didn't remove machine check for pSeries on "reg" property lookup.
->> It's worthy to keep it, since almost every platform (if not all of them)
->> contain the "reg" property on PHB node in device-tree, but only in
->> pSeries we're 100% sure it can be used as the PHB unique identifier.
->> Since the patch has a dynamic PHB numbering mechanism, the other platforms
->> won't have trouble with it.
->
-> I'll drop it and test here on Cell & others.
->
+With this small change things look much better (with the 10 ms delay
+we have now):
 
-OK, glad to hear this. I have no access to Cell and other platforms, 
-thanks for taking time to test this :)
+[    2.353643] pcieport 0000:06:03.0: enabling device (0000 -> 0002)
+[    2.353789] pcieport 0000:06:03.0: rpm_idle
+[    2.353825] pcieport 0000:06:04.0: enabling device (0000 -> 0003)
+[    2.353855] pcieport 0000:06:03.0: rpm_idle
+[    2.353994] pcieport 0000:06:04.0: rpm_idle
+[    2.354017] pcieport 0000:06:04.0: rpm_idle
+[    2.354042] pcieport 0000:06:05.0: enabling device (0000 -> 0003)
+[    2.354186] pcieport 0000:06:05.0: rpm_idle
+[    2.354213] pcieport 0000:06:06.0: enabling device (0000 -> 0002)
+[    2.354362] pcieport 0000:06:06.0: rpm_idle
+[    2.354407] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+[    2.354441] pciehp 0000:06:03.0:pcie204: Slot #3 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+[    2.354524] pciehp 0000:06:03.0:pcie204: service driver pciehp loaded
+[    2.354533] pciehp 0000:06:04.0:pcie204: Slot #4 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+[    2.354609] pciehp 0000:06:04.0:pcie204: service driver pciehp loaded
+[    2.354617] pciehp 0000:06:05.0:pcie204: Slot #5 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+[    2.354690] pciehp 0000:06:05.0:pcie204: service driver pciehp loaded
+[    2.354698] pciehp 0000:06:06.0:pcie204: Slot #6 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+[    2.354772] pciehp 0000:06:06.0:pcie204: service driver pciehp loaded
+[    2.354777] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
+[    2.354827] intel_idle: MWAIT substates: 0x21120
+[    2.354829] intel_idle: v0.4.1 model 0x3A
+[    2.355122] intel_idle: lapic_timer_reliable_states 0xffffffff
+[    2.355152] GHES: HEST is not enabled!
+[    2.355216] pcieport 0000:06:05.0: rpm_idle
+[    2.355235] pcieport 0000:06:06.0: rpm_idle
+[    2.355238] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
+[    2.355277] pcieport 0000:06:03.0: rpm_idle
+[    2.355301] pcieport 0000:06:04.0: rpm_idle
+[    2.355659] Linux agpgart interface v0.103
+[    2.355739] AMD IOMMUv2 driver by Joerg Roedel <jroedel@suse.de>
+[    2.355764] AMD IOMMUv2 functionality not available on this system
+[    2.356396] i8042: PNP: No PS/2 controller found. Probing ports directly.
+[    2.364794] pcieport 0000:06:06.0: rpm_suspend
+[    2.366112] pcieport 0000:06:05.0: rpm_suspend
+[    2.367402] pcieport 0000:06:04.0: rpm_suspend
+[    2.368671] pcieport 0000:06:03.0: rpm_suspend
 
+Thanks,
 
->> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> index 0f7a60f..4afc9c1 100644
->> --- a/arch/powerpc/kernel/pci-common.c
->> +++ b/arch/powerpc/kernel/pci-common.c
->> @@ -41,11 +41,18 @@
->>   #include <asm/ppc-pci.h>
->>   #include <asm/eeh.h>
->>
->> +/* hose_spinlock protects accesses to the the phb_bitmap. */
->>   static DEFINE_SPINLOCK(hose_spinlock);
->>   LIST_HEAD(hose_list);
->>
->> -/* XXX kill that some day ... */
->> -static int global_phb_number;		/* Global phb counter */
->> +/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
->> +#define MAX_PHBS 0x10000
->> +
->> +/*
->> + * For dynamic PHB numbering: used/free PHBs tracking bitmap.
->> + * Accesses to this bitmap should be protected by hose_spinlock.
->> + */
->> +static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
->>
->>   /* ISA Memory physical address */
->>   resource_size_t isa_mem_base;
->> @@ -64,6 +71,47 @@ struct dma_map_ops *get_pci_dma_ops(void)
->>   }
->>   EXPORT_SYMBOL(get_pci_dma_ops);
->>
->> +/*
->> + * This function should run under locking protection, specifically
->> + * hose_spinlock.
->> + */
->> +static int get_phb_number(struct device_node *dn)
->> +{
->> +	u64 prop;
->> +	int ret;
->> +	int phb_id;
->> +
->> +	/*
->> +	 * Try fixed PHB numbering first, by checking archs and reading
->> +	 * the respective device-tree properties. Firstly, try PowerNV by
->> +	 * reading "ibm,opal-phbid", only present in OPAL environment.
->> +	 */
->> +	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
->> +	if (ret && machine_is(pseries))
->> +		ret = of_property_read_u32_array(dn, "reg", (u32 *)&prop, 2);
->> +	if (ret)
->> +		goto dynamic_phb_numbering;
->> +
->> +	phb_id = (int)(prop & (MAX_PHBS - 1));
->> +
->> +	/* We need to be sure to not use the same PHB number twice. */
->> +	if (test_and_set_bit(phb_id, phb_bitmap))
->> +		goto dynamic_phb_numbering;
->> +
->> +	return phb_id;
->> +
->> +	/*
->> +	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
->> +	 * the same PHB number twice, then fallback to dynamic PHB numbering.
->> +	 */
->> +dynamic_phb_numbering:
->> +	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
->> +	BUG_ON(phb_id >= MAX_PHBS);
->> +	set_bit(phb_id, phb_bitmap);
->> +
->> +	return phb_id;
->> +}
->
-> You really shouldn't need a goto in a function this simple.
->
-> Either rearrange it so you can do the logic once, or just put the dynamic case
-> into a helper function.
-
-Sure, I'll rearrange the code to drop this goto, thanks for the suggestion.
-
-Cheers,
-
-
-Guilherme
-
-
-
->
-> cheers
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
->
-
+Lukas
