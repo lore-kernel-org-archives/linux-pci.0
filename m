@@ -1,94 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50028 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754914AbcEBUnN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 May 2016 16:43:13 -0400
-Date: Mon, 2 May 2016 15:43:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
-	linux-kernel@vger.kernel.org,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jake Oshins <jakeo@microsoft.com>
-Subject: Re: [PATCH] PCI: hv: report resources release after stopping the bus
-Message-ID: <20160502204303.GL24851@localhost>
-References: <1461922750-26053-1-git-send-email-vkuznets@redhat.com>
+Return-Path: <yu.c.chen@intel.com>
+Return-Path: <yu.c.chen@intel.com>
+From: Chen Yu <yu.c.chen@intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ linux-arch <linux-arch@vger.kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
+References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
+ <20160530213305.GA21322@localhost> <574D03F9.6050201@intel.com>
+ <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
+Message-ID: <574D3AAA.6090503@intel.com>
+Date: Tue, 31 May 2016 15:18:02 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461922750-26053-1-git-send-email-vkuznets@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 29, 2016 at 11:39:10AM +0200, Vitaly Kuznetsov wrote:
-> Kernel hang is observed when pci-hyperv module is release with device
-> drivers still attached. E.g. when I do 'rmmod pci_hyperv' with BCM5720
-> device pass-through-ed (tg3 module) I see the following:
-> 
->  NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [rmmod:2104]
->  ...
->  Call Trace:
->   [<ffffffffa0641487>] tg3_read_mem+0x87/0x100 [tg3]
->   [<ffffffffa063f000>] ? 0xffffffffa063f000
->   [<ffffffffa0644375>] tg3_poll_fw+0x85/0x150 [tg3]
->   [<ffffffffa0649877>] tg3_chip_reset+0x357/0x8c0 [tg3]
->   [<ffffffffa064ca8b>] tg3_halt+0x3b/0x190 [tg3]
->   [<ffffffffa0657611>] tg3_stop+0x171/0x230 [tg3]
->   ...
->   [<ffffffffa064c550>] tg3_remove_one+0x90/0x140 [tg3]
->   [<ffffffff813bee59>] pci_device_remove+0x39/0xc0
->   [<ffffffff814a3201>] __device_release_driver+0xa1/0x160
->   [<ffffffff814a32e3>] device_release_driver+0x23/0x30
->   [<ffffffff813b794a>] pci_stop_bus_device+0x8a/0xa0
->   [<ffffffff813b7ab6>] pci_stop_root_bus+0x36/0x60
->   [<ffffffffa02c3f38>] hv_pci_remove+0x238/0x260 [pci_hyperv]
-> 
-> The problem seems to be that we report local resources release before
-> stopping the bus and removing devices from it and device drivers may
-> try to perform some operations with these resources on shutdown. Move
-> resources release report after we do pci_stop_root_bus().
-> 
-> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
 
-Applied with Jake's ack to pci/host-hv for v4.7, thanks, Vitaly!
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index f2559b6..c17e792 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -2268,11 +2268,6 @@ static int hv_pci_remove(struct hv_device *hdev)
->  
->  	hbus = hv_get_drvdata(hdev);
->  
-> -	ret = hv_send_resources_released(hdev);
-> -	if (ret)
-> -		dev_err(&hdev->device,
-> -			"Couldn't send resources released packet(s)\n");
-> -
->  	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
->  	init_completion(&comp_pkt.host_event);
->  	pkt.teardown_packet.completion_func = hv_pci_generic_compl;
-> @@ -2295,6 +2290,11 @@ static int hv_pci_remove(struct hv_device *hdev)
->  		pci_unlock_rescan_remove();
->  	}
->  
-> +	ret = hv_send_resources_released(hdev);
-> +	if (ret)
-> +		dev_err(&hdev->device,
-> +			"Couldn't send resources released packet(s)\n");
+On 2016年05月31日 15:00, Yinghai Lu wrote:
+> On Mon, May 30, 2016 at 8:24 PM, Chen Yu <yu.c.chen@intel.com> wrote:
+>
+>> and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
+>> resource window and then update related base/limit registers:
+>>
+>> [    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to [bus
+>> 02] add_size 1000
+>> [    0.865343] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff
+>> 64bit pref] to [bus 02] add_size 200000 add_align 100000
+>> [    0.865344] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff]
+>> to [bus 02] add_size 200000 add_align 100000
+>>
+> That is for hotplug bridge, then we could use following instead.
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ee72ebe..d3ec833 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2775,6 +2775,13 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+>
+>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+>
+> +static void quirk_hotplug_bridge_skip(struct pci_dev *dev)
+> +{
+> +       dev->is_hotplug_bridge = 0;
+> +}
 > +
->  	vmbus_close(hdev->channel);
->  
->  	/* Delete any children which might still exist. */
-> -- 
-> 2.5.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10,
+> quirk_hotplug_bridge_skip);
+> +
+>   /*
+>    * This is a quirk for the Ricoh MMC controller found as a part of
+>    * some mulifunction chips.
+Good idea, but in this way we might not have io window allocated for 
+it?I'm not sure
+if this would break wifi,etc, I'll suggest reporters to have a try.
+
+thanks,
+Yu
