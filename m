@@ -1,141 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:43403 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbcEHXw6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 May 2016 19:52:58 -0400
-Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 9 May 2016 09:52:55 +1000
-Date: Mon, 9 May 2016 09:51:25 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Bjorn Helgaas <bhelgaas@google.com>, dja@axtens.net,
-	Alistair Popple <alistair@popple.id.au>
-Subject: Re: [PATCH v9 22/22] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
-Message-ID: <20160508235125.GA7692@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1462281773-26438-23-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqLAYk2S80LNvF2z2ZzPfCWAbpz2LNKK-04OgSkabjWbxQ@mail.gmail.com>
- <20160506002834.GA5509@gwshan>
- <CAL_JsqKQNyL7g71PL9unwqS9834A=D41X9mx5Zr0iX=NapWLJw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqKQNyL7g71PL9unwqS9834A=D41X9mx5Zr0iX=NapWLJw@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:58800 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751023AbcEaMF3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 May 2016 08:05:29 -0400
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH 1/5] PCI: Add helpers to request/release memory and I/O regions
+Date: Tue, 31 May 2016 14:05:09 +0200
+Message-Id: <a068e858f5e115ebb3a841e4564aec8523a154f6.1464694724.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464694724.git.jthumshirn@suse.de>
+References: <cover.1464694724.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464694724.git.jthumshirn@suse.de>
+References: <cover.1464694724.git.jthumshirn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 06, 2016 at 08:12:42AM -0500, Rob Herring wrote:
->On Thu, May 5, 2016 at 7:28 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> On Thu, May 05, 2016 at 12:04:49PM -0500, Rob Herring wrote:
->>>On Tue, May 3, 2016 at 8:22 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>>> This adds standalone driver to support PCI hotplug for PowerPC PowerNV
->>>> platform that runs on top of skiboot firmware. The firmware identifies
->>>> hotpluggable slots and marked their device tree node with proper
->>>> "ibm,slot-pluggable" and "ibm,reset-by-firmware". The driver scans
->>>> device tree nodes to create/register PCI hotplug slot accordingly.
->>>>
->>>> The PCI slots are organized in fashion of tree, which means one
->>>> PCI slot might have parent PCI slot and parent PCI slot possibly
->>>> contains multiple child PCI slots. At the plugging time, the parent
->>>> PCI slot is populated before its children. The child PCI slots are
->>>> removed before their parent PCI slot can be removed from the system.
->>>>
->>>> If the skiboot firmware doesn't support slot status retrieval, the PCI
->>>> slot device node shouldn't have property "ibm,reset-by-firmware". In
->>>> that case, none of valid PCI slots will be detected from device tree.
->>>> The skiboot firmware doesn't export the capability to access attention
->>>> LEDs yet and it's something for TBD.
->>>>
->>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>>
->>>[...]
->>>
->>>> +static void pnv_php_handle_poweron(struct pnv_php_slot *php_slot)
->>>> +{
->>>> +       void *fdt, *fdt1, *dt;
->>>> +       int confirm = PNV_PHP_POWER_CONFIRMED_SUCCESS;
->>>> +       int ret;
->>>> +
->>>> +       /* We don't know the FDT blob size. We try to get it through
->>>> +        * maximal memory chunk and then copy it to another chunk that
->>>> +        * fits the real size.
->>>> +        */
->>>> +       fdt1 = kzalloc(0x10000, GFP_KERNEL);
->>>> +       if (!fdt1)
->>>> +               goto error;
->>>> +
->>>> +       ret = pnv_pci_get_device_tree(php_slot->dn->phandle, fdt1, 0x10000);
->>>> +       if (ret)
->>>> +               goto free_fdt1;
->>>> +
->>>> +       fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
->>>> +       if (!fdt)
->>>> +               goto free_fdt1;
->>>> +
->>>> +       /* Unflatten device tree blob */
->>>> +       memcpy(fdt, fdt1, fdt_totalsize(fdt1));
->>>
->>>This is wrong. If the size is greater than 64K, then you will be
->>>overrunning the fdt1 buffer. You need to fetch the FDT again if it is
->>>bigger than 64KB.
->>>
->>
->> Thanks for review, Rob. Sorry that I don't see how it's a problem. An
->> errcode is returned from pnv_pci_get_device_tree() if the FDT blob
->> size is greater than 64K. In this case, memcpy() won't be triggered.
->> pnv_pci_get_device_tree() relies on firmware implementation which
->> avoids overrunning the buffer.
->
->Okay, I missed that pnv_pci_get_device_tree would error out.
->
->> On the other hand, it would be reasonable to retry retriving the
->> FDT blob if 64K buffer isn't enough. Also, kzalloc() can be replaced
->> with alloc_pages() as 64K is the default page size on PPC64. I will
->> have something like below until some one has more concerns. As the
->> size of the allocated buffer will be greater than the real FDT blob
->> size, some memory (not too much) is wasted. I guess it should be ok.
->>
->>         struct page *page;
->>         void *fdt;
->>         unsigned int order;
->>         int ret;
->>
->>         for (order = 0; order < MAX_ORDER; order++) {
->>                 page = alloc_pages(GFP_KERNEL, order);
->>                 if (page) {
->>                         fdt = page_address(page);
->>                         ret = pnv_pci_get_device_tree(php_slot->dn->phandle,
->>                                                       fdt, (1 << order) * PAGE_SIZE);
->>                         if (ret) {
->>                                 dev_dbg(&php_slot->pdev.dev, "Error %d getting device tree (%d)\n",
->>                                         ret, order);
->>                                 free_pages(fdt, order);
->>                                 continue;
->>                         }
->>                 }
->>         }
->
->I would allocate a minimal buffer to read the header, get the actual
->size, then allocate a new buffer. There's no point in looping. If you
->know 64KB is the biggest size you should ever see, then how you had it
->is reasonable, too.
->
+Add helpers to request and release a device's memory or I/O regions.
 
-The interface pnv_pci_get_device_tree() returns header and meta-data
-in one shoot as it was designed. Also, 64KB here is good enough as I
-can see. I will keep the code as-is. Thanks a lot for looking into
-details, Rob.
+With these helpers in place, one does not need to select a device's memory or
+I/O regions with pci_select_bars() prior to requesting or releasing them.
 
-Thanks,
-Gavin
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ include/linux/pci.h | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 932ec74..846f4cf 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2007,6 +2007,35 @@ static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
+ 	return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
+ }
+ 
++static inline int
++pci_request_io_regions(struct pci_dev *pdev, const char *name)
++{
++	return pci_request_selected_regions(pdev,
++					    pci_select_bars(pdev, IORESOURCE_IO), name);
++}
++
++static inline void
++pci_release_io_regions(struct pci_dev *pdev)
++{
++	return pci_release_selected_regions(pdev,
++					    pci_select_bars(pdev, IORESOURCE_IO));
++}
++
++static inline int
++pci_request_mem_regions(struct pci_dev *pdev, const char *name)
++{
++	return pci_request_selected_regions(pdev,
++					    pci_select_bars(pdev, IORESOURCE_MEM), name);
++}
++
++static inline void
++pci_release_mem_regions(struct pci_dev *pdev)
++{
++	return pci_release_selected_regions(pdev,
++					    pci_select_bars(pdev,
++							    IORESOURCE_MEM));
++}
++
+ /**
+  * pci_ari_enabled - query ARI forwarding status
+  * @bus: the PCI bus
+-- 
+1.8.5.6
 
