@@ -1,106 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32149 "EHLO mga02.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:40342 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161860AbcEaARK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 May 2016 20:17:10 -0400
-Message-ID: <574CD7FF.6070205@intel.com>
-Date: Tue, 31 May 2016 08:17:03 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
+	id S1751375AbcEaV6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 May 2016 17:58:07 -0400
+Subject: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack overflow"
+To: Arnd Bergmann <arnd@arndb.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	linux-kernel@vger.kernel.org
+Date: Tue, 31 May 2016 16:58:02 -0500
+Message-ID: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-CC: bhelgaas@google.com
-Subject: Re: [RFC v3] PCI: PTM Driver
-References: <1458705848-26056-1-git-send-email-jonathan.yong@intel.com> <5706076B.3080608@intel.com>
-In-Reply-To: <5706076B.3080608@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/07/2016 15:08, Yong, Jonathan wrote:
-> On 03/23/2016 12:04, Yong, Jonathan wrote:
->> Hello LKML,
->>
->> This is a preliminary implementation of the PTM[1] support driver, the
->> code
->> is obviously hacked together and in need of refactoring. This driver has
->> only been tested against a virtual PCI bus.
->>
->> The drivers job is to get to every PTM capable device, set some PCI
->> config
->> space bits, then go back to sleep [2].
->>
->> PTM capable PCIe devices will get a new sysfs entry to allow PTM to be
->> enabled if automatic PTM activation is disabled, or disabled if so
->> desired.
->>
->> Comments? Should I explain the PTM registers in more details?
->> Please CC me, thanks.
->>
->> [1] Precision Time Measurement: A protocol for synchronizing PCIe
->> endpoint
->> clocks against the host clock as specified in the PCI Express Base
->> Specification 3.1. It is identified by the 0x001f extended capability ID.
->>
->> PTM capable devices are split into 3 roles, master, responder and
->> requester.
->> Summary as follows:
->>
->> A master holds the master clock that will be used for all devices
->> under its
->> domain (not to be confused with PCI domains). There may be multiple
->> masters
->> in a PTM hierarchy, in which case, the highest master closest to the root
->> complex will be selected for the PTM domain. A master is also always
->> responder capable. Clock precision is signified by a Local Clock
->> Granularity field, in nano-seconds.
->>
->> A responder responds to any PTM synchronization requests from a
->> downstream
->> device. A responder is typically a switch device. It may also hold a
->> local
->> clock signified by a non-zero Local Clock Granularity field. A value of 0
->> signifies that the device simply propagates timing information from
->> upstream devices.
->>
->> A requester is typically an endpoint that will request synchronization
->> updates from an upstream PTM capable time source. The driver will update
->> the Effective Clock Granularity field based on the same field from the
->> PTM domain master. The field should be programmed with a value of 0 if
->> any
->> intervening responder has a Local Clock Granularity field value of 0.
->>
->> [2] The software drivers never see the PTM packets, the PCI Express Base
->> Specification 3.1 reads:
->>     PTM capable components can make their PTM context available for
->>     inspection by software, enabling software to translate timing
->>     information between local times and PTM Master Time.
->>
->> This isn't very informative.
->>
->> Changes since v1:
->> * Moved register constants to pci_regs.h
->> * Use pci_dev to hold PTM status
->> * PTM initialization now done top-down hierarchy wise.
->>
->> Changes since v2:
->> * Added missing void return in the pci_ptm_init inline stub.
->>
->> Yong, Jonathan (1):
->>    PCI: PTM preliminary implementation
->>
->>   drivers/pci/pci-sysfs.c       |   7 ++
->>   drivers/pci/pci.h             |  25 +++++
->>   drivers/pci/pcie/Kconfig      |   8 ++
->>   drivers/pci/pcie/Makefile     |   2 +-
->>   drivers/pci/pcie/pcie_ptm.c   | 212
->> ++++++++++++++++++++++++++++++++++++++++++
->>   drivers/pci/probe.c           |   3 +
->>   include/linux/pci.h           |   9 ++
->>   include/uapi/linux/pci_regs.h |  12 +++
->>   8 files changed, 277 insertions(+), 1 deletion(-)
->>   create mode 100644 drivers/pci/pcie/pcie_ptm.c
->>
->
-> Ping?
->
-Ping2?
+This reverts commit 498a92d42596a7a32c042319eb62a4c3d8081cf1.
+
+Krzysztof reported that this change broke Cavium CNS3xxx, ARMv6 (Laguna
+GW-2388) because the MRRS setting is never written to the hardware.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Krzysztof Hałasa <khalasa@piap.pl>
+---
+ arch/arm/mach-cns3xxx/pcie.c |   71 ++++++++++++++++++++++++------------------
+ 1 file changed, 41 insertions(+), 30 deletions(-)
+
+diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+index 318394e..c622c30 100644
+--- a/arch/arm/mach-cns3xxx/pcie.c
++++ b/arch/arm/mach-cns3xxx/pcie.c
+@@ -65,9 +65,8 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
+ 
+ 	/*
+ 	 * The CNS PCI bridge doesn't fit into the PCI hierarchy, though
+-	 * we still want to access it.
+-	 * We place the host bridge on bus 0, and the directly connected
+-	 * device on bus 1, slot 0.
++	 * we still want to access it. For this to work, we must place
++	 * the first device on the same bus as the CNS PCI bridge.
+ 	 */
+ 	if (busno == 0) { /* internal PCIe bus, host bridge device */
+ 		if (devfn == 0) /* device# and function# are ignored by hw */
+@@ -212,46 +211,58 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
+ 	}
+ }
+ 
+-static void cns3xxx_write_config(struct cns3xxx_pcie *cnspci,
+-					 int where, int size, u32 val)
+-{
+-	void __iomem *base = cnspci->host_regs + (where & 0xffc);
+-	u32 v;
+-	u32 mask = (0x1ull << (size * 8)) - 1;
+-	int shift = (where % 4) * 8;
+-
+-	v = readl_relaxed(base);
+-
+-	v &= ~(mask << shift);
+-	v |= (val & mask) << shift;
+-
+-	writel_relaxed(v, base);
+-	readl_relaxed(base);
+-}
+-
+ static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
+ {
++	int port = cnspci->port;
++	struct pci_sys_data sd = {
++		.private_data = cnspci,
++	};
++	struct pci_bus bus = {
++		.number = 0,
++		.ops = &cns3xxx_pcie_ops,
++		.sysdata = &sd,
++	};
+ 	u16 mem_base  = cnspci->res_mem.start >> 16;
+ 	u16 mem_limit = cnspci->res_mem.end   >> 16;
+ 	u16 io_base   = cnspci->res_io.start  >> 16;
+ 	u16 io_limit  = cnspci->res_io.end    >> 16;
++	u32 devfn = 0;
++	u8 tmp8;
++	u16 pos;
++	u16 dc;
++
++	pci_bus_write_config_byte(&bus, devfn, PCI_PRIMARY_BUS, 0);
++	pci_bus_write_config_byte(&bus, devfn, PCI_SECONDARY_BUS, 1);
++	pci_bus_write_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, 1);
+ 
+-	cns3xxx_write_config(cnspci, PCI_PRIMARY_BUS, 1, 0);
+-	cns3xxx_write_config(cnspci, PCI_SECONDARY_BUS, 1, 1);
+-	cns3xxx_write_config(cnspci, PCI_SUBORDINATE_BUS, 1, 1);
+-	cns3xxx_write_config(cnspci, PCI_MEMORY_BASE, 2, mem_base);
+-	cns3xxx_write_config(cnspci, PCI_MEMORY_LIMIT, 2, mem_limit);
+-	cns3xxx_write_config(cnspci, PCI_IO_BASE_UPPER16, 2, io_base);
+-	cns3xxx_write_config(cnspci, PCI_IO_LIMIT_UPPER16, 2, io_limit);
++	pci_bus_read_config_byte(&bus, devfn, PCI_PRIMARY_BUS, &tmp8);
++	pci_bus_read_config_byte(&bus, devfn, PCI_SECONDARY_BUS, &tmp8);
++	pci_bus_read_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, &tmp8);
++
++	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_BASE, mem_base);
++	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_LIMIT, mem_limit);
++	pci_bus_write_config_word(&bus, devfn, PCI_IO_BASE_UPPER16, io_base);
++	pci_bus_write_config_word(&bus, devfn, PCI_IO_LIMIT_UPPER16, io_limit);
+ 
+ 	if (!cnspci->linked)
+ 		return;
+ 
+ 	/* Set Device Max_Read_Request_Size to 128 byte */
+-	pcie_bus_config = PCIE_BUS_PEER2PEER;
+-
++	bus.number = 1; /* directly connected PCIe device */
++	devfn = PCI_DEVFN(0, 0);
++	pos = pci_bus_find_capability(&bus, devfn, PCI_CAP_ID_EXP);
++	pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
++	if (dc & PCI_EXP_DEVCTL_READRQ) {
++		dc &= ~PCI_EXP_DEVCTL_READRQ;
++		pci_bus_write_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, dc);
++		pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
++		if (dc & PCI_EXP_DEVCTL_READRQ)
++			pr_warn("PCIe: Unable to set device Max_Read_Request_Size\n");
++		else
++			pr_info("PCIe: Max_Read_Request_Size set to 128 bytes\n");
++	}
+ 	/* Disable PCIe0 Interrupt Mask INTA to INTD */
+-	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(cnspci->port));
++	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(port));
+ }
+ 
+ static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+
