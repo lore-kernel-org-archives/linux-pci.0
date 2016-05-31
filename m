@@ -1,84 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:29798 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161382AbcE3NhH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:37:07 -0400
-Received: from pps.filterd (m0075771.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY7vF002600
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:06 -0400
-Message-Id: <201605301337.u4UDY7vF002600@mx0a-001b2d01.pphosted.com>
-Received: from e28smtp02.in.ibm.com (e28smtp02.in.ibm.com [125.16.236.2])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 238hnbqs39-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:37:06 -0400
-Received: from localhost
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 30 May 2016 19:07:02 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-Subject: [PATCH v2 1/6] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-Date: Mon, 30 May 2016 21:32:08 +0800
-In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:35447 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751283AbcEaUND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 May 2016 16:13:03 -0400
+Date: Tue, 31 May 2016 15:12:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Krzysztof Halasa <khalasa@piap.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH REPOST] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix
+ CNS3xxx BM DMA.
+Message-ID: <20160531201257.GA24310@localhost>
+References: <m3h9fghbfh.fsf@t19.piap.pl>
+ <20160421154234.GB32739@localhost>
+ <20160502165322.GC24851@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160502165322.GC24851@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
-which indicates interrupts of all devices on the bus are
-managed by the hardware enabling IRQ remapping(intel naming).
-When the capability is enabled, a given PCI device can only
-shoot the MSIs assigned for it. In other words, the hardware
-can protect system from invalid MSIs of the device by checking
-the target address and data when there is something wrong
-with MSI part in device or device driver.
+On Mon, May 02, 2016 at 11:53:22AM -0500, Bjorn Helgaas wrote:
+> On Thu, Apr 21, 2016 at 10:42:34AM -0500, Bjorn Helgaas wrote:
+> > On Mon, Mar 21, 2016 at 10:39:52AM +0100, Krzysztof Halasa wrote:
+> > > I think this bug needs to be fixed, this way or another.
+> > > 
+> > > The platform in question is Cavium CNS3xxx, ARMv6.
+> > > 
+> > > A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
+> > > potential stack overflow") converted an explicit setting of
+> > > PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
+> > > read request) to:
+> > > +    pcie_bus_config = PCIE_BUS_PEER2PEER;
+> > 
+> > Any thoughts on this, Arnd?  I can (and will) look at this, but it's
+> > a complicated area and it will take me quite a while to dig into it.
+> 
+> What should we do here?  Should we revert 498a92d42596?  It appeared in
+> v4.4, so this has been broken for a while.
+> 
+> It looks like 498a92d42596 merely fixed a warning, at the expense of
+> breaking DMA on Cavium.  Reverting it would bring the warning back, but
+> that's better than broken DMA.
 
-There is a existing flag for this capability in the IOMMU space:
+I propose that we revert 498a92d42596 ("ARM: cns3xxx: pci: avoid
+potential stack overflow").  I haven't had a chance to look into the
+problem with it yet.
 
-enum iommu_cap {
-	IOMMU_CAP_CACHE_COHERENCY,
---->	IOMMU_CAP_INTR_REMAP,
-	IOMMU_CAP_NOEXEC,
-};
-
-and Eric also posted a patchset [1] to abstract it on MSI
-controller side for ARM. But it would make sense to have a
-more common flag like PCI_BUS_FLAGS_MSI_REMAP so that we can
-use a universal flag to test this capability on PCI side for
-different archs.
-
-With this flag enabled, we can easily know whether it's safe
-to expose MSI-X tables of PCI BARs to userspace. Some usespace
-drivers such as VFIO may benefit from this.
-
-[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- include/linux/pci.h |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 932ec74..4ec37da 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -187,6 +187,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
- enum pci_bus_flags {
- 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
- 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-+	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 4,
- };
- 
- /* These values come from the PCI Express Spec */
--- 
-1.7.9.5
-
+> > > with the following commentary:
+> > >     "The second part is how the driver sets up the Max_Read_Request_Size
+> > >     value for the first device/function on bus 1, i.e. the device
+> > >     plugged directly into the PCIe root port.
+> > >     For all I can tell, this is in fact incomplete, as it does not
+> > >     perform the same setting on devices attached to a PCIe switch,
+> > >     or multi-function devices.
+> > >     The solution for this part fortunately is even easier: if we
+> > >     just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
+> > >     all PCIe devices in the system are limited to 128 byte MPS, which
+> > >     in turn limits the MRRS to 128 bytes for all devices, and we
+> > >     no longer even need to touch any devices."
+> > > 
+> > > The problem is the MRRS setting is never written to the hardware.
+> > > I propose the following, though I'm not sure if we can do this safely,
+> > > especially given the comments in probe.c. OTOH, this change may be
+> > > required in other (all?) cases when the user requests
+> > > PCIE_BUS_PEER2PEER.
+> > > 
+> > > On this Laguna GW-2388 the following patch fixes BM DMA with:
+> > > 0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
+> > > 0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
+> > > 0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
+> > > 0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
+> > > 	     the second lane from the CPU)
+> > > 
+> > > pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
+> > > pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
+> > > pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
+> > > 
+> > > Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
+> > > Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
+> > > 
+> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > index 6d7ab9b..91713b6 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+> > >  	/* In the "safe" case, do not configure the MRRS.  There appear to be
+> > >  	 * issues with setting MRRS to 0 on a number of devices.
+> > >  	 */
+> > > -	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
+> > > +	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
+> > > +	    pcie_bus_config != PCIE_BUS_PEER2PEER)
+> > >  		return;
+> > >  
+> > >  	/* For Max performance, the MRRS must be set to the largest supported
+> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > index 2771625..6f5088a 100644
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -756,7 +756,7 @@ enum pcie_bus_config_types {
+> > >  	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
+> > >  	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
+> > >  	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
+> > > -	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
+> > > +	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
+> > >  };
+> > >  
+> > >  extern enum pcie_bus_config_types pcie_bus_config;
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
