@@ -1,108 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:60126 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796AbcEMLxi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:53:38 -0400
-Date: Fri, 13 May 2016 13:56:42 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Joerg Roedel <jroedel@suse.de>,
-	Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org
-Subject: Build breakage for pci-next since v4.6-rc5
-Message-ID: <20160513115642.GA22906@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mx2.suse.de ([195.135.220.15]:58854 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753519AbcEaMFd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 May 2016 08:05:33 -0400
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	Christoph Hellwig <hch@infradead.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme@lists.infradead.org,
+	James Smart <james.smart@avagotech.com>,
+	Dick Kennedy <dick.kennedy@avagotech.com>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jay Cliburn <jcliburn@gmail.com>,
+	Chris Snook <chris.snook@gmail.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org
+Subject: [PATCH 0/5] Introduce pci_(request|release)_(mem|io)_regions
+Date: Tue, 31 May 2016 14:05:08 +0200
+Message-Id: <cover.1464694724.git.jthumshirn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jacek, Hi Jörg,
+The first patch in this series introduces the following 4 helper functions to
+the PCI core:
 
-in case this isn't on your radar yet, Bjorn Helgaas' next branch
-currently no longer builds when merged with Linus' master branch
-because this commit introduced with v4.6-rc5:
+* pci_request_mem_regions()
+* pci_request_io_regions()
+* pci_release_mem_regions()
+* pci_release_io_regions()
 
-    commit e3156048346c28c695f5cf9db67a8cf88c90f947
-    Author: Joerg Roedel <jroedel@suse.de>
-    Date:   Fri Apr 8 15:12:24 2016 +0200
-    iommu/amd: Fix checking of pci dma aliases
+which encapsulate the request and release of a PCI device's memory or I/O
+bars.
 
-adds an occurrence of PCI_DEV_FLAGS_DMA_ALIAS_DEVFN but this
-commit on Bjorn's next branch:
+The subsequent patches convert the drivers, which use the
+pci_request_selected_regions(pdev, 
+	pci_select_bars(pdev, IORESOURCE_MEM), name); 
+and similar pattern to use the new interface.
 
-    commit 338c3149a221527e202ee26b1e35f76c965bb6c0
-    Author: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-    Date:   Thu Mar 3 15:38:02 2016 +0100
-    PCI: Add support for multiple DMA aliases
+This was suggested by Christoph Hellwig in
+http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
+tested on kernel v4.6 with NVMe.
 
-removed all other occurrences of this macro. A rebase of the
-latter commit is required to fix the build breakage. I was
-made aware of this yesterday by Intel's 0-DAY kernel test
-infrastructure (see below).
+The conversion of the drivers has been performed by the following coccinelle
+spatch:
+// IORESOURCE_MEM
+@@
+expression err, pdev, name;
+@@
 
-Thanks,
+- err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
+IORESOURCE_MEM), name);
++ err = pci_request_mem_regions(pdev, name);
 
-Lukas
+@@
+expression pdev;
+@@
+- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM));
++ pci_release_mem_regions(pdev);
 
------ Forwarded message from kbuild test robot <fengguang.wu@intel.com> -----
+@@
+expression err, pdev, name;
+identifier bars;
+@@
+- bars = pci_select_bars(pdev, IORESOURCE_MEM);
+...
+- err = pci_request_selected_regions(pdev, bars, name);
++ err = pci_request_mem_regions(pdev, name);
 
-Date: Thu, 12 May 2016 21:38:46 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: kbuild-all@01.org, Lukas Wunner <lukas@wunner.de>
-Subject: [l1k:thunderbolt_runpm_v2 1/14] drivers/iommu/amd_iommu.c:266:22:
-	error: 'PCI_DEV_FLAGS_DMA_ALIAS_DEVFN' undeclared
-User-Agent: Mutt/1.5.23 (2014-03-12)
+@@
+expression pdev;
+identifier bars;
+@@
+- bars = pci_select_bars(pdev, IORESOURCE_MEM);
+...
+- pci_release_selected_regions(pdev, bars);
++ pci_release_mem_regions(pdev);
 
-tree:   https://github.com/l1k/linux thunderbolt_runpm_v2
-head:   308f7c892de104a57f50dda4761c10c094f5e80d
-commit: 376a0f25bf07bdd90c58985f210c95a59d21fe1b [1/14] Merge remote-tracking branches 'helgaas/next', 'helgaas/for-linus' and 'helgaas/pci/pm' into HEAD
-config: x86_64-rhel (attached as .config)
-compiler: gcc-4.9 (Debian 4.9.3-14) 4.9.3
-reproduce:
-        git checkout 376a0f25bf07bdd90c58985f210c95a59d21fe1b
-        # save the attached .config to linux build tree
-        make ARCH=x86_64 
+// IORESOURCE_IO
+@@
+expression err, pdev, name;
+@@
 
-Note: the l1k/thunderbolt_runpm_v2 HEAD 308f7c892de104a57f50dda4761c10c094f5e80d builds fine.
-      It only hurts bisectibility.
+- err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
+IORESOURCE_IO), name);
++ err = pci_request_io_regions(pdev, name);
 
-All errors (new ones prefixed by >>):
+@@
+expression pdev;
+@@
+- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_IO));
++ pci_release_io_regions(pdev);
 
-   drivers/iommu/amd_iommu.c: In function 'get_alias':
->> drivers/iommu/amd_iommu.c:266:22: error: 'PCI_DEV_FLAGS_DMA_ALIAS_DEVFN' undeclared (first use in this function)
-      pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-                         ^
-   drivers/iommu/amd_iommu.c:266:22: note: each undeclared identifier is reported only once for each function it appears in
->> drivers/iommu/amd_iommu.c:267:7: error: 'struct pci_dev' has no member named 'dma_alias_devfn'
-      pdev->dma_alias_devfn = ivrs_alias & 0xff;
-          ^
+@@
+expression err, pdev, name;
+identifier bars;
+@@
+- bars = pci_select_bars(pdev, IORESOURCE_IO);
+...
+- err = pci_request_selected_regions(pdev, bars, name);
++ err = pci_request_io_regions(pdev, name);
 
-vim +/PCI_DEV_FLAGS_DMA_ALIAS_DEVFN +266 drivers/iommu/amd_iommu.c
-
-e3156048 Joerg Roedel 2016-04-08  260  	/*
-e3156048 Joerg Roedel 2016-04-08  261  	 * If we don't have a PCI DMA alias and the IVRS alias is on the same
-e3156048 Joerg Roedel 2016-04-08  262  	 * bus, then the IVRS table may know about a quirk that we don't.
-e3156048 Joerg Roedel 2016-04-08  263  	 */
-e3156048 Joerg Roedel 2016-04-08  264  	if (pci_alias == devid &&
-e3156048 Joerg Roedel 2016-04-08  265  	    PCI_BUS_NUM(ivrs_alias) == pdev->bus->number) {
-e3156048 Joerg Roedel 2016-04-08 @266  		pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-e3156048 Joerg Roedel 2016-04-08 @267  		pdev->dma_alias_devfn = ivrs_alias & 0xff;
-e3156048 Joerg Roedel 2016-04-08  268  		pr_info("AMD-Vi: Added PCI DMA alias %02x.%d for %s\n",
-e3156048 Joerg Roedel 2016-04-08  269  			PCI_SLOT(ivrs_alias), PCI_FUNC(ivrs_alias),
-e3156048 Joerg Roedel 2016-04-08  270  			dev_name(dev));
-
-:::::: The code at line 266 was first introduced by commit
-:::::: e3156048346c28c695f5cf9db67a8cf88c90f947 iommu/amd: Fix checking of pci dma aliases
-
-:::::: TO: Joerg Roedel <jroedel@suse.de>
-:::::: CC: Joerg Roedel <jroedel@suse.de>
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
+@@
+expression pdev;
+identifier bars;
+@@
+- bars = pci_select_bars(pdev, IORESOURCE_IO);
+...
+- pci_release_selected_regions(pdev, bars);
++ pci_release_io_regions(pdev);
 
 
------ End forwarded message -----
+Johannes Thumshirn (5):
+  PCI: Add helpers to request/release memory and I/O regions
+  NVMe: Use pci_(request|release)_mem_regions
+  scsi: Use pci_(request|release)_mem_regions
+  GenWQE: Use pci_(request|release)_mem_regions
+  ethernet: Use pci_(request|release)_mem_regions
+
+ drivers/misc/genwqe/card_base.c               | 13 +++++-------
+ drivers/net/ethernet/atheros/alx/main.c       | 12 +++++------
+ drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
+ drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++-------
+ drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
+ drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++------
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
+ drivers/nvme/host/pci.c                       | 10 +++------
+ drivers/scsi/lpfc/lpfc_init.c                 |  5 +----
+ include/linux/pci.h                           | 29 +++++++++++++++++++++++++++
+ 10 files changed, 57 insertions(+), 57 deletions(-)
+
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: linux-nvme@lists.infradead.org
+Cc: James Smart <james.smart@avagotech.com>
+Cc: Dick Kennedy <dick.kennedy@avagotech.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jay Cliburn <jcliburn@gmail.com>
+Cc: Chris Snook <chris.snook@gmail.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: intel-wired-lan@lists.osuosl.org
+-- 
+1.8.5.6
+
