@@ -1,68 +1,78 @@
-Return-Path: <hch@lst.de>
-Return-Path: <hch@lst.de>
-Date: Thu, 12 May 2016 09:35:52 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, helgaas@kernel.org, pjw@netapp.com,
-	axboe@fb.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
-	routines
-Message-ID: <20160512073552.GA4027@lst.de>
-References: <1462457096-19795-1-git-send-email-hch@lst.de> <1462457096-19795-2-git-send-email-hch@lst.de> <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com> <20160511085049.GA20279@lst.de> <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
+Return-Path: <yu.c.chen@intel.com>
+Return-Path: <yu.c.chen@intel.com>
+Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
+ <20160530213305.GA21322@localhost> <20160530221123.GA13535@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Yinghai Lu <yinghai@kernel.org>
+From: Chen Yu <yu.c.chen@intel.com>
+Message-ID: <574D0523.3020009@intel.com>
+Date: Tue, 31 May 2016 11:29:39 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
+In-Reply-To: <20160530221123.GA13535@wunner.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
+Hi Lukas,
 
-what do you think about the incremental patch below?  This should
-address the concerns about the strange PPC bridges, although I don't
-have a way to test one:
+On 2016年05月31日 06:11, Lukas Wunner wrote:
+> On Mon, May 30, 2016 at 04:33:05PM -0500, Bjorn Helgaas wrote:
+>> On Mon, May 30, 2016 at 06:33:24PM +0800, Chen Yu wrote:
+>>> Currently there are many people reported that they can not
+>>> do a poweroff nor a suspend to memory on their Mac Pro 11.
+>>> After some investigations it was found that, once the PCI bridge
+>>> 0000:00:1c.0 reassigns its mm windows([mem 0x7fa00000-0x7fbfffff]
+>>> and [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+>>> io resource 0x1804 becomes unaccessible immediately, where the
+>>> ACPI Sleep register is located, as a result neither poweroff(S5)
+>>> nor suspend to memory(S3) works.
+>>>
+>>> I don't know why setting the base/limit of PCI bridge mem resource
+>>> would affect another io resource region, so this quirk just simply
+>>> bypass the assignment of these mm resources on 0000:00:1c.0, by
+>>> resetting the resource flag to 0 before updating the base/limit registers.
+>>> This patch also introduces a new pci fixup phase before the actual bridge
+>>> resource assignment.
+>> Split the new fixup phase into a separate patch.
+>>
+>> I'm doubtful about this because we don't understand the root cause.
+> Agreed.
+>
+>
+>>> +}
+>>> +DECLARE_PCI_FIXUP_ASSIGN(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_mac_disable_mmio_bar);
+>> Is this device *only* used on the Mac Pro 11?  http://pci-ids.ucs.cz
+>> says "8 Series/C220 Series Chipset Family PCI Express Root Port #1",
+>> which sounds pretty generic.
+> It's a root port of a standard Haswell chipset.
+>
+> This concerns the Mac*Book*Pro11 (not MacPro11), and apparently only
+> the two models introduced 2015, MacBookPro11,4 and MacBookPro11,5
+> (can be queried with DMI). I've never heard of issues like this on the
+> 2013/2014 models (MacBookPro11,1 to 11,3).
+>
+> Looking at the lspci output of the MacBookPro11,4 I notice that the
+> root port in question, 00:1c.0, has secondary bus 02 below it, but
+> there are no devices listed on that bus:
+> https://bugzilla.kernel.org/attachment.cgi?id=218181
+>
+> On the MacBookPro11,5, there's bus 03 below that port, but likewise
+> without any devices:
+> https://launchpadlibrarian.net/222477783/Lspci.txt
+>
+> It looks like this root port is unused, so perhaps the best option
+> is to disable it as if it were an appendix. I.e., don't scan it at all,
+> put it into D3 and leave it alone.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a510484..32ce65e 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1177,6 +1177,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
- 	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
- 		return -EINVAL;
- 
-+retry:
- 	if (!pci_msi_supported(dev, 1))
- 		goto use_legacy_irq;
- 
-@@ -1191,17 +1192,26 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
- 	if (!dev->irqs)
- 		return -ENOMEM;
- 
--	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
-+	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX)) {
- 		ret = __pci_enable_msix(dev, nr_vecs);
--	else
-+		if (ret < 0)
-+			flags |= PCI_IRQ_NOMSIX;
-+	} else {
- 		ret = __pci_enable_msi(dev, nr_vecs);
--	if (ret)
--		goto out_free_irqs;
-+	}
- 
--	return 0;
-+	/* if we succeeded getting all vectors return the number we got: */
-+	if (!ret)
-+		return nr_vecs;
- 
--out_free_irqs:
- 	kfree(dev->irqs);
-+	/* if ret is positive it's the numbers of vectors we can use, retry: */
-+	if (ret > 0) {
-+		nr_vecs = ret;
-+		goto retry;
-+	}
-+
-+	/* no MSI or MSI-X vectors available, fall back to the legacy IRQ: */
- use_legacy_irq:
- 	dev->irqs = &dev->irq;
- 	return 1;
+I used to bypass the probe for this pci bridge:
+https://bugzilla.kernel.org/attachment.cgi?id=216661
+, but it looks like although poweroff works however
+the wifi and facetime are broken:
+https://bugzilla.kernel.org/show_bug.cgi?id=103211#c109
+
+Thanks,
+Yu
