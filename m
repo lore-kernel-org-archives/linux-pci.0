@@ -1,91 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:36725 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754800AbcEYFpT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 May 2016 01:45:19 -0400
-Message-ID: <1464155117.8573.2.camel@ellerman.id.au>
-Subject: Re: [v4] powerpc/pci: Assign fixed PHB number based on device-tree
- properties
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: mikey@neuling.org, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, paulus@samba.org, imunsie@au1.ibm.com,
-	andrew.donnellan@au1.ibm.com, bhelgaas@google.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Date: Wed, 25 May 2016 15:45:17 +1000
-In-Reply-To: <56F9255A.1040900@linux.vnet.ibm.com>
-References: <3qWdQC0MVDz9s9Y@ozlabs.org>
-	 <56F9255A.1040900@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:32968 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750813AbcEaUJh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2016 16:09:37 -0400
+Received: by mail-yw0-f177.google.com with SMTP id h19so200519353ywc.0
+        for <linux-pci@vger.kernel.org>; Tue, 31 May 2016 13:09:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201606010302.zx7ZnkzC%fengguang.wu@intel.com>
+References: <201606010302.zx7ZnkzC%fengguang.wu@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 31 May 2016 15:09:16 -0500
+Message-ID: <CAErSpo4_ErtrNNz-QdMMk=qQxSqE4cr_FkxrJBv42UaAuefotA@mail.gmail.com>
+Subject: Re: [pci:pci/host-request-windows 3/22] drivers/pci/host/pci-xgene.c:562:25:
+ error: 'resources' undeclared
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: "kbuild-all@01.org" <kbuild-all@01.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Guilherme,
+On Tue, May 31, 2016 at 2:14 PM, kbuild test robot
+<fengguang.wu@intel.com> wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-request-windows
+> head:   001fdc8c3dd699197ede3f80776e40ad26d6ea20
+> commit: ca08256c121d5fa1c94c70e650c9442a7095f201 [3/22] PCI: xgene: Free bridge resource list on failure
+> config: arm64-defconfig (attached as .config)
+> compiler: aarch64-linux-gnu-gcc (Debian 5.3.1-8) 5.3.1 20160205
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         git checkout ca08256c121d5fa1c94c70e650c9442a7095f201
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=arm64
+>
+> Note: the pci/pci/host-request-windows HEAD 001fdc8c3dd699197ede3f80776e40ad26d6ea20 builds fine.
+>       It only hurts bisectibility.
 
-Sorry for the very late reply, this got lost in my email filters.
+This note is incorrect.  The HEAD (001fdc8c3dd6) contains the same
+error as the one shown below.
 
+> All errors (new ones prefixed by >>):
 
-On Mon, 2016-03-28 at 09:36 -0300, Guilherme G. Piccoli wrote:
-> On 03/25/2016 06:33 AM, Michael Ellerman wrote:
+The new errors are actually prefixed by ">", not ">>".
 
-> > > +static int get_phb_number(struct device_node *dn)
-> > > +{
-> > > +	const __be64 *prop64;
-> > > +	const __be32 *regs;
-> > > +	int phb_id = 0;
-> > > +
-> > > +	/* try fixed PHB numbering first, by checking archs and reading
-> > > +	 * the respective device-tree property. */
-> > > +	if (machine_is(pseries)) {
-> > 
-> > Firstly I don't see why this check needs to be conditional on pseries. Any
-> > machine where the PHB has a 'reg' property should be able to use 'reg' for
-> > numbering.
-> 
-> This is something I'm not sure for all the powerpc sub-architectures, 
-> like Cell - that's the reason of the check. If you are sure about this, 
-> I'll gladly remove this check =)
-
-Please do.
-
-I'll test on Cell & other platforms. If there are bugs we can fix them. Maybe
-if we can't get it to work on eg. Cell then we need a machine_is() check, but
-that should be the last resort.
-
-> > > +		regs = of_get_property(dn, "reg", NULL);
-> > > +		if (regs)
-> > > +			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
-> > 
-> > This should use of_property_read_u32().
-
-You missed this in v5 ^
-
-> > And finally in either case above, where you get a number from the device tree,
-> > you must check that it's not already allocated. Otherwise if you have a system
-> > where some PHBs have a property but others don't, you may give out the same
-> > number twice. Also you could have firmware give you the same number twice
-> > (which would be a firmware bug, but those happen).
-> > 
-> > If the number is allocated you fall back to dynamic numbering.
-> > 
-> > If it's not allocated you must mark it as allocated in the bitmap.
-> 
-> Hmm..interesting. I thought in performing such check, but I wasn't able 
-> to imagine a system in which we can have some PHBs indexed by 
-> device-tree properties and others don't, seemed impossible to me. The 
-> buggy fw case is an example, I can implement this modification if you 
-> think it's valid.
-> 
-> But, notice that for consistency in implementation, I'll might need to 
-> increase the MAX_PHBS value to 65536, otherwise we won't cover all the 
-> possible wrong cases, since I'm performing an AND with 0xFFFF mask 
-> (imagine if we can have a buggy fw exposing same value for two different 
-> PHBs, and this value is higher than 8192). What do you think about this?
-
-Yeah please increase the bitmap size to 65536. It will only take 8KB of memory,
-which is negligible.
-
-cheers
-
+> vim +/resources +562 drivers/pci/host/pci-xgene.c
+>
+>    556          pci_bus_add_devices(bus);
+>    557
+>    558          platform_set_drvdata(pdev, port);
+>    559          return 0;
+>    560
+>    561  error:
+>  > 562          pci_free_resource_list(resources);
+>    563          return ret;
+>    564  }
+>    565
+>
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
