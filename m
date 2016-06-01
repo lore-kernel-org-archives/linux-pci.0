@@ -1,184 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:9155 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752499AbcERB5g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2016 21:57:36 -0400
-Received: from pps.filterd (m0048817.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4I1jpcZ000758
-	for <linux-pci@vger.kernel.org>; Tue, 17 May 2016 21:48:26 -0400
-Message-Id: <201605180148.u4I1jpcZ000758@mx0a-001b2d01.pphosted.com>
-Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 230akd0qut-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 17 May 2016 21:48:26 -0400
-Received: from localhost
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Tue, 17 May 2016 22:48:24 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 3A6BF1DC0054
-	for <linux-pci@vger.kernel.org>; Tue, 17 May 2016 21:48:15 -0400 (EDT)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4I1mL4T7078246
-	for <linux-pci@vger.kernel.org>; Tue, 17 May 2016 22:48:21 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4I1mKQI023695
-	for <linux-pci@vger.kernel.org>; Tue, 17 May 2016 22:48:21 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
-	benh@kernel.crashing.org, paulus@samba.org
-Cc: linux-pci@vger.kernel.org, imunsie@au1.ibm.com, mikey@neuling.org,
-	andrew.donnellan@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com, gpiccoli@linux.vnet.ibm.com,
-	frederic.barrat@fr.ibm.com, mrochs@linux.vnet.ibm.com
-Subject: [PATCH v6] powerpc/pci: Assign fixed PHB number based on device-tree properties
-Date: Tue, 17 May 2016 22:48:00 -0300
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
+ <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
+ <57483CAA.8000005@arm.com>
+Cc: Heiko Stuebner <heiko@sntech.de>, Rob Herring <robh+dt@kernel.org>,
+	devicetree@vger.kernel.org, Doug Anderson <dianders@chromium.org>,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+From: Wenrui Li <wenrui.li@rock-chips.com>
+Message-ID: <574E4EF5.7040005@rock-chips.com>
+Date: Wed, 1 Jun 2016 10:56:53 +0800
+MIME-Version: 1.0
+In-Reply-To: <57483CAA.8000005@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The domain/PHB field of PCI addresses has its value obtained from a
-global variable, incremented each time a new domain (represented by
-struct pci_controller) is added on the system. The domain addition
-process happens during boot or due to PHB hotplug add.
+Hi:
 
-As recent kernels are using predictable naming for network interfaces,
-the network stack is more tied to PCI naming. This can be a problem in
-hotplug scenarios, because PCI addresses will change if devices are
-removed and then re-added. This situation seems unusual, but it can
-happen if a user wants to replace a NIC without rebooting the machine,
-for example.
+On 2016/5/27 20:25, Marc Zyngier Wrote:
+> [+Lorenzo]
+>
+> On 20/05/16 11:29, Shawn Lin wrote:
+>> RK3399 has a PCIe controller which can be used as Root Complex.
+>> This driver supports a PCIe controller as Root Complex mode.
+>>
 
-This patch changes the way PCI domain values are generated: now, we use
-device-tree properties to assign fixed PHB numbers to PCI addresses
-when available (meaning pSeries and PowerNV cases). We also use a bitmap
-to allow dynamic PHB numbering when device-tree properties are not
-used. This bitmap keeps track of used PHB numbers and if a PHB is
-released (by hotplug operations for example), it allows the reuse of
-this PHB number, avoiding PCI address to change in case of device remove
-and re-add soon after. No functional changes were introduced.
+[....]
 
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
----
-v6:
-    * Dropped the of_get_property() use to use instead
-of_property_read_u64()/of_property_read_u32_array as per Michael's
-suggestion. Since these 2 functions deal with endianness conversion,
-no need to manually convert endianness anymore. Logic was simplified.
+>> +static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *pp)
+>> +{
+>> +	struct device *dev = pp->dev;
+>> +	struct device_node *node = dev->of_node;
+>> +	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
+>
+> That's really ugly, as it depends on the layout of your DT.
+>
+>> +
+>> +	if (!pcie_intc_node) {
+>> +		dev_err(dev, "No PCIe Intc node found\n");
+>> +		return PTR_ERR(pcie_intc_node);
+>> +	}
+>> +	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+>> +					       &intx_domain_ops, pp);
+>
+> Why can't you just register your host controller as the interrupt
+> controller? You don't need an intermediate node for that.
 
-    * Changed MAX_PHBS to 64K as per Gavin's suggestion. Changed 0xFFFF
-to (MAX_PHBS - 1) then.
+OK, the child node is really no need here, we will use the host 
+controller as interrupt controller next patch. Thanks!
 
-    * Changed test_bit() and set_bit() to test_and_set_bit() as per
-Gavin's suggestion.
+>
+>> +	if (!pp->irq_domain) {
+>> +		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+>> +		return PTR_ERR(pp->irq_domain);
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+>> +{
+>> +	struct rockchip_pcie_port *pp = arg;
+>> +	u32 reg;
+>> +	u32 sub_reg;
+>> +
+>> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
+>> +	if (reg & LOC_INT) {
+>> +		dev_dbg(pp->dev, "local interrupt recived\n");
+>> +		sub_reg = pcie_read(pp, PCIE_CORE_INT_STATUS);
+>> +		if (sub_reg & PRFPE)
+>> +			dev_dbg(pp->dev, "Parity error detected while reading from the PNP Receive FIFO RAM\n");
+>> +
+>> +		if (sub_reg & CRFPE)
+>> +			dev_dbg(pp->dev, "Parity error detected while reading from the Completion Receive FIFO RAM\n");
+>> +
+>> +		if (sub_reg & RRPE)
+>> +			dev_dbg(pp->dev, "Parity error detected while reading from Replay Buffer RAM\n");
+>> +
+>> +		if (sub_reg & PRFO)
+>> +			dev_dbg(pp->dev, "Overflow occurred in the PNP Receive FIFO\n");
+>> +
+>> +		if (sub_reg & CRFO)
+>> +			dev_dbg(pp->dev, "Overflow occurred in the Completion Receive FIFO\n");
+>> +
+>> +		if (sub_reg & RT)
+>> +			dev_dbg(pp->dev, "Replay timer timed out\n");
+>> +
+>> +		if (sub_reg & RTR)
+>> +			dev_dbg(pp->dev, "Replay timer rolled over after 4 transmissions of the same TLP\n");
+>> +
+>> +		if (sub_reg & PE)
+>> +			dev_dbg(pp->dev, "Phy error detected on receive side\n");
+>> +
+>> +		if (sub_reg & MTR)
+>> +			dev_dbg(pp->dev, "Malformed TLP received from the link\n");
+>> +
+>> +		if (sub_reg & UCR)
+>> +			dev_dbg(pp->dev, "Malformed TLP received from the link\n");
+>> +
+>> +		if (sub_reg & FCE)
+>> +			dev_dbg(pp->dev, "An error was observed in the flow control advertisements from the other side\n");
+>> +
+>> +		if (sub_reg & CT)
+>> +			dev_dbg(pp->dev, "A request timed out waiting for completion\n");
+>> +
+>> +		if (sub_reg & UTC)
+>> +			dev_dbg(pp->dev, "Unmapped TC error\n");
+>> +
+>> +		if (sub_reg & MMVC)
+>> +			dev_dbg(pp->dev, "MSI mask register changes\n");
+>> +
+>> +		pcie_write(pp, sub_reg, PCIE_CORE_INT_STATUS);
+>> +	}
+>> +
+>> +	pcie_write(pp, reg, PCIE_CLIENT_INT_STATUS);
+>> +
+>> +	return IRQ_HANDLED;
+>> +}
 
-    * Removed some obvious comments.
+[....]
 
-    * Didn't remove machine check for pSeries on "reg" property lookup.
-It's worthy to keep it, since almost every platform (if not all of them)
-contain the "reg" property on PHB node in device-tree, but only in
-pSeries we're 100% sure it can be used as the PHB unique identifier.
-Since the patch has a dynamic PHB numbering mechanism, the other platforms
-won't have trouble with it.
+>> +static irqreturn_t rockchip_pcie_legacy_int_handler(int irq, void *arg)
+>> +{
+>> +	struct rockchip_pcie_port *pp = arg;
+>> +	u32 reg;
+>> +
+>> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
+>> +	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
+>> +	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
+>> +	generic_handle_irq(irq_find_mapping(pp->irq_domain, ffs(reg)));
+>
+> NAK. What you have here is a chained interrupt controller, please
+> implement it as such.
 
- arch/powerpc/kernel/pci-common.c | 59 ++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 56 insertions(+), 3 deletions(-)
+Your mean is use handle_nested_irq instead of generic_handle_irq here?
+But, I found all other pci host controller drivers use this api.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0f7a60f..4afc9c1 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -41,11 +41,18 @@
- #include <asm/ppc-pci.h>
- #include <asm/eeh.h>
- 
-+/* hose_spinlock protects accesses to the the phb_bitmap. */
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
- 
--/* XXX kill that some day ... */
--static int global_phb_number;		/* Global phb counter */
-+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
-+#define MAX_PHBS 0x10000
-+
-+/*
-+ * For dynamic PHB numbering: used/free PHBs tracking bitmap.
-+ * Accesses to this bitmap should be protected by hose_spinlock.
-+ */
-+static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
- 
- /* ISA Memory physical address */
- resource_size_t isa_mem_base;
-@@ -64,6 +71,47 @@ struct dma_map_ops *get_pci_dma_ops(void)
- }
- EXPORT_SYMBOL(get_pci_dma_ops);
- 
-+/*
-+ * This function should run under locking protection, specifically
-+ * hose_spinlock.
-+ */
-+static int get_phb_number(struct device_node *dn)
-+{
-+	u64 prop;
-+	int ret;
-+	int phb_id;
-+
-+	/*
-+	 * Try fixed PHB numbering first, by checking archs and reading
-+	 * the respective device-tree properties. Firstly, try PowerNV by
-+	 * reading "ibm,opal-phbid", only present in OPAL environment.
-+	 */
-+	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
-+	if (ret && machine_is(pseries))
-+		ret = of_property_read_u32_array(dn, "reg", (u32 *)&prop, 2);
-+	if (ret)
-+		goto dynamic_phb_numbering;
-+
-+	phb_id = (int)(prop & (MAX_PHBS - 1));
-+
-+	/* We need to be sure to not use the same PHB number twice. */
-+	if (test_and_set_bit(phb_id, phb_bitmap))
-+		goto dynamic_phb_numbering;
-+
-+	return phb_id;
-+
-+	/*
-+	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
-+	 * the same PHB number twice, then fallback to dynamic PHB numbering.
-+	 */
-+dynamic_phb_numbering:
-+	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
-+	BUG_ON(phb_id >= MAX_PHBS);
-+	set_bit(phb_id, phb_bitmap);
-+
-+	return phb_id;
-+}
-+
- struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- {
- 	struct pci_controller *phb;
-@@ -72,7 +120,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- 	if (phb == NULL)
- 		return NULL;
- 	spin_lock(&hose_spinlock);
--	phb->global_number = global_phb_number++;
-+	phb->global_number = get_phb_number(dev);
- 	list_add_tail(&phb->list_node, &hose_list);
- 	spin_unlock(&hose_spinlock);
- 	phb->dn = dev;
-@@ -94,6 +142,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
- void pcibios_free_controller(struct pci_controller *phb)
- {
- 	spin_lock(&hose_spinlock);
-+
-+	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
-+	if (phb->global_number < MAX_PHBS)
-+		clear_bit(phb->global_number, phb_bitmap);
-+
- 	list_del(&phb->list_node);
- 	spin_unlock(&hose_spinlock);
- 
--- 
-2.1.0
+>
+>> +
+>> +	pcie_write(pp, reg, PCIE_CLIENT_INT_STATUS);
+>> +	return IRQ_HANDLED;
+>> +}
+>> +
 
+[...]
+
+>> +static struct platform_driver rockchip_pcie_driver = {
+>> +	.driver = {
+>> +		.name = "rockchip-pcie",
+>> +		.of_match_table = rockchip_pcie_of_match,
+>> +		.suppress_bind_attrs = true,
+>> +	},
+>> +	.probe = rockchip_pcie_probe,
+>> +	.remove = rockchip_pcie_remove,
+>> +};
+>> +module_platform_driver(rockchip_pcie_driver);
+>> +
+>> +MODULE_AUTHOR("Rockchip Inc");
+>> +MODULE_DESCRIPTION("Rockchip AXI PCIe driver");
+>> +MODULE_LICENSE("GPL v2");
+>>
+>
+> This definitely requires some rework for both the interrupt and MSI
+> parts. I'll leave Lorenzo to comment on the PCI side of things.
+>
+> Thanks,
+>
+> 	M.
+>
+
+Best Regards,
+Li
