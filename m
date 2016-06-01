@@ -1,39 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
-	eric.auger@redhat.com
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com, Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH V2 0/4] ACPI,PCI,IRQ: correct ISA penalty calculation
-Date: Wed, 29 Jun 2016 04:27:34 -0400
-Message-Id: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ni.piap.pl ([195.187.100.4]:42556 "EHLO ni.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751433AbcFALJE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2016 07:09:04 -0400
+From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack overflow"
+References: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Wed, 01 Jun 2016 13:08:59 +0200
+In-Reply-To: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	(Bjorn Helgaas's message of "Tue, 31 May 2016 16:58:02 -0500")
+Message-ID: <m3inxt17zo.fsf@t19.piap.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
-the penalty values are calculated on the fly rather than boot time.
+Bjorn Helgaas <bhelgaas@google.com> writes:
 
-This works fine for PCI interrupts but not so well for the ISA interrupts.
-Whether an ISA interrupt is in use or not information is not available
-inside the pci_link.c file. This information gets sent externally via
-acpi_penalize_isa_irq function. If active is true, then the IRQ is in use
-by ISA. Otherwise, IRQ is in use by PCI.
+> This reverts commit 498a92d42596a7a32c042319eb62a4c3d8081cf1.
+>
+> Krzysztof reported that this change broke Cavium CNS3xxx, ARMv6 (Laguna
+> GW-2388) because the MRRS setting is never written to the hardware.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Krzysztof Hałasa <khalasa@piap.pl>
+> ---
+>  arch/arm/mach-cns3xxx/pcie.c |   71 ++++++++++++++++++++++++------------------
+>  1 file changed, 41 insertions(+), 30 deletions(-)
 
-Sinan Kaya (4):
-  ACPI,PCI,IRQ: factor in PCI possible
-  Revert "ACPI,PCI,IRQ: remove redundant code in
-    acpi_irq_penalty_init()"
-  ACPI,PCI,IRQ: separate ISA penalty calculation
-  ACPI,PCI,IRQ: correct operator precedence
+This, applied to v4.7-rc1, fixes the problem on my Laguna boards.
 
- arch/x86/pci/acpi.c         |  1 +
- drivers/acpi/pci_link.c     | 65 ++++++++++++++++++++++++++++++++++-----------
- include/acpi/acpi_drivers.h |  1 +
- 3 files changed, 51 insertions(+), 16 deletions(-)
+Tested-by: Krzysztof Hałasa <khalasa@piap.pl>
 
+And as well
+
+Acked-by: Krzysztof Hałasa <khalasa@piap.pl>
+
+Thanks.
 -- 
-1.8.2.1
+Krzysztof Halasa
 
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
