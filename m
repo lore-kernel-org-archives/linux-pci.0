@@ -1,106 +1,156 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Jun 2016 08:17:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH V8 7/9] acpi: Add generic MCFG table handling
-Message-ID: <20160608131709.GB16764@localhost>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-8-git-send-email-tn@semihalf.com>
- <20160608015631.GE4759@localhost> <57580DCA.7000703@semihalf.com>
-MIME-Version: 1.0
-In-Reply-To: <57580DCA.7000703@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
- okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org,
- Lorenzo.Pieralisi@arm.com, linaro-acpi@lists.linaro.org,
- ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
- robert.richter@caviumnetworks.com, liudongdong3@huawei.com,
- catalin.marinas@arm.com, Liviu.Dudau@arm.com, arnd@arndb.de, jcm@redhat.com,
- msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com,
- linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com, dhdang@apm.com,
- linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org,
- Suravee.Suthikulpanit@amd.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.73]:55976 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbcFAMcW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2016 08:32:22 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Heiko Stuebner <heiko@sntech.de>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Doug Anderson <dianders@chromium.org>,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 1/3] pci: introduce read_bridge/write_bridge pci ops
+Date: Wed,  1 Jun 2016 14:31:22 +0200
+Message-Id: <1464784332-3775650-1-git-send-email-arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 08, 2016 at 02:21:30PM +0200, Tomasz Nowicki wrote:
-> On 08.06.2016 03:56, Bjorn Helgaas wrote:
-> >On Mon, May 30, 2016 at 05:14:20PM +0200, Tomasz Nowicki wrote:
-> >>In order to handle PCI config space regions properly in ACPI, new MCFG
-> >>interface is defined which does sanity checks on MCFG table and keeps its
-> >>root pointer. The user is able to lookup MCFG regions based on
-> >>host bridge root structure and domain:bus_start:bus_end touple.
-> >>Use pci_mmcfg_late_init old prototype to avoid another function name.
+A lot of PCI host bridges require different methods for initiating
+type 0 and type 1 config space accesses, leading to duplication of
+code.
 
-> >>+	/* found matching entry, bus range check */
-> >>+	if (entry->end_bus_number != bus_res->end) {
-> >>+		resource_size_t bus_end = min_t(resource_size_t,
-> >>+					entry->end_bus_number, bus_res->end);
-> >>+		pr_warn("%04x:%pR bus end mismatch, using %02lx\n",
-> >>+			root->segment, bus_res, (unsigned long)bus_end);
-> >>+		bus_res->end = bus_end;
-> >>+	}
-> 
-> What about bus end mismatch case? Should we trim the host bridge bus
-> range or expect MCFG entry covers that range? Sometimes we get
-> _BBN-0xFF bus range, not from _CRS.
+This adds support for the two different kinds at the pci_ops
+level, with the newly added map_bridge/read_bridge/write_bridge
+operations for type 1 accesses.
 
-Lack of a bus range in _CRS is a firmware defect.  There's a comment
-about this in acpi_pci_root_add().  On x86, we probably had to live
-with firmware in the field that had this defect.  I think we should
-expect all ARM64 systems to provide a bus number range in _CRS, and
-fail the attach if it's not there.
+When these are not set, we fall back to the regular map_bus/read/write
+operations, so all existing drivers keep working, and bridges that
+have identical operations continue to only require one set.
 
-I don't think we should warn about an MCFG entry that covers more than
-the _CRS bus range.  On x86, it's common to have something like:
+In most cases, a driver will only have to override either map_bridge
+or read_bridge/write_bridge but not both.
 
-  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7f])
-  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-ff])
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+This is slightly refined over what I had in the "Add PCIe driver for
+Rockchip Soc" thread earlier, but probably not the final version yet,
+so I'd like to get more feedback on it.
 
-with a single MCFG entry that covers [bus 00-ff].  That seems
-reasonable and I don't think it's worth warning about it.
+In particular, I think it may be useful to add a third set of
+functions for the config space of devices that are directly attached
+to the host bridge, as those are sometimes (designware, rcar, mvebu)
+yet again different from the host bridge itself and from all other
+devices. On the other hand, that adds further complexity that we
+may want to leave out of the common code, and I honestly can't
+seem to come up for a catchy name form the callbacks.
 
-If the MCFG entry doesn't cover all of a _CRS bus range, we should
-just fail so we can find and fix broken firmware.
+ drivers/pci/access.c | 35 +++++++++++++++++++++++++++--------
+ include/linux/pci.h  |  3 +++
+ 2 files changed, 30 insertions(+), 8 deletions(-)
 
-> >>+/* Interface called by ACPI - parse and save MCFG table */
-> >
-> >I think we save a *pointer* to the MCFG table, not the table itself.
-> 
-> Right, the comment is broken.
-> 
-> >And acpi_table_parse() calls early_acpi_os_unmap_memory() immediately
-> >after it calls pci_mcfg_parse(), so I'm doubtful that the pointer
-> >remains valid.
-> 
-> At this stage early_acpi_os_unmap_memory() is doing nothing since
-> acpi_early_init() set acpi_gbl_permanent_mmap to 1 way before. The
-> pointer is fine then.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d11cdbb8fba3..263606ece211 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -34,9 +34,12 @@ int pci_bus_read_config_##size \
+ 	u32 data = 0;							\
+ 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+ 	raw_spin_lock_irqsave(&pci_lock, flags);			\
+-	res = bus->ops->read(bus, devfn, pos, len, &data);		\
++	if (!bus->parent == 0 && bus->ops->read_bridge)			\
++		res = bus->ops->read_bridge(bus, devfn, pos, len, &data);	\
++	else								\
++		res = bus->ops->read(bus, devfn, pos, len, &data);	\
+ 	*value = (type)data;						\
+-	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
++	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
+ 	return res;							\
+ }
+ 
+@@ -48,8 +51,11 @@ int pci_bus_write_config_##size \
+ 	unsigned long flags;						\
+ 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+ 	raw_spin_lock_irqsave(&pci_lock, flags);			\
+-	res = bus->ops->write(bus, devfn, pos, len, value);		\
+-	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
++	if (!bus->parent && bus->ops->write_bridge)			\
++		res = bus->ops->write_bridge(bus, devfn, pos, len, value);\
++	else								\
++		res = bus->ops->write(bus, devfn, pos, len, value);	\
++	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
+ 	return res;							\
+ }
+ 
+@@ -72,7 +78,11 @@ int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
+ {
+ 	void __iomem *addr;
+ 
+-	addr = bus->ops->map_bus(bus, devfn, where);
++	if (!bus->parent && bus->ops->map_bridge)
++		addr = bus->ops->map_bridge(bus, devfn, where);
++	else
++		addr = bus->ops->map_bus(bus, devfn, where);
++
+ 	if (!addr) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+@@ -94,7 +104,10 @@ int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
+ {
+ 	void __iomem *addr;
+ 
+-	addr = bus->ops->map_bus(bus, devfn, where);
++	if (!bus->parent && bus->ops->map_bridge)
++		addr = bus->ops->map_bridge(bus, devfn, where);
++	else
++		addr = bus->ops->map_bus(bus, devfn, where);
+ 	if (!addr)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+@@ -114,7 +127,10 @@ int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
+ {
+ 	void __iomem *addr;
+ 
+-	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
++	if (!bus->parent && bus->ops->map_bridge)
++		addr = bus->ops->map_bridge(bus, devfn, where);
++	else
++		addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
+ 	if (!addr) {
+ 		*val = ~0;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+@@ -135,7 +151,10 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
+ 	void __iomem *addr;
+ 	u32 mask, tmp;
+ 
+-	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
++	if (!bus->parent && bus->ops->map_bridge)
++		addr = bus->ops->map_bridge(bus, devfn, where);
++	else
++		addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
+ 	if (!addr)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index df41c4645911..2b1d08771b36 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -580,6 +580,9 @@ struct pci_ops {
+ 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+ 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+ 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
++	void __iomem *(*map_bridge)(struct pci_bus *bus, unsigned int devfn, int where);
++	int (*read_bridge)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
++	int (*write_bridge)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+ };
+ 
+ /*
+-- 
+2.7.0
 
-Hmmm...  I see your argument, but this is a problem waiting to happen.
-We should not depend on the internal implementation of
-early_acpi_os_unmap_memory().  The pattern of:
-
-  y = x;
-  unmap(x);
-  z = *y;
-
-is just broken and we shouldn't expect readers to recognize that "oh,
-unmap() isn't really unmapping anything in this special case, so this
-looks wrong but is really fine."
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
