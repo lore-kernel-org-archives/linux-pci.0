@@ -1,53 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v6 0/3] PCI: Precision Time Measurement support
-To: Jonathan Yong <jonathan.yong@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-kernel@vger.kernel.org
-Date: Mon, 13 Jun 2016 14:05:26 -0500
-Message-ID: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:53915 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754080AbcFAO4s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Jun 2016 10:56:48 -0400
+Message-ID: <1464793005.2960.3.camel@intel.com>
+Subject: Re: [PATCH 5/5] ethernet: Use pci_(request|release)_mem_regions
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>,
+	Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jay Cliburn <jcliburn@gmail.com>,
+	Chris Snook <chris.snook@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org
+Date: Wed, 01 Jun 2016 07:56:45 -0700
+In-Reply-To: <20160601085112.ve6k7bzspapjsswf@c203.arch.suse.de>
+References: <cover.1464694724.git.jthumshirn@suse.de>
+	 <3f24b687c31dea31a03cd3a529de790e942dd5bb.1464694724.git.jthumshirn@suse.de>
+	 <20160601075956.GD11923@infradead.org>
+	 <20160601085112.ve6k7bzspapjsswf@c203.arch.suse.de>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-NZJAPV9V/Hi0vA+scgWM"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a slightly different proposal for the PTM support Jonathan
-proposed here:
 
-  http://lkml.kernel.org/r/1462956446-27361-2-git-send-email-jonathan.yong@intel.com
+--=-NZJAPV9V/Hi0vA+scgWM
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I split this into three pieces mostly for ease in reviewing.  They
-could all be squashed:
+On Wed, 2016-06-01 at 10:51 +0200, Johannes Thumshirn wrote:
+> On Wed, Jun 01, 2016 at 12:59:56AM -0700, Christoph Hellwig wrote:
+> > On Tue, May 31, 2016 at 02:05:13PM +0200, Johannes Thumshirn wrote:
+> > > Now that we do have pci_request_mem_regions() and
+> pci_release_mem_regions() at
+> > > hand, use it in the ethernet drivers.
+> >=C2=A0
+> > This should probably be one patch per driver.
+>=20
+> I though if I do one patch per subsystem it'll be less a hassle for the
+> individual maintainers, but if the netdev people want it as split up,
+> I'll be
+> doing it of cause.
 
-  - Enable PTM in root ports and switches automatically at boot
-  - Enable PTM in endpoints when requested by driver
-  - Add clock granularity information
+Since almost all the changes are to Intel wired LAN drivers, if you just
+split off the atheros change into a separate patch, I would be happy. =C2=
+=A0Then
+you could keep just one patch to change all the Intel drivers.
+--=-NZJAPV9V/Hi0vA+scgWM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-I have some open questions about how PTM works on Root Complex
-Integrated Endpoints and whether we should enable it automatically
-even without a driver request.  And I probably left out some details
-of the clock granularity computation, so treat this as more of an RFC
-than anything.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Bjorn
+iQIcBAABCgAGBQJXTveuAAoJEOVv75VaS+3Ow7sQAIB9BzAWQr2V0t9BgRQz9GHS
+lOn0GIIgn1ToZgxR4jx7CGap0ZGpLpPw1MV/75lQjyCgzyXr+ba6ureDu5C9RWTn
+jQnAT37PY1Udua//spi/nOUgA1/nGzAnI+nMBu3QvfIUvfNI9p4cviXSf+QKoZ79
+MkQpOT5WyQRZrsFDkgu2HAozVFD8aHRkFXeL5x7GCLb9VNY54+poYuWuvEkX/XAX
+Dyua2lNUteUYVm6cS4pFVvUq+ebc+W1t2CsXCFGK7nLMrH6LnQkb8vbew47R3awA
+bPKNmp6KDGZYyBZSfimmGnh2XF1UUqL4QBXvQ0UtJhq4Re9lLjFLhaII9X7ZZbIk
+/9QgwkHlsWIP/eY2H8dmWLuRVX2XvECu6w4YoUR7ZjqNskIptllI26MybY9BNhqF
+aZJiBDlOzm+BTauij5yIBMaiPn2vEhlL37eop3XN0W5YtYjzDVevRMcErzK7qYGg
+9kFG6UfMHgzfVa/I0CjCe35K1kJsnVtOZPVu9o+GZwZZ2VdhLmsRr5W5wkcIxjsY
+2znPkO0zDQC/JebOJ6lbVWr1BcH9FAjl6fTTz/Y7RoJY5wkHwUH5ip1fqsCw9xG0
+GfMLgSmlSdVy2d6nK15pYBlnTLR7pjVDI72IkxyaVv4JdOWPZ0grQCrI2axOKpji
+axgsQbF3m34yjSSApdSW
+=LJ3C
+-----END PGP SIGNATURE-----
 
----
+--=-NZJAPV9V/Hi0vA+scgWM--
 
-Bjorn Helgaas (2):
-      PCI: Add pci_enable_ptm() for drivers to enable PTM on endpoints
-      PCI: Add PTM clock granularity information
-
-Jonathan Yong (1):
-      PCI: Add Precision Time Measurement (PTM) support
-
-
- drivers/pci/pci.h             |    6 ++
- drivers/pci/pcie/Kconfig      |   12 ++++
- drivers/pci/pcie/Makefile     |    1 
- drivers/pci/pcie/ptm.c        |  140 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c           |    3 +
- include/linux/pci.h           |   13 ++++
- include/uapi/linux/pci_regs.h |   12 +++-
- 7 files changed, 186 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/pcie/ptm.c
