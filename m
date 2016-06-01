@@ -1,161 +1,40 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 1 Jun 2016 10:51:12 +0200
 From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme@lists.infradead.org,
-	James Smart <james.smart@avagotech.com>,
-	Dick Kennedy <dick.kennedy@avagotech.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jay Cliburn <jcliburn@gmail.com>,
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jay Cliburn <jcliburn@gmail.com>,
 	Chris Snook <chris.snook@gmail.com>,
 	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
 	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
 	intel-wired-lan@lists.osuosl.org
-Subject: [PATCH v2 0/6] Introduce pci_(request|release)_(mem|io)_regions
-Date: Thu,  2 Jun 2016 09:30:28 +0200
-Message-Id: <cover.1464795082.git.jthumshirn@suse.de>
+Subject: Re: [PATCH 5/5] ethernet: Use pci_(request|release)_mem_regions
+Message-ID: <20160601085112.ve6k7bzspapjsswf@c203.arch.suse.de>
+References: <cover.1464694724.git.jthumshirn@suse.de>
+ <3f24b687c31dea31a03cd3a529de790e942dd5bb.1464694724.git.jthumshirn@suse.de>
+ <20160601075956.GD11923@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20160601075956.GD11923@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The first patch in this series introduces the following 4 helper functions to
-the PCI core:
+On Wed, Jun 01, 2016 at 12:59:56AM -0700, Christoph Hellwig wrote:
+> On Tue, May 31, 2016 at 02:05:13PM +0200, Johannes Thumshirn wrote:
+> > Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+> > hand, use it in the ethernet drivers.
+> 
+> This should probably be one patch per driver.
 
-* pci_request_mem_regions()
-* pci_request_io_regions()
-* pci_release_mem_regions()
-* pci_release_io_regions()
+I though if I do one patch per subsystem it'll be less a hassle for the
+individual maintainers, but if the netdev people want it as split up, I'll be
+doing it of cause.
 
-which encapsulate the request and release of a PCI device's memory or I/O
-bars.
-
-The subsequent patches convert the drivers, which use the
-pci_request_selected_regions(pdev, 
-	pci_select_bars(pdev, IORESOURCE_MEM), name); 
-and similar pattern to use the new interface.
-
-This was suggested by Christoph Hellwig in
-http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
-tested on kernel v4.6 with NVMe.
-
-The conversion of the drivers has been performed by the following coccinelle
-spatch:
-// IORESOURCE_MEM
-@@
-expression err, pdev, name;
-@@
-
-- err = pci_request_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM), name);
-+ err = pci_request_mem_regions(pdev, name);
-
-@@
-expression pdev;
-@@
-- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_MEM));
-+ pci_release_mem_regions(pdev);
-
-@@
-expression err, pdev, name;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_MEM);
-...
-- err = pci_request_selected_regions(pdev, bars, name);
-+ err = pci_request_mem_regions(pdev, name);
-
-@@
-expression pdev;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_MEM);
-...
-- pci_release_selected_regions(pdev, bars);
-+ pci_release_mem_regions(pdev);
-
-// IORESOURCE_IO
-@@
-expression err, pdev, name;
-@@
-
-- err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
-IORESOURCE_IO), name);
-+ err = pci_request_io_regions(pdev, name);
-
-@@
-expression pdev;
-@@
-- pci_release_selected_regions(pdev, pci_select_bars(pdev, IORESOURCE_IO));
-+ pci_release_io_regions(pdev);
-
-@@
-expression err, pdev, name;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_IO);
-...
-- err = pci_request_selected_regions(pdev, bars, name);
-+ err = pci_request_io_regions(pdev, name);
-
-@@
-expression pdev;
-identifier bars;
-@@
-- bars = pci_select_bars(pdev, IORESOURCE_IO);
-...
-- pci_release_selected_regions(pdev, bars);
-+ pci_release_io_regions(pdev);
-
-Changes since v1:
-* Fixed indendatoin in pci.h patch to not cross the 80 chars boundary.
-* Split Ethernet patches into two, one for Atheros and one for Intel drivers.
-* Correctly named lpfc patch.
-* Converted init-path of lpfc driver as well.
-* Added Reviewed-by tags were appropriate.
-
-Johannes Thumshirn (6):
-  PCI: Add helpers to request/release memory and I/O regions
-  NVMe: Use pci_(request|release)_mem_regions
-  lpfc: Use pci_(request|release)_mem_regions
-  GenWQE: Use pci_(request|release)_mem_regions
-  ethernet/intel: Use pci_(request|release)_mem_regions
-  alx: Use pci_(request|release)_mem_regions
-
- drivers/misc/genwqe/card_base.c               | 13 +++++--------
- drivers/net/ethernet/atheros/alx/main.c       | 12 +++++-------
- drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++--------
- drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
- drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++-------
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
- drivers/nvme/host/pci.c                       | 10 +++-------
- drivers/scsi/lpfc/lpfc_init.c                 | 15 ++++----------
- include/linux/pci.h                           | 28 +++++++++++++++++++++++++++
- 10 files changed, 59 insertions(+), 64 deletions(-)
-
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: linux-nvme@lists.infradead.org
-Cc: James Smart <james.smart@avagotech.com>
-Cc: Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: Frank Haverkamp <haver@linux.vnet.ibm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jay Cliburn <jcliburn@gmail.com>
-Cc: Chris Snook <chris.snook@gmail.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: intel-wired-lan@lists.osuosl.org
+	Johannes
 -- 
-1.8.5.6
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
