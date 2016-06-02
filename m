@@ -1,433 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, hch@infradead.org,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Juergen Gross <jgross@suse.com>,
-	Muli Ben-Yehuda <mulix@mulix.org>,
-	Jon Mason <jdmason@kudzu.us>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>,
-	xen-devel@lists.xenproject.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v5 23/44] x86: dma-mapping: Use unsigned long for dma_attrs
-Date: Thu, 30 Jun 2016 10:25:50 +0200
-Message-id: <1467275171-6298-23-git-send-email-k.kozlowski@samsung.com>
-In-reply-to: <1467275171-6298-1-git-send-email-k.kozlowski@samsung.com>
-References: <1467275019-30789-1-git-send-email-k.kozlowski@samsung.com>
- <1467275171-6298-1-git-send-email-k.kozlowski@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from vps0.lunn.ch ([178.209.37.122]:57504 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750811AbcFBMYJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jun 2016 08:24:09 -0400
+Date: Thu, 2 Jun 2016 14:24:05 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Marcin Wojtas <mw@semihalf.com>
+Subject: Re: [PATCH 1/3] dt-bindings: add DT binding for the Aardvark PCIe
+ controller
+Message-ID: <20160602122405.GG17343@lunn.ch>
+References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1464858585-10963-2-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1464858585-10963-2-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split out subsystem specific changes for easier reviews. This will be
-squashed with main commit.
+> +In addition, the Device Tree describing an Aardvark PCIe controller
+> +must include a sub-node that describes the legacy interrupt controller
+> +built into the PCIe controller. This sub-node must have the following
+> +properties:
+> +
+> + - interrupt-controller
+> + - #interrupt-cells: set to <1>
+> +
+> +Example:
+> +
+> +	pcie0: pcie@d0070000 {
+> +		compatible = "marvell,armada-3700-pcie";
+> +		device_type = "pci";
+> +		status = "disabled";
+> +		reg = <0 0xd0070000 0 0x20000>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		bus-range = <0x00 0xff>;
+> +		interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
+> +		#interrupt-cells = <1>;
+> +		ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
+> +			  0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
+> +		interrupt-map-mask = <0 0 0 7>;
+> +		interrupt-map = <0 0 0 1 &pcie_intc 0>,
+> +				<0 0 0 2 &pcie_intc 1>,
+> +				<0 0 0 3 &pcie_intc 2>,
+> +				<0 0 0 4 &pcie_intc 3>;
+> +		pcie_intc: interrupt-controller {
+> +			interrupt-controller;
+> +			#interrupt-cells = <1>;
+> +		};
 
-Signed-off-by: Krzysztof Kozlowski <k.kozlowski@samsung.com>
----
- arch/x86/include/asm/dma-mapping.h       |  5 ++---
- arch/x86/include/asm/swiotlb.h           |  4 ++--
- arch/x86/include/asm/xen/page-coherent.h |  9 ++++-----
- arch/x86/kernel/amd_gart_64.c            | 20 ++++++++++----------
- arch/x86/kernel/pci-calgary_64.c         | 14 +++++++-------
- arch/x86/kernel/pci-dma.c                |  4 ++--
- arch/x86/kernel/pci-nommu.c              |  4 ++--
- arch/x86/kernel/pci-swiotlb.c            |  4 ++--
- arch/x86/pci/sta2x11-fixup.c             |  2 +-
- arch/x86/pci/vmd.c                       | 16 ++++++++--------
- 10 files changed, 40 insertions(+), 42 deletions(-)
+Hi Thomas
 
-diff --git a/arch/x86/include/asm/dma-mapping.h b/arch/x86/include/asm/dma-mapping.h
-index 3a27b93e6261..44461626830e 100644
---- a/arch/x86/include/asm/dma-mapping.h
-+++ b/arch/x86/include/asm/dma-mapping.h
-@@ -9,7 +9,6 @@
- #include <linux/kmemcheck.h>
- #include <linux/scatterlist.h>
- #include <linux/dma-debug.h>
--#include <linux/dma-attrs.h>
- #include <asm/io.h>
- #include <asm/swiotlb.h>
- #include <linux/dma-contiguous.h>
-@@ -48,11 +47,11 @@ extern int dma_supported(struct device *hwdev, u64 mask);
- 
- extern void *dma_generic_alloc_coherent(struct device *dev, size_t size,
- 					dma_addr_t *dma_addr, gfp_t flag,
--					struct dma_attrs *attrs);
-+					unsigned long attrs);
- 
- extern void dma_generic_free_coherent(struct device *dev, size_t size,
- 				      void *vaddr, dma_addr_t dma_addr,
--				      struct dma_attrs *attrs);
-+				      unsigned long attrs);
- 
- #ifdef CONFIG_X86_DMA_REMAP /* Platform code defines bridge-specific code */
- extern bool dma_capable(struct device *dev, dma_addr_t addr, size_t size);
-diff --git a/arch/x86/include/asm/swiotlb.h b/arch/x86/include/asm/swiotlb.h
-index ab05d73e2bb7..d2f69b9ff732 100644
---- a/arch/x86/include/asm/swiotlb.h
-+++ b/arch/x86/include/asm/swiotlb.h
-@@ -31,9 +31,9 @@ static inline void dma_mark_clean(void *addr, size_t size) {}
- 
- extern void *x86_swiotlb_alloc_coherent(struct device *hwdev, size_t size,
- 					dma_addr_t *dma_handle, gfp_t flags,
--					struct dma_attrs *attrs);
-+					unsigned long attrs);
- extern void x86_swiotlb_free_coherent(struct device *dev, size_t size,
- 					void *vaddr, dma_addr_t dma_addr,
--					struct dma_attrs *attrs);
-+					unsigned long attrs);
- 
- #endif /* _ASM_X86_SWIOTLB_H */
-diff --git a/arch/x86/include/asm/xen/page-coherent.h b/arch/x86/include/asm/xen/page-coherent.h
-index acd844c017d3..f02f025ff988 100644
---- a/arch/x86/include/asm/xen/page-coherent.h
-+++ b/arch/x86/include/asm/xen/page-coherent.h
-@@ -2,12 +2,11 @@
- #define _ASM_X86_XEN_PAGE_COHERENT_H
- 
- #include <asm/page.h>
--#include <linux/dma-attrs.h>
- #include <linux/dma-mapping.h>
- 
- static inline void *xen_alloc_coherent_pages(struct device *hwdev, size_t size,
- 		dma_addr_t *dma_handle, gfp_t flags,
--		struct dma_attrs *attrs)
-+		unsigned long attrs)
- {
- 	void *vstart = (void*)__get_free_pages(flags, get_order(size));
- 	*dma_handle = virt_to_phys(vstart);
-@@ -16,18 +15,18 @@ static inline void *xen_alloc_coherent_pages(struct device *hwdev, size_t size,
- 
- static inline void xen_free_coherent_pages(struct device *hwdev, size_t size,
- 		void *cpu_addr, dma_addr_t dma_handle,
--		struct dma_attrs *attrs)
-+		unsigned long attrs)
- {
- 	free_pages((unsigned long) cpu_addr, get_order(size));
- }
- 
- static inline void xen_dma_map_page(struct device *hwdev, struct page *page,
- 	     dma_addr_t dev_addr, unsigned long offset, size_t size,
--	     enum dma_data_direction dir, struct dma_attrs *attrs) { }
-+	     enum dma_data_direction dir, unsigned long attrs) { }
- 
- static inline void xen_dma_unmap_page(struct device *hwdev, dma_addr_t handle,
- 		size_t size, enum dma_data_direction dir,
--		struct dma_attrs *attrs) { }
-+		unsigned long attrs) { }
- 
- static inline void xen_dma_sync_single_for_cpu(struct device *hwdev,
- 		dma_addr_t handle, size_t size, enum dma_data_direction dir) { }
-diff --git a/arch/x86/kernel/amd_gart_64.c b/arch/x86/kernel/amd_gart_64.c
-index 8e3842fc8bea..4aff288e37a4 100644
---- a/arch/x86/kernel/amd_gart_64.c
-+++ b/arch/x86/kernel/amd_gart_64.c
-@@ -242,7 +242,7 @@ static dma_addr_t dma_map_area(struct device *dev, dma_addr_t phys_mem,
- static dma_addr_t gart_map_page(struct device *dev, struct page *page,
- 				unsigned long offset, size_t size,
- 				enum dma_data_direction dir,
--				struct dma_attrs *attrs)
-+				unsigned long attrs)
- {
- 	unsigned long bus;
- 	phys_addr_t paddr = page_to_phys(page) + offset;
-@@ -264,7 +264,7 @@ static dma_addr_t gart_map_page(struct device *dev, struct page *page,
-  */
- static void gart_unmap_page(struct device *dev, dma_addr_t dma_addr,
- 			    size_t size, enum dma_data_direction dir,
--			    struct dma_attrs *attrs)
-+			    unsigned long attrs)
- {
- 	unsigned long iommu_page;
- 	int npages;
-@@ -286,7 +286,7 @@ static void gart_unmap_page(struct device *dev, dma_addr_t dma_addr,
-  * Wrapper for pci_unmap_single working with scatterlists.
-  */
- static void gart_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
--			  enum dma_data_direction dir, struct dma_attrs *attrs)
-+			  enum dma_data_direction dir, unsigned long attrs)
- {
- 	struct scatterlist *s;
- 	int i;
-@@ -294,7 +294,7 @@ static void gart_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
- 	for_each_sg(sg, s, nents, i) {
- 		if (!s->dma_length || !s->length)
- 			break;
--		gart_unmap_page(dev, s->dma_address, s->dma_length, dir, NULL);
-+		gart_unmap_page(dev, s->dma_address, s->dma_length, dir, 0);
- 	}
- }
- 
-@@ -316,7 +316,7 @@ static int dma_map_sg_nonforce(struct device *dev, struct scatterlist *sg,
- 			addr = dma_map_area(dev, addr, s->length, dir, 0);
- 			if (addr == bad_dma_addr) {
- 				if (i > 0)
--					gart_unmap_sg(dev, sg, i, dir, NULL);
-+					gart_unmap_sg(dev, sg, i, dir, 0);
- 				nents = 0;
- 				sg[0].dma_length = 0;
- 				break;
-@@ -387,7 +387,7 @@ dma_map_cont(struct device *dev, struct scatterlist *start, int nelems,
-  * Merge chunks that have page aligned sizes into a continuous mapping.
-  */
- static int gart_map_sg(struct device *dev, struct scatterlist *sg, int nents,
--		       enum dma_data_direction dir, struct dma_attrs *attrs)
-+		       enum dma_data_direction dir, unsigned long attrs)
- {
- 	struct scatterlist *s, *ps, *start_sg, *sgmap;
- 	int need = 0, nextneed, i, out, start;
-@@ -457,7 +457,7 @@ static int gart_map_sg(struct device *dev, struct scatterlist *sg, int nents,
- 
- error:
- 	flush_gart();
--	gart_unmap_sg(dev, sg, out, dir, NULL);
-+	gart_unmap_sg(dev, sg, out, dir, 0);
- 
- 	/* When it was forced or merged try again in a dumb way */
- 	if (force_iommu || iommu_merge) {
-@@ -477,7 +477,7 @@ error:
- /* allocate and map a coherent mapping */
- static void *
- gart_alloc_coherent(struct device *dev, size_t size, dma_addr_t *dma_addr,
--		    gfp_t flag, struct dma_attrs *attrs)
-+		    gfp_t flag, unsigned long attrs)
- {
- 	dma_addr_t paddr;
- 	unsigned long align_mask;
-@@ -509,9 +509,9 @@ gart_alloc_coherent(struct device *dev, size_t size, dma_addr_t *dma_addr,
- /* free a coherent mapping */
- static void
- gart_free_coherent(struct device *dev, size_t size, void *vaddr,
--		   dma_addr_t dma_addr, struct dma_attrs *attrs)
-+		   dma_addr_t dma_addr, unsigned long attrs)
- {
--	gart_unmap_page(dev, dma_addr, size, DMA_BIDIRECTIONAL, NULL);
-+	gart_unmap_page(dev, dma_addr, size, DMA_BIDIRECTIONAL, 0);
- 	dma_generic_free_coherent(dev, size, vaddr, dma_addr, attrs);
- }
- 
-diff --git a/arch/x86/kernel/pci-calgary_64.c b/arch/x86/kernel/pci-calgary_64.c
-index 833b1d329c47..5d400ba1349d 100644
---- a/arch/x86/kernel/pci-calgary_64.c
-+++ b/arch/x86/kernel/pci-calgary_64.c
-@@ -340,7 +340,7 @@ static inline struct iommu_table *find_iommu_table(struct device *dev)
- 
- static void calgary_unmap_sg(struct device *dev, struct scatterlist *sglist,
- 			     int nelems,enum dma_data_direction dir,
--			     struct dma_attrs *attrs)
-+			     unsigned long attrs)
- {
- 	struct iommu_table *tbl = find_iommu_table(dev);
- 	struct scatterlist *s;
-@@ -364,7 +364,7 @@ static void calgary_unmap_sg(struct device *dev, struct scatterlist *sglist,
- 
- static int calgary_map_sg(struct device *dev, struct scatterlist *sg,
- 			  int nelems, enum dma_data_direction dir,
--			  struct dma_attrs *attrs)
-+			  unsigned long attrs)
- {
- 	struct iommu_table *tbl = find_iommu_table(dev);
- 	struct scatterlist *s;
-@@ -396,7 +396,7 @@ static int calgary_map_sg(struct device *dev, struct scatterlist *sg,
- 
- 	return nelems;
- error:
--	calgary_unmap_sg(dev, sg, nelems, dir, NULL);
-+	calgary_unmap_sg(dev, sg, nelems, dir, 0);
- 	for_each_sg(sg, s, nelems, i) {
- 		sg->dma_address = DMA_ERROR_CODE;
- 		sg->dma_length = 0;
-@@ -407,7 +407,7 @@ error:
- static dma_addr_t calgary_map_page(struct device *dev, struct page *page,
- 				   unsigned long offset, size_t size,
- 				   enum dma_data_direction dir,
--				   struct dma_attrs *attrs)
-+				   unsigned long attrs)
- {
- 	void *vaddr = page_address(page) + offset;
- 	unsigned long uaddr;
-@@ -422,7 +422,7 @@ static dma_addr_t calgary_map_page(struct device *dev, struct page *page,
- 
- static void calgary_unmap_page(struct device *dev, dma_addr_t dma_addr,
- 			       size_t size, enum dma_data_direction dir,
--			       struct dma_attrs *attrs)
-+			       unsigned long attrs)
- {
- 	struct iommu_table *tbl = find_iommu_table(dev);
- 	unsigned int npages;
-@@ -432,7 +432,7 @@ static void calgary_unmap_page(struct device *dev, dma_addr_t dma_addr,
- }
- 
- static void* calgary_alloc_coherent(struct device *dev, size_t size,
--	dma_addr_t *dma_handle, gfp_t flag, struct dma_attrs *attrs)
-+	dma_addr_t *dma_handle, gfp_t flag, unsigned long attrs)
- {
- 	void *ret = NULL;
- 	dma_addr_t mapping;
-@@ -466,7 +466,7 @@ error:
- 
- static void calgary_free_coherent(struct device *dev, size_t size,
- 				  void *vaddr, dma_addr_t dma_handle,
--				  struct dma_attrs *attrs)
-+				  unsigned long attrs)
- {
- 	unsigned int npages;
- 	struct iommu_table *tbl = find_iommu_table(dev);
-diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
-index 6ba014c61d62..d30c37750765 100644
---- a/arch/x86/kernel/pci-dma.c
-+++ b/arch/x86/kernel/pci-dma.c
-@@ -77,7 +77,7 @@ void __init pci_iommu_alloc(void)
- }
- void *dma_generic_alloc_coherent(struct device *dev, size_t size,
- 				 dma_addr_t *dma_addr, gfp_t flag,
--				 struct dma_attrs *attrs)
-+				 unsigned long attrs)
- {
- 	unsigned long dma_mask;
- 	struct page *page;
-@@ -120,7 +120,7 @@ again:
- }
- 
- void dma_generic_free_coherent(struct device *dev, size_t size, void *vaddr,
--			       dma_addr_t dma_addr, struct dma_attrs *attrs)
-+			       dma_addr_t dma_addr, unsigned long attrs)
- {
- 	unsigned int count = PAGE_ALIGN(size) >> PAGE_SHIFT;
- 	struct page *page = virt_to_page(vaddr);
-diff --git a/arch/x86/kernel/pci-nommu.c b/arch/x86/kernel/pci-nommu.c
-index da15918d1c81..00e71ce396a8 100644
---- a/arch/x86/kernel/pci-nommu.c
-+++ b/arch/x86/kernel/pci-nommu.c
-@@ -28,7 +28,7 @@ check_addr(char *name, struct device *hwdev, dma_addr_t bus, size_t size)
- static dma_addr_t nommu_map_page(struct device *dev, struct page *page,
- 				 unsigned long offset, size_t size,
- 				 enum dma_data_direction dir,
--				 struct dma_attrs *attrs)
-+				 unsigned long attrs)
- {
- 	dma_addr_t bus = page_to_phys(page) + offset;
- 	WARN_ON(size == 0);
-@@ -55,7 +55,7 @@ static dma_addr_t nommu_map_page(struct device *dev, struct page *page,
-  */
- static int nommu_map_sg(struct device *hwdev, struct scatterlist *sg,
- 			int nents, enum dma_data_direction dir,
--			struct dma_attrs *attrs)
-+			unsigned long attrs)
- {
- 	struct scatterlist *s;
- 	int i;
-diff --git a/arch/x86/kernel/pci-swiotlb.c b/arch/x86/kernel/pci-swiotlb.c
-index 7c577a178859..db88bfe56a77 100644
---- a/arch/x86/kernel/pci-swiotlb.c
-+++ b/arch/x86/kernel/pci-swiotlb.c
-@@ -16,7 +16,7 @@ int swiotlb __read_mostly;
- 
- void *x86_swiotlb_alloc_coherent(struct device *hwdev, size_t size,
- 					dma_addr_t *dma_handle, gfp_t flags,
--					struct dma_attrs *attrs)
-+					unsigned long attrs)
- {
- 	void *vaddr;
- 
-@@ -37,7 +37,7 @@ void *x86_swiotlb_alloc_coherent(struct device *hwdev, size_t size,
- 
- void x86_swiotlb_free_coherent(struct device *dev, size_t size,
- 				      void *vaddr, dma_addr_t dma_addr,
--				      struct dma_attrs *attrs)
-+				      unsigned long attrs)
- {
- 	if (is_swiotlb_buffer(dma_to_phys(dev, dma_addr)))
- 		swiotlb_free_coherent(dev, size, vaddr, dma_addr);
-diff --git a/arch/x86/pci/sta2x11-fixup.c b/arch/x86/pci/sta2x11-fixup.c
-index 5ceda85b8687..052c1cb76305 100644
---- a/arch/x86/pci/sta2x11-fixup.c
-+++ b/arch/x86/pci/sta2x11-fixup.c
-@@ -169,7 +169,7 @@ static void *sta2x11_swiotlb_alloc_coherent(struct device *dev,
- 					    size_t size,
- 					    dma_addr_t *dma_handle,
- 					    gfp_t flags,
--					    struct dma_attrs *attrs)
-+					    unsigned long attrs)
- {
- 	void *vaddr;
- 
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index 7792aba266df..d5834cc658c0 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -265,14 +265,14 @@ static struct dma_map_ops *vmd_dma_ops(struct device *dev)
- }
- 
- static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *addr,
--		       gfp_t flag, struct dma_attrs *attrs)
-+		       gfp_t flag, unsigned long attrs)
- {
- 	return vmd_dma_ops(dev)->alloc(to_vmd_dev(dev), size, addr, flag,
- 				       attrs);
- }
- 
- static void vmd_free(struct device *dev, size_t size, void *vaddr,
--		     dma_addr_t addr, struct dma_attrs *attrs)
-+		     dma_addr_t addr, unsigned long attrs)
- {
- 	return vmd_dma_ops(dev)->free(to_vmd_dev(dev), size, vaddr, addr,
- 				      attrs);
-@@ -280,7 +280,7 @@ static void vmd_free(struct device *dev, size_t size, void *vaddr,
- 
- static int vmd_mmap(struct device *dev, struct vm_area_struct *vma,
- 		    void *cpu_addr, dma_addr_t addr, size_t size,
--		    struct dma_attrs *attrs)
-+		    unsigned long attrs)
- {
- 	return vmd_dma_ops(dev)->mmap(to_vmd_dev(dev), vma, cpu_addr, addr,
- 				      size, attrs);
-@@ -288,7 +288,7 @@ static int vmd_mmap(struct device *dev, struct vm_area_struct *vma,
- 
- static int vmd_get_sgtable(struct device *dev, struct sg_table *sgt,
- 			   void *cpu_addr, dma_addr_t addr, size_t size,
--			   struct dma_attrs *attrs)
-+			   unsigned long attrs)
- {
- 	return vmd_dma_ops(dev)->get_sgtable(to_vmd_dev(dev), sgt, cpu_addr,
- 					     addr, size, attrs);
-@@ -297,26 +297,26 @@ static int vmd_get_sgtable(struct device *dev, struct sg_table *sgt,
- static dma_addr_t vmd_map_page(struct device *dev, struct page *page,
- 			       unsigned long offset, size_t size,
- 			       enum dma_data_direction dir,
--			       struct dma_attrs *attrs)
-+			       unsigned long attrs)
- {
- 	return vmd_dma_ops(dev)->map_page(to_vmd_dev(dev), page, offset, size,
- 					  dir, attrs);
- }
- 
- static void vmd_unmap_page(struct device *dev, dma_addr_t addr, size_t size,
--			   enum dma_data_direction dir, struct dma_attrs *attrs)
-+			   enum dma_data_direction dir, unsigned long attrs)
- {
- 	vmd_dma_ops(dev)->unmap_page(to_vmd_dev(dev), addr, size, dir, attrs);
- }
- 
- static int vmd_map_sg(struct device *dev, struct scatterlist *sg, int nents,
--		      enum dma_data_direction dir, struct dma_attrs *attrs)
-+		      enum dma_data_direction dir, unsigned long attrs)
- {
- 	return vmd_dma_ops(dev)->map_sg(to_vmd_dev(dev), sg, nents, dir, attrs);
- }
- 
- static void vmd_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
--			 enum dma_data_direction dir, struct dma_attrs *attrs)
-+			 enum dma_data_direction dir, unsigned long attrs)
- {
- 	vmd_dma_ops(dev)->unmap_sg(to_vmd_dev(dev), sg, nents, dir, attrs);
- }
--- 
-1.9.1
+It is possible to list PCIe devices on the bus here as child
+nodes. I've done this when i needed a phandle to an intel ethernet
+controller on the PCIe bus, which i know is soldered onto the board.
+
+I think your current implementation simply uses the first child
+node. It would be good to document that ordering is important. It must
+be the first child node, and any pcie devices children must come
+afterwards.
+
+      Andrew
