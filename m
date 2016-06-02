@@ -1,99 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:22849 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978AbcFVI33 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jun 2016 04:29:29 -0400
-From: "dongbo (E)" <dongbo4@huawei.com>
-To: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linuxarm <linuxarm@huawei.com>,
-	Zhanweitao <zhanweitao@hisilicon.com>
-Subject: [PATCH] Decouple CFG and IO in Designware PCIe Driver
-Date: Wed, 22 Jun 2016 08:24:51 +0000
-Message-ID: <BEF013ED77979042B16A827A9AC75AF820FA4C5E@SZXEMI502-MBS.china.huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from down.free-electrons.com ([37.187.137.238]:42152 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750978AbcFBJKE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 05:10:04 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Marcin Wojtas <mw@semihalf.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 0/3] PCIe controller driver for Marvell Armada 3700
+Date: Thu,  2 Jun 2016 11:09:42 +0200
+Message-Id: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dong Bo <dongbo4@huawei.com>
+Hello,
 
-In designware PCIe driver, the iatu0 is used for both CFG and IO accesses.
-When PCIe sends CFGs to peripherals (e.g. lspci),
-iatu0 frequently switches between CFG and IO alternatively.
+This small patch series adds a new driver for the PCIe controller
+found on Marvell Armada 3700 ARM64 SoCs. Like any other new driver
+submission, this patch series includes: a Device Tree binding
+documentation patch, a patch adding the driver itself, and a patch
+adding the Device Tree description of the hardware.
 
-If the LIMIT of MEMORY is a value between CFGs BASE_ADDR and IOs LIMIT, 
-this probably results in a MEMORY beging matched to be an IO by mistake.
+Thanks in advance for your reviews!
 
-Considering the following configurations:
-MEMORY          ->      BASE_ADDR: 0xb4100000, LIMIT: 0xb4100FFF, TYPE=mem
-CFG             ->      BASE_ADDR: 0xb4000000, LIMIT: 0xb4000FFF, TYPE=cfg
-IO              ->      BASE_ADDR: 0xFFFFFFFF, LIMIT: 0xFFFFFFFE, TYPE=io
-Suppose PCIe has just completed a CFG access, to switch back to IO, it set the BASE_ADDR to 0xFFFFFFFF, LIMIT 0xFFFFFFFE and TYPE to io.
-When another CFG access come,
-PCIe first set BASE_ADDR to 0xb4000000 to switch to CFG.
-At this moment, a MEMORY access shows up, due to `0xb4000000 <= MEMORY BASE_ADDR <= MEMORY LIMIE <= 0xFFFFFFF, it matches with iatu0.
-And it is treated as an IO access by mistake, then sent to perpheral.
+Thomas
 
-This patch fixes the problem by decoupling CFG and IO, reassigning iatu2 to IO.
+Thomas Petazzoni (3):
+  dt-bindings: add DT binding for the Aardvark PCIe controller
+  PCI: host: new PCI host controller driver for Marvell Armada 3700
+  arm64: dts: marvell: PCIe support for Armada 3700
 
-Signed-off-by: Dong Bo <dongbo4@huawei.com>
----
- drivers/pci/host/pcie-designware.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ .../devicetree/bindings/pci/aardvark-pci.txt       |   51 +
+ MAINTAINERS                                        |    7 +
+ arch/arm64/boot/dts/marvell/armada-3720-db.dts     |    5 +
+ arch/arm64/boot/dts/marvell/armada-37xx.dtsi       |   23 +
+ drivers/pci/host/Kconfig                           |    9 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-aardvark.c                    | 1029 ++++++++++++++++++++
+ 7 files changed, 1125 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/aardvark-pci.txt
+ create mode 100644 drivers/pci/host/pci-aardvark.c
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index aafd766..1a40305 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -51,6 +51,7 @@
- #define PCIE_ATU_VIEWPORT		0x900
- #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
- #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-+#define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
- #define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
- #define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
- #define PCIE_ATU_CR1			0x904
-@@ -603,9 +604,6 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
--	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--				  PCIE_ATU_TYPE_IO, pp->io_base,
--				  pp->io_bus_addr, pp->io_size);
- 
- 	return ret;
- }
-@@ -640,9 +638,6 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
--	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
--				  PCIE_ATU_TYPE_IO, pp->io_base,
--				  pp->io_bus_addr, pp->io_size);
- 
- 	return ret;
- }
-@@ -778,10 +773,15 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	 * uses its own address translation component rather than ATU, so
- 	 * we should not program the ATU here.
- 	 */
--	if (!pp->ops->rd_other_conf)
-+	if (!pp->ops->rd_other_conf) {
- 		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
- 					  pp->mem_bus_addr, pp->mem_size);
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX2,
-+					PCIE_ATU_TYPE_IO, pp->io_base,
-+					pp->io_bus_addr, pp->io_size);
-+
-+	}
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
---
-1.9.1
+-- 
+2.7.4
 
