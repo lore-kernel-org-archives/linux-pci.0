@@ -1,66 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33226 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161222AbcFMVOR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jun 2016 17:14:17 -0400
-Date: Mon, 13 Jun 2016 16:14:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
-Message-ID: <20160613211411.GC18747@localhost>
-References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme@lists.infradead.org
+Subject: [PATCH v2 2/6] NVMe: Use pci_(request|release)_mem_regions
+Date: Thu,  2 Jun 2016 09:30:30 +0200
+Message-Id: <9cdb60ecb1d5124311a05c6b75d16f48526593f0.1464795082.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 17, 2016 at 03:39:58PM -0600, Keith Busch wrote:
-> Every sriov capable driver has to check if any guest is using a virtual
-> function prior to disabling, so let's make it common code.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+hand, use it in the NVMe driver.
 
-If I understand the discussion correctly, this is still racy but
-nobody objects to adding this until we have a better, non-racy
-solution.
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: linux-nvme@lists.infradead.org
+---
+ drivers/nvme/host/pci.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-However, you added this in common code and took advantage of it in
-nvme.  Good so far.  But we have about a dozen other drivers that call
-pci_vfs_assigned().  I assume some of those places could be changed so
-they take advantage of this check in the core instead?
-
-Can we do that at the same time?  If we add good new stuff and only
-use it one place, there's not as much overall goodness as there would
-be if we updated everybody to do it similarly.
-
-> ---
->  drivers/pci/pci-sysfs.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 342b691..5011fa9 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -487,6 +487,11 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  
->  	if (num_vfs == 0) {
->  		/* disable VFs */
-> +		if (pci_vfs_assigned(pdev)) {
-> +			dev_warn(&pdev->dev,
-> +				"Cannot disable SR-IOV VFs while assigned\n");
-> +			return -EPERM;
-> +		}
->  		ret = pdev->driver->sriov_configure(pdev, 0);
->  		if (ret < 0)
->  			return ret;
-> -- 
-> 2.7.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 4fd733f..e7d17ae 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1756,7 +1756,7 @@ static void nvme_dev_unmap(struct nvme_dev *dev)
+ {
+ 	if (dev->bar)
+ 		iounmap(dev->bar);
+-	pci_release_regions(to_pci_dev(dev->dev));
++	pci_release_mem_regions(to_pci_dev(dev->dev));
+ }
+ 
+ static void nvme_pci_disable(struct nvme_dev *dev)
+@@ -1979,13 +1979,9 @@ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
+ 
+ static int nvme_dev_map(struct nvme_dev *dev)
+ {
+-	int bars;
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+ 
+-	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+-	if (!bars)
+-		return -ENODEV;
+-	if (pci_request_selected_regions(pdev, bars, "nvme"))
++	if (pci_request_mem_regions(pdev, "nvme"))
+ 		return -ENODEV;
+ 
+ 	dev->bar = ioremap(pci_resource_start(pdev, 0), 8192);
+@@ -1994,7 +1990,7 @@ static int nvme_dev_map(struct nvme_dev *dev)
+ 
+        return 0;
+   release:
+-       pci_release_regions(pdev);
++       pci_release_mem_regions(pdev);
+        return -ENODEV;
+ }
+ 
+-- 
+1.8.5.6
