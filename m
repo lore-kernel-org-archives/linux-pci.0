@@ -1,92 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH v2 05/15] drivers: acpi: iort: add support for named component look-up
-Date: Tue,  7 Jun 2016 14:31:00 +0100
-Message-Id: <1465306270-27076-6-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.mailbox.org ([80.241.60.215]:44441 "EHLO mx2.mailbox.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751293AbcFBMxB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jun 2016 08:53:01 -0400
+From: Stefan Roese <sr@denx.de>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	Jisheng Zhang <jszhang@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: mvebu: Don't try to add an MBus window that already exists
+Date: Thu,  2 Jun 2016 14:52:47 +0200
+Message-Id: <20160602125247.17566-1-sr@denx.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ACPI IORT table allows ids translations for PCI devices (through
-their respective root complex) and name components (ie components
-identified through their ACPI namespace path).
+Add a check to mvebu_pcie_add_windows() to detect, if an MBus window is
+already configured. If this is the case (base address, size, target and
+attribute are identical), then this window is not created. This fixes
+a problem I'm currently seeing on a custom Armada XP based board, which
+generates this error upon PCI rescanning (in this case via sysfs):
 
-Current IORT code only allows look-up and retrieval of IORT nodes
-corresponding to PCI root complexes components; this patch fills
-the gap by adding support for named components IORT node look-ups.
+$ echo 1 > /sys/bus/pci/rescan
+mvebu_mbus: cannot add window '4:e8', conflicts with another window
+mvebu-pcie soc:pcie-controller: Could not create MBus window at [mem 0x9e000000-0x9e0fffff]: -22
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Signed-off-by: Stefan Roese <sr@denx.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: Jisheng Zhang <jszhang@marvell.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/iort.c | 30 +++++++++++++++++++++++++++---
- 1 file changed, 27 insertions(+), 3 deletions(-)
+ drivers/pci/host/pci-mvebu.c | 35 ++++++++++++++++++++++++-----------
+ 1 file changed, 24 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 7cc9880..cfdde71 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -215,12 +215,35 @@ iort_scan_node(enum acpi_iort_node_type type,
- static acpi_status
- iort_find_dev_callback(struct acpi_iort_node *node, void *context)
- {
--	struct acpi_iort_root_complex *pci_rc;
- 	struct device *dev = context;
--	struct pci_bus *bus;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 6b451df..a85b2b4 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -355,18 +355,31 @@ static void mvebu_pcie_add_windows(struct mvebu_pcie_port *port,
+ 	while (size) {
+ 		size_t sz = 1 << (fls(size) - 1);
+ 		int ret;
++		u32 wsize;
++		u8 wtarget, wattr;
  
- 	switch (node->type) {
--	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX:
-+	case ACPI_IORT_NODE_NAMED_COMPONENT: {
-+		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+		struct acpi_iort_named_component *ncomp;
-+		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
+-		ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
+-							sz, remap);
+-		if (ret) {
+-			phys_addr_t end = base + sz - 1;
+-
+-			dev_err(&port->pcie->pdev->dev,
+-				"Could not create MBus window at [mem %pa-%pa]: %d\n",
+-				&base, &end, ret);
+-			mvebu_pcie_del_windows(port, base - size_mapped,
+-					       size_mapped);
+-			return;
++		/*
++		 * Only add this MBus window when it does not yet exist.
++		 * Otherwise an error may occur upon PCI rescanning (e.g.
++		 * via sysfs).
++		 */
++		ret = mvebu_mbus_get_io_win_info(base, &wsize, &wtarget,
++						 &wattr);
++		if (ret < 0 || wsize != sz || wtarget != target ||
++		    wattr != attribute) {
++			ret = mvebu_mbus_add_window_remap_by_id(target,
++								attribute, base,
++								sz, remap);
++			if (ret) {
++				phys_addr_t end = base + sz - 1;
 +
-+		if (!adev)
-+			break;
-+
-+		ncomp = (struct acpi_iort_named_component *)node->node_data;
-+
-+		if (ACPI_FAILURE(acpi_get_name(adev->handle,
-+					       ACPI_FULL_PATHNAME, &buffer))) {
-+			pr_warn("Can't get device full path name\n");
-+			break;
-+		}
-+
-+		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
-+			return AE_OK;
-+
-+		break;
-+	}
-+
-+	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
-+		struct acpi_iort_root_complex *pci_rc;
-+		struct pci_bus *bus;
-+
- 		bus = to_pci_bus(dev);
- 		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
++				dev_err(&port->pcie->pdev->dev,
++					"Could not create MBus window at [mem %pa-%pa]: %d\n",
++					&base, &end, ret);
++				mvebu_pcie_del_windows(port, base - size_mapped,
++						       size_mapped);
++				return;
++			}
+ 		}
  
-@@ -234,6 +257,7 @@ iort_find_dev_callback(struct acpi_iort_node *node, void *context)
- 
- 		break;
- 	}
-+	}
- 
- 	return AE_NOT_FOUND;
- }
+ 		size -= sz;
 -- 
-2.6.4
+2.8.3
 
