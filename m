@@ -1,75 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:16345 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753383AbcFHU46 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jun 2016 16:56:58 -0400
-Date: Wed, 8 Jun 2016 14:56:56 -0600
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: "Busch, Keith" <keith.busch@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCHv2] x86/vmd: Initialize list item in irq disable
-Message-ID: <20160608205656.GA3568@localhost.localdomain>
-References: <1463505738-30666-1-git-send-email-keith.busch@intel.com>
- <20160517185101.GA1975@localhost.localdomain>
- <8D943B239464E04C9184454D8B3F5CFF0AD53672@ORSMSX101.amr.corp.intel.com>
+Received: from down.free-electrons.com ([37.187.137.238]:47699 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752116AbcFBMpp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 08:45:45 -0400
+Date: Thu, 2 Jun 2016 14:45:42 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>,
+	Lior Amsalem <alior@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	Hanna Hawa <hannah@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marcin Wojtas <mw@semihalf.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 1/3] dt-bindings: add DT binding for the Aardvark PCIe
+ controller
+Message-ID: <20160602144542.6bc1b421@free-electrons.com>
+In-Reply-To: <8313817.cgODJZVrao@wuerfel>
+References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1464858585-10963-2-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20160602122405.GG17343@lunn.ch>
+	<8313817.cgODJZVrao@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8D943B239464E04C9184454D8B3F5CFF0AD53672@ORSMSX101.amr.corp.intel.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hello,
 
-Let me know if there's anything else needing to be done to get this set in.
+On Thu, 02 Jun 2016 14:34:14 +0200, Arnd Bergmann wrote:
 
-Thanks,
-Jon
+> I think some other PCI hosts just move the interrupt-controller
+> and #interrupt-cells properties into the PCI host node itself,
+> which avoids the ambiguity here.
 
-On Wed, Jun 01, 2016 at 03:10:30PM -0600, Derrick, Jonathan wrote:
-> Hi Bjorn,
-> 
-> Any plans to get this set in?
-> 
-> Thanks,
-> J
-> 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Jon Derrick
-> Sent: Tuesday, May 17, 2016 12:51 PM
-> To: Busch, Keith <keith.busch@intel.com>
-> Cc: linux-pci@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>
-> Subject: Re: [PATCHv2] x86/vmd: Initialize list item in irq disable
-> 
-> Acked-by Jon Derrick: <jonathan.derrick@intel.com>
-> 
-> On Tue, May 17, 2016 at 11:22:18AM -0600, Keith Busch wrote:
-> > Multiple calls to disable an IRQ would have caused the driver to 
-> > dereference a poisoned list item. This re-initializes the list to 
-> > allow multiple requests to disable the irq.
-> > 
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> > ---
-> > v1 -> v2:
-> >   Used the patch with the correct macro
-> > 
-> >  arch/x86/pci/vmd.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> > 
-> > diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c index 
-> > b1662bf..3519a15 100644
-> > --- a/arch/x86/pci/vmd.c
-> > +++ b/arch/x86/pci/vmd.c
-> > @@ -135,6 +135,7 @@ static void vmd_irq_disable(struct irq_data *data)
-> >  
-> >  	raw_spin_lock(&list_lock);
-> >  	list_del_rcu(&vmdirq->node);
-> > +	INIT_LIST_HEAD_RCU(&vmdirq->node);
-> >  	raw_spin_unlock(&list_lock);
-> >  }
-> >  
-> > --
-> > 2.7.2
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Do you have an example of this? I have modeled my DT binding after the
+one used by the pci-dra7xx driver, which is in the same situation as I
+am in terms of interrupt handling.
+
+But I can indeed try to make the top-level PCIe controller node the
+interrupt controller. Let me try that quickly.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
