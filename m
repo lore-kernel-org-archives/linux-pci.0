@@ -1,84 +1,61 @@
-Return-Path: <yu.c.chen@intel.com>
-Return-Path: <yu.c.chen@intel.com>
-Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
- <20160530213305.GA21322@localhost> <574D03F9.6050201@intel.com>
- <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
- <574D3AAA.6090503@intel.com> <20160531131658.GA23837@localhost>
-Cc: Yinghai Lu <yinghai@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- linux-arch <linux-arch@vger.kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>
-From: Chen Yu <yu.c.chen@intel.com>
-Message-ID: <57579F9F.6010200@intel.com>
-Date: Wed, 8 Jun 2016 12:31:27 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55619 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701AbcFBTd4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 15:33:56 -0400
+From: Mitchel Humpherys <mitchelh@codeaurora.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	"Will Deacon" <will.deacon@arm.com>,
+	"Robin Murphy" <robin.murphy@arm.com>,
+	Tony Truong <truong@codeaurora.org>,
+	Yan He <yanhe@codeaurora.org>,
+	Pratik Patel <pratikp@codeaurora.org>,
+	"Hamad Kadmany" <hkadmany@codeaurora.org>,
+	"Maya Erez" <qca_merez@qca.qualcomm.com>
+Subject: Re: How to keep PCI-e endpoints and RCs in distinct IOMMU groups?
+References: <vnkwoa7ty89k.fsf@codeaurora.org>
+	<20160525204558.08c30a34@ul30vt.home>
+Date: Thu, 02 Jun 2016 12:33:22 -0700
+In-Reply-To: <20160525204558.08c30a34@ul30vt.home> (Alex Williamson's message
+	of "Wed, 25 May 2016 20:45:58 -0600")
+Message-ID: <vnkwa8j3fksd.fsf@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20160531131658.GA23837@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 2016年05月31日 21:16, Bjorn Helgaas wrote:
-> On Tue, May 31, 2016 at 03:18:02PM +0800, Chen Yu wrote:
->> On 2016年05月31日 15:00, Yinghai Lu wrote:
->>> On Mon, May 30, 2016 at 8:24 PM, Chen Yu <yu.c.chen@intel.com> wrote:
->>>
->>>> and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
->>>> resource window and then update related base/limit registers:
->>>>
->>>> [    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to [bus
->>>> 02] add_size 1000
->>>> [    0.865343] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff
->>>> 64bit pref] to [bus 02] add_size 200000 add_align 100000
->>>> [    0.865344] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff]
->>>> to [bus 02] add_size 200000 add_align 100000
->>>>
->>> That is for hotplug bridge, then we could use following instead.
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index ee72ebe..d3ec833 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -2775,6 +2775,13 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
->>>
->>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
->>>
->>> +static void quirk_hotplug_bridge_skip(struct pci_dev *dev)
->>> +{
->>> +       dev->is_hotplug_bridge = 0;
->>> +}
->>> +
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10,
->>> quirk_hotplug_bridge_skip);
->>> +
->>>   /*
->>>    * This is a quirk for the Ricoh MMC controller found as a part of
->>>    * some mulifunction chips.
->> Good idea, but in this way we might not have io window allocated for
->> it?I'm not sure
->> if this would break wifi,etc, I'll suggest reporters to have a try.
-> Let's figure out the root cause before trying more random fixes.  I
-> have the same objection to the patch above.  No doubt there are many
-> ways we could "fix" this, but unless we know the root cause, we're
-> likely to make a change that's not a complete fix or will cause other
-> issues in the future.
+On Wed, May 25 2016 at 08:45:58 PM, Alex Williamson <alex.williamson@redhat.com> wrote:
+>> Why do we do that?  If the devices have different BDFs can't we safely
+>> say that they're protected from peer-to-peer DMA (assuming no DMA
+>> aliasing quirks)?  Even as I write that out it seems wrong though since
+>> the RC can probably do whatever it wants...
+>> 
+>> Maybe the IOMMU framework can't actually know whether the devices should
+>> be kept in separate groups and we just need to do something custom in
+>> the arm-smmu driver?
 >
-I just let the reporter  paste their lspci in Mac OS, it looks that Mac 
-OS also
-does not allocate any resource for this broken pci bridge, and other pci
-devices have almost the same resource region as it is in linux, so I think
-this is an evidence that Apple does not want to use this firmware for now,
-maybe reserved for future use, declaim resource for this pci bridge might
-cause unpredictable result, how about adding a dmi+pci quirk for this
-special platform?
+> You're only considering the visibility of devices to the IOMMU, not the
+> isolation between devices.  Without ACS peer-to-peer can be re-routed
+> between devices before the IOMMU even knows about it.  That's why the
+> root port is included in the group.  I'm confused why your driver is
+> using the IOMMU API instead of the much more common DMA API anyway
+> though.  Thanks,
+>
+> Alex
 
-lspci result from Mac OS, there's no resource behind this bridge:
-https://bugzilla.kernel.org/attachment.cgi?id=219321
+Ah ok, thanks for the explanation!
+
+The driver *is* using the DMA API.  I'm actually working on the DMA APIs
+themselves (a hacked-up version of the arm32 DMA APIs that have been
+forklifted into arm64, to be exact).  Anyways, it looks like the best
+route for us long-term is to try and align with Robin's arm64 IOMMU DMA
+API mapper and take it from there.
 
 
-thanks,
-Yu
+-Mitch
+
+-- 
+Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
