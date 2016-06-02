@@ -1,79 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: Shawn Guo <shawnguo@kernel.org>
-Subject: RE: [PATCH v3 1/2] nxp/dts: add pcie aer interrupt-name property in
- the dts
-Date: Thu, 16 Jun 2016 10:50:23 +0000
-Message-ID: <VI1PR0401MB1709B98EC43F035158CF022E92560@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-1-git-send-email-po.liu@nxp.com>
- <20160616003627.GJ20243@tiger>
-In-Reply-To: <20160616003627.GJ20243@tiger>
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: helgaas@kernel.org, will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org, jchandra@broadcom.com, robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com, msalter@redhat.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
+Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors against platfrom specific ECAM quirks.
+Date: Thu, 02 Jun 2016 13:42:43 +0200
+Message-ID: <4347711.qDrKz2s8lr@wuerfel>
+In-Reply-To: <1464856864-18049-2-git-send-email-tn@semihalf.com>
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com> <1464856864-18049-2-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Marc Zyngier <marc.zyngier@arm.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>, Bjorn
- Helgaas <bhelgaas@google.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+On Thursday, June 2, 2016 10:41:01 AM CEST Tomasz Nowicki wrote:
+> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+> +{
+> +       int bus_num = root->secondary.start;
+> +       int domain = root->segment;
+> +       struct pci_cfg_fixup *f;
+> +
+> +       if (!mcfg_table)
+> +               return &pci_generic_ecam_ops;
+> +
+> +       /*
+> +        * Match against platform specific quirks and return corresponding
+> +        * CAM ops.
+> +        *
+> +        * First match against PCI topology <domain:bus> then use OEM ID and
+> +        * OEM revision from MCFG table standard header.
+> +        */
+> +       for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
+> +               if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
+> +                   (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
+> +                   (!strncmp(f->oem_id, mcfg_table->header.oem_id,
+> +                             ACPI_OEM_ID_SIZE)) &&
+> +                   (f->oem_revision == mcfg_table->header.oem_revision))
+> +                       return f->ops;
+> +       }
+> +       /* No quirks, use ECAM */
+> +       return &pci_generic_ecam_ops;
+> +}
+> +
+>  int pci_mcfg_lookup(struct acpi_pci_root *root)
 
->  -----Original Message-----
->  From: Shawn Guo [mailto:shawnguo@kernel.org]
->  Sent: Thursday, June 16, 2016 8:36 AM
->  To: Po Liu
->  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Roy Zang; Arnd
->  Bergmann; Marc Zyngier; Stuart Yoder; Yang-Leo Li; Minghuan Lian; Murali
->  Karicheri; Bjorn Helgaas; Mingkai Hu
->  Subject: Re: [PATCH v3 1/2] nxp/dts: add pcie aer interrupt-name
->  property in the dts
->  
->  On Tue, Jun 14, 2016 at 04:24:04PM +0800, Po Liu wrote:
->  > NXP some platforms aer interrupt was not MSI/MSI-X/INTx but using
->  > interrupt line independently. This patch add a "aer"
->  > interrupt-names for aer interrupt.
->  >
->  > Signed-off-by: Po Liu <po.liu@nxp.com>
->  > ---
->  > changes for v3:
->  > 	- None;
->  >
->  >  .../devicetree/bindings/pci/layerscape-pci.txt         |  4 ++--
->  
->  The bindings shouldn't be part of dts patch but the driver patch who is
->  actually using it.
->  
->  Shawn
+Can you explain the use of pci_ecam_ops instead of pci_ops here?
 
-Ok, I'll move the doc part to the driver patch.
+I was hoping we'd be able to fold all of pci-ecam code into the
+generic PCI layer at some point and get rid of pci_ecam_ops in the
+process.
 
-Po Liu
->From NXP
->  
->  >  arch/arm/boot/dts/ls1021a.dtsi                         |  6 ++++--
->  >  arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi         | 18
->  +++++++++---------
->  >  arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi         | 16 ++++++++-
->  -------
->  >  4 files changed, 23 insertions(+), 21 deletions(-)
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	Arnd
