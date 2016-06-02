@@ -1,63 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:64796 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbcF3PoC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 11:44:02 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
-Date: Thu, 30 Jun 2016 17:37:35 +0200
-Message-ID: <5307392.exoejlJp9x@wuerfel>
-In-Reply-To: <20160630151931.29216-1-thierry.reding@gmail.com>
-References: <20160630151931.29216-1-thierry.reding@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from e36.co.us.ibm.com ([32.97.110.154]:57592 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbcFBGOd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 02:14:33 -0400
+Received: from localhost
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 2 Jun 2016 00:14:33 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [RESEND PATCH v2 1/6] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+Date: Thu,  2 Jun 2016 14:09:58 +0800
+Message-Id: <1464847803-22756-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 30, 2016 5:19:30 PM CEST Thierry Reding wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> This patch makes the existing pci_host_bridge structure a proper device
-> that is usable by PCI host drivers in a more standard way. In addition
-> to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
-> and pci_create_root_bus interfaces, this unfortunately means having to
-> add yet another interface doing basically the same thing, and add some
-> extra code in the initial step.
+We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
+which indicates interrupts of all devices on the bus are
+managed by the hardware enabling IRQ remapping(intel naming).
+When the capability is enabled, a given PCI device can only
+shoot the MSIs assigned for it. In other words, the hardware
+can protect system from invalid MSIs of the device by checking
+the target address and data when there is something wrong
+with MSI part in device or device driver.
 
-Thanks a lot for following up on my patches and getting them to work!
+There is a existing flag for this capability in the IOMMU space:
 
-> As mentioned in a previous email, one open question is whether we want
-> to export a function for allocating a pci_host_bridge device in
-> combination with the per-device structure or let the driver itself
-> call kzalloc.
-> 
-> Changes in v2 (Thierry Reding):
-> - add a pci_host_bridge_init() helper that drivers can use to perform
->   all the necessary steps to initialize the bridge
+enum iommu_cap {
+	IOMMU_CAP_CACHE_COHERENCY,
+--->	IOMMU_CAP_INTR_REMAP,
+	IOMMU_CAP_NOEXEC,
+};
 
-For these two points, the addition of pci_host_bridge_init() to me
-tips the balance in favour of having a separate allocation function
-that also does the initialization, something like
+and Eric also posted a patchset [1] to abstract it on MSI
+controller side for ARM. But it would make sense to have a
+more common flag like PCI_BUS_FLAGS_MSI_REMAP so that we can
+use a universal flag to test this capability on PCI side for
+different archs.
 
-struct struct pci_host_bridge *pci_host_bridge_alloc(size_t priv)
-{
-	struct pci_host_bridge *bridge;
+With this flag enabled, we can easily know whether it's safe
+to expose MSI-X tables of PCI BARs to userspace. Some usespace
+drivers such as VFIO may benefit from this.
 
-	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
-	if (!bridge)
-		return NULL;
+[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
 
-	INIT_LIST_HEAD(&bridge->windows);
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ include/linux/pci.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-	if (priv)
-		bridge->private = &bridge[1];
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 932ec74..4ec37da 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -187,6 +187,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
+ enum pci_bus_flags {
+ 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+ 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
++	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 4,
+ };
+ 
+ /* These values come from the PCI Express Spec */
+-- 
+1.7.9.5
 
-	return bridge;
-}
-
-	Arnd
