@@ -1,102 +1,91 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V8 7/9] acpi: Add generic MCFG table handling
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-8-git-send-email-tn@semihalf.com>
- <20160608015631.GE4759@localhost> <57580DCA.7000703@semihalf.com>
- <20160608131709.GB16764@localhost>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
- rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
- okaya@codeaurora.org, jchandra@broadcom.com,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com,
- Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
- cov@codeaurora.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <57582133.8060402@semihalf.com>
-Date: Wed, 8 Jun 2016 15:44:19 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:32784 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473AbcFBM07 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 08:26:59 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160608131709.GB16764@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1464855435-32960-4-git-send-email-mika.westerberg@linux.intel.com>
+References: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
+	<1464855435-32960-4-git-send-email-mika.westerberg@linux.intel.com>
+Date: Thu, 2 Jun 2016 14:26:57 +0200
+Message-ID: <CAJZ5v0g95d1RFdzKYFhwrYeYC8X5VB-xzr=dpcnkVmY2YcJZ4A@mail.gmail.com>
+Subject: Re: [PATCH v6 3/5] PCI: Power on bridges before scanning new devices
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Peter Wu <peter@lekensteyn.nl>,
+	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08.06.2016 15:17, Bjorn Helgaas wrote:
-> On Wed, Jun 08, 2016 at 02:21:30PM +0200, Tomasz Nowicki wrote:
->> On 08.06.2016 03:56, Bjorn Helgaas wrote:
->>> On Mon, May 30, 2016 at 05:14:20PM +0200, Tomasz Nowicki wrote:
->>>> In order to handle PCI config space regions properly in ACPI, new MCFG
->>>> interface is defined which does sanity checks on MCFG table and keeps its
->>>> root pointer. The user is able to lookup MCFG regions based on
->>>> host bridge root structure and domain:bus_start:bus_end touple.
->>>> Use pci_mmcfg_late_init old prototype to avoid another function name.
+On Thu, Jun 2, 2016 at 10:17 AM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> When a PCI device is removed through sysfs interface the upstream bridge
+> (PCIe port) can be runtime suspended if it was the last device on that bus.
+> Now, if the bridge is in D3 we cannot find devices below the bridge
+> anymore.  For example following fails to find the removed device again:
 >
->>>> +	/* found matching entry, bus range check */
->>>> +	if (entry->end_bus_number != bus_res->end) {
->>>> +		resource_size_t bus_end = min_t(resource_size_t,
->>>> +					entry->end_bus_number, bus_res->end);
->>>> +		pr_warn("%04x:%pR bus end mismatch, using %02lx\n",
->>>> +			root->segment, bus_res, (unsigned long)bus_end);
->>>> +		bus_res->end = bus_end;
->>>> +	}
->>
->> What about bus end mismatch case? Should we trim the host bridge bus
->> range or expect MCFG entry covers that range? Sometimes we get
->> _BBN-0xFF bus range, not from _CRS.
+>   # echo 1 > /sys/bus/pci/devices/0000:00:01.0/0000:01:00.0/remove
+>   # echo 1 > /sys/bus/pci/devices/0000:00:01.0/rescan
 >
-> Lack of a bus range in _CRS is a firmware defect.  There's a comment
-> about this in acpi_pci_root_add().  On x86, we probably had to live
-> with firmware in the field that had this defect.  I think we should
-> expect all ARM64 systems to provide a bus number range in _CRS, and
-> fail the attach if it's not there.
+> Where 0000:00:01.0 is the bridge device.
 >
-> I don't think we should warn about an MCFG entry that covers more than
-> the _CRS bus range.  On x86, it's common to have something like:
+> In order to be able to rescan devices below the bridge add
+> pm_runtime_get_sync()/pm_runtime_put() calls to pci_scan_bridge().  This
+> should keep bridges powered on while their children devices are being
+> scanned.
 >
->    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7f])
->    ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-ff])
->
-> with a single MCFG entry that covers [bus 00-ff].  That seems
-> reasonable and I don't think it's worth warning about it.
->
-> If the MCFG entry doesn't cover all of a _CRS bus range, we should
-> just fail so we can find and fix broken firmware.
+> Reported-by: Peter Wu <peter@lekensteyn.nl>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Make sense to me.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+> ---
+>  drivers/pci/probe.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 >
->>>> +/* Interface called by ACPI - parse and save MCFG table */
->>>
->>> I think we save a *pointer* to the MCFG table, not the table itself.
->>
->> Right, the comment is broken.
->>
->>> And acpi_table_parse() calls early_acpi_os_unmap_memory() immediately
->>> after it calls pci_mcfg_parse(), so I'm doubtful that the pointer
->>> remains valid.
->>
->> At this stage early_acpi_os_unmap_memory() is doing nothing since
->> acpi_early_init() set acpi_gbl_permanent_mmap to 1 way before. The
->> pointer is fine then.
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8e3ef720997d..11a802daf242 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/aer.h>
+>  #include <linux/acpi.h>
+>  #include <linux/irqdomain.h>
+> +#include <linux/pm_runtime.h>
+>  #include "pci.h"
 >
-> Hmmm...  I see your argument, but this is a problem waiting to happen.
-> We should not depend on the internal implementation of
-> early_acpi_os_unmap_memory().  The pattern of:
+>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
+> @@ -832,6 +833,12 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>         u8 primary, secondary, subordinate;
+>         int broken = 0;
 >
->    y = x;
->    unmap(x);
->    z = *y;
+> +       /*
+> +        * Make sure the bridge is powered on to be able to access config
+> +        * space of devices below it.
+> +        */
+> +       pm_runtime_get_sync(&dev->dev);
+> +
+>         pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
+>         primary = buses & 0xFF;
+>         secondary = (buses >> 8) & 0xFF;
+> @@ -1012,6 +1019,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>  out:
+>         pci_write_config_word(dev, PCI_BRIDGE_CONTROL, bctl);
 >
-> is just broken and we shouldn't expect readers to recognize that "oh,
-> unmap() isn't really unmapping anything in this special case, so this
-> looks wrong but is really fine."
->
-
-Right, so we are back to MCFG cache.
-
-Thanks,
-Tomasz
+> +       pm_runtime_put(&dev->dev);
+> +
+>         return max;
+>  }
+>  EXPORT_SYMBOL(pci_scan_bridge);
+> --
