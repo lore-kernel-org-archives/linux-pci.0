@@ -1,158 +1,168 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V7 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
-To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
-	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
-	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com
-References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
- <1466420541-20101-7-git-send-email-tn@semihalf.com>
-Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <bebbe715-19df-be34-40d9-6845f38b9c2f@linaro.org>
-Date: Tue, 21 Jun 2016 16:03:54 +0800
-MIME-Version: 1.0
-In-Reply-To: <1466420541-20101-7-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:15286 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751963AbcFBIR0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jun 2016 04:17:26 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Peter Wu <peter@lekensteyn.nl>,
+	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v6 0/5] PCI: Add support for suspending (including runtime) of PCIe ports
+Date: Thu,  2 Jun 2016 11:17:10 +0300
+Message-Id: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/6/20 19:02, Tomasz Nowicki wrote:
-> ITS is prepared for being initialized different than DT,
-> therefore we can initialize it in ACPI way. We collect register base
-> address from MADT table and pass mandatory info to firmware-agnostic
-> ITS init call.
->
-> Use here IORT lib to register ITS domain which then can be found and
-> used on to build another PCI MSI domain in hierarchical stack domain.
->
-> NOTE: Waiting for proper ITS and NUMA node relation description in IORT
-> table, we pass around NUMA_NO_NODE to the its_probe_one init call.
-> This means that Cavium ThunderX erratum 23144 (pass1.1 only)
-> is not supported for ACPI boot method yet.
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/irqchip/Kconfig          |  1 +
->  drivers/irqchip/irq-gic-v3-its.c | 59 +++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 59 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-> index 5495a5b..fd4b8b8 100644
-> --- a/drivers/irqchip/Kconfig
-> +++ b/drivers/irqchip/Kconfig
-> @@ -38,6 +38,7 @@ config ARM_GIC_V3
->  config ARM_GIC_V3_ITS
->  	bool
->  	select PCI_MSI_IRQ_DOMAIN
-> +	select IORT_TABLE if ACPI
->
->  config ARM_NVIC
->  	bool
-> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-> index 1e0888d..c5c8616 100644
-> --- a/drivers/irqchip/irq-gic-v3-its.c
-> +++ b/drivers/irqchip/irq-gic-v3-its.c
-> @@ -15,10 +15,13 @@
->   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
->   */
->
-> +#include <linux/acpi.h>
->  #include <linux/bitmap.h>
->  #include <linux/cpu.h>
->  #include <linux/delay.h>
->  #include <linux/interrupt.h>
-> +#include <linux/irqdomain.h>
-> +#include <linux/iort.h>
->  #include <linux/log2.h>
->  #include <linux/mm.h>
->  #include <linux/msi.h>
-> @@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
->  		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
->  		fwspec.param[1] = hwirq;
->  		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
-> +	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
-> +		fwspec.fwnode = domain->parent->fwnode;
-> +		fwspec.param_count = 2;
-> +		fwspec.param[0] = hwirq;
-> +		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
->  	} else {
->  		return -EINVAL;
->  	}
-> @@ -1792,6 +1800,55 @@ static int __init its_of_probe(struct device_node *node)
->  	return 0;
->  }
->
-> +#ifdef CONFIG_ACPI
-> +
-> +#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
-> +
-> +static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
-> +					  const unsigned long end)
-> +{
-> +	struct acpi_madt_generic_translator *its_entry;
-> +	struct fwnode_handle *dom_handle;
-> +	struct resource res;
-> +	int err;
-> +
-> +	its_entry = (struct acpi_madt_generic_translator *)header;
-> +	res.start = its_entry->base_address;
-> +	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
-> +
-> +	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
-> +	if (!dom_handle) {
-> +		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
-> +		       &res.start);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
-> +	if (err) {
-> +		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
-> +		       &res.start, its_entry->translation_id);
-> +		goto dom_err;
-> +	}
-> +
-> +	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
-> +	if (!err)
-> +		return 0;
-> +
-> +	iort_deregister_domain_token(its_entry->translation_id);
-> +dom_err:
-> +	irq_domain_free_fwnode(dom_handle);
-> +	return err;
-> +}
-> +
-> +static void __init its_acpi_probe(void)
-> +{
-> +	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
-> +			      gic_acpi_parse_madt_its, 0);
-> +}
-> +#else
-> +static void __init its_acpi_probe(void) { }
-> +#endif
-> +
->  int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
->  		    struct irq_domain *parent_domain)
->  {
-> @@ -1802,7 +1859,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
->  	if (of_node)
->  		its_of_probe(of_node);
->  	else
-> -		return -ENODEV;
-> +		its_acpi_probe();
->
->  	if (list_empty(&its_nodes)) {
->  		pr_warn("ITS: No ITS available, not enabling LPIs\n");
->
+Current Linux PCI core does not do any kind of power management to PCIe
+ports. This means that we waste energy and consume laptop battery even if
+the port has nothing connected to. These patches aim to change that to the
+right direction.
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Previous versions of the patches can be found below:
 
-Thanks
-Hanjun
+  v1: http://www.spinics.net/lists/linux-pci/msg49313.html
+  v2: http://www.spinics.net/lists/linux-pci/msg50167.html
+  v3: http://www.spinics.net/lists/linux-pci/msg50345.html
+  v4: http://www.spinics.net/lists/linux-pci/msg50665.html
+  v5: http://www.spinics.net/lists/linux-pci/msg50803.html
+
+This assumes that recent (starting from 2015) PCIe ports are capable of
+transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
+that is set whenever the PCI core thinks the port can be put to D3. The
+check in pci_pm_suspend_noirq() is then extended to cover devices where
+'bridge_d3' is set.
+
+We then add two new functions pci_bridge_d3_device_changed/removed(). These
+are used to set and clear 'bridge_d3' whenever there is a change in device
+power management policy (or if the device is removed). For example when
+userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
+will clear 'bridge_d3' of the upstream bridge.
+
+For all PCI ports where 'bridge_d3' is set we also enable and unblock
+runtime PM automatically. Only exception is when the PCIe port claims to
+support hotplug. More information about that is in the changelog of
+patch [5/5].
+
+Since this also touches xhci, I'm adding Mathias and Greg to check if the
+change looks reasonable.
+
+Bjorn, if you are fine with these patches, it would be nice to get these to
+linux-next for better testing coverage.
+
+Changes to v5:
+
+  - Add patch "PCI: Power on bridges before scanning new devices" to make
+    sure rescanning using sysfs still works.
+
+  - Change patch "ACPI / hotplug / PCI: Runtime resume bridge before
+    rescan" to runtime resume in acpiphp_check_bridge() instead of
+    hotplug_event().
+
+  - Change runtime PM autosuspend delay from 10ms to 100ms.
+
+  - Call pm_runtime_mark_last_busy() to make sure we do not runtime suspend
+    the port immediatly.
+
+Changes to v4:
+
+  - Use "Put PCIe ports into D3" instead of "move" in subject and comments.
+
+  - Add new helper function pci_power_manageable() and use it to check if
+    the port can be suspended instead of open-coding it everytime.
+
+  - Changed pci_dev_check_d3cold() to follow what Rafael suggested.
+
+  - Dropped call to pm_runtime_mark_last_busy() in pcie_port_runtime_resume()
+    as PM core does that automatically when the function returns 0.
+
+  - Added ACKs from Rafael.
+
+Changes to v3:
+
+  - Make 'no_d3cold' persist for pci_dev. Once this is set through
+    pci_d3cold_enable/disable(), it will persist unless changed again using
+    the same functions. Those also handle setting and clearing 'bridge_d3'
+    as necessary.
+
+  - Add kernel command line parameter "pcie_port_pm=off|force" that can
+    be used to forcibly disable/enable the feature.
+
+  - Use runtime PM autosuspend instead of scheduling runtime suspend
+    manually
+
+  - Allow runtime PM always except when we are dealing with a hotplug
+    bridge. Actual checking whether the port can be suspended is done in
+    ->idle() and ->runtime_suspend() hooks based on 'bridge_d3'.
+
+Changes to v2:
+
+  - Renamed and split pci_enable_d3cold() into two functions
+    pci_d3cold_enable()/disable().
+
+  - Renamed pci_bridge_pm_update() into two functions
+    pci_bridge_d3_device_changed() and pci_bridge_d3_device_removed() that
+    should match better what they are doing.
+
+  - Propagate ->bridge_d3 change to upstream bridges in
+    pci_bridge_d3_update().
+
+  - Removed pci_can_suspend() in favor of doing ->bridge_d3 check directly
+    in pci_pm_suspend_noirq().
+
+  - Extend runtime PM enabling for ports that are using native PCIe
+    hotplug.
+
+  - Call pm_runtime_no_callbacks() for PCIe port service devices (the are
+    handled by the parent device).
+
+Changes to v1:
+
+  - Dropped patch [2/6] as there is no need to use that function from other
+    files anymore.
+
+  - Dropped patches [5-6/6] in favor of using cut-off date.
+
+  - Updated changelog of [1/4] to mention where in the PCI core PCI bridge
+    and PCIe ports are skipped from being power managed.
+
+  - Instead of checking at suspend time if it is possible to transition the
+    port to D3, do it whenever power management status of a device (below a
+    port) is changed or when it is added or removed to the bus.
+
+  - Added patch [3/4] to runtime resume a bridge when ACPI hotplug event is
+    received.
+
+Mika Westerberg (5):
+  PCI: Don't clear d3cold_allowed for PCIe ports
+  PCI: Put PCIe ports into D3 during suspend
+  PCI: Power on bridges before scanning new devices
+  ACPI / hotplug / PCI: Runtime resume bridge before rescan
+  PCI: Add runtime PM support for PCIe ports
+
+ Documentation/kernel-parameters.txt |   4 +
+ drivers/pci/bus.c                   |   1 +
+ drivers/pci/hotplug/acpiphp_glue.c  |   4 +
+ drivers/pci/pci-driver.c            |   5 +-
+ drivers/pci/pci-sysfs.c             |   5 ++
+ drivers/pci/pci.c                   | 175 ++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h                   |  11 +++
+ drivers/pci/pcie/portdrv_core.c     |   3 +
+ drivers/pci/pcie/portdrv_pci.c      |  52 ++++++++++-
+ drivers/pci/probe.c                 |   9 ++
+ drivers/pci/remove.c                |   2 +
+ drivers/usb/host/xhci-pci.c         |   2 +-
+ include/linux/pci.h                 |   3 +
+ 13 files changed, 268 insertions(+), 8 deletions(-)
+
+-- 
+2.8.1
+
