@@ -1,108 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:16374 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753154AbcFONJl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jun 2016 09:09:41 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5FD4XZr036661
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jun 2016 09:09:41 -0400
-Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23jfmpwnct-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jun 2016 09:09:41 -0400
-Received: from localhost
-	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Wed, 15 Jun 2016 10:09:38 -0300
-Subject: Re: [PATCH 06/13] irq: add a helper spread an affinity mask for
- MSI/MSI-X vectors
-To: Christoph Hellwig <hch@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
- <1465934346-20648-7-git-send-email-hch@lst.de>
- <57607D0E.1060907@linux.vnet.ibm.com> <20160615101045.GB16425@lst.de>
-Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	axboe@fb.com, tglx@linutronix.de, bart.vanassche@sandisk.com
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Date: Wed, 15 Jun 2016 10:09:33 -0300
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, Wenrui Li <wenrui.li@rock-chips.com>, Doug Anderson <dianders@chromium.org>, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>, Hannes Reinecke <hare@suse.de>, Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 1/3] pci: introduce read_bridge/write_bridge pci ops
+Date: Thu, 02 Jun 2016 17:44:51 +0200
+Message-ID: <4288331.jNpl6KXlNO@wuerfel>
+In-Reply-To: <20160602140001.GB8262@localhost>
+References: <1464784332-3775650-1-git-send-email-arnd@arndb.de> <4967020.J4dsRYGugq@wuerfel> <20160602140001.GB8262@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20160615101045.GB16425@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Message-Id: <5761538D.6060303@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the responses Bart and Christoph.
+On Thursday, June 2, 2016 9:00:01 AM CEST Bjorn Helgaas wrote:
+> On Wed, Jun 01, 2016 at 10:37:28PM +0200, Arnd Bergmann wrote:
+> > On Wednesday, June 1, 2016 2:04:30 PM CEST Bjorn Helgaas wrote:
+> > > On Wed, Jun 01, 2016 at 05:41:53PM +0200, Arnd Bergmann wrote:
+> > > > On Wednesday, June 1, 2016 10:09:29 AM CEST Bjorn Helgaas wrote:
+> > > > > Hi Arnd,
+> > > > > 
+> > > > > On Wed, Jun 01, 2016 at 02:31:22PM +0200, Arnd Bergmann wrote:
+> > > > > > A lot of PCI host bridges require different methods for initiating
+> > > > > > type 0 and type 1 config space accesses, leading to duplication of
+> > > > > > code.
+> > > > > > 
+> > > > > > This adds support for the two different kinds at the pci_ops
+> > > > > > level, with the newly added map_bridge/read_bridge/write_bridge
+> > > > > > operations for type 1 accesses.
+> > > > > > 
+> > > > > > When these are not set, we fall back to the regular map_bus/read/write
+> > > > > > operations, so all existing drivers keep working, and bridges that
+> > > > > > have identical operations continue to only require one set.
+> > > > > 
+> > > > > This adds new config accessor functions to struct pci_ops and makes
+> > > > > the callers responsible for figuring out which one to use.  The
+> > > > > benefit is to reduce code duplication in some host bridge drivers
+> > > > > (DesignWare and MVEBU so far).
+> > > > > 
+> > > > > From a design perspective, I'm not comfortable with moving this burden
+> > > > > from the host bridge drivers to the callers of the config accessors.
+> > > > ...
+> > > 
+> > > > Maybe we can simply change them to use the normal API and come up with
+> > > > a way to make the pci_ops harder to misuse? Would it make you feel better
+> > > > if we also renamed .read/.write into .read_type0/.write_type0 or something
+> > > > like that?
+> > > 
+> > > I'm trying to get a better feel for the tradeoff here.  It seems like
+> > > an API complication vs. code duplication.
+> > > 
+> > > I don't really think the callers should have to figure out which
+> > > accessor to use.  How much of a benefit do we really gain by
+> > > complicating the callers?  We've managed for quite a few years with
+> > > the current scheme, and it seems like only a couple new ARM platforms
+> > > would benefit.
+> > 
+> > I just did a count of the implementations of pci_ops: I found 107
+> > instances of 'struct pci_ops', and 67 of them treat type0 and type1
+> > access differently in some form.
+> > 
+> > I'd estimate that about half of them, or roughly a third of the total
+> > instances would benefit from my change, if we were to do them again.
+> > Clearly there is no need to change the existing code here when it works,
+> > unless the benefit is very clear and the code is actively maintained.
+> > 
+> > In some cases, the difference is only that the root bus has a limited
+> > set of devices that are allowed to be accessed, so there would
+> > likely be no benefit of this, compared to e.g. yet another callback
+> > that checks the validity.
+> > Some other instances have type0 registers at a different memory location
+> > from type1, some use different layout inside of that space, and some
+> > are completely different.
+> 
+> The type0/type1 distinction still seems out of place to me at the call
+> site.  Is there any other reason a caller would care about the
+> difference between type0 and type1?
 
+Another idea based on my RFC patches to make pci_host_bridge the primary
+structure for probing PCI: we could split out the old 'bus::pci_ops' with
+the traditional read/write interface from a new structure that becomes
+pci_host_bridge::pci_host_bridge_ops, and also contains the other callbacks
+that we recently added to pci_ops, alongside type0/type1 accessors.
 
-On 06/15/2016 07:10 AM, Christoph Hellwig wrote:
-> On Tue, Jun 14, 2016 at 06:54:22PM -0300, Guilherme G. Piccoli wrote:
->> On 06/14/2016 04:58 PM, Christoph Hellwig wrote:
->>> This is lifted from the blk-mq code and adopted to use the affinity mask
->>> concept just intruced in the irq handling code.
->>
->> Very nice patch Christoph, thanks. There's a little typo above, on
->> "intruced".
->
-> fixed.
->
->> Another little typo above in "assining".
->
-> fixed a swell.
->
->> I take this opportunity to ask you something, since I'm working in a
->> related code in a specific driver
->
-> Which driver?  One of the points here is to get this sort of code out
-> of drivers and into common code..
+We could then have a set of default pci_ops that call
+pci_host_bridge_ops->type0_read/type0_write/type1_read/type1_write,
+and those in turn get a pci_host_bridge as an argument along with the
+bus, device, function and register numbers instead of bus pointer
+and devfn/where.
 
-A network driver, i40e. I'd be glad to implement/see some common code to 
-raise the topology information I need, but I was implementing on i40e 
-more as a test case/toy example heheh...
+This way all existing code can keep working, but we can convert host
+drivers (if desired) to provide only pci_host_bridge_ops and no
+pci_ops, while making it easier to define those with a more modern
+interface.
 
-
->> - sorry in advance if my question is
->> silly or if I misunderstood your code.
->>
->> The function irq_create_affinity_mask() below deals with the case in which
->> we have nr_vecs < num_online_cpus(); in this case, wouldn't be a good idea
->> to trying distribute the vecs among cores?
->>
->> Example: if we have 128 online cpus, 8 per core (meaning 16 cores) and 64
->> vecs, I guess would be ideal to distribute 4 vecs _per core_, leaving 4
->> CPUs in each core without vecs.
->
-> There have been some reports about the blk-mq IRQ distribution being
-> suboptimal, but no one sent patches so far.  This patch just moves the
-> existing algorithm into the core code to be better bisectable.
->
-> I think an algorithm that takes cores into account instead of just SMT
-> sibling would be very useful.  So if you have a case where this helps
-> for you an incremental patch (or even one against the current blk-mq
-> code for now) would be appreciated.
-
-...but now I'll focus on the common/general case! Thanks for the 
-suggestion Christoph. I guess would be even better to have a generic 
-function that retrieves an optimal mask, something like 
-topology_get_optimal_mask(n, *cpumask), in which we get the best 
-distribution of n CPUs among all cores and return such a mask - 
-interesting case is when n < num_online_cpus. So, this function could be 
-used inside your irq_create_affinity_mask() and maybe in other places it 
-is needed.
-
-I was planning to use topology_core_id() to retrieve the core of a CPU, 
-if anybody has a better idea, I'd be glad to hear it.
-
-Cheers,
-
-
-Guilherme
-
-
->
-> _______________________________________________
-> Linux-nvme mailing list
-> Linux-nvme@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-nvme
->
-
+	Arnd
