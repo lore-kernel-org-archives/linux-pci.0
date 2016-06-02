@@ -1,51 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22354 "EHLO mga02.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:48791 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751901AbcFFNGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jun 2016 09:06:47 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+	id S932128AbcFBHal (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jun 2016 03:30:41 -0400
+From: Johannes Thumshirn <jthumshirn@suse.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 1/4] PCI / PCIe: Introduce module_pci_port_service()
-Date: Mon,  6 Jun 2016 16:06:05 +0300
-Message-Id: <1465218368-36494-2-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	Jay Cliburn <jcliburn@gmail.com>,
+	Chris Snook <chris.snook@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org
+Subject: [PATCH v2 6/6] alx: Use pci_(request|release)_mem_regions
+Date: Thu,  2 Jun 2016 09:30:34 +0200
+Message-Id: <d23546e4a87cfd23082fdfbe648bd5269ba89df7.1464795082.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As used elsewhere in the kernel already. This will reduce amount of
-boilerblate code PCIe port service drivers otherwise need to open-code.
+Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+hand, use it in the ethernet drivers.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jay Cliburn <jcliburn@gmail.com>
+Cc: Chris Snook <chris.snook@gmail.com>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: intel-wired-lan@lists.osuosl.org
 ---
- include/linux/pcieport_if.h | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/net/ethernet/atheros/alx/main.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
-index afcd130ab3a9..9276a85bffde 100644
---- a/include/linux/pcieport_if.h
-+++ b/include/linux/pcieport_if.h
-@@ -67,4 +67,17 @@ struct pcie_port_service_driver {
- int pcie_port_service_register(struct pcie_port_service_driver *new);
- void pcie_port_service_unregister(struct pcie_port_service_driver *new);
+diff --git a/drivers/net/ethernet/atheros/alx/main.c b/drivers/net/ethernet/atheros/alx/main.c
+index 55b118e..d2363de 100644
+--- a/drivers/net/ethernet/atheros/alx/main.c
++++ b/drivers/net/ethernet/atheros/alx/main.c
+@@ -1238,7 +1238,7 @@ static int alx_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct alx_priv *alx;
+ 	struct alx_hw *hw;
+ 	bool phy_configured;
+-	int bars, err;
++	int err;
  
-+/**
-+ * module_pcie_port_service() - Helper macro for registering a PCI driver
-+ * @__port_service: pcie_port_service struct
-+ *
-+ * Helper macro for PCIe port service drivers which do not do anything
-+ * special in module init/exit. This eliminates a lot of boilerplate. Each
-+ * module may only use this macro once, and calling it replaces
-+ * module_init() and module_exit()
-+ */
-+#define module_pcie_port_service(__port_service) \
-+	module_driver(__port_service, pcie_port_service_register, \
-+		      pcie_port_service_unregister)
-+
- #endif /* _PCIEPORT_IF_H_ */
+ 	err = pci_enable_device_mem(pdev);
+ 	if (err)
+@@ -1258,11 +1258,10 @@ static int alx_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		}
+ 	}
+ 
+-	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+-	err = pci_request_selected_regions(pdev, bars, alx_drv_name);
++	err = pci_request_mem_regions(pdev, alx_drv_name);
+ 	if (err) {
+ 		dev_err(&pdev->dev,
+-			"pci_request_selected_regions failed(bars:%d)\n", bars);
++			"pci_request_mem_regions failed\n");
+ 		goto out_pci_disable;
+ 	}
+ 
+@@ -1388,7 +1387,7 @@ out_unmap:
+ out_free_netdev:
+ 	free_netdev(netdev);
+ out_pci_release:
+-	pci_release_selected_regions(pdev, bars);
++	pci_release_mem_regions(pdev);
+ out_pci_disable:
+ 	pci_disable_device(pdev);
+ 	return err;
+@@ -1407,8 +1406,7 @@ static void alx_remove(struct pci_dev *pdev)
+ 
+ 	unregister_netdev(alx->dev);
+ 	iounmap(hw->hw_addr);
+-	pci_release_selected_regions(pdev,
+-				     pci_select_bars(pdev, IORESOURCE_MEM));
++	pci_release_mem_regions(pdev);
+ 
+ 	pci_disable_pcie_error_reporting(pdev);
+ 	pci_disable_device(pdev);
 -- 
-2.8.1
+1.8.5.6
 
