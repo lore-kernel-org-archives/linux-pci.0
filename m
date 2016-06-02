@@ -1,53 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:34541 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753185AbcF2PSe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 11:18:34 -0400
-Date: Wed, 29 Jun 2016 20:48:20 +0530
-From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-To: bhelgaas@google.com, michal.simek@xilinx.com,
-	soren.brinkmann@xilinx.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Cc: julia.lawall@lip6.fr
-Subject: [PATCH] PCI: xilinx: Modify error handling
-Message-ID: <20160629151820.GA14282@amitoj-Inspiron-3542>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([134.134.136.65]:48903 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932742AbcFBVBh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jun 2016 17:01:37 -0400
+Message-ID: <1464901295.2736.29.camel@intel.com>
+Subject: Re: [PATCH v2 5/6] ethernet/intel: Use
+ pci_(request|release)_mem_regions
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org
+Date: Thu, 02 Jun 2016 14:01:35 -0700
+In-Reply-To: <e15aedde3b7d8b301b9ca6197f8d39d4076c9c86.1464795082.git.jthumshirn@suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
+	 <e15aedde3b7d8b301b9ca6197f8d39d4076c9c86.1464795082.git.jthumshirn@suse.de>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-V2PqDfR0o+AxeTcExJxv"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Failure of of_get_next_child returns NULL, not an ERR_PTR. Use
-appropriate error code -ENODEV to be returned on failure instead.
 
-The Coccinelle semantic patch used to find this issue is as follows:
-@@
-expression E,E1;
-@@
+--=-V2PqDfR0o+AxeTcExJxv
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-if (
-*   E == NULL
-   ) { <+... when != E = E1
-        PTR_ERR(E)
-       ...+> }
+On Thu, 2016-06-02 at 09:30 +0200, Johannes Thumshirn wrote:
+> Now that we do have pci_request_mem_regions() and
+> pci_release_mem_regions() at
+> hand, use it in the Intel ethernet drivers.
+>=20
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: intel-wired-lan@lists.osuosl.org
 
-Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
----
- drivers/pci/host/pcie-xilinx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 65f0fe0..d76ea8d 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -550,7 +550,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 	pcie_intc_node = of_get_next_child(node, NULL);
- 	if (!pcie_intc_node) {
- 		dev_err(dev, "No PCIe Intc node found\n");
--		return PTR_ERR(pcie_intc_node);
-+		return -ENODEV;
- 	}
- 
- 	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
--- 
-1.9.1
+> ---
+> =C2=A0drivers/net/ethernet/intel/e1000e/netdev.c=C2=A0=C2=A0=C2=A0 |=C2=
+=A0 6 ++----
+> =C2=A0drivers/net/ethernet/intel/fm10k/fm10k_pci.c=C2=A0 | 11 +++--------
+> =C2=A0drivers/net/ethernet/intel/i40e/i40e_main.c=C2=A0=C2=A0 |=C2=A0 9 +=
+++------
+> =C2=A0drivers/net/ethernet/intel/igb/igb_main.c=C2=A0=C2=A0=C2=A0=C2=A0 |=
+ 10 +++-------
+> =C2=A0drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |=C2=A0 9 +++------
+> =C2=A05 files changed, 14 insertions(+), 31 deletions(-)
+
+--=-V2PqDfR0o+AxeTcExJxv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJXUJ6vAAoJEOVv75VaS+3OAGQP/jXZHPJWhfwdV91AxtxXpMNV
+dJVvKKBCLY4j1EJBtcIE1ZzqLDLfVInQE8xVX6LwTh+dAg6nzLjir1RSrR4qkjFd
+u3JDIkdYzi4T2CE7Wh34Hn+fMtD+cLbwExpqnm7rY3nN9oLg6MSpfuftaxaQRvea
+VcffdWLjcz9nn+6d01LKa2k37i5/ijAbEcWOInUZ71fYvNh1v8ZYHYPKPgnhBsbJ
+8ZpT7miRtkBGX2e2DiwJZqvb/+byrB/NxhvyjeuN10ow8XkyvR1xPebHB87tI6M6
+qyQXolFcHUjQ1rncWpWGWFxbBa2cChENK5G+ni/Esdr1y9ebrja21gkHxD9UKnnT
+5XP1Bsb/n6KsdGMMSCfop+UWrtLtZteRYrGABvicQdo6aJXQCQ6O7ZsaQMBUakhw
+3ut5WMAwb/EhHsgpqOZHZU2qpj5FMmupIH2lM+1bX1GAIcJl4xbD2VU2+TtXAd6a
+Xi1RObsDElRop6ZA05H4DrI59nitxM9aAjonWG7mSvQJL8xAznb6sIYazjg7lF69
+OxePtJbtpWviWuf4MBVBFEa39zZcGhTivjxzkrYYq0+cYvfNdOVBL3AhW5g6c9c8
+8lh6cUcM/ZQpa4hoDB2wwLi9/JRI1OQCRiuBCmOdVMigxrjnOcyPlvp9WRbZ2Pvu
+Pcds1/QA+1E1Ow0QZL87
+=hp3V
+-----END PGP SIGNATURE-----
+
+--=-V2PqDfR0o+AxeTcExJxv--
 
