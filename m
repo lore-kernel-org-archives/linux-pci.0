@@ -1,203 +1,56 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Subject: [PATCH v3 5/6] ethernet/intel: Use pci_(request|release)_mem_regions
-Date: Tue,  7 Jun 2016 09:44:05 +0200
-Message-Id: <a0505095e96b7a45cb308238289f97751ccd3d7d.1465200424.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [RESEND PATCH v2 3/6] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+Date: Thu,  2 Jun 2016 14:10:00 +0800
+Message-Id: <1464847803-22756-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-hand, use it in the Intel ethernet drivers.
+The capability of IRQ remapping is abstracted on IOMMU side on
+some archs. There is a existing flag IOMMU_CAP_INTR_REMAP for this.
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: intel-wired-lan@lists.osuosl.org
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To have a universal flag to test this capability for different
+archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+when IOMMU_CAP_INTR_REMAP is set.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++--------
- drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
- drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++-------
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
- 5 files changed, 14 insertions(+), 31 deletions(-)
+ drivers/pci/probe.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index 9b4ec13..ecd8d15 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -7284,8 +7284,7 @@ err_flashmap:
- err_ioremap:
- 	free_netdev(netdev);
- err_alloc_etherdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -7352,8 +7351,7 @@ static void e1000_remove(struct pci_dev *pdev)
- 	if ((adapter->hw.flash_address) &&
- 	    (adapter->hw.mac.type < e1000_pch_spt))
- 		iounmap(adapter->hw.flash_address);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2b9e3ba..15a33e2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -16,6 +16,7 @@
+ #include <linux/aer.h>
+ #include <linux/acpi.h>
+ #include <linux/irqdomain.h>
++#include <linux/iommu.h>
+ #include "pci.h"
  
- 	free_netdev(netdev);
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+@@ -2160,6 +2161,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	pci_set_bus_of_node(b);
+ 	pci_set_bus_msi_domain(b);
  
-diff --git a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-index 4eb7a6f..ad28e87 100644
---- a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-+++ b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-@@ -1940,10 +1940,7 @@ static int fm10k_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto err_dma;
- 	}
- 
--	err = pci_request_selected_regions(pdev,
--					   pci_select_bars(pdev,
--							   IORESOURCE_MEM),
--					   fm10k_driver_name);
-+	err = pci_request_mem_regions(pdev, fm10k_driver_name);
- 	if (err) {
- 		dev_err(&pdev->dev,
- 			"pci_request_selected_regions failed: %d\n", err);
-@@ -2034,8 +2031,7 @@ err_sw_init:
- err_ioremap:
- 	free_netdev(netdev);
- err_alloc_netdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -2086,8 +2082,7 @@ static void fm10k_remove(struct pci_dev *pdev)
- 
- 	free_netdev(netdev);
- 
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	pci_disable_pcie_error_reporting(pdev);
- 
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
-index 3449129..37592b1 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_main.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
-@@ -10779,8 +10779,7 @@ static int i40e_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 
- 	/* set up pci connections */
--	err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
--					   IORESOURCE_MEM), i40e_driver_name);
-+	err = pci_request_mem_regions(pdev, i40e_driver_name);
- 	if (err) {
- 		dev_info(&pdev->dev,
- 			 "pci_request_selected_regions failed %d\n", err);
-@@ -11277,8 +11276,7 @@ err_ioremap:
- 	kfree(pf);
- err_pf_alloc:
- 	pci_disable_pcie_error_reporting(pdev);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -11387,8 +11385,7 @@ static void i40e_remove(struct pci_dev *pdev)
- 
- 	iounmap(hw->hw_addr);
- 	kfree(pf);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	pci_disable_pcie_error_reporting(pdev);
- 	pci_disable_device(pdev);
-diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 55a1405c..466087f 100644
---- a/drivers/net/ethernet/intel/igb/igb_main.c
-+++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -2288,9 +2288,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		}
- 	}
- 
--	err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
--					   IORESOURCE_MEM),
--					   igb_driver_name);
-+	err = pci_request_mem_regions(pdev, igb_driver_name);
- 	if (err)
- 		goto err_pci_reg;
- 
-@@ -2707,8 +2705,7 @@ err_sw_init:
- err_ioremap:
- 	free_netdev(netdev);
- err_alloc_etherdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -2873,8 +2870,7 @@ static void igb_remove(struct pci_dev *pdev)
- 	pci_iounmap(pdev, adapter->io_addr);
- 	if (hw->flash_address)
- 		iounmap(hw->flash_address);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	kfree(adapter->shadow_vfta);
- 	free_netdev(netdev);
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index 7df3fe2..1357dd2 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -9084,8 +9084,7 @@ static int ixgbe_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		pci_using_dac = 0;
- 	}
- 
--	err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
--					   IORESOURCE_MEM), ixgbe_driver_name);
-+	err = pci_request_mem_regions(pdev, ixgbe_driver_name);
- 	if (err) {
- 		dev_err(&pdev->dev,
- 			"pci_request_selected_regions failed 0x%x\n", err);
-@@ -9460,8 +9459,7 @@ err_ioremap:
- 	disable_dev = !test_and_set_bit(__IXGBE_DISABLED, &adapter->state);
- 	free_netdev(netdev);
- err_alloc_etherdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	if (!adapter || disable_dev)
-@@ -9527,8 +9525,7 @@ static void ixgbe_remove(struct pci_dev *pdev)
- 
- #endif
- 	iounmap(adapter->io_addr);
--	pci_release_selected_regions(pdev, pci_select_bars(pdev,
--				     IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	e_dev_info("complete\n");
++	if (iommu_capable(&pci_bus_type, IOMMU_CAP_INTR_REMAP))
++		b->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++
+ 	if (!parent)
+ 		set_dev_node(b->bridge, pcibus_to_node(b));
  
 -- 
-1.8.5.6
+1.7.9.5
