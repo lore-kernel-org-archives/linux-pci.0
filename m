@@ -1,172 +1,45 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 00/11] Support for ARM64 ACPI based PCI host controller
-Date: Fri, 10 Jun 2016 21:55:08 +0200
-Message-Id: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, Wenrui Li <wenrui.li@rock-chips.com>, Doug Anderson <dianders@chromium.org>, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>, Hannes Reinecke <hare@suse.de>, Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 1/3] pci: introduce read_bridge/write_bridge pci ops
+Date: Thu, 02 Jun 2016 17:06:55 +0200
+Message-ID: <3585926.N1C2xx3GaB@wuerfel>
+In-Reply-To: <20160602140001.GB8262@localhost>
+References: <1464784332-3775650-1-git-send-email-arnd@arndb.de> <4967020.J4dsRYGugq@wuerfel> <20160602140001.GB8262@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
->From the functionality point of view this series may be split into the
-following logic parts:
-1. Export ECAM API and add parent device to pci_config_window
-2. Add IO resources handling to PCI core code
-3. New MCFG driver
-4. Cleanups and support for generic domain assignment based on ACPI
-5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64/
+On Thursday, June 2, 2016 9:00:01 AM CEST Bjorn Helgaas wrote:
+> > I just did a count of the implementations of pci_ops: I found 107
+> > instances of 'struct pci_ops', and 67 of them treat type0 and type1
+> > access differently in some form.
+> > 
+> > I'd estimate that about half of them, or roughly a third of the total
+> > instances would benefit from my change, if we were to do them again.
+> > Clearly there is no need to change the existing code here when it works,
+> > unless the benefit is very clear and the code is actively maintained.
+> > 
+> > In some cases, the difference is only that the root bus has a limited
+> > set of devices that are allowed to be accessed, so there would
+> > likely be no benefit of this, compared to e.g. yet another callback
+> > that checks the validity.
+> > Some other instances have type0 registers at a different memory location
+> > from type1, some use different layout inside of that space, and some
+> > are completely different.
+> 
+> The type0/type1 distinction still seems out of place to me at the call
+> site.  Is there any other reason a caller would care about the
+> difference between type0 and type1?
 
-Patches has been built on top of 4.7-rc2 and can be found here:
-git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v9)
+The callers really shouldn't care, but they also shouldn't call the
+pci_ops function pointer (and as we found earlier, there are only
+three such callers).
 
-This has been tested on Cavium ThunderX server. Any help in reviewing and
-testing is very appreciated.
+The distinction between type0 and type1 in my mind is an implementation
+detail of the pci_{read,write}_config_{byte,word,dword} functions
+that call the low-level operations here.
 
-v8 -> v9
-- additional cleanups around generic assignment
-- added back MCFG entries cache
-- simplified config start address lookup
-- fixed leak in pci_acpi_scan_root()
-- isolated patch with ACPI RAW accessors implementation
-- rebase against 4.7-rc2
-
-v7 -> v8
-- move code from drivers/acpi/pci_root_generic.c to arch/arm64/kernel/pci.c
-- minor changes around domain assignment
-- pci_mcfg.c improvements for parsing MCFG tables and lookup its entries
-- rebase against 4.7-rc1
-
-v6 -> v7
-- drop quirks handling
-- changes for ACPI companion and domain number assignment approach
-- implement arch pcibios_{add|remove}_bus and call acpi_pci_{add|remove}_bus from there
-- cleanups around nomenclature
-- use resources oriented API for ECAM
-- fix for based address calculation before mapping ECAM region
-- remove useless lock for MCFG lookup
-- move MCFG stuff to separated file pci_mcfg.c
-- drop MCFG entries caching
-- rebase against 4.6-rc7
-
-v5 -> v6
-- drop idea of x86 MMCONFIG code refactoring
-- integrate JC's patches which introduce new ECAM API:
-  https://lkml.org/lkml/2016/4/11/907
-  git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
-- integrate Sinan's fix for releasing IO resources, see patch [06/13]
-- added ACPI support for ThunderX ECAM and PEM drivers
-- rebase against 4.6-rc2
-
-v4 -> v5
-- drop MCFG refactoring group patches 1-6 from series v4 and integrate Jayachandran's patch
-  https://patchwork.ozlabs.org/patch/575525/
-- rewrite PCI legacy IRQs allocation
-- squash two patches 11 and 12 from series v4, fixed bisection issue
-- changelog improvements
-- rebase against 4.5-rc3
-
-v3 -> v4
-- drop Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-- add Lorenzo's fix patch 19/24
-- ACPI PCI bus domain number assigning cleanup
-- change resource management, we now claim and reassign resources
-- improvements for applying quirks
-- drop Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-- rebase against 4.5-rc1
-
-v2 -> v3
-- fix legacy IRQ assigning and IO ports registration
-- remove reference to arch specific companion device for ia64
-- move ACPI PCI host controller driver to pci_root.c
-- drop generic domain assignment for x86 and ia64 as I am not
-  able to run all necessary test variants
-- drop patch which cleaned legacy IRQ assignment since it belongs to
-  Mathew's series:
-  https://patchwork.ozlabs.org/patch/557504/
-- extend MCFG quirk code
-- rebase against 4.4
-
-v1 -> v2
-- move non-arch specific piece of code to dirver/acpi/ directory
-- fix IO resource handling
-- introduce PCI config accessors quirks matching
-- moved ACPI_COMPANION_SET to generic code
-
-v1 - https://lkml.org/lkml/2015/10/27/504
-v2 - https://lkml.org/lkml/2015/12/16/246
-v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-v4 - https://lkml.org/lkml/2016/2/4/646
-v5 - https://lkml.org/lkml/2016/2/16/426
-v6 - https://lkml.org/lkml/2016/4/15/594
-v7 - https://lkml.org/lkml/2016/5/10/568
-v8 - https://lkml.org/lkml/2016/5/30/468
-
-Jayachandran C (3):
-  PCI/ECAM: Move ecam.h to linux/include/pci-ecam.h
-  PCI/ECAM: Add parent device field to pci_config_window
-  ACPI/PCI: Support IO resources when parsing PCI host bridge resources
-
-Sinan Kaya (1):
-  PCI: Add new function to unmap IO resources
-
-Tomasz Nowicki (7):
-  ACPI/PCI: Add generic MCFG table handling
-  PCI: Refactor generic bus domain assignment
-  PCI: Factor DT specific pci_bus_find_domain_nr() code out
-  ARM64/PCI: Add ACPI hook to assign domain number
-  ARM64/PCI: ACPI support for legacy IRQs parsing and consolidation with
-    DT code
-  ARM64/PCI: Implement ACPI low-level calls to access PCI_Config region
-    from AML
-  ARM64/PCI: Support for ACPI based PCI host controller
-
- arch/arm64/Kconfig                  |   2 +
- arch/arm64/kernel/pci.c             | 146 ++++++++++++++++++++++++++++++++++--
- drivers/acpi/Kconfig                |   3 +
- drivers/acpi/Makefile               |   1 +
- drivers/acpi/pci_mcfg.c             |  92 +++++++++++++++++++++++
- drivers/acpi/pci_root.c             |  39 ++++++++++
- drivers/pci/ecam.c                  |   6 +-
- drivers/pci/ecam.h                  |  67 -----------------
- drivers/pci/host/pci-host-common.c  |   3 +-
- drivers/pci/host/pci-host-generic.c |   3 +-
- drivers/pci/host/pci-thunder-ecam.c |   3 +-
- drivers/pci/host/pci-thunder-pem.c  |   6 +-
- drivers/pci/pci.c                   |  29 ++++++-
- drivers/pci/probe.c                 |   4 +-
- include/linux/pci-acpi.h            |   2 +
- include/linux/pci-ecam.h            |  67 +++++++++++++++++
- include/linux/pci.h                 |  15 ++--
- 17 files changed, 392 insertions(+), 96 deletions(-)
- create mode 100644 drivers/acpi/pci_mcfg.c
- delete mode 100644 drivers/pci/ecam.h
- create mode 100644 include/linux/pci-ecam.h
-
--- 
-1.9.1
+	Arnd
