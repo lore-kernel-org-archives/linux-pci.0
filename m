@@ -1,63 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37914 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932119AbcFNT71 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:27 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 05/13] irq/msi: Make use of affinity aware allocations
-Date: Tue, 14 Jun 2016 21:58:58 +0200
-Message-Id: <1465934346-20648-6-git-send-email-hch@lst.de>
-In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:38056 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752973AbcFBJsp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 05:48:45 -0400
+Received: by mail-wm0-f53.google.com with SMTP id a20so59955426wma.1
+        for <linux-pci@vger.kernel.org>; Thu, 02 Jun 2016 02:48:44 -0700 (PDT)
+Date: Thu, 2 Jun 2016 10:48:42 +0100
+From: Matt Fleming <matt@codeblueprint.co.uk>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
+	Chris Milsted <cmilsted@redhat.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Andi Kleen <ak@linux.intel.com>, Michael Buesch <m@bues.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Konstantin Simanov <k.simanov@stlk.ru>,
+	Bryan Paradis <bryan.paradis@gmail.com>,
+	Andrew Worsley <amworsley@gmail.com>,
+	Chris Bainbridge <chris.bainbridge@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, zajec5@gmail.com
+Subject: Re: [PATCH] x86: Add early quirk to reset Apple AirPort card
+Message-ID: <20160602094842.GF2658@codeblueprint.co.uk>
+References: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Sun, 29 May, at 01:35:28AM, Lukas Wunner wrote:
+> The EFI firmware on Macs contains a full-fledged network stack for
+> downloading OS X images from osrecovery.apple.com. Unfortunately
+> on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
+> wireless card on every boot and leaves it enabled even after
+> ExitBootServices has been called. The card continues to assert its IRQ
+> line, causing spurious interrupts if the IRQ is shared. It also corrupts
+> memory by DMAing received packets, allowing for remote code execution
+> over the air. This only stops when a driver is loaded for the wireless
+> card, which may be never if the driver is not installed or blacklisted.
 
-Allow the MSI code to provide affinity hints per MSI descriptor.
+[... Snip a very thorough changelog ...]
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- include/linux/msi.h | 2 ++
- kernel/irq/msi.c    | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+This patch looks fine to me from an EFI perspective.
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index c33abfa..4f0bfe5 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -47,6 +47,7 @@ struct fsl_mc_msi_desc {
-  * @nvec_used:	The number of vectors used
-  * @dev:	Pointer to the device which uses this descriptor
-  * @msg:	The last set MSI message cached for reuse
-+ * @affinity:	Optional pointer to a cpu affinity mask for this descriptor
-  *
-  * @masked:	[PCI MSI/X] Mask bits
-  * @is_msix:	[PCI MSI/X] True if MSI-X
-@@ -67,6 +68,7 @@ struct msi_desc {
- 	unsigned int			nvec_used;
- 	struct device			*dev;
- 	struct msi_msg			msg;
-+	const struct cpumask		*affinity;
- 
- 	union {
- 		/* PCI MSI/X specific data */
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 58dbbac..0e2a736 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -335,7 +335,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 
- 		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
- 					       dev_to_node(dev), &arg, false,
--					       NULL);
-+					       desc->affinity);
- 		if (virq < 0) {
- 			ret = -ENOSPC;
- 			if (ops->handle_error)
--- 
-2.1.4
-
+Acked-by: Matt Fleming <matt@codeblueprint.co.uk>
