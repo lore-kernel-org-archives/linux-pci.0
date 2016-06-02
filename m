@@ -1,94 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RESEND PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X
- table
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, iommu@lists.linux-foundation.org
-References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-From: Auger Eric <eric.auger@redhat.com>
-Message-ID: <e03d36bb-c8ff-ec95-780e-5f625bdaf78e@redhat.com>
-Date: Wed, 8 Jun 2016 09:41:05 +0200
+Return-Path: <jcm@redhat.com>
+Return-Path: <jcm@redhat.com>
+Subject: Re: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host controller
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com"
+ <will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F767865@lhreml507-mbx>
+Cc: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+        Wangyijing <wangyijing@huawei.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        "jcm@redhat.com" <jcm@redhat.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "dhdang@apm.com" <dhdang@apm.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <f606faa9-72f3-3219-02a8-69e948338d2e@redhat.com>
+Date: Thu, 2 Jun 2016 03:31:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F767865@lhreml507-mbx>
 Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yongji,
+On 06/01/2016 03:36 AM, Gabriele Paoloni wrote:
 
-Le 02/06/2016 à 08:09, Yongji Xie a écrit :
-> Current vfio-pci implementation disallows to mmap the page
-> containing MSI-X table in case that users can write directly
-> to MSI-X table and generate an incorrect MSIs.
-> 
-> However, this will cause some performance issue when there
-> are some critical device registers in the same page as the 
-> MSI-X table. We have to handle the mmio access to these
-> registers in QEMU emulation rather than in guest.
-> 
-> To solve this issue, this series allows to expose MSI-X table
-> to userspace when hardware enables the capability of interrupt
-> remapping which can ensure that a given PCI device can only
-> shoot the MSIs assigned for it. And we introduce a new bus_flags
-> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
-> for different archs.
-> 
-> The patch 3 are based on the proposed patchset[1].
-You may have noticed I sent a respin of [1] yesterday:
-http://www.gossamer-threads.com/lists/linux/kernel/2455187.
+> If you agree I think Jon can tell who's the best person to
+> push the quirk RFC (as my understanding is that this mechanism
+> is currently used by some platforms deployed on the market...)
 
-Unfortunately you will see I removed the patch defining the new
-msi_domain_info MSI_FLAG_IRQ_REMAPPING flag you rely on in this series.
-I did so because I was not using it anymore. At the beginning this was
-used to detect whether the MSI assignment was safe but this
-method was covering cases where the MSI controller was
-upstream to the IOMMU. So now I rely on a mechanism where MSI controller
-are supposed to register their MSI doorbells and tag whether it is safe.
+Let me ping Linaro folks to see who has that (quirks) ball. We can
+certainly share the older OEM matching quirks Mark Salter did for
+earlier RHEL(SA) internal versions as a seed for that[0] activity.
 
-I don't know yet how this change will be welcomed though. Depending
-on reviews/discussions, might happen we revert to the previous flag.
+BUT...I don't think we should block this thread on the quirks. They're
+separate (but important). I see Arnd's reply as well, but nobody else
+has yet chimed in to this thread (and I am about to prod all of the
+vendors to reply to this thread and ACK). Can I ask whether we can't
+just stage v8 as-is for -next at this point? Can Arnd's (or other)
+suggestions be handled as followup patches post-merge please? Bjorn?
 
-If you need the feature you can embed the used patches in your series and
-follow the review process separately. Sorry for the setback.
+Jon.
 
-Best Regards
+[0] RHEL(SA) has had three different PCIe enabled ACPI stacks maintained
+independently so far since we need PCIe to boot most of the hundreds of
+v8 systems we have internal to Red Hat - which all have PCI.
 
-Eric
-> 
-> Changelog v2: 
-> - Make the commit log more clear
-> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
->   so that we could clearly know what the function does
-> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
->   of iommu_bus_notifier()
-> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
->   table so that we can know whether we allow to mmap MSI-X table
->   in QEMU
-> 
-> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-> 
-> Yongji Xie (6):
->   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
->   PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
->   PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
->   iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
->   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
->   vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
-> 
->  arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
->  drivers/iommu/iommu.c                     |    8 ++++++++
->  drivers/pci/msi.c                         |   15 +++++++++++++++
->  drivers/pci/probe.c                       |    7 +++++++
->  drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
->  drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
->  include/linux/msi.h                       |    5 ++++-
->  include/linux/pci.h                       |    1 +
->  8 files changed, 59 insertions(+), 5 deletions(-)
-> 
+-- 
+Computer Architect | Sent from my Fedora powered laptop
