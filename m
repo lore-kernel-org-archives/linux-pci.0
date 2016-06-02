@@ -1,190 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:60594 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757423AbcFAIY2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2016 04:24:28 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Wenrui Li <wenrui.li@rock-chips.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Doug Anderson <dianders@chromium.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-rockchip@lists.infradead.org"
-	<linux-rockchip@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
-Date: Wed, 01 Jun 2016 10:24:11 +0200
-Message-ID: <4816755.yFEaWXVu6I@wuerfel>
-In-Reply-To: <57482200.9090008@rock-chips.com>
-References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com> <8520D5D51A55D047800579B094147198258AF22F@XAP-PVEXMBX01.xlnx.xilinx.com> <57482200.9090008@rock-chips.com>
+Return-Path: <martin.stadtler@linaro.org>
+Return-Path: <martin.stadtler@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f606faa9-72f3-3219-02a8-69e948338d2e@redhat.com>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F767865@lhreml507-mbx> <f606faa9-72f3-3219-02a8-69e948338d2e@redhat.com>
+From: Martin Stadtler <martin.stadtler@linaro.org>
+Date: Thu, 2 Jun 2016 09:53:11 +0100
+Message-ID: <CAKb5QVWSBN=K7cgK4ujWqUe6+SMqEaGckA148krZR4CyUvjqpg@mail.gmail.com>
+Subject: Re: [Linaro-acpi] [PATCH V8 0/9] Support for ARM64 ACPI based PCI
+ host controller
+To: Jon Masters <jcm@redhat.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>, Tomasz Nowicki <tn@semihalf.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+	"will.deacon@arm.com" <will.deacon@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"rafael@kernel.org" <rafael@kernel.org>, "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>, "okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "dhdang@apm.com" <dhdang@apm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>, "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>, Wangyijing <wangyijing@huawei.com>,
+	"mw@semihalf.com" <mw@semihalf.com>, "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: multipart/alternative; boundary=001a114c888cba2f28053447bee1
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 27, 2016 6:31:28 PM CEST Wenrui Li wrote:
-> Hi,
-> 
-> On 2016/5/27 15:13, Bharat Kumar Gogada wrote:
-> >>>
-> >>>> +
-> >>>> +static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *pp,
-> >>>> +                                 struct pci_bus *bus, u32 devfn,
-> >>>> +                                 int where, int size, u32 *val)
-> >>>> +{
-> >>>> +  u32 busdev;
-> >>>> +
-> >>>> +  busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
-> >>>> +                          PCI_FUNC(devfn), where);
-> >>>> +
-> >>>> +  if (busdev & (size - 1)) {
-> >>>> +          *val = 0;
-> >>>> +          return PCIBIOS_BAD_REGISTER_NUMBER;
-> >>>> +  }
-> >>>> +
-> >>>> +  if (size == 4) {
-> >>>> +          *val = readl(pp->reg_base + busdev);
-> >>>> +  } else if (size == 2) {
-> >>>> +          *val = readw(pp->reg_base + busdev);
-> >>>> +  } else if (size == 1) {
-> >>>> +          *val = readb(pp->reg_base + busdev);
-> >>>> +  } else {
-> >>>> +          *val = 0;
-> >>>> +          return PCIBIOS_BAD_REGISTER_NUMBER;
-> >>>> +  }
-> >>>> +  return PCIBIOS_SUCCESSFUL;
-> >>>> +}
-> >>>> +
-> >>>
-> >>> This looks like the normal ECAM operations, you could just call those.
-> >>
-> >> I read ECAM reference code, I found it not support ioremap config space
-> >> for each bus individually on 64-bit systems. Our soc is 64-bit system,
-> >> and bus0 config space base address is 0xfda00000, bus1 base address is
-> >> 0xf8100000. So I think it is not normal ECAM operations, I do not know
-> >> if I have understood correctly?
-> >>
-> > Hi,
-> >
-> > I think Arnd was suggesting to use generic config read/write calls, pci_generic_config_read/pci_generic_config_write
-> > which does above functionality.
-> 
-> Yeah, I seem the pci_generic_config_write use writew/writeb for byte and 
-> word write. but our SOC not support byte and word write in RC config 
-> spcace. So I redefine the the pci_ops.write
+--001a114c888cba2f28053447bee1
+Content-Type: text/plain; charset=UTF-8
 
-Rihgt, that bug should be documented somewhere. You can also use
-the pci_generic_config_read32/pci_generic_config_write32 functions
-for this.
+On 2 June 2016 at 08:31, Jon Masters <jcm@redhat.com> wrote:
 
-I wonder if we should add a more general way of treating type 1
-config space accesses differently, as a lot of host bridges have
-similar requirements, accessing the registers in a different place,
-different layout, or other constraints.
+> On 06/01/2016 03:36 AM, Gabriele Paoloni wrote:
+>
+> > If you agree I think Jon can tell who's the best person to
+> > push the quirk RFC (as my understanding is that this mechanism
+> > is currently used by some platforms deployed on the market...)
+>
+> Let me ping Linaro folks to see who has that (quirks) ball. We can
+> certainly share the older OEM matching quirks Mark Salter did for
+> earlier RHEL(SA) internal versions as a seed for that[0] activity.
+>
 
-The patch below would make that very easy to do. Suggestions for
-better naming welcome.
+Both Graeme and Ard are out this week, I'll ask for Al and Hanjun to step
+in until they are back.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> BUT...I don't think we should block this thread on the quirks. They're
+> separate (but important). I see Arnd's reply as well, but nobody else
+> has yet chimed in to this thread (and I am about to prod all of the
+> vendors to reply to this thread and ACK). Can I ask whether we can't
+> just stage v8 as-is for -next at this point? Can Arnd's (or other)
+> suggestions be handled as followup patches post-merge please? Bjorn?
+>
+> Jon.
+>
+> [0] RHEL(SA) has had three different PCIe enabled ACPI stacks maintained
+> independently so far since we need PCIe to boot most of the hundreds of
+> v8 systems we have internal to Red Hat - which all have PCI.
+>
+> --
+> Computer Architect | Sent from my Fedora powered laptop
+>
+> _______________________________________________
+> Linaro-acpi mailing list
+> Linaro-acpi@lists.linaro.org
+> https://lists.linaro.org/mailman/listinfo/linaro-acpi
+>
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d11cdbb8fba3..2f7dcaa63e1d 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -34,9 +34,12 @@ int pci_bus_read_config_##size \
- 	u32 data = 0;							\
- 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
- 	raw_spin_lock_irqsave(&pci_lock, flags);			\
--	res = bus->ops->read(bus, devfn, pos, len, &data);		\
-+	if (bus->number == 0 && bus->ops->read0)			\
-+		res = bus->ops->read0(bus, devfn, pos, len, &data);	\
-+	else								\
-+		res = bus->ops->read(bus, devfn, pos, len, &data);	\
- 	*value = (type)data;						\
--	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-+	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
- 	return res;							\
- }
- 
-@@ -48,8 +51,11 @@ int pci_bus_write_config_##size \
- 	unsigned long flags;						\
- 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
- 	raw_spin_lock_irqsave(&pci_lock, flags);			\
--	res = bus->ops->write(bus, devfn, pos, len, value);		\
--	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-+	if (bus->number == 0 && bus->ops->write0)			\
-+		res = bus->ops->write0(bus, devfn, pos, len, value);	\
-+	else								\
-+		res = bus->ops->write(bus, devfn, pos, len, value);	\
-+	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
- 	return res;							\
- }
- 
-@@ -72,7 +78,11 @@ int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
- {
- 	void __iomem *addr;
- 
--	addr = bus->ops->map_bus(bus, devfn, where);
-+	if (bus->number == 0 && bus->ops->map_bus0)
-+		addr = bus->ops->map_bus0(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where);
-+
- 	if (!addr) {
- 		*val = ~0;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -94,7 +104,10 @@ int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
- {
- 	void __iomem *addr;
- 
--	addr = bus->ops->map_bus(bus, devfn, where);
-+	if (bus->number == 0 && bus->ops->map_bus0)
-+		addr = bus->ops->map_bus0(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where);
- 	if (!addr)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-@@ -114,7 +127,10 @@ int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
- {
- 	void __iomem *addr;
- 
--	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
-+	if (bus->number == 0 && bus->ops->map_bus0)
-+		addr = bus->ops->map_bus0(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
- 	if (!addr) {
- 		*val = ~0;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -135,7 +151,10 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	void __iomem *addr;
- 	u32 mask, tmp;
- 
--	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
-+	if (bus->number == 0 && bus->ops->map_bus0)
-+		addr = bus->ops->map_bus0(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
- 	if (!addr)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index df41c4645911..1caae3bd7115 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -580,6 +580,9 @@ struct pci_ops {
- 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
- 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
- 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
-+	void __iomem *(*map_bus0)(struct pci_bus *bus, unsigned int devfn, int where);
-+	int (*read0)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
-+	int (*write0)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
- };
- 
- /*
 
+
+-- 
+
+Martin Stadtler
+Director, Enterprise Group
+Linaro Ltd
+mobile: +44.7492180779
+IRC: martinst@#linaro on irc.freenode.ne <http://irc.freenode.net/>t
+
+--001a114c888cba2f28053447bee1
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><div class=3D"gmail_quo=
+te">On 2 June 2016 at 08:31, Jon Masters <span dir=3D"ltr">&lt;<a href=3D"m=
+ailto:jcm@redhat.com" target=3D"_blank">jcm@redhat.com</a>&gt;</span> wrote=
+:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-le=
+ft:1px #ccc solid;padding-left:1ex"><span class=3D"">On 06/01/2016 03:36 AM=
+, Gabriele Paoloni wrote:<br>
+<br>
+&gt; If you agree I think Jon can tell who&#39;s the best person to<br>
+&gt; push the quirk RFC (as my understanding is that this mechanism<br>
+&gt; is currently used by some platforms deployed on the market...)<br>
+<br>
+</span>Let me ping Linaro folks to see who has that (quirks) ball. We can<b=
+r>
+certainly share the older OEM matching quirks Mark Salter did for<br>
+earlier RHEL(SA) internal versions as a seed for that[0] activity.<br></blo=
+ckquote><div><br></div><div>Both Graeme and Ard are out this week, I&#39;ll=
+ ask for Al and Hanjun to step in until they are back.=C2=A0</div><blockquo=
+te class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc so=
+lid;padding-left:1ex">
+<br>
+BUT...I don&#39;t think we should block this thread on the quirks. They&#39=
+;re<br>
+separate (but important). I see Arnd&#39;s reply as well, but nobody else<b=
+r>
+has yet chimed in to this thread (and I am about to prod all of the<br>
+vendors to reply to this thread and ACK). Can I ask whether we can&#39;t<br=
+>
+just stage v8 as-is for -next at this point? Can Arnd&#39;s (or other)<br>
+suggestions be handled as followup patches post-merge please? Bjorn?<br>
+<br>
+Jon.<br>
+<br>
+[0] RHEL(SA) has had three different PCIe enabled ACPI stacks maintained<br=
+>
+independently so far since we need PCIe to boot most of the hundreds of<br>
+v8 systems we have internal to Red Hat - which all have PCI.<br>
+<span class=3D"HOEnZb"><font color=3D"#888888"><br>
+--<br>
+Computer Architect | Sent from my Fedora powered laptop<br>
+</font></span><div class=3D"HOEnZb"><div class=3D"h5"><br>
+_______________________________________________<br>
+Linaro-acpi mailing list<br>
+<a href=3D"mailto:Linaro-acpi@lists.linaro.org">Linaro-acpi@lists.linaro.or=
+g</a><br>
+<a href=3D"https://lists.linaro.org/mailman/listinfo/linaro-acpi" rel=3D"no=
+referrer" target=3D"_blank">https://lists.linaro.org/mailman/listinfo/linar=
+o-acpi</a><br>
+</div></div></blockquote></div><br><br clear=3D"all"><div><br></div>-- <br>=
+<div class=3D"gmail_signature" data-smartmail=3D"gmail_signature"><div dir=
+=3D"ltr"><div><div dir=3D"ltr"><div><div dir=3D"ltr"><span style=3D"font-si=
+ze:12.8000001907349px"><br></span></div><div dir=3D"ltr"><span style=3D"fon=
+t-size:12.8000001907349px">Martin Stadtler</span><br style=3D"font-size:12.=
+8000001907349px">Director, Enterprise Group<br style=3D"font-size:12.800000=
+1907349px"><span style=3D"font-size:12.8000001907349px">Linaro Ltd</span><b=
+r style=3D"font-size:12.8000001907349px"><span style=3D"font-size:12.800000=
+1907349px">mobile:=C2=A0+44.7492180779</span><br style=3D"font-size:12.8000=
+001907349px"><span style=3D"font-size:12.8000001907349px">IRC: martinst@#li=
+naro on=C2=A0</span><a href=3D"http://irc.freenode.net/" rel=3D"noreferrer"=
+ style=3D"color:rgb(17,85,204);font-size:12.8000001907349px" target=3D"_bla=
+nk">irc.freenode.ne</a>t<br></div></div></div></div></div></div>
+</div></div>
+
+--001a114c888cba2f28053447bee1--
