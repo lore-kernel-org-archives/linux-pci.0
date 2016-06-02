@@ -1,40 +1,58 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 1 Jun 2016 10:51:12 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jay Cliburn <jcliburn@gmail.com>,
-	Chris Snook <chris.snook@gmail.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Subject: Re: [PATCH 5/5] ethernet: Use pci_(request|release)_mem_regions
-Message-ID: <20160601085112.ve6k7bzspapjsswf@c203.arch.suse.de>
-References: <cover.1464694724.git.jthumshirn@suse.de>
- <3f24b687c31dea31a03cd3a529de790e942dd5bb.1464694724.git.jthumshirn@suse.de>
- <20160601075956.GD11923@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160601075956.GD11923@infradead.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [RESEND PATCH v2 5/6] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+Date: Thu,  2 Jun 2016 14:10:02 +0800
+Message-Id: <1464847803-22756-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 01, 2016 at 12:59:56AM -0700, Christoph Hellwig wrote:
-> On Tue, May 31, 2016 at 02:05:13PM +0200, Johannes Thumshirn wrote:
-> > Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-> > hand, use it in the ethernet drivers.
-> 
-> This should probably be one patch per driver.
+Any IODA host bridge have the capability of IRQ remapping.
+So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
+is detected.
 
-I though if I do one patch per subsystem it'll be less a hassle for the
-individual maintainers, but if the netdev people want it as split up, I'll be
-doing it of cause.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-	Johannes
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index c5baaf3..9011268 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -3094,6 +3094,12 @@ static void pnv_pci_ioda_fixup(void)
+ 	pnv_npu_ioda_fixup();
+ }
+ 
++int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++	return 0;
++}
++
+ /*
+  * Returns the alignment for I/O or memory windows for P2P
+  * bridges. That actually depends on how PEs are segmented.
+@@ -3395,6 +3401,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	 */
+ 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+ 
++	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
++
+ 	if (phb->type == PNV_PHB_NPU)
+ 		hose->controller_ops = pnv_npu_ioda_controller_ops;
+ 	else
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.7.9.5
