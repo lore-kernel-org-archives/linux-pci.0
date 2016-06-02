@@ -1,105 +1,121 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 15 Jun 2016 10:09:19 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
-	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
-	al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V6 0/7] Introduce ACPI world to ITS irqchip
-Message-ID: <20160615100919.6b507b57@arm.com>
-In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39948 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752184AbcFBDsd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Jun 2016 23:48:33 -0400
+Date: Wed, 1 Jun 2016 22:48:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Po Liu <po.liu@nxp.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, Roy Zang <roy.zang@nxp.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Minghuan Lian <minghuan.lian@nxp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Mingkai Hu <mingkai.hu@nxp.com>, Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 2/2] aer: add support aer interrupt with none
+ MSI/MSI-X/INTx mode
+Message-ID: <20160602034828.GA10240@localhost>
+References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 13 Jun 2016 16:41:06 +0200
-Tomasz Nowicki <tn@semihalf.com> wrote:
+[+cc Rob]
 
-> The series builds the PCI/MSI domain stack based on initial IORT driver
-> which is added in first place. As a reference please see IORT spec:
-> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-> 
-> Patches were built on top of accepted ARM64 ACPI PCI support and can be found
-> all together here:
-> https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v6)
-> 
-> Tested on Cavium ThunderX server.
-> 
-> v5 -> v6
-> - added locking mechanism for IORT list with domain token
-> - IORT function name improvements
-> - extended IORT RID mapping helper
-> - reworked IORT to be more SMMU friendly
-> - IORT functions which map RID and find corresponding domain are not
->   PCI specific any more (struct pci_dev -> struct device)
-> - bug fixes
-> 
-> v4 -> v5
-> - rebased against v4.7-rc1
-> - drop generic layer and call IORT functions directly
-> - improve resource abstraction and string formatting
-> 
-> v3 -> v4
-> - rebased against v4.5
-> - add ACPI support for IRQ domain handling on a per-device basis
-> - reorder domain setup step
-> - improve error handling
-> - code style improvements
-> 
-> v2 -> v3
-> - rebased on top of 4.4
-> - fixes and improvements for redistributor init via GICC structures
-> - fixes as per kbuild reports
-> 
-> v1 -> v2
-> - rebased on top of 4.4-rc4
-> - use pci_msi_domain_get_msi_rid for requester ID to device ID translation
-> 
-> Tomasz Nowicki (7):
->   ACPI: I/O Remapping Table (IORT) initial support
->   PCI/MSI: Setup MSI domain on a per-devices basis using IORT ACPI table
->   irqchip/gicv3-its: Cleanup for ITS domain initialization
->   irqchip/gicv3-its: Refator ITS DT init code to prepare for ACPI
->   irqchip/gicv3-its: Probe ITS in the ACPI way
->   irqchip/gicv3-its: Factor out code that might be reused for ACPI
->   irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain
->     initialization
-> 
->  drivers/acpi/Kconfig                     |   3 +
->  drivers/acpi/Makefile                    |   1 +
->  drivers/acpi/iort.c                      | 386 +++++++++++++++++++++++++++++++
->  drivers/irqchip/Kconfig                  |   1 +
->  drivers/irqchip/irq-gic-v3-its-pci-msi.c |  88 +++++--
->  drivers/irqchip/irq-gic-v3-its.c         | 185 ++++++++++-----
->  drivers/irqchip/irq-gic-v3.c             |   7 +-
->  drivers/pci/msi.c                        |  11 +-
->  include/linux/iort.h                     |  38 +++
->  include/linux/irqchip/arm-gic-v3.h       |   4 +-
->  10 files changed, 646 insertions(+), 78 deletions(-)
->  create mode 100644 drivers/acpi/iort.c
->  create mode 100644 include/linux/iort.h
-> 
+Hi Po,
 
+On Thu, May 26, 2016 at 02:00:06PM +0800, Po Liu wrote:
+> On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
+> When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
+> maybe there is interrupt line for aer pme etc. Search the interrupt
+> number in the fdt file.
 
-Once you've addressed the couple of remarks I had, and unless someone
-has further objections, this should be in a sane state.
+My understanding is that AER interrupt signaling can be done via INTx,
+MSI, or MSI-X (PCIe spec r3.0, sec 6.2.4.1.2).  Apparently your device
+doesn't support MSI or MSI-X.  Are you saying it doesn't support INTx
+either?  How is the interrupt you're requesting here different from
+INTx?
 
-Of course, the following question would be "who merges this thing". I'm
-happy to take it (mostly because it makes my life easier on the ITS
-side), but it needs to be Acked by the usual suspects (Rafael, Bjorn,
-Lorenzo).
+My guess is that your device *does* support INTx, and we should use
+that.  ACPI has the generic _PRT that describes INTx routing.  There
+must be something similar for DT, but I don't know what it is.  It
+seems like this should be described using that DT mechanism (whatever
+it is), and we shouldn't need special-case code in the portdrv code.
 
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny.
+> Signed-off-by: Po Liu <po.liu@nxp.com>
+> ---
+>  drivers/pci/pcie/portdrv_core.c | 31 ++++++++++++++++++++++++++++---
+>  1 file changed, 28 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index 32d4d0a..64833e5 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/pcieport_if.h>
+>  #include <linux/aer.h>
+> +#include <linux/of_irq.h>
+>  
+>  #include "../pci.h"
+>  #include "portdrv.h"
+> @@ -199,6 +200,28 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+>  static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+>  {
+>  	int i, irq = -1;
+> +	int ret;
+> +	struct device_node *np = NULL;
+> +
+> +	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+> +		irqs[i] = 0;
+> +
+> +	if (dev->bus->dev.of_node)
+> +		np = dev->bus->dev.of_node;
+> +
+> +	/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
+> +	 * request irq for aer
+> +	 */
+> +	if (IS_ENABLED(CONFIG_OF_IRQ) && np &&
+> +			(mask & PCIE_PORT_SERVICE_PME)) {
+> +		ret = of_irq_get_byname(np, "aer");
+> +		if (ret > 0) {
+> +			irqs[PCIE_PORT_SERVICE_AER_SHIFT] = ret;
+> +			if (dev->irq)
+> +				irq = dev->irq;
+> +			goto no_msi;
+> +		}
+> +	}
+>  
+>  	/*
+>  	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
+> @@ -224,11 +247,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+>  		irq = dev->irq;
+>  
+>   no_msi:
+> -	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+> -		irqs[i] = irq;
+> +	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+> +		if (!irqs[i])
+> +			irqs[i] = irq;
+> +	}
+>  	irqs[PCIE_PORT_SERVICE_VC_SHIFT] = -1;
+>  
+> -	if (irq < 0)
+> +	if (irq < 0 && irqs[PCIE_PORT_SERVICE_AER_SHIFT] < 0)
+>  		return -ENODEV;
+>  	return 0;
+>  }
+> -- 
+> 2.1.0.27.g96db324
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
