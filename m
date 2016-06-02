@@ -1,62 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v12 09/15] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Fri,  3 Jun 2016 17:06:36 -0700
-Message-Id: <20160604000642.28162-10-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors
+ against platfrom specific ECAM quirks.
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
+ <1464856864-18049-2-git-send-email-tn@semihalf.com>
+ <4347711.qDrKz2s8lr@wuerfel>
+Cc: helgaas@kernel.org, will.deacon@arm.com, catalin.marinas@arm.com,
+ rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
+ okaya@codeaurora.org, jchandra@broadcom.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com,
+ Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ cov@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5750218F.9030406@semihalf.com>
+Date: Thu, 2 Jun 2016 14:07:43 +0200
+MIME-Version: 1.0
+In-Reply-To: <4347711.qDrKz2s8lr@wuerfel>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
+On 02.06.2016 13:42, Arnd Bergmann wrote:
+> On Thursday, June 2, 2016 10:41:01 AM CEST Tomasz Nowicki wrote:
+>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+>> +{
+>> +       int bus_num = root->secondary.start;
+>> +       int domain = root->segment;
+>> +       struct pci_cfg_fixup *f;
+>> +
+>> +       if (!mcfg_table)
+>> +               return &pci_generic_ecam_ops;
+>> +
+>> +       /*
+>> +        * Match against platform specific quirks and return corresponding
+>> +        * CAM ops.
+>> +        *
+>> +        * First match against PCI topology <domain:bus> then use OEM ID and
+>> +        * OEM revision from MCFG table standard header.
+>> +        */
+>> +       for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
+>> +               if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
+>> +                   (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
+>> +                   (!strncmp(f->oem_id, mcfg_table->header.oem_id,
+>> +                             ACPI_OEM_ID_SIZE)) &&
+>> +                   (f->oem_revision == mcfg_table->header.oem_revision))
+>> +                       return f->ops;
+>> +       }
+>> +       /* No quirks, use ECAM */
+>> +       return &pci_generic_ecam_ops;
+>> +}
+>> +
+>>   int pci_mcfg_lookup(struct acpi_pci_root *root)
+>
+> Can you explain the use of pci_ecam_ops instead of pci_ops here?
+>
 
-This patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
-flags parsing.
+I wanted to get associated bus_shift and use it to setup configuration 
+region properly before calling pci_ecam_create. Please see next patch.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Anton Blanchard <anton@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 719f225..476b8ac5 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
--- 
-2.8.3
+Thanks,
+Tomasz
