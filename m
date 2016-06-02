@@ -1,50 +1,99 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Mon, 13 Jun 2016 18:11:22 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RFC] implement gpio_pci_platform_pm to put pci device into
- D3cold
-Message-ID: <20160613171122.GA29837@red-moon>
-References: <20160612203245.66fbd54a@xhacker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160612203245.66fbd54a@xhacker>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:57643 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110AbcFBGOj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 02:14:39 -0400
+Received: from localhost
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 2 Jun 2016 00:14:33 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [RESEND PATCH v2 6/6] vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+Date: Thu,  2 Jun 2016 14:10:03 +0800
+Message-Id: <1464847803-22756-7-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jisheng,
+This patch tries to expose MSI-X tables to userspace if hardware
+enables interrupt remapping. This capability can ensure that a
+given PCI device can only shoot the MSIs assigned for it. That
+means a userspace driver could never hurt other devices or system
+by writing to the exposed MSI-X table directly.
 
-On Sun, Jun 12, 2016 at 08:32:45PM +0800, Jisheng Zhang wrote:
-> Dear all,
-> 
-> I want to solve one problem: we have pcie in a DT based arm64 system,
-> now we want to put the device into D3cold when runtime suspended. The
-> pcie device could be power down by operating one gpio pin, this is the
-> D3cold the platform could support. 
-> 
-> My solution is to register a gpio_pci_platform_pm with
-> pci_set_platform_pm() but the key is how to setup a mapping between
-> pci_dev and gpio through DT
-> 
-> I think this is a general case, could you please kindly give some
-> suggestions?
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/vfio/pci/vfio_pci.c      |   17 ++++++++++++++---
+ drivers/vfio/pci/vfio_pci_rdwr.c |    3 ++-
+ 2 files changed, 16 insertions(+), 4 deletions(-)
 
-You would like to define an "equivalent" of what exists today
-in ACPI (ie ACPI methods like _PSx) through generic DT bindings,
-correct ?
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 188b1ff..6bae388 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -487,8 +487,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 
+ 	end = pci_resource_len(vdev->pdev, vdev->msix_bar);
+ 
+-	/* If MSI-X table is aligned to the start or end, only one area */
+-	if (((vdev->msix_offset & PAGE_MASK) == 0) ||
++	/*
++	 * If MSI-X table is allowed to mmap because of the capability
++	 * of IRQ remapping or aligned to the start or end, only one area
++	 */
++	if ((vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) ||
++	    ((vdev->msix_offset & PAGE_MASK) == 0) ||
+ 	    (PAGE_ALIGN(vdev->msix_offset + vdev->msix_size) >= end))
+ 		nr_areas = 1;
+ 
+@@ -503,6 +507,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 			      struct vfio_region_info_cap_sparse_mmap, header);
+ 	sparse->nr_areas = nr_areas;
+ 
++	if (vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) {
++		sparse->areas[i].offset = 0;
++		sparse->areas[i].size = end;
++		return 0;
++	}
++
+ 	if (vdev->msix_offset & PAGE_MASK) {
+ 		sparse->areas[i].offset = 0;
+ 		sparse->areas[i].size = vdev->msix_offset & PAGE_MASK;
+@@ -1061,7 +1071,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
+ 		return -EINVAL;
+ 
+-	if (index == vdev->msix_bar) {
++	if (index == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		/*
+ 		 * Disallow mmaps overlapping the MSI-X table; users don't
+ 		 * get to touch this directly.  We could find somewhere
+diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
+index 5ffd1d9..dbf9cd0 100644
+--- a/drivers/vfio/pci/vfio_pci_rdwr.c
++++ b/drivers/vfio/pci/vfio_pci_rdwr.c
+@@ -164,7 +164,8 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
+ 	} else
+ 		io = vdev->barmap[bar];
+ 
+-	if (bar == vdev->msix_bar) {
++	if (bar == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		x_start = vdev->msix_offset;
+ 		x_end = vdev->msix_offset + vdev->msix_size;
+ 	}
+-- 
+1.7.9.5
 
-It is hard to say what can be really generalized and how without
-having first an implementation (so that we can see how this would
-map to other systems), if you have some code to share even if it
-is an RFC that would help quite a bit.
-
-Question: when you say "I think this is a general case" I wonder,
-are you referring to specific drivers in the mainline ?
-
-Thanks,
-Lorenzo
