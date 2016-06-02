@@ -1,135 +1,170 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v1 00/25] PCI: Request host bridge window resources
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160618180735.GB20504@localhost>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>, <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	<linux-kernel@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
-	<rfi@lists.rocketboards.org>, <linux-renesas-soc@vger.kernel.org>,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	<linux-tegra@vger.kernel.org>, "Ley Foon Tan" <lftan@altera.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
-	<linux-arm-kernel@lists.infradead.org>
-From: wangyijing <wangyijing@huawei.com>
-Message-ID: <57692BD0.6030609@huawei.com>
-Date: Tue, 21 Jun 2016 19:58:08 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160618180735.GB20504@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors against platfrom specific ECAM quirks.
+Date: Thu,  2 Jun 2016 10:41:01 +0200
+Message-Id: <1464856864-18049-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1464856864-18049-1-git-send-email-tn@semihalf.com>
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, use devm_request_resource() for host bridge resource is cool,
-what about do the similar change for x86, now we request host bridge resource
-in pci_acpi_root_add_resources() in x86, and we would release the host bridge
-resource when host bridge device refcount reach 0. This logic may introduce issue,
-E.g.
-If we try to remove a pci host bridge, but there is a child pci device which refcount
-cannot decrease to 0 after remove the device, in this case, its parent pci_bus and
-parent device, all their refcount cannot reach to 0, the result is pci host bridge
-refcount can not reach 0, so its .release_fn() won't be called, and host bridge
-resouces can not release. If we want to add the pci host bridge again, all pci devices
-can not work because the resource is conflict with the old.
+Some platforms may not be fully compliant with generic set of PCI config
+accessors. For these cases we implement the way to overwrite accessors
+set. Algorithm traverses available quirk list, matches against
+<oem_id, oem_rev, domain, bus number> tuple and returns corresponding
+PCI config ops. oem_id and oem_rev come from MCFG table standard header.
+All quirks can be defined using DECLARE_ACPI_MCFG_FIXUP() macro and
+kept self contained. Example:
 
-devm resource would be released when the driver detach, this is better than what we do now, I think.
+/* Custom PCI config ops */
+static struct pci_generic_ecam_ops foo_pci_ops = {
+	.bus_shift	= 24,
+	.pci_ops = {
+		.map_bus = pci_ecam_map_bus,
+		.read = foo_ecam_config_read,
+		.write = foo_ecam_config_write,
+	}
+};
 
-Thanks!
-Yijing.
+DECLARE_ACPI_MCFG_FIXUP(&foo_pci_ops, <oem_id_str>, <oem_rev>, <domain_nr>, <bus_nr>);
 
-在 2016/6/19 2:07, Bjorn Helgaas 写道:
-> On Mon, Jun 06, 2016 at 06:04:44PM -0500, Bjorn Helgaas wrote:
->> Several host bridge drivers (designware and all derivatives, iproc,
->> xgene, xilinx, and xilinx-nwl) don't request the MMIO and I/O port
->> windows they forward downstream to the PCI bus.
->>
->> That means the PCI core can't request resources for PCI bridge
->> windows and PCI BARs.
->>
->> Several other drivers (altera, generic, mvebu, rcar, tegra) do request
->> the windows, but use some duplicated code to do it.
->>
->> This adds a new devm_request_pci_bus_resources() interface and changes
->> these drivers to use it.  It also fixes several error paths where we failed
->> to free the resource list allocated by of_pci_get_host_bridge_resources().
->>
->> Tegra guys, please take a look at "PCI: tegra: Remove top-level resource
->> from hierarchy" in particular.  Removing the top-level resource definitely
->> makes /proc/iomem look uglier (although it will look more like that of
->> other drivers).  A short-term fix could be to include device information in
->> the resource name.  I think a better long-term fix would be to make the DT
->> or platform device core request all the resources from the DT.
->>
->> Comments welcome.  I expect we'll trip over something here, so I marked
->> this "v1" and I don't plan to put it into -next for a while.
->>
->> This is on my pci/host-request-windows branch, which you can pull or view
->> at https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-request-windows
-> 
-> I merged this to my -next branch, so it should show up in linux-next
-> in a couple days.  Let me know if you see any problems.
-> 
->> Bjorn Helgaas (25):
->>       PCI: Add devm_request_pci_bus_resources()
->>       PCI: designware: Free bridge resource list on failure
->>       PCI: designware: Request host bridge window resources
->>       PCI: designware: Simplify host bridge window iteration
->>       PCI: iproc: Request host bridge window resources
->>       PCI: xgene: Free bridge resource list on failure
->>       PCI: xgene: Request host bridge window resources
->>       PCI: xilinx: Free bridge resource list on failure
->>       PCI: xilinx: Request host bridge window resources
->>       PCI: xilinx-nwl: Free bridge resource list on failure
->>       PCI: xilinx-nwl: Request host bridge window resources
->>       PCI: xilinx-nwl: Use dev_printk() when possible
->>       PCI: altera: Request host bridge window resources with core function
->>       PCI: altera: Simplify host bridge window iteration
->>       PCI: generic: Free resource list close to where it's allocated
->>       PCI: generic: Request host bridge window resources with core function
->>       PCI: generic: Simplify host bridge window iteration
->>       PCI: mvebu: Request host bridge window resources with core function
->>       PCI: rcar Gen2: Request host bridge window resources
->>       PCI: rcar: Request host bridge window resources with core function
->>       PCI: rcar: Simplify host bridge window iteration
->>       PCI: tegra: Remove top-level resource from hierarchy
->>       PCI: tegra: Request host bridge window resources with core function
->>       PCI: versatile: Request host bridge window resources with core function
->>       PCI: versatile: Simplify host bridge window iteration
->>
->>
->>  drivers/pci/bus.c                  |   29 +++++++++++++++++
->>  drivers/pci/host/pci-host-common.c |   61 +++++++++++++++---------------------
->>  drivers/pci/host/pci-mvebu.c       |   17 ++++------
->>  drivers/pci/host/pci-rcar-gen2.c   |    4 ++
->>  drivers/pci/host/pci-tegra.c       |   35 +++------------------
->>  drivers/pci/host/pci-versatile.c   |   29 ++++++-----------
->>  drivers/pci/host/pci-xgene.c       |   16 ++++++++-
->>  drivers/pci/host/pcie-altera.c     |   35 ++++++---------------
->>  drivers/pci/host/pcie-designware.c |   34 +++++++++++++-------
->>  drivers/pci/host/pcie-iproc.c      |    4 ++
->>  drivers/pci/host/pcie-rcar.c       |   33 +++++--------------
->>  drivers/pci/host/pcie-xilinx-nwl.c |   20 +++++++++---
->>  drivers/pci/host/pcie-xilinx.c     |   16 ++++++++-
->>  include/linux/pci.h                |    5 ++-
->>  14 files changed, 170 insertions(+), 168 deletions(-)
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
-> .
-> 
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/pci_mcfg.c           | 32 ++++++++++++++++++++++++++++++++
+ include/asm-generic/vmlinux.lds.h |  7 +++++++
+ include/linux/pci-acpi.h          | 19 +++++++++++++++++++
+ 3 files changed, 58 insertions(+)
+
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index 1847f74..f3d4570 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -22,11 +22,43 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
++#include <linux/pci-ecam.h>
+ 
+ /* Root pointer to the mapped MCFG table */
+ static struct acpi_table_mcfg *mcfg_table;
+ static int mcfg_entries;
+ 
++extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
++extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
++
++struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
++{
++	int bus_num = root->secondary.start;
++	int domain = root->segment;
++	struct pci_cfg_fixup *f;
++
++	if (!mcfg_table)
++		return &pci_generic_ecam_ops;
++
++	/*
++	 * Match against platform specific quirks and return corresponding
++	 * CAM ops.
++	 *
++	 * First match against PCI topology <domain:bus> then use OEM ID and
++	 * OEM revision from MCFG table standard header.
++	 */
++	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
++		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
++		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
++		    (!strncmp(f->oem_id, mcfg_table->header.oem_id,
++			      ACPI_OEM_ID_SIZE)) &&
++		    (f->oem_revision == mcfg_table->header.oem_revision))
++			return f->ops;
++	}
++	/* No quirks, use ECAM */
++	return &pci_generic_ecam_ops;
++}
++
+ int pci_mcfg_lookup(struct acpi_pci_root *root)
+ {
+ 	struct acpi_mcfg_allocation *mptr, *entry = NULL;
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 6a67ab9..43604fc 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -300,6 +300,13 @@
+ 		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
+ 	}								\
+ 									\
++	/* ACPI MCFG quirks */						\
++	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
++		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
++		*(.acpi_fixup_mcfg)					\
++		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
++	}								\
++									\
+ 	/* Built-in firmware blobs */					\
+ 	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
+ 		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index e0e6dfc..b4e8106 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -25,6 +25,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+ extern int pci_mcfg_lookup(struct acpi_pci_root *root);
++extern struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
+@@ -72,6 +73,24 @@ struct acpi_pci_root_ops {
+ 	int (*prepare_resources)(struct acpi_pci_root_info *info);
+ };
+ 
++struct pci_cfg_fixup {
++	struct pci_ecam_ops *ops;
++	char *oem_id;
++	u32 oem_revision;
++	int domain;
++	int bus_num;
++};
++
++#define PCI_MCFG_DOMAIN_ANY	-1
++#define PCI_MCFG_BUS_ANY	-1
++
++/* Designate a routine to fix up buggy MCFG */
++#define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, rev, dom, bus)		\
++	static const struct pci_cfg_fixup __mcfg_fixup_##system##dom##bus\
++	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
++				aligned((sizeof(void *))))) =		\
++	{ ops, oem_id, rev, dom, bus };
++
+ extern int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info);
+ extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 					    struct acpi_pci_root_ops *ops,
+-- 
+1.9.1
