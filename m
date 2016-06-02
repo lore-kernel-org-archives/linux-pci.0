@@ -1,79 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 10 Jun 2016 11:13:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: Use device_match_always()
-Message-ID: <20160610161343.GH19309@localhost>
-References: <20160606073238.1073-1-thierry.reding@gmail.com>
- <20160606073238.1073-2-thierry.reding@gmail.com>
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com, okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org, Lorenzo.Pieralisi@arm.com, linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com, helgaas@kernel.org, liudongdong3@huawei.com, catalin.marinas@arm.com, Liviu.Dudau@arm.com, jcm@redhat.com, msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com, jchandra@broadcom.com, dhdang@apm.com, linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com
+Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors against platfrom specific ECAM quirks.
+Date: Thu, 02 Jun 2016 14:32:33 +0200
+Message-ID: <9294389.sZPDtyjoUs@wuerfel>
+In-Reply-To: <5750218F.9030406@semihalf.com>
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com> <4347711.qDrKz2s8lr@wuerfel> <5750218F.9030406@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160606073238.1073-2-thierry.reding@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 06, 2016 at 09:32:37AM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On Thursday, June 2, 2016 2:07:43 PM CEST Tomasz Nowicki wrote:
+> On 02.06.2016 13:42, Arnd Bergmann wrote:
+> > On Thursday, June 2, 2016 10:41:01 AM CEST Tomasz Nowicki wrote:
+> >> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+> >> +{
+> >> +       int bus_num = root->secondary.start;
+> >> +       int domain = root->segment;
+> >> +       struct pci_cfg_fixup *f;
+> >> +
+> >> +       if (!mcfg_table)
+> >> +               return &pci_generic_ecam_ops;
+> >> +
+> >> +       /*
+> >> +        * Match against platform specific quirks and return corresponding
+> >> +        * CAM ops.
+> >> +        *
+> >> +        * First match against PCI topology <domain:bus> then use OEM ID and
+> >> +        * OEM revision from MCFG table standard header.
+> >> +        */
+> >> +       for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
+> >> +               if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
+> >> +                   (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
+> >> +                   (!strncmp(f->oem_id, mcfg_table->header.oem_id,
+> >> +                             ACPI_OEM_ID_SIZE)) &&
+> >> +                   (f->oem_revision == mcfg_table->header.oem_revision))
+> >> +                       return f->ops;
+> >> +       }
+> >> +       /* No quirks, use ECAM */
+> >> +       return &pci_generic_ecam_ops;
+> >> +}
+> >> +
+> >>   int pci_mcfg_lookup(struct acpi_pci_root *root)
+> >
+> > Can you explain the use of pci_ecam_ops instead of pci_ops here?
+> >
 > 
-> There is now a common implementation for a match function that will
-> always match, so the PCI-specific implementation can be removed.
+> I wanted to get associated bus_shift and use it to setup configuration 
+> region properly before calling pci_ecam_create. Please see next patch.
 > 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+I see. It feels really odd to do it this way though, since having a
+nonstandard bus_shift essentially means not using anything resembling
+ECAM to start with.
 
-I'm sort of OK with this.  It's clearly not going to break anything.
+I realize that a lot of the host bridges are not ECAM, but because
+of this, it would be more logical to have their own pci_ops instead
+of pci_ecam_ops.
 
-But I would far rather figure out a way to remove no_pci_devices()
-completely.  There's only one in-tree caller, and it's sort of
-dubious, although the idea was added by Linus (2bff5e94f1bf).
-
-I suppose nowadays we would use ACPI or DMI to do this.  But I guess
-this is OK as-is.  It'd be pretty hard to find a PC110 to test any
-real driver changes.
-
-I assume all three of these patches would get merged together by
-somebody else.
-
-> ---
->  drivers/pci/probe.c | 7 +------
->  1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8e3ef720997d..3db06d8d6497 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -62,11 +62,6 @@ static struct resource *get_pci_domain_busn_res(int domain_nr)
->  	return &r->res;
->  }
->  
-> -static int find_anything(struct device *dev, void *data)
-> -{
-> -	return 1;
-> -}
-> -
->  /*
->   * Some device drivers need know if pci is initiated.
->   * Basically, we think pci is not initiated when there
-> @@ -77,7 +72,7 @@ int no_pci_devices(void)
->  	struct device *dev;
->  	int no_devices;
->  
-> -	dev = bus_find_device(&pci_bus_type, NULL, NULL, find_anything);
-> +	dev = bus_find_device(&pci_bus_type, NULL, NULL, device_match_always);
->  	no_devices = (dev == NULL);
->  	put_device(dev);
->  	return no_devices;
-> -- 
-> 2.8.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Arnd
