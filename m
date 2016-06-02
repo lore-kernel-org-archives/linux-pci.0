@@ -1,153 +1,141 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v3 6/7] PCI: Add support for enforcing all MMIO BARs to be page aligned
-Date: Thu, 30 Jun 2016 18:53:12 +0800
-In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1467283993-3185-7-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V8 9/9] pci, acpi: ARM64 support for ACPI based generic
+ PCI host controller
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <1464621262-26770-10-git-send-email-tn@semihalf.com>
+ <20160602093500.GA13962@red-moon>
+Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+ catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, jchandra@broadcom.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com,
+ Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ cov@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5750001B.2090309@semihalf.com>
+Date: Thu, 2 Jun 2016 11:44:59 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160602093500.GA13962@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-When vfio passthrough a PCI device of which MMIO BARs are
-smaller than PAGE_SIZE, guest will not handle the mmio
-accesses to the BARs which leads to mmio emulations in host.
+On 02.06.2016 11:35, Lorenzo Pieralisi wrote:
+> On Mon, May 30, 2016 at 05:14:22PM +0200, Tomasz Nowicki wrote:
+>> This patch implements pci_acpi_scan_root call so that ARM64 can start
+>> using ACPI to setup and enumerate PCI buses.
+>>
+>> The implementation of pci_acpi_scan_root() looks up config space regions
+>> through MCFG interface. Then ECAM library is doing a new mapping
+>> and attach generic ECAM ops which are used for accessing config space.
+>>
+>> On ARM64, ACPI and DT can be enabled together, and in that case
+>> we need to use generic domains. In order to do that we implement
+>> ARM64 specific way of retrieving domain number from pci_config_window
+>> structure.
+>>
+>> Since we enable PCI for ACPI we need to implement raw_pci_{read|write}
+>> at the same time. ARM64 provides RAW accessors as long as there is
+>> correlated valid pci_bus structure, but not before.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+>
+> [...]
+>
+>> +/* release_info: free resrouces allocated by init_info */
+>
+> Nit: s/resrouces/resources
+>
+>> +static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
+>> +{
+>> +	struct acpi_pci_generic_root_info *ri;
+>> +
+>> +	ri = container_of(ci, struct acpi_pci_generic_root_info, common);
+>> +	pci_ecam_free(ri->cfg);
+>> +	kfree(ri);
+>> +}
+>> +
+>> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
+>> +	.release_info = pci_acpi_generic_release_info,
+>> +};
+>> +
+>> +/* Interface called from ACPI code to setup PCI host controller */
+>>   struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>   {
+>> -	/* TODO: Should be revisited when implementing PCI on ACPI */
+>> -	return NULL;
+>> +	int node = acpi_get_node(root->device->handle);
+>> +	struct acpi_pci_generic_root_info *ri;
+>> +	struct pci_bus *bus, *child;
+>> +	int err;
+>> +
+>> +	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
+>> +	if (!ri)
+>> +		return NULL;
+>> +
+>> +	err = pci_acpi_setup_ecam_mapping(root, ri);
+>> +	if (err)
+>> +		return NULL;
+>                  ^
+> Leaking memory -> kfree(ri)
 
-This is because vfio will not allow to passthrough one BAR's
-mmio page which may be shared with other BARs. Otherwise,
-there will be a backdoor that guest can use to access BARs
-of other guest.
+I missed that. Will fix.
 
-To solve this issue, this patch modifies resource_alignment
-to support syntax where multiple devices get the same
-alignment. So we can use something like
-"pci=resource_alignment=*:*:*.*:noresize" to enforce the
-alignment of all MMIO BARs to be at least PAGE_SIZE so that
-one BAR's mmio page would not be shared with other BARs.
+>
+>> +	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
+>> +	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
+>> +				   ri->cfg);
+>> +	if (!bus)
+>> +		return NULL;
+>
+> Ditto.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- Documentation/kernel-parameters.txt |    2 ++
- drivers/pci/pci.c                   |   60 ++++++++++++++++++++++++++++-------
- 2 files changed, 51 insertions(+), 11 deletions(-)
+Here kfree(ri) is not needed. __acpi_pci_root_release_info will free ri 
+inside of acpi_pci_root_create.
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index c4802f5..cb09503 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -3003,6 +3003,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
-+				<domain>, <bus>, <slot> and <func> can be set to
-+				"*" which means match all values.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
- 				noresize: Don't change the resources' sizes when
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1d80a94..2e15ac8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4759,6 +4759,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 	int seg, bus, slot, func, align_order, count;
- 	resource_size_t align = 0;
- 	char *p;
-+	bool invalid = false;
- 
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
-@@ -4777,16 +4778,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 		} else {
- 			align_order = -1;
- 		}
--		if (sscanf(p, "%x:%x:%x.%x%n",
--			&seg, &bus, &slot, &func, &count) != 4) {
-+		if (p[0] == '*' && p[1] == ':') {
-+			seg = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
-+				p[count] != ':') {
-+			invalid = true;
-+			break;
-+		}
-+		p += count + 1;
-+		if (*p == '*') {
-+			bus = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
-+			invalid = true;
-+			break;
-+		}
-+		p += count;
-+		if (*p == '.') {
-+			slot = bus;
-+			bus = seg;
- 			seg = 0;
--			if (sscanf(p, "%x:%x.%x%n",
--					&bus, &slot, &func, &count) != 3) {
--				/* Invalid format */
--				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
--					p);
-+			p++;
-+		} else if (*p == ':') {
-+			p++;
-+			if (p[0] == '*' && p[1] == '.') {
-+				slot = -1;
-+				count = 1;
-+			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
-+					p[count] != '.') {
-+				invalid = true;
- 				break;
- 			}
-+			p += count + 1;
-+		} else {
-+			invalid = true;
-+			break;
-+		}
-+		if (*p == '*') {
-+			func = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
-+			invalid = true;
-+			break;
- 		}
- 		p += count;
- 		if (!strncmp(p, ":noresize", 9)) {
-@@ -4794,10 +4828,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 			p += 9;
- 		} else
- 			*resize = true;
--		if (seg == pci_domain_nr(dev->bus) &&
--			bus == dev->bus->number &&
--			slot == PCI_SLOT(dev->devfn) &&
--			func == PCI_FUNC(dev->devfn)) {
-+		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
-+			(bus == dev->bus->number || bus == -1) &&
-+			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
-+			(func == PCI_FUNC(dev->devfn) || func == -1)) {
- 			if (align_order == -1)
- 				align = PAGE_SIZE;
- 			else
-@@ -4807,10 +4841,14 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 		}
- 		if (*p != ';' && *p != ',') {
- 			/* End of param or invalid format */
-+			invalid = true;
- 			break;
- 		}
- 		p++;
- 	}
-+	if (invalid)
-+		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
-+				p);
- 	spin_unlock(&resource_alignment_lock);
- 	return align;
- }
--- 
-1.7.9.5
+>
+>> +
+>> +	pci_bus_size_bridges(bus);
+>> +	pci_bus_assign_resources(bus);
+>> +
+>> +	list_for_each_entry(child, &bus->children, node)
+>> +		pcie_bus_configure_settings(child);
+>> +
+>> +	return bus;
+>>   }
+>>
+>>   void pcibios_add_bus(struct pci_bus *bus)
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 9661c85..f66d188 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1390,7 +1390,12 @@ static inline int pci_domain_nr(struct pci_bus *bus)
+>>   {
+>>   	return bus->domain_nr;
+>>   }
+>> +/* Arch specific ACPI hook to set-up domain number */
+>> +#ifdef CONFIG_ACPI
+>> +int acpi_pci_bus_domain_nr(struct pci_bus *bus);
+>
+> Technically speaking, this should be introduced in a separate patch;
+> given that I know it is a temporary plaster and no other architecture will
+> have to implement it I reckon it is fine to leave it here, I will make
+> it disappear as fast as I can.
+>
+> We can argue if it is best to move the ACPI bits into a separate file
+> (acpi-pci.c), I am fine with keeping DT/ACPI in one file if that's fine
+> with Catalin and Will.
+>
+> You can send the fix-ups above in the final pull request which I hope
+> is nigh.
+>
+> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+Thanks,
+Tomasz
