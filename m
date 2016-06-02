@@ -1,96 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
-Date: Tue, 14 Jun 2016 16:24:05 +0800
-Message-ID: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
-In-Reply-To: <1465892645-32381-1-git-send-email-po.liu@nxp.com>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-1-git-send-email-po.liu@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- Marc Zyngier <marc.zyngier@arm.com>, Po Liu <po.liu@nxp.com>,
- Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Minghuan Lian <minghuan.lian@nxp.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
- Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:39879 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824AbcFBGOX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 02:14:23 -0400
+Received: from localhost
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 2 Jun 2016 00:14:21 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+Subject: [RESEND PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X table
+Date: Thu,  2 Jun 2016 14:09:57 +0800
+Message-Id: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
-When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
-maybe there is interrupt line for aer pme etc. Search the interrupt
-number in the fdt file. Then fixup the dev->irq with it.
+Current vfio-pci implementation disallows to mmap the page
+containing MSI-X table in case that users can write directly
+to MSI-X table and generate an incorrect MSIs.
 
-Signed-off-by: Po Liu <po.liu@nxp.com>
----
-changes for V3:
-	- Move to quirk;
-	- Only correct the irq in RC mode;
+However, this will cause some performance issue when there
+are some critical device registers in the same page as the 
+MSI-X table. We have to handle the mmio access to these
+registers in QEMU emulation rather than in guest.
 
- drivers/pci/quirks.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+To solve this issue, this series allows to expose MSI-X table
+to userspace when hardware enables the capability of interrupt
+remapping which can ensure that a given PCI device can only
+shoot the MSIs assigned for it. And we introduce a new bus_flags
+PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+for different archs.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ee72ebe..8b39cce 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -25,6 +25,7 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <linux/mm.h>
-+#include <linux/of_irq.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-@@ -4419,3 +4420,31 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 	}
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-+
-+/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
-+ * but use standalone irq. Read the device tree for the aer
-+ * interrupt number.
-+ */
-+static void quirk_aer_interrupt(struct pci_dev *dev)
-+{
-+	int ret;
-+	u8 header_type;
-+	struct device_node *np = NULL;
-+
-+	/* Only for the RC mode device */
-+	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
-+	if ((header_type & 0x7F) != PCI_HEADER_TYPE_BRIDGE)
-+		return;
-+
-+	if (dev->bus->dev.of_node)
-+		np = dev->bus->dev.of_node;
-+
-+	if (IS_ENABLED(CONFIG_OF_IRQ) && np) {
-+		ret = of_irq_get_byname(np, "aer");
-+		if (ret > 0) {
-+			dev->no_msi = 1;
-+			dev->irq = ret;
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, quirk_aer_interrupt);
+The patch 3 are based on the proposed patchset[1].
+
+Changelog v2: 
+- Make the commit log more clear
+- Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+  so that we could clearly know what the function does
+- Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+  of iommu_bus_notifier()
+- Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+  table so that we can know whether we allow to mmap MSI-X table
+  in QEMU
+
+[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+
+Yongji Xie (6):
+  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+  iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+  vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+ drivers/iommu/iommu.c                     |    8 ++++++++
+ drivers/pci/msi.c                         |   15 +++++++++++++++
+ drivers/pci/probe.c                       |    7 +++++++
+ drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
+ drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
+ include/linux/msi.h                       |    5 ++++-
+ include/linux/pci.h                       |    1 +
+ 8 files changed, 59 insertions(+), 5 deletions(-)
+
 -- 
-2.1.0.27.g96db324
+1.7.9.5
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
