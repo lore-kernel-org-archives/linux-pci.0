@@ -1,302 +1,114 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
-Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 4/7] irqchip/gicv3-its: Refator ITS DT init code to prepare for ACPI
-Date: Mon, 13 Jun 2016 16:41:10 +0200
-Message-Id: <1465828873-23498-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Po Liu <po.liu@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Roy Zang <roy.zang@nxp.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Minghuan Lian <minghuan.lian@nxp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Mingkai Hu <mingkai.hu@nxp.com>, Rob Herring <robh@kernel.org>
+Subject: RE: [PATCH 2/2] aer: add support aer interrupt with none
+ MSI/MSI-X/INTx mode
+Date: Thu, 2 Jun 2016 05:01:19 +0000
+Message-ID: <VI1PR0401MB1709E215DCE264B2C27B3DAB92580@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+ <20160602034828.GA10240@localhost>
+In-Reply-To: <20160602034828.GA10240@localhost>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to add ACPI support we need to isolate ACPI&DT common code and
-move DT logic to corresponding functions. To achieve this we are using
-firmware agnostic handle which can be unpacked to either DT or ACPI node.
-
-No functional changes other than a very minor one:
-1. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
-as a bonus we get nice string formatting.
-2. Since there is only one of ITS parent domain convert it to static global
-variable and drop the parameter from its_probe_one. Users can refer to it
-in more convenient way then.
-
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/irqchip/irq-gic-v3-its.c   | 79 +++++++++++++++++++++-----------------
- drivers/irqchip/irq-gic-v3.c       |  6 +--
- include/linux/irqchip/arm-gic-v3.h |  4 +-
- 3 files changed, 48 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 43d32fc..f033fd8 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -74,7 +74,7 @@ struct its_node {
- 	raw_spinlock_t		lock;
- 	struct list_head	entry;
- 	void __iomem		*base;
--	unsigned long		phys_base;
-+	phys_addr_t		phys_base;
- 	struct its_cmd_block	*cmd_base;
- 	struct its_cmd_block	*cmd_write;
- 	struct its_baser	tables[GITS_BASER_NR_REGS];
-@@ -114,6 +114,7 @@ struct its_device {
- static LIST_HEAD(its_nodes);
- static DEFINE_SPINLOCK(its_lock);
- static struct rdists *gic_rdists;
-+static struct irq_domain *its_parent;
- 
- #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
- #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
-@@ -837,7 +838,7 @@ static void its_free_tables(struct its_node *its)
- 	}
- }
- 
--static int its_alloc_tables(const char *node_name, struct its_node *its)
-+static int its_alloc_tables(struct its_node *its)
- {
- 	int err;
- 	int i;
-@@ -893,8 +894,8 @@ static int its_alloc_tables(const char *node_name, struct its_node *its)
- 				    order);
- 			if (order >= MAX_ORDER) {
- 				order = MAX_ORDER - 1;
--				pr_warn("%s: Device Table too large, reduce its page order to %u\n",
--					node_name, order);
-+				pr_warn("ITS@%pa: Device Table too large, reduce its page order to %u\n",
-+					&its->phys_base, order);
- 			}
- 		}
- 
-@@ -903,8 +904,8 @@ retry_alloc_baser:
- 		if (alloc_pages > GITS_BASER_PAGES_MAX) {
- 			alloc_pages = GITS_BASER_PAGES_MAX;
- 			order = get_order(GITS_BASER_PAGES_MAX * psz);
--			pr_warn("%s: Device Table too large, reduce its page order to %u (%u pages)\n",
--				node_name, order, alloc_pages);
-+			pr_warn("ITS@%pa: Device Table too large, reduce its page order to %u (%u pages)\n",
-+				&its->phys_base, order, alloc_pages);
- 		}
- 
- 		base = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO, order);
-@@ -978,8 +979,8 @@ retry_baser:
- 		}
- 
- 		if (val != tmp) {
--			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
--			       node_name, i,
-+			pr_err("ITS@%pa: GITS_BASER%d doesn't stick: %lx %lx\n",
-+			       &its->phys_base, i,
- 			       (unsigned long) val, (unsigned long) tmp);
- 			err = -ENXIO;
- 			goto out_free;
-@@ -1507,8 +1508,7 @@ static void its_enable_quirks(struct its_node *its)
- 	gic_enable_quirks(iidr, its_quirks, its);
- }
- 
--static int its_init_domain(struct device_node *node, struct its_node *its,
--			   struct irq_domain *parent)
-+static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
- {
- 	struct irq_domain *inner_domain;
- 	struct msi_domain_info *info;
-@@ -1517,13 +1517,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
- 	if (!info)
- 		return -ENOMEM;
- 
--	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
-+	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
- 	if (!inner_domain) {
- 		kfree(info);
- 		return -ENOMEM;
- 	}
- 
--	inner_domain->parent = parent;
-+	inner_domain->parent = its_parent;
- 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
- 	info->ops = &its_msi_domain_ops;
- 	info->data = its;
-@@ -1532,43 +1532,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
- 	return 0;
- }
- 
--static int __init its_probe(struct device_node *node,
--			    struct irq_domain *parent)
-+static int __init its_probe_one(struct resource *res,
-+				struct fwnode_handle *handle, int numa_node)
- {
--	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
- 
--	err = of_address_to_resource(node, 0, &res);
--	if (err) {
--		pr_warn("%s: no regs?\n", node->full_name);
--		return -ENXIO;
--	}
--
--	its_base = ioremap(res.start, resource_size(&res));
-+	its_base = ioremap(res->start, resource_size(res));
- 	if (!its_base) {
--		pr_warn("%s: unable to map registers\n", node->full_name);
-+		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
- 		return -ENOMEM;
- 	}
- 
- 	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
- 	if (val != 0x30 && val != 0x40) {
--		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
-+		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
- 		err = -ENODEV;
- 		goto out_unmap;
- 	}
- 
- 	err = its_force_quiescent(its_base);
- 	if (err) {
--		pr_warn("%s: failed to quiesce, giving up\n",
--			node->full_name);
-+		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
- 		goto out_unmap;
- 	}
- 
--	pr_info("ITS: %s\n", node->full_name);
-+	pr_info("ITS@%pa\n", &res->start);
- 
- 	its = kzalloc(sizeof(*its), GFP_KERNEL);
- 	if (!its) {
-@@ -1580,9 +1572,9 @@ static int __init its_probe(struct device_node *node,
- 	INIT_LIST_HEAD(&its->entry);
- 	INIT_LIST_HEAD(&its->its_device_list);
- 	its->base = its_base;
--	its->phys_base = res.start;
-+	its->phys_base = res->start;
- 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
--	its->numa_node = of_node_to_nid(node);
-+	its->numa_node = numa_node;
- 
- 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
- 	if (!its->cmd_base) {
-@@ -1593,7 +1585,7 @@ static int __init its_probe(struct device_node *node,
- 
- 	its_enable_quirks(its);
- 
--	err = its_alloc_tables(node->full_name, its);
-+	err = its_alloc_tables(its);
- 	if (err)
- 		goto out_free_cmd;
- 
-@@ -1629,7 +1621,7 @@ static int __init its_probe(struct device_node *node,
- 	writeq_relaxed(0, its->base + GITS_CWRITER);
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
--	err = its_init_domain(node, its, parent);
-+	err = its_init_domain(handle, its);
- 	if (err)
- 		goto out_free_tables;
- 
-@@ -1647,7 +1639,7 @@ out_free_its:
- 	kfree(its);
- out_unmap:
- 	iounmap(its_base);
--	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
-+	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
- 	return err;
- }
- 
-@@ -1675,10 +1667,10 @@ static struct of_device_id its_device_id[] = {
- 	{},
- };
- 
--int __init its_init(struct device_node *node, struct rdists *rdists,
--	     struct irq_domain *parent_domain)
-+static int __init its_of_probe(struct device_node *node)
- {
- 	struct device_node *np;
-+	struct resource res;
- 
- 	for (np = of_find_matching_node(node, its_device_id); np;
- 	     np = of_find_matching_node(np, its_device_id)) {
-@@ -1688,8 +1680,25 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
- 			continue;
- 		}
- 
--		its_probe(np, parent_domain);
-+		if (of_address_to_resource(np, 0, &res)) {
-+			pr_warn("%s: no regs?\n", np->full_name);
-+			continue;
-+		}
-+
-+		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
- 	}
-+	return 0;
-+}
-+
-+int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
-+		    struct irq_domain *parent_domain)
-+{
-+	struct device_node *of_node;
-+
-+	its_parent = parent_domain;
-+	of_node = to_of_node(handle);
-+	if (of_node)
-+		its_of_probe(of_node);
- 
- 	if (list_empty(&its_nodes)) {
- 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
-diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
-index 2c5ba0e..019b442 100644
---- a/drivers/irqchip/irq-gic-v3.c
-+++ b/drivers/irqchip/irq-gic-v3.c
-@@ -911,7 +911,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
- 				 u64 redist_stride,
- 				 struct fwnode_handle *handle)
- {
--	struct device_node *node;
- 	u32 typer;
- 	int gic_irqs;
- 	int err;
-@@ -952,10 +951,9 @@ static int __init gic_init_bases(void __iomem *dist_base,
- 
- 	set_handle_irq(gic_handle_irq);
- 
--	node = to_of_node(handle);
- 	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
--	    node) /* Temp hack to prevent ITS init for ACPI */
--		its_init(node, &gic_data.rdists, gic_data.domain);
-+	    to_of_node(handle)) /* Temp hack to prevent ITS init for ACPI */
-+		its_init(handle, &gic_data.rdists, gic_data.domain);
- 
- 	gic_smp_init();
- 	gic_dist_init();
-diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-index dc493e0..2136639 100644
---- a/include/linux/irqchip/arm-gic-v3.h
-+++ b/include/linux/irqchip/arm-gic-v3.h
-@@ -334,9 +334,9 @@ struct rdists {
- };
- 
- struct irq_domain;
--struct device_node;
-+struct fwnode_handle;
- int its_cpu_init(void);
--int its_init(struct device_node *node, struct rdists *rdists,
-+int its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 	     struct irq_domain *domain);
- 
- static inline bool gic_enable_sre(void)
--- 
-1.9.1
-
+SGkgQmpvcm4sDQoNCg0KPiAgLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gIEZyb206IEJq
+b3JuIEhlbGdhYXMgW21haWx0bzpoZWxnYWFzQGtlcm5lbC5vcmddDQo+ICBTZW50OiBUaHVyc2Rh
+eSwgSnVuZSAwMiwgMjAxNiAxMTo0OCBBTQ0KPiAgVG86IFBvIExpdQ0KPiAgQ2M6IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsN
+Cj4gIGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwu
+b3JnOyBBcm5kIEJlcmdtYW5uOw0KPiAgUm95IFphbmc7IE1hcmMgWnluZ2llcjsgU3R1YXJ0IFlv
+ZGVyOyBZYW5nLUxlbyBMaTsgTWluZ2h1YW4gTGlhbjsgQmpvcm4NCj4gIEhlbGdhYXM7IFNoYXdu
+IEd1bzsgTWluZ2thaSBIdTsgUm9iIEhlcnJpbmcNCj4gIFN1YmplY3Q6IFJlOiBbUEFUQ0ggMi8y
+XSBhZXI6IGFkZCBzdXBwb3J0IGFlciBpbnRlcnJ1cHQgd2l0aCBub25lDQo+ICBNU0kvTVNJLVgv
+SU5UeCBtb2RlDQo+ICANCj4gIFsrY2MgUm9iXQ0KPiAgDQo+ICBIaSBQbywNCj4gIA0KPiAgT24g
+VGh1LCBNYXkgMjYsIDIwMTYgYXQgMDI6MDA6MDZQTSArMDgwMCwgUG8gTGl1IHdyb3RlOg0KPiAg
+PiBPbiBzb21lIHBsYXRmb3Jtcywgcm9vdCBwb3J0IGRvZXNuJ3Qgc3VwcG9ydCBNU0kvTVNJLVgv
+SU5UeCBpbiBSQyBtb2RlLg0KPiAgPiBXaGVuIGNoaXAgc3VwcG9ydCB0aGUgYWVyIGludGVycnVw
+dCB3aXRoIG5vbmUgTVNJL01TSS1YL0lOVHggbW9kZSwNCj4gID4gbWF5YmUgdGhlcmUgaXMgaW50
+ZXJydXB0IGxpbmUgZm9yIGFlciBwbWUgZXRjLiBTZWFyY2ggdGhlIGludGVycnVwdA0KPiAgPiBu
+dW1iZXIgaW4gdGhlIGZkdCBmaWxlLg0KPiAgDQo+ICBNeSB1bmRlcnN0YW5kaW5nIGlzIHRoYXQg
+QUVSIGludGVycnVwdCBzaWduYWxpbmcgY2FuIGJlIGRvbmUgdmlhIElOVHgsDQo+ICBNU0ksIG9y
+IE1TSS1YIChQQ0llIHNwZWMgcjMuMCwgc2VjIDYuMi40LjEuMikuICBBcHBhcmVudGx5IHlvdXIg
+ZGV2aWNlDQo+ICBkb2Vzbid0IHN1cHBvcnQgTVNJIG9yIE1TSS1YLiAgQXJlIHlvdSBzYXlpbmcg
+aXQgZG9lc24ndCBzdXBwb3J0IElOVHgNCj4gIGVpdGhlcj8gIEhvdyBpcyB0aGUgaW50ZXJydXB0
+IHlvdSdyZSByZXF1ZXN0aW5nIGhlcmUgZGlmZmVyZW50IGZyb20gSU5UeD8NCg0KTGF5ZXJzY2Fw
+ZSB1c2Ugbm9uZSBvZiBNU0kgb3IgTVNJLVggb3IgSU5UeCB0byBpbmRpY2F0ZSB0aGUgZGV2aWNl
+cyBvciByb290IGVycm9yDQppbiBSQyBtb2RlLiBCdXQgdXNlIGFuIGluZGVwZW5kZW50IFNQSSBp
+bnRlcnJ1cHQoYXJtIGludGVycnVwdCBjb250cm9sbGVyKSBsaW5lLg0KQW5kIGF0IHNhbWUgdGlt
+ZSwgQUVSIGNhcGFiaWxpdHkgbGlzdCBpbiBQQ0llIHJlZ2lzdGVyIGRlc2NyaXB0b3JzLiBBbmQg
+YWxzbywNClRoZSBSb290IEVycm9yIENvbW1hbmQvc3RhdHVzIHJlZ2lzdGVyIHdhcyBwcm9wZXIg
+dG8gZW5hYmxlL2Rpc2FibGUgdGhlIEFFUiBpbnRlcnJ1cHQuDQoNClRoaXMgaGFyZHdhcmUgaW1w
+bGVtZW50YXRpb24gbWFrZSBzZW5zZSBpbiBzb21lIHBsYXRmb3JtcywgYW5kIHRoaXMgd2FzIGRl
+c2NyaWJlZA0KaW4gdGhlIGZ1bmN0aW9uIGluaXRfc2VydmljZV9pcnFzKCkgaW4gdGhlIGRyaXZl
+cnMvcGNpL3BjaWUvcG9ydGRydl9jb3JlLmMgaW4gY3VycmVudA0Ka2VybmVsIGFzOg0KDQoyNDEg
+ICAgICAqIFdlJ3JlIG5vdCBnb2luZyB0byB1c2UgTVNJLVgsIHNvIHRyeSBNU0kgYW5kIGZhbGwg
+YmFjayB0byBJTlR4LiAgICAgDQoyNDIgICAgICAqIElmIG5laXRoZXIgTVNJL01TSS1YIG5vciBJ
+TlR4IGF2YWlsYWJsZSwgdHJ5IG90aGVyIGludGVycnVwdC4gIE9uICANCjI0MyAgICAgICogc29t
+ZSBwbGF0Zm9ybXMsIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBvcnQgTVNJL01TSS1YL0lOVHggaW4g
+UkMgbW9kZQ0KMjQ0ICAgICAgKi8gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KDQpTbyBJIHRoaW5rIHRo
+aXMgd2FzIHRoZSBwcm9wZXIgcGxhY2UgdG8gdXBkYXRlIHRoZSBpcnEgbnVtYmVyIGJlZm9yZSBh
+ZXIgc2VydmljZQ0KZHJpdmVyIHdhcyBsb2FkZWQuDQoNCj4gIA0KPiAgTXkgZ3Vlc3MgaXMgdGhh
+dCB5b3VyIGRldmljZSAqZG9lcyogc3VwcG9ydCBJTlR4LCBhbmQgd2Ugc2hvdWxkIHVzZSB0aGF0
+Lg0KPiAgQUNQSSBoYXMgdGhlIGdlbmVyaWMgX1BSVCB0aGF0IGRlc2NyaWJlcyBJTlR4IHJvdXRp
+bmcuICBUaGVyZSBtdXN0IGJlDQo+ICBzb21ldGhpbmcgc2ltaWxhciBmb3IgRFQsIGJ1dCBJIGRv
+bid0IGtub3cgd2hhdCBpdCBpcy4gIEl0IHNlZW1zIGxpa2UNCj4gIHRoaXMgc2hvdWxkIGJlIGRl
+c2NyaWJlZCB1c2luZyB0aGF0IERUIG1lY2hhbmlzbSAod2hhdGV2ZXIgaXQgaXMpLCBhbmQNCj4g
+IHdlIHNob3VsZG4ndCBuZWVkIHNwZWNpYWwtY2FzZSBjb2RlIGluIHRoZSBwb3J0ZHJ2IGNvZGUu
+DQo+ICANCj4gID4gU2lnbmVkLW9mZi1ieTogUG8gTGl1IDxwby5saXVAbnhwLmNvbT4NCj4gID4g
+LS0tDQo+ICA+ICBkcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29yZS5jIHwgMzEgKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKy0tLQ0KPiAgPiAgMSBmaWxlIGNoYW5nZWQsIDI4IGluc2VydGlv
+bnMoKyksIDMgZGVsZXRpb25zKC0pDQo+ICA+DQo+ICA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Bj
+aS9wY2llL3BvcnRkcnZfY29yZS5jDQo+ICA+IGIvZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2X2Nv
+cmUuYyBpbmRleCAzMmQ0ZDBhLi42NDgzM2U1IDEwMDY0NA0KPiAgPiAtLS0gYS9kcml2ZXJzL3Bj
+aS9wY2llL3BvcnRkcnZfY29yZS5jDQo+ICA+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRy
+dl9jb3JlLmMNCj4gID4gQEAgLTE1LDYgKzE1LDcgQEANCj4gID4gICNpbmNsdWRlIDxsaW51eC9z
+bGFiLmg+DQo+ICA+ICAjaW5jbHVkZSA8bGludXgvcGNpZXBvcnRfaWYuaD4NCj4gID4gICNpbmNs
+dWRlIDxsaW51eC9hZXIuaD4NCj4gID4gKyNpbmNsdWRlIDxsaW51eC9vZl9pcnEuaD4NCj4gID4N
+Cj4gID4gICNpbmNsdWRlICIuLi9wY2kuaCINCj4gID4gICNpbmNsdWRlICJwb3J0ZHJ2LmgiDQo+
+ICA+IEBAIC0xOTksNiArMjAwLDI4IEBAIHN0YXRpYyBpbnQgcGNpZV9wb3J0X2VuYWJsZV9tc2l4
+KHN0cnVjdCBwY2lfZGV2DQo+ICA+ICpkZXYsIGludCAqdmVjdG9ycywgaW50IG1hc2spICBzdGF0
+aWMgaW50IGluaXRfc2VydmljZV9pcnFzKHN0cnVjdA0KPiAgPiBwY2lfZGV2ICpkZXYsIGludCAq
+aXJxcywgaW50IG1hc2spICB7DQo+ICA+ICAJaW50IGksIGlycSA9IC0xOw0KPiAgPiArCWludCBy
+ZXQ7DQo+ICA+ICsJc3RydWN0IGRldmljZV9ub2RlICpucCA9IE5VTEw7DQo+ICA+ICsNCj4gID4g
+Kwlmb3IgKGkgPSAwOyBpIDwgUENJRV9QT1JUX0RFVklDRV9NQVhTRVJWSUNFUzsgaSsrKQ0KPiAg
+PiArCQlpcnFzW2ldID0gMDsNCj4gID4gKw0KPiAgPiArCWlmIChkZXYtPmJ1cy0+ZGV2Lm9mX25v
+ZGUpDQo+ICA+ICsJCW5wID0gZGV2LT5idXMtPmRldi5vZl9ub2RlOw0KPiAgPiArDQo+ICA+ICsJ
+LyogSWYgcm9vdCBwb3J0IGRvZXNuJ3Qgc3VwcG9ydCBNU0kvTVNJLVgvSU5UeCBpbiBSQyBtb2Rl
+LA0KPiAgPiArCSAqIHJlcXVlc3QgaXJxIGZvciBhZXINCj4gID4gKwkgKi8NCj4gID4gKwlpZiAo
+SVNfRU5BQkxFRChDT05GSUdfT0ZfSVJRKSAmJiBucCAmJg0KPiAgPiArCQkJKG1hc2sgJiBQQ0lF
+X1BPUlRfU0VSVklDRV9QTUUpKSB7DQo+ICA+ICsJCXJldCA9IG9mX2lycV9nZXRfYnluYW1lKG5w
+LCAiYWVyIik7DQo+ICA+ICsJCWlmIChyZXQgPiAwKSB7DQo+ICA+ICsJCQlpcnFzW1BDSUVfUE9S
+VF9TRVJWSUNFX0FFUl9TSElGVF0gPSByZXQ7DQo+ICA+ICsJCQlpZiAoZGV2LT5pcnEpDQo+ICA+
+ICsJCQkJaXJxID0gZGV2LT5pcnE7DQo+ICA+ICsJCQlnb3RvIG5vX21zaTsNCj4gID4gKwkJfQ0K
+PiAgPiArCX0NCj4gID4NCj4gID4gIAkvKg0KPiAgPiAgCSAqIElmIE1TSSBjYW5ub3QgYmUgdXNl
+ZCBmb3IgUENJZSBQTUUgb3IgaG90cGx1Zywgd2UgaGF2ZSB0byB1c2UNCj4gIEBADQo+ICA+IC0y
+MjQsMTEgKzI0NywxMyBAQCBzdGF0aWMgaW50IGluaXRfc2VydmljZV9pcnFzKHN0cnVjdCBwY2lf
+ZGV2ICpkZXYsDQo+ICBpbnQgKmlycXMsIGludCBtYXNrKQ0KPiAgPiAgCQlpcnEgPSBkZXYtPmly
+cTsNCj4gID4NCj4gID4gICBub19tc2k6DQo+ICA+IC0JZm9yIChpID0gMDsgaSA8IFBDSUVfUE9S
+VF9ERVZJQ0VfTUFYU0VSVklDRVM7IGkrKykNCj4gID4gLQkJaXJxc1tpXSA9IGlycTsNCj4gID4g
+Kwlmb3IgKGkgPSAwOyBpIDwgUENJRV9QT1JUX0RFVklDRV9NQVhTRVJWSUNFUzsgaSsrKSB7DQo+
+ICA+ICsJCWlmICghaXJxc1tpXSkNCj4gID4gKwkJCWlycXNbaV0gPSBpcnE7DQo+ICA+ICsJfQ0K
+PiAgPiAgCWlycXNbUENJRV9QT1JUX1NFUlZJQ0VfVkNfU0hJRlRdID0gLTE7DQo+ICA+DQo+ICA+
+IC0JaWYgKGlycSA8IDApDQo+ICA+ICsJaWYgKGlycSA8IDAgJiYgaXJxc1tQQ0lFX1BPUlRfU0VS
+VklDRV9BRVJfU0hJRlRdIDwgMCkNCj4gID4gIAkJcmV0dXJuIC1FTk9ERVY7DQo+ICA+ICAJcmV0
+dXJuIDA7DQo+ICA+ICB9DQo+ICA+IC0tDQo+ICA+IDIuMS4wLjI3Lmc5NmRiMzI0DQo+ICA+DQo+
+ICA+DQo+ICA+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+DQo+ICA+IGxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0DQo+ICA+IGxpbnV4LWFybS1rZXJu
+ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZw0KPiAgPiBodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9t
+YWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwNCg==
