@@ -1,164 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH v2 09/15] drivers: iommu: arm-smmu-v3: split probe functions into DT/generic portions
-Date: Tue,  7 Jun 2016 14:31:04 +0100
-Message-Id: <1465306270-27076-10-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <ddaney.cavm@gmail.com>
+Return-Path: <ddaney.cavm@gmail.com>
+Message-ID: <5751B704.7010208@gmail.com>
+Date: Fri, 03 Jun 2016 09:57:40 -0700
+From: David Daney <ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+CC: Christopher Covington <cov@codeaurora.org>,
+ Tomasz Nowicki <tn@semihalf.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "arnd@arndb.de" <arnd@arndb.de>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "rafael@kernel.org" <rafael@kernel.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "jchandra@broadcom.com" <jchandra@broadcom.com>,
+ "liudongdong (C)" <liudongdong3@huawei.com>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ "jcm@redhat.com" <jcm@redhat.com>,
+ "dhdang@apm.com" <dhdang@apm.com>,
+ "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+ "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+ "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+ "msalter@redhat.com" <msalter@redhat.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Wangyijing <wangyijing@huawei.com>, "mw@semihalf.com" <mw@semihalf.com>,
+ "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors against
+ platfrom specific ECAM quirks.
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com> <1464856864-18049-2-git-send-email-tn@semihalf.com> <57519F09.2010201@codeaurora.org> <EE11001F9E5DDD47B7634E2F8A612F2E1F76E9D7@lhreml507-mbx>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F76E9D7@lhreml507-mbx>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
-initialization functions to detect and programme the ARM SMMU v3 driver
-features. In order to allow probing the ARM SMMUv3 with other firmwares
-than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
-specific portions so that other FW interfaces (ie ACPI) can reuse the HW
-probing functions and skip the DT portion accordingly.
+On 06/03/2016 08:32 AM, Gabriele Paoloni wrote:
+[...]
+>>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+>>> +{
+>>> +	int bus_num = root->secondary.start;
+>>> +	int domain = root->segment;
+>>> +	struct pci_cfg_fixup *f;
+>>> +
+>>> +	if (!mcfg_table)
+>>> +		return &pci_generic_ecam_ops;
+>>> +
+>>> +	/*
+>>> +	 * Match against platform specific quirks and return
+>> corresponding
+>>> +	 * CAM ops.
+>>> +	 *
+>>> +	 * First match against PCI topology <domain:bus> then use OEM ID
+>> and
+>>> +	 * OEM revision from MCFG table standard header.
+>>> +	 */
+>>> +	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
+>> f++) {
+>>> +		if ((f->domain == domain || f->domain ==
+>> PCI_MCFG_DOMAIN_ANY) &&
+>>> +		    (f->bus_num == bus_num || f->bus_num ==
+>> PCI_MCFG_BUS_ANY) &&
+>>> +		    (!strncmp(f->oem_id, mcfg_table->header.oem_id,
+>>> +			      ACPI_OEM_ID_SIZE)) &&
+>>> +		    (f->oem_revision == mcfg_table->header.oem_revision))
+>>
+>> Is this more likely to be updated between quirky and fixed platforms
+>> than oem_table_id? What do folks think about using oem_table_id instead
+>> of, or in addition to, oem_revision?
+>
+>  From my understanding we need to stick to this mechanism as (otherwise)
+> there are platforms out in the field that would need a FW update.
+>
+> So I don't think that using oem_table_id "instead" is possible; about
+> "in addition" I think it is doable, but I do not see the advantage much.
+> I mean that if a platform gets fixed the oem revision should change too,
+> Right?
 
-This patch implements no functional change, only code reshuffling.
+I think you are correct.  My take away on discussions about using this 
+style of quirk matching was that we would require the oem_revision to 
+change as different quirks (or lack of quirks) were required.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/arm-smmu-v3.c | 63 +++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 52 insertions(+), 11 deletions(-)
+David Daney
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 6379f0a..75f93aa 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -20,12 +20,14 @@
-  * This driver is powered by bad coffee and bombay mix.
-  */
- 
-+#include <linux/acpi.h>
- #include <linux/delay.h>
- #include <linux/dma-iommu.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/iommu.h>
- #include <linux/iopoll.h>
-+#include <linux/iort.h>
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of.h>
-@@ -2331,10 +2333,10 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu)
- 	return 0;
- }
- 
--static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
-+static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- {
- 	u32 reg;
--	bool coherent;
-+	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
- 
- 	/* IDR0 */
- 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
-@@ -2386,13 +2388,9 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
- 		smmu->features |= ARM_SMMU_FEAT_HYP;
- 
- 	/*
--	 * The dma-coherent property is used in preference to the ID
-+	 * The coherency feature as set by FW is used in preference to the ID
- 	 * register, but warn on mismatch.
- 	 */
--	coherent = of_dma_is_coherent(smmu->dev->of_node);
--	if (coherent)
--		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
--
- 	if (!!(reg & IDR0_COHACC) != coherent)
- 		dev_warn(smmu->dev, "IDR0.COHACC overridden by dma-coherent property (%s)\n",
- 			 coherent ? "true" : "false");
-@@ -2513,7 +2511,44 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
- 	return 0;
- }
- 
--static int arm_smmu_device_dt_probe(struct platform_device *pdev)
-+#ifdef CONFIG_ACPI
-+static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-+				      struct arm_smmu_device *smmu)
-+{
-+	struct acpi_iort_smmu_v3 *iort_smmu;
-+	struct device *dev = smmu->dev;
-+	struct acpi_iort_node *node;
-+
-+	node = *(struct acpi_iort_node **)dev_get_platdata(dev);
-+
-+	/* Retrieve SMMUv3 specific data */
-+	iort_smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	if (iort_smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE)
-+		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
-+
-+	return 0;
-+}
-+#else
-+static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
-+				      struct arm_smmu_device *smmu)
-+{
-+	return -ENODEV;
-+}
-+#endif
-+
-+static int arm_smmu_device_dt_probe(struct platform_device *pdev,
-+				    struct arm_smmu_device *smmu)
-+{
-+	parse_driver_options(smmu);
-+
-+	if (of_dma_is_coherent(smmu->dev->of_node))
-+		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
-+
-+	return 0;
-+}
-+
-+static int arm_smmu_device_probe(struct platform_device *pdev)
- {
- 	int irq, ret;
- 	struct resource *res;
-@@ -2555,10 +2590,16 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
- 	if (irq > 0)
- 		smmu->gerr_irq = irq;
- 
--	parse_driver_options(smmu);
-+	if (acpi_disabled)
-+		ret = arm_smmu_device_dt_probe(pdev, smmu);
-+	else
-+		ret = arm_smmu_device_acpi_probe(pdev, smmu);
-+
-+	if (ret)
-+		return ret;
- 
- 	/* Probe the h/w */
--	ret = arm_smmu_device_probe(smmu);
-+	ret = arm_smmu_device_hw_probe(smmu);
- 	if (ret)
- 		return ret;
- 
-@@ -2593,7 +2634,7 @@ static struct platform_driver arm_smmu_driver = {
- 		.name		= "arm-smmu-v3",
- 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
- 	},
--	.probe	= arm_smmu_device_dt_probe,
-+	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
- 
--- 
-2.6.4
 
+>
+> Thanks
+>
+> Gab
+>
