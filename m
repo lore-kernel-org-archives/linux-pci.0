@@ -1,59 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:32966 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751525AbcFUWFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jun 2016 18:05:14 -0400
-Date: Tue, 21 Jun 2016 17:04:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
-Subject: Re: [PATCH] Extending kernel option pci=resource_alignment to be
- able to specify PCI device/vendor IDs
-Message-ID: <20160621220457.GD7603@localhost>
-References: <22400b8828ad44ddbccb876cc5ca3b11@FE-MBX1012.de.bosch.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56059 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750910AbcFCC2g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 22:28:36 -0400
+Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u532PUt8031274
+	for <linux-pci@vger.kernel.org>; Thu, 2 Jun 2016 22:28:35 -0400
+Message-Id: <201606030228.u532PUt8031274@mx0a-001b2d01.pphosted.com>
+Received: from e28smtp04.in.ibm.com (e28smtp04.in.ibm.com [125.16.236.4])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23am7exc44-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 02 Jun 2016 22:28:35 -0400
+Received: from localhost
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Fri, 3 Jun 2016 07:58:31 +0530
+Subject: Re: [RESEND PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X
+ table
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160602071132.273c64c7@ul30vt.home>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, bhelgaas@google.com,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 3 Jun 2016 10:28:21 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <22400b8828ad44ddbccb876cc5ca3b11@FE-MBX1012.de.bosch.com>
+In-Reply-To: <20160602071132.273c64c7@ul30vt.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 07, 2016 at 02:24:17PM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
-> Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned 
-> PCI memory resources are not page aligned.
-> By using the kernel option "pci=resource_alignment" it is possible to force
-> single PCI boards to use page alignment for their memory resources.
-> However, this is fairly cumbersome if multiple of these boards are in use as 
-> the specification of the cards has to be done via PCI bus/slot/function number
-> which might change e.g. by adding another board.
-> This patch extends the kernel option "pci=resource_alignment" to allow to
-> specify the relevant boards via PCI device/vendor (and subdevice/subvendor) ids.
-> The specification of the devices via device/vendor is indicated by a leading
-> string "pci:" as argument to "pci=resource_alignment".
-> The format of the specification is
->   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-> 
-> Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
-> 
-> ---
->  Documentation/kernel-parameters.txt |    2 +
->  drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
->  2 files changed, 49 insertions(+), 19 deletions(-)
-> 
-> Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
-> ===================================================================
-> --- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
-> +++ linux-4.7-rc1/Documentation/kernel-parameters.txt
-> @@ -2998,6 +2998,8 @@ bytes respectively. Such letter suffixes
->  		resource_alignment=
->  				Format:
->  				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-> +				[<order of align>@]pci:<vendor>:<device>\
-> +						[:<subvendor>:<subdevice>][; ...] 
+Hi, Alex
 
-Can you include a little example here so we know whether to use
-"pci:8086:1234" or "pci:0x8086:0x1234"?
+On 2016/6/2 21:11, Alex Williamson wrote:
 
-Bjorn
+> AFAICT, you posted this *3* days ago, has something changed here or is
+> this just expedited nagging for review?  This also depends on a
+> non-upstream series and crosses multiple functional areas, all of which
+> make it difficult for maintainers to actually do anything with this
+> series.  Thanks,
+>
+> Alex
+
+I resend this series because I found the message-id of the previous email
+is changed unexpectedly. The cover letter is not in the same thread as other
+patches.  It would be a little hard for people to review.
+
+Thanks,
+Yongji
+
+> On Thu,  2 Jun 2016 14:09:57 +0800
+> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+>
+>> Current vfio-pci implementation disallows to mmap the page
+>> containing MSI-X table in case that users can write directly
+>> to MSI-X table and generate an incorrect MSIs.
+>>
+>> However, this will cause some performance issue when there
+>> are some critical device registers in the same page as the
+>> MSI-X table. We have to handle the mmio access to these
+>> registers in QEMU emulation rather than in guest.
+>>
+>> To solve this issue, this series allows to expose MSI-X table
+>> to userspace when hardware enables the capability of interrupt
+>> remapping which can ensure that a given PCI device can only
+>> shoot the MSIs assigned for it. And we introduce a new bus_flags
+>> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+>> for different archs.
+>>
+>> The patch 3 are based on the proposed patchset[1].
+>>
+>> Changelog v2:
+>> - Make the commit log more clear
+>> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+>>    so that we could clearly know what the function does
+>> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+>>    of iommu_bus_notifier()
+>> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+>>    table so that we can know whether we allow to mmap MSI-X table
+>>    in QEMU
+>>
+>> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+>>
+>> Yongji Xie (6):
+>>    PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+>>    PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
+>>    PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+>>    iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+>>    pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+>>    vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+>>
+>>   arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+>>   drivers/iommu/iommu.c                     |    8 ++++++++
+>>   drivers/pci/msi.c                         |   15 +++++++++++++++
+>>   drivers/pci/probe.c                       |    7 +++++++
+>>   drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
+>>   drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
+>>   include/linux/msi.h                       |    5 ++++-
+>>   include/linux/pci.h                       |    1 +
+>>   8 files changed, 59 insertions(+), 5 deletions(-)
+>>
+
