@@ -1,156 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:55976 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822AbcFAMcW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2016 08:32:22 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Heiko Stuebner <heiko@sntech.de>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Doug Anderson <dianders@chromium.org>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH 1/3] pci: introduce read_bridge/write_bridge pci ops
-Date: Wed,  1 Jun 2016 14:31:22 +0200
-Message-Id: <1464784332-3775650-1-git-send-email-arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <201606030228.u532PSG8045852@mx0a-001b2d01.pphosted.com>
+Subject: Re: [RESEND PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X
+ table
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160602071132.273c64c7@ul30vt.home>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, bhelgaas@google.com,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 3 Jun 2016 10:28:21 +0800
+MIME-Version: 1.0
+In-Reply-To: <20160602071132.273c64c7@ul30vt.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A lot of PCI host bridges require different methods for initiating
-type 0 and type 1 config space accesses, leading to duplication of
-code.
+Hi, Alex
 
-This adds support for the two different kinds at the pci_ops
-level, with the newly added map_bridge/read_bridge/write_bridge
-operations for type 1 accesses.
+On 2016/6/2 21:11, Alex Williamson wrote:
 
-When these are not set, we fall back to the regular map_bus/read/write
-operations, so all existing drivers keep working, and bridges that
-have identical operations continue to only require one set.
+> AFAICT, you posted this *3* days ago, has something changed here or is
+> this just expedited nagging for review?  This also depends on a
+> non-upstream series and crosses multiple functional areas, all of which
+> make it difficult for maintainers to actually do anything with this
+> series.  Thanks,
+>
+> Alex
 
-In most cases, a driver will only have to override either map_bridge
-or read_bridge/write_bridge but not both.
+I resend this series because I found the message-id of the previous email
+is changed unexpectedly. The cover letter is not in the same thread as other
+patches.  It would be a little hard for people to review.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-This is slightly refined over what I had in the "Add PCIe driver for
-Rockchip Soc" thread earlier, but probably not the final version yet,
-so I'd like to get more feedback on it.
+Thanks,
+Yongji
 
-In particular, I think it may be useful to add a third set of
-functions for the config space of devices that are directly attached
-to the host bridge, as those are sometimes (designware, rcar, mvebu)
-yet again different from the host bridge itself and from all other
-devices. On the other hand, that adds further complexity that we
-may want to leave out of the common code, and I honestly can't
-seem to come up for a catchy name form the callbacks.
-
- drivers/pci/access.c | 35 +++++++++++++++++++++++++++--------
- include/linux/pci.h  |  3 +++
- 2 files changed, 30 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d11cdbb8fba3..263606ece211 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -34,9 +34,12 @@ int pci_bus_read_config_##size \
- 	u32 data = 0;							\
- 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
- 	raw_spin_lock_irqsave(&pci_lock, flags);			\
--	res = bus->ops->read(bus, devfn, pos, len, &data);		\
-+	if (!bus->parent == 0 && bus->ops->read_bridge)			\
-+		res = bus->ops->read_bridge(bus, devfn, pos, len, &data);	\
-+	else								\
-+		res = bus->ops->read(bus, devfn, pos, len, &data);	\
- 	*value = (type)data;						\
--	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-+	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
- 	return res;							\
- }
- 
-@@ -48,8 +51,11 @@ int pci_bus_write_config_##size \
- 	unsigned long flags;						\
- 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
- 	raw_spin_lock_irqsave(&pci_lock, flags);			\
--	res = bus->ops->write(bus, devfn, pos, len, value);		\
--	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-+	if (!bus->parent && bus->ops->write_bridge)			\
-+		res = bus->ops->write_bridge(bus, devfn, pos, len, value);\
-+	else								\
-+		res = bus->ops->write(bus, devfn, pos, len, value);	\
-+	raw_spin_unlock_irqrestore(&pci_lock, flags);			\
- 	return res;							\
- }
- 
-@@ -72,7 +78,11 @@ int pci_generic_config_read(struct pci_bus *bus, unsigned int devfn,
- {
- 	void __iomem *addr;
- 
--	addr = bus->ops->map_bus(bus, devfn, where);
-+	if (!bus->parent && bus->ops->map_bridge)
-+		addr = bus->ops->map_bridge(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where);
-+
- 	if (!addr) {
- 		*val = ~0;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -94,7 +104,10 @@ int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
- {
- 	void __iomem *addr;
- 
--	addr = bus->ops->map_bus(bus, devfn, where);
-+	if (!bus->parent && bus->ops->map_bridge)
-+		addr = bus->ops->map_bridge(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where);
- 	if (!addr)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-@@ -114,7 +127,10 @@ int pci_generic_config_read32(struct pci_bus *bus, unsigned int devfn,
- {
- 	void __iomem *addr;
- 
--	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
-+	if (!bus->parent && bus->ops->map_bridge)
-+		addr = bus->ops->map_bridge(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
- 	if (!addr) {
- 		*val = ~0;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -135,7 +151,10 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	void __iomem *addr;
- 	u32 mask, tmp;
- 
--	addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
-+	if (!bus->parent && bus->ops->map_bridge)
-+		addr = bus->ops->map_bridge(bus, devfn, where);
-+	else
-+		addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
- 	if (!addr)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index df41c4645911..2b1d08771b36 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -580,6 +580,9 @@ struct pci_ops {
- 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
- 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
- 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
-+	void __iomem *(*map_bridge)(struct pci_bus *bus, unsigned int devfn, int where);
-+	int (*read_bridge)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
-+	int (*write_bridge)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
- };
- 
- /*
--- 
-2.7.0
-
+> On Thu,  2 Jun 2016 14:09:57 +0800
+> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+>
+>> Current vfio-pci implementation disallows to mmap the page
+>> containing MSI-X table in case that users can write directly
+>> to MSI-X table and generate an incorrect MSIs.
+>>
+>> However, this will cause some performance issue when there
+>> are some critical device registers in the same page as the
+>> MSI-X table. We have to handle the mmio access to these
+>> registers in QEMU emulation rather than in guest.
+>>
+>> To solve this issue, this series allows to expose MSI-X table
+>> to userspace when hardware enables the capability of interrupt
+>> remapping which can ensure that a given PCI device can only
+>> shoot the MSIs assigned for it. And we introduce a new bus_flags
+>> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+>> for different archs.
+>>
+>> The patch 3 are based on the proposed patchset[1].
+>>
+>> Changelog v2:
+>> - Make the commit log more clear
+>> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+>>    so that we could clearly know what the function does
+>> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+>>    of iommu_bus_notifier()
+>> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+>>    table so that we can know whether we allow to mmap MSI-X table
+>>    in QEMU
+>>
+>> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+>>
+>> Yongji Xie (6):
+>>    PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+>>    PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
+>>    PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+>>    iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+>>    pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+>>    vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+>>
+>>   arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+>>   drivers/iommu/iommu.c                     |    8 ++++++++
+>>   drivers/pci/msi.c                         |   15 +++++++++++++++
+>>   drivers/pci/probe.c                       |    7 +++++++
+>>   drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
+>>   drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
+>>   include/linux/msi.h                       |    5 ++++-
+>>   include/linux/pci.h                       |    1 +
+>>   8 files changed, 59 insertions(+), 5 deletions(-)
+>>
