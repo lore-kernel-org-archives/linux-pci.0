@@ -1,122 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:9842 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751103AbcFQWXq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2016 18:23:46 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5HMJaxC079892
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jun 2016 18:23:45 -0400
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23kqt3x6p1-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jun 2016 18:23:45 -0400
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Sat, 18 Jun 2016 08:23:42 +1000
-Subject: Re: [PATCH] tracing: Expose CPU physical addresses (resource
- values) for PCI devices
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Reply-To: benh@au1.ibm.com
-To: Steven Rostedt <rostedt@goodmis.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, karol herbst <karolherbst@gmail.com>,
-	linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	Pekka Paalanen <ppaalanen@gmail.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Ben Skeggs <bskeggs@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>, koriakin@0x04.net
-Date: Sat, 18 Jun 2016 08:23:23 +1000
-In-Reply-To: <20160617175901.7bd90d14@gandalf.local.home>
-References: <20160511190657.5898.4248.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	 <20160617175901.7bd90d14@gandalf.local.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1466202203.24271.76.camel@au1.ibm.com>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:51480 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbcFDXXk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Jun 2016 19:23:40 -0400
+Date: Sun, 5 Jun 2016 01:27:18 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Peter Wu <peter@lekensteyn.nl>,
+	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v6 0/5] PCI: Add support for suspending (including
+ runtime) of PCIe ports
+Message-ID: <20160604232718.GA17088@wunner.de>
+References: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2016-06-17 at 17:59 -0400, Steven Rostedt wrote:
-> Sorry for the late reply, this patch got pushed down in my INBOX.
+On Thu, Jun 02, 2016 at 11:17:10AM +0300, Mika Westerberg wrote:
+> Bjorn, if you are fine with these patches, it would be nice to get these to
+> linux-next for better testing coverage.
 > 
-> Could I get someone from PPC to review this patch, just to be safe?
+> Changes to v5:
+> 
+>   - Add patch "PCI: Power on bridges before scanning new devices" to make
+>     sure rescanning using sysfs still works.
+> 
+>   - Change patch "ACPI / hotplug / PCI: Runtime resume bridge before
+>     rescan" to runtime resume in acpiphp_check_bridge() instead of
+>     hotplug_event().
+> 
+>   - Change runtime PM autosuspend delay from 10ms to 100ms.
+> 
+>   - Call pm_runtime_mark_last_busy() to make sure we do not runtime suspend
+>     the port immediately.
 
-The patch makes sense, I can try getting somebody onto porting
-mmiotrace one of these days.
+I've applied v6 of this series to my local tree and tested it with
+my Thunderbolt runtime pm patches. Everything seems to still work
+fine, so my Tested-by is upheld.
 
-Cheers,
-Ben.
+I've also compared this version with the previous one in my tree and
+reviewed the changes. I only found a punctuation and spacing change
+that Bjorn had made and that isn't included in the commit message of
+patch [4/5]:
 
-> Thanks!
-> 
-> -- Steve
-> 
-> 
-> 
-> On Wed, 11 May 2016 14:06:57 -0500
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
-> 
-> > Previously, mmio_print_pcidev() put "user" addresses in the trace
-> > buffer.
-> > On most architectures, these are the same as CPU physical
-> > addresses, but on
-> > microblaze, mips, powerpc, and sparc, they may be something else,
-> > typically
-> > a raw BAR value (a bus address as opposed to a CPU address).
-> > 
-> > Always expose the CPU physical address to avoid this arch-dependent
-> > behavior.
-> > 
-> > This change should have no user-visible effect because this file
-> > currently
-> > depends on CONFIG_HAVE_MMIOTRACE_SUPPORT, which is only defined for
-> > x86,
-> > and pci_resource_to_user() is a no-op on x86.
-> > 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  kernel/trace/trace_mmiotrace.c |   10 +++-------
-> >  1 file changed, 3 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/kernel/trace/trace_mmiotrace.c
-> > b/kernel/trace/trace_mmiotrace.c
-> > index 68f376c..cd7480d 100644
-> > --- a/kernel/trace/trace_mmiotrace.c
-> > +++ b/kernel/trace/trace_mmiotrace.c
-> > @@ -68,19 +68,15 @@ static void mmio_print_pcidev(struct trace_seq
-> > *s, const struct pci_dev *dev)
-> >  	trace_seq_printf(s, "PCIDEV %02x%02x %04x%04x %x",
-> >  			 dev->bus->number, dev->devfn,
-> >  			 dev->vendor, dev->device, dev->irq);
-> > -	/*
-> > -	 * XXX: is pci_resource_to_user() appropriate, since we
-> > are
-> > -	 * supposed to interpret the __ioremap() phys_addr
-> > argument based on
-> > -	 * these printed values?
-> > -	 */
-> >  	for (i = 0; i < 7; i++) {
-> > -		pci_resource_to_user(dev, i, &dev->resource[i],
-> > &start, &end);
-> > +		start = dev->resource[i].start;
-> >  		trace_seq_printf(s, " %llx",
-> >  			(unsigned long long)(start |
-> >  			(dev->resource[i].flags &
-> > PCI_REGION_FLAG_MASK)));
-> >  	}
-> >  	for (i = 0; i < 7; i++) {
-> > -		pci_resource_to_user(dev, i, &dev->resource[i],
-> > &start, &end);
-> > +		start = dev->resource[i].start;
-> > +		end = dev->resource[i].end;
-> >  		trace_seq_printf(s, " %llx",
-> >  			dev->resource[i].start < dev-
-> > >resource[i].end ?
-> >  			(unsigned long long)(end - start) + 1 :
-> > 0);
-> 
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
+< hotplug event such as BUS_CHECK, we need to make sure it is resumed before
+< devices below the bridge are re-scanned.  Otherwise the devices behind the
+---
+> hotplug event, such as BUS_CHECK we need to make sure it is resumed before
+> devices below the bridge are re-scanned. Otherwise the devices behind the
 
+And this line in the commit message of patch [5/5] suddenly has > 72
+chars now:
+
+> Add back runtime PM support for PCIe ports that was removed in
+> commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for PCIe
+
+Thanks,
+
+Lukas
