@@ -1,36 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:31952 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932164AbcFTJJP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jun 2016 05:09:15 -0400
-Date: Mon, 20 Jun 2016 12:03:29 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH] PCI: Document connection between pci_power_t and
- hardware PM capability
-Message-ID: <20160620090329.GZ1739@lahna.fi.intel.com>
-References: <20160618180056.7267.67911.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160618180056.7267.67911.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25995 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbcFDAYD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jun 2016 20:24:03 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v12 07/15] sparc/PCI: Keep resource idx order with bridge register number
+Date: Fri,  3 Jun 2016 17:06:34 -0700
+Message-Id: <20160604000642.28162-8-yinghai@kernel.org>
+In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
+References: <20160604000642.28162-1-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 18, 2016 at 01:00:56PM -0500, Bjorn Helgaas wrote:
-> The dev.pme_support field, pci_pm_init(), and pci_pme_capable() depend on
-> the fact that the pci_power_t values (PCI_D0, PCI_D1, etc.) match the
-> definition of the PME_Support field of the Power Management Capabilities
-> register in the Power Management capability (see PCI Bus Power Management
-> spec r1.2, sec 3.2.3).
-> 
-> Add a note to this effect at the pci_power_t typedef.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On one system found strange "no compatible bridge window" warning
+even we already had pref_compat support that add extra pref bit for device
+resource.
 
-Good idea,
+PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
+PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
+pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
+just check resource with bridge pref mmio register idx 15, and we have put
+resource to use mmio register idx 14 during of_scan_pci_bridge()
+as the bridge does not have mmio resource.
+
+We already fix pci_up_path_over_pref_mem64() to check all bus resources.
+
+And at the same time, this patch make resource to have consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even when non-pref mmio is missing, or out of ordering in firmware reporting.
+
+Just hold i = 1 for non pref mmio, and i = 2 for pref mmio.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: sparclinux@vger.kernel.org
+---
+ arch/sparc/kernel/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index e7fbf56..e84fa8c 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -481,7 +481,7 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 		pci_read_bridge_bases(bus);
+ 		goto after_ranges;
+ 	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		u64 start;
+ 
+@@ -513,6 +513,12 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
+-- 
+2.8.3
+
