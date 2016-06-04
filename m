@@ -1,281 +1,173 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
- rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
- robert.richter@caviumnetworks.com, shijie.huang@arm.com,
- Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
-Subject: [PATCH V7 2/8] ACPI: Add new IORT functions to support MSI domain
- handling
-Date: Mon, 20 Jun 2016 13:02:15 +0200
-Message-Id: <1466420541-20101-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1466420541-20101-1-git-send-email-tn@semihalf.com>
-References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
- will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
- Tomasz Nowicki <tn@semihalf.com>, mw@semihalf.com, andrea.gallo@linaro.org,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v12 05/15] sparc/PCI: Reserve legacy mmio after PCI mmio
+Date: Fri,  3 Jun 2016 17:06:32 -0700
+Message-Id: <20160604000642.28162-6-yinghai@kernel.org>
+In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
+References: <20160604000642.28162-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For ITS, MSI functionality consists on building domain stack and
-during that process we need to reference to domain stack components
-e.g. before we create new DOMAIN_BUS_PCI_MSI domain we need to specify
-its DOMAIN_BUS_NEXUS parent domain. In order to manage that process
-properly, maintain list which elements contain domain token
-(unique for MSI domain stack) and ITS ID: iort_register_domain_token()
-and iort_deregister_domain_token(). Then retrieve domain token
-any time later with ITS ID being key off: iort_find_domain_token().
-With domain token and domain type we are able to find corresponding
-IRQ domain.
+On one system found bunch of claim resource fail from pci device.
+pci_sun4v f02b894c: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x2000000000000-0x200007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x20007ffffffff] (bus address [0x100000000-0x7ffffffff])
+...
+PCI: Claiming 0000:00:02.0: Resource 14: 0002000000000000..00020000004fffff [200]
+pci 0000:00:02.0: can't claim BAR 14 [mem 0x2000000000000-0x20000004fffff]: address conflict with Video RAM area [??? 0x20000000a0000-0x20000000bffff flags 0x80000000]
+pci 0000:02:00.0: can't claim BAR 0 [mem 0x2000000000000-0x20000000fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.0: Resource 3: 0002000000100000..0002000000103fff [200]
+pci 0000:02:00.0: can't claim BAR 3 [mem 0x2000000100000-0x2000000103fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 0: 0002000000200000..00020000002fffff [200]
+pci 0000:02:00.1: can't claim BAR 0 [mem 0x2000000200000-0x20000002fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 3: 0002000000104000..0002000000107fff [200]
+pci 0000:02:00.1: can't claim BAR 3 [mem 0x2000000104000-0x2000000107fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 0: 0002000000300000..00020000003fffff [200]
+pci 0000:02:00.2: can't claim BAR 0 [mem 0x2000000300000-0x20000003fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 3: 0002000000108000..000200000010bfff [200]
+pci 0000:02:00.2: can't claim BAR 3 [mem 0x2000000108000-0x200000010bfff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 0: 0002000000400000..00020000004fffff [200]
+pci 0000:02:00.3: can't claim BAR 0 [mem 0x2000000400000-0x20000004fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 3: 000200000010c000..000200000010ffff [200]
+pci 0000:02:00.3: can't claim BAR 3 [mem 0x200000010c000-0x200000010ffff]: no compatible bridge window
 
-Since IORT is prepared to describe MSI domain on a per-device basis,
-use existing IORT helpers and implement two calls:
-1. iort_msi_map_rid() to map MSI RID for a device
-2. iort_get_device_domain() to find domain token for a device
+The bridge 00:02.0 resource does not get reserved as Video RAM take the position early,
+and following children resources reservation all fail.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Move down Video RAM area reservation after pci mmio get reserved,
+so we leave pci driver to use those regions.
+
+-v5: merge simplify one and use pcibios_bus_to_resource()
+
+-v6: use pci_find_bus_resource()
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: sparclinux@vger.kernel.org
 ---
- drivers/acpi/iort.c  | 169 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iort.h |  11 ++++
- 2 files changed, 180 insertions(+)
+ arch/sparc/kernel/pci.c        |  1 +
+ arch/sparc/kernel/pci_common.c | 59 ++++++++++++++++++++++--------------------
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ 3 files changed, 33 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index e342bac..496dcf6 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -22,12 +22,91 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 4245dc4..e7fbf56 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -686,6 +686,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	pci_bus_register_of_sysfs(bus);
  
-+struct iort_its_msi_chip {
-+	struct list_head	list;
-+	struct fwnode_handle	*fw_node;
-+	u32			translation_id;
-+};
-+
- typedef acpi_status (*iort_find_node_callback)
- 	(struct acpi_iort_node *node, void *context);
- 
- /* Root pointer to the mapped IORT table */
- static struct acpi_table_header *iort_table;
- 
-+static LIST_HEAD(iort_msi_chip_list);
-+static DEFINE_SPINLOCK(iort_msi_chip_lock);
-+
-+/**
-+ * iort_register_domain_token() - register domain token and related ITS ID
-+ * to the list from where we can get it back later on.
-+ * @trans_id: ITS ID.
-+ * @fw_node: Domain token.
-+ *
-+ * Returns: 0 on success, -ENOMEM if no memory when allocating list element
-+ */
-+int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
-+{
-+	struct iort_its_msi_chip *its_msi_chip;
-+
-+	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
-+	if (!its_msi_chip)
-+		return -ENOMEM;
-+
-+	its_msi_chip->fw_node = fw_node;
-+	its_msi_chip->translation_id = trans_id;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_add(&its_msi_chip->list, &iort_msi_chip_list);
-+	spin_unlock(&iort_msi_chip_lock);
-+
-+	return 0;
-+}
-+
-+/**
-+ * iort_deregister_domain_token() - Deregister domain token based on ITS ID
-+ * @trans_id: ITS ID.
-+ *
-+ * Returns: none.
-+ */
-+void iort_deregister_domain_token(int trans_id)
-+{
-+	struct iort_its_msi_chip *its_msi_chip, *t;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_for_each_entry_safe(its_msi_chip, t, &iort_msi_chip_list, list) {
-+		if (its_msi_chip->translation_id == trans_id) {
-+			list_del(&its_msi_chip->list);
-+			kfree(its_msi_chip);
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_msi_chip_lock);
-+}
-+
-+/**
-+ * iort_find_domain_token() - Find domain token based on given ITS ID
-+ * @trans_id: ITS ID.
-+ *
-+ * Returns: domain token when find on the list, NULL otherwise
-+ */
-+struct fwnode_handle *iort_find_domain_token(int trans_id)
-+{
-+	struct fwnode_handle *fw_node = NULL;
-+	struct iort_its_msi_chip *its_msi_chip;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
-+		if (its_msi_chip->translation_id == trans_id) {
-+			fw_node = its_msi_chip->fw_node;
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_msi_chip_lock);
-+
-+	return fw_node;
-+}
-+
- static struct acpi_iort_node *
- iort_scan_node(enum acpi_iort_node_type type,
- 	       iort_find_node_callback callback, void *context)
-@@ -205,6 +284,96 @@ iort_find_dev_node(struct device *dev)
- 			      iort_match_node_callback, &pbus->dev);
+ 	pci_claim_bus_resources(bus);
++	pci_register_legacy_regions(bus);
+ 	pci_bus_add_devices(bus);
+ 	return bus;
+ }
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 76998f8..1ebc7ff 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -328,41 +328,46 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
+ 	}
  }
  
-+/**
-+ * iort_msi_map_rid() - Map a MSI requester ID for a device
-+ * @dev: The device for which the mapping is to be done.
-+ * @req_id: The device requester ID.
-+ *
-+ * Returns: mapped MSI RID on success, input requester ID otherwise
-+ */
-+u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-+{
-+	struct acpi_iort_node *node;
-+	u32 dev_id;
-+
-+	if (!iort_table)
-+		return req_id;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node) {
-+		dev_err(dev, "can't find related IORT node\n");
-+		return req_id;
-+	}
-+
-+	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-+	return dev_id;
-+}
-+
-+/**
-+ * iort_dev_find_its_id() - Find the ITS identifier for a device
-+ * @dev: The device.
-+ * @idx: Index of the ITS identifier list.
-+ * @its_id: ITS identifier.
-+ *
-+ * Returns: 0 on success, appropriate error value otherwise
-+ */
-+static int
-+iort_dev_find_its_id(struct device *dev, u32 req_id, unsigned int idx,
-+		     int *its_id)
-+{
-+	struct acpi_iort_its_group *its;
-+	struct acpi_iort_node *node;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node) {
-+		dev_err(dev, "can't find related IORT node\n");
-+		return -ENXIO;
-+	}
-+
-+	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	if (!node) {
-+		dev_err(dev, "can't find related ITS node\n");
-+		return -ENXIO;
-+	}
-+
-+	/* Move to ITS specific data */
-+	its = (struct acpi_iort_its_group *)node->node_data;
-+	if (idx > its->its_count) {
-+		dev_err(dev, "requested ITS ID index [%d] is greater than available [%d]\n",
-+			idx, its->its_count);
-+		return -ENXIO;
-+	}
-+
-+	*its_id = its->identifiers[idx];
-+	return 0;
-+}
-+
-+/**
-+ * iort_get_device_domain() - Find MSI domain related to a device
-+ * @dev: The device.
-+ * @req_id: Requester ID for the device.
-+ *
-+ * Returns: the MSI domain for this device, NULL otherwise
-+ */
-+struct irq_domain *
-+iort_get_device_domain(struct device *dev, u32 req_id)
-+{
-+	static struct fwnode_handle *handle;
-+	int its_id;
-+
-+	if (!iort_table)
-+		return NULL;
-+
-+	if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
-+		return NULL;
-+
-+	handle = iort_find_domain_token(its_id);
-+	if (!handle)
-+		return NULL;
-+
-+	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
-+}
-+
- void __init iort_table_detect(void)
+-static void pci_register_legacy_regions(struct resource *io_res,
+-					struct resource *mem_res)
++static void pci_register_region(struct pci_bus *bus, const char *name,
++				resource_size_t rstart, resource_size_t size)
  {
- 	acpi_status status;
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index cde6809..d7daba1 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -20,11 +20,22 @@
- #define __IORT_H__
+-	struct resource *p;
++	struct resource *res, *conflict, *bus_res;
++	struct pci_bus_region region;
  
- #include <linux/acpi.h>
-+#include <linux/fwnode.h>
-+#include <linux/irqdomain.h>
+-	/* VGA Video RAM. */
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
+ 		return;
  
-+int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
-+void iort_deregister_domain_token(int trans_id);
-+struct fwnode_handle *iort_find_domain_token(int trans_id);
- #ifdef CONFIG_IORT_TABLE
- void iort_table_detect(void);
-+u32 iort_msi_map_rid(struct device *dev, u32 req_id);
-+struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- #else
- static inline void iort_table_detect(void) { }
-+static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-+{ return req_id; }
-+static inline struct irq_domain *
-+iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
- #endif
+-	p->name = "Video RAM area";
+-	p->start = mem_res->start + 0xa0000UL;
+-	p->end = p->start + 0x1ffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	res->flags = IORESOURCE_MEM;
  
- #endif /* __IORT_H__ */
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	region.start = rstart;
++	region.end = rstart + size - 1UL;
++	pcibios_bus_to_resource(bus, res, &region);
++	bus_res = pci_find_bus_resource(bus, res);
++	if (!bus_res) {
++		kfree(res);
+ 		return;
++	}
++
++	res->name = name;
++	res->flags |= IORESOURCE_BUSY;
++	conflict = request_resource_conflict(bus_res, res);
++	if (conflict) {
++		dev_printk(KERN_DEBUG, &bus->dev,
++			" can't claim %s %pR: address conflict with %s %pR\n",
++			res->name, res, conflict->name, conflict);
++		kfree(res);
++	}
++}
+ 
+-	p->name = "System ROM";
+-	p->start = mem_res->start + 0xf0000UL;
+-	p->end = p->start + 0xffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++void pci_register_legacy_regions(struct pci_bus *bus)
++{
++	/* VGA Video RAM. */
++	pci_register_region(bus, "Video RAM area", 0xa0000UL, 0x20000UL);
+ 
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
++	pci_register_region(bus, "System ROM",     0xf0000UL, 0x10000UL);
+ 
+-	p->name = "Video ROM";
+-	p->start = mem_res->start + 0xc0000UL;
+-	p->end = p->start + 0x7fffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	pci_register_region(bus, "Video ROM",      0xc0000UL,  0x8000UL);
+ }
+ 
+ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+@@ -504,8 +509,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	if (pbm->mem64_space.flags)
+ 		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+-	pci_register_legacy_regions(&pbm->io_space,
+-				    &pbm->mem_space);
+ 	pci_register_iommu_region(pbm);
+ }
+ 
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 2853af7..ff8f5e1 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -167,6 +167,7 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm);
+ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				 struct device *parent);
+ void pci_determine_mem_io_space(struct pci_pbm_info *pbm);
++void pci_register_legacy_regions(struct pci_bus *bus);
+ 
+ /* Error reporting support. */
+ void pci_scan_for_target_abort(struct pci_pbm_info *, struct pci_bus *);
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.8.3
