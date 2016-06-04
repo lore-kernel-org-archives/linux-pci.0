@@ -1,546 +1,492 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 15 Jun 2016 09:31:27 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
-	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
-	al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
-Message-ID: <20160615093127.01c0a2af@arm.com>
-In-Reply-To: <1465828873-23498-2-git-send-email-tn@semihalf.com>
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
-	<1465828873-23498-2-git-send-email-tn@semihalf.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com,
+	linux-ia64@vger.kernel.org, linux-mips@linux-mips.org,
+	linux-am33-list@redhat.com, linux-parisc@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.org
+Subject: [PATCH v12 01/15] PCI: Let pci_mmap_page_range() take extra resource pointer
+Date: Fri,  3 Jun 2016 17:06:28 -0700
+Message-Id: <20160604000642.28162-2-yinghai@kernel.org>
+In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
+References: <20160604000642.28162-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 13 Jun 2016 16:41:07 +0200
-Tomasz Nowicki <tn@semihalf.com> wrote:
+This one is preparing patch for next one:
+  PCI: Let pci_mmap_page_range() take resource addr
 
-> IORT shows representation of IO topology for ARM based systems.
-> It describes how various components are connected together on
-> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
-> 
-> Initial support allows to:
-> - register ITS MSI chip along with ITS translation ID and domain token
-> - deregister ITS MSI chip based on ITS translation ID
-> - find registered domain token based on ITS translation ID
-> - map MSI RID for a device
-> - find domain token for a device
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> ---
->  drivers/acpi/Kconfig  |   3 +
->  drivers/acpi/Makefile |   1 +
->  drivers/acpi/iort.c   | 386 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/iort.h  |  38 +++++
->  4 files changed, 428 insertions(+)
->  create mode 100644 drivers/acpi/iort.c
->  create mode 100644 include/linux/iort.h
-> 
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index f98c328..111dd50 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -57,6 +57,9 @@ config ACPI_SYSTEM_POWER_STATES_SUPPORT
->  config ACPI_CCA_REQUIRED
->  	bool
->  
-> +config IORT_TABLE
-> +	bool
-> +
->  config ACPI_DEBUGGER
->  	bool "AML debugger interface"
->  	select ACPI_DEBUG
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index 632e81f..0390f27 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -83,6 +83,7 @@ obj-$(CONFIG_ACPI_CUSTOM_METHOD)+= custom_method.o
->  obj-$(CONFIG_ACPI_BGRT)		+= bgrt.o
->  obj-$(CONFIG_ACPI_CPPC_LIB)	+= cppc_acpi.o
->  obj-$(CONFIG_ACPI_DEBUGGER_USER) += acpi_dbg.o
-> +obj-$(CONFIG_IORT_TABLE) 	+= iort.o
->  
->  # processor has its own "processor." module_param namespace
->  processor-y			:= processor_driver.o
-> diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-> new file mode 100644
-> index 0000000..5bccbc8
-> --- /dev/null
-> +++ b/drivers/acpi/iort.c
-> @@ -0,0 +1,386 @@
-> +/*
-> + * Copyright (C) 2016, Semihalf
-> + *	Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + * This file implements early detection/parsing of I/O mapping
-> + * reported to OS through firmware via I/O Remapping Table (IORT)
-> + * IORT document number: ARM DEN 0049A
-> + */
-> +
-> +#define pr_fmt(fmt)	"ACPI: IORT: " fmt
-> +
-> +#include <linux/export.h>
-> +#include <linux/iort.h>
-> +#include <linux/irqdomain.h>
-> +#include <linux/kernel.h>
-> +#include <linux/pci.h>
-> +
-> +struct iort_its_msi_chip {
-> +	struct list_head	list;
-> +	struct fwnode_handle	*fw_node;
-> +	u32			translation_id;
-> +};
-> +
-> +typedef acpi_status (*iort_find_node_callback)
-> +	(struct acpi_iort_node *node, void *context);
-> +
-> +/* Root pointer to the mapped IORT table */
-> +static struct acpi_table_header *iort_table;
-> +
-> +static LIST_HEAD(iort_msi_chip_list);
-> +static DEFINE_SPINLOCK(iort_msi_chip_lock);
-> +
-> +/**
-> + * iort_register_domain_token() - register domain token and related ITS ID
-> + * to the list from where we can get it back later on.
-> + * @translation_id: ITS ID.
-> + * @token: Domain token.
-> + *
-> + * Returns: 0 on success, -ENOMEM if no memory when allocating list element
-> + */
-> +int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
-> +{
-> +	struct iort_its_msi_chip *its_msi_chip;
-> +
-> +	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
-> +	if (!its_msi_chip)
-> +		return -ENOMEM;
-> +
-> +	its_msi_chip->fw_node = fw_node;
-> +	its_msi_chip->translation_id = trans_id;
-> +
-> +	spin_lock(&iort_msi_chip_lock);
-> +	list_add(&its_msi_chip->list, &iort_msi_chip_list);
-> +	spin_unlock(&iort_msi_chip_lock);
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * iort_deregister_domain_token() - Deregister domain token based on ITS ID
-> + * @translation_id: ITS ID.
-> + *
-> + * Returns: none.
-> + */
-> +void iort_deregister_domain_token(int trans_id)
-> +{
-> +	struct iort_its_msi_chip *its_msi_chip, *t;
-> +
-> +	spin_lock(&iort_msi_chip_lock);
-> +	list_for_each_entry_safe(its_msi_chip, t, &iort_msi_chip_list, list) {
-> +		if (its_msi_chip->translation_id == trans_id) {
-> +			list_del(&its_msi_chip->list);
-> +			kfree(its_msi_chip);
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&iort_msi_chip_lock);
-> +}
-> +
-> +/**
-> + * iort_find_domain_token() - Find domain token based on given ITS ID
-> + * @translation_id: ITS ID.
-> + *
-> + * Returns: domain token when find on the list, NULL otherwise
-> + */
-> +struct fwnode_handle *iort_find_domain_token(int trans_id)
-> +{
-> +	struct fwnode_handle *fw_node = NULL;
-> +	struct iort_its_msi_chip *its_msi_chip;
-> +
-> +	spin_lock(&iort_msi_chip_lock);
-> +	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
-> +		if (its_msi_chip->translation_id == trans_id) {
-> +			fw_node = its_msi_chip->fw_node;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&iort_msi_chip_lock);
-> +
-> +	return fw_node;
-> +}
-> +
-> +static struct acpi_iort_node *
-> +iort_scan_node(enum acpi_iort_node_type type,
-> +	       iort_find_node_callback callback, void *context)
-> +{
-> +	struct acpi_iort_node *iort_node, *iort_end;
-> +	struct acpi_table_iort *iort;
-> +	int i;
-> +
-> +	/* Get the first IORT node */
-> +	iort = (struct acpi_table_iort *)iort_table;
-> +	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
-> +				 iort->node_offset);
-> +	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-> +				iort_table->length);
-> +
-> +	for (i = 0; i < iort->node_count; i++) {
-> +		if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
-> +			       "IORT node pointer overflows, bad table!\n"))
-> +			return NULL;
-> +
-> +		if (iort_node->type == type) {
-> +			if (ACPI_SUCCESS(callback(iort_node, context)))
-> +				return iort_node;
-> +		}
-> +
-> +		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
-> +					 iort_node->length);
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
-> +static acpi_status
-> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
-> +{
-> +	struct device *dev = context;
-> +
-> +	switch (node->type) {
-> +	case ACPI_IORT_NODE_NAMED_COMPONENT: {
-> +		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
-> +		struct acpi_iort_named_component *ncomp;
-> +
-> +		if (!adev)
-> +			break;
-> +
-> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
-> +
-> +		if (ACPI_FAILURE(acpi_get_name(adev->handle,
-> +					       ACPI_FULL_PATHNAME, &buffer))) {
-> +			dev_warn(dev, "Can't get device full path name\n");
-> +			break;
-> +		}
-> +
-> +		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
-> +			return AE_OK;
-> +
-> +		break;
-> +	}
-> +	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
-> +		struct acpi_iort_root_complex *pci_rc;
-> +		struct pci_bus *bus;
-> +
-> +		bus = to_pci_bus(dev);
-> +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
-> +
-> +		/*
-> +		 * It is assumed that PCI segment numbers maps one-to-one
-> +		 * with root complexes. Each segment number can represent only
-> +		 * one root complex.
-> +		 */
-> +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
-> +			return AE_OK;
-> +
-> +		break;
-> +	}
-> +	}
-> +
-> +	return AE_NOT_FOUND;
-> +}
-> +
-> +static struct acpi_iort_node *
-> +iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
-> +		  u32 *rid_out, u8 type)
-> +{
-> +
-> +	if (!node)
-> +		goto out;
-> +
-> +	/* Go upstream */
-> +	while (node->type != type) {
-> +		struct acpi_iort_id_mapping *id;
-> +		int i, found = 0;
-> +
-> +		/* Exit when no mapping array */
-> +		if (!node->mapping_offset || !node->mapping_count)
-> +			return NULL;
-> +
-> +		id = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
-> +				  node->mapping_offset);
-> +
-> +		for (i = 0, found = 0; i < node->mapping_count; i++, id++) {
-> +			/*
-> +			 * Single mapping is not translation rule,
-> +			 * lets move on for this case
-> +			 */
-> +			if (id->flags & ACPI_IORT_ID_SINGLE_MAPPING) {
-> +				if (node->type != ACPI_IORT_NODE_SMMU) {
-> +					rid_in = id->output_base;
-> +					found = 1;
-> +					break;
-> +				}
-> +
-> +				pr_warn(FW_BUG "[node %p type %d] SINGLE MAPPING flag not allowed for SMMU node, skipping ID map\n",
-> +					node, node->type);
-> +				continue;
-> +			}
-> +
-> +			if (rid_in < id->input_base ||
-> +			    (rid_in > id->input_base + id->id_count))
-> +				continue;
-> +
-> +			rid_in = id->output_base + (rid_in - id->input_base);
-> +			found = 1;
-> +			break;
-> +		}
-> +
-> +		if (!found)
-> +			return NULL;
+We need to pass extra resource pointer to avoid searching that again
+for powerpc and microblaze prot set operation.
 
-Why this special case? It would make more sense to use the normal
-epilogue, and update rid_out. Unless not finding a translation for a
-given rid is illegal?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-cris-kernel@axis.com
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-mips@linux-mips.org
+Cc: linux-am33-list@redhat.com
+Cc: linux-parisc@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-sh@vger.kernel.org
+Cc: sparclinux@vger.kernel.org
+Cc: linux-xtensa@linux-xtensa.org
+---
+ arch/arm/include/asm/pci.h              | 2 --
+ arch/arm/kernel/bios32.c                | 3 ++-
+ arch/cris/arch-v32/drivers/pci/bios.c   | 3 ++-
+ arch/cris/include/asm/pci.h             | 3 ---
+ arch/ia64/include/asm/pci.h             | 2 --
+ arch/ia64/pci/pci.c                     | 3 ++-
+ arch/microblaze/include/asm/pci.h       | 3 ---
+ arch/microblaze/pci/pci-common.c        | 3 ++-
+ arch/mips/include/asm/pci.h             | 3 ---
+ arch/mips/pci/pci.c                     | 3 ++-
+ arch/mn10300/include/asm/pci.h          | 3 ---
+ arch/mn10300/unit-asb2305/pci-asb2305.c | 3 ++-
+ arch/parisc/include/asm/pci.h           | 3 ---
+ arch/parisc/kernel/pci.c                | 3 ++-
+ arch/powerpc/include/asm/pci.h          | 3 ---
+ arch/powerpc/kernel/pci-common.c        | 3 ++-
+ arch/sh/drivers/pci/pci.c               | 3 ++-
+ arch/sh/include/asm/pci.h               | 2 --
+ arch/sparc/include/asm/pci_64.h         | 4 ----
+ arch/sparc/kernel/pci.c                 | 3 ++-
+ arch/unicore32/include/asm/pci.h        | 2 --
+ arch/unicore32/kernel/pci.c             | 3 ++-
+ arch/x86/include/asm/pci.h              | 4 ----
+ arch/x86/pci/i386.c                     | 3 ++-
+ arch/xtensa/include/asm/pci.h           | 4 ----
+ arch/xtensa/kernel/pci.c                | 3 ++-
+ drivers/pci/pci-sysfs.c                 | 2 +-
+ drivers/pci/pci.h                       | 2 +-
+ drivers/pci/proc.c                      | 2 +-
+ include/linux/pci.h                     | 6 ++++++
+ 30 files changed, 35 insertions(+), 54 deletions(-)
 
-> +
-> +		/* Firmware bug! */
-> +		if (!id->output_reference) {
-> +			pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
-> +			       node, node->type);
-> +			return NULL;
-> +		}
-> +
-> +		node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-> +				    id->output_reference);
-> +	}
-> +
-> +out:
-> +	if (rid_out)
-> +		*rid_out = rid_in;
-> +	return node;
-> +}
-> +
-> +static struct acpi_iort_node *
-> +iort_find_dev_node(struct device *dev)
-> +{
-> +	struct pci_bus *pbus;
-> +
-> +	if (!dev_is_pci(dev))
-> +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-> +				      iort_match_node_callback, dev);
-> +
-> +	/* Find a PCI root bus */
-> +	pbus = to_pci_dev(dev)->bus;
-> +	while (!pci_is_root_bus(pbus))
-> +		pbus = pbus->parent;
-> +
-> +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-> +			      iort_match_node_callback, &pbus->dev);
-> +}
-> +
-> +/**
-> + * iort_msi_map_rid() - Map a MSI requester ID for a device
-> + * @dev: The device for which the mapping is to be done.
-> + * @req_id: The device requester ID.
-> + *
-> + * Returns: mapped MSI RID on success, input requester ID otherwise
-> + */
-> +u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-> +{
-> +	struct acpi_iort_node *node;
-> +	u32 dev_id;
-> +
-> +	if (!iort_table)
-> +		return req_id;
-> +
-> +	node = iort_find_dev_node(dev);
-> +	if (!node) {
-> +		dev_err(dev, "can't find related IORT node\n");
-> +		return req_id;
-> +	}
-> +
-> +	if (!iort_node_map_rid(node, req_id, &dev_id,
-> +			       ACPI_IORT_NODE_ITS_GROUP))
-> +		return req_id;
-
-And once you've fixed the special case in iort_node_map_rid, you can
-unconditionally return dev_id.
-
-> +
-> +	return dev_id;
-> +}
-> +
-> +/**
-> + * iort_dev_find_its_id() - Find the ITS identifier for a device
-> + * @dev: The device.
-> + * @idx: Index of the ITS identifier list.
-> + * @its_id: ITS identifier.
-> + *
-> + * Returns: 0 on success, appropriate error value otherwise
-> + */
-> +static int
-> +iort_dev_find_its_id(struct device *dev, u32 req_id, unsigned int idx,
-> +		     int *its_id)
-> +{
-> +	struct acpi_iort_its_group *its;
-> +	struct acpi_iort_node *node;
-> +
-> +	node = iort_find_dev_node(dev);
-> +	if (!node) {
-> +		dev_err(dev, "can't find related IORT node\n");
-> +		return -ENXIO;
-> +	}
-> +
-> +	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-> +	if (!node) {
-> +		dev_err(dev, "can't find related ITS node\n");
-> +		return -ENXIO;
-> +	}
-> +
-> +	/* Move to ITS specific data */
-> +	its = (struct acpi_iort_its_group *)node->node_data;
-> +	if (idx > its->its_count) {
-> +		dev_err(dev, "requested ITS ID index [%d] is greater than available [%d]\n",
-> +			idx, its->its_count);
-> +		return -ENXIO;
-> +	}
-> +
-> +	*its_id = its->identifiers[idx];
-> +	return 0;
-> +}
-> +
-> +/**
-> + * iort_get_device_domain() - Find MSI domain related to a device
-> + * @dev: The device.
-> + * @req_id: Requester ID for the device.
-> + *
-> + * Returns: the MSI domain for this device, NULL otherwise
-> + */
-> +struct irq_domain *
-> +iort_get_device_domain(struct device *dev, u32 req_id)
-> +{
-> +	static struct fwnode_handle *handle;
-> +	int its_id;
-> +
-> +	if (!iort_table)
-> +		return NULL;
-> +
-> +	if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
-> +		return NULL;
-> +
-> +	handle = iort_find_domain_token(its_id);
-> +	if (!handle)
-> +		return NULL;
-
-Can this actually happen? I can't see how, unless you have a race
-between iort_dev_find_its_id and iort_find_domain_token. And given that
-both these functions are only called from here, maybe you're better off
-having a single function:
-
-struct fwnode_handle *iort_dev_find_its_domain_token(struct device *dev,
-						     u32 rid);
-
-which returns the atomic lookup of the ITS handle. Or is there any
-constraints preventing us from holding the lock?
-
-> +
-> +	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
-> +}
-> +
-> +static int __init iort_table_detect(void)
-> +{
-> +	acpi_status status;
-> +
-> +	if (acpi_disabled)
-> +		return -ENODEV;
-> +
-> +	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
-> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> +		const char *msg = acpi_format_exception(status);
-> +		pr_err("Failed to get table, %s\n", msg);
-> +		return -EINVAL;
-> +	}
-> +
-> +	return 0;
-> +}
-> +arch_initcall(iort_table_detect);
-
-Instead of an initcall, can't this be directly called from whatever
-ACPI init we already have?
-
-> diff --git a/include/linux/iort.h b/include/linux/iort.h
-> new file mode 100644
-> index 0000000..1bcf2fc
-> --- /dev/null
-> +++ b/include/linux/iort.h
-> @@ -0,0 +1,38 @@
-> +/*
-> + * Copyright (C) 2016, Semihalf
-> + *	Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License along with
-> + * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-> + * Place - Suite 330, Boston, MA 02111-1307 USA.
-> + */
-> +
-> +#ifndef __IORT_H__
-> +#define __IORT_H__
-> +
-> +#include <linux/acpi.h>
-> +
-> +struct fwnode_handle;
-> +int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
-> +void iort_deregister_domain_token(int trans_id);
-> +struct fwnode_handle *iort_find_domain_token(int trans_id);
-> +#ifdef CONFIG_IORT_TABLE
-> +u32 iort_msi_map_rid(struct device *dev, u32 req_id);
-> +struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
-> +#else
-> +static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-> +{ return req_id; }
-> +static inline struct irq_domain *
-> +iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
-> +#endif
-> +
-> +#endif /* __IORT_H__ */
-
-Other than the above, this is finally starting to look like something
-I can work with, provided that you address these small comments. I'd
-also expect the ACPI folks (Rafael, Lorenzo) to chime in and comment on
-this.
-
-Thanks,
-
-	M.
+diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+index 057d381..51118a0 100644
+--- a/arch/arm/include/asm/pci.h
++++ b/arch/arm/include/asm/pci.h
+@@ -29,8 +29,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #define PCI_DMA_BUS_IS_PHYS     (1)
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-                               enum pci_mmap_state mmap_state, int write_combine);
+ 
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ {
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 05e61a2..d3245d1 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -602,7 +602,8 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return pci_enable_resources(dev, mask);
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	if (mmap_state == pci_mmap_io)
+diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+index 64a5fb9..082efb9 100644
+--- a/arch/cris/arch-v32/drivers/pci/bios.c
++++ b/arch/cris/arch-v32/drivers/pci/bios.c
+@@ -14,7 +14,8 @@ void pcibios_set_master(struct pci_dev *dev)
+ 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+index b1b289d..65198cb 100644
+--- a/arch/cris/include/asm/pci.h
++++ b/arch/cris/include/asm/pci.h
+@@ -42,9 +42,6 @@ struct pci_dev;
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			       enum pci_mmap_state mmap_state, int write_combine);
+-
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index c0835b0..6a2f5d8 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -51,8 +51,6 @@ extern unsigned long ia64_max_iommu_merge_mask;
+ #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
+-				enum pci_mmap_state mmap_state, int write_combine);
+ #define HAVE_PCI_LEGACY
+ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ 				      struct vm_area_struct *vma,
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 8f6ac2f..1518d66 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -419,7 +419,8 @@ pcibios_align_resource (void *data, const struct resource *res,
+ }
+ 
+ int
+-pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
++pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++		     struct vm_area_struct *vma,
+ 		     enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long size = vma->vm_end - vma->vm_start;
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index fc3ecb5..1b93824 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -46,9 +46,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
+ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+ struct vm_area_struct;
+-/* Map a range of PCI memory or I/O space for a device into user space */
+-int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine);
+ 
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+ #define HAVE_PCI_MMAP	1
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 14cba60..95146b0 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -304,7 +304,8 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *rp,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	resource_size_t offset =
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 86b239d..71d2c3b 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -75,9 +75,6 @@ extern void pcibios_set_master(struct pci_dev *dev);
+ 
+ #define HAVE_PCI_MMAP
+ 
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
+-
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+ 
+ static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index f1b11f0..e620333 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -319,7 +319,8 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+ EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+index 51159ff..082b6de 100644
+--- a/arch/mn10300/include/asm/pci.h
++++ b/arch/mn10300/include/asm/pci.h
+@@ -74,9 +74,6 @@ static inline int pci_controller_num(struct pci_dev *dev)
+ }
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			       enum pci_mmap_state mmap_state,
+-			       int write_combine);
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index b7ab837..40efdc6 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -211,7 +211,8 @@ void __init pcibios_resource_survey(void)
+ 	pcibios_allocate_resources(1);
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
+index defebd9..bb9ea90 100644
+--- a/arch/parisc/include/asm/pci.h
++++ b/arch/parisc/include/asm/pci.h
+@@ -201,7 +201,4 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 
+ #define HAVE_PCI_MMAP
+ 
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
+-
+ #endif /* __ASM_PARISC_PCI_H */
+diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
+index 0903c6a..8d5c34c 100644
+--- a/arch/parisc/kernel/pci.c
++++ b/arch/parisc/kernel/pci.c
+@@ -228,7 +228,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ }
+ 
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index a6f3ac0..662c1ef 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -77,9 +77,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
+ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+ struct vm_area_struct;
+-/* Map a range of PCI memory or I/O space for a device into user space */
+-int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine);
+ 
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+ #define HAVE_PCI_MMAP	1
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..6720b81 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -445,7 +445,8 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *rp,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	resource_size_t offset =
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index d5462b7..a1bc7ba 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -269,7 +269,8 @@ void __init_refok pcibios_report_status(unsigned int status_mask, int warn)
+ 	}
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	/*
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 644314f..8e0fdb9 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -66,8 +66,6 @@ extern unsigned long PCIBIOS_MIN_IO, PCIBIOS_MIN_MEM;
+ struct pci_dev;
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
+ extern void pcibios_set_master(struct pci_dev *dev);
+ 
+ /* Dynamic DMA mapping stuff.
+diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+index 022d160..f7a93df 100644
+--- a/arch/sparc/include/asm/pci_64.h
++++ b/arch/sparc/include/asm/pci_64.h
+@@ -45,10 +45,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #define HAVE_ARCH_PCI_GET_UNMAPPED_AREA
+ #define get_pci_unmapped_area get_fb_unmapped_area
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state,
+-			int write_combine);
+-
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ {
+ 	return PCI_IRQ_NONE;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index c2b202d..86d7dda 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -862,7 +862,8 @@ static void __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vm
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state,
+ 			int write_combine)
+ {
+diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
+index 37e55d0..a5129086 100644
+--- a/arch/unicore32/include/asm/pci.h
++++ b/arch/unicore32/include/asm/pci.h
+@@ -17,8 +17,6 @@
+ #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
+ 
+ #endif /* __KERNEL__ */
+ #endif
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index d45fa5f..ff1b7ef 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -362,7 +362,8 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return 0;
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long phys;
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 9ab7507..eb87481 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -88,10 +88,6 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+ 
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			       enum pci_mmap_state mmap_state,
+-			       int write_combine);
+-
+ 
+ #ifdef CONFIG_PCI
+ extern void early_quirks(void);
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 0a9f2ca..36463c7 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -411,7 +411,8 @@ static const struct vm_operations_struct pci_mmap_ops = {
+ 	.access = generic_access_phys,
+ };
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+index 5d6bd93..bb5510b 100644
+--- a/arch/xtensa/include/asm/pci.h
++++ b/arch/xtensa/include/asm/pci.h
+@@ -46,10 +46,6 @@ struct pci_dev;
+ 
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+-/* Map a range of PCI memory or I/O space for a device into user space */
+-int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine);
+-
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+ #define HAVE_PCI_MMAP	1
+ 
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index b848cc3..89c8687 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -362,7 +362,8 @@ __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state,
+ 			int write_combine)
+ {
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d319a9c..5bbe20c 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1027,7 +1027,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	pci_resource_to_user(pdev, i, res, &start, &end);
+ 	vma->vm_pgoff += start >> PAGE_SHIFT;
+ 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
+-	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
++	return pci_mmap_page_range(pdev, res, vma, mmap_type, write_combine);
+ }
+ 
+ static int pci_mmap_resource_uc(struct file *filp, struct kobject *kobj,
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index a814bbb..7d339c3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -30,7 +30,7 @@ enum pci_mmap_api {
+ 	PCI_MMAP_PROCFS	/* mmap on /proc/bus/pci/<BDF> */
+ };
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+-		  enum pci_mmap_api mmap_api);
++		  enum pci_mmap_state mmap_type, enum pci_mmap_api mmap_api);
+ #endif
+ int pci_probe_reset_function(struct pci_dev *dev);
+ 
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 3f155e7..f19ee2a 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -245,7 +245,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ 	if (i >= PCI_ROM_RESOURCE)
+ 		return -ENODEV;
+ 
+-	ret = pci_mmap_page_range(dev, vma,
++	ret = pci_mmap_page_range(dev, &dev->resource[i], vma,
+ 				  fpriv->mmap_state,
+ 				  fpriv->write_combine);
+ 	if (ret < 0)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..3c1a0f4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -70,6 +70,12 @@ enum pci_mmap_state {
+ 	pci_mmap_mem
+ };
+ 
++struct vm_area_struct;
++/* Map a range of PCI memory or I/O space for a device into user space */
++int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
++			struct vm_area_struct *vma,
++			enum pci_mmap_state mmap_state, int write_combine);
++
+ /*
+  *  For PCI devices, the region numbers are assigned this way:
+  */
 -- 
-Jazz is not dead. It just smells funny.
+2.8.3
