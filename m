@@ -1,95 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20803 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbcFDAHO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jun 2016 20:07:14 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v12 04/15] PCI: Add pci_find_bus_resource()
-Date: Fri,  3 Jun 2016 17:06:31 -0700
-Message-Id: <20160604000642.28162-5-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:59205 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751684AbcFFNHa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jun 2016 09:07:30 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 2/4] PCI / DPC: Convert to use module_pcie_port_service()
+Date: Mon,  6 Jun 2016 16:06:06 +0300
+Message-Id: <1465218368-36494-3-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_find_bus_resource() to return bus resource for input resource.
+There is no need to open-code this in the driver. Use the helper we just
+introduced to remove the boilerblate code from the driver.
 
-In some case, we may only have bus instead of dev.
-It is same as pci_find_parent_resource, but take bus as input.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/pci.c   | 27 ++++++++++++++++-----------
- include/linux/pci.h |  2 ++
- 2 files changed, 18 insertions(+), 11 deletions(-)
+ drivers/pci/pcie/pcie-dpc.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c8b4dbd..81c6cf9 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -414,18 +414,9 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- }
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index ab552f1bc08f..533c548607d7 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -144,20 +144,9 @@ static struct pcie_port_service_driver dpcdriver = {
+ 	.remove		= dpc_remove,
+ };
  
--/**
-- * pci_find_parent_resource - return resource region of parent bus of given region
-- * @dev: PCI device structure contains resources to be searched
-- * @res: child resource record for which parent is sought
-- *
-- *  For given resource region of given device, return the resource
-- *  region of parent bus the given region is contained in.
-- */
--struct resource *pci_find_parent_resource(const struct pci_dev *dev,
--					  struct resource *res)
-+struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					struct resource *res)
- {
--	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
- 	int i;
+-static int __init dpc_service_init(void)
+-{
+-	return pcie_port_service_register(&dpcdriver);
+-}
+-
+-static void __exit dpc_service_exit(void)
+-{
+-	pcie_port_service_unregister(&dpcdriver);
+-}
++module_pcie_port_service(dpcdriver);
  
-@@ -455,6 +446,20 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 	}
- 	return NULL;
- }
-+
-+/**
-+ * pci_find_parent_resource - return resource region of parent bus of given region
-+ * @dev: PCI device structure contains resources to be searched
-+ * @res: child resource record for which parent is sought
-+ *
-+ *  For given resource region of given device, return the resource
-+ *  region of parent bus the given region is contained in.
-+ */
-+struct resource *pci_find_parent_resource(const struct pci_dev *dev,
-+					  struct resource *res)
-+{
-+	return pci_find_bus_resource(dev->bus, res);
-+}
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3c1a0f4..11b216d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -811,6 +811,8 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res);
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
-+struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					struct resource *res);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+ MODULE_DESCRIPTION("PCI Express Downstream Port Containment driver");
+ MODULE_AUTHOR("Keith Busch <keith.busch@intel.com>");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION("0.1");
+-
+-module_init(dpc_service_init);
+-module_exit(dpc_service_exit);
 -- 
-2.8.3
+2.8.1
 
