@@ -1,173 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37468 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:53375 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753321AbcFJQZd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jun 2016 12:25:33 -0400
-Date: Fri, 10 Jun 2016 11:25:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	id S1750933AbcFFIOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jun 2016 04:14:19 -0400
+Date: Mon, 6 Jun 2016 10:14:16 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH v2 12/15] drivers: acpi: implement acpi_dma_configure
-Message-ID: <20160610162528.GI19309@localhost>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1465306270-27076-13-git-send-email-lorenzo.pieralisi@arm.com>
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 1/6] PCI: Add helpers to request/release memory and
+ I/O regions
+Message-ID: <20160606081416.qjv5hoqjfo2dmpov@c203.arch.suse.de>
+References: <2a5ab5c7cdf2d068395a2c97c934c258ae8d58c0.1464795082.git.jthumshirn@suse.de>
+ <201606050757.3lyBOdJT%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465306270-27076-13-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201606050757.3lyBOdJT%fengguang.wu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 07, 2016 at 02:31:07PM +0100, Lorenzo Pieralisi wrote:
-> On DT based systems, the of_dma_configure() API implements DMA configuration
-> for a given device. On ACPI systems an API equivalent to of_dma_configure()
-> is missing which implies that it is currently not possible to set-up DMA
-> operations for devices through the ACPI generic kernel layer.
+On Sun, Jun 05, 2016 at 07:32:13AM +0800, kbuild test robot wrote:
+> Hi,
 > 
-> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-> calls that for now are just wrappers around arch_setup_dma_ops() and
-> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
-> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+> [auto build test ERROR on jkirsher-next-queue/dev-queue]
+> [also build test ERROR on v4.7-rc1 next-20160603]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 > 
-> The DMA range size passed to arch_setup_dma_ops() is sized according
-> to the device coherent_dma_mask (starting at address 0x0), mirroring the
-> DT probing path behaviour when a dma-ranges property is not provided
-> for the device being probed; this changes the current arch_setup_dma_ops()
-> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
-> is a NOP on all architectures but ARM/ARM64 this patch does not change
-> the current kernel behaviour on them.
+> url:    https://github.com/0day-ci/linux/commits/Johannes-Thumshirn/Introduce-pci_-request-release-_-mem-io-_regions/20160602-153400
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/next-queue.git dev-queue
+> config: mips-rt305x_defconfig (attached as .config)
+> compiler: mips-linux-gnu-gcc (Debian 5.3.1-8) 5.3.1 20160205
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=mips 
 > 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I assume this will be merged by somebody else along with the rest
-of the series.
-
+> All errors (new ones prefixed by >>):
+> 
+>    In file included from lib/pci_iomap.c:6:0:
+>    include/linux/pci.h: In function 'pci_request_io_regions':
+> >> include/linux/pci.h:2021:9: error: implicit declaration of function 'pci_request_selected_regions' [-Werror=implicit-function-declaration]
+>      return pci_request_selected_regions(pdev,
+>             ^
+> >> include/linux/pci.h:2022:8: error: implicit declaration of function 'pci_select_bars' [-Werror=implicit-function-declaration]
+>            pci_select_bars(pdev, IORESOURCE_IO), name);
+>            ^
+>    include/linux/pci.h: In function 'pci_release_io_regions':
+>    include/linux/pci.h:2028:9: error: implicit declaration of function 'pci_release_selected_regions' [-Werror=implicit-function-declaration]
+>      return pci_release_selected_regions(pdev,
+>             ^
+>    include/linux/pci.h:2028:9: warning: 'return' with a value, in function returning void
+>    include/linux/pci.h: In function 'pci_release_mem_regions':
+>    include/linux/pci.h:2042:9: warning: 'return' with a value, in function returning void
+>      return pci_release_selected_regions(pdev,
+>             ^
+>    cc1: some warnings being treated as errors
+> 
+> vim +/pci_request_selected_regions +2021 include/linux/pci.h
+> 
+>   2015		return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
+>   2016	}
+>   2017	
+>   2018	static inline int
+>   2019	pci_request_io_regions(struct pci_dev *pdev, const char *name)
+>   2020	{
+> > 2021		return pci_request_selected_regions(pdev,
+> > 2022				    pci_select_bars(pdev, IORESOURCE_IO), name);
+>   2023	}
+>   2024	
+>   2025	static inline void
+> 
 > ---
->  drivers/acpi/glue.c     |  4 ++--
->  drivers/acpi/scan.c     | 24 ++++++++++++++++++++++++
->  drivers/pci/probe.c     |  3 +--
->  include/acpi/acpi_bus.h |  2 ++
->  include/linux/acpi.h    |  5 +++++
->  5 files changed, 34 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-> index 5ea5dc2..f8d6564 100644
-> --- a/drivers/acpi/glue.c
-> +++ b/drivers/acpi/glue.c
-> @@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->  
->  	attr = acpi_get_dma_attr(acpi_dev);
->  	if (attr != DEV_DMA_NOT_SUPPORTED)
-> -		arch_setup_dma_ops(dev, 0, 0, NULL,
-> -				   attr == DEV_DMA_COHERENT);
-> +		acpi_dma_configure(dev, attr);
->  
->  	acpi_physnode_link_name(physical_node_name, node_id);
->  	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-> @@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->  	return 0;
->  
->   err:
-> +	acpi_dma_deconfigure(dev);
->  	ACPI_COMPANION_SET(dev, NULL);
->  	put_device(dev);
->  	put_device(&acpi_dev->dev);
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 5f28cf7..b4b9064 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -1358,6 +1358,30 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  		return DEV_DMA_NON_COHERENT;
->  }
->  
-> +/**
-> + * acpi_dma_configure - Set-up DMA configuration for the device.
-> + * @dev: The pointer to the device
-> + * @attr: device dma attributes
-> + */
-> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-> +{
-> +	/*
-> +	 * Assume dma valid range starts at 0 and covers the whole
-> +	 * coherent_dma_mask.
-> +	 */
-> +	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-> +			   attr == DEV_DMA_COHERENT);
-> +}
-> +
-> +/**
-> + * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
-> + * @dev: The pointer to the device
-> + */
-> +void acpi_dma_deconfigure(struct device *dev)
-> +{
-> +	arch_teardown_dma_ops(dev);
-> +}
-> +
->  static void acpi_init_coherency(struct acpi_device *adev)
->  {
->  	unsigned long long cca = 0;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8e3ef72..01dd369 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1725,8 +1725,7 @@ static void pci_dma_configure(struct pci_dev *dev)
->  		if (attr == DEV_DMA_NOT_SUPPORTED)
->  			dev_warn(&dev->dev, "DMA not supported.\n");
->  		else
-> -			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
-> -					   attr == DEV_DMA_COHERENT);
-> +			acpi_dma_configure(&dev->dev, attr);
->  	}
->  
->  	pci_put_host_bridge_device(bridge);
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 788c6c35..8b5039a 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -566,6 +566,8 @@ struct acpi_pci_root {
->  
->  bool acpi_dma_supported(struct acpi_device *adev);
->  enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
-> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-> +void acpi_dma_deconfigure(struct device *dev);
->  
->  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
->  					   u64 address, bool check_children);
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 288fac5..135a452 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -676,6 +676,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  	return DEV_DMA_NOT_SUPPORTED;
->  }
->  
-> +static inline void acpi_dma_configure(struct device *dev,
-> +				      enum dev_dma_attr attr) { }
-> +
-> +static inline void acpi_dma_deconfigure(struct device *dev) { }
-> +
->  #define ACPI_PTR(_ptr)	(NULL)
->  
->  #endif	/* !CONFIG_ACPI */
-> -- 
-> 2.6.4
-> 
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+
+Problem got addressed, waiting for an reply from Dick Kenedy on the lpfc patch
+before re-submission,
+
+Thanks for reporting,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
