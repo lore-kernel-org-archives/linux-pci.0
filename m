@@ -1,64 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41661 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752296AbcFTMZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jun 2016 08:25:08 -0400
-Date: Mon, 20 Jun 2016 14:22:19 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	Keith Busch <keith.busch@intel.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"axboe@fb.com" <axboe@fb.com>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+Received: from cn.fujitsu.com ([59.151.112.132]:5803 "EHLO
+	heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751025AbcFFJSm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jun 2016 05:18:42 -0400
+Subject: Re: Re: [Qemu-devel] [RFC PATCH 0/3] x86: Add support for guest DMA
+ dirty page tracking
+To: Alexander Duyck <alexander.duyck@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <CAKgT0UeY9+BJoGtM+Fqa4Zve36GBJQpYVyoo2CPJZdELH6cEbg@mail.gmail.com>
+CC: Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	<kvm@vger.kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
-Message-ID: <20160620122219.GA29059@lst.de>
-References: <1465934346-20648-3-git-send-email-hch@lst.de> <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com> <20160615102311.GA16619@lst.de> <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com> <20160615151415.GA1919@localhost.localdomain> <7f0b16bd-b39f-99e6-c1c1-6a508bf9bbbf@sandisk.com> <20160615160316.GB1919@localhost.localdomain> <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com> <20160616152006.GA13615@lst.de> <f22e87c1-6875-9a59-94db-42a6f71663b8@sandisk.com>
+	<x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	<qemu-devel@nongnu.org>, Alexander Graf <agraf@suse.de>,
+	Alexander Duyck <aduyck@mirantis.com>,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>
+From: Zhou Jie <zhoujie2011@cn.fujitsu.com>
+Message-ID: <df81dd53-dc03-667e-4d53-3c67f90aab8f@cn.fujitsu.com>
+Date: Mon, 6 Jun 2016 17:18:33 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f22e87c1-6875-9a59-94db-42a6f71663b8@sandisk.com>
+In-Reply-To: <CAKgT0UeY9+BJoGtM+Fqa4Zve36GBJQpYVyoo2CPJZdELH6cEbg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 16, 2016 at 05:39:07PM +0200, Bart Van Assche wrote:
-> On 06/16/2016 05:20 PM, Christoph Hellwig wrote:
->> On Wed, Jun 15, 2016 at 09:36:54PM +0200, Bart Van Assche wrote:
->>> Do you agree that - ignoring other interrupt assignments - that the latter
->>> interrupt assignment scheme would result in higher throughput and lower
->>> interrupt processing latency?
+Hi Alex,
+
+On 2016/1/6 0:18, Alexander Duyck wrote:
+> On Tue, Jan 5, 2016 at 1:40 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+>> On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+>>>>> The two mechanisms referenced above would likely require coordination with
+>>>>> QEMU and as such are open to discussion.  I haven't attempted to address
+>>>>> them as I am not sure there is a consensus as of yet.  My personal
+>>>>> preference would be to add a vendor-specific configuration block to the
+>>>>> emulated pci-bridge interfaces created by QEMU that would allow us to
+>>>>> essentially extend shpc to support guest live migration with pass-through
+>>>>> devices.
+>>>>
+>>>> shpc?
+>>>
+>>> That is kind of what I was thinking.  We basically need some mechanism
+>>> to allow for the host to ask the device to quiesce.  It has been
+>>> proposed to possibly even look at something like an ACPI interface
+>>> since I know ACPI is used by QEMU to manage hot-plug in the standard
+>>> case.
+>>>
+>>> - Alex
 >>
->> Probably.  Once we've got it in the core IRQ code we can tweak the
->> algorithm to be optimal.
+>>
+>> Start by using hot-unplug for this!
+>>
+>> Really use your patch guest side, and write host side
+>> to allow starting migration with the device, but
+>> defer completing it.
 >
-> Sorry but I'm afraid that we are embedding policy in the kernel, something 
-> we should not do. I know that there are workloads for which dedicating some 
-> CPU cores to interrupt processing and other CPU cores to running kernel 
-> threads improves throughput, probably because this results in less cache 
-> eviction on the CPU cores that run kernel threads and some degree of 
-> interrupt coalescing on the CPU cores that process interrupts.
+> Yeah, I'm fully on board with this idea, though I'm not really working
+> on this right now since last I knew the folks on this thread from
+> Intel were working on it.  My patches were mostly meant to be a nudge
+> in this direction so that we could get away from the driver specific
+> code.
 
-And you can still easily set this use case up by chosing less queues
-(aka interrupts) than CPUs and assining your workload to the other
-cores.
+I have seen your email about live migration.
 
-> My concern 
-> is that I doubt that there is an interrupt assignment scheme that works 
-> optimally for all workloads. Hence my request to preserve the ability to 
-> modify interrupt affinity from user space.
+I conclude the idea you proposed as following.
+1. Extend swiotlb to allow for a page dirtying functionality.
+2. Use pci express capability to implement of a PCI bridge to act
+    as a bridge between direct assigned devices and the host bridge.
+3. Using APCI event or extend shpc driver to support device pause.
+Is it right?
 
-I'd say let's do such an interface incrementall based on the use
-case - especially after we get networking over to use common code
-to distribute the interrupts.  If you were doing something like this
-with the current blk-mq code it wouldn't work very well due to the
-fact that you'd have a mismatch between the assigned interrupt and
-the blk-mq queue mapping anyway.
+Will you implement the patchs for live migration?
 
-It might be a good idea to start brainstorming how we'd want to handle
-this change - we'd basically need a per-device notification that the
-interrupt mapping changes so that we can rebuild the queue mapping,
-which is somewhat similar to the lib/cpu_rmap.c code used by a few
-networking drivers.  This would also help with dealing with cpu
-hotplug events that change the cpu mapping.
+Sincerely,
+Zhou Jie
+
+
+>
+>> So
+>>
+>> 1.- host tells guest to start tracking memory writes
+>> 2.- guest acks
+>> 3.- migration starts
+>> 4.- most memory is migrated
+>> 5.- host tells guest to eject device
+>> 6.- guest acks
+>> 7.- stop vm and migrate rest of state
+>>
+>
+> Sounds about right.  The only way this differs from what I see as the
+> final solution for this is that instead of fully ejecting the device
+> in step 5 the driver would instead pause the device and give the host
+> something like 10 seconds to stop the VM and resume with the same
+> device connected if it is available.  We would probably also need to
+> look at a solution that would force the device to be ejected or abort
+> prior to starting the migration if it doesn't give us the ack in step
+> 2.
+>
+>> It will already be a win since hot unplug after migration starts and
+>> most memory has been migrated is better than hot unplug before migration
+>> starts.
+>
+> Right.  Generally the longer the VF can be maintained as a part of the
+> guest the longer the network performance is improved versus using a
+> purely virtual interface.
+>
+>> Then measure downtime and profile. Then we can look at ways
+>> to quiesce device faster which really means step 5 is replaced
+>> with "host tells guest to quiesce device and dirty (or just unmap!)
+>> all memory mapped for write by device".
+>
+> Step 5 will be the spot where we really need to start modifying
+> drivers.  Specifically we probably need to go through and clean-up
+> things so that we can reduce as many of the delays in the driver
+> suspend/resume path as possible.  I suspect there is quite a bit that
+> can be done there that would probably also improve boot and shutdown
+> times since those are also impacted by the devices.
+>
+> - Alex
+>
+>
+>
+> .
+>
+
+
