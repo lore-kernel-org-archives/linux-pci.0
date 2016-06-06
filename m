@@ -1,58 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 4/4] ACPI,PCI,IRQ: correct operator precedence
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
- <1467188859-28188-5-git-send-email-okaya@codeaurora.org>
- <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
- <d22fd8f7-7028-b4b7-6677-6903685034aa@codeaurora.org>
- <CAJZ5v0h1o5C8t+QJuFo93uZt0XuPNwtXFs5XSBkhm-fARWqi2g@mail.gmail.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>,
-	linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <96388f6b-f8b1-5720-4725-3f0ec0f5d1c3@codeaurora.org>
-Date: Wed, 29 Jun 2016 17:19:13 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 04/25] PCI: designware: Simplify host bridge window
+ iteration
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:05:15 -0500
+Message-ID: <20160606230515.20936.35308.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0h1o5C8t+QJuFo93uZt0XuPNwtXFs5XSBkhm-fARWqi2g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2016 5:14 PM, Rafael J. Wysocki wrote:
-> On Wed, Jun 29, 2016 at 8:29 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> On 6/29/2016 9:16 AM, Rafael J. Wysocki wrote:
->>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->>> Well, this is a rather obvious one, so I'm wondering why it is the
->>> last one in the series?
->>>
->>
->> The first three are more relevant to each other. It makes easy to
->> correlate the changes.
-> 
-> But this one doesn't seem to depend on them and it could be applied
-> without them, right?
-> 
+The switch is the only statement in the resource_list_for_each_entry()
+loop, so remove unnecessary "continue" statements in the switch.
 
-Sure. It has no dependency. 
+No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-designware.c |    6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 8304aeb..12afce1 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -465,11 +465,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->io_size = resource_size(pp->io);
+ 			pp->io_bus_addr = pp->io->start - win->offset;
+ 			ret = pci_remap_iospace(pp->io, pp->io_base);
+-			if (ret) {
++			if (ret)
+ 				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
+ 					 ret, pp->io);
+-				continue;
+-			}
+ 			break;
+ 		case IORESOURCE_MEM:
+ 			pp->mem = win->res;
+@@ -487,8 +485,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		case IORESOURCE_BUS:
+ 			pp->busn = win->res;
+ 			break;
+-		default:
+-			continue;
+ 		}
+ 	}
+ 
 
 
-> Thanks,
-> Rafael
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
