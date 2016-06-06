@@ -1,74 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v13 08/16] sparc/PCI: Keep resource idx order with bridge register number
-Date: Fri, 17 Jun 2016 19:24:53 -0700
-Message-Id: <20160618022501.15648-9-yinghai@kernel.org>
-In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
-References: <20160618022501.15648-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:57906 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751925AbcFFOZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jun 2016 10:25:47 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/1] PCI / PM: check all fields in pci_set_platform_pm()
+Date: Mon,  6 Jun 2016 17:25:33 +0300
+Message-Id: <1465223133-73532-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On one system found strange "no compatible bridge window" warning
-even we already had pref_compat support that add extra pref bit for device
-resource.
+When assign new PCI platform PM operations check for all mandatory fields to
+prevent NULL pointer dereference.
 
-PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
-PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
-pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
-
-It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
-just check resource with bridge pref mmio register idx 15, and we have put
-resource to use mmio register idx 14 during of_scan_pci_bridge()
-as the bridge does not have mmio resource.
-
-We already fix pci_up_path_over_pref_mem64() to check all bus resources.
-
-And at the same time, this patch make resource to have consistent sequence
-like other arch or directly from pci_read_bridge_bases(),
-even when non-pref mmio is missing, or out of ordering in firmware reporting.
-
-Just hold i = 1 for non pref mmio, and i = 2 for pref mmio.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: sparclinux@vger.kernel.org
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- arch/sparc/kernel/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/pci/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 654cf21..c6a3971 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -481,7 +481,7 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 		pci_read_bridge_bases(bus);
- 		goto after_ranges;
- 	}
--	i = 1;
-+	i = 3;
- 	for (; len >= 32; len -= 32, ranges += 8) {
- 		u64 start;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c8b4dbd..badbddc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -530,8 +530,8 @@ static const struct pci_platform_pm_ops *pci_platform_pm;
  
-@@ -513,6 +513,12 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
-+		} else if ((flags & IORESOURCE_PREFETCH) &&
-+			   !bus->resource[2]->flags) {
-+			res = bus->resource[2];
-+		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
-+			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
-+			res = bus->resource[1];
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
+ int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+ {
+-	if (!ops->is_manageable || !ops->set_state || !ops->choose_state
+-	    || !ops->sleep_wake)
++	if (!ops->is_manageable || !ops->set_state || !ops->choose_state ||
++	    !ops->sleep_wake || !ops->run_wake || !ops->need_resume)
+ 		return -EINVAL;
+ 	pci_platform_pm = ops;
+ 	return 0;
 -- 
-2.8.3
+2.8.1
+
