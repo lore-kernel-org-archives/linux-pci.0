@@ -1,46 +1,59 @@
-Return-Path: <jcm@jonmasters.org>
-Return-Path: <jcm@jonmasters.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
- <20160610234107.GC7671@localhost>
-Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
- okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org,
- linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com,
- linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
- catalin.marinas@arm.com, Liviu.Dudau@arm.com, arnd@arndb.de, jcm@redhat.com,
- cov@codeaurora.org, mw@semihalf.com, linux-arm-kernel@lists.infradead.org,
- jchandra@broadcom.com, dhdang@apm.com, linux-kernel@vger.kernel.org,
- jeremy.linton@arm.com
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <2e8ae0dc-d04e-3264-86d4-e2640060750c@jonmasters.org>
-Date: Fri, 10 Jun 2016 19:58:38 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 12/25] PCI: xilinx-nwl: Use dev_printk() when possible
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:06:14 -0500
+Message-ID: <20160606230614.20936.98599.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20160610234107.GC7671@localhost>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [Linaro-acpi] [PATCH V9 00/11] Support for ARM64 ACPI based PCI
- host controller
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/10/2016 07:41 PM, Bjorn Helgaas wrote:
-> On Fri, Jun 10, 2016 at 09:55:08PM +0200, Tomasz Nowicki wrote:
->> From the functionality point of view this series may be split into the
->> following logic parts:
->> 1. Export ECAM API and add parent device to pci_config_window
->> 2. Add IO resources handling to PCI core code
->> 3. New MCFG driver
->> 4. Cleanups and support for generic domain assignment based on ACPI
->> 5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64/
-> 
-> This is beautiful!  It really turned out well.
-> 
-> I applied all these to pci/arm64-acpi for v4.8.
+Use dev_printk() when possible to make messages more useful.
 
-Quick followup - I've forwarded your mail to the Linaro Enterprise Group
-members and started nudging the vendors to prep any remaining pieces for
-post-merge. That includes quirks, and then any drivers that anyone has
-been sitting on until this was upstream.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looking forward to F25 Server booting out of the box, and finally
-getting to a point where Fedora is once again upstream of RHEL(SA).
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 3c16bbf..0b597d9 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -825,7 +825,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
+ 	if (err) {
+-		pr_err("Getting bridge resources failed\n");
++		dev_err(pcie->dev, "Getting bridge resources failed\n");
+ 		return err;
+ 	}
+ 
 
-Jon.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
