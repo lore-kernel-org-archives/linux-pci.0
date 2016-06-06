@@ -1,61 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34336 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364AbcF2NQX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 09:16:23 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 08/25] PCI: xilinx: Free bridge resource list on failure
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:05:45 -0500
+Message-ID: <20160606230545.20936.65430.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1467188859-28188-5-git-send-email-okaya@codeaurora.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org> <1467188859-28188-5-git-send-email-okaya@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 29 Jun 2016 15:16:11 +0200
-Message-ID: <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
-Subject: Re: [PATCH V2 4/4] ACPI,PCI,IRQ: correct operator precedence
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>,
-	linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> The omitted parenthesis prevents the addition operation when
-> acpi_penalize_isa_irq function is called.
->
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+of_pci_get_host_bridge_resources() allocates a list of resources for host
+bridge windows.  If we fail after allocating that list, free it before we
+return error.
 
-Well, this is a rather obvious one, so I'm wondering why it is the
-last one in the series?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-> ---
->  drivers/acpi/pci_link.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index 8c08971..c983bf7 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -872,7 +872,7 @@ void acpi_penalize_isa_irq(int irq, int active)
->  {
->         if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
->                 acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> -                       active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
-> +                 (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
->  }
->
->  bool acpi_isa_irq_available(int irq)
-> --
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 65f0fe0..5c456db 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -660,7 +660,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 	struct xilinx_pcie_port *port;
+ 	struct device *dev = &pdev->dev;
+ 	struct pci_bus *bus;
+-
+ 	int err;
+ 	resource_size_t iobase = 0;
+ 	LIST_HEAD(res);
+@@ -696,8 +695,10 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 	}
+ 	bus = pci_create_root_bus(&pdev->dev, 0,
+ 				  &xilinx_pcie_ops, port, &res);
+-	if (!bus)
+-		return -ENOMEM;
++	if (!bus) {
++		err = -ENOMEM;
++		goto error;
++	}
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	xilinx_pcie_msi_chip.dev = port->dev;
+@@ -712,6 +713,10 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, port);
+ 
+ 	return 0;
++
++error:
++	pci_free_resource_list(&res);
++	return err;
+ }
+ 
+ /**
 
-Thanks,
-Rafael
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
