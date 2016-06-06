@@ -1,84 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:32977 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113AbcFNP3Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 11:29:16 -0400
-Date: Tue, 14 Jun 2016 17:29:11 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>
-Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management Unit
- driver
-Message-ID: <20160614152911.GB28601@gmail.com>
-References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <20160614104355.GC13439@gmail.com>
- <1465912766.30123.55.camel@linux.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 10/25] PCI: xilinx-nwl: Free bridge resource list on failure
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:05:59 -0500
+Message-ID: <20160606230559.20936.29055.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1465912766.30123.55.camel@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+of_pci_get_host_bridge_resources() allocates a list of resources for host
+bridge windows.  If we fail after allocating that list, free it before we
+return error.
 
-* Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-> On Tue, 2016-06-14 at 12:43 +0200, Ingo Molnar wrote:
-> > * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-> > 
-> > > Add Power Management Unit driver to handle power states of South
-> > > Complex
-> > > devices on Intel Tangier. In the future it might be expanded to
-> > > cover North
-> > > Complex devices as well.
-> > > 
-> > > With this driver the power state of the host controllers such as
-> > > SPI, I2C,
-> > > UART, eMMC, and DMA would be managed.
-> > > 
-> > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > ---
-> > >  arch/x86/include/asm/intel-mid.h     |   8 +
-> > >  arch/x86/pci/intel_mid_pci.c         |  35 +++-
-> > >  arch/x86/platform/intel-mid/Makefile |   2 +-
-> > >  arch/x86/platform/intel-mid/pmu.c    | 392
-> > > +++++++++++++++++++++++++++++++++++
-> > >  drivers/pci/Makefile                 |   3 +
-> > >  drivers/pci/pci-mid.c                |  77 +++++++
-> > >  6 files changed, 515 insertions(+), 2 deletions(-)
-> > >  create mode 100644 arch/x86/platform/intel-mid/pmu.c
-> > >  create mode 100644 drivers/pci/pci-mid.c
-> > 
-> > So this collides with perf's 'PMU' naming massively. Can we pick
-> > another name 
-> > before hillarious kernel-wide confusion spreads?
-> > 
-> > how about intel/mid/pm.c plus renaming all the pmu* internal names to
-> > pm*?
-> > 
-> > We could call it 'power management interface', and in a single line
-> > mention that 
-> > this is also a 'Power Management Unit' in Intel-speak?
-> 
-> In the TRM it's called Power Management Unit, though once or twice in some 
-> documents as Power Management Controller. I actually woudn't like to use PMC 
-> abbreviation to not be confused with pmc_atom.c and many other variation of 
-> existing PMC drivers of other Intel platforms.
-> 
-> PM* as a prefix might be too short to conflict with Power Management framework 
-> in the kernel. P-Unit (punit*) is existing part in SoC which will have its own 
-> driver in the future, so, can't use it either.
-> 
-> pwr*, pwrmu*, scpmu* (as of South Complex Power Management Unit) — one of them?
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 3479d30..506da7b 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -832,20 +832,22 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 	err = nwl_pcie_init_irq_domain(pcie);
+ 	if (err) {
+ 		dev_err(pcie->dev, "Failed creating IRQ Domain\n");
+-		return err;
++		goto error;
+ 	}
+ 
+ 	bus = pci_create_root_bus(&pdev->dev, pcie->root_busno,
+ 				  &nwl_pcie_ops, pcie, &res);
+-	if (!bus)
+-		return -ENOMEM;
++	if (!bus) {
++		err = -ENOMEM;
++		goto error;
++	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		err = nwl_pcie_enable_msi(pcie, bus);
+ 		if (err < 0) {
+ 			dev_err(&pdev->dev,
+ 				"failed to enable MSI support: %d\n", err);
+-			return err;
++			goto error;
+ 		}
+ 	}
+ 	pci_scan_child_bus(bus);
+@@ -855,6 +857,10 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 	pci_bus_add_devices(bus);
+ 	platform_set_drvdata(pdev, pcie);
+ 	return 0;
++
++error:
++	pci_free_resource_list(&res);
++	return err;
+ }
+ 
+ static int nwl_pcie_remove(struct platform_device *pdev)
 
-'pwr' certainly sounds good to me! PWMU perhaps?
 
-Thanks,
-
-	Ingo
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
