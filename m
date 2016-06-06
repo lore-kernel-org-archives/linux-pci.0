@@ -1,78 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:22135 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752208AbcF3KyX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 06:54:23 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5UAsG8q065033
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:54:17 -0400
-Received: from e28smtp09.in.ibm.com (e28smtp09.in.ibm.com [125.16.236.9])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 23utca7nnw-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:54:17 -0400
-Received: from localhost
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 30 Jun 2016 16:23:24 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v3 1/7] PCI: Ignore enforced alignment when kernel uses existing firmware setup
-Date: Thu, 30 Jun 2016 18:53:07 +0800
-In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1467283993-3185-2-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 06/25] PCI: xgene: Free bridge resource list on failure
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:05:30 -0500
+Message-ID: <20160606230530.20936.50110.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI resources allocator will use firmware setup and not try to
-reassign resource when PCI_PROBE_ONLY or IORESOURCE_PCI_FIXED
-is set.
+of_pci_get_host_bridge_resources() allocates a list of resources for host
+bridge windows.  If we fail after allocating that list, free it before we
+return error.
 
-The enforced alignment in pci_reassigndev_resource_alignment()
-should be ignored in this case. Otherwise, some PCI devices'
-resources would be released here and not re-allocated.
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/pci/host/pci-xgene.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c8b4dbd..be8f72c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4760,6 +4760,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index ae00ce2..bc4e1c6 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -542,12 +542,14 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
  
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
-+	if (pci_has_flag(PCI_PROBE_ONLY)) {
-+		if (*p)
-+			printk_once(KERN_INFO "PCI: Ignore resource_alignment parameter: %s with PCI_PROBE_ONLY set\n",
-+						p);
-+		spin_unlock(&resource_alignment_lock);
-+		return 0;
+ 	ret = xgene_pcie_setup(port, &res, iobase);
+ 	if (ret)
+-		return ret;
++		goto error;
+ 
+ 	bus = pci_create_root_bus(&pdev->dev, 0,
+ 					&xgene_pcie_ops, port, &res);
+-	if (!bus)
+-		return -ENOMEM;
++	if (!bus) {
++		ret = -ENOMEM;
++		goto error;
 +	}
- 	while (*p) {
- 		count = 0;
- 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
-@@ -4837,6 +4844,11 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		r = &dev->resource[i];
- 		if (!(r->flags & IORESOURCE_MEM))
- 			continue;
-+		if (r->flags & IORESOURCE_PCI_FIXED) {
-+			dev_info(&dev->dev, "No alignment for fixed BAR%d: %pR\n",
-+				i, r);
-+			continue;
-+		}
- 		size = resource_size(r);
- 		if (size < align) {
- 			size = align;
--- 
-1.7.9.5
+ 
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+@@ -555,6 +557,10 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, port);
+ 	return 0;
++
++error:
++	pci_free_resource_list(&res);
++	return ret;
+ }
+ 
+ static const struct of_device_id xgene_pcie_match_table[] = {
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
