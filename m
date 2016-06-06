@@ -1,72 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55942 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161183AbcFMU27 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jun 2016 16:28:59 -0400
-Date: Mon, 13 Jun 2016 15:28:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Engraf <david.engraf@sysgo.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix __pci_bus_size_bridges when bridge is not
- available
-Message-ID: <20160613202855.GB14934@localhost>
-References: <5734293A.6040702@sysgo.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 11/25] PCI: xilinx-nwl: Request host bridge window resources
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:06:07 -0500
+Message-ID: <20160606230606.20936.88648.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5734293A.6040702@sysgo.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 12, 2016 at 08:56:58AM +0200, David Engraf wrote:
-> A virtual PCI controller may not have a bridge device, thus when
-> __pci_bus_size_bridges is called, it will generate a NULL pointer
-> exception when accessing bus->self->class. The attached patch adds a
-> check to verify if a bridge has been set. Without a bridge device,
-> the function returns.
-> 
-> Signed-off-by: David Engraf <david.engraf <at> sysgo.com>
-> 
+Request host bridge window resources so they appear in ioport_resource and
+iomem_resource and are reflected in /proc/ioports and /proc/iomem.
 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 55641a3..ddb3381 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1245,6 +1245,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
->  	if (pci_is_root_bus(bus))
->  		return;
->  
-> +	/* bridge device available? */
-> +	if (!bus->self)
-> +		return;
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-I'd like to see the code that relies on this, i.e., the virtual PCI
-controller driver.
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 506da7b..3c16bbf 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -829,6 +829,10 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
++	err = devm_request_pci_bus_resources(pcie->dev, &res);
++	if (err)
++		goto error;
++
+ 	err = nwl_pcie_init_irq_domain(pcie);
+ 	if (err) {
+ 		dev_err(pcie->dev, "Failed creating IRQ Domain\n");
 
-I don't know how we would handle resource assignment if there's no bridge.
-When we assign resources to a device, we normally look at the upstream
-bridge to see what resources are available.
 
-Here's an example from my laptop:
-
-  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-fe])
-  pci_bus 0000:00: root bus resource [mem 0xbf200000-0xdfffffff window]
-  pci 0000:00:1c.3: PCI bridge to [bus 02]
-  pci 0000:00:1c.3:   bridge window [mem 0xd0500000-0xd05fffff]
-  pci 0000:02:00.0: reg 0x10: [mem 0xd0500000-0xd0501fff 64bit]
-
-PCI0 is the host bridge, and it forwards transactions in the range
-[mem 0xbf200000-0xdfffffff] to PCI bus 00.  The 00:1c.3 bridge
-forwards transactions in the range [mem 0xd0500000-0xd05fffff] from
-bus 00 to bus 02.  So if we want to assign resources to the BARs of
-02:00.0, we have to take them from the 00:1c.3 window.
-
-In your virtual PCI controller situation, it sounds like you could
-have a device like 02:00.0 that is not on a root bus and does not have
-an upstream bridge.  How would we assign resources to it?
-
->  	switch (bus->self->class >> 8) {
->  	case PCI_CLASS_BRIDGE_CARDBUS:
->  		/* don't size cardbuses yet. */
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
