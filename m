@@ -1,33 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Rui Wang <rui.y.wang@intel.com>, tony.luck@intel.com,
-	bhelgaas@google.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 1/3] x86/ioapic: Support hot-removal of IOAPICs present during boot
-Date: Fri, 10 Jun 2016 15:56:24 +0200
-Message-ID: <47298553.oybh2YTvtj@vostro.rjw.lan>
-In-Reply-To: <alpine.DEB.2.11.1606101456520.5839@nanos>
-References: <1465369193-4816-2-git-send-email-rui.y.wang@intel.com> <1465378364-5982-1-git-send-email-rui.y.wang@intel.com> <alpine.DEB.2.11.1606101456520.5839@nanos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:36204 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752144AbcFFHcv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jun 2016 03:32:51 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] scsi: Use device_match_always()
+Date: Mon,  6 Jun 2016 09:32:38 +0200
+Message-Id: <20160606073238.1073-3-thierry.reding@gmail.com>
+In-Reply-To: <20160606073238.1073-1-thierry.reding@gmail.com>
+References: <20160606073238.1073-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 10, 2016 02:57:52 PM Thomas Gleixner wrote:
-> On Wed, 8 Jun 2016, Rui Wang wrote:
-> 
-> > v3: Previous versions break mips. This version fixes it.
-> > 
-> > IOAPICs present during system boot aren't added to ioapic_list,
-> > thus are unable to be hot-removed. Fix it by calling
-> > acpi_ioapic_add() during root bus enumeration.
-> 
-> Who will pick that one up? I already took 2/3 of this series as they are
-> independent.
+From: Thierry Reding <treding@nvidia.com>
 
-I can pick it up.
+There is now a common implementation for a match function that will
+always match, so the SCSI-specific implementation can be removed.
 
-Thanks,
-Rafael
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/scsi/scsi_proc.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index 7a74b82e8973..4adcdc2caf27 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -371,15 +371,10 @@ static ssize_t proc_scsi_write(struct file *file, const char __user *buf,
+ 	return err;
+ }
+ 
+-static int always_match(struct device *dev, void *data)
+-{
+-	return 1;
+-}
+-
+ static inline struct device *next_scsi_device(struct device *start)
+ {
+ 	struct device *next = bus_find_device(&scsi_bus_type, start, NULL,
+-					      always_match);
++					      device_match_always);
+ 	put_device(start);
+ 	return next;
+ }
+-- 
+2.8.3
 
