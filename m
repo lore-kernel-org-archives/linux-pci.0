@@ -1,85 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34386 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753076AbcFOVCQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jun 2016 17:02:16 -0400
-Date: Wed, 15 Jun 2016 16:02:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Gregory CLEMENT <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Nicolas Pitre <nicolas.pitre@linaro.org>,
-	Rob Herring <robh@kernel.org>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Ray Jui <rjui@broadcom.com>, Ley Foon Tan <lftan@altera.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] arm/arm64/irqchip/pci: fix PCI_MSI dependencies
-Message-ID: <20160615210211.GA17504@localhost>
-References: <8531046.3ceRqUA835@wuerfel>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 07/25] PCI: xgene: Request host bridge window resources
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:05:37 -0500
+Message-ID: <20160606230537.20936.2892.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8531046.3ceRqUA835@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 15, 2016 at 10:09:38PM +0200, Arnd Bergmann wrote:
-> The PCI_MSI symbol is used inconsistently throughout the tree,
-> with some drivers using 'select' and others using 'depends on',
-> or using conditional selects. This keeps causing problems,
-> and the latest one is a result of ARCH_ALPINE using a 'select'
-> statement to enable its platform specific MSI driver but not
-> enabling MSI support first:
-> 
-> warning: (ARCH_ALPINE) selects ALPINE_MSI which has unmet direct dependencies (PCI && PCI_MSI)
-> drivers/irqchip/irq-alpine-msi.c:104:15: error: variable 'alpine_msix_domain_info' has initializer but incomplete type
->  static struct msi_domain_info alpine_msix_domain_info = {
->                ^~~~~~~~~~~~~~~
-> drivers/irqchip/irq-alpine-msi.c:105:2: error: unknown field 'flags' specified in initializer
->   .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
->   ^
-> drivers/irqchip/irq-alpine-msi.c:105:11: error: 'MSI_FLAG_USE_DEF_DOM_OPS' undeclared here (not in a function)
->   .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
->            ^~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> There is little reason to enable PCI support for a platform that
-> uses MSI but then leaving MSI disabled at compile time.
-> 
-> I sent an earlier version that used 'select PCI_MSI' everywhere
-> in March, but that caused build regressions on x86.
-> 
-> This version instead selects PCI_MSI from irqchips that implement MSI,
-> and makes PCI host bridges that use MSI on ARM depend on PCI_MSI_IRQ_DOMAIN,
-> which in turn is now enabled by default on all three architectures that
-> support it, whenever MSI is enabled.
-> 
-> I think it makes most sense to merge this patch through the PCI tree,
-> as new PCI host drivers get added occasionally, and they all need to
-> be adapted for this change.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Suggested-by: Marc Zyngier <marc.zyngier@arm.com>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Request host bridge window resources so they appear in ioport_resource and
+iomem_resource and are reflected in /proc/ioports and /proc/iomem.
 
-I applied this to pci/msi, minus the crypto change that looks unrelated:
+For example, the following entries did not previously appear in /proc/iomem:
 
-> @@ -1038,6 +1038,8 @@ source "arch/arm64/Kconfig.debug"
->  source "security/Kconfig"
->  
->  source "crypto/Kconfig"
-> +if CRYPTO
->  source "arch/arm64/crypto/Kconfig"
-> +endif
+  e180000000-e1ffffffff : /soc/pcie@1f2b0000
+    e180000000-e182ffffff : PCI Bus 0000:01
+      e180000000-e181ffffff : 0000:01:00.0
+      e182000000-e1820fffff : 0000:01:00.0
+      e182100000-e1821fffff : 0000:01:00.0
+  f000000000-ffffffffff : /soc/pcie@1f2b0000
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-xgene.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index bc4e1c6..7eb20cc 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -540,6 +540,10 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	ret = devm_request_pci_bus_resources(&pdev->dev, &res);
++	if (ret)
++		goto error;
++
+ 	ret = xgene_pcie_setup(port, &res, iobase);
+ 	if (ret)
+ 		goto error;
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
