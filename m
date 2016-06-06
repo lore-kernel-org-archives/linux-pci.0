@@ -1,60 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:59452 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040AbcFXPuj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jun 2016 11:50:39 -0400
-Received: from localhost.localdomain ([127.0.0.1]:49072 "EHLO linux-mips.org"
-        rhost-flags-OK-OK-OK-FAIL) by eddie.linux-mips.org with ESMTP
-        id S27044061AbcFXPuhfNF7B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Jun 2016 17:50:37 +0200
-Date: Fri, 24 Jun 2016 17:50:21 +0200
-From: Ralf Baechle <ralf@linux-mips.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-mips@linux-mips.org,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Ganesan Ramalingam <ganesanr@broadcom.com>,
-	David Daney <david.daney@cavium.com>,
-	linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Andy Isaacson <adi@hexapodia.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI: PCI_PROBE_ONLY clean-up
-Message-ID: <20160624155021.GD5930@linux-mips.org>
-References: <20160623221441.3154.31310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 22/25] PCI: tegra: Remove top-level resource from
+ hierarchy
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Rob Herring <robh@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
+	linux-renesas-soc@vger.kernel.org,
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+	linux-arm-kernel@lists.infradead.org
+Date: Mon, 06 Jun 2016 18:07:28 -0500
+Message-ID: <20160606230728.20936.53648.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160623221441.3154.31310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 23, 2016 at 05:16:47PM -0500, Bjorn Helgaas wrote:
+41534e53786d ("PCI: tegra: Implement a proper resource hierarchy") did two
+things:
 
-> Lorenzo is changing the PCI_PROBE_ONLY case so the BARs and windows remain
-> immutable, but we insert the resources into the iomem_resource tree.
-> 
-> The ideal thing would be to remove the use of PCI_PROBE_ONLY completely,
-> and allow Linux to program BARs as necessary.  If the firmware *has*
-> programmed the BARs, we don't change them unless we find something broken,
-> so in most cases PCI_PROBE_ONLY is unnecessary.
-> 
-> There are several MIPS platforms (bcm1480, ip27, sb1250, virtio_guest, xlp,
-> xlr) that set PCI_PROBE_ONLY for reasons I don't know.  These were added
-> by:
-> 
->   bcm1480
->     Andrew Isaacson <adi@broadcom.com>
->     dc41f94f7709 ("Support for the BCM1480 on-chip PCI-X bridge.")
-> 
->   ip27
->     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
->     96173a6c4ebc ("[MIPS] IP27: misc fixes")
+  1) It added a top-level resource that encloses all resources declared in
+     the DT description, including registers and bridge apertures, and
 
-Afair  I did originally implement the IP27 use of PCI_PROBE_ONLY.  The
-problem is that it was not possible for the kernel to assign resources
-properly on an IP27.  Also that would invalidate firmware configuration
-information, so we had to live with whatever the firmware (mis)configured
-for us.  Afair - it's a darn long time ...  I think the reasoning for
-the BCM1480 was similar but Andy will hopefully recall the details.
+  2) It requested the bridge apertures, which means the PCI core can track
+     the resources used by PCI devices below the bridge.
 
-  Ralf
+The latter is necessary, but the former is questionable because there's no
+guarantee that the bridge registers and the apertures are contiguous.  In
+this example:
+
+  # cat /proc/iomem
+  00000000-3fffffff : /pcie-controller@00003000
+    00000000-00000fff : /pcie-controller@00003000/pci@1,0
+    00003000-000037ff : pads
+    00003800-000039ff : afi
+    10000000-1fffffff : cs
+
+the resource tree claims that [mem 0x00003a00-0x0fffffff] is consumed by
+/pcie-controller@00003000, but it's not mentioned in the DT, and it might
+actually be used by other devices.
+
+Remove the top-level resource so we don't claim more than the device
+actually consumes.
+
+This reintroduces the problem that we can't match the resources, e.g.,
+"pads", "afi", "cs", etc., to the DT device.  I think this should be solved
+by having the DT core request all resources of all devices in the DT (it
+does not do that today).  If a driver claims the device, it can request the
+resources it uses.  For example:
+
+  # cat /proc/iomem
+  00000000-00000fff : /pcie-controller@00003000
+    00000000-00000fff : /pcie-controller@00003000/pci@1,0
+  00003000-000037ff : /pcie-controller@00003000
+    00003000-000037ff : pads
+  00003800-000039ff : /pcie-controller@00003000
+    00003800-000039ff : afi
+  10000000-1fffffff : /pcie-controller@00003000
+    10000000-1fffffff : cs
+  ...
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-tegra.c |   23 +++--------------------
+ 1 file changed, 3 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index c388468..920a899 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -274,7 +274,6 @@ struct tegra_pcie {
+ 	struct list_head buses;
+ 	struct resource *cs;
+ 
+-	struct resource all;
+ 	struct resource io;
+ 	struct resource pio;
+ 	struct resource mem;
+@@ -623,7 +622,7 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	sys->mem_offset = pcie->offset.mem;
+ 	sys->io_offset = pcie->offset.io;
+ 
+-	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->io);
++	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->io);
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -631,11 +630,11 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
+ 	if (err < 0)
+ 		return err;
+ 
+-	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->mem);
++	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->mem);
+ 	if (err < 0)
+ 		return err;
+ 
+-	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->prefetch);
++	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->prefetch);
+ 	if (err)
+ 		return err;
+ 
+@@ -1822,12 +1821,6 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 	struct resource res;
+ 	int err;
+ 
+-	memset(&pcie->all, 0, sizeof(pcie->all));
+-	pcie->all.flags = IORESOURCE_MEM;
+-	pcie->all.name = np->full_name;
+-	pcie->all.start = ~0;
+-	pcie->all.end = 0;
+-
+ 	if (of_pci_range_parser_init(&parser, np)) {
+ 		dev_err(pcie->dev, "missing \"ranges\" property\n");
+ 		return -EINVAL;
+@@ -1880,18 +1873,8 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 			}
+ 			break;
+ 		}
+-
+-		if (res.start <= pcie->all.start)
+-			pcie->all.start = res.start;
+-
+-		if (res.end >= pcie->all.end)
+-			pcie->all.end = res.end;
+ 	}
+ 
+-	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->all);
+-	if (err < 0)
+-		return err;
+-
+ 	err = of_pci_parse_bus_range(np, &pcie->busn);
+ 	if (err < 0) {
+ 		dev_err(pcie->dev, "failed to parse ranges property: %d\n",
