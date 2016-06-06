@@ -1,61 +1,81 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 13/25] PCI: altera: Request host bridge window resources
+ with core function
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:06:21 -0500
+Message-ID: <20160606230621.20936.79245.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 22 Jun 2016 23:54:39 -0400
-From: okaya@codeaurora.org
-To: wim@djo.tudelft.nl
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
- <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
- Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org
-Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
-In-Reply-To: <20160621221347.GA28603@djo.tudelft.nl>
-References: <20160620003530.GA19571@djo.tudelft.nl>
- <2999417.fp4mqtxYS2@vostro.rjw.lan> <20160620212507.GA24086@localhost>
- <57686D67.8010201@codeaurora.org> <20160621124715.GB3528@djo.tudelft.nl>
- <576943BA.1000001@codeaurora.org> <20160621221347.GA28603@djo.tudelft.nl>
-Message-ID: <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-06-21 18:13, Wim Osterholt wrote:
-> On Tue, Jun 21, 2016 at 09:40:10AM -0400, Sinan Kaya wrote:
->> 
->> Thanks, It was a guess with no proof.
->> 
->> Let's undo the change above and start adding some print statements to 
->> collect
->> data from your system.
->> 
->> Can you add this to the end of acpi_irq_get_penalty function and then 
->> send
->> the output?
->> 
->> 	pr_info("%s:%d irq = %d penalty = %d\n", __func__, __LINE__, irq,
->> 		penalty);
->> 
-> 
-> This produced some 60 lines extra. Too much to include here.
-> The entire dmesg file is here:
-> http://webserver.djo.tudelft.nl/dmesg474+printpenalty
+Use devm_request_pci_bus_resources() to request host bridge window
+resources instead of doing it by hand in the driver.
 
-Thanks, let's go back to 4.6 and add a very similar printf to every 
-single place where the array is modified and also right before the 
-enabled message.
+No functional change intended.
 
-I am trying to find a system with similar characteristics for debug
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-altera.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index dbac6fb..b97abbc 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -432,21 +432,20 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
+ 	if (err)
+ 		return err;
+ 
++	err = devm_request_pci_bus_resources(dev, &pcie->resources);
++	if (err)
++		goto out_release_res;
++
+ 	resource_list_for_each_entry(win, &pcie->resources) {
+-		struct resource *parent, *res = win->res;
++		struct resource *res = win->res;
+ 
+ 		switch (resource_type(res)) {
+ 		case IORESOURCE_MEM:
+-			parent = &iomem_resource;
+ 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+ 			break;
+ 		default:
+ 			continue;
+ 		}
+-
+-		err = devm_request_resource(dev, parent, res);
+-		if (err)
+-			goto out_release_res;
+ 	}
+ 
+ 	if (!res_valid) {
 
 
-
-> 
-> 
-> Regards, Wim.
-> 
-> 
-> ----- wim@djo.tudelft.nl -----
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
