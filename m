@@ -1,52 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:45785 "EHLO
-	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964790AbcFMK7H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2016 06:59:07 -0400
-Message-ID: <1465815543.2313.9.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: imx6: Add missing required clocks
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: bhelgaas@google.com, hongxing.zhu@nxp.com,
-	linux-pci@vger.kernel.org
-Date: Mon, 13 Jun 2016 12:59:03 +0200
-In-Reply-To: <1465392461-3469-1-git-send-email-fabio.estevam@nxp.com>
-References: <1465392461-3469-1-git-send-email-fabio.estevam@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 17/25] PCI: generic: Simplify host bridge window iteration
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Rob Herring <robh@kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
+	linux-renesas-soc@vger.kernel.org,
+	Simon Horman <horms@verge.net.au>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+	linux-arm-kernel@lists.infradead.org
+Date: Mon, 06 Jun 2016 18:06:51 -0500
+Message-ID: <20160606230651.20936.73053.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 08.06.2016, 10:27 -0300 schrieb Fabio Estevam:
-> The PCI hardware on imx6 requires the following clocks:
-> "pcie", "pcie_bus" and "pcie_phy", so add the missing clocks
-> in the clock-names property.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
-> ---
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 83aeb1f..94ab92c 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -10,8 +10,8 @@ Required properties:
->    entry for each entry in the interrupt-names property.
->  - interrupt-names: Must include the following entries:
->  	- "msi": The interrupt that is asserted when an MSI is received
-> -- clock-names: Must include the following additional entries:
-> -	- "pcie_phy"
-> +- clock-names: Must include the following entries:
-> +	- "pcie", "pcie_bus" and "pcie_phy".
+The switch is the only statement in the resource_list_for_each_entry()
+loop, so remove unnecessary "continue" statements in the switch.  Simplify
+checking for the required non-prefetchable memory aperture.
 
-NACK.
+No functional change intended.
 
-Both "pcie" and "pcie_bus" are inherited from the common
-designware-pcie.txt binding. That's why it reads "must include the
-following ADDITIONAL entries".
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-host-common.c |   17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-Regards,
-Lucas
-
-
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index e7515fd..bb03120 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -46,29 +46,24 @@ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
+ 		switch (resource_type(res)) {
+ 		case IORESOURCE_IO:
+ 			err = pci_remap_iospace(res, iobase);
+-			if (err) {
++			if (err)
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 err, res);
+-				continue;
+-			}
+ 			break;
+ 		case IORESOURCE_MEM:
+ 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+ 			break;
+ 		case IORESOURCE_BUS:
+ 			*bus_range = res;
+-		default:
+-			continue;
++			break;
+ 		}
+ 	}
+ 
+-	if (!res_valid) {
+-		dev_err(dev, "non-prefetchable memory resource required\n");
+-		err = -EINVAL;
+-		goto out_release_res;
+-	}
++	if (res_valid)
++		return 0;
+ 
+-	return 0;
++	dev_err(dev, "non-prefetchable memory resource required\n");
++	err = -EINVAL;
+ 
+ out_release_res:
+ 	pci_free_resource_list(resources);
