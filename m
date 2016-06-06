@@ -1,189 +1,77 @@
-Return-Path: <valentine.barshak@cogentembedded.com>
-Return-Path: <valentine.barshak@cogentembedded.com>
-Date: Tue, 21 Jun 2016 18:41:00 +0300
-From: Valentine Barshak <valentine.barshak@cogentembedded.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Rob Herring <robh@kernel.org>, Jason Cooper <jason@lakedaemon.net>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
-	linux-renesas-soc@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
-	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v1 19/25] PCI: rcar Gen2: Request host bridge window
- resources
-Message-ID: <20160621154100.GA4782@cogentembedded.com>
-Reply-To: Valentine Barshak <valentine.barshak@cogentembedded.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160606230706.20936.13086.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <CAMuHMdVgLfTD-BjRZ+gVKgYE8dkDZzQ6DnYtkUs+jVPthJsEdQ@mail.gmail.com>
- <20160621142623.GA29966@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160621142623.GA29966@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:34486 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751878AbcFFNGv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jun 2016 09:06:51 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 3/4] PCI / DPC: Convert the driver to use devm_* functions
+Date: Mon,  6 Jun 2016 16:06:07 +0300
+Message-Id: <1465218368-36494-4-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 21, 2016 at 09:26:23AM -0500, Bjorn Helgaas wrote:
-> [+cc Valentine]
-> 
+These will automatically release the resources when the driver is removed
+so no need to do that explicitly in the driver.
 
-Hi Bjorn,
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-> Hi Geert,
-> 
-> Thanks a lot for testing this, and sorry for the breakage.
-> 
-> On Tue, Jun 21, 2016 at 12:41:31PM +0200, Geert Uytterhoeven wrote:
-> > On Tue, Jun 7, 2016 at 1:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > > Request host bridge window resources so they appear in ioport_resource and
-> > > iomem_resource and are reflected in /proc/ioports and /proc/iomem.
-> > >
-> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > ---
-> > >  drivers/pci/host/pci-rcar-gen2.c |    4 ++++
-> > >  1 file changed, 4 insertions(+)
-> > >
-> > > diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> > > index 9980a4b..617a6b2 100644
-> > > --- a/drivers/pci/host/pci-rcar-gen2.c
-> > > +++ b/drivers/pci/host/pci-rcar-gen2.c
-> > > @@ -194,6 +194,7 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
-> > >         struct rcar_pci_priv *priv = sys->private_data;
-> > >         void __iomem *reg = priv->reg;
-> > >         u32 val;
-> > > +       int ret;
-> > >
-> > >         pm_runtime_enable(priv->dev);
-> > >         pm_runtime_get_sync(priv->dev);
-> > > @@ -275,6 +276,9 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
-> > >         /* Add PCI resources */
-> > >         pci_add_resource(&sys->resources, &priv->io_res);
-> > >         pci_add_resource(&sys->resources, &priv->mem_res);
-> > > +       ret = devm_request_pci_bus_resources(priv->dev, &sys->resources);
-> > > +       if (ret < 0)
-> > > +               return ret;
-> > >
-> > >         /* Setup bus number based on platform device id / of bus-range */
-> > >         sys->busnr = priv->busnr;
-> > 
-> > This patch (commit 1bd019707b7c9249d34c5d348f1ef75eb4d83e89 in pci/next)
-> > broke PCI on r8a7791/koelsch. Dmesg differences are:
-> > 
-> >  pci-rcar-gen2 ee090000.pci: PCI: bus0 revision 11
-> > -pci-rcar-gen2 ee090000.pci: PCI host bridge to bus 0000:00
-> > -pci_bus 0000:00: root bus resource [io  0xee080000-0xee0810ff]
-> > -pci_bus 0000:00: root bus resource [mem 0xee080000-0xee0810ff]
-> 
-> This is probably a result of this code in drivers/pci/host/pci-rcar-gen2.c:
-> 
->         /*
->          * The controller does not support/use port I/O,
->          * so setup a dummy port I/O region here.
->          */
->         priv->io_res.start = priv->mem_res.start;
->         priv->io_res.end = priv->mem_res.end;
->         priv->io_res.flags = IORESOURCE_IO;
-> 
-> We try to avoid adding dummy regions like this, but maybe we missed
-> this one.  I haven't found any email discussion about it yet, so I
-> don't know what the reason for this one is.  Valentine, do you
-> remember?
-
-I do not, but I think I've found something in my mailbox.
-Below is the quote from the original conversation with:
-(Re: [PATCH] pci: Add R-Car Gen2 internal PCI support)
-
-[quote starts]
- >>+    priv->mem_res = *mem_res;
- >>+    /*
- >>+     * The controller does not support/use port I/O,
- >>+     * so setup a dummy port I/O region here.
- >>+     */
- >>+    priv->io_res.start = priv->mem_res.start;
- >>+    priv->io_res.end = priv->mem_res.end;
- >>+    priv->io_res.flags = IORESOURCE_IO;
- >>
- > I don't understand this.  There's no requirement (at least as far as the
- > PCI core is concerned) to supply an I/O aperture at all, and I think it
- > would be better if you didn't.
- >
- > Oh, I see ... maybe pcibios_init_resources() forces you to have an
- > I/O resource to avoid having it give you a default one?  And I
- > suppose that since you have several host bridges, these dummy I/O
- > regions have to be distinct.  Ugh.  Well, I guess this is something
- > you'd have to fix here or in the ARM code, it's up to you what to do.
-
- Exactly. This is to avoid assigning default I/O resources.
-[quote ends]
-
-> 
-> Can you try the patch below (apply it before the 1bd019707b7c patch
-> that broke things)?
-> 
-> 
-> commit b64dc28f5f2b3afe47ee4a42fb79db84ec4227f8
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Jun 21 09:19:34 2016 -0500
-> 
->     PCI: rcar: Drop gen2 dummy I/O port region
->     
->     Previously we added a dummy I/O port region even though the R-Car
->     controller doesn't support PCI port I/O.  This resulted in bogus root bus
->     resources like this:
->     
->       pci_bus 0000:00: root bus resource [io  0xee080000-0xee0810ff]
->       pci_bus 0000:00: root bus resource [mem 0xee080000-0xee0810ff]
->     
->     Drop the unused dummy I/O port region.
->     
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index 9980a4b..53ae619 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -97,7 +97,6 @@
->  struct rcar_pci_priv {
->  	struct device *dev;
->  	void __iomem *reg;
-> -	struct resource io_res;
->  	struct resource mem_res;
->  	struct resource *cfg_res;
->  	unsigned busnr;
-> @@ -273,7 +272,6 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
->  		rcar_pci_setup_errirq(priv);
->  
->  	/* Add PCI resources */
-> -	pci_add_resource(&sys->resources, &priv->io_res);
->  	pci_add_resource(&sys->resources, &priv->mem_res);
->  
->  	/* Setup bus number based on platform device id / of bus-range */
-> @@ -371,14 +369,6 @@ static int rcar_pci_probe(struct platform_device *pdev)
->  		return -ENOMEM;
->  
->  	priv->mem_res = *mem_res;
-> -	/*
-> -	 * The controller does not support/use port I/O,
-> -	 * so setup a dummy port I/O region here.
-> -	 */
-> -	priv->io_res.start = priv->mem_res.start;
-> -	priv->io_res.end = priv->mem_res.end;
-> -	priv->io_res.flags = IORESOURCE_IO;
-> -
->  	priv->cfg_res = cfg_res;
->  
->  	priv->irq = platform_get_irq(pdev, 0);
-
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 533c548607d7..8a061645f217 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -89,7 +89,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	int status;
+ 	u16 ctl, cap;
+ 
+-	dpc = kzalloc(sizeof(*dpc), GFP_KERNEL);
++	dpc = devm_kzalloc(&dev->device, sizeof(*dpc), GFP_KERNEL);
+ 	if (!dpc)
+ 		return -ENOMEM;
+ 
+@@ -98,11 +98,12 @@ static int dpc_probe(struct pcie_device *dev)
+ 	INIT_WORK(&dpc->work, interrupt_event_handler);
+ 	set_service_data(dev, dpc);
+ 
+-	status = request_irq(dev->irq, dpc_irq, IRQF_SHARED, "pcie-dpc", dpc);
++	status = devm_request_irq(&dev->device, dev->irq, dpc_irq, IRQF_SHARED,
++				  "pcie-dpc", dpc);
+ 	if (status) {
+ 		dev_warn(&dev->device, "request IRQ%d failed: %d\n", dev->irq,
+ 			 status);
+-		goto out;
++		return status;
+ 	}
+ 
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+@@ -117,9 +118,6 @@ static int dpc_probe(struct pcie_device *dev)
+ 		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
+ 		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
+ 	return status;
+- out:
+-	kfree(dpc);
+-	return status;
+ }
+ 
+ static void dpc_remove(struct pcie_device *dev)
+@@ -131,9 +129,6 @@ static void dpc_remove(struct pcie_device *dev)
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+ 	ctl &= ~(PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN);
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+-
+-	free_irq(dev->irq, dpc);
+-	kfree(dpc);
+ }
+ 
+ static struct pcie_port_service_driver dpcdriver = {
 -- 
-Thanks,
-Val.
+2.8.1
+
