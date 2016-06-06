@@ -1,118 +1,110 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors
- against platfrom specific ECAM quirks.
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
- <9294389.sZPDtyjoUs@wuerfel> <57503626.9050208@semihalf.com>
- <4608372.hbXNF1lbNO@wuerfel>
-Cc: linux-arm-kernel@lists.infradead.org, rafael@kernel.org,
- linux-pci@vger.kernel.org, will.deacon@arm.com, okaya@codeaurora.org,
- wangyijing@huawei.com, andrea.gallo@linaro.org, Lorenzo.Pieralisi@arm.com,
- linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com,
- linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
- helgaas@kernel.org, liudongdong3@huawei.com, catalin.marinas@arm.com,
- Liviu.Dudau@arm.com, jcm@redhat.com, msalter@redhat.com, cov@codeaurora.org,
- mw@semihalf.com, jchandra@broadcom.com, dhdang@apm.com,
- linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org,
- Suravee.Suthikulpanit@amd.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <575FC925.9000608@semihalf.com>
-Date: Tue, 14 Jun 2016 11:06:45 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f49.google.com ([209.85.213.49]:35538 "EHLO
+	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764AbcFFQE3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jun 2016 12:04:29 -0400
+Received: by mail-vk0-f49.google.com with SMTP id d127so205696333vkh.2
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jun 2016 09:04:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4608372.hbXNF1lbNO@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <df81dd53-dc03-667e-4d53-3c67f90aab8f@cn.fujitsu.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com> <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com> <CAKgT0UeY9+BJoGtM+Fqa4Zve36GBJQpYVyoo2CPJZdELH6cEbg@mail.gmail.com>
+ <df81dd53-dc03-667e-4d53-3c67f90aab8f@cn.fujitsu.com>
+From: Alex Duyck <aduyck@mirantis.com>
+Date: Mon, 6 Jun 2016 09:04:27 -0700
+Message-ID: <CAMt9YRpzAKt1KQW17VBzx0PT5BxiL_1+U1-AEK2A_Ao9KQjmGg@mail.gmail.com>
+Subject: Re: Re: [Qemu-devel] [RFC PATCH 0/3] x86: Add support for guest DMA
+ dirty page tracking
+To: Zhou Jie <zhoujie2011@cn.fujitsu.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	kvm@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Alexander Graf <agraf@suse.de>,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-Sorry for late response. Please see comments inline.
-
-On 02.06.2016 17:19, Arnd Bergmann wrote:
-> On Thursday, June 2, 2016 3:35:34 PM CEST Tomasz Nowicki wrote:
->> On 02.06.2016 14:32, Arnd Bergmann wrote:
->>> On Thursday, June 2, 2016 2:07:43 PM CEST Tomasz Nowicki wrote:
->>>> On 02.06.2016 13:42, Arnd Bergmann wrote:
->>>>> On Thursday, June 2, 2016 10:41:01 AM CEST Tomasz Nowicki wrote:
->>>>>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
->>>>>> +{
->>>>>> +       int bus_num = root->secondary.start;
->>>>>> +       int domain = root->segment;
->>>>>> +       struct pci_cfg_fixup *f;
->>>>>> +
->>>>>> +       if (!mcfg_table)
->>>>>> +               return &pci_generic_ecam_ops;
->>>>>> +
->>>>>> +       /*
->>>>>> +        * Match against platform specific quirks and return corresponding
->>>>>> +        * CAM ops.
->>>>>> +        *
->>>>>> +        * First match against PCI topology <domain:bus> then use OEM ID and
->>>>>> +        * OEM revision from MCFG table standard header.
->>>>>> +        */
->>>>>> +       for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
->>>>>> +               if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
->>>>>> +                   (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
->>>>>> +                   (!strncmp(f->oem_id, mcfg_table->header.oem_id,
->>>>>> +                             ACPI_OEM_ID_SIZE)) &&
->>>>>> +                   (f->oem_revision == mcfg_table->header.oem_revision))
->>>>>> +                       return f->ops;
->>>>>> +       }
->>>>>> +       /* No quirks, use ECAM */
->>>>>> +       return &pci_generic_ecam_ops;
->>>>>> +}
->>>>>> +
->>>>>>     int pci_mcfg_lookup(struct acpi_pci_root *root)
->>>>>
->>>>> Can you explain the use of pci_ecam_ops instead of pci_ops here?
->>>>>
->>>>
->>>> I wanted to get associated bus_shift and use it to setup configuration
->>>> region properly before calling pci_ecam_create. Please see next patch.
->>>>
->>>
->>> I see. It feels really odd to do it this way though, since having a
->>> nonstandard bus_shift essentially means not using anything resembling
->>> ECAM to start with.
->>>
->>> I realize that a lot of the host bridges are not ECAM, but because
->>> of this, it would be more logical to have their own pci_ops instead
->>> of pci_ecam_ops.
+On Mon, Jun 6, 2016 at 2:18 AM, Zhou Jie <zhoujie2011@cn.fujitsu.com> wrote:
+> Hi Alex,
+>
+>
+> On 2016/1/6 0:18, Alexander Duyck wrote:
 >>
->> Well, we have bus_shift there to express bus shift differentiation. So I
->> would say we should change just structure name to prevent misunderstanding.
+>> On Tue, Jan 5, 2016 at 1:40 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+>>>
+>>> On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
+>>>>>>
+>>>>>> The two mechanisms referenced above would likely require coordination
+>>>>>> with
+>>>>>> QEMU and as such are open to discussion.  I haven't attempted to
+>>>>>> address
+>>>>>> them as I am not sure there is a consensus as of yet.  My personal
+>>>>>> preference would be to add a vendor-specific configuration block to
+>>>>>> the
+>>>>>> emulated pci-bridge interfaces created by QEMU that would allow us to
+>>>>>> essentially extend shpc to support guest live migration with
+>>>>>> pass-through
+>>>>>> devices.
+>>>>>
+>>>>>
+>>>>> shpc?
+>>>>
+>>>>
+>>>> That is kind of what I was thinking.  We basically need some mechanism
+>>>> to allow for the host to ask the device to quiesce.  It has been
+>>>> proposed to possibly even look at something like an ACPI interface
+>>>> since I know ACPI is used by QEMU to manage hot-plug in the standard
+>>>> case.
+>>>>
+>>>> - Alex
+>>>
+>>>
+>>>
+>>> Start by using hot-unplug for this!
+>>>
+>>> Really use your patch guest side, and write host side
+>>> to allow starting migration with the device, but
+>>> defer completing it.
+>>
+>>
+>> Yeah, I'm fully on board with this idea, though I'm not really working
+>> on this right now since last I knew the folks on this thread from
+>> Intel were working on it.  My patches were mostly meant to be a nudge
+>> in this direction so that we could get away from the driver specific
+>> code.
 >
-> I'm not really convinced here. We use the bus_shift for two
-> completely different things in the end: for sizing the MMIO window
-> that gets mapped by ACPI and for the pci_ecam_map_bus() function
-> that isn't actually used for the typical fixups that override the
-> pci_ops.
-
-Since we overwrite the whole pci_ecam_ops structure (next patch):
--	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
--			      &pci_generic_ecam_ops);
-+	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, ops);
-
-IMO bus_shift is used in the right way. So if anybody decides to put 
-different bus_shift there he also needs to implement map_bus and use 
-there bus_shift appropriate to quirk requirements. Obviously we can use 
-standard pci_ecam_map_bus() as map_bus but that would mean quirk nature 
-needs that, like for ThunderX one.
-
 >
-> I see now that this sneaks in an .init callback for the quirk
-> through the backdoor, by adding it to the pci_ecam_ops. I think
-> that is not good: if the idea is to have the config space access
-> be adapted to various quirks that is one thing, but if we actually
-> need a function to be called for the quirk we should do just that
-> and have it be obvious. That function can then override the
-> pci_ops.
+> I have seen your email about live migration.
+>
+> I conclude the idea you proposed as following.
+> 1. Extend swiotlb to allow for a page dirtying functionality.
+> 2. Use pci express capability to implement of a PCI bridge to act
+>    as a bridge between direct assigned devices and the host bridge.
+> 3. Using APCI event or extend shpc driver to support device pause.
+> Is it right?
+>
+> Will you implement the patchs for live migration?
 
-Actually we do not need to call a function for each quirk. At the same 
-time we already have .init callback adopted to configuration space 
-access quirk. This way there is really small amount of code duplication. 
-On the other hand I understand that .init call should be more explicit. 
-Any suggestions are very appreciated.
+That is pretty much the heart of the proposal I had.  I submitted an
+RFC as a proof-of-concept for item 1 in the hopes that someone else
+might try tackling items 2 and 3 but I haven't seen any updates since
+then.  The trick is to find a way to make it so that item 1 doesn't
+slow down standard SWIOTLB when you are not migrating a VM. If nothing
+else we would probably just need to add a static key that we could
+default to false unless there is a PCI bridge indicating we are
+starting a migration.
 
-Thanks,
-Tomasz
+I haven't had time to really work on this though. In addition I am not
+that familiar with QEMU and the internals of live migration so pieces
+2 and 3 would take me some additional time to work on.
+
+- Alex
