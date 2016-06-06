@@ -1,104 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:17819 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932065AbcFRDSm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2016 23:18:42 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5I3IdeL113662
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jun 2016 23:18:41 -0400
-Received: from e28smtp09.in.ibm.com (e28smtp09.in.ibm.com [125.16.236.9])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23mtd1mq81-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jun 2016 23:18:40 -0400
-Received: from localhost
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Sat, 18 Jun 2016 08:48:36 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 10578E0045
-	for <linux-pci@vger.kernel.org>; Sat, 18 Jun 2016 08:52:12 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u5I3HoTi18612624
-	for <linux-pci@vger.kernel.org>; Sat, 18 Jun 2016 08:47:50 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u5I3IQIK020990
-	for <linux-pci@vger.kernel.org>; Sat, 18 Jun 2016 08:48:31 +0530
-Date: Sat, 18 Jun 2016 13:18:22 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, alistair@popple.id.au
-Subject: Re: [v10,17/18] powerpc/powernv: Functions to get/set PCI slot state
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-18-git-send-email-gwshan@linux.vnet.ibm.com>
- <3rWGlZ2Qs5z9t0v@ozlabs.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 00/25] PCI: Request host bridge window resources
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:04:44 -0500
+Message-ID: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3rWGlZ2Qs5z9t0v@ozlabs.org>
-Message-Id: <20160618031822.GA6937@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 17, 2016 at 08:32:10PM +1000, Michael Ellerman wrote:
->On Fri, 2016-20-05 at 06:41:41 UTC, Gavin Shan wrote:
->> diff --git a/arch/powerpc/include/asm/opal-api.h b/arch/powerpc/include/asm/opal-api.h
->> index 9bb8ddf..2417c86 100644
->> --- a/arch/powerpc/include/asm/opal-api.h
->> +++ b/arch/powerpc/include/asm/opal-api.h
->> @@ -344,6 +348,18 @@ enum OpalPciResetState {
->>  	OPAL_ASSERT_RESET   = 1
->>  };
->>  
->> +enum OpalPciSlotPresentenceState {
->
->In skiboot this is called "OpalPciSlotPresence".
->
->I've renamed it.
->
->> +	OPAL_PCI_SLOT_EMPTY	= 0,
->> +	OPAL_PCI_SLOT_PRESENT	= 1
->> +};
->> +
->> +enum OpalPciSlotPowerState {
->
->In skiboot this is called "OpalPciSlotPower".
->
->I've renamed it.
->
->> +	OPAL_PCI_SLOT_POWER_OFF	= 0,
->> +	OPAL_PCI_SLOT_POWER_ON	= 1,
->> +	OPAL_PCI_SLOT_OFFLINE	= 2,
->> +	OPAL_PCI_SLOT_ONLINE	= 3
->> +};
->> +
->>  enum OpalSlotLedType {
->>  	OPAL_SLOT_LED_TYPE_ID = 0,	/* IDENTIFY LED */
->>  	OPAL_SLOT_LED_TYPE_FAULT = 1,	/* FAULT LED */
->> @@ -378,6 +394,7 @@ enum opal_msg_type {
->>  	OPAL_MSG_DPO		= 5,
->>  	OPAL_MSG_PRD		= 6,
->>  	OPAL_MSG_OCC		= 7,
->> +	OPAL_MSG_PCI_HOTPLUG	= 8,
->
->I don't see this in skiboot?
->
->It also doesn't seem to be used, so I've dropped it.
->
+Several host bridge drivers (designware and all derivatives, iproc,
+xgene, xilinx, and xilinx-nwl) don't request the MMIO and I/O port
+windows they forward downstream to the PCI bus.
 
-Thanks, Michael. All the changes are correct. The enum name was changed
-in the last skiboot patchset that was merged couple days ago. At same
-time, OPAL_MSG_PCI_HOTPLUG isn't needed as PCI hotplug won't have one
-dedicated message type, an asychornous message is used instead.
+That means the PCI core can't request resources for PCI bridge
+windows and PCI BARs.
 
-Thanks,
-Gavin
+Several other drivers (altera, generic, mvebu, rcar, tegra) do request
+the windows, but use some duplicated code to do it.
+
+This adds a new devm_request_pci_bus_resources() interface and changes
+these drivers to use it.  It also fixes several error paths where we failed
+to free the resource list allocated by of_pci_get_host_bridge_resources().
+
+Tegra guys, please take a look at "PCI: tegra: Remove top-level resource
+from hierarchy" in particular.  Removing the top-level resource definitely
+makes /proc/iomem look uglier (although it will look more like that of
+other drivers).  A short-term fix could be to include device information in
+the resource name.  I think a better long-term fix would be to make the DT
+or platform device core request all the resources from the DT.
+
+Comments welcome.  I expect we'll trip over something here, so I marked
+this "v1" and I don't plan to put it into -next for a while.
+
+This is on my pci/host-request-windows branch, which you can pull or view
+at https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-request-windows
+
+---
+
+Bjorn Helgaas (25):
+      PCI: Add devm_request_pci_bus_resources()
+      PCI: designware: Free bridge resource list on failure
+      PCI: designware: Request host bridge window resources
+      PCI: designware: Simplify host bridge window iteration
+      PCI: iproc: Request host bridge window resources
+      PCI: xgene: Free bridge resource list on failure
+      PCI: xgene: Request host bridge window resources
+      PCI: xilinx: Free bridge resource list on failure
+      PCI: xilinx: Request host bridge window resources
+      PCI: xilinx-nwl: Free bridge resource list on failure
+      PCI: xilinx-nwl: Request host bridge window resources
+      PCI: xilinx-nwl: Use dev_printk() when possible
+      PCI: altera: Request host bridge window resources with core function
+      PCI: altera: Simplify host bridge window iteration
+      PCI: generic: Free resource list close to where it's allocated
+      PCI: generic: Request host bridge window resources with core function
+      PCI: generic: Simplify host bridge window iteration
+      PCI: mvebu: Request host bridge window resources with core function
+      PCI: rcar Gen2: Request host bridge window resources
+      PCI: rcar: Request host bridge window resources with core function
+      PCI: rcar: Simplify host bridge window iteration
+      PCI: tegra: Remove top-level resource from hierarchy
+      PCI: tegra: Request host bridge window resources with core function
+      PCI: versatile: Request host bridge window resources with core function
+      PCI: versatile: Simplify host bridge window iteration
 
 
->>  	OPAL_MSG_TYPE_MAX,
->>  };
->>  
->
->cheers
->
+ drivers/pci/bus.c                  |   29 +++++++++++++++++
+ drivers/pci/host/pci-host-common.c |   61 +++++++++++++++---------------------
+ drivers/pci/host/pci-mvebu.c       |   17 ++++------
+ drivers/pci/host/pci-rcar-gen2.c   |    4 ++
+ drivers/pci/host/pci-tegra.c       |   35 +++------------------
+ drivers/pci/host/pci-versatile.c   |   29 ++++++-----------
+ drivers/pci/host/pci-xgene.c       |   16 ++++++++-
+ drivers/pci/host/pcie-altera.c     |   35 ++++++---------------
+ drivers/pci/host/pcie-designware.c |   34 +++++++++++++-------
+ drivers/pci/host/pcie-iproc.c      |    4 ++
+ drivers/pci/host/pcie-rcar.c       |   33 +++++--------------
+ drivers/pci/host/pcie-xilinx-nwl.c |   20 +++++++++---
+ drivers/pci/host/pcie-xilinx.c     |   16 ++++++++-
+ include/linux/pci.h                |    5 ++-
+ 14 files changed, 170 insertions(+), 168 deletions(-)
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
