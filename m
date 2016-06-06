@@ -1,164 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37838 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932205AbcFNT73 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:29 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 04/13] irq: Use affinity hint in irqdesc allocation
-Date: Tue, 14 Jun 2016 21:58:57 +0200
-Message-Id: <1465934346-20648-5-git-send-email-hch@lst.de>
-In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:53280 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751365AbcFFIM6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jun 2016 04:12:58 -0400
+Date: Mon, 6 Jun 2016 10:12:51 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	James Smart <james.smart@avagotech.com>,
+	Dick Kennedy <dick.kennedy@avagotech.com>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 3/6] lpfc: Use pci_(request|release)_mem_regions
+Message-ID: <20160606081251.crfzyn7tvmbk4tpb@c203.arch.suse.de>
+References: <cover.1464795082.git.jthumshirn@suse.de>
+ <51b9bf3879e440da6c34094dfd1ee765f94f51c3.1464795082.git.jthumshirn@suse.de>
+ <CAGx+d6eHPKvOM_aYgv9qJvA1siJ89PzwHtK07U9tKs3yG7=O9w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAGx+d6eHPKvOM_aYgv9qJvA1siJ89PzwHtK07U9tKs3yG7=O9w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the affinity hint in the irqdesc allocator. The hint is used to determine
-the node for the allocation and to set the affinity of the interrupt.
+On Thu, Jun 02, 2016 at 07:57:43AM -0400, Dick Kennedy wrote:
+> Thanks Johannes, it looks good.
+Hi Dick, 
 
-If multiple interrupts are allocated (multi-MSI) then the allocator iterates
-over the cpumask and for each set cpu it allocates on their node and sets the
-initial affinity to that cpu.
+Can I use this as an Acked-by in the next submission?
 
-If a single interrupt is allocated (MSI-X) then the allocator uses the first
-cpu in the mask to compute the allocation node and uses the mask for the
-initial affinity setting.
+Thanks,
+	Johannes
 
-Interrupts set up this way are marked with the AFFINITY_MANAGED flag to
-prevent userspace from messing with their affinity settings.
+> 
+> On Thu, Jun 2, 2016 at 3:30 AM, Johannes Thumshirn <jthumshirn@suse.de>
+> wrote:
+> 
+> > Now that we do have pci_request_mem_regions() and
+> > pci_release_mem_regions() at
+> > hand, use it in the lpfc driver.
+> >
+> > Suggested-by: Christoph Hellwig <hch@infradead.org>
+> > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> > Cc: James Smart <james.smart@avagotech.com>
+> > Cc: Dick Kennedy <dick.kennedy@avagotech.com>
+> > Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> > Cc: linux-scsi@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > ---
+> >  drivers/scsi/lpfc/lpfc_init.c | 15 ++++-----------
+> >  1 file changed, 4 insertions(+), 11 deletions(-)
+> >
+> > diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> > index f57d02c..a8735f7 100644
+> > --- a/drivers/scsi/lpfc/lpfc_init.c
+> > +++ b/drivers/scsi/lpfc/lpfc_init.c
+> > @@ -4775,20 +4775,17 @@ static int
+> >  lpfc_enable_pci_dev(struct lpfc_hba *phba)
+> >  {
+> >         struct pci_dev *pdev;
+> > -       int bars = 0;
+> >
+> >         /* Obtain PCI device reference */
+> >         if (!phba->pcidev)
+> >                 goto out_error;
+> >         else
+> >                 pdev = phba->pcidev;
+> > -       /* Select PCI BARs */
+> > -       bars = pci_select_bars(pdev, IORESOURCE_MEM);
+> >         /* Enable PCI device */
+> >         if (pci_enable_device_mem(pdev))
+> >                 goto out_error;
+> >         /* Request PCI resource for the device */
+> > -       if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
+> > +       if (pci_request_mem_regions(pdev, LPFC_DRIVER_NAME))
+> >                 goto out_disable_device;
+> >         /* Set up device as PCI master and save state for EEH */
+> >         pci_set_master(pdev);
+> > @@ -4805,7 +4802,7 @@ out_disable_device:
+> >         pci_disable_device(pdev);
+> >  out_error:
+> >         lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+> > -                       "1401 Failed to enable pci device, bars:x%x\n",
+> > bars);
+> > +                       "1401 Failed to enable pci device\n");
+> >         return -ENODEV;
+> >  }
+> >
+> > @@ -4820,17 +4817,14 @@ static void
+> >  lpfc_disable_pci_dev(struct lpfc_hba *phba)
+> >  {
+> >         struct pci_dev *pdev;
+> > -       int bars;
+> >
+> >         /* Obtain PCI device reference */
+> >         if (!phba->pcidev)
+> >                 return;
+> >         else
+> >                 pdev = phba->pcidev;
+> > -       /* Select PCI BARs */
+> > -       bars = pci_select_bars(pdev, IORESOURCE_MEM);
+> >         /* Release PCI resource and disable PCI device */
+> > -       pci_release_selected_regions(pdev, bars);
+> > +       pci_release_mem_regions(pdev);
+> >         pci_disable_device(pdev);
+> >
+> >         return;
+> > @@ -9705,7 +9699,6 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
+> >         struct lpfc_vport **vports;
+> >         struct lpfc_hba   *phba = vport->phba;
+> >         int i;
+> > -       int bars = pci_select_bars(pdev, IORESOURCE_MEM);
+> >
+> >         spin_lock_irq(&phba->hbalock);
+> >         vport->load_flag |= FC_UNLOADING;
+> > @@ -9780,7 +9773,7 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
+> >
+> >         lpfc_hba_free(phba);
+> >
+> > -       pci_release_selected_regions(pdev, bars);
+> > +       pci_release_mem_regions(pdev);
+> >         pci_disable_device(pdev);
+> >  }
+> >
+> > --
+> > 1.8.5.6
+> >
+> >
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- kernel/irq/irqdesc.c | 51 +++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 39 insertions(+), 12 deletions(-)
-
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index b8df4fc..a623b44 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -68,9 +68,13 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
- 	return 0;
- }
- 
--static void desc_smp_init(struct irq_desc *desc, int node)
-+static void desc_smp_init(struct irq_desc *desc, int node,
-+			  const struct cpumask *affinity)
- {
--	cpumask_copy(desc->irq_common_data.affinity, irq_default_affinity);
-+	if (!affinity)
-+		affinity = irq_default_affinity;
-+	cpumask_copy(desc->irq_common_data.affinity, affinity);
-+
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	cpumask_clear(desc->pending_mask);
- #endif
-@@ -82,11 +86,12 @@ static void desc_smp_init(struct irq_desc *desc, int node)
- #else
- static inline int
- alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
--static inline void desc_smp_init(struct irq_desc *desc, int node) { }
-+static inline void
-+desc_smp_init(struct irq_desc *desc, int node, const struct cpumask *affinity) { }
- #endif
- 
- static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
--		struct module *owner)
-+			      const struct cpumask *affinity, struct module *owner)
- {
- 	int cpu;
- 
-@@ -107,7 +112,7 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
- 	desc->owner = owner;
- 	for_each_possible_cpu(cpu)
- 		*per_cpu_ptr(desc->kstat_irqs, cpu) = 0;
--	desc_smp_init(desc, node);
-+	desc_smp_init(desc, node, affinity);
- }
- 
- int nr_irqs = NR_IRQS;
-@@ -158,7 +163,9 @@ void irq_unlock_sparse(void)
- 	mutex_unlock(&sparse_irq_lock);
- }
- 
--static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
-+static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
-+				   const struct cpumask *affinity,
-+				   struct module *owner)
- {
- 	struct irq_desc *desc;
- 	gfp_t gfp = GFP_KERNEL;
-@@ -178,7 +185,8 @@ static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
- 	lockdep_set_class(&desc->lock, &irq_desc_lock_class);
- 	init_rcu_head(&desc->rcu);
- 
--	desc_set_defaults(irq, desc, node, owner);
-+	desc_set_defaults(irq, desc, node, affinity, owner);
-+	irqd_set(&desc->irq_data, flags);
- 
- 	return desc;
- 
-@@ -225,11 +233,30 @@ static void free_desc(unsigned int irq)
- static int alloc_descs(unsigned int start, unsigned int cnt, int node,
- 		       const struct cpumask *affinity, struct module *owner)
- {
-+	const struct cpumask *mask = NULL;
- 	struct irq_desc *desc;
--	int i;
-+	unsigned int flags;
-+	int i, cpu = -1;
-+
-+	if (affinity && cpumask_empty(affinity))
-+		return -EINVAL;
-+
-+	flags = affinity ? IRQD_AFFINITY_MANAGED : 0;
- 
- 	for (i = 0; i < cnt; i++) {
--		desc = alloc_desc(start + i, node, owner);
-+		if (affinity) {
-+			cpu = cpumask_next(cpu, affinity);
-+			if (cpu >= nr_cpu_ids)
-+				cpu = cpumask_first(affinity);
-+			node = cpu_to_node(cpu);
-+
-+			/*
-+			 * For single allocations we use the caller provided
-+			 * mask otherwise we use the mask of the target cpu
-+			 */
-+			mask = cnt == 1 ? affinity : cpumask_of(cpu);
-+		}
-+		desc = alloc_desc(start + i, node, flags, mask, owner);
- 		if (!desc)
- 			goto err;
- 		mutex_lock(&sparse_irq_lock);
-@@ -277,7 +304,7 @@ int __init early_irq_init(void)
- 		nr_irqs = initcnt;
- 
- 	for (i = 0; i < initcnt; i++) {
--		desc = alloc_desc(i, node, NULL);
-+		desc = alloc_desc(i, node, 0, NULL, NULL);
- 		set_bit(i, allocated_irqs);
- 		irq_insert_desc(i, desc);
- 	}
-@@ -311,7 +338,7 @@ int __init early_irq_init(void)
- 		alloc_masks(&desc[i], GFP_KERNEL, node);
- 		raw_spin_lock_init(&desc[i].lock);
- 		lockdep_set_class(&desc[i].lock, &irq_desc_lock_class);
--		desc_set_defaults(i, &desc[i], node, NULL);
-+		desc_set_defaults(i, &desc[i], node, NULL, NULL);
- 	}
- 	return arch_early_irq_init();
- }
-@@ -328,7 +355,7 @@ static void free_desc(unsigned int irq)
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&desc->lock, flags);
--	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL);
-+	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL, NULL);
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
- }
- 
 -- 
-2.1.4
-
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
