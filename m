@@ -1,173 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40048 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751525AbcF2SOp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 14:14:45 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5TIAcXk032496
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 14:14:44 -0400
-Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 23v097xd15-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 14:14:44 -0400
-Received: from localhost
-	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Wed, 29 Jun 2016 15:14:42 -0300
-Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 926581DC0071
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 14:14:31 -0400 (EDT)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u5TIEdZs28246422
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 15:14:39 -0300
-Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
-	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u5TIEb6o014387
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 15:14:38 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
-	benh@kernel.crashing.org, imunsie@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, paulus@samba.org, mikey@neuling.org,
-	andrew.donnellan@au1.ibm.com, bhelgaas@google.com,
-	gpiccoli@linux.vnet.ibm.com, frederic.barrat@fr.ibm.com,
-	mrochs@linux.vnet.ibm.com
-Subject: [PATCH v7] powerpc/pci: Assign fixed PHB number based on device-tree properties
-Date: Wed, 29 Jun 2016 15:14:22 -0300
-Message-Id: <1467224062-9173-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 20/25] PCI: rcar: Request host bridge window resources
+ with core function
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:07:13 -0500
+Message-ID: <20160606230713.20936.51279.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The domain/PHB field of PCI addresses has its value obtained from a
-global variable, incremented each time a new domain (represented by
-struct pci_controller) is added on the system. The domain addition
-process happens during boot or due to PHB hotplug add.
+Use devm_request_pci_bus_resources() to request host bridge window
+resources instead of doing it by hand in the driver.
 
-As recent kernels are using predictable naming for network interfaces,
-the network stack is more tied to PCI naming. This can be a problem in
-hotplug scenarios, because PCI addresses will change if devices are
-removed and then re-added. This situation seems unusual, but it can
-happen if a user wants to replace a NIC without rebooting the machine,
-for example.
+No functional change intended.
 
-This patch changes the way PCI domain values are generated: now, we use
-device-tree properties to assign fixed PHB numbers to PCI addresses
-when available (meaning pSeries and PowerNV cases). We also use a bitmap
-to allow dynamic PHB numbering when device-tree properties are not
-used. This bitmap keeps track of used PHB numbers and if a PHB is
-released (by hotplug operations for example), it allows the reuse of
-this PHB number, avoiding PCI address to change in case of device remove
-and re-add soon after. No functional changes were introduced.
-
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-v7:
-    * Removed the goto as per Michael's suggestion;
+ drivers/pci/host/pcie-rcar.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-    * Changed of_property_read_u32_array() to of_property_read_u32_index(),
-as per Gavin's suggestion. This way, we end up using buid_low as the index
-of PHB in pSeries, which is expected but was not being achieved in v6,
-as per my mistake.
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 3509218..ce096db 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -955,12 +955,15 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+ 	if (err)
+ 		return err;
+ 
++	err = devm_request_pci_bus_resources(dev, &pci->resources);
++	if (err)
++		goto out_release_res;
++
+ 	resource_list_for_each_entry(win, &pci->resources) {
+-		struct resource *parent, *res = win->res;
++		struct resource *res = win->res;
+ 
+ 		switch (resource_type(res)) {
+ 		case IORESOURCE_IO:
+-			parent = &ioport_resource;
+ 			err = pci_remap_iospace(res, iobase);
+ 			if (err) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+@@ -969,17 +972,12 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+ 			}
+ 			break;
+ 		case IORESOURCE_MEM:
+-			parent = &iomem_resource;
+ 			break;
+ 
+ 		case IORESOURCE_BUS:
+ 		default:
+ 			continue;
+ 		}
+-
+-		err = devm_request_resource(dev, parent, res);
+-		if (err)
+-			goto out_release_res;
+ 	}
+ 
+ 	return 0;
 
-    * Didn't remove machine check for pSeries on "reg" property lookup.
-It's worthy to keep it, since almost every platform (if not all of them)
-contain the "reg" property on PHB node in device-tree, but only in
-pSeries we're 100% sure it can be used as the PHB unique identifier.
-Since the patch has a dynamic PHB numbering mechanism, the other platforms
-won't have trouble with it.
 
- arch/powerpc/kernel/pci-common.c | 53 +++++++++++++++++++++++++++++++++++++---
- 1 file changed, 50 insertions(+), 3 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0f7a60f..c87545b 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -41,11 +41,18 @@
- #include <asm/ppc-pci.h>
- #include <asm/eeh.h>
- 
-+/* hose_spinlock protects accesses to the the phb_bitmap. */
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
- 
--/* XXX kill that some day ... */
--static int global_phb_number;		/* Global phb counter */
-+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
-+#define MAX_PHBS 0x10000
-+
-+/*
-+ * For dynamic PHB numbering: used/free PHBs tracking bitmap.
-+ * Accesses to this bitmap should be protected by hose_spinlock.
-+ */
-+static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
- 
- /* ISA Memory physical address */
- resource_size_t isa_mem_base;
-@@ -64,6 +71,41 @@ struct dma_map_ops *get_pci_dma_ops(void)
- }
- EXPORT_SYMBOL(get_pci_dma_ops);
- 
-+/*
-+ * This function should run under locking protection, specifically
-+ * hose_spinlock.
-+ */
-+static int get_phb_number(struct device_node *dn)
-+{
-+	u64 prop;
-+	int ret, phb_id = -1;
-+
-+	/*
-+	 * Try fixed PHB numbering first, by checking archs and reading
-+	 * the respective device-tree properties. Firstly, try PowerNV by
-+	 * reading "ibm,opal-phbid", only present in OPAL environment.
-+	 */
-+	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
-+	if (ret && machine_is(pseries))
-+		ret = of_property_read_u32_index(dn, "reg", 1, (u32 *)&prop);
-+	if (!ret)
-+		phb_id = (int)(prop & (MAX_PHBS - 1));
-+
-+	/* We need to be sure to not use the same PHB number twice. */
-+	if ((phb_id >= 0) && !test_and_set_bit(phb_id, phb_bitmap))
-+		return phb_id;
-+
-+	/*
-+	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
-+	 * the same PHB number twice, then fallback to dynamic PHB numbering.
-+	 */
-+	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
-+	BUG_ON(phb_id >= MAX_PHBS);
-+	set_bit(phb_id, phb_bitmap);
-+
-+	return phb_id;
-+}
-+
- struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- {
- 	struct pci_controller *phb;
-@@ -72,7 +114,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- 	if (phb == NULL)
- 		return NULL;
- 	spin_lock(&hose_spinlock);
--	phb->global_number = global_phb_number++;
-+	phb->global_number = get_phb_number(dev);
- 	list_add_tail(&phb->list_node, &hose_list);
- 	spin_unlock(&hose_spinlock);
- 	phb->dn = dev;
-@@ -94,6 +136,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
- void pcibios_free_controller(struct pci_controller *phb)
- {
- 	spin_lock(&hose_spinlock);
-+
-+	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
-+	if (phb->global_number < MAX_PHBS)
-+		clear_bit(phb->global_number, phb_bitmap);
-+
- 	list_del(&phb->list_node);
- 	spin_unlock(&hose_spinlock);
- 
--- 
-2.1.0
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
