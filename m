@@ -1,166 +1,259 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Subject: [RFC PATCH v2 04/15] drivers: acpi: iort: add support for IOMMU
- registration
-Date: Tue,  7 Jun 2016 14:30:59 +0100
-Message-Id: <1465306270-27076-5-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
- Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
- linux-pci@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
- Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Jeffrey Hugo <jhugo@codeaurora.org>,
+        Christopher Covington
+	<cov@codeaurora.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org"
+	<hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com"
+	<Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>
+CC: "liudongdong (C)" <liudongdong3@huawei.com>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        "jcm@redhat.com" <jcm@redhat.com>, "dhdang@apm.com" <dhdang@apm.com>,
+        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com"
+	<ddaney@caviumnetworks.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        "Suravee.Suthikulpanit@amd.com"
+	<Suravee.Suthikulpanit@amd.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        Wangyijing <wangyijing@huawei.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "andrea.gallo@linaro.org"
+	<andrea.gallo@linaro.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors
+ against platfrom specific ECAM quirks.
+Date: Mon, 6 Jun 2016 07:27:17 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F7710AD@lhreml507-mbx>
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
+ <1464856864-18049-2-git-send-email-tn@semihalf.com>
+ <57519F09.2010201@codeaurora.org>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F76E9D7@lhreml507-mbx>
+ <470f6d93-4c83-e271-7e99-7e23f3f76e71@codeaurora.org>
+In-Reply-To: <470f6d93-4c83-e271-7e99-7e23f3f76e71@codeaurora.org>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
-components that allow creating the kernel data structures required to
-probe and initialize the IOMMU devices.
+Hi Jeffrey
 
-This patch provides support in the IORT kernel code to register IOMMU
-components and their respective IOMMU operations, along with a hook
-(ie iommu_xlate()) that is used to translate devices ids to ids usable
-by the SMMU driver to set-up IOMMU group/domain configuration.
+> -----Original Message-----
+> From: Jeffrey Hugo [mailto:jhugo@codeaurora.org]
+> Sent: 03 June 2016 18:00
+> To: Gabriele Paoloni; Christopher Covington; Tomasz Nowicki;
+> helgaas@kernel.org; arnd@arndb.de; will.deacon@arm.com;
+> catalin.marinas@arm.com; rafael@kernel.org; hanjun.guo@linaro.org;
+> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org; jchandra@broadcom.com
+> Cc: liudongdong (C); linaro-acpi@lists.linaro.org; jcm@redhat.com;
+> dhdang@apm.com; Liviu.Dudau@arm.com; ddaney@caviumnetworks.com;
+> jeremy.linton@arm.com; linux-kernel@vger.kernel.org; linux-
+> acpi@vger.kernel.org; robert.richter@caviumnetworks.com;
+> msalter@redhat.com; Suravee.Suthikulpanit@amd.com; linux-
+> pci@vger.kernel.org; Wangyijing; mw@semihalf.com;
+> andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space
+> accessors against platfrom specific ECAM quirks.
+>=20
+> On 6/3/2016 9:32 AM, Gabriele Paoloni wrote:
+> > Hi Cov
+> >
+> >> -----Original Message-----
+> >> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> >> owner@vger.kernel.org] On Behalf Of Christopher Covington
+> >> Sent: 03 June 2016 16:15
+> >> To: Tomasz Nowicki; helgaas@kernel.org; arnd@arndb.de;
+> >> will.deacon@arm.com; catalin.marinas@arm.com; rafael@kernel.org;
+> >> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com;
+> okaya@codeaurora.org;
+> >> jchandra@broadcom.com
+> >> Cc: jcm@redhat.com; linaro-acpi@lists.linaro.org; linux-
+> >> pci@vger.kernel.org; dhdang@apm.com; Liviu.Dudau@arm.com;
+> >> ddaney@caviumnetworks.com; jeremy.linton@arm.com; linux-
+> >> kernel@vger.kernel.org; linux-acpi@vger.kernel.org;
+> >> robert.richter@caviumnetworks.com; Suravee.Suthikulpanit@amd.com;
+> >> msalter@redhat.com; Wangyijing; mw@semihalf.com;
+> >> andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org;
+> >> liudongdong (C); Gabriele Paoloni
+> >> Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space
+> >> accessors against platfrom specific ECAM quirks.
+> >>
+> >> Hi Tomasz,
+> >>
+> >> Thanks for your work on this.
+> >>
+> >> On 06/02/2016 04:41 AM, Tomasz Nowicki wrote:
+> >>> Some platforms may not be fully compliant with generic set of PCI
+> >> config
+> >>> accessors. For these cases we implement the way to overwrite
+> >> accessors
+> >>> set. Algorithm traverses available quirk list, matches against
+> >>> <oem_id, oem_rev, domain, bus number> tuple and returns
+> corresponding
+> >>> PCI config ops. oem_id and oem_rev come from MCFG table standard
+> >> header.
+> >>> All quirks can be defined using DECLARE_ACPI_MCFG_FIXUP() macro and
+> >>> kept self contained. Example:
+> >>>
+> >>> /* Custom PCI config ops */
+> >>> static struct pci_generic_ecam_ops foo_pci_ops =3D {
+> >>> 	.bus_shift	=3D 24,
+> >>> 	.pci_ops =3D {
+> >>> 		.map_bus =3D pci_ecam_map_bus,
+> >>> 		.read =3D foo_ecam_config_read,
+> >>> 		.write =3D foo_ecam_config_write,
+> >>> 	}
+> >>> };
+> >>>
+> >>> DECLARE_ACPI_MCFG_FIXUP(&foo_pci_ops, <oem_id_str>, <oem_rev>,
+> >> <domain_nr>, <bus_nr>);
+> >>>
+> >>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> >>> ---
+> >>>  drivers/acpi/pci_mcfg.c           | 32
+> >> ++++++++++++++++++++++++++++++++
+> >>>  include/asm-generic/vmlinux.lds.h |  7 +++++++
+> >>>  include/linux/pci-acpi.h          | 19 +++++++++++++++++++
+> >>>  3 files changed, 58 insertions(+)
+> >>>
+> >>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> >>> index 1847f74..f3d4570 100644
+> >>> --- a/drivers/acpi/pci_mcfg.c
+> >>> +++ b/drivers/acpi/pci_mcfg.c
+> >>> @@ -22,11 +22,43 @@
+> >>>  #include <linux/kernel.h>
+> >>>  #include <linux/pci.h>
+> >>>  #include <linux/pci-acpi.h>
+> >>> +#include <linux/pci-ecam.h>
+> >>>
+> >>>  /* Root pointer to the mapped MCFG table */
+> >>>  static struct acpi_table_mcfg *mcfg_table;
+> >>>  static int mcfg_entries;
+> >>>
+> >>> +extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
+> >>> +extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
+> >>> +
+> >>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+> >>> +{
+> >>> +	int bus_num =3D root->secondary.start;
+> >>> +	int domain =3D root->segment;
+> >>> +	struct pci_cfg_fixup *f;
+> >>> +
+> >>> +	if (!mcfg_table)
+> >>> +		return &pci_generic_ecam_ops;
+> >>> +
+> >>> +	/*
+> >>> +	 * Match against platform specific quirks and return
+> >> corresponding
+> >>> +	 * CAM ops.
+> >>> +	 *
+> >>> +	 * First match against PCI topology <domain:bus> then use OEM ID
+> >> and
+> >>> +	 * OEM revision from MCFG table standard header.
+> >>> +	 */
+> >>> +	for (f =3D __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
+> >> f++) {
+> >>> +		if ((f->domain =3D=3D domain || f->domain =3D=3D
+> >> PCI_MCFG_DOMAIN_ANY) &&
+> >>> +		    (f->bus_num =3D=3D bus_num || f->bus_num =3D=3D
+> >> PCI_MCFG_BUS_ANY) &&
+> >>> +		    (!strncmp(f->oem_id, mcfg_table->header.oem_id,
+> >>> +			      ACPI_OEM_ID_SIZE)) &&
+> >>> +		    (f->oem_revision =3D=3D mcfg_table->header.oem_revision))
+> >>
+> >> Is this more likely to be updated between quirky and fixed platforms
+> >> than oem_table_id? What do folks think about using oem_table_id
+> instead
+> >> of, or in addition to, oem_revision?
+> >
+> > From my understanding we need to stick to this mechanism as
+> (otherwise)
+> > there are platforms out in the field that would need a FW update.
+> >
+> > So I don't think that using oem_table_id "instead" is possible; about
+> > "in addition" I think it is doable, but I do not see the advantage
+> much.
+> > I mean that if a platform gets fixed the oem revision should change
+> too,
+> > Right?
+>=20
+> Cov and I had a discussion about this, so hopefully I can bring a
+> slightly different perspective that will make sense.
+>=20
+> We forsee a situation where we have platform A that needs a quirk, and
+> platform B that does not.  The OEM id is the same for both platforms as
+> they are different platforms from the same OEM.  Using the OEM revision
+> field does not seem to be appropriate since these are different
+> platforms and the revision field appears to be for the purpose of
+> tracking differences within a single platform.  Therefore, Cov is
+> proposing using the OEM table id as a mechanism to distinguish platform
+> A (needs quirk applied) vs platform B (no quirks) from the same OEM.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/iort.c  | 72 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iort.h |  5 ++++
- 2 files changed, 77 insertions(+)
+Ah yes I see now...
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 226eb6d..7cc9880 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -19,10 +19,13 @@
- #define pr_fmt(fmt)	"ACPI: IORT: " fmt
- 
- #include <linux/export.h>
-+#include <linux/iommu.h>
- #include <linux/iort.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-+#include <linux/list.h>
- #include <linux/pci.h>
-+#include <linux/slab.h>
- 
- struct iort_its_msi_chip {
- 	struct list_head	list;
-@@ -30,6 +33,75 @@ struct iort_its_msi_chip {
- 	u32			translation_id;
- };
- 
-+struct iort_ops_node {
-+	struct list_head list;
-+	struct acpi_iort_node *node;
-+	const struct iommu_ops *ops;
-+	int (*iommu_xlate)(struct device *dev, u32 streamid,
-+			   struct acpi_iort_node *node);
-+};
-+static LIST_HEAD(iort_iommu_ops);
-+static DEFINE_SPINLOCK(iort_ops_lock);
-+
-+/**
-+ * iort_smmu_set_ops - Create iort_ops_node and use it to register
-+ *		       iommu data in the iort_iommu_ops list.
-+ *
-+ * @node: IORT table node associated with the IOMMU
-+ * @ops: IOMMU operations associated with the IORT node
-+ * @iommu_xlate: iommu translate function to be used to carry out stream id
-+ *		 translation
-+ *
-+ * Returns: 0 on success
-+ *          -ENOMEM on failure
-+ */
-+int iort_smmu_set_ops(struct acpi_iort_node *node,
-+		       const struct iommu_ops *ops,
-+		       int (*iommu_xlate)(struct device *dev, u32 streamid,
-+					  struct acpi_iort_node *node))
-+{
-+	struct iort_ops_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
-+
-+	if (WARN_ON(!iommu))
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&iommu->list);
-+	iommu->node = node;
-+	iommu->ops = ops;
-+	iommu->iommu_xlate = iommu_xlate;
-+
-+	spin_lock(&iort_ops_lock);
-+	list_add_tail(&iommu->list, &iort_iommu_ops);
-+	spin_unlock(&iort_ops_lock);
-+
-+	return 0;
-+}
-+
-+/**
-+ * iort_smmu_get_ops_node - Retrieve iort_ops_node associated with an
-+ *			    IORT node.
-+ *
-+ * @node: IORT table node to be looked-up
-+ *
-+ * Returns: iort_ops_node pointer on success
-+ *          NULL on failure
-+*/
-+const struct iort_ops_node *iort_smmu_get_ops_node(struct acpi_iort_node *node)
-+{
-+	struct iort_ops_node *curr, *iommu_node = NULL;
-+
-+	spin_lock(&iort_ops_lock);
-+	list_for_each_entry(curr, &iort_iommu_ops, list) {
-+		if (curr->node == node) {
-+			iommu_node = curr;
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_ops_lock);
-+
-+	return iommu_node;
-+}
-+
- typedef acpi_status (*iort_find_node_callback)
- 	(struct acpi_iort_node *node, void *context);
- 
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index 6f2fec3..5053cc3 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -35,5 +35,10 @@ static inline u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id)
- static inline struct irq_domain *
- iort_pci_get_domain(struct pci_dev *pdev, u32 req_id) { return NULL; }
- #endif
-+int iort_smmu_set_ops(struct acpi_iort_node *node,
-+		      const struct iommu_ops *ops,
-+		      int (*iommu_xlate)(struct device *dev,
-+					 u32 streamid,
-+					 struct acpi_iort_node *node));
- 
- #endif /* __IORT_H__ */
--- 
-2.6.4
+Probably it should be ok to have a check on all three OEM fields.
 
+Thanks for explaining
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Gab=20
+
+>=20
+> >
+> > Thanks
+> >
+> > Gab
+> >
+> >>
+> >> In case these details are helpful, here was my simple prototype of
+> an
+> >> MCFG based approach:
+> >>
+> >> https://codeaurora.org/cgit/quic/server/kernel/commit/?h=3Dcov/4.7-
+> rc1-
+> >> testing&id=3Dc5d8bc49a198fd8f61f82c7d8f169564d6176b07
+> >> https://codeaurora.org/cgit/quic/server/kernel/commit/?h=3Dcov/4.7-
+> rc1-
+> >> testing&id=3D50bfe77ccd1639e6ce8c7c4fcca187d50e0bead4
+> >>
+> >> Thanks,
+> >> Cov
+> >>
+> >> --
+> >> Qualcomm Innovation Center, Inc.
+> >> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+> >> a Linux Foundation Collaborative Project
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >
+>=20
+>=20
+> --
+> Jeffrey Hugo
+> Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+> Linux Foundation Collaborative Project
