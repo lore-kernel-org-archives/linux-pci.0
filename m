@@ -1,103 +1,112 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Fri, 10 Jun 2016 21:50:26 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
-	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
-Subject: Re: [PATCH V9 06/11] PCI: Refactor generic bus domain assignment
-Message-ID: <20160610205026.GA24178@red-moon>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
- <1465588519-11334-7-git-send-email-tn@semihalf.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 15/25] PCI: generic: Free resource list close to where
+ it's allocated
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 Jun 2016 18:06:36 -0500
+Message-ID: <20160606230636.20936.29083.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465588519-11334-7-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
+ rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
+ Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
+ linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 10, 2016 at 09:55:14PM +0200, Tomasz Nowicki wrote:
-> Change the way PCI bus domain number is assigned and improve function
-> name to reflect what function does. No functional changes.
-> 
-> Instead of assigning bus domain number inside of pci_bus_assign_domain_nr()
-> simply return domain number and let pci_create_root_bus() do assignment.
-> This way pci_create_root_bus() setups bus structure data in the consistent
-> way. Since pci_bus_assign_domain_nr() now does not assign but retrieves
-> domain number instead, rename it to pci_bus_find_domain_nr().
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Previously we allocated the PCI resource list in
+gen_pci_parse_request_of_pci_ranges(), but if we had an error, we freed it
+on error in gen_pci_init().
 
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reorder gen_pci_init() so we can take care of error path cleanup in
+gen_pci_parse_request_of_pci_ranges() instead.
 
-> ---
->  drivers/pci/pci.c   | 4 ++--
->  drivers/pci/probe.c | 4 +++-
->  include/linux/pci.h | 7 +------
->  3 files changed, 6 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index eb431b5..b9a7833 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4941,7 +4941,7 @@ int pci_get_new_domain_nr(void)
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
->  {
->  	static int use_dt_domains = -1;
->  	int domain = -1;
-> @@ -4985,7 +4985,7 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->  		domain = -1;
->  	}
->  
-> -	bus->domain_nr = domain;
-> +	return domain;
->  }
->  #endif
->  #endif
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8e3ef72..380d46d 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2127,7 +2127,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	b->sysdata = sysdata;
->  	b->ops = ops;
->  	b->number = b->busn_res.start = bus;
-> -	pci_bus_assign_domain_nr(b, parent);
-> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> +	b->domain_nr = pci_bus_find_domain_nr(b, parent);
-> +#endif
->  	b2 = pci_find_bus(pci_domain_nr(b), bus);
->  	if (b2) {
->  		/* If we already got to this bus through a different bridge, ignore it */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index ce03d65..48839e8 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1390,12 +1390,7 @@ static inline int pci_domain_nr(struct pci_bus *bus)
->  {
->  	return bus->domain_nr;
->  }
-> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
-> -#else
-> -static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
-> -					struct device *parent)
-> -{
-> -}
-> +int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
->  #endif
->  
->  /* some architectures require additional setup to direct VGA traffic */
-> -- 
-> 1.9.1
-> 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-host-common.c |   32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 8cba7ab..16a4e61 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -73,6 +73,7 @@ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
+ 	return 0;
+ 
+ out_release_res:
++	pci_free_resource_list(resources);
+ 	return err;
+ }
+ 
+@@ -89,33 +90,30 @@ static struct pci_config_window *gen_pci_init(struct device *dev,
+ 	struct resource *bus_range = NULL;
+ 	struct pci_config_window *cfg;
+ 
+-	/* Parse our PCI ranges and request their resources */
+-	err = gen_pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
+-	if (err)
+-		goto err_out;
+-
+ 	err = of_address_to_resource(dev->of_node, 0, &cfgres);
+ 	if (err) {
+ 		dev_err(dev, "missing \"reg\" property\n");
+-		goto err_out;
++		return err;
+ 	}
+ 
+ 	cfg = pci_ecam_create(dev, &cfgres, bus_range, ops);
+-	if (IS_ERR(cfg)) {
+-		err = PTR_ERR(cfg);
+-		goto err_out;
+-	}
++	if (IS_ERR(cfg))
++		return PTR_ERR(cfg);
+ 
+ 	err = devm_add_action(dev, gen_pci_unmap_cfg, cfg);
+-	if (err) {
+-		gen_pci_unmap_cfg(cfg);
+-		goto err_out;
+-	}
++	if (err)
++		goto err_cfg;
++
++	/* Parse our PCI ranges and request their resources */
++	err = gen_pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
++	if (err)
++		goto err_cfg;
++
+ 	return cfg;
+ 
+-err_out:
+-	pci_free_resource_list(resources);
+-	return ERR_PTR(err);
++err_cfg:
++	gen_pci_unmap_cfg(cfg);
++	return err;
+ }
+ 
+ int pci_host_common_probe(struct platform_device *pdev,
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
