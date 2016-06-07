@@ -1,1114 +1,240 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:35725 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932066AbcF3Jcu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 05:32:50 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 2/3] PCI: host: new PCI host controller driver for Aardvark
-Date: Thu, 30 Jun 2016 11:32:31 +0200
-Message-Id: <1467279152-5717-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 7 Jun 2016 17:46:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Po Liu <po.liu@nxp.com>
+Subject: Re: [PATCH 2/2] aer: add support aer interrupt with none
+ MSI/MSI-X/INTx mode
+Message-ID: <20160607224634.GB2543@localhost>
+References: <VI1PR0401MB1709E215DCE264B2C27B3DAB92580@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+ <20160602135546.GA8262@localhost> <575052B8.3090203@ti.com>
+ <20160603040952.GA17904@localhost> <5751BEDF.3040300@ti.com>
+ <20160604034852.GA15143@localhost>
+ <DB5PR0401MB1702AF829693255DFC347448925C0@DB5PR0401MB1702.eurprd04.prod.outlook.com>
+ <57558248.4010502@ti.com> <20160606181049.GA15171@localhost>
+ <VI1PR0401MB17093077A7F0E3C52AC3392D925D0@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+MIME-Version: 1.0
+In-Reply-To: <VI1PR0401MB17093077A7F0E3C52AC3392D925D0@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ devicetree@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, linux-arm-kernel@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ Shawn Guo <shawnguo@kernel.org>, Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds a new driver for a PCIe controller called Aardvark,
-which is used on the Marvell Armada 3700 ARM64 SoC.
+On Tue, Jun 07, 2016 at 10:07:40AM +0000, Po Liu wrote:
+> Hi Bjorn,
+> 
+> >  -----Original Message-----
+> >  
+> >  On Mon, Jun 06, 2016 at 10:01:44AM -0400, Murali Karicheri wrote:
+> >  > On 06/06/2016 03:32 AM, Po Liu wrote:
+> >  > > Hi Bjorn,
+> >  > > I confirm we met same problem with KeyStone base on DesignWare
+> >  design.
+> >  > >
+> >  > >
+> >  > > Best regards,
+> >  > > Liu Po
+> >  > >
+> >  > >>  -----Original Message-----
+> >  > >>  From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> >  > >>  Sent: Saturday, June 04, 2016 11:49 AM
+> >  > >>  To: Murali Karicheri
+> >  > >>  Cc: Po Liu; linux-pci@vger.kernel.org; linux-arm-
+> >  > >> kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
+> >  > >> devicetree@vger.kernel.org; Arnd Bergmann; Roy Zang; Marc Zyngier;
+> >  > >> Stuart Yoder; Yang-Leo Li; Minghuan Lian; Bjorn Helgaas; Shawn Guo;
+> >  > >> Mingkai Hu; Rob Herring
+> >  > >>  Subject: Re: [PATCH 2/2] aer: add support aer interrupt with none
+> >  > >> MSI/MSI-X/INTx mode
+> >  > >>
+> >  > >>  On Fri, Jun 03, 2016 at 01:31:11PM -0400, Murali Karicheri wrote:
+> >  > >>  > Po,
+> >  > >>  >
+> >  > >>  > Sorry to hijack your discussion, but the problem seems to be
+> >  > >> same for  > Keystone PCI controller which is also designware (old
+> >  version) based.
+> >  > >>  >
+> >  > >>  > On 06/03/2016 12:09 AM, Bjorn Helgaas wrote:
+> >  > >>  > > On Thu, Jun 02, 2016 at 11:37:28AM -0400, Murali Karicheri
+> >  wrote:
+> >  > >>  > >> On 06/02/2016 09:55 AM, Bjorn Helgaas wrote:
+> >  > >>  > >>> On Thu, Jun 02, 2016 at 05:01:19AM +0000, Po Liu wrote:
+> >  > >>  > >>>>>  -----Original Message-----  > >>>>>  From: Bjorn Helgaas
+> >  > >> [mailto:helgaas@kernel.org]  > >>>>>  Sent: Thursday, June 02, 2016
+> >  > >> 11:48 AM  > >>>>>  To: Po Liu  > >>>>>  Cc:
+> >  > >> linux-pci@vger.kernel.org;  > >>>>>
+> >  > >> linux-arm-kernel@lists.infradead.org;
+> >  > >>  > >>>>>  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
+> >  > >> Arnd  > >>>>> Bergmann;  Roy Zang; Marc Zyngier; Stuart Yoder;
+> >  > >> Yang-Leo Li;  > >>>>> Minghuan Lian; Bjorn  Helgaas; Shawn Guo;
+> >  > >> Mingkai Hu; Rob  > >>>>> Herring  > >>>>>  Subject: Re: [PATCH 2/2]
+> >  > >> aer: add support aer interrupt with  > >>>>> none  MSI/MSI-X/INTx
+> >  > >> mode  > >>>>>  > >>>>>  [+cc Rob]  > >>>>>  > >>>>>  Hi Po,  >
+> >  > >> >>>>>  > >>>>>  On Thu, May 26, 2016 at 02:00:06PM +0800, Po Liu
+> >  > >> wrote:
+> >  > >>  > >>>>>  > On some platforms, root port doesn't support
+> >  > >> MSI/MSI-X/INTx  in RC mode.
+> >  > >>  > >>>>>  > When chip support the aer interrupt with none
+> >  > >> MSI/MSI-X/INTx  > >>>>> mode,  > maybe there is interrupt line for
+> >  > >> aer pme etc. Search  > >>>>> the interrupt  > number in the fdt
+> >  file.
+> >  > >>  > >>>>>
+> >  > >>  > >>>>>  My understanding is that AER interrupt signaling can be
+> >  > >> done  > >>>>> via INTx,  MSI, or MSI-X (PCIe spec r3.0, sec
+> >  6.2.4.1.2).
+> >  > >>  > >>>>> Apparently your device  doesn't support MSI or MSI-X.  Are
+> >  > >> you  > >>>>> saying it doesn't support INTx  either?  How is the
+> >  > >> interrupt  you're requesting here different from INTx?
+> >  > >>  > >>>>
+> >  > >>  > >>>> Layerscape use none of MSI or MSI-X or INTx to indicate the
+> >  > >> > >>>> devices or root error in RC mode. But use an independent SPI
+> >  > >> > >>>> interrupt(arm interrupt controller) line.
+> >  > >>  > >>>
+> >  > >>  > >>> The Root Port is a PCI device and should follow the normal
+> >  > >> PCI  > >>> rules for interrupts.  As far as I understand, that
+> >  > >> means it  > >>> should use MSI, MSI-X, or INTx.  If your Root Port
+> >  > >> doesn't use MSI  > >>> or MSI-X, it should use INTx, the
+> >  > >> PCI_INTERRUPT_PIN register  > >>> should tell us which (INTA/
+> >  > >> INTB/etc.), and  PCI_COMMAND_INTX_DISABLE should work to disable it.
+> >  > >>  > >>> That's all from the PCI point of view, of course.
+> >  > >>  > >>
+> >  > >>  > >> I am faced with the same issue on Keystone PCI hardware and
+> >  > >> it has  > >> been on my TODO list  for quite some time. Keystone
+> >  > >> PCI hardware  > >> also doesn't use MSI or MSI-X or INTx for
+> >  > >> reporting errors received  > >> at the root port, but use a
+> >  > >> platform interrupt instead (not  > >> complaint to PCI standard as
+> >  > >> per PCI base spec). So I would need  > >> similar change to have
+> >  > >> the error interrupt passed to the aer  > >> driver. So there are
+> >  > >> hardware out there like Keystone which  requires to support this
+> >  through platform IRQ.
+> >  > >>  > >
+> >  > >>  > > This is not a new area of the spec, and it's hard for me to
+> >  > >> believe  > > that these two new PCIe controllers are both broken
+> >  > >> the same way  > > (although I guess both are DesignWare-based, so
+> >  > >> maybe this is the  > > same underlying problem in both cases?).  I
+> >  > >> think it's more likely  > > that we just haven't figured out the
+> >  > >> right way to describe this in  the DT.
+> >  > >>  >
+> >  > >>  > Keystone is using an older version of the designware IP and it
+> >  > >> > implements all of the interrupts in the application register
+> >  > >> space  > unlike other newer version of the hardware. So I assume,
+> >  > >> the version  > used on Layerscape is also an older version and the
+> >  > >> both have same  > issue in terms of non standard platform interrupt
+> >  > >> used for error  reporting.
+> >  > >>  >
+> >  > >>  > > I assume you have a Root Port with an AER capability, no MSI
+> >  > >> > > capability, and no MSI-X capability, right?
+> >  > >>  >
+> >  > >>  > Has AER capability and both MSI and INTx (legacy) capability  >
+> >  > >> > > What does its Interrupt  > > Pin register contain?  If it's
+> >  > >> zero, it doesn't use INTx either, so  > > according to the spec it
+> >  > >> should generate no interrupts.
+> >  > >>  > >
+> >  > >>  > At address offset 0x3C by default has a value of 1, but it is
+> >  > >> writable  > by software. So default is INTx A.
+> >  > >>
+> >  > >>  0x3c is the Interrupt *Line*, which is read/write.  The Interrupt
+> >  > >>  *Pin* is at 0x3d and should be read-only.
+> >  > >>
+> >  >
+> >  > You are right. But default is 1 at this address.
+> >  >
+> >  > >>  Does your Keystone driver support MSI?  If so, since your Root
+> >  > >> Port  supports MSI, I would think we would use that by default, and
+> >  > >> the INTx  stuff wouldn't even matter.
+> >  > >
+> >  > > Layerscape is also shows "Both message signaled interrupts (MSI) and
+> >  legacy INTx are supported."
+> >  > > But both of them not work for AER interrupt when devices or root
+> >  port report aer error.
+> >  > > But another GIC interrupt line do.
+> >  >
+> >  > Same with Keystone. Even though both MSI and INTx are supported error
+> >  > interrupt at root port is reported on a different interrupt line than
+> >  > MSI/INTx. So for Power Management event interrupt is also different
+> >  > line.
+> >  
+> >  I'm looking at the "Error Message Controls" diagram in the PCIe spec
+> >  r3.0, sec 6.2.6.  Does this hardware fit into the platform-specific
+> >  "System Error" case there?  Do the Root Control enable bits (in the PCIe
+> >  Capability) control this interrupt?  If so, maybe this makes more sense
+> >  than I thought.
+> 
+> It supposedly not the "System Error" case. But "the Error Interrupt" case.
+> Which means " Root Error Command register " could control the interrupt
+>  line we have now. (refer PCIe spec r3.0, sec 6.2.6)
 
-This patch is based on work done by Hezi Shahmoon
-<hezi.shahmoon@marvell.com> and Marcin Wojtas <mw@semihalf.com>.
+Did you actually try this out and verify that the PCIe Root Control
+enable bits have no effect and the AER Root Error Command bits do
+control it?  The names are very similar, so there's lots of room for
+misunderstanding here :)
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- MAINTAINERS                     |    7 +
- drivers/pci/host/Kconfig        |    9 +
- drivers/pci/host/Makefile       |    1 +
- drivers/pci/host/pci-aardvark.c | 1014 +++++++++++++++++++++++++++++++++++++++
- 4 files changed, 1031 insertions(+)
- create mode 100644 drivers/pci/host/pci-aardvark.c
+If the AER Root Error Command does control this interrupt, I think the
+PCI_COMMAND_INTX_DISABLE bit in the PCI Command register should also
+control it (per sec 6.2.4.1.2).
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7304d2e..373215c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8740,6 +8740,13 @@ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- F:	drivers/pci/host/*mvebu*
- 
-+PCI DRIVER FOR AARDVARK (Marvell Armada 3700)
-+M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+S:	Maintained
-+F:	drivers/pci/host/pci-aardvark.c
-+
- PCI DRIVER FOR NVIDIA TEGRA
- M:	Thierry Reding <thierry.reding@gmail.com>
- L:	linux-tegra@vger.kernel.org
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 5d2374e..c9806c4 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -16,6 +16,15 @@ config PCI_MVEBU
- 	depends on ARM
- 	depends on OF
- 
-+config PCI_AARDVARK
-+	bool "Aardvark PCIe controller"
-+	depends on ARCH_MVEBU && ARM64
-+	depends on OF
-+	depends on PCI_MSI_IRQ_DOMAIN
-+	help
-+	 Add support for Aardvark 64bit PCIe Host Controller. This
-+	 controller is part of the South Bridge of the Marvel Armada
-+	 3700 SoC.
- 
- config PCIE_XILINX_NWL
- 	bool "NWL PCIe Core"
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9c8698e..66f45b6 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -5,6 +5,7 @@ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-+obj-$(CONFIG_PCI_AARDVARK) += pci-aardvark.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCIE_RCAR) += pcie-rcar.o
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-new file mode 100644
-index 0000000..0145bc5
---- /dev/null
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -0,0 +1,1014 @@
-+/*
-+ * Driver for the Aardvark PCIe controller, used on Marvell Armada
-+ * 3700.
-+ *
-+ * Copyright (C) 2016 Marvell
-+ *
-+ * This file is licensed under the terms of the GNU General Public
-+ * License version 2.  This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
-+#include <linux/kernel.h>
-+#include <linux/pci.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+
-+/* PCIe core registers */
-+#define PCIE_CORE_CMD_STATUS_REG				0x4
-+#define     PCIE_CORE_CMD_IO_ACCESS_EN				BIT(0)
-+#define     PCIE_CORE_CMD_MEM_ACCESS_EN				BIT(1)
-+#define     PCIE_CORE_CMD_MEM_IO_REQ_EN				BIT(2)
-+#define PCIE_CORE_DEV_CTRL_STATS_REG				0xc8
-+#define     PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE	(0 << 4)
-+#define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
-+#define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
-+#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
-+#define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
-+#define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
-+#define     PCIE_CORE_LINK_TRAINING				BIT(5)
-+#define     PCIE_CORE_LINK_WIDTH_SHIFT				20
-+#define PCIE_CORE_ERR_CAPCTL_REG				0x118
-+#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX			BIT(5)
-+#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX_EN			BIT(6)
-+#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHCK			BIT(7)
-+#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHCK_RCV			BIT(8)
-+
-+/* PIO registers base address and register offsets */
-+#define PIO_BASE_ADDR				0x4000
-+#define PIO_CTRL				(PIO_BASE_ADDR + 0x0)
-+#define   PIO_CTRL_TYPE_MASK			GENMASK(3, 0)
-+#define   PIO_CTRL_ADDR_WIN_DISABLE		BIT(24)
-+#define PIO_STAT				(PIO_BASE_ADDR + 0x4)
-+#define   PIO_COMPLETION_STATUS_SHIFT		7
-+#define   PIO_COMPLETION_STATUS_MASK		GENMASK(9, 7)
-+#define   PIO_COMPLETION_STATUS_OK		0
-+#define   PIO_COMPLETION_STATUS_UR		1
-+#define   PIO_COMPLETION_STATUS_CRS		2
-+#define   PIO_COMPLETION_STATUS_CA		4
-+#define   PIO_NON_POSTED_REQ			BIT(0)
-+#define PIO_ADDR_LS				(PIO_BASE_ADDR + 0x8)
-+#define PIO_ADDR_MS				(PIO_BASE_ADDR + 0xc)
-+#define PIO_WR_DATA				(PIO_BASE_ADDR + 0x10)
-+#define PIO_WR_DATA_STRB			(PIO_BASE_ADDR + 0x14)
-+#define PIO_RD_DATA				(PIO_BASE_ADDR + 0x18)
-+#define PIO_START				(PIO_BASE_ADDR + 0x1c)
-+#define PIO_ISR					(PIO_BASE_ADDR + 0x20)
-+#define PIO_ISRM				(PIO_BASE_ADDR + 0x24)
-+
-+/* Aardvark Control registers */
-+#define CONTROL_BASE_ADDR			0x4800
-+#define PCIE_CORE_CTRL0_REG			(CONTROL_BASE_ADDR + 0x0)
-+#define     PCIE_GEN_SEL_MSK			0x3
-+#define     PCIE_GEN_SEL_SHIFT			0x0
-+#define     SPEED_GEN_1				0
-+#define     SPEED_GEN_2				1
-+#define     SPEED_GEN_3				2
-+#define     IS_RC_MSK				1
-+#define     IS_RC_SHIFT				2
-+#define     LANE_CNT_MSK			0x18
-+#define     LANE_CNT_SHIFT			0x3
-+#define     LANE_COUNT_1			(0 << LANE_CNT_SHIFT)
-+#define     LANE_COUNT_2			(1 << LANE_CNT_SHIFT)
-+#define     LANE_COUNT_4			(2 << LANE_CNT_SHIFT)
-+#define     LANE_COUNT_8			(3 << LANE_CNT_SHIFT)
-+#define     LINK_TRAINING_EN			BIT(6)
-+#define     LEGACY_INTA				BIT(28)
-+#define     LEGACY_INTB				BIT(29)
-+#define     LEGACY_INTC				BIT(30)
-+#define     LEGACY_INTD				BIT(31)
-+#define PCIE_CORE_CTRL1_REG			(CONTROL_BASE_ADDR + 0x4)
-+#define     HOT_RESET_GEN			BIT(0)
-+#define PCIE_CORE_CTRL2_REG			(CONTROL_BASE_ADDR + 0x8)
-+#define     PCIE_CORE_CTRL2_RESERVED		0x7
-+#define     PCIE_CORE_CTRL2_TD_ENABLE		BIT(4)
-+#define     PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE	BIT(5)
-+#define     PCIE_CORE_CTRL2_OB_WIN_ENABLE	BIT(6)
-+#define     PCIE_CORE_CTRL2_MSI_ENABLE		BIT(10)
-+#define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
-+#define PCIE_ISR0_MASK_REG			(CONTROL_BASE_ADDR + 0x44)
-+#define     PCIE_ISR0_MSI_INT_PENDING		BIT(24)
-+#define     PCIE_ISR0_INTX_ASSERT(val)		BIT(16 + (val))
-+#define     PCIE_ISR0_INTX_DEASSERT(val)	BIT(20 + (val))
-+#define	    PCIE_ISR0_ALL_MASK			GENMASK(26, 0)
-+#define PCIE_ISR1_REG				(CONTROL_BASE_ADDR + 0x48)
-+#define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
-+#define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
-+#define     PCIE_ISR1_FLUSH			BIT(5)
-+#define     PCIE_ISR1_ALL_MASK			GENMASK(5, 4)
-+#define PCIE_MSI_ADDR_LOW_REG			(CONTROL_BASE_ADDR + 0x50)
-+#define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
-+#define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
-+#define PCIE_MSI_MASK_REG			(CONTROL_BASE_ADDR + 0x5C)
-+#define PCIE_MSI_PAYLOAD_REG			(CONTROL_BASE_ADDR + 0x9C)
-+
-+/* PCIe window configuration */
-+#define OB_WIN_BASE_ADDR			0x4c00
-+#define OB_WIN_BLOCK_SIZE			0x20
-+#define OB_WIN_REG_ADDR(win, offset)		(OB_WIN_BASE_ADDR + \
-+						 OB_WIN_BLOCK_SIZE * (win) + \
-+						 (offset))
-+#define OB_WIN_MATCH_LS(win)			OB_WIN_REG_ADDR(win, 0x00)
-+#define OB_WIN_MATCH_MS(win)			OB_WIN_REG_ADDR(win, 0x04)
-+#define OB_WIN_REMAP_LS(win)			OB_WIN_REG_ADDR(win, 0x08)
-+#define OB_WIN_REMAP_MS(win)			OB_WIN_REG_ADDR(win, 0x0c)
-+#define OB_WIN_MASK_LS(win)			OB_WIN_REG_ADDR(win, 0x10)
-+#define OB_WIN_MASK_MS(win)			OB_WIN_REG_ADDR(win, 0x14)
-+#define OB_WIN_ACTIONS(win)			OB_WIN_REG_ADDR(win, 0x18)
-+
-+/* PCIe window types */
-+#define OB_PCIE_MEM				0x0
-+#define OB_PCIE_IO				0x4
-+
-+/* LMI registers base address and register offsets */
-+#define LMI_BASE_ADDR				0x6000
-+#define CFG_REG					(LMI_BASE_ADDR + 0x0)
-+#define     LTSSM_SHIFT				24
-+#define     LTSSM_MASK				0x3f
-+#define     LTSSM_L0				0x10
-+#define     RC_BAR_CONFIG			0x300
-+
-+/* PCIe core controller registers */
-+#define CTRL_CORE_BASE_ADDR			0x18000
-+#define CTRL_CONFIG_REG				(CTRL_CORE_BASE_ADDR + 0x0)
-+#define     CTRL_MODE_SHIFT			0x0
-+#define     CTRL_MODE_MASK			0x1
-+#define     PCIE_CORE_MODE_DIRECT		0x0
-+#define     PCIE_CORE_MODE_COMMAND		0x1
-+
-+/* PCIe Central Interrupts Registers */
-+#define CENTRAL_INT_BASE_ADDR			0x1b000
-+#define HOST_CTRL_INT_STATUS_REG		(CENTRAL_INT_BASE_ADDR + 0x0)
-+#define HOST_CTRL_INT_MASK_REG			(CENTRAL_INT_BASE_ADDR + 0x4)
-+#define     PCIE_IRQ_CMDQ_INT			BIT(0)
-+#define     PCIE_IRQ_MSI_STATUS_INT		BIT(1)
-+#define     PCIE_IRQ_CMD_SENT_DONE		BIT(3)
-+#define     PCIE_IRQ_DMA_INT			BIT(4)
-+#define     PCIE_IRQ_IB_DXFERDONE		BIT(5)
-+#define     PCIE_IRQ_OB_DXFERDONE		BIT(6)
-+#define     PCIE_IRQ_OB_RXFERDONE		BIT(7)
-+#define     PCIE_IRQ_COMPQ_INT			BIT(12)
-+#define     PCIE_IRQ_DIR_RD_DDR_DET		BIT(13)
-+#define     PCIE_IRQ_DIR_WR_DDR_DET		BIT(14)
-+#define     PCIE_IRQ_CORE_INT			BIT(16)
-+#define     PCIE_IRQ_CORE_INT_PIO		BIT(17)
-+#define     PCIE_IRQ_DPMU_INT			BIT(18)
-+#define     PCIE_IRQ_PCIE_MIS_INT		BIT(19)
-+#define     PCIE_IRQ_MSI_INT1_DET		BIT(20)
-+#define     PCIE_IRQ_MSI_INT2_DET		BIT(21)
-+#define     PCIE_IRQ_RC_DBELL_DET		BIT(22)
-+#define     PCIE_IRQ_EP_STATUS			BIT(23)
-+#define     PCIE_IRQ_ALL_MASK			0xfff0fb
-+#define     PCIE_IRQ_ENABLE_INTS_MASK		PCIE_IRQ_CORE_INT
-+
-+/* Transaction types */
-+#define PCIE_CONFIG_RD_TYPE0			0x8
-+#define PCIE_CONFIG_RD_TYPE1			0x9
-+#define PCIE_CONFIG_WR_TYPE0			0xa
-+#define PCIE_CONFIG_WR_TYPE1			0xb
-+
-+/* PCI_BDF shifts 8bit, so we need extra 4bit shift */
-+#define PCIE_BDF(dev)				(dev << 4)
-+#define PCIE_CONF_BUS(bus)			(((bus) & 0xff) << 20)
-+#define PCIE_CONF_DEV(dev)			(((dev) & 0x1f) << 15)
-+#define PCIE_CONF_FUNC(fun)			(((fun) & 0x7)	<< 12)
-+#define PCIE_CONF_REG(reg)			((reg) & 0xffc)
-+#define PCIE_CONF_ADDR(bus, devfn, where)	\
-+	(PCIE_CONF_BUS(bus) | PCIE_CONF_DEV(PCI_SLOT(devfn))	| \
-+	 PCIE_CONF_FUNC(PCI_FUNC(devfn)) | PCIE_CONF_REG(where))
-+
-+#define PIO_TIMEOUT_MS			1
-+
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
-+
-+#define LEGACY_IRQ_NUM			4
-+#define MSI_IRQ_NUM			32
-+
-+struct advk_pcie {
-+	struct platform_device *pdev;
-+	void __iomem *base;
-+	struct list_head resources;
-+	struct irq_domain *irq_domain;
-+	struct irq_chip irq_chip;
-+	struct msi_controller msi;
-+	struct irq_domain *msi_domain;
-+	struct irq_chip msi_irq_chip;
-+	DECLARE_BITMAP(msi_irq_in_use, MSI_IRQ_NUM);
-+	struct mutex msi_used_lock;
-+	u16 msi_msg;
-+	int root_bus_nr;
-+};
-+
-+static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
-+{
-+	writel(val, pcie->base + reg);
-+}
-+
-+static inline u32 advk_readl(struct advk_pcie *pcie, u64 reg)
-+{
-+	return readl(pcie->base + reg);
-+}
-+
-+static int advk_pcie_link_up(struct advk_pcie *pcie)
-+{
-+	u32 val, ltssm_state;
-+
-+	val = advk_readl(pcie, CFG_REG);
-+	ltssm_state = (val >> LTSSM_SHIFT) & LTSSM_MASK;
-+	return ltssm_state >= LTSSM_L0;
-+}
-+
-+static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
-+{
-+	int retries;
-+
-+	/* check if the link is up or not */
-+	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+		if (advk_pcie_link_up(pcie)) {
-+			dev_info(&pcie->pdev->dev, "link up\n");
-+			return 0;
-+		}
-+
-+		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-+	}
-+
-+	dev_err(&pcie->pdev->dev, "link never came up\n");
-+
-+	return -ETIMEDOUT;
-+}
-+
-+/*
-+ * Set PCIe address window register which could be used for memory
-+ * mapping.
-+ */
-+static void advk_pcie_set_ob_win(struct advk_pcie *pcie,
-+				 u32 win_num, u32 match_ms,
-+				 u32 match_ls, u32 mask_ms,
-+				 u32 mask_ls, u32 remap_ms,
-+				 u32 remap_ls, u32 action)
-+{
-+	advk_writel(pcie, match_ls, OB_WIN_MATCH_LS(win_num));
-+	advk_writel(pcie, match_ms, OB_WIN_MATCH_MS(win_num));
-+	advk_writel(pcie, mask_ms, OB_WIN_MASK_MS(win_num));
-+	advk_writel(pcie, mask_ls, OB_WIN_MASK_LS(win_num));
-+	advk_writel(pcie, remap_ms, OB_WIN_REMAP_MS(win_num));
-+	advk_writel(pcie, remap_ls, OB_WIN_REMAP_LS(win_num));
-+	advk_writel(pcie, action, OB_WIN_ACTIONS(win_num));
-+	advk_writel(pcie, match_ls | BIT(0), OB_WIN_MATCH_LS(win_num));
-+}
-+
-+static void advk_pcie_setup_hw(struct advk_pcie *pcie)
-+{
-+	u32 reg;
-+	int i;
-+
-+	/* Point PCIe unit MBUS decode windows to DRAM space */
-+	for (i = 0; i < 8; i++)
-+		advk_pcie_set_ob_win(pcie, i, 0, 0, 0, 0, 0, 0, 0);
-+
-+	/* Set to Direct mode */
-+	reg = advk_readl(pcie, CTRL_CONFIG_REG);
-+	reg &= ~(CTRL_MODE_MASK << CTRL_MODE_SHIFT);
-+	reg |= ((PCIE_CORE_MODE_DIRECT & CTRL_MODE_MASK) << CTRL_MODE_SHIFT);
-+	advk_writel(pcie, reg, CTRL_CONFIG_REG);
-+
-+	/* Set PCI global control register to RC mode */
-+	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
-+	reg |= (IS_RC_MSK << IS_RC_SHIFT);
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
-+
-+	/* Set Advanced Error Capabilities and Control PF0 register */
-+	reg = PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX |
-+		PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX_EN |
-+		PCIE_CORE_ERR_CAPCTL_ECRC_CHCK |
-+		PCIE_CORE_ERR_CAPCTL_ECRC_CHCK_RCV;
-+	advk_writel(pcie, reg, PCIE_CORE_ERR_CAPCTL_REG);
-+
-+	/* Set PCIe Device Control and Status 1 PF0 register */
-+	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
-+		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
-+		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
-+		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
-+	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
-+
-+	/* Program PCIe Control 2 to disable strict ordering */
-+	reg = PCIE_CORE_CTRL2_RESERVED |
-+		PCIE_CORE_CTRL2_TD_ENABLE;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
-+
-+	/* Set GEN2 */
-+	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
-+	reg &= ~PCIE_GEN_SEL_MSK;
-+	reg |= SPEED_GEN_2;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
-+
-+	/* Set lane X1 */
-+	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
-+	reg &= ~LANE_CNT_MSK;
-+	reg |= LANE_COUNT_1;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
-+
-+	/* Enable link training */
-+	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
-+	reg |= LINK_TRAINING_EN;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
-+
-+	/* Enable MSI */
-+	reg = advk_readl(pcie, PCIE_CORE_CTRL2_REG);
-+	reg |= PCIE_CORE_CTRL2_MSI_ENABLE;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
-+
-+	/* Clear all interrupts */
-+	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_REG);
-+	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_REG);
-+	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_STATUS_REG);
-+
-+	/* Disable All ISR0/1 Sources */
-+	reg = PCIE_ISR0_ALL_MASK;
-+	reg &= ~PCIE_ISR0_MSI_INT_PENDING;
-+	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
-+
-+	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_MASK_REG);
-+
-+	/* Unmask all MSI's */
-+	advk_writel(pcie, 0, PCIE_MSI_MASK_REG);
-+
-+	/* Enable summary interrupt for GIC SPI source */
-+	reg = PCIE_IRQ_ALL_MASK & (~PCIE_IRQ_ENABLE_INTS_MASK);
-+	advk_writel(pcie, reg, HOST_CTRL_INT_MASK_REG);
-+
-+	reg = advk_readl(pcie, PCIE_CORE_CTRL2_REG);
-+	reg |= PCIE_CORE_CTRL2_OB_WIN_ENABLE;
-+	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
-+
-+	/* Bypass the address window mapping for PIO */
-+	reg = advk_readl(pcie, PIO_CTRL);
-+	reg |= PIO_CTRL_ADDR_WIN_DISABLE;
-+	advk_writel(pcie, reg, PIO_CTRL);
-+
-+	/* Start link training */
-+	reg = advk_readl(pcie, PCIE_CORE_LINK_CTRL_STAT_REG);
-+	reg |= PCIE_CORE_LINK_TRAINING;
-+	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
-+
-+	advk_pcie_wait_for_link(pcie);
-+
-+	reg = PCIE_CORE_LINK_L0S_ENTRY |
-+		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
-+	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
-+
-+	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
-+	reg |= PCIE_CORE_CMD_MEM_ACCESS_EN |
-+		PCIE_CORE_CMD_IO_ACCESS_EN |
-+		PCIE_CORE_CMD_MEM_IO_REQ_EN;
-+	advk_writel(pcie, reg, PCIE_CORE_CMD_STATUS_REG);
-+}
-+
-+static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
-+{
-+	u32 reg;
-+	unsigned int status;
-+	char *strcomp_status, *str_posted;
-+
-+	reg = advk_readl(pcie, PIO_STAT);
-+	status = (reg & PIO_COMPLETION_STATUS_MASK) >>
-+		PIO_COMPLETION_STATUS_SHIFT;
-+
-+	if (!status)
-+		return;
-+
-+	switch (status) {
-+	case PIO_COMPLETION_STATUS_UR:
-+		strcomp_status = "UR";
-+		break;
-+	case PIO_COMPLETION_STATUS_CRS:
-+		strcomp_status = "CRS";
-+		break;
-+	case PIO_COMPLETION_STATUS_CA:
-+		strcomp_status = "CA";
-+		break;
-+	default:
-+		strcomp_status = "Unknown";
-+		break;
-+	}
-+
-+	if (reg & PIO_NON_POSTED_REQ)
-+		str_posted = "Non-posted";
-+	else
-+		str_posted = "Posted";
-+
-+	dev_err(&pcie->pdev->dev,
-+		"%s PIO Response Status: %s, %#x @ %#x\n",
-+		str_posted, strcomp_status, reg,
-+		advk_readl(pcie, PIO_ADDR_LS));
-+}
-+
-+static int advk_pcie_wait_pio(struct advk_pcie *pcie)
-+{
-+	unsigned long timeout;
-+
-+	timeout = jiffies + msecs_to_jiffies(PIO_TIMEOUT_MS);
-+
-+	while (time_before(jiffies, timeout)) {
-+		u32 start, isr;
-+
-+		start = advk_readl(pcie, PIO_START);
-+		isr = advk_readl(pcie, PIO_ISR);
-+		if (!start && isr)
-+			return 0;
-+	}
-+
-+	dev_err(&pcie->pdev->dev, "config read/write timed out\n");
-+	return -ETIMEDOUT;
-+}
-+
-+static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
-+			     int where, int size, u32 *val)
-+{
-+	struct advk_pcie *pcie = bus->sysdata;
-+	u32 reg;
-+	int ret;
-+
-+	if (PCI_SLOT(devfn) != 0) {
-+		*val = 0xffffffff;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	/* Start PIO */
-+	advk_writel(pcie, 0, PIO_START);
-+	advk_writel(pcie, 1, PIO_ISR);
-+
-+	/* Program the control register */
-+	reg = advk_readl(pcie, PIO_CTRL);
-+	reg &= ~PIO_CTRL_TYPE_MASK;
-+	if (bus->number ==  pcie->root_bus_nr)
-+		reg |= PCIE_CONFIG_RD_TYPE0;
-+	else
-+		reg |= PCIE_CONFIG_RD_TYPE1;
-+	advk_writel(pcie, reg, PIO_CTRL);
-+
-+	/* Program the address registers */
-+	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
-+	advk_writel(pcie, reg, PIO_ADDR_LS);
-+	advk_writel(pcie, 0, PIO_ADDR_MS);
-+
-+	/* Program the data strobe */
-+	advk_writel(pcie, 0xf, PIO_WR_DATA_STRB);
-+
-+	/* Start the transfer */
-+	advk_writel(pcie, 1, PIO_START);
-+
-+	ret = advk_pcie_wait_pio(pcie);
-+	if (ret < 0)
-+		return PCIBIOS_SET_FAILED;
-+
-+	advk_pcie_check_pio_status(pcie);
-+
-+	/* Get the read result */
-+	*val = advk_readl(pcie, PIO_RD_DATA);
-+	if (size == 1)
-+		*val = (*val >> (8 * (where & 3))) & 0xff;
-+	else if (size == 2)
-+		*val = (*val >> (8 * (where & 3))) & 0xffff;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
-+				int where, int size, u32 val)
-+{
-+	struct advk_pcie *pcie = bus->sysdata;
-+	u32 reg;
-+	u32 data_strobe = 0x0;
-+	int offset;
-+	int ret;
-+
-+	if (PCI_SLOT(devfn) != 0)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	if (where % size)
-+		return PCIBIOS_SET_FAILED;
-+
-+	/* Start PIO */
-+	advk_writel(pcie, 0, PIO_START);
-+	advk_writel(pcie, 1, PIO_ISR);
-+
-+	/* Program the control register */
-+	reg = advk_readl(pcie, PIO_CTRL);
-+	reg &= ~PIO_CTRL_TYPE_MASK;
-+	if (bus->number == pcie->root_bus_nr)
-+		reg |= PCIE_CONFIG_WR_TYPE0;
-+	else
-+		reg |= PCIE_CONFIG_WR_TYPE1;
-+	advk_writel(pcie, reg, PIO_CTRL);
-+
-+	/* Program the address registers */
-+	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
-+	advk_writel(pcie, reg, PIO_ADDR_LS);
-+	advk_writel(pcie, 0, PIO_ADDR_MS);
-+
-+	/* Calculate the write strobe */
-+	offset      = where & 0x3;
-+	reg         = val << (8 * offset);
-+	data_strobe = GENMASK(size - 1, 0) << offset;
-+
-+	/* Program the data register */
-+	advk_writel(pcie, reg, PIO_WR_DATA);
-+
-+	/* Program the data strobe */
-+	advk_writel(pcie, data_strobe, PIO_WR_DATA_STRB);
-+
-+	/* Start the transfer */
-+	advk_writel(pcie, 1, PIO_START);
-+
-+	ret = advk_pcie_wait_pio(pcie);
-+	if (ret < 0)
-+		return PCIBIOS_SET_FAILED;
-+
-+	advk_pcie_check_pio_status(pcie);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static struct pci_ops advk_pcie_ops = {
-+	.read = advk_pcie_rd_conf,
-+	.write = advk_pcie_wr_conf,
-+};
-+
-+static int advk_pcie_alloc_msi(struct advk_pcie *pcie)
-+{
-+	int hwirq;
-+
-+	mutex_lock(&pcie->msi_used_lock);
-+	hwirq = find_first_zero_bit(pcie->msi_irq_in_use, MSI_IRQ_NUM);
-+	if (hwirq >= MSI_IRQ_NUM)
-+		hwirq = -ENOSPC;
-+	else
-+		set_bit(hwirq, pcie->msi_irq_in_use);
-+	mutex_unlock(&pcie->msi_used_lock);
-+
-+	return hwirq;
-+}
-+
-+static void advk_pcie_free_msi(struct advk_pcie *pcie, int hwirq)
-+{
-+	mutex_lock(&pcie->msi_used_lock);
-+	if (!test_bit(hwirq, pcie->msi_irq_in_use))
-+		dev_err(&pcie->pdev->dev,
-+			"trying to free unused MSI#%d\n", hwirq);
-+	else
-+		clear_bit(hwirq, pcie->msi_irq_in_use);
-+	mutex_unlock(&pcie->msi_used_lock);
-+}
-+
-+static int advk_pcie_setup_msi_irq(struct msi_controller *chip,
-+				   struct pci_dev *pdev,
-+				   struct msi_desc *desc)
-+{
-+	struct advk_pcie *pcie = pdev->bus->sysdata;
-+	struct msi_msg msg;
-+	int virq, hwirq;
-+	phys_addr_t msi_msg_phys;
-+
-+	/* We support MSI, but not MSI-X */
-+	if (desc->msi_attrib.is_msix)
-+		return -EINVAL;
-+
-+	hwirq = advk_pcie_alloc_msi(pcie);
-+	if (hwirq < 0)
-+		return hwirq;
-+
-+	virq = irq_create_mapping(pcie->msi_domain, hwirq);
-+	if (!virq) {
-+		advk_pcie_free_msi(pcie, hwirq);
-+		return -EINVAL;
-+	}
-+
-+	irq_set_msi_desc(virq, desc);
-+
-+	msi_msg_phys = virt_to_phys(&pcie->msi_msg);
-+
-+	msg.address_lo = lower_32_bits(msi_msg_phys);
-+	msg.address_hi = upper_32_bits(msi_msg_phys);
-+	msg.data = virq;
-+
-+	pci_write_msi_msg(virq, &msg);
-+
-+	return 0;
-+}
-+
-+static void advk_pcie_teardown_msi_irq(struct msi_controller *chip,
-+				       unsigned int irq)
-+{
-+	struct irq_data *d = irq_get_irq_data(irq);
-+	struct msi_desc *msi = irq_data_get_msi_desc(d);
-+	struct advk_pcie *pcie = msi_desc_to_pci_sysdata(msi);
-+	unsigned long hwirq = d->hwirq;
-+
-+	irq_dispose_mapping(irq);
-+	advk_pcie_free_msi(pcie, hwirq);
-+}
-+
-+static int advk_pcie_msi_map(struct irq_domain *domain,
-+			     unsigned int virq, irq_hw_number_t hw)
-+{
-+	struct advk_pcie *pcie = domain->host_data;
-+
-+	irq_set_chip_and_handler(virq, &pcie->msi_irq_chip,
-+				 handle_simple_irq);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops advk_pcie_msi_irq_ops = {
-+	.map = advk_pcie_msi_map,
-+};
-+
-+static void advk_pcie_irq_mask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	u32 mask;
-+
-+	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+	mask |= PCIE_ISR0_INTX_ASSERT(hwirq);
-+	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-+}
-+
-+static void advk_pcie_irq_unmask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	u32 mask;
-+
-+	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+	mask &= ~PCIE_ISR0_INTX_ASSERT(hwirq);
-+	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-+}
-+
-+static int advk_pcie_irq_map(struct irq_domain *h,
-+			     unsigned int virq, irq_hw_number_t hwirq)
-+{
-+	struct advk_pcie *pcie = h->host_data;
-+
-+	advk_pcie_irq_mask(irq_get_irq_data(virq));
-+	irq_set_status_flags(virq, IRQ_LEVEL);
-+	irq_set_chip_and_handler(virq, &pcie->irq_chip,
-+				 handle_level_irq);
-+	irq_set_chip_data(virq, pcie);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops advk_pcie_irq_domain_ops = {
-+	.map = advk_pcie_irq_map,
-+	.xlate = irq_domain_xlate_onecell,
-+};
-+
-+static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	struct irq_chip *msi_irq_chip;
-+	struct msi_controller *msi;
-+	phys_addr_t msi_msg_phys;
-+	int ret;
-+
-+	msi_irq_chip = &pcie->msi_irq_chip;
-+
-+	msi_irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-msi",
-+					    dev_name(dev));
-+	if (!msi_irq_chip->name)
-+		return -ENOMEM;
-+
-+	msi_irq_chip->irq_enable = pci_msi_unmask_irq;
-+	msi_irq_chip->irq_disable = pci_msi_mask_irq;
-+	msi_irq_chip->irq_mask = pci_msi_mask_irq;
-+	msi_irq_chip->irq_unmask = pci_msi_unmask_irq;
-+
-+	msi = &pcie->msi;
-+
-+	msi->setup_irq = advk_pcie_setup_msi_irq;
-+	msi->teardown_irq = advk_pcie_teardown_msi_irq;
-+	msi->of_node = node;
-+
-+	mutex_init(&pcie->msi_used_lock);
-+
-+	msi_msg_phys = virt_to_phys(&pcie->msi_msg);
-+
-+	advk_writel(pcie, lower_32_bits(msi_msg_phys),
-+		    PCIE_MSI_ADDR_LOW_REG);
-+	advk_writel(pcie, upper_32_bits(msi_msg_phys),
-+		    PCIE_MSI_ADDR_HIGH_REG);
-+
-+	pcie->msi_domain =
-+		irq_domain_add_linear(NULL, MSI_IRQ_NUM,
-+				      &advk_pcie_msi_irq_ops, pcie);
-+	if (!pcie->msi_domain)
-+		return -ENOMEM;
-+
-+	ret = of_pci_msi_chip_add(msi);
-+	if (ret < 0) {
-+		irq_domain_remove(pcie->msi_domain);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
-+{
-+	of_pci_msi_chip_remove(&pcie->msi);
-+	irq_domain_remove(pcie->msi_domain);
-+}
-+
-+static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	struct device_node *pcie_intc_node;
-+	struct irq_chip *irq_chip;
-+
-+	pcie_intc_node =  of_get_next_child(node, NULL);
-+	if (!pcie_intc_node) {
-+		dev_err(dev, "No PCIe Intc node found\n");
-+		return -ENODEV;
-+	}
-+
-+	irq_chip = &pcie->irq_chip;
-+
-+	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
-+					dev_name(dev));
-+	if (!irq_chip->name) {
-+		of_node_put(pcie_intc_node);
-+		return -ENOMEM;
-+	}
-+
-+	irq_chip->irq_mask = advk_pcie_irq_mask;
-+	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
-+	irq_chip->irq_unmask = advk_pcie_irq_unmask;
-+
-+	pcie->irq_domain =
-+		irq_domain_add_linear(pcie_intc_node, LEGACY_IRQ_NUM,
-+				      &advk_pcie_irq_domain_ops, pcie);
-+	if (!pcie->irq_domain) {
-+		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-+		of_node_put(pcie_intc_node);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static void advk_pcie_remove_irq_domain(struct advk_pcie *pcie)
-+{
-+	irq_domain_remove(pcie->irq_domain);
-+}
-+
-+static void advk_pcie_handle_msi(struct advk_pcie *pcie)
-+{
-+	u32 msi_val, msi_mask, msi_status, msi_idx;
-+	u16 msi_data;
-+
-+	msi_mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-+	msi_val = advk_readl(pcie, PCIE_MSI_STATUS_REG);
-+	msi_status = msi_val & ~msi_mask;
-+
-+	for (msi_idx = 0; msi_idx < MSI_IRQ_NUM; msi_idx++) {
-+		if (!(BIT(msi_idx) & msi_status))
-+			continue;
-+
-+		advk_writel(pcie, BIT(msi_idx), PCIE_MSI_STATUS_REG);
-+		msi_data = advk_readl(pcie, PCIE_MSI_PAYLOAD_REG) & 0xFF;
-+		generic_handle_irq(msi_data);
-+	}
-+
-+	advk_writel(pcie, PCIE_ISR0_MSI_INT_PENDING,
-+		    PCIE_ISR0_REG);
-+}
-+
-+static void advk_pcie_handle_int(struct advk_pcie *pcie)
-+{
-+	u32 val, mask, status;
-+	int i, virq;
-+
-+	val = advk_readl(pcie, PCIE_ISR0_REG);
-+	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+	status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
-+
-+	if (!status) {
-+		advk_writel(pcie, val, PCIE_ISR0_REG);
-+		return;
-+	}
-+
-+	/* Process MSI interrupts */
-+	if (status & PCIE_ISR0_MSI_INT_PENDING)
-+		advk_pcie_handle_msi(pcie);
-+
-+	/* Process legacy interrupts */
-+	for (i = 0; i < LEGACY_IRQ_NUM; i++) {
-+		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
-+			continue;
-+
-+		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
-+			    PCIE_ISR0_REG);
-+
-+		virq = irq_find_mapping(pcie->irq_domain, i);
-+		generic_handle_irq(virq);
-+	}
-+}
-+
-+static irqreturn_t advk_pcie_irq_handler(int irq, void *arg)
-+{
-+	struct advk_pcie *pcie = arg;
-+	u32 status;
-+
-+	status = advk_readl(pcie, HOST_CTRL_INT_STATUS_REG);
-+	if (!(status & PCIE_IRQ_CORE_INT))
-+		return IRQ_NONE;
-+
-+	advk_pcie_handle_int(pcie);
-+
-+	/* Clear interrupt */
-+	advk_writel(pcie, PCIE_IRQ_CORE_INT, HOST_CTRL_INT_STATUS_REG);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
-+{
-+	int err, res_valid = 0;
-+	struct device *dev = &pcie->pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	struct resource_entry *win;
-+	resource_size_t iobase;
-+
-+	INIT_LIST_HEAD(&pcie->resources);
-+
-+	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
-+					       &iobase);
-+	if (err)
-+		return err;
-+
-+	resource_list_for_each_entry(win, &pcie->resources) {
-+		struct resource *parent = NULL;
-+		struct resource *res = win->res;
-+
-+		switch (resource_type(res)) {
-+		case IORESOURCE_IO:
-+			parent = &ioport_resource;
-+			advk_pcie_set_ob_win(pcie, 1,
-+					     upper_32_bits(res->start),
-+					     lower_32_bits(res->start),
-+					     0,	0xF8000000, 0,
-+					     lower_32_bits(res->start),
-+					     OB_PCIE_IO);
-+			err = pci_remap_iospace(res, iobase);
-+			if (err) {
-+				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+					 err, res);
-+				continue;
-+			}
-+			break;
-+		case IORESOURCE_MEM:
-+			parent = &iomem_resource;
-+			advk_pcie_set_ob_win(pcie, 0,
-+					     upper_32_bits(res->start),
-+					     lower_32_bits(res->start),
-+					     0x0, 0xF8000000, 0,
-+					     lower_32_bits(res->start),
-+					     (2 << 20) | OB_PCIE_MEM);
-+			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-+			break;
-+		case IORESOURCE_BUS:
-+			pcie->root_bus_nr = res->start;
-+			break;
-+		default:
-+			continue;
-+		}
-+
-+		if (parent) {
-+			err = devm_request_resource(dev, parent, res);
-+			if (err)
-+				goto out_release_res;
-+		}
-+	}
-+
-+	if (!res_valid) {
-+		dev_err(dev, "non-prefetchable memory resource required\n");
-+		err = -EINVAL;
-+		goto out_release_res;
-+	}
-+
-+	return 0;
-+
-+out_release_res:
-+	pci_free_resource_list(&pcie->resources);
-+	return err;
-+}
-+
-+static int advk_pcie_probe(struct platform_device *pdev)
-+{
-+	struct advk_pcie *pcie;
-+	struct resource *res;
-+	struct pci_bus *bus, *child;
-+	struct msi_controller *msi;
-+	struct device_node *msi_node;
-+	int ret, irq;
-+
-+	pcie = devm_kzalloc(&pdev->dev, sizeof(struct advk_pcie),
-+			    GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->pdev = pdev;
-+	platform_set_drvdata(pdev, pcie);
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	pcie->base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(pcie->base)) {
-+		dev_err(&pdev->dev, "failed to map registers\n");
-+		return PTR_ERR(pcie->base);
-+	}
-+
-+	irq = platform_get_irq(pdev, 0);
-+	ret = devm_request_irq(&pdev->dev, irq, advk_pcie_irq_handler,
-+			       IRQF_SHARED | IRQF_NO_THREAD, "advk-pcie",
-+			       pcie);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Failed to register interrupt\n");
-+		return ret;
-+	}
-+
-+	ret = advk_pcie_parse_request_of_pci_ranges(pcie);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Failed to parse resources\n");
-+		return ret;
-+	}
-+
-+	advk_pcie_setup_hw(pcie);
-+
-+	ret = advk_pcie_init_irq_domain(pcie);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Failed to initialize irq\n");
-+		return ret;
-+	}
-+
-+	ret = advk_pcie_init_msi_irq_domain(pcie);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Failed to initialize irq\n");
-+		advk_pcie_remove_irq_domain(pcie);
-+		return ret;
-+	}
-+
-+	msi_node = of_parse_phandle(pdev->dev.of_node, "msi-parent", 0);
-+	if (msi_node)
-+		msi = of_pci_find_msi_chip_by_node(msi_node);
-+	else
-+		msi = NULL;
-+
-+	bus = pci_scan_root_bus_msi(&pdev->dev, 0, &advk_pcie_ops,
-+				    pcie, &pcie->resources, &pcie->msi);
-+	if (!bus) {
-+		advk_pcie_remove_msi_irq_domain(pcie);
-+		advk_pcie_remove_irq_domain(pcie);
-+		return -ENOMEM;
-+	}
-+
-+	pci_bus_assign_resources(bus);
-+
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+	pci_bus_add_devices(bus);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id advk_pcie_of_match_table[] = {
-+	{ .compatible = "marvell,armada-3700-pcie", },
-+	{},
-+};
-+
-+static struct platform_driver advk_pcie_driver = {
-+	.driver = {
-+		.name = "advk-pcie",
-+		.of_match_table = advk_pcie_of_match_table,
-+		/* Driver unloading/unbinding currently not supported */
-+		.suppress_bind_attrs = true,
-+	},
-+	.probe = advk_pcie_probe,
-+};
-+module_platform_driver(advk_pcie_driver);
-+
-+MODULE_AUTHOR("Hezi Shahmoon <hezi.shahmoon@marvell.com>");
-+MODULE_DESCRIPTION("Aardvark PCIe driver");
-+MODULE_LICENSE("GPL v2");
--- 
-2.7.4
+> May this kind of hardware design route broken the spec? 
 
+If the Reporting Enable bits in the Root Port's AER Root Error Command
+register control the interrupt, but the interrupt is not delivered via
+the Root Port's INTx or MSI/MSI-X, I think the design is not following
+the spec.
+
+All the information needed by the AER driver should be communicated
+via the config space mechanisms described in the spec (AER capability,
+MSI/MSI-X capabilities, Interrupt Pin, etc.)  That way the driver
+works without change on future spec-compliant hardware.
+
+> PME also like the AER. Hotplug is not supported. Others not known.
+> Po Liu
+
+Per sec 6.1.6, I think PME *should* be signaled by the Root Port's
+INTx or MSI/MSI-X.
+
+In particular, it says "Note that all other interrupt sources within
+the same Function will assert the same virtual INTx wire when
+requesting service."  To me, that means that if we're using INTx, it
+will be the same INTx for AER, PME, hotplug, etc., and it should be
+the one indicated by the Interrupt Pin register.
+
+But I think on your Root Port:
+
+  - There is an MSI capability, but MSI doesn't actually work at all
+  - Interrupt Pin contains 1, indicating INTA, which is routed to IRQ X
+  - AER interrupts are routed to some different IRQ Y
+  - PME interrupts are routed to a third IRQ Z
+
+So how should we work around this?  I think you should be able to get
+partway there with a quirk that sets:
+
+  dev->no_msi = 1;
+  dev->irq = Y;
+
+for this device.  That should make AER work, but of course PME would
+not work.
+
+Is there a way to set up your interrupt controller so these three
+interrupts (X, Y, Z above) all map to the same Linux IRQ?  If you can
+do that, you could set up INTA, the AER interrupt, and the PME
+interrupt to all be on the same IRQ and everything should work.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
