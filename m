@@ -1,195 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:45459 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751676AbcFSMZx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Jun 2016 08:25:53 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [PATCH v2 1/2] PCI: Extend PCI IOV API
-Date: Sun, 19 Jun 2016 15:16:56 +0300
-Message-Id: <1466338617-43027-2-git-send-email-ilyal@mellanox.com>
-In-Reply-To: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
-References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+Received: from smtp6-v.fe.bosch.de ([139.15.237.11]:50898 "EHLO
+	smtp6-v.fe.bosch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbcFGOYU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2016 10:24:20 -0400
+From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
+Subject: [PATCH] Extending kernel option pci=resource_alignment to be able to
+ specify PCI device/vendor IDs
+Date: Tue, 7 Jun 2016 14:24:17 +0000
+Message-ID: <22400b8828ad44ddbccb876cc5ca3b11@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. Add pci_enable_sriov_with_override to allow
-enabling sriov with a driver override
-on the VFs.
+Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned 
+PCI memory resources are not page aligned.
+By using the kernel option "pci=resource_alignment" it is possible to force
+single PCI boards to use page alignment for their memory resources.
+However, this is fairly cumbersome if multiple of these boards are in use as 
+the specification of the cards has to be done via PCI bus/slot/function number
+which might change e.g. by adding another board.
+This patch extends the kernel option "pci=resource_alignment" to allow to
+specify the relevant boards via PCI device/vendor (and subdevice/subvendor) ids.
+The specification of the devices via device/vendor is indicated by a leading
+string "pci:" as argument to "pci=resource_alignment".
+The format of the specification is
+  pci:<vendor>:<device>[:<subvendor>:<subdevice>]
 
-2. Expose pci_iov_set_numvfs and pci_iov_resource_size
-to make them available for other modules
+Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
 
-Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
-Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-Signed-off-by: Haggai Eran <haggaie@mellanox.com>
 ---
- drivers/pci/iov.c   | 41 +++++++++++++++++++++++++++++++++--------
- include/linux/pci.h | 13 ++++++++++++-
- 2 files changed, 45 insertions(+), 9 deletions(-)
+ Documentation/kernel-parameters.txt |    2 +
+ drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
+ 2 files changed, 49 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 2194b44..5ffd926 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -41,7 +41,7 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
-  *
-  * Update iov->offset and iov->stride when NumVFs is written.
-  */
--static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
-+void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
+===================================================================
+--- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
++++ linux-4.7-rc1/Documentation/kernel-parameters.txt
+@@ -2998,6 +2998,8 @@ bytes respectively. Such letter suffixes
+ 		resource_alignment=
+ 				Format:
+ 				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
++				[<order of align>@]pci:<vendor>:<device>\
++						[:<subvendor>:<subdevice>][; ...] 
+ 				Specifies alignment and device to reassign
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+Index: linux-4.7-rc1/drivers/pci/pci.c
+===================================================================
+--- linux-4.7-rc1.orig/drivers/pci/pci.c
++++ linux-4.7-rc1/drivers/pci/pci.c
+@@ -4755,6 +4755,7 @@ static DEFINE_SPINLOCK(resource_alignmen
+ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
  {
- 	struct pci_sriov *iov = dev->sriov;
+ 	int seg, bus, slot, func, align_order, count;
++	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+ 	resource_size_t align = 0;
+ 	char *p;
  
-@@ -49,6 +49,7 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
- }
-+EXPORT_SYMBOL(pci_iov_set_numvfs);
- 
- /*
-  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
-@@ -112,8 +113,10 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
- }
-+EXPORT_SYMBOL(pci_iov_resource_size);
- 
--int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
-+int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset,
-+		       char *driver_override)
- {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -154,14 +157,20 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
- 		rc = request_resource(res, &virtfn->resource[i]);
- 		BUG_ON(rc);
- 	}
--
- 	if (reset)
- 		__pci_reset_function(virtfn);
- 
- 	pci_device_add(virtfn, virtfn->bus);
- 	mutex_unlock(&iov->dev->sriov->lock);
- 
-+	if (driver_override) {
-+		virtfn->driver_override = kstrdup(driver_override, GFP_KERNEL);
-+		if (!virtfn->driver_override)
-+			goto failed1;
-+	}
-+
- 	pci_bus_add_device(virtfn);
-+
- 	sprintf(buf, "virtfn%u", id);
- 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
- 	if (rc)
-@@ -235,7 +244,8 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
- 	return 0;
- }
- 
--static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-+static int sriov_enable(struct pci_dev *dev, int nr_virtfn,
-+			char *driver_override)
- {
- 	int rc;
- 	int i;
-@@ -321,7 +331,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = pci_iov_add_virtfn(dev, i, 0);
-+		rc = pci_iov_add_virtfn(dev, i, 0, driver_override);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -622,20 +632,35 @@ int pci_iov_bus_range(struct pci_bus *bus)
- }
- 
- /**
-- * pci_enable_sriov - enable the SR-IOV capability
-+ * pci_enable_sriov_with_override - enable the SR-IOV capability
-  * @dev: the PCI device
-  * @nr_virtfn: number of virtual functions to enable
-+ * driver_override: driver override for VFs
-  *
-  * Returns 0 on success, or negative on failure.
-  */
--int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
-+int pci_enable_sriov_with_override(struct pci_dev *dev, int nr_virtfn,
-+				   char *driver_override)
- {
- 	might_sleep();
- 
- 	if (!dev->is_physfn)
- 		return -ENOSYS;
- 
--	return sriov_enable(dev, nr_virtfn);
-+	return sriov_enable(dev, nr_virtfn, driver_override);
-+}
-+EXPORT_SYMBOL_GPL(pci_enable_sriov_with_override);
-+
-+/**
-+ * pci_enable_sriov - enable the SR-IOV capability
-+ * @dev: the PCI device
-+ * @nr_virtfn: number of virtual functions to enable
-+ *
-+ * Returns 0 on success, or negative on failure.
-+ */
-+int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
-+{
-+	return pci_enable_sriov_with_override(dev, nr_virtfn, NULL);
- }
- EXPORT_SYMBOL_GPL(pci_enable_sriov);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b67e4df..54b3059 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1739,15 +1739,20 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
- int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
- int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
- 
-+int pci_enable_sriov_with_override(struct pci_dev *dev, int nr_virtfn,
-+				   char *driver_override);
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
--int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset);
-+int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset,
-+		       char *driver_override);
- void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
-+
-+void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-@@ -1757,6 +1762,11 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- {
- 	return -ENOSYS;
- }
-+
-+static inline int pci_enable_sriov_with_override(struct pci_dev *dev,
-+						 int nr_virtfn,
-+						 char *driver_override)
-+{ return -ENODEV; }
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
-@@ -1775,6 +1785,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
- static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- { return 0; }
-+static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn) { }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
--- 
-1.8.3.1
-
+@@ -4768,28 +4769,55 @@ static resource_size_t pci_specified_res
+ 		} else {
+ 			align_order = -1;
+ 		}
+-		if (sscanf(p, "%x:%x:%x.%x%n",
+-			&seg, &bus, &slot, &func, &count) != 4) {
+-			seg = 0;
+-			if (sscanf(p, "%x:%x.%x%n",
+-					&bus, &slot, &func, &count) != 3) {
+-				/* Invalid format */
+-				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+-					p);
++		if (strncmp(p, "pci:", 4) == 0) {
++			/* PCI vendor/device (subvendor/subdevice) ids are specified */
++			p += 4;
++			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
++				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
++				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
++					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
++						p);
++					break;
++				}
++				subsystem_vendor = subsystem_device = 0;
++			}
++			p += count;
++			if ((!vendor || (vendor == dev->vendor)) &&
++				(!device || (device == dev->device)) &&
++				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
++				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
++				if (align_order == -1)
++					align = PAGE_SIZE;
++				else
++					align = 1 << align_order;
++				/* Found */
+ 				break;
+ 			}
+ 		}
+-		p += count;
+-		if (seg == pci_domain_nr(dev->bus) &&
+-			bus == dev->bus->number &&
+-			slot == PCI_SLOT(dev->devfn) &&
+-			func == PCI_FUNC(dev->devfn)) {
+-			if (align_order == -1)
+-				align = PAGE_SIZE;
+-			else
+-				align = 1 << align_order;
+-			/* Found */
+-			break;
++		else {
++			if (sscanf(p, "%x:%x:%x.%x%n",
++				&seg, &bus, &slot, &func, &count) != 4) {
++				seg = 0;
++				if (sscanf(p, "%x:%x.%x%n",
++						&bus, &slot, &func, &count) != 3) {
++					/* Invalid format */
++					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
++						p);
++					break;
++				}
++			}
++			p += count;
++			if (seg == pci_domain_nr(dev->bus) &&
++				bus == dev->bus->number &&
++				slot == PCI_SLOT(dev->devfn) &&
++				func == PCI_FUNC(dev->devfn)) {
++				if (align_order == -1)
++					align = PAGE_SIZE;
++				else
++					align = 1 << align_order;
++				/* Found */
++				break;
++			}
+ 		}
+ 		if (*p != ';' && *p != ',') {
+ 			/* End of param or invalid format */
