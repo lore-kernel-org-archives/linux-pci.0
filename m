@@ -1,119 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 11 Jun 2016 14:10:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: niklass@axis.com, jespern@axis.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] dt-bindings: pci: add DT binding for Axis
- ARTPEC-6 PCIe controller
-Message-ID: <20160611191033.GL16462@localhost>
-References: <1462794507-30262-1-git-send-email-niklass@axis.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Subject: [RFC PATCH v2 02/15] drivers: irqchip: its: fix its_acpi_probe()
+ prototype
+Date: Tue,  7 Jun 2016 14:30:57 +0100
+Message-Id: <1465306270-27076-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ Hanjun Guo <hanjun.guo@linaro.org>, Jon Masters <jcm@redhat.com>,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462794507-30262-1-git-send-email-niklass@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 09, 2016 at 01:48:27PM +0200, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@axis.com>
-> 
-> This commit adds the Device Tree binding documentation that allows to
-> describe the PCIe controller found in the Axis ARTPEC-6 SoC.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+The empty stub for its_acpi_probe() on !CONFIG_ACPI systems has
+a wrong prototype, which causes compilation errors:
 
-I applied both of these, with Rob's ack on the first, to
-pci/host-artpec for v4.8, thanks!
+drivers/irqchip/irq-gic-v3-its.c: In function 'its_init':
+drivers/irqchip/irq-gic-v3-its.c:1762:3: error: too few arguments to
+function 'its_acpi_probe'
+   its_acpi_probe();
+   ^
+drivers/irqchip/irq-gic-v3-its.c:1749:27: note: declared here
+ static inline void __init its_acpi_probe(struct irq_domain
+*parent_domain) { }
 
-I made the following minor edits; hopefully I didn't break anything:
+This patch fixes the prototype and the corresponding compilation
+errors.
 
-diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-index f91b916..330a45b 100644
---- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-@@ -1,11 +1,11 @@
- * Axis ARTPEC-6 PCIe interface
- 
--This PCIe host controller is based on the Synopsys Designware PCIe IP
-+This PCIe host controller is based on the Synopsys DesignWare PCIe IP
- and thus inherits all the common properties defined in designware-pcie.txt.
- 
- Required properties:
- - compatible: "axis,artpec6-pcie", "snps,dw-pcie"
--- reg: base addresses and lengths of the pcie controller (DBI),
-+- reg: base addresses and lengths of the PCIe controller (DBI),
- 	the phy controller, and configuration address space.
- - reg-names: Must include the following entries:
- 	- "dbi"
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 1a2de8f..033d9ad 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -250,5 +250,8 @@ config PCIE_ARTPEC6
- 	depends on MACH_ARTPEC6
- 	select PCIE_DW
- 	select PCIEPORTBUS
-+	help
-+	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
-+	  SoCs.  This PCIe controller uses the DesignWare core.
- 
- endmenu
-diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/host/pcie-artpec6.c
-index d53dbaf..19adc77 100644
---- a/drivers/pci/host/pcie-artpec6.c
-+++ b/drivers/pci/host/pcie-artpec6.c
-@@ -61,7 +61,7 @@ struct artpec6_pcie {
- #define PHY_STATUS			0x118
- #define PHY_COSPLLLOCK			(1 << 0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		0x0FFFFFFF
-+#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
- 
- static int artpec6_pcie_establish_link(struct pcie_port *pp)
- {
-@@ -241,35 +241,26 @@ static int __init artpec6_pcie_probe(struct platform_device *pdev)
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
- 	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
--	if (IS_ERR(pp->dbi_base)) {
--		ret = PTR_ERR(pp->dbi_base);
--		goto fail;
--	}
-+	if (IS_ERR(pp->dbi_base))
-+		return PTR_ERR(pp->dbi_base);
- 
- 	phy_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
- 	artpec6_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
--	if (IS_ERR(artpec6_pcie->phy_base)) {
--		ret = PTR_ERR(artpec6_pcie->phy_base);
--		goto fail;
--	}
-+	if (IS_ERR(artpec6_pcie->phy_base))
-+		return PTR_ERR(artpec6_pcie->phy_base);
- 
- 	artpec6_pcie->regmap =
- 		syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
- 						"axis,syscon-pcie");
--	if (IS_ERR(artpec6_pcie->regmap)) {
--		ret = PTR_ERR(artpec6_pcie->regmap);
--		goto fail;
--	}
-+	if (IS_ERR(artpec6_pcie->regmap))
-+		return PTR_ERR(artpec6_pcie->regmap);
- 
- 	ret = artpec6_add_pcie_port(pp, pdev);
- 	if (ret < 0)
--		goto fail;
-+		return ret;
- 
- 	platform_set_drvdata(pdev, artpec6_pcie);
- 	return 0;
--
--fail:
--	return ret;
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index c8f36a5..1846800 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -1700,7 +1700,7 @@ void __init its_acpi_probe(void)
+ 		pr_info("No valid GIC ITS entries exist\n");
  }
+ #else
+-static inline void __init its_acpi_probe(struct irq_domain *parent_domain) { }
++static inline void __init its_acpi_probe(void) { }
+ #endif
  
- static const struct of_device_id artpec6_pcie_of_match[] = {
+ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+-- 
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
