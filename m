@@ -1,290 +1,156 @@
-Return-Path: <m-karicheri2@ti.com>
-Return-Path: <m-karicheri2@ti.com>
-Subject: Re: [PATCH 2/2] aer: add support aer interrupt with none
- MSI/MSI-X/INTx mode
-To: Po Liu <po.liu@nxp.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <20160602034828.GA10240@localhost>
- <VI1PR0401MB1709E215DCE264B2C27B3DAB92580@VI1PR0401MB1709.eurprd04.prod.outlook.com>
- <20160602135546.GA8262@localhost> <575052B8.3090203@ti.com>
- <20160603040952.GA17904@localhost> <5751BEDF.3040300@ti.com>
- <20160604034852.GA15143@localhost>
- <DB5PR0401MB1702AF829693255DFC347448925C0@DB5PR0401MB1702.eurprd04.prod.outlook.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Roy Zang
-	<roy.zang@nxp.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Stuart Yoder
-	<stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
-        Minghuan Lian
-	<minghuan.lian@nxp.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo
-	<shawnguo@kernel.org>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Rob Herring
-	<robh@kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <57558248.4010502@ti.com>
-Date: Mon, 6 Jun 2016 10:01:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <DB5PR0401MB1702AF829693255DFC347448925C0@DB5PR0401MB1702.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Rui Wang <rui.y.wang@intel.com>
+To: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
+	bhelgaas@google.com
+Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, rui.y.wang@intel.com
+Subject: [PATCH 2/2] x86/ioapic: Fix wrong pointers in ioapic_setup_resources()
+Date: Tue,  7 Jun 2016 15:21:13 +0800
+Message-Id: <1465284073-354-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1465284073-354-1-git-send-email-rui.y.wang@intel.com>
+References: <1465284073-354-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/06/2016 03:32 AM, Po Liu wrote:
-> Hi Bjorn,
-> I confirm we met same problem with KeyStone base on DesignWare design.
-> 
-> 
-> Best regards,
-> Liu Po
-> 
->>  -----Original Message-----
->>  From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->>  Sent: Saturday, June 04, 2016 11:49 AM
->>  To: Murali Karicheri
->>  Cc: Po Liu; linux-pci@vger.kernel.org; linux-arm-
->>  kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
->>  devicetree@vger.kernel.org; Arnd Bergmann; Roy Zang; Marc Zyngier;
->>  Stuart Yoder; Yang-Leo Li; Minghuan Lian; Bjorn Helgaas; Shawn Guo;
->>  Mingkai Hu; Rob Herring
->>  Subject: Re: [PATCH 2/2] aer: add support aer interrupt with none
->>  MSI/MSI-X/INTx mode
->>  
->>  On Fri, Jun 03, 2016 at 01:31:11PM -0400, Murali Karicheri wrote:
->>  > Po,
->>  >
->>  > Sorry to hijack your discussion, but the problem seems to be same for
->>  > Keystone PCI controller which is also designware (old version) based.
->>  >
->>  > On 06/03/2016 12:09 AM, Bjorn Helgaas wrote:
->>  > > On Thu, Jun 02, 2016 at 11:37:28AM -0400, Murali Karicheri wrote:
->>  > >> On 06/02/2016 09:55 AM, Bjorn Helgaas wrote:
->>  > >>> On Thu, Jun 02, 2016 at 05:01:19AM +0000, Po Liu wrote:
->>  > >>>>>  -----Original Message-----
->>  > >>>>>  From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->>  > >>>>>  Sent: Thursday, June 02, 2016 11:48 AM
->>  > >>>>>  To: Po Liu
->>  > >>>>>  Cc: linux-pci@vger.kernel.org;
->>  > >>>>> linux-arm-kernel@lists.infradead.org;
->>  > >>>>>  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Arnd
->>  > >>>>> Bergmann;  Roy Zang; Marc Zyngier; Stuart Yoder; Yang-Leo Li;
->>  > >>>>> Minghuan Lian; Bjorn  Helgaas; Shawn Guo; Mingkai Hu; Rob
->>  > >>>>> Herring
->>  > >>>>>  Subject: Re: [PATCH 2/2] aer: add support aer interrupt with
->>  > >>>>> none  MSI/MSI-X/INTx mode
->>  > >>>>>
->>  > >>>>>  [+cc Rob]
->>  > >>>>>
->>  > >>>>>  Hi Po,
->>  > >>>>>
->>  > >>>>>  On Thu, May 26, 2016 at 02:00:06PM +0800, Po Liu wrote:
->>  > >>>>>  > On some platforms, root port doesn't support MSI/MSI-X/INTx
->>  in RC mode.
->>  > >>>>>  > When chip support the aer interrupt with none MSI/MSI-X/INTx
->>  > >>>>> mode,  > maybe there is interrupt line for aer pme etc. Search
->>  > >>>>> the interrupt  > number in the fdt file.
->>  > >>>>>
->>  > >>>>>  My understanding is that AER interrupt signaling can be done
->>  > >>>>> via INTx,  MSI, or MSI-X (PCIe spec r3.0, sec 6.2.4.1.2).
->>  > >>>>> Apparently your device  doesn't support MSI or MSI-X.  Are you
->>  > >>>>> saying it doesn't support INTx  either?  How is the interrupt
->>  you're requesting here different from INTx?
->>  > >>>>
->>  > >>>> Layerscape use none of MSI or MSI-X or INTx to indicate the
->>  > >>>> devices or root error in RC mode. But use an independent SPI
->>  > >>>> interrupt(arm interrupt controller) line.
->>  > >>>
->>  > >>> The Root Port is a PCI device and should follow the normal PCI
->>  > >>> rules for interrupts.  As far as I understand, that means it
->>  > >>> should use MSI, MSI-X, or INTx.  If your Root Port doesn't use MSI
->>  > >>> or MSI-X, it should use INTx, the PCI_INTERRUPT_PIN register
->>  > >>> should tell us which (INTA/ INTB/etc.), and
->>  PCI_COMMAND_INTX_DISABLE should work to disable it.
->>  > >>> That's all from the PCI point of view, of course.
->>  > >>
->>  > >> I am faced with the same issue on Keystone PCI hardware and it has
->>  > >> been on my TODO list  for quite some time. Keystone PCI hardware
->>  > >> also doesn't use MSI or MSI-X or INTx for reporting errors received
->>  > >> at the root port, but use a platform interrupt instead (not
->>  > >> complaint to PCI standard as per PCI base spec). So I would need
->>  > >> similar change to have the error interrupt passed to the aer
->>  > >> driver. So there are hardware out there like Keystone which
->>  requires to support this through platform IRQ.
->>  > >
->>  > > This is not a new area of the spec, and it's hard for me to believe
->>  > > that these two new PCIe controllers are both broken the same way
->>  > > (although I guess both are DesignWare-based, so maybe this is the
->>  > > same underlying problem in both cases?).  I think it's more likely
->>  > > that we just haven't figured out the right way to describe this in
->>  the DT.
->>  >
->>  > Keystone is using an older version of the designware IP and it
->>  > implements all of the interrupts in the application register space
->>  > unlike other newer version of the hardware. So I assume, the version
->>  > used on Layerscape is also an older version and the both have same
->>  > issue in terms of non standard platform interrupt used for error
->>  reporting.
->>  >
->>  > > I assume you have a Root Port with an AER capability, no MSI
->>  > > capability, and no MSI-X capability, right?
->>  >
->>  > Has AER capability and both MSI and INTx (legacy) capability
->>  >
->>  > > What does its Interrupt
->>  > > Pin register contain?  If it's zero, it doesn't use INTx either, so
->>  > > according to the spec it should generate no interrupts.
->>  > >
->>  > At address offset 0x3C by default has a value of 1, but it is writable
->>  > by software. So default is INTx A.
->>  
->>  0x3c is the Interrupt *Line*, which is read/write.  The Interrupt
->>  *Pin* is at 0x3d and should be read-only.
->>  
+On a 4-socket brickland, hot-removing one ioapic is fine. Hot-removing
+the 2nd one causes panic:
 
-You are right. But default is 1 at this address.
+[  453.422259] BUG: unable to handle kernel NULL pointer dereference at
+0000000000000030
+[  453.431059] IP: [<ffffffff8109a8c2>] release_resource+0x22/0x80
+[  453.437713] PGD 0
+[  453.439976] Oops: 0000 [#1] SMP
+[  453.443610] Modules linked in: fuse btrfs xor raid6_pq msdos ext4
+mbcache jbd2 binfmt_misc xt_CHECKSUM ipt_MAS
+QUERADE nf_nat_masquerade_ipv4 tun ip6t_rpfilter ip6t_REJECT
+nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_conntrac
+k ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables
+ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6
+ nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw
+ip6table_filter ip6_tables iptable_nat nf_conntrack_i
+pv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle
+iptable_security iptable_raw iptable_filter vfa
+t fat x86_pkg_temp_thermal intel_powerclamp coretemp kvm sb_edac
+irqbypass edac_core aesni_intel ipmi_ssif iTCO_w
+dt iTCO_vendor_support lpc_ich glue_helper ipmi_si ablk_helper sg shpchp
+pcspkr mfd_core i2c_i801 ipmi_msghandler
+ wmi acpi_pad nfsd
+[  453.523040]  auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs
+libcrc32c sr_mod cdrom sd_mod mgag200 drm_km
+s_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm drm ixgbe igb
+ahci libahci libata mdio i2c_algo_bit pt
+p i2c_core megaraid_sas pps_core dca dm_mirror dm_region_hash dm_log
+dm_mod
+[  453.551438] CPU: 34 PID: 1146 Comm: kworker/u288:1 Not tainted
+4.5.0-rc1+ #69
+[  453.559418] Hardware name: Intel Corporation BRICKLAND/BRICKLAND,
+BIOS BRHSXSD1.86B.0063.R00.1503261059 03/26/
+2015
+[  453.570994] Workqueue: kacpi_hotplug acpi_hotplug_work_fn
+[  453.577041] task: ffff880463325800 ti: ffff88046267c000 task.ti:
+ffff88046267c000
+[  453.585415] RIP: 0010:[<ffffffff8109a8c2>]  [<ffffffff8109a8c2>]
+release_resource+0x22/0x80
+[  453.594768] RSP: 0018:ffff88046267fcc8  EFLAGS: 00010246
+[  453.600706] RAX: 00000000ffffffea RBX: ffff88087fffde00 RCX:
+0000000000000000
+[  453.608684] RDX: 00000000000000ff RSI: ffffea0011b72180 RDI:
+ffffffff81e3c0f8
+[  453.616663] RBP: ffff88046267fcd0 R08: ffff88046dc86fc0 R09:
+00000001802a0028
+[  453.624641] R10: 000000006dc86f01 R11: ffffea0011b72180 R12:
+0000000000000003
+[  453.632619] R13: ffffffff81e1d450 R14: 00000000000000d8 R15:
+0000000000000003
+[  453.640598] FS:  0000000000000000(0000) GS:ffff88086f000000(0000)
+knlGS:0000000000000000
+[  453.649645] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  453.656069] CR2: 0000000000000030 CR3: 0000000001a6e000 CR4:
+00000000001406e0
+[  453.664047] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+0000000000000000
+[  453.672027] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+0000000000000400
+[  453.680005] Stack:
+[  453.682251]  00000000000000d8 ffff88046267fd08 ffffffff81057965
+0000000000000048
+[  453.690567]  ffffffff81b43bd8 ffff88086b125358 ffff88086b783ea0
+ffff88086b125300
+[  453.698876]  ffff88046267fd20 ffffffff8104e3ff 0000000000000000
+ffff88046267fd58
+[  453.707195] Call Trace:
+[  453.709935]  [<ffffffff81057965>] mp_unregister_ioapic+0x125/0x180
+[  453.716846]  [<ffffffff8104e3ff>] acpi_unregister_ioapic+0x1f/0x40
+[  453.723759]  [<ffffffff8140cfe3>] acpi_ioapic_remove+0x5f/0xf0
+[  453.730283]  [<ffffffff813e0645>] acpi_pci_root_remove+0x2c/0x80
+[  453.737002]  [<ffffffff813da86b>] acpi_bus_trim+0x5a/0x8d
+[  453.743039]  [<ffffffff813dc31d>] acpi_device_hotplug+0x1b7/0x418
+[  453.749851]  [<ffffffff813d4f8a>] acpi_hotplug_work_fn+0x1e/0x29
+[  453.756570]  [<ffffffff810ad67f>] process_one_work+0x14f/0x3d0
+[  453.763092]  [<ffffffff810adf35>] worker_thread+0x125/0x4b0
+[  453.769325]  [<ffffffff816fd5c1>] ? __schedule+0x2b1/0x700
+[  453.775459]  [<ffffffff810ade10>] ? rescuer_thread+0x370/0x370
+[  453.781981]  [<ffffffff810b3a58>] kthread+0xd8/0xf0
+[  453.787435]  [<ffffffff810b3980>] ? kthread_park+0x60/0x60
+[  453.793570]  [<ffffffff8170190f>] ret_from_fork+0x3f/0x70
+[  453.800203]  [<ffffffff810b3980>] ? kthread_park+0x60/0x60
+[  453.806914] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89
+e5 53 48 89 fb 48 c7 c7 f8 c0 e3 81 e8 87 69 66 00 48 8b 4b 20 b8 ea ff
+ff ff <48> 8b 51 30 48 85 d2 74 1d 48 39 d3 75 0a eb 3f 48 39 c3 74 1b
+[  453.829861] RIP  [<ffffffff8109a8c2>] release_resource+0x22/0x80
+[  453.837188]  RSP <ffff88046267fcc8>
+[  453.841673] CR2: 0000000000000030
 
->>  Does your Keystone driver support MSI?  If so, since your Root Port
->>  supports MSI, I would think we would use that by default, and the INTx
->>  stuff wouldn't even matter.
-> 
-> Layerscape is also shows "Both message signaled interrupts (MSI) and legacy INTx are supported."
-> But both of them not work for AER interrupt when devices or root port report aer error.
-> But another GIC interrupt line do.
+Fix it by assigning the correct pointers to ioapics[i].iomem_res in
+ioapic_setup_resources(). Also simplify the function by removing
+the redundant 'num' variable.
 
-Same with Keystone. Even though both MSI and INTx are supported
-error interrupt at root port is reported on a different interrupt
-line than MSI/INTx. So for Power Management event interrupt is also
-different line.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c | 18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
 
-Murali
-> 
->>  
->>  > > But if Interrupt Pin is non-zero, that means the Root Port should be
->>  > > able to generate virtual INTx interrupts.  Presumably the Root
->>  > > Complex connects those interrupts to something; maybe to your
->>  > > platform interrupt?
->>  >
->>  > Probably that is what is happening. Both Power management and Error
->>  > interrupts are raised on platform interrupt lines.
->>  >
->>  > 12 Error Interrupts
->>  >
->>  > [0] System error (OR of fatal, nonfatal, correctable errors) (RC mode
->>  > only) [1] PCIe fatal error (RC mode only) [2] PCIe non-fatal error (RC
->>  > mode only) [3] PCIe correctable error (RC mode only) [4] AXI Error due
->>  > to fatal condition in AXI bridge (EP/RC modes) [5] PCIe advanced error
->>  > (RC mode only)
->>  >
->>  > 13 Power management and reset event interrupts
->>  >
->>  > [0] Power management turn-off message interrupt (EP mode only) [1]
->>  > Power management ack message interrupt (RC mode only) [2] Power
->>  > management event interrupt (RC mode only) [3] Link request reset
->>  > interrupt (hot reset or link down) (RC mode only)
->>  >
->>  > > PCI doesn't say anything about an interrupt after it leaves the Root
->>  > > Complex, so the fact that it's connected to a "platform interrupt"
->>  > > or "SPI interrupt" or "IOAPIC interrupt" doesn't make it non-
->>  compliant.
->>  > > Shouldn't we be able to use the interrupt-map and related DT
->>  > > properties to express the fact that Root Port virtual INTx is routed
->>  > > to platform interrupt Y, even without any special-case code in
->>  > > portdrv?
->>  >
->>  > My understanding is if RC also raise interrupt on INTx, then below map
->>  > make sense, where either EP or RC can raise interrupt and the line
->>  > will be muxed for interrupt from EP or RC port.
->>  
->>  I'm sorry, I didn't quite catch your meaning here, so let me try to
->>  clarify some terminology.  Maybe we'll eventually blunder into a common
->>  understanding :)
->>  
->>  INTx is a PCI concept and only means something in the PCI hierarchy.
->>  The RC would *receive* virtual INTx interrupts from the PCI hierarchy
->>  and turn them into some platform-specific interrupt (not INTx) on the
->>  upstream side.
->>  
->>  So strictly speaking, the RC might raise platform-specific interrupts
->>  when it receives INTx interrupts, but it would not raise any INTx
->>  interrupts itself.
->>  
->>  > Here is the DT entry in PCIE keystone for Legacy interrupt mapping to
->>  > host interrupt.
->>  >                         #interrupt-cells = <1>;
->>  >                         interrupt-map-mask = <0 0 0 7>;
->>  >                         interrupt-map = <0 0 0 1 &pcie_intc0 0>, /*
->>  INT A */
->>  >                                         <0 0 0 2 &pcie_intc0 1>, /*
->>  INT B */
->>  >                                         <0 0 0 3 &pcie_intc0 2>, /*
->>  INT C */
->>  >                                         <0 0 0 4 &pcie_intc0 3>; /*
->>  > INT D */
->>  
->>  If I understand correctly, this is the mapping from the PCI world (INTA,
->>  INTB, etc.) to the platform-specific world (pcie_intc0 0, etc.)
->>  
->>  If a Root Port raises a virtual INTA, the RC should turn it into the
->>  corresponding platform interrupt, i.e., GIC_SPI 48 from the description
->>  below.
->>  
->>  > And  then
->>  >
->>  >                         pcie_intc0: legacy-interrupt-controller {
->>  >                                 interrupt-controller;
->>  >                                 #interrupt-cells = <1>;
->>  >                                 interrupt-parent = <&gic>;
->>  >                                 interrupts = <GIC_SPI 48
->>  IRQ_TYPE_EDGE_RISING>,
->>  >                                         <GIC_SPI 49
->>  IRQ_TYPE_EDGE_RISING>,
->>  >                                         <GIC_SPI 50
->>  IRQ_TYPE_EDGE_RISING>,
->>  >                                         <GIC_SPI 51
->>  IRQ_TYPE_EDGE_RISING>;
->>  >                         };
->>  >
->>  > So if RC interrupt for Power management and Error interrupt is a
->>  > separate line, how can software describe that using the above
->>  interrupt map?
->>  
->>  I don't know anything about interrupts the RC might generate on its own
->>  behalf.  A lot of the RC behavior is not specified by the PCIe spec
->>  because the RC is on the border between the upstream platform-specific
->>  stuff and the downstream PCIe stuff.  Is there something in the PCIe
->>  spec about the power management and error interrupts you're talking
->>  about?  Of maybe you can point me to a section of the Keystone spec that
->>  talks about interrupts generated by the RC?
-> 
-> Below is one of the PCIE controller interrupts list: 
-> 
-> 142 PEX1 INTA 
-> 143 PEX1 INTB 
-> 144 PEX1 INTC 
-> 145 PEX1 INTD 
-> 146-147 Reserved
-> 148 PEX1 MSI 
-> 149 PEX1 PME 
-> 150 PEX1 CFG err interrupt
-> 
-> Only the "150 PEX1 CFG err interrupt" routing to the aer interrupt. 
-> 
-> 
->>  
->>  In any event, the AER interrupts we're looking for in portdrv are from
->>  the Root Port, not from the RC.  For INTx, my understanding is that the
->>  RC *transforms* virtual INTx messages from the Root Port in the PCIe
->>  domain into GIC transactions in the platform domain.
->>  
->>  Bjorn
-
-
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f253218..a90b131 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2563,29 +2563,25 @@ static struct resource * __init ioapic_setup_resources(void)
+ 	unsigned long n;
+ 	struct resource *res;
+ 	char *mem;
+-	int i, num = 0;
++	int i;
+ 
+-	for_each_ioapic(i)
+-		num++;
+-	if (num == 0)
++	if (nr_ioapics == 0)
+ 		return NULL;
+ 
+ 	n = IOAPIC_RESOURCE_NAME_SIZE + sizeof(struct resource);
+-	n *= num;
++	n *= nr_ioapics;
+ 
+ 	mem = alloc_bootmem(n);
+ 	res = (void *)mem;
+ 
+-	mem += sizeof(struct resource) * num;
++	mem += sizeof(struct resource) * nr_ioapics;
+ 
+-	num = 0;
+ 	for_each_ioapic(i) {
+-		res[num].name = mem;
+-		res[num].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
++		res[i].name = mem;
++		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+ 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+ 		mem += IOAPIC_RESOURCE_NAME_SIZE;
+-		num++;
+-		ioapics[i].iomem_res = res;
++		ioapics[i].iomem_res = &res[i];
+ 	}
+ 
+ 	ioapic_resources = res;
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+1.8.3.1
+
