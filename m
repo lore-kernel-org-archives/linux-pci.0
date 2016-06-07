@@ -1,123 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:35705 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751575AbcF3Jcy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 05:32:54 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 0/3] pci: Aardvark PCIe controller driver for Marvell Armada 3700
-Date: Thu, 30 Jun 2016 11:32:29 +0200
-Message-Id: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Jun 2016 10:04:30 +0200
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com,
+	linux-ia64@vger.kernel.org, linux-mips@linux-mips.org,
+	linux-am33-list@redhat.com, linux-parisc@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.org
+Subject: Re: [PATCH v12 01/15] PCI: Let pci_mmap_page_range() take extra
+ resource pointer
+Message-ID: <20160607080430.GI3183@axis.com>
+References: <20160604000642.28162-1-yinghai@kernel.org>
+ <20160604000642.28162-2-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160604000642.28162-2-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Fri, Jun 03, 2016 at 05:06:28PM -0700, Yinghai Lu wrote:
+> This one is preparing patch for next one:
+>   PCI: Let pci_mmap_page_range() take resource addr
+> 
+> We need to pass extra resource pointer to avoid searching that again
+> for powerpc and microblaze prot set operation.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: linux-arm-kernel@lists.infradead.org
 
-This is the third iteration of the patch series that adds a PCIe
-controller driver for the Aardvark PCI controller, which is used on
-Marvell Armada 3700.
+For the CRIS part:
 
-Changes since v2:
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 
- - Fix typo in the DT binding documentation (handled ->
-   handle). Noticed by Bjorn Helgaas.
+> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+> index 64a5fb9..082efb9 100644
+> --- a/arch/cris/arch-v32/drivers/pci/bios.c
+> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
+> @@ -14,7 +14,8 @@ void pcibios_set_master(struct pci_dev *dev)
+>  	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+>  }
+>  
+> -int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+> +int pci_mmap_page_range(struct pci_dev *dev, struct resource *res,
+> +			struct vm_area_struct *vma,
+>  			enum pci_mmap_state mmap_state, int write_combine)
+>  {
+>  	unsigned long prot;
+> diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+> index b1b289d..65198cb 100644
+> --- a/arch/cris/include/asm/pci.h
+> +++ b/arch/cris/include/asm/pci.h
+> @@ -42,9 +42,6 @@ struct pci_dev;
+>  #define PCI_DMA_BUS_IS_PHYS	(1)
+>  
+>  #define HAVE_PCI_MMAP
+> -extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+> -			       enum pci_mmap_state mmap_state, int write_combine);
+> -
+>  
+>  #endif /* __KERNEL__ */
 
- - Make all macro definitions use lower-case letters for hexadecimal
-   numbers. Suggested by Bjorn Helgaas.
-
- - Remove numerous unused macro definitions. Suggested by Bjorn
-   Helgaas.
-
- - Remove useless parenthesis in macro definitions. Suggested by Bjorn
-   Helgaas.
-
- - Read the root bus number from the Device Tree (through the
-   IORESOURCE_BUS resource) instead of hardcoding bus 0. Suggested by
-   Bjorn Helgaas.
-
- - Rework the "link up" functions in two separate functions:
-   advk_pcie_link_up() and advk_pcie_wait_for_link(), and use
-   usleep_range() with a number of retries. Suggested by Bjorn
-   Helgaas.
-
- - Fix some comments for consistency.
-
- - Switch from the AXI disabling logic to a different strategy for
-   accessing the configuration space. This avoids the need for
-   synchronization, and therefore solves some stability problems.
-
- - Minor improvements to the advk_pcie_wait_pio() function.
-
- - Make the 'if (where % size)' test earlier in the
-   advk_pcie_wr_conf() function. Suggested by Bjorn Helgaas.
-
- - Use dev_err() instead of pr_err(). Suggested by Bjorn Helgaas.
-
- - Split the irq domain initialization (for legacy interrupts and MSI
-   interrupts into two functions). While at it, also fix a device_node
-   reference count leak when initializing the legacy irq
-   domain. Requested by Bjorn Helgaas.
-
- - Remove the advk_pcie_release_of_pci_ranges() function, and call
-   pci_free_resource_list() directly. Suggested by Bjorn Helgaas.
-
- - Remove MODULE_DEVICE_TABLE(), as the driver is not compiled as a
-   module. Suggested by Bjorn Helgaas.
-
- - Change the "select PCI_MSI" to "depends on
-   PCI_MSI_IRQ_DOMAIN". Suggested by Bjorn Helgaas.
-
-Changes since v1:
-
- - Even if the MSI handling is currently done directly by the PCIe
-   controller, use a msi-parent property to indicate this
-   relationship. This way, if in the future we want to use the MSI
-   capabilities from the GIC interrupt controller rather than the MSI
-   functionality of the PCI controller, it will be possible.
-
-   Suggested by Arnd Bergmann.
-
- - Replace the number-of-retry based loops by timeout based loops,
-   using time_before().
-
-   Suggested by Arnd Bergmann.
-
- - Simplify the IRQ handling, which actually also fixes a number of
-   issues with the interrupt handling.
-
-   Suggested by Marcin Wojtas.
-
-Thanks,
-
-Thomas
-
-Thomas Petazzoni (3):
-  dt-bindings: add DT binding for the Aardvark PCIe controller
-  PCI: host: new PCI host controller driver for Aardvark
-  arm64: dts: marvell: Aardvark PCIe support for Armada 3700
-
- .../devicetree/bindings/pci/aardvark-pci.txt       |   56 ++
- MAINTAINERS                                        |    7 +
- arch/arm64/boot/dts/marvell/armada-3720-db.dts     |    5 +
- arch/arm64/boot/dts/marvell/armada-37xx.dtsi       |   25 +
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-aardvark.c                    | 1014 ++++++++++++++++++++
- 7 files changed, 1117 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/aardvark-pci.txt
- create mode 100644 drivers/pci/host/pci-aardvark.c
-
+/^JN - Jesper Nilsson
 -- 
-2.7.4
-
+               Jesper Nilsson -- jesper.nilsson@axis.com
