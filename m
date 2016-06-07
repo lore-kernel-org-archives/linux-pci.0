@@ -1,143 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33480 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652AbcFVM6b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jun 2016 08:58:31 -0400
-Date: Wed, 22 Jun 2016 14:57:49 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, Stephen Warren <swarren@nvidia.com>
-Subject: Re: [PATCH] pci: tegra: correctly program PADS_REFCLK registers
-Message-ID: <20160622125749.GJ26943@ulmo.ba.sec>
-References: <20160621184640.19885-1-swarren@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="VSaCG/zfRnOiPJtU"
-In-Reply-To: <20160621184640.19885-1-swarren@wwwdotorg.org>
+Received: from foss.arm.com ([217.140.101.70]:44525 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932955AbcFGNbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jun 2016 09:31:31 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH v2 13/15] drivers: acpi: iort: introduce iort_iommu_configure
+Date: Tue,  7 Jun 2016 14:31:08 +0100
+Message-Id: <1465306270-27076-14-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+DT based systems have a generic kernel API to configure IOMMUs
+for devices (ie of_iommu_configure()).
 
---VSaCG/zfRnOiPJtU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On ARM based ACPI systems, the of_iommu_configure() equivalent can
+be implemented atop ACPI IORT kernel API, with the corresponding
+functions to map device identifiers to IOMMUs and retrieve the
+corresponding IOMMU operations necessary for DMA operations set-up.
 
-On Tue, Jun 21, 2016 at 12:46:40PM -0600, Stephen Warren wrote:
-> From: Stephen Warren <swarren@nvidia.com>
->=20
-> The value that should be programmed into the PADS_REFCLK register varies
-> per SoC. Fix the Tegra PCIe driver to program the correct values. Future
-> SoCs will require different values in cfg0/1, so the two values are stored
-> separately in the per-SoC data structures.
->=20
-> For reference, the values are all documented in NV bug 1771116 comment 20.
-> Rhe ASIC team has validated all these values, except for the Tegra20 value
-> which is simply left unchanged in this patch.
->=20
-> Signed-off-by: Stephen Warren <swarren@nvidia.com>
-> ---
->  drivers/pci/host/pci-tegra.c | 20 ++++++++------------
->  1 file changed, 8 insertions(+), 12 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index c388468c202a..74887fedc3d4 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -228,15 +228,6 @@
->  #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
->  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
-> =20
-> -/* Default value provided by HW engineering is 0xfa5c */
-> -#define PADS_REFCLK_CFG_VALUE \
-> -	( \
-> -		(0x17 << PADS_REFCLK_CFG_TERM_SHIFT)   | \
-> -		(0    << PADS_REFCLK_CFG_E_TERM_SHIFT) | \
-> -		(0xa  << PADS_REFCLK_CFG_PREDI_SHIFT)  | \
-> -		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
-> -	)
-> -
->  struct tegra_msi {
->  	struct msi_controller chip;
->  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> @@ -252,6 +243,8 @@ struct tegra_pcie_soc_data {
->  	unsigned int msi_base_shift;
->  	u32 pads_pll_ctl;
->  	u32 tx_ref_sel;
-> +	u32 pads_refclk_cfg0;
-> +	u32 pads_refclk_cfg1;
->  	bool has_pex_clkreq_en;
->  	bool has_pex_bias_ctrl;
->  	bool has_intr_prsnt_sense;
-> @@ -839,10 +832,9 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *=
-pcie)
->  	pads_writel(pcie, value, soc->pads_pll_ctl);
-> =20
->  	/* Configure the reference clock driver */
-> -	value =3D PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
-> -	pads_writel(pcie, value, PADS_REFCLK_CFG0);
-> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
->  	if (soc->num_ports > 2)
-> -		pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
-> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
-> =20
->  	/* wait for the PLL to lock */
->  	err =3D tegra_pcie_pll_wait(pcie, 500);
-> @@ -2078,6 +2070,7 @@ static const struct tegra_pcie_soc_data tegra20_pci=
-e_data =3D {
->  	.msi_base_shift =3D 0,
->  	.pads_pll_ctl =3D PADS_PLL_CTL_TEGRA20,
->  	.tx_ref_sel =3D PADS_PLL_CTL_TXCLKREF_DIV10,
-> +	.pads_refclk_cfg0 =3D 0xfa5cfa5c,
->  	.has_pex_clkreq_en =3D false,
->  	.has_pex_bias_ctrl =3D false,
->  	.has_intr_prsnt_sense =3D false,
-> @@ -2090,6 +2083,8 @@ static const struct tegra_pcie_soc_data tegra30_pci=
-e_data =3D {
->  	.msi_base_shift =3D 8,
->  	.pads_pll_ctl =3D PADS_PLL_CTL_TEGRA30,
->  	.tx_ref_sel =3D PADS_PLL_CTL_TXCLKREF_BUF_EN,
-> +	.pads_refclk_cfg0 =3D 0xfa5cfa5c,
-> +	.pads_refclk_cfg1 =3D 0xfa5cfa5c,
->  	.has_pex_clkreq_en =3D true,
->  	.has_pex_bias_ctrl =3D true,
->  	.has_intr_prsnt_sense =3D true,
-> @@ -2102,6 +2097,7 @@ static const struct tegra_pcie_soc_data tegra124_pc=
-ie_data =3D {
->  	.msi_base_shift =3D 8,
->  	.pads_pll_ctl =3D PADS_PLL_CTL_TEGRA30,
->  	.tx_ref_sel =3D PADS_PLL_CTL_TXCLKREF_BUF_EN,
-> +	.pads_refclk_cfg0 =3D 0x44ac44ac,
->  	.has_pex_clkreq_en =3D true,
->  	.has_pex_bias_ctrl =3D true,
->  	.has_intr_prsnt_sense =3D true,
+The iort_iommu_configure() implementation requires an IORT API
+to retrieve the parent node for any given IORT node, so this
+patch adds a function to the IORT kernel layer that serves that
+specific purpose.
 
-I think it'd be nice to have these decoded into their individual fields,
-to reduce the magic. We already define the register fields, so it seems
-sensible to use them.
+This patch implements the iort based IOMMU configuration for
+ARM ACPI systems and hook it up in the ACPI kernel layer that
+implements DMA configuration for a device.
 
-Thierry
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/iort.c  | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/scan.c  |  7 ++++-
+ include/linux/iort.h |  7 +++++
+ 3 files changed, 90 insertions(+), 1 deletion(-)
 
---VSaCG/zfRnOiPJtU
-Content-Type: application/pgp-signature; name="signature.asc"
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 2ef08d9..56258ac 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -213,6 +213,29 @@ iort_scan_node(enum acpi_iort_node_type type,
+ 	return NULL;
+ }
+ 
++static struct acpi_iort_node *
++iort_find_parent_node(struct acpi_iort_node *node)
++{
++	struct acpi_iort_id_mapping *id;
++
++	if (!node || !node->mapping_offset || !node->mapping_count)
++		return NULL;
++
++	id = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
++			  node->mapping_offset);
++
++	if (!id->output_reference) {
++		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
++		       node, node->type);
++		return NULL;
++	}
++
++	node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++			    id->output_reference);
++
++	return node;
++}
++
+ static acpi_status
+ iort_match_callback(struct acpi_iort_node *node, void *context)
+ {
+@@ -437,6 +460,60 @@ iort_pci_get_domain(struct pci_dev *pdev, u32 req_id)
+ 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+ }
+ 
++static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
++{
++	u32 *rid = data;
++
++	*rid = alias;
++	return 0;
++}
++
++/**
++ * iort_iommu_configure - Set-up IOMMU configuration for a device.
++ *
++ * @dev: device to configure
++ *
++ * Returns: iommu_ops pointer on configuration success
++ *          NULL on configuration failure
++ */
++const struct iommu_ops *iort_iommu_configure(struct device *dev)
++{
++	struct acpi_iort_node *node, *parent;
++	const struct iort_ops_node *iort_ops;
++	u32 rid = 0, devid = 0;
++
++	if (dev_is_pci(dev)) {
++		struct pci_bus *bus = to_pci_dev(dev)->bus;
++
++		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
++				       &rid);
++
++		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
++				      iort_find_dev_callback, &bus->dev);
++	} else {
++		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
++				      iort_find_dev_callback, dev);
++	}
++
++	if (!node)
++		return NULL;
++
++	parent = iort_find_parent_node(node);
++
++	if (!parent)
++		return NULL;
++
++	iort_ops = iort_smmu_get_ops_node(parent);
++
++	if (iort_ops && iort_ops->iommu_xlate) {
++		iort_dev_map_rid(node, rid, &devid, parent->type);
++		iort_ops->iommu_xlate(dev, devid, parent);
++		return iort_ops->ops;
++	}
++
++	return NULL;
++}
++
+ static int __init
+ add_smmu_platform_device(const struct iort_iommu_config *iort_cfg,
+ 			 struct acpi_iort_node *node)
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index b4b9064..de28825 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/kernel.h>
+ #include <linux/acpi.h>
++#include <linux/iort.h>
+ #include <linux/signal.h>
+ #include <linux/kthread.h>
+ #include <linux/dmi.h>
+@@ -1365,11 +1366,15 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+  */
+ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ {
++	const struct iommu_ops *iommu;
++
++	iommu = iort_iommu_configure(dev);
++
+ 	/*
+ 	 * Assume dma valid range starts at 0 and covers the whole
+ 	 * coherent_dma_mask.
+ 	 */
+-	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
++	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+ 			   attr == DEV_DMA_COHERENT);
+ }
+ 
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index 5dcfa09..bb29647 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -30,12 +30,19 @@ struct fwnode_handle *iort_its_find_domain_token(int trans_id);
+ bool iort_node_match(u8 type);
+ u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id);
+ struct irq_domain *iort_pci_get_domain(struct pci_dev *pdev, u32 req_id);
++
++/* IOMMU interface */
++const struct iommu_ops *iort_iommu_configure(struct device *dev);
+ #else
+ static inline bool iort_node_match(u8 type) { return false; }
+ static inline u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id)
+ { return req_id; }
+ static inline struct irq_domain *
+ iort_pci_get_domain(struct pci_dev *pdev, u32 req_id) { return NULL; }
++
++/* IOMMU interface */
++static inline const struct iommu_ops *
++iort_iommu_configure(struct device *dev) { return NULL; }
+ #endif
+ int iort_smmu_set_ops(struct acpi_iort_node *node,
+ 		      const struct iommu_ops *ops,
+-- 
+2.6.4
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXaotNAAoJEN0jrNd/PrOhLTYP/jlaSo0vXY4K4M1a+drSuS5u
-MYN6ZKFKboEMRf2NAxjLkV2dCwqjLkPWnClao8cL3/WL1I38KEAMEr8XD/GLW9b+
-Fhh3iTH6VY94SwsWuAGUCxZt8aBRtRWwfyAwuPv2kRT5h6xhAJirVHNDiELlDbtg
-iXfYxIF/qQo+vJjPNcsZV+Q37USD88PNHB6Ls3iXQ9BRyFYSuOZI3nqQMuW9xwEo
-vgvrEzuBrC39g0S0i/RtaPoNcedt3cYFmZLAXJUX5EHo6QkyZfxte+RIAx1zPOzy
-hFqAqe4RXAlAU9jdTPiPnqGMnrBW20xAvr7I12Gu3LCx7X+aA+hY4LJloT8wUZmJ
-Yt2VhjlohoPH7BJrGtYPmT4uwFjz/I6lji0cC8/BUqNU4RcOtP1bm6AhsFJQA6Xk
-+n7OmlDphp3yIj1mkYbLja18GlzAyp2zHwf4QI80u0d7kEfUNShgByRuANcNcp+W
-VVsXYBAWZLxQKK0fQc8mgkYsM3AwczffnCAQb4E2CTQ1ADTBckJW9Y6wCdlBkllZ
-8pIGHiFrvc3VQ6bX0+UJa+IbcvrP+wqfHvr9b4lKJlvC9MMT6G6m/GWtMeUF8X5K
-caySnnhTT1loVGPeF9OqfqYVbu5RY1QZqZEsUI1L0/vm+SE32GIFwzD7LVt9+0XN
-ACyd7oJi6AS5rT8QC664
-=GKtd
------END PGP SIGNATURE-----
-
---VSaCG/zfRnOiPJtU--
