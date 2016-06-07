@@ -1,79 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44489 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932929AbcFGNbX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jun 2016 09:31:23 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH v2 10/15] drivers: iommu: arm-smmu-v3: enable ACPI driver initialization
-Date: Tue,  7 Jun 2016 14:31:05 +0100
-Message-Id: <1465306270-27076-11-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, Wenrui Li <wenrui.li@rock-chips.com>, Doug Anderson <dianders@chromium.org>, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>, Hannes Reinecke <hare@suse.de>, Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 1/3] pci: introduce read_bridge/write_bridge pci ops
+Date: Tue, 07 Jun 2016 10:13:01 +0200
+Message-ID: <3754686.OCbiLBzILC@wuerfel>
+In-Reply-To: <20160607002822.GA1391@localhost>
+References: <1464784332-3775650-1-git-send-email-arnd@arndb.de> <3585926.N1C2xx3GaB@wuerfel> <20160607002822.GA1391@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On systems booting with ACPI that enable the ARM SMMU components
-in the kernel config options, the ARM SMMU v3 init function
-(ie arm_smmu_init(), that registers the driver and sets-up bus
-iommu operations) does not run only because the device tree interface
-(of_find_matching_node()) fails to find the respective device tree
-nodes for ARM SMMU devices.
+On Monday, June 6, 2016 7:28:22 PM CEST Bjorn Helgaas wrote:
+> The caller is performing one abstract operation: reading or writing
+> config space of a PCI device.  In the caller's context, it makes no
+> difference whether it's a type0 or type1 access.
+> 
+> Moving the test from the host bridge driver to pci_read_config_byte()
+> does move a little code from the callee to the caller, and there are
+> more callees than callers, so in that sense it does remove code
+> overall.  If you consider a single driver by itself, I'm not sure it
+> makes much difference.
+> 
+> The pcie-designware.c patch is a net removal of 17 lines, but that's
+> not all from moving the type0/type1 test: restructuring along the same
+> lines but keeping the original type0/type1 test removes about 9 lines.
+> 
+> Anyway, I think I'd rather work first on your RFC patches to make
+> pci_host_bridge the primary structure for probing PCI.  I think
+> there will be a *lot* of benefit there.
 
-This works as long as there are no ARM SMMU devices to be probed
-with ACPI. If ARM SMMU v3 components are part of the IORT tables,
-for them to be instantiated and probed the function registering
-the ARM SMMU v3 driver must be able to register the driver and
-initialize the bus IOMMU operations accordingly.
+Fair enough. This series started from the review of the Rockchip
+driver, and the idea was to make that one simpler, but given that
+we already have several dozen drivers doing the same thing, adding
+one more isn't going to have a significant impact now.
 
-This patch changes the logic in arm-smmu-v3 init call to allow
-for it to be probed in ACPI systems.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/arm-smmu-v3.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 75f93aa..90745a8 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2643,11 +2643,16 @@ static int __init arm_smmu_init(void)
- 	struct device_node *np;
- 	int ret;
- 
--	np = of_find_matching_node(NULL, arm_smmu_of_match);
--	if (!np)
--		return 0;
-+	if (acpi_disabled) {
-+		np = of_find_matching_node(NULL, arm_smmu_of_match);
-+		if (!np)
-+			return 0;
- 
--	of_node_put(np);
-+		of_node_put(np);
-+	} else {
-+		if (!iort_node_match(ACPI_IORT_NODE_SMMU_V3))
-+			return 0;
-+	}
- 
- 	ret = platform_driver_register(&arm_smmu_driver);
- 	if (ret)
--- 
-2.6.4
-
+	Arnd
