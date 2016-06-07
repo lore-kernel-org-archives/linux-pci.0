@@ -1,80 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:34486 "EHLO
-	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424299AbcFMOly (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2016 10:41:54 -0400
-Received: by mail-lf0-f47.google.com with SMTP id j7so62099136lfg.1
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jun 2016 07:41:52 -0700 (PDT)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
-Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 2/7] PCI/MSI: Setup MSI domain on a per-devices basis using IORT ACPI table
-Date: Mon, 13 Jun 2016 16:41:08 +0200
-Message-Id: <1465828873-23498-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:58583 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161110AbcFGObP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2016 10:31:15 -0400
+Date: Tue, 7 Jun 2016 07:31:14 -0700
+From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
+Subject: Re: [PATCH] Introducing kernel option to force all PCI memory
+ resources to be page aligned. Fixes issues with uio based drivers.
+Message-ID: <20160607143114.GA14513@kroah.com>
+References: <fe4f2460f9454483bb18a64c1314c950@FE-MBX1012.de.bosch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fe4f2460f9454483bb18a64c1314c950@FE-MBX1012.de.bosch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible to provide information about which MSI controller to
-use on a per-device basis for DT. This patch supply this with ACPI support.
+On Tue, Jun 07, 2016 at 06:51:47AM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
+> Hi Greg,
+> > > thanks for the response.
+> > > > > Some uio based PCI drivers (e.g. uio_cif) do not work if the
+> > > > > assigned PCI memory resources are not page aligned.
+> > > > > By using the kernel option "pci=resource_alignment" it is possible
+> > > > > to force single PCI boards to use page alignment for their memory
+> > resources.
+> > > > > However, this is fairly cumbersome if multiple of these cards are in use.
+> > > > > This patch adds another kernel option "pci=resources_page_aligned"
+> > > > > that allows to set the default alignment of PCI memory resources
+> > > > > to be page aligned.
+> > > > > Overwriting of this default alignment via "pci=resource_alignment"
+> > > > > is still possible.
+> > > >
+> > > > This seems like a very large hammer for a very specific problem with
+> > > > a card that seems to be not-in-spec (I can't find anywhere that
+> > > > requires resources to be "page" aligned in the PCI spec).  Why not fix the
+> > firmware in these cards?
+> > > The issue is not the firmware. The issue is that the Linux uio driver
+> > > (here: uio_cif) does not work as uio_mmap() -> uio_mmap_physical()
+> > > does not do a mmap on physical memory that is not page aligned...
+> > 
+> > Then why not fix the uio_cif driver?
+> The fix might be in uio and not in uio_cif. However uio_mmap_physical() in
+> uio.c has introduced checks to reject non page-aligned addresses.
 
-Currently, IORT is the only one ACPI table which can provide such mapping.
-In order to plug IORT into MSI infrastructure we are adding ACPI
-equivalents for finding PCI device domain and its RID translation
-(pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
+Yes, because we had real problems with that in the past.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/pci/msi.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+> These checks have been introduced somewhere in between kernel V3.2 and kernel V3.18. 
+> Removing these checks again does not sound to me like a good idea...
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a080f44..1d45e81 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -18,6 +18,7 @@
- #include <linux/smp.h>
- #include <linux/errno.h>
- #include <linux/io.h>
-+#include <linux/iort.h>
- #include <linux/slab.h>
- #include <linux/irqdomain.h>
- #include <linux/of_irq.h>
-@@ -1364,8 +1365,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
- 
- 	of_node = irq_domain_get_of_node(domain);
--	if (of_node)
--		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
-+	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
-+			iort_msi_map_rid(&pdev->dev, rid);
- 
- 	return rid;
- }
-@@ -1381,9 +1382,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
-  */
- struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
- {
-+	struct irq_domain *dom;
- 	u32 rid = 0;
- 
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
--	return of_msi_map_get_device_domain(&pdev->dev, rid);
-+	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
-+	if (!dom)
-+		dom = iort_get_device_domain(&pdev->dev, rid);
-+	return dom;
- }
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
--- 
-1.9.1
+I agree, you should fix your hardware :)
 
+> The overall question is now if the UIO system is working at all with non page 
+> aligned PCI memory resources. For me it looks as if this is not the case.
+
+How is your system ending up with such alignment in the first place?
+What is the resource list after booting?
+
+thanks,
+
+greg k-h
