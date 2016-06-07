@@ -1,38 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17346 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751901AbcFFNGf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jun 2016 09:06:35 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 0/4] PCI / DPC: Few improvements
-Date: Mon,  6 Jun 2016 16:06:04 +0300
-Message-Id: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	James Smart <james.smart@avagotech.com>,
+	Dick Kennedy <dick.kennedy@avagotech.com>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH v3 3/6] lpfc: Use pci_(request|release)_mem_regions
+Date: Tue,  7 Jun 2016 09:44:03 +0200
+Message-Id: <db039786e24d1cf8d9225468bb95d7f060c1311b.1465200424.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
+References: <cover.1465200424.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
+References: <cover.1465200424.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+hand, use it in the lpfc driver.
 
-This series includes few improvements for the PCIe DPC driver. First we
-introduce module_pci_port_service() which allows reducing of boilerblate
-code used in the DPC driver. In addition we convert the driver to use
-managed resource functions (devm) to get rid of even more boilerblate.
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Acked-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Cc: James Smart <james.smart@avagotech.com>
+Cc: Dick Kennedy <dick.kennedy@avagotech.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/lpfc/lpfc_init.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-I do not have hardware supporting DPC so these are only compile tested.
-
-Mika Westerberg (4):
-  PCI / PCIe: Introduce module_pci_port_service()
-  PCI / DPC: Convert to use module_pcie_port_service()
-  PCI / DPC: Convert the driver to use devm_* functions
-  PCI / DPC: Fix whitespace in struct dpc_dev
-
- drivers/pci/pcie/pcie-dpc.c | 30 +++++++-----------------------
- include/linux/pcieport_if.h | 13 +++++++++++++
- 2 files changed, 20 insertions(+), 23 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f57d02c..a8735f7 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4775,20 +4775,17 @@ static int
+ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+ {
+ 	struct pci_dev *pdev;
+-	int bars = 0;
+ 
+ 	/* Obtain PCI device reference */
+ 	if (!phba->pcidev)
+ 		goto out_error;
+ 	else
+ 		pdev = phba->pcidev;
+-	/* Select PCI BARs */
+-	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 	/* Enable PCI device */
+ 	if (pci_enable_device_mem(pdev))
+ 		goto out_error;
+ 	/* Request PCI resource for the device */
+-	if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
++	if (pci_request_mem_regions(pdev, LPFC_DRIVER_NAME))
+ 		goto out_disable_device;
+ 	/* Set up device as PCI master and save state for EEH */
+ 	pci_set_master(pdev);
+@@ -4805,7 +4802,7 @@ out_disable_device:
+ 	pci_disable_device(pdev);
+ out_error:
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-			"1401 Failed to enable pci device, bars:x%x\n", bars);
++			"1401 Failed to enable pci device\n");
+ 	return -ENODEV;
+ }
+ 
+@@ -4820,17 +4817,14 @@ static void
+ lpfc_disable_pci_dev(struct lpfc_hba *phba)
+ {
+ 	struct pci_dev *pdev;
+-	int bars;
+ 
+ 	/* Obtain PCI device reference */
+ 	if (!phba->pcidev)
+ 		return;
+ 	else
+ 		pdev = phba->pcidev;
+-	/* Select PCI BARs */
+-	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 	/* Release PCI resource and disable PCI device */
+-	pci_release_selected_regions(pdev, bars);
++	pci_release_mem_regions(pdev);
+ 	pci_disable_device(pdev);
+ 
+ 	return;
+@@ -9705,7 +9699,6 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
+ 	struct lpfc_vport **vports;
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	int i;
+-	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 
+ 	spin_lock_irq(&phba->hbalock);
+ 	vport->load_flag |= FC_UNLOADING;
+@@ -9780,7 +9773,7 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
+ 
+ 	lpfc_hba_free(phba);
+ 
+-	pci_release_selected_regions(pdev, bars);
++	pci_release_mem_regions(pdev);
+ 	pci_disable_device(pdev);
+ }
+ 
 -- 
-2.8.1
-
+1.8.5.6
