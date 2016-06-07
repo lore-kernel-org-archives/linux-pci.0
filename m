@@ -1,65 +1,152 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Rui Wang <rui.y.wang@intel.com>
-To: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-	bhelgaas@google.com
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, rui.y.wang@intel.com
-Subject: [PATCH V2 3/3] x86/ioapic: Simplify ioapic_setup_resources()
-Date: Wed,  8 Jun 2016 14:59:53 +0800
-Message-Id: <1465369193-4816-4-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1465369193-4816-1-git-send-email-rui.y.wang@intel.com>
-References: <1465369193-4816-1-git-send-email-rui.y.wang@intel.com>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH v2 15/15] drivers: iommu: arm-smmu-v3: allow ACPI based streamid translation
+Date: Tue,  7 Jun 2016 14:31:10 +0100
+Message-Id: <1465306270-27076-16-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Optimize the function by removing the variable 'num'.
+The ACPI IORT table provides data to ARM SMMU drivers to carry out
+streamid mappings and the kernel has the infrastructure to implement
+it through the iommu_xlate() IORT SMMU operation hook.
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+By reusing the infrastructure implemented for of_xlate(), this patch
+adds the ARM SMMU v3 iommu_xlate() hook to carry out streamid
+translation for ARM SMMU v3 on ACPI based systems.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
- arch/x86/kernel/apic/io_apic.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
+ drivers/iommu/arm-smmu-v3.c | 60 +++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 52 insertions(+), 8 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 446702e..e587295 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2567,29 +2567,25 @@ static struct resource * __init ioapic_setup_resources(void)
- 	unsigned long n;
- 	struct resource *res;
- 	char *mem;
--	int i, num = 0;
-+	int i;
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 7acb6b5..96d0504 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -634,8 +634,23 @@ struct arm_smmu_domain {
+ 	struct iommu_domain		domain;
+ };
  
--	for_each_ioapic(i)
--		num++;
--	if (num == 0)
-+	if (nr_ioapics == 0)
++enum arm_smmu_fw_type {
++	ARM_SMMU_FW_INVALID = 0,
++	ARM_SMMU_FW_OF,
++	ARM_SMMU_FW_IORT,
++};
++
++struct arm_smmu_fw_handle {
++	enum arm_smmu_fw_type type;
++	union {
++		struct device_node *np;
++		struct acpi_iort_node *iort_node;
++	};
++};
++
+ /* SMMU private data for each master */
+ struct arm_smmu_master_data {
++	struct arm_smmu_fw_handle	handle;
+ 	struct arm_smmu_device		*smmu;
+ 
+ 	struct arm_smmu_strtab_ent	ste;
+@@ -1721,9 +1736,17 @@ arm_smmu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova)
+ 	return ret;
+ }
+ 
+-static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
++static struct arm_smmu_device *
++arm_smmu_get_dev(struct arm_smmu_fw_handle *handle)
+ {
+-	struct platform_device *smmu_pdev = of_find_device_by_node(np);
++	struct platform_device *smmu_pdev = NULL;
++
++	if (handle->type == ARM_SMMU_FW_OF) {
++		smmu_pdev = of_find_device_by_node(handle->np);
++		of_node_put(handle->np);
++	} else if (handle->type == ARM_SMMU_FW_IORT) {
++		smmu_pdev = iort_find_iommu_device(handle->iort_node);
++	}
+ 
+ 	if (!smmu_pdev)
  		return NULL;
+@@ -1743,16 +1766,14 @@ static bool arm_smmu_sid_in_range(struct arm_smmu_device *smmu, u32 sid)
  
- 	n = IOAPIC_RESOURCE_NAME_SIZE + sizeof(struct resource);
--	n *= num;
-+	n *= nr_ioapics;
+ static int arm_smmu_add_device(struct device *dev)
+ {
+-	struct device_node *np;
+ 	struct arm_smmu_device *smmu;
+ 	struct arm_smmu_master_data *data = dev->archdata.iommu;
  
- 	mem = alloc_bootmem(n);
- 	res = (void *)mem;
+ 	if (!data)
+ 		return -ENODEV;
  
--	mem += sizeof(struct resource) * num;
-+	mem += sizeof(struct resource) * nr_ioapics;
+-	np = (struct device_node *)data->smmu;
+-	smmu = data->smmu = arm_smmu_get_by_node(np);
+-	of_node_put(np);
++	smmu = data->smmu = arm_smmu_get_dev(&data->handle);
++
+ 	if (!smmu)
+ 		return -ENODEV;
  
--	num = 0;
- 	for_each_ioapic(i) {
--		res[num].name = mem;
--		res[num].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-+		res[i].name = mem;
-+		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
- 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
- 		mem += IOAPIC_RESOURCE_NAME_SIZE;
--		ioapics[i].iomem_res = &res[num];
--		num++;
-+		ioapics[i].iomem_res = &res[i];
- 	}
+@@ -1854,7 +1875,8 @@ static int arm_smmu_of_xlate(struct device *dev, struct of_phandle_args *args)
+ 	 * By the time we see this again in an add_device callback, we'll
+ 	 * be in a position to fix it up with the real thing.
+ 	 */
+-	data->smmu = (struct arm_smmu_device *)args->np;
++	data->handle.type = ARM_SMMU_FW_OF;
++	data->handle.np = args->np;
+ 	data->sid = args->args[0];
+ 	dev->archdata.iommu = data;
  
- 	ioapic_resources = res;
+@@ -2688,9 +2710,31 @@ static int __init arm_smmu_of_init(struct device_node *np)
+ IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+ 
+ #ifdef CONFIG_ACPI
++static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
++			       struct acpi_iort_node *node)
++{
++	struct arm_smmu_master_data *data;
++
++	if (!node || (node->type != ACPI_IORT_NODE_SMMU_V3))
++		return -ENODEV;
++
++	if (dev->archdata.iommu)
++		return -EEXIST;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	data->handle.type = ARM_SMMU_FW_IORT;
++	data->handle.iort_node = node;
++	data->sid = streamid;
++	dev->archdata.iommu = data;
++	return 0;
++}
++
+ static int acpi_smmu_init(struct acpi_iort_node *node)
+ {
+-	iort_smmu_set_ops(node, &arm_smmu_ops, NULL);
++	iort_smmu_set_ops(node, &arm_smmu_ops, arm_smmu_iort_xlate);
+ 
+ 	return 0;
+ }
 -- 
-1.8.3.1
+2.6.4
 
