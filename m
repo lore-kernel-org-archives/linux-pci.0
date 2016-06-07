@@ -1,60 +1,166 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-Date: Wed, 1 Jun 2016 18:51:51 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	dri-devel@lists.freedesktop.org, Bjorn Helgaas <helgaas@kernel.org>,
-	nouveau@lists.freedesktop.org, Dave Airlie <airlied@redhat.com>
-Subject: Re: [Nouveau] [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe
- runtime PM
-Message-ID: <20160601165151.GA1947@al>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <20160525135535.GN1789@lahna.fi.intel.com>
- <20160527111037.GA1436@al>
- <20160530095709.GK1789@lahna.fi.intel.com>
- <20160530122010.GB1149@al>
- <20160530130909.GA1743@lahna.fi.intel.com>
- <20160530161351.GA1355@al>
- <20160531122026.GA14129@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Subject: [RFC PATCH v2 04/15] drivers: acpi: iort: add support for IOMMU
+ registration
+Date: Tue,  7 Jun 2016 14:30:59 +0100
+Message-Id: <1465306270-27076-5-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
+ Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160531122026.GA14129@wunner.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 31, 2016 at 02:20:26PM +0200, Lukas Wunner wrote:
-> On Mon, May 30, 2016 at 06:13:51PM +0200, Peter Wu wrote:
-> > Do you have any suggestions for the case where the pcieport driver
-> > refuses to put the bridge in D3 (because the BIOS is too old)? In that
-> > case the nouveau driver needs to fallback to the DSM method (but not
-> > when runtime PM is deliberately disabled by writing control=on).
-> 
-> The BIOS cut-off date is meant to avoid issues when suspending ports
-> on older chipsets. However if the port is used for an Optimus GPU
-> and we can clearly identify that, and there's a _PR3 method provided,
-> it's probably safe to say that the port is *intended* to be suspended.
-> 
-> So you may want to consider amending pci_bridge_d3_possible() to
-> allow D3 for such ports regardless of the BIOS date, as I've done
-> for Thunderbolt in this commit:
-> https://github.com/l1k/linux/commit/3cb8549cd4e5
+The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+components that allow creating the kernel data structures required to
+probe and initialize the IOMMU devices.
 
-Then we have heuristics based on BIOS year, on whether it is TB or not,
-and next to it whether it is an Optimus laptop? Maybe the PCI core needs
-to export a function that allows drivers to override the detection if
-this becomes more common.
+This patch provides support in the IORT kernel code to register IOMMU
+components and their respective IOMMU operations, along with a hook
+(ie iommu_xlate()) that is used to translate devices ids to ids usable
+by the SMMU driver to set-up IOMMU group/domain configuration.
 
-> Not sure how to uniquely identify such ports though. Perhaps check
-> if there's a device in slot 0 below the port which has
-> 	(pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY &&
-> 	(pdev->vendor == PCI_VENDOR_ID_NVIDIA ||
-> 	 pdev->vendor == PCI_VENDOR_ID_ATI)
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/iort.c  | 72 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iort.h |  5 ++++
+ 2 files changed, 77 insertions(+)
 
-Seems fragile, there are desktop setups satisfying this match.
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 226eb6d..7cc9880 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -19,10 +19,13 @@
+ #define pr_fmt(fmt)	"ACPI: IORT: " fmt
+ 
+ #include <linux/export.h>
++#include <linux/iommu.h>
+ #include <linux/iort.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -30,6 +33,75 @@ struct iort_its_msi_chip {
+ 	u32			translation_id;
+ };
+ 
++struct iort_ops_node {
++	struct list_head list;
++	struct acpi_iort_node *node;
++	const struct iommu_ops *ops;
++	int (*iommu_xlate)(struct device *dev, u32 streamid,
++			   struct acpi_iort_node *node);
++};
++static LIST_HEAD(iort_iommu_ops);
++static DEFINE_SPINLOCK(iort_ops_lock);
++
++/**
++ * iort_smmu_set_ops - Create iort_ops_node and use it to register
++ *		       iommu data in the iort_iommu_ops list.
++ *
++ * @node: IORT table node associated with the IOMMU
++ * @ops: IOMMU operations associated with the IORT node
++ * @iommu_xlate: iommu translate function to be used to carry out stream id
++ *		 translation
++ *
++ * Returns: 0 on success
++ *          -ENOMEM on failure
++ */
++int iort_smmu_set_ops(struct acpi_iort_node *node,
++		       const struct iommu_ops *ops,
++		       int (*iommu_xlate)(struct device *dev, u32 streamid,
++					  struct acpi_iort_node *node))
++{
++	struct iort_ops_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
++
++	if (WARN_ON(!iommu))
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&iommu->list);
++	iommu->node = node;
++	iommu->ops = ops;
++	iommu->iommu_xlate = iommu_xlate;
++
++	spin_lock(&iort_ops_lock);
++	list_add_tail(&iommu->list, &iort_iommu_ops);
++	spin_unlock(&iort_ops_lock);
++
++	return 0;
++}
++
++/**
++ * iort_smmu_get_ops_node - Retrieve iort_ops_node associated with an
++ *			    IORT node.
++ *
++ * @node: IORT table node to be looked-up
++ *
++ * Returns: iort_ops_node pointer on success
++ *          NULL on failure
++*/
++const struct iort_ops_node *iort_smmu_get_ops_node(struct acpi_iort_node *node)
++{
++	struct iort_ops_node *curr, *iommu_node = NULL;
++
++	spin_lock(&iort_ops_lock);
++	list_for_each_entry(curr, &iort_iommu_ops, list) {
++		if (curr->node == node) {
++			iommu_node = curr;
++			break;
++		}
++	}
++	spin_unlock(&iort_ops_lock);
++
++	return iommu_node;
++}
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index 6f2fec3..5053cc3 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -35,5 +35,10 @@ static inline u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id)
+ static inline struct irq_domain *
+ iort_pci_get_domain(struct pci_dev *pdev, u32 req_id) { return NULL; }
+ #endif
++int iort_smmu_set_ops(struct acpi_iort_node *node,
++		      const struct iommu_ops *ops,
++		      int (*iommu_xlate)(struct device *dev,
++					 u32 streamid,
++					 struct acpi_iort_node *node));
+ 
+ #endif /* __IORT_H__ */
 -- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
