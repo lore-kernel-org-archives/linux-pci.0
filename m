@@ -1,65 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39549 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbcFDBHV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jun 2016 21:07:21 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v12 08/15] powerpc/PCI: Keep resource idx order with bridge register number
-Date: Fri,  3 Jun 2016 17:06:35 -0700
-Message-Id: <20160604000642.28162-9-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>, linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>, Michal Simek <michal.simek@xilinx.com>, =?ISO-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>
+Subject: Re: [PATCH v1 00/25] PCI: Request host bridge window resources
+Date: Tue, 07 Jun 2016 15:25:46 +0200
+Message-ID: <3552943.lb56sJA8nL@wuerfel>
+In-Reply-To: <20160607131105.GA2543@localhost>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com> <3416214.BpvATlfaN7@wuerfel> <20160607131105.GA2543@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as sparc version.
+On Tuesday, June 7, 2016 8:11:05 AM CEST Bjorn Helgaas wrote:
+> > 
+> > What do you think is the correct behavior here, should the driver only
+> > request the PIO range with parent=ioport_resource, or should it also
+> > request the MMIO window for the I/O ports with parent=iomem_resource?
+> > In the latter case, any idea how that can be generalized?
+> 
+> I think it should request both because I think iomem_resource should
+> contain everything in the memory map.  This would be required if we ever
+> did any significant reassignment of top-level devices, e.g., ACPI devices.
 
-Make resource with consistent sequence
-like other arch or directly from pci_read_bridge_bases(),
-even when non-pref mmio is missing, or out of ordering in firmware reporting.
+Ok. Should we try to pass the mmio resource for the I/O window to
+the devm_request_pci_bus_resources() function along with the other
+arguments then?
 
-Just hold i = 1 for non pref mmio, and i = 2 for pref mmio.
+As far as I can tell, it should not go into the resource list
+because it is not something the PCI core code should access the
+way it handles the other resources.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 526ac67..719f225 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -252,7 +252,7 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 		bus->resource[i] = res;
- 		++res;
- 	}
--	i = 1;
-+	i = 3;
- 	for (; len >= 32; len -= 32, ranges += 8) {
- 		flags = pci_parse_of_flags(of_read_number(ranges, 1), 1);
- 		size = of_read_number(&ranges[6], 2);
-@@ -265,6 +265,12 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
-+		} else if ((flags & IORESOURCE_PREFETCH) &&
-+			   !bus->resource[2]->flags) {
-+			res = bus->resource[2];
-+		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
-+			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
-+			res = bus->resource[1];
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
--- 
-2.8.3
-
+	Arnd
