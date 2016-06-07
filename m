@@ -1,104 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25999 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572AbcFRCZl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2016 22:25:41 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v13 13/16] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Fri, 17 Jun 2016 19:24:58 -0700
-Message-Id: <20160618022501.15648-14-yinghai@kernel.org>
-In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
-References: <20160618022501.15648-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH v2 05/15] drivers: acpi: iort: add support for named component look-up
+Date: Tue,  7 Jun 2016 14:31:00 +0100
+Message-Id: <1465306270-27076-6-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+ACPI IORT table allows ids translations for PCI devices (through
+their respective root complex) and name components (ie components
+identified through their ACPI namespace path).
 
-We need to move pci_bridge_check_ranges calling early.
-For parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
+Current IORT code only allows look-up and retrieval of IORT nodes
+corresponding to PCI root complexes components; this patch fills
+the gap by adding support for named components IORT node look-ups.
 
--v2: check all bus resources instead of just res[15].
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
+ drivers/acpi/iort.c | 30 +++++++++++++++++++++++++++---
+ 1 file changed, 27 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b3b1565..ffb1941 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -738,6 +738,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 7cc9880..cfdde71 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -215,12 +215,35 @@ iort_scan_node(enum acpi_iort_node_type type,
+ static acpi_status
+ iort_find_dev_callback(struct acpi_iort_node *node, void *context)
+ {
+-	struct acpi_iort_root_complex *pci_rc;
+ 	struct device *dev = context;
+-	struct pci_bus *bus;
  
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
+ 	switch (node->type) {
+-	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX:
++	case ACPI_IORT_NODE_NAMED_COMPONENT: {
++		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++		struct acpi_iort_named_component *ncomp;
++		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
 +
-+	if (bus->self) {
-+		int i;
-+		bool found = false;
-+		struct resource *res;
++		if (!adev)
++			break;
 +
-+		pci_bus_for_each_resource(bus, res, i)
-+			if (res->flags & IORESOURCE_MEM_64) {
-+				found = true;
-+				break;
-+			}
++		ncomp = (struct acpi_iort_named_component *)node->node_data;
 +
-+		if (!found)
-+			return false;
++		if (ACPI_FAILURE(acpi_get_name(adev->handle,
++					       ACPI_FULL_PATHNAME, &buffer))) {
++			pr_warn("Can't get device full path name\n");
++			break;
++		}
++
++		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
++			return AE_OK;
++
++		break;
 +	}
 +
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
++	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
++		struct acpi_iort_root_complex *pci_rc;
++		struct pci_bus *bus;
 +
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
- {
-@@ -746,7 +769,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 		bus = to_pci_bus(dev);
+ 		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
  
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
+@@ -234,6 +257,7 @@ iort_find_dev_callback(struct acpi_iort_node *node, void *context)
  
- 	return res->flags;
-@@ -1239,6 +1263,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1266,7 +1294,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
  		break;
+ 	}
++	}
  
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
+ 	return AE_NOT_FOUND;
+ }
 -- 
-2.8.3
+2.6.4
 
