@@ -1,78 +1,94 @@
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [RESEND PATCH v2 1/4] PCI: Ignore resource_alignment if
- PCI_PROBE_ONLY was set\\
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1464846411-16895-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1464846411-16895-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160621014346.GA30307@localhost>
-Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-        linux-doc@vger.kernel.org, aik@ozlabs.ru, linux-pci@vger.kernel.org,
-        corbet@lwn.net, linux-kernel@vger.kernel.org,
-        gwshan@linux.vnet.ibm.com, warrier@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, paulus@samba.org, bhelgaas@google.com,
-        linuxppc-dev@lists.ozlabs.org
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Tue, 21 Jun 2016 10:16:58 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3 3/4] ARM64/PCI: remove arch specific pcibios_enable_device()
+Date: Wed,  8 Jun 2016 12:04:49 +0100
+Message-Id: <1465383890-13538-4-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Russell King <linux@arm.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
+ David Daney <david.daney@cavium.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20160621014346.GA30307@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <6b457696-5cb6-66ba-911a-fec42bb3e0d3@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/6/21 9:43, Bjorn Helgaas wrote:
+The arm64 pcibios_enable_device() implementation exists solely
+to prevent enabling PCI resources on PCI_PROBE_ONLY systems, since
+on those systems the PCI resources are currently not claimed (ie
+inserted in the PCI resource tree - which means their parent
+pointer is not correctly set-up) therefore they can not be enabled
+since this would trigger PCI set-ups failures.
 
-> On Thu, Jun 02, 2016 at 01:46:48PM +0800, Yongji Xie wrote:
->> The resource_alignment will releases memory resources allocated
->> by firmware so that kernel can reassign new resources later on.
->> But this will cause the problem that no resources can be
->> allocated by kernel if PCI_PROBE_ONLY was set, e.g. on pSeries
->> platform because PCI_PROBE_ONLY force kernel to use firmware
->> setup and not to reassign any resources.
->>
->> To solve this problem, this patch ignores resource_alignment
->> if PCI_PROBE_ONLY was set.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/pci/pci.c |    6 ++++++
->>   1 file changed, 6 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index c8b4dbd..a259394 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4761,6 +4761,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->>   	spin_lock(&resource_alignment_lock);
->>   	p = resource_alignment_param;
->>   	while (*p) {
->> +		if (pci_has_flag(PCI_PROBE_ONLY)) {
->> +			printk(KERN_ERR "PCI: Ignore resource_alignment parameter: %s with PCI_PROBE_ONLY set\n",
->> +					p);
->> +			*p = 0;
->> +			break;
-> Wouldn't it be simpler to make pci_set_resource_alignment_param() fail
-> if PCI_PROBE_ONLY is set?
+By introducing resources claiming in the PCI host controllers set-ups
+that have PCI_PROBE_ONLY as a probe option, there is no need for arch
+specific pcibios_enable_device() implementations anymore in that the
+kernel can rely on the generic pcibios_enable_device() implementation
+without resorting to arch specific code to work around the missing
+resources claiming enumeration step.
 
-I add the check here because I want to print some logs so that users
-could know the reason why resource_alignment doesn't work when
-they add this parameter.
+On !PCI_PROBE_ONLY PCI bus set-ups, resources are always assigned
+in the PCI host controllers drivers; since the PCI resource assignment
+API takes care of inserting the assigned resources in the resource tree,
+the resources parent pointer is correctly set-up, which means that this
+patch leaves behaviour unchanged for all arm64 PCI set-ups that do not
+set the PCI_PROBE_ONLY flag.
 
-Thanks,
-Yongji
+Remove the pcibios_enable_device() function from the arm64 arch
+back-end so that the kernel now uses its generic implementation.
 
->> +		}
->>   		count = 0;
->>   		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
->>   							p[count] == '@') {
->> -- 
->> 1.7.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+---
+ arch/arm64/kernel/pci.c | 13 -------------
+ 1 file changed, 13 deletions(-)
+
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 3c4e308..39cfa03 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -36,19 +36,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return res->start;
+ }
+ 
+-/**
+- * pcibios_enable_device - Enable I/O and memory.
+- * @dev: PCI device to be enabled
+- * @mask: bitmask of BARs to enable
+- */
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
+-{
+-	if (pci_has_flag(PCI_PROBE_ONLY))
+-		return 0;
+-
+-	return pci_enable_resources(dev, mask);
+-}
+-
+ /*
+  * Try to assign the IRQ number from DT when adding a new device
+  */
+-- 
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
