@@ -1,47 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43498 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750701AbcFUS5X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jun 2016 14:57:23 -0400
-Date: Tue, 21 Jun 2016 13:57:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/4] PCI / DPC: Few improvements
-Message-ID: <20160621185719.GB7603@localhost>
-References: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60015 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1161918AbcFHJ5k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2016 05:57:40 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u589rfwG056706
+	for <linux-pci@vger.kernel.org>; Wed, 8 Jun 2016 05:57:39 -0400
+Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23eejxjrjb-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 08 Jun 2016 05:57:39 -0400
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 8 Jun 2016 19:57:35 +1000
+Subject: Re: [RESEND PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X
+ table
+To: Auger Eric <eric.auger@redhat.com>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, iommu@lists.linux-foundation.org
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <e03d36bb-c8ff-ec95-780e-5f625bdaf78e@redhat.com>
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Wed, 8 Jun 2016 17:56:49 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <e03d36bb-c8ff-ec95-780e-5f625bdaf78e@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <8ccf0165-da3e-9709-6cf2-ccab82eb55fb@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 06, 2016 at 04:06:04PM +0300, Mika Westerberg wrote:
-> Hi,
-> 
-> This series includes few improvements for the PCIe DPC driver. First we
-> introduce module_pci_port_service() which allows reducing of boilerblate
-> code used in the DPC driver. In addition we convert the driver to use
-> managed resource functions (devm) to get rid of even more boilerblate.
-> 
-> I do not have hardware supporting DPC so these are only compile tested.
-> 
-> Mika Westerberg (4):
->   PCI / PCIe: Introduce module_pci_port_service()
->   PCI / DPC: Convert to use module_pcie_port_service()
->   PCI / DPC: Convert the driver to use devm_* functions
->   PCI / DPC: Fix whitespace in struct dpc_dev
-> 
->  drivers/pci/pcie/pcie-dpc.c | 30 +++++++-----------------------
->  include/linux/pcieport_if.h | 13 +++++++++++++
->  2 files changed, 20 insertions(+), 23 deletions(-)
+Hi, Eric
 
-I applied the last two, with Keith's acks, to pci/dpc for v4.8.
+On 2016/6/8 15:41, Auger Eric wrote:
 
-I didn't apply the first two because I don't think these port drivers
-should be modules.  I think DPC and thunderbolt are the only candidates
-right now, and I think it's a stretch to think about either one as a
-module.
+> Hi Yongji,
+>
+> Le 02/06/2016 à 08:09, Yongji Xie a écrit :
+>> Current vfio-pci implementation disallows to mmap the page
+>> containing MSI-X table in case that users can write directly
+>> to MSI-X table and generate an incorrect MSIs.
+>>
+>> However, this will cause some performance issue when there
+>> are some critical device registers in the same page as the
+>> MSI-X table. We have to handle the mmio access to these
+>> registers in QEMU emulation rather than in guest.
+>>
+>> To solve this issue, this series allows to expose MSI-X table
+>> to userspace when hardware enables the capability of interrupt
+>> remapping which can ensure that a given PCI device can only
+>> shoot the MSIs assigned for it. And we introduce a new bus_flags
+>> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+>> for different archs.
+>>
+>> The patch 3 are based on the proposed patchset[1].
+> You may have noticed I sent a respin of [1] yesterday:
+> http://www.gossamer-threads.com/lists/linux/kernel/2455187.
+>
+> Unfortunately you will see I removed the patch defining the new
+> msi_domain_info MSI_FLAG_IRQ_REMAPPING flag you rely on in this series.
+> I did so because I was not using it anymore. At the beginning this was
+> used to detect whether the MSI assignment was safe but this
+> method was covering cases where the MSI controller was
+> upstream to the IOMMU. So now I rely on a mechanism where MSI controller
+> are supposed to register their MSI doorbells and tag whether it is safe.
+>
+> I don't know yet how this change will be welcomed though. Depending
+> on reviews/discussions, might happen we revert to the previous flag.
+>
+> If you need the feature you can embed the used patches in your series and
+> follow the review process separately. Sorry for the setback.
 
-Bjorn
+Thanks for your notification. I'd better wait until your patches get
+settled. Then I could exactly know which way we should use to test the
+capability of interrupt remapping on ARM in my series.
+
+Thanks,
+Yongji
+
