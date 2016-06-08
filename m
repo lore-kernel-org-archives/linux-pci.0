@@ -1,193 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:48048 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422860AbcFMMuB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2016 08:50:01 -0400
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <arnd@arndb.de>, <will.deacon@arm.com>,
-	<catalin.marinas@arm.com>, <rafael@kernel.org>,
-	<hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>,
-	<okaya@codeaurora.org>, <jchandra@broadcom.com>, <tn@semihalf.com>
-CC: <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
-	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
-	<wangyijing@huawei.com>, <Suravee.Suthikulpanit@amd.com>,
-	<msalter@redhat.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linaro-acpi@lists.linaro.org>, <jcm@redhat.com>,
-	<andrea.gallo@linaro.org>, <dhdang@apm.com>,
-	<jeremy.linton@arm.com>, <liudongdong3@huawei.com>,
-	<cov@codeaurora.org>, <gabriele.paoloni@huawei.com>,
-	<charles.chenxin@huawei.com>, <linuxarm@huawei.com>
-Subject: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors against platfrom specific ECAM quirks
-Date: Mon, 13 Jun 2016 21:02:02 +0800
-Message-ID: <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <mathias.koehrer@etas.com>
+Return-Path: <mathias.koehrer@etas.com>
+From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, "hjk@hansjkoch.de"
+	<hjk@hansjkoch.de>, "helgaas@kernel.org" <helgaas@kernel.org>
+Subject: Re: [PATCH] Introducing kernel option to force all PCI memory
+ resources to be page aligned. Fixes issues with uio based drivers.
+Date: Wed, 8 Jun 2016 08:32:52 +0000
+Message-ID: <ef1a9c8e1ef0439a84ad43c1a8f92d79@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tomasz Nowicki <tn@semihalf.com>
+Hi Greg,
+> > > > The issue is not the firmware. The issue is that the Linux uio
+> > > > driver
+> > > > (here: uio_cif) does not work as uio_mmap() -> uio_mmap_physical()
+> > > > does not do a mmap on physical memory that is not page aligned...
+> > >
+> > > Then why not fix the uio_cif driver?
+> > The fix might be in uio and not in uio_cif. However
+> > uio_mmap_physical() in uio.c has introduced checks to reject non page-
+> aligned addresses.
+>=20
+> Yes, because we had real problems with that in the past.
+>=20
+> > These checks have been introduced somewhere in between kernel V3.2 and
+> kernel V3.18.
+> > Removing these checks again does not sound to me like a good idea...
+>=20
+> I agree, you should fix your hardware :)
+>=20
+> > The overall question is now if the UIO system is working at all with
+> > non page aligned PCI memory resources. For me it looks as if this is no=
+t the
+> case.
+>=20
+> How is your system ending up with such alignment in the first place?
+> What is the resource list after booting?
+Here is the resource list of the relevant PCI board. The first memory resou=
+rce has a size of 128k and is not page aligned.
 
-Some platforms may not be fully compliant with generic set of PCI config
-accessors. For these cases we implement the way to overwrite accessors
-set. Algorithm traverses available quirk list, matches against
-<oem_id, oem_table_id, domain, bus number> tuple and returns corresponding
-PCI config ops. oem_id and oem_table_id come from MCFG table standard header.
-All quirks can be defined using DECLARE_ACPI_MCFG_FIXUP() macro and
-kept self contained. Example:
+0f:05.0 Bridge: PLX Technology, Inc. PCI9030 32-bit 33MHz PCI <-> IOBus Bri=
+dge (rev 01)
+	Subsystem: PLX Technology, Inc. Hilscher CIF50-PB/DPS Profibus
+	Flags: medium devsel, IRQ 23
+	Memory at eae4f400 (32-bit, non-prefetchable) [size=3D128]
+	I/O ports at 9800 [size=3D128]
+	Memory at eae4c000 (32-bit, non-prefetchable) [size=3D8K]
+	Capabilities: [40] Power Management version 1
+	Capabilities: [48] CompactPCI hot-swap <?>
+	Capabilities: [4c] Vital Product Data
+	Kernel driver in use: hilscher
 
-/* Custom PCI config ops */
-static struct pci_generic_ecam_ops foo_pci_ops = {
-	.bus_shift	= 24,
-	.pci_ops = {
-		.map_bus = pci_ecam_map_bus,
-		.read = foo_ecam_config_read,
-		.write = foo_ecam_config_write,
-	}
-};
+Regards
 
-DECLARE_ACPI_MCFG_FIXUP(&foo_pci_ops, <oem_id_str>, <oem_table_id>, <domain_nr>, <bus_nr>);
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- drivers/acpi/pci_mcfg.c           | 41 ++++++++++++++++++++++++++++++++++++---
- include/asm-generic/vmlinux.lds.h |  7 +++++++
- include/linux/pci-acpi.h          | 20 +++++++++++++++++++
- 3 files changed, 65 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index d3c3e85..49612b3 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -22,6 +22,10 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
-+#include <linux/pci-ecam.h>
-+
-+/* Root pointer to the mapped MCFG table */
-+static struct acpi_table_mcfg *mcfg_table;
- 
- /* Structure to hold entries from the MCFG table */
- struct mcfg_entry {
-@@ -35,6 +39,38 @@ struct mcfg_entry {
- /* List to save mcfg entries */
- static LIST_HEAD(pci_mcfg_list);
- 
-+extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
-+extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
-+
-+struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
-+{
-+	int bus_num = root->secondary.start;
-+	int domain = root->segment;
-+	struct pci_cfg_fixup *f;
-+
-+	if (!mcfg_table)
-+		return &pci_generic_ecam_ops;
-+
-+	/*
-+	 * Match against platform specific quirks and return corresponding
-+	 * CAM ops.
-+	 *
-+	 * First match against PCI topology <domain:bus> then use OEM ID and
-+	 * OEM revision from MCFG table standard header.
-+	 */
-+	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
-+		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
-+		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
-+		    (!strncmp(f->oem_id, mcfg_table->header.oem_id,
-+			      ACPI_OEM_ID_SIZE)) &&
-+		    (!strncmp(f->oem_table_id, mcfg_table->header.oem_table_id,
-+			      ACPI_OEM_TABLE_ID_SIZE)))
-+			return f->ops;
-+	}
-+	/* No quirks, use ECAM */
-+	return &pci_generic_ecam_ops;
-+}
-+
- phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
- {
- 	struct mcfg_entry *e;
-@@ -54,7 +90,6 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
- 
- static __init int pci_mcfg_parse(struct acpi_table_header *header)
- {
--	struct acpi_table_mcfg *mcfg;
- 	struct acpi_mcfg_allocation *mptr;
- 	struct mcfg_entry *e, *arr;
- 	int i, n;
-@@ -64,8 +99,8 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
- 
- 	n = (header->length - sizeof(struct acpi_table_mcfg)) /
- 					sizeof(struct acpi_mcfg_allocation);
--	mcfg = (struct acpi_table_mcfg *)header;
--	mptr = (struct acpi_mcfg_allocation *) &mcfg[1];
-+	mcfg_table = (struct acpi_table_mcfg *)header;
-+	mptr = (struct acpi_mcfg_allocation *) &mcfg_table[1];
- 
- 	arr = kcalloc(n, sizeof(*arr), GFP_KERNEL);
- 	if (!arr)
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 6a67ab9..43604fc 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -300,6 +300,13 @@
- 		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
- 	}								\
- 									\
-+	/* ACPI MCFG quirks */						\
-+	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
-+		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
-+		*(.acpi_fixup_mcfg)					\
-+		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
-+	}								\
-+									\
- 	/* Built-in firmware blobs */					\
- 	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
- 		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 7d63a66..088a1da 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -25,6 +25,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
- extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
- 
- extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
-+extern struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root);
- 
- static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
- {
-@@ -72,6 +73,25 @@ struct acpi_pci_root_ops {
- 	int (*prepare_resources)(struct acpi_pci_root_info *info);
- };
- 
-+struct pci_cfg_fixup {
-+	struct pci_ecam_ops *ops;
-+	char *oem_id;
-+	char *oem_table_id;
-+	int domain;
-+	int bus_num;
-+};
-+
-+#define PCI_MCFG_DOMAIN_ANY	-1
-+#define PCI_MCFG_BUS_ANY	-1
-+
-+/* Designate a routine to fix up buggy MCFG */
-+#define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, oem_table_id, dom, bus)	\
-+	static const struct pci_cfg_fixup				\
-+	__mcfg_fixup_##oem_id##oem_table_id##dom##bus			\
-+	__used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
-+				aligned((sizeof(void *))))) =		\
-+	{ ops, oem_id, oem_table_id, dom, bus };
-+
- extern int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info);
- extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 					    struct acpi_pci_root_ops *ops,
--- 
-1.9.1
-
+Mathias
