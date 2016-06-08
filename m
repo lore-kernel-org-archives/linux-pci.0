@@ -1,30 +1,77 @@
-Return-Path: <jonathan.yong@intel.com>
-Return-Path: <jonathan.yong@intel.com>
-Message-ID: <575F5EAC.2030904@intel.com>
-Date: Tue, 14 Jun 2016 09:32:28 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Jun 2016 16:27:50 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 1/3] dt-bindings: add DT binding for the Aardvark PCIe
+ controller
+Message-ID: <20160608162750.712916ce@free-electrons.com>
+In-Reply-To: <33469694.MLbpCUJe2G@wuerfel>
+References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1464858585-10963-2-git-send-email-thomas.petazzoni@free-electrons.com>
+ <33469694.MLbpCUJe2G@wuerfel>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH v5] PCI: PTM preliminary implementation
-References: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com> <1462956446-27361-2-git-send-email-jonathan.yong@intel.com> <20160613185648.GA6901@localhost>
-In-Reply-To: <20160613185648.GA6901@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+ Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
+ linux-pci@vger.kernel.org, Hanna Hawa <hannah@marvell.com>,
+ Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Marcin Wojtas <mw@semihalf.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/14/2016 02:56, Bjorn Helgaas wrote:
-> I'm also a little confused about how Root Complex Integrated Endpoints
-> are supposed to use PTM, since they don't have an upstream bridge.
-> Maybe it has to do with an RCRB (Root Complex Register Block, spec
-> r3.1, sec 7.2.3)?  I don't think Linux really has any support for that
-> (yet).
+Hello,
 
-The spec (7.32.3 PTM Control Register) says:
+Thanks for your review!
 
-For Root Complex Integrated Endpoints, system software must set this 
-field to the value reported in the Local Clock Granularity field by the 
-associated PTM Time Source.
+On Thu, 02 Jun 2016 11:35:38 +0200, Arnd Bergmann wrote:
+> On Thursday, June 2, 2016 11:09:43 AM CEST Thomas Petazzoni wrote:
+> > +               ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
+> > +                         0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
+> >   
+> 
+> Any reason for not having a 64-bit MEM prefetchable area in the example?
+> Does the host not support that?
 
-I'm not familiar with RC integrated endpoints either. I'm guessing 
-whatever device 0, function 0 on the "bus"? Just copy the granularity 
-value over?
+I'll have to admit I am not sure how to find this out from the
+datasheet. My datasheet says about the PCIe controller:
+
+"""
+64-bit PCIe address and system address space for outbound transactions
+"""
+
+So I guess this would indicate that a 64-bit MEM area is possible.
+However, since anyway the area used above is at 0xe8000000 for a length
+of 0x1000000, what would be the benefit of declaring this range as a
+64-bit one ?
+
+Regarding the prefetchable aspect, I couldn't find any reference in the
+datasheet. However, the original driver code explicitly errors out if
+there is no non-prefetchable memory area, so I guess prefetchable
+areas is not supported.
+
+In of_bus_pci_get_flags(), both the 32-bit and 64-bit cases are handled
+in the same way, so is this distinction actually being used by the
+kernel?
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
