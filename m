@@ -1,31 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Jun 2016 17:16:13 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org, axboe@fb.com, tglx@linutronix.de,
-	bart.vanassche@sandisk.com
-Subject: Re: [PATCH 06/13] irq: add a helper spread an affinity mask for
-	MSI/MSI-X vectors
-Message-ID: <20160616151613.GA13433@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de> <1465934346-20648-7-git-send-email-hch@lst.de> <57607D0E.1060907@linux.vnet.ibm.com> <20160615101045.GB16425@lst.de> <5761538D.6060303@linux.vnet.ibm.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 8 Jun 2016 07:47:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Chen Yu <yu.c.chen@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
+Message-ID: <20160608124742.GA16764@localhost>
+References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
+ <20160530213305.GA21322@localhost>
+ <574D03F9.6050201@intel.com>
+ <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
+ <574D3AAA.6090503@intel.com>
+ <20160531131658.GA23837@localhost>
+ <57579F9F.6010200@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5761538D.6060303@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <57579F9F.6010200@intel.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->
-> ...but now I'll focus on the common/general case! Thanks for the suggestion 
-> Christoph. I guess would be even better to have a generic function that 
-> retrieves an optimal mask, something like topology_get_optimal_mask(n, 
-> *cpumask), in which we get the best distribution of n CPUs among all cores 
-> and return such a mask - interesting case is when n < num_online_cpus. So, 
-> this function could be used inside your irq_create_affinity_mask() and 
-> maybe in other places it is needed.
+On Wed, Jun 08, 2016 at 12:31:27PM +0800, Chen Yu wrote:
+> Hi Bjorn,
+> 
+> On 2016年05月31日 21:16, Bjorn Helgaas wrote:
+> >On Tue, May 31, 2016 at 03:18:02PM +0800, Chen Yu wrote:
+> >>On 2016年05月31日 15:00, Yinghai Lu wrote:
+> >>>On Mon, May 30, 2016 at 8:24 PM, Chen Yu <yu.c.chen@intel.com> wrote:
+> >>>
+> >>>>and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
+> >>>>resource window and then update related base/limit registers:
+> >>>>
+> >>>>[    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to [bus
+> >>>>02] add_size 1000
+> >>>>[    0.865343] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff
+> >>>>64bit pref] to [bus 02] add_size 200000 add_align 100000
+> >>>>[    0.865344] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff]
+> >>>>to [bus 02] add_size 200000 add_align 100000
+> >>>>
+> >>>That is for hotplug bridge, then we could use following instead.
+> >>>
+> >>>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >>>index ee72ebe..d3ec833 100644
+> >>>--- a/drivers/pci/quirks.c
+> >>>+++ b/drivers/pci/quirks.c
+> >>>@@ -2775,6 +2775,13 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+> >>>
+> >>>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+> >>>
+> >>>+static void quirk_hotplug_bridge_skip(struct pci_dev *dev)
+> >>>+{
+> >>>+       dev->is_hotplug_bridge = 0;
+> >>>+}
+> >>>+
+> >>>+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10,
+> >>>quirk_hotplug_bridge_skip);
+> >>>+
+> >>>  /*
+> >>>   * This is a quirk for the Ricoh MMC controller found as a part of
+> >>>   * some mulifunction chips.
+> >>Good idea, but in this way we might not have io window allocated for
+> >>it?I'm not sure
+> >>if this would break wifi,etc, I'll suggest reporters to have a try.
+> >Let's figure out the root cause before trying more random fixes.  I
+> >have the same objection to the patch above.  No doubt there are many
+> >ways we could "fix" this, but unless we know the root cause, we're
+> >likely to make a change that's not a complete fix or will cause other
+> >issues in the future.
+> >
+> I just let the reporter  paste their lspci in Mac OS, it looks that
+> Mac OS also
+> does not allocate any resource for this broken pci bridge, and other pci
+> devices have almost the same resource region as it is in linux, so I think
+> this is an evidence that Apple does not want to use this firmware for now,
+> maybe reserved for future use, declaim resource for this pci bridge might
+> cause unpredictable result, how about adding a dmi+pci quirk for this
+> special platform?
 
-Yes, we should probably just plug this in where we're using the current
-routines.  Block very much optimizes for the cases of either 1 queue
-or enough queues for all cpus at the moments.  It would be good to check
-what the network drivers currently do.
+This is not a root cause.  We still have no idea why the problem
+occurs.  I do not think a quirk is a good idea until we know what the
+problem is and exactly how a quirk would fix it.
+
+> lspci result from Mac OS, there's no resource behind this bridge:
+> https://bugzilla.kernel.org/attachment.cgi?id=219321
+> 
+> 
+> thanks,
+> Yu
