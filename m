@@ -1,123 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ni.piap.pl ([195.187.100.4]:34712 "EHLO ni.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932448AbcFIFm2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jun 2016 01:42:28 -0400
-From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack overflow"
-References: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<m3inxt17zo.fsf@t19.piap.pl> <11128570.JeBAgI5zQr@wuerfel>
-Date: Thu, 09 Jun 2016 07:42:24 +0200
-In-Reply-To: <11128570.JeBAgI5zQr@wuerfel> (Arnd Bergmann's message of "Wed,
-	01 Jun 2016 23:09:47 +0200")
-Message-ID: <m37fdydikf.fsf@t19.piap.pl>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3 4/4] ARM/PCI: remove arch specific pcibios_enable_device()
+Date: Wed,  8 Jun 2016 12:04:50 +0100
+Message-Id: <1465383890-13538-5-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Russell King <linux@arm.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
+ David Daney <david.daney@cavium.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+The arm pcibios_enable_device() implementation exists solely
+to prevent enabling PCI resources on PCI_PROBE_ONLY systems, since
+on those systems the PCI resources are currently not claimed (ie
+inserted in the PCI resource tree - which means their parent
+pointer is not correctly set-up) therefore they can not be enabled
+since this would trigger PCI set-ups failures.
 
-> What exactly is the problem we are seeing, and is there a way to fix
-> it on top of my patch? Are we perhaps just missing a call to
-> pcie_bus_configure_settings()?
+After removing the pci=firmware command line option in:
 
-From: khalasa@piap.pl (Krzysztof Halasa)
-Subject: [PATCH] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix CNS3xxx BM DMA.
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 21 Mar 2016 10:39:52 +0100 (11 weeks, 2 days, 19 hours ago)
+commit 903589ca7165 ("ARM: 8554/1: kernel: pci: remove pci=firmware
+command line parameter handling")
 
-The platform in question is Cavium CNS3xxx, ARMv6.
+(that was used to set the PCI_PROBE_ONLY flag through the command line)
+and by introducing resources claiming in the PCI host controllers
+set-ups that have PCI_PROBE_ONLY as a probe option, there is no need for
+arch specific pcibios_enable_device() implementations anymore in that
+the kernel can rely on the generic pcibios_enable_device()
+implementation without resorting to arch specific code to work around
+the missing resources claiming enumeration step.
 
-A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
-potential stack overflow") converted an explicit setting of
-PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
-read request) to:
-+    pcie_bus_config = PCIE_BUS_PEER2PEER;
+On !PCI_PROBE_ONLY PCI bus set-ups, resources are always assigned
+either in pcibios initialization code or PCI host controllers drivers;
+since the PCI resource assignment API takes care of inserting the
+assigned resources in the resource tree, the resources parent pointers
+are correctly set-up, which means that this patch leaves behaviour
+unchanged for all arm PCI set-ups that do not set the PCI_PROBE_ONLY
+flag.
 
-with the following commentary:
-    "The second part is how the driver sets up the Max_Read_Request_Size
-    value for the first device/function on bus 1, i.e. the device
-    plugged directly into the PCIe root port.
-    For all I can tell, this is in fact incomplete, as it does not
-    perform the same setting on devices attached to a PCIe switch,
-    or multi-function devices.
-    The solution for this part fortunately is even easier: if we
-    just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
-    all PCIe devices in the system are limited to 128 byte MPS, which
-    in turn limits the MRRS to 128 bytes for all devices, and we
-    no longer even need to touch any devices."
+Remove the pcibios_enable_device() function from the arm arch back-end
+so that the kernel now uses its generic implementation.
 
-The problem is the MRRS setting is never written to the hardware.
-I propose the following, though I'm not sure if we can do this safely,
-especially given the comments in probe.c. OTOH, this change may be
-required in other (all?) cases when the user requests
-PCIE_BUS_PEER2PEER.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+---
+ arch/arm/kernel/bios32.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-On this Laguna GW-2388 the following patch fixes BM DMA with:
-0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
-0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
-0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
-0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
-	     the second lane from the CPU)
-
-pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
-pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-
-Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
-Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..91713b6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
- 	/* In the "safe" case, do not configure the MRRS.  There appear to be
- 	 * issues with setting MRRS to 0 on a number of devices.
- 	 */
--	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
-+	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
-+	    pcie_bus_config != PCIE_BUS_PEER2PEER)
- 		return;
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 05e61a2..488545f 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -590,18 +590,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
  
- 	/* For Max performance, the MRRS must be set to the largest supported
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2771625..6f5088a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -756,7 +756,7 @@ enum pcie_bus_config_types {
- 	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
- 	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
- 	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
--	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
-+	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
- };
- 
- extern enum pcie_bus_config_types pcie_bus_config;
-
-> Note that cns3xxx is in a bit of an odd state, as only half of the
-> platform code is even present in the kernel, and there is no effort
-> to change that. As far as I know, the board that this was tested on
-> is not present in the mainline kernel, and the board we support
-> is a development system that few people even own at this point.
-
-The boards I use (Gateworks Laguna) are basically equivalent to the
-devel board (from the platform code POV).
-The kernel lacks support for SMP and the Ethernet driver (and things
-like GPIO), though there are patches available and I plan to integrate
-them, when the existing issues are resolved.
-
-Also, this is practically a non-DT arch but I guess a conversion to DT
-would be a good thing as it would eliminate a need for board-specific
-code. That's why there is no platform code for Laguna. Unfortunately
-there is no DT file for CNS3xxx, and I'm not an DT expert.
+-/**
+- * pcibios_enable_device - Enable I/O and memory.
+- * @dev: PCI device to be enabled
+- */
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
+-{
+-	if (pci_has_flag(PCI_PROBE_ONLY))
+-		return 0;
+-
+-	return pci_enable_resources(dev, mask);
+-}
+-
+ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
 -- 
-Krzysztof Halasa
+2.6.4
 
-Industrial Research Institute for Automation and Measurements PIAP
-Al. Jerozolimskie 202, 02-486 Warsaw, Poland
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
