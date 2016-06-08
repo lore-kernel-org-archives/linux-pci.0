@@ -1,140 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53280 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751365AbcFFIM6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jun 2016 04:12:58 -0400
-Date: Mon, 6 Jun 2016 10:12:51 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	James Smart <james.smart@avagotech.com>,
-	Dick Kennedy <dick.kennedy@avagotech.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 3/6] lpfc: Use pci_(request|release)_mem_regions
-Message-ID: <20160606081251.crfzyn7tvmbk4tpb@c203.arch.suse.de>
-References: <cover.1464795082.git.jthumshirn@suse.de>
- <51b9bf3879e440da6c34094dfd1ee765f94f51c3.1464795082.git.jthumshirn@suse.de>
- <CAGx+d6eHPKvOM_aYgv9qJvA1siJ89PzwHtK07U9tKs3yG7=O9w@mail.gmail.com>
+Received: from smtp6-v.fe.bosch.de ([139.15.237.11]:12645 "EHLO
+	smtp6-v.fe.bosch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbcFHGOT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2016 02:14:19 -0400
+From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@kernel.org" <bhelgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
+Subject: Re: [PATCH] Extending kernel option pci=resource_alignment to be able
+ to specify PCI device/vendor IDs
+Date: Wed, 8 Jun 2016 06:14:16 +0000
+Message-ID: <c2861d5d0f534854b8fb7ced8820791b@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAGx+d6eHPKvOM_aYgv9qJvA1siJ89PzwHtK07U9tKs3yG7=O9w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 02, 2016 at 07:57:43AM -0400, Dick Kennedy wrote:
-> Thanks Johannes, it looks good.
-Hi Dick, 
+Hi Greg,
 
-Can I use this as an Acked-by in the next submission?
-
-Thanks,
-	Johannes
-
-> 
-> On Thu, Jun 2, 2016 at 3:30 AM, Johannes Thumshirn <jthumshirn@suse.de>
-> wrote:
-> 
-> > Now that we do have pci_request_mem_regions() and
-> > pci_release_mem_regions() at
-> > hand, use it in the lpfc driver.
+> > Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
 > >
-> > Suggested-by: Christoph Hellwig <hch@infradead.org>
-> > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> > Cc: James Smart <james.smart@avagotech.com>
-> > Cc: Dick Kennedy <dick.kennedy@avagotech.com>
-> > Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
 > > ---
-> >  drivers/scsi/lpfc/lpfc_init.c | 15 ++++-----------
-> >  1 file changed, 4 insertions(+), 11 deletions(-)
-> >
-> > diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> > index f57d02c..a8735f7 100644
-> > --- a/drivers/scsi/lpfc/lpfc_init.c
-> > +++ b/drivers/scsi/lpfc/lpfc_init.c
-> > @@ -4775,20 +4775,17 @@ static int
-> >  lpfc_enable_pci_dev(struct lpfc_hba *phba)
-> >  {
-> >         struct pci_dev *pdev;
-> > -       int bars = 0;
-> >
-> >         /* Obtain PCI device reference */
-> >         if (!phba->pcidev)
-> >                 goto out_error;
-> >         else
-> >                 pdev = phba->pcidev;
-> > -       /* Select PCI BARs */
-> > -       bars = pci_select_bars(pdev, IORESOURCE_MEM);
-> >         /* Enable PCI device */
-> >         if (pci_enable_device_mem(pdev))
-> >                 goto out_error;
-> >         /* Request PCI resource for the device */
-> > -       if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
-> > +       if (pci_request_mem_regions(pdev, LPFC_DRIVER_NAME))
-> >                 goto out_disable_device;
-> >         /* Set up device as PCI master and save state for EEH */
-> >         pci_set_master(pdev);
-> > @@ -4805,7 +4802,7 @@ out_disable_device:
-> >         pci_disable_device(pdev);
-> >  out_error:
-> >         lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-> > -                       "1401 Failed to enable pci device, bars:x%x\n",
-> > bars);
-> > +                       "1401 Failed to enable pci device\n");
-> >         return -ENODEV;
-> >  }
-> >
-> > @@ -4820,17 +4817,14 @@ static void
-> >  lpfc_disable_pci_dev(struct lpfc_hba *phba)
-> >  {
-> >         struct pci_dev *pdev;
-> > -       int bars;
-> >
-> >         /* Obtain PCI device reference */
-> >         if (!phba->pcidev)
-> >                 return;
-> >         else
-> >                 pdev = phba->pcidev;
-> > -       /* Select PCI BARs */
-> > -       bars = pci_select_bars(pdev, IORESOURCE_MEM);
-> >         /* Release PCI resource and disable PCI device */
-> > -       pci_release_selected_regions(pdev, bars);
-> > +       pci_release_mem_regions(pdev);
-> >         pci_disable_device(pdev);
-> >
-> >         return;
-> > @@ -9705,7 +9699,6 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
-> >         struct lpfc_vport **vports;
-> >         struct lpfc_hba   *phba = vport->phba;
-> >         int i;
-> > -       int bars = pci_select_bars(pdev, IORESOURCE_MEM);
-> >
-> >         spin_lock_irq(&phba->hbalock);
-> >         vport->load_flag |= FC_UNLOADING;
-> > @@ -9780,7 +9773,7 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
-> >
-> >         lpfc_hba_free(phba);
-> >
-> > -       pci_release_selected_regions(pdev, bars);
-> > +       pci_release_mem_regions(pdev);
-> >         pci_disable_device(pdev);
-> >  }
-> >
-> > --
-> > 1.8.5.6
-> >
-> >
+> >  Documentation/kernel-parameters.txt |    2 +
+> >  drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
+> >  2 files changed, 49 insertions(+), 19 deletions(-)
+> 
+> This looks better, but wow, messy.  I'll defer to the PCI maintainer and
+> developers now, this is in their camp, not mine :)
+It looks messy as I had to change the indentation of existing code...
+A "diff -u -w" on pci.c delivers a much simpler diff:
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--- pci.c.orig	2016-05-29 16:29:24.000000000 +0000
++++ pci.c	2016-06-08 06:08:05.000000000 +0000
+@@ -4755,6 +4755,7 @@
+ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ {
+ 	int seg, bus, slot, func, align_order, count;
++	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+ 	resource_size_t align = 0;
+ 	char *p;
+ 
+@@ -4768,6 +4769,32 @@
+ 		} else {
+ 			align_order = -1;
+ 		}
++		if (strncmp(p, "pci:", 4) == 0) {
++			/* PCI vendor/device (subvendor/subdevice) ids are specified */
++			p += 4;
++			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
++				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
++				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
++					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
++						p);
++					break;
++				}
++				subsystem_vendor = subsystem_device = 0;
++			}
++			p += count;
++			if ((!vendor || (vendor == dev->vendor)) &&
++				(!device || (device == dev->device)) &&
++				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
++				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
++				if (align_order == -1)
++					align = PAGE_SIZE;
++				else
++					align = 1 << align_order;
++				/* Found */
++				break;
++			}
++		}
++		else {
+ 		if (sscanf(p, "%x:%x:%x.%x%n",
+ 			&seg, &bus, &slot, &func, &count) != 4) {
+ 			seg = 0;
+@@ -4791,6 +4818,7 @@
+ 			/* Found */
+ 			break;
+ 		}
++		}
+ 		if (*p != ';' && *p != ',') {
+ 			/* End of param or invalid format */
+ 			break;
+
+
+Best regards
+
+Mathias
