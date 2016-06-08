@@ -1,110 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	James Smart <james.smart@avagotech.com>,
-	Dick Kennedy <dick.kennedy@avagotech.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v3 3/6] lpfc: Use pci_(request|release)_mem_regions
-Date: Tue,  7 Jun 2016 09:44:03 +0200
-Message-Id: <db039786e24d1cf8d9225468bb95d7f060c1311b.1465200424.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Jun 2016 17:47:39 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Marcin Wojtas <mw@semihalf.com>
+Subject: Re: [PATCH 2/3] PCI: host: new PCI host controller driver for
+ Marvell Armada 3700
+Message-ID: <20160608174739.2e66943e@free-electrons.com>
+In-Reply-To: <CAPv3WKcznGD4p-YO3QLLYw+y+7w4ha-d_Nt6FHue7d2_SiyK0w@mail.gmail.com>
+References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1464858585-10963-3-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAPv3WKcznGD4p-YO3QLLYw+y+7w4ha-d_Nt6FHue7d2_SiyK0w@mail.gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+ Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
+ linux-pci@vger.kernel.org, Hanna Hawa <hannah@marvell.com>,
+ Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-hand, use it in the lpfc driver.
+Hello,
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Acked-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: James Smart <james.smart@avagotech.com>
-Cc: Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/scsi/lpfc/lpfc_init.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+Thanks for your feedback!
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f57d02c..a8735f7 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4775,20 +4775,17 @@ static int
- lpfc_enable_pci_dev(struct lpfc_hba *phba)
- {
- 	struct pci_dev *pdev;
--	int bars = 0;
- 
- 	/* Obtain PCI device reference */
- 	if (!phba->pcidev)
- 		goto out_error;
- 	else
- 		pdev = phba->pcidev;
--	/* Select PCI BARs */
--	bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 	/* Enable PCI device */
- 	if (pci_enable_device_mem(pdev))
- 		goto out_error;
- 	/* Request PCI resource for the device */
--	if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
-+	if (pci_request_mem_regions(pdev, LPFC_DRIVER_NAME))
- 		goto out_disable_device;
- 	/* Set up device as PCI master and save state for EEH */
- 	pci_set_master(pdev);
-@@ -4805,7 +4802,7 @@ out_disable_device:
- 	pci_disable_device(pdev);
- out_error:
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"1401 Failed to enable pci device, bars:x%x\n", bars);
-+			"1401 Failed to enable pci device\n");
- 	return -ENODEV;
- }
- 
-@@ -4820,17 +4817,14 @@ static void
- lpfc_disable_pci_dev(struct lpfc_hba *phba)
- {
- 	struct pci_dev *pdev;
--	int bars;
- 
- 	/* Obtain PCI device reference */
- 	if (!phba->pcidev)
- 		return;
- 	else
- 		pdev = phba->pcidev;
--	/* Select PCI BARs */
--	bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 	/* Release PCI resource and disable PCI device */
--	pci_release_selected_regions(pdev, bars);
-+	pci_release_mem_regions(pdev);
- 	pci_disable_device(pdev);
- 
- 	return;
-@@ -9705,7 +9699,6 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
- 	struct lpfc_vport **vports;
- 	struct lpfc_hba   *phba = vport->phba;
- 	int i;
--	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 
- 	spin_lock_irq(&phba->hbalock);
- 	vport->load_flag |= FC_UNLOADING;
-@@ -9780,7 +9773,7 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
- 
- 	lpfc_hba_free(phba);
- 
--	pci_release_selected_regions(pdev, bars);
-+	pci_release_mem_regions(pdev);
- 	pci_disable_device(pdev);
- }
- 
+On Wed, 8 Jun 2016 17:15:08 +0200, Marcin Wojtas wrote:
+
+> Have you checked my latest improvements of interrupt handling in this
+> controller? As DEASSERT is polled in advk_pcie_handle_int() I don't
+> think it should be able to trigger root complex interrupt at all.
+> Hence I think it shouldn't be unmasked.
+
+Correct. Makes sense. Though you are suggesting below to no longer poll
+the DEASSERT signal in the interrupt handler, but you're instead saying
+to ignore it entirely.
+
+
+> > +       msi = &pcie->msi;  
+> 
+> Do we consciously resign from CONFIG_MSI dependency? I know it should
+> always be enabled, but just making sure.
+
+Yes, I discussed this with Arnd, and we decided to simply make MSI
+support a hard dependency. You can always disable it by passing
+pci=nomsi on the kernel command line (tested to be working).
+
+
+> Below code will result in spurious interrupt flood (I can provide test
+> details with SATA3.0 card). I know this part of specs very well, but
+> expected EP operation flow should look like this:
+> a. EP interrupt
+> b. INTX_ASSERT signal
+> c. root complex interrupt
+> d. clear INTX_ASSERT bit
+> e. execute EP handler
+> f. INTX_DEASSERT signal
+> g. clear INTX_DEASSERT bit
+> h. exit interrupt
+> 
+> Now between d. and f., in case of any shortest delay we will force
+> executing EP handler numerous of times, which IMO is not desired. All
+> of them for e.g. the SATA3.0 card are registered as spurious
+> interrupts, pretty quickly resulting in "switching to irq poll"
+> failure after 100k of such happenings. Actually I think that after
+> executing generic_handle_irq(virq); we should leave root complex isr
+> asap, the polling for DEASSERT in such case is not resulting in any
+> benefits. In my code I ignored DEASSERT signal existence - it neither
+> triggers interrupt nor we don't poll for it. Under big stress nothing
+> wrong happens. We rely only on interrupts triggered by INTX_ASSERT
+> signal, so we care only for its status.
+
+Thanks for the detailed explanation. So in practice, the code should be
+just:
+
+	for (i = 0; i < LEGACY_IRQ_NUM; i++) {
+		int virq;
+
+		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
+			continue;
+
+		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i), PCIE_ISR0_REG);
+		virq = irq_find_mapping(pcie->irq_domain, i);
+		generic_handle_irq(virq);
+	}
+
+and that's it.
+
+Is that what you suggest?
+
+Thanks!
+
+Thomas
 -- 
-1.8.5.6
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
