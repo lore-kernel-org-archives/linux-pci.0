@@ -1,50 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Jun 2016 17:57:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
-	Chris Milsted <cmilsted@redhat.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Andi Kleen <ak@linux.intel.com>, Michael Buesch <m@bues.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Matt Fleming <matt@codeblueprint.co.uk>,
-	Konstantin Simanov <k.simanov@stlk.ru>,
-	Bryan Paradis <bryan.paradis@gmail.com>,
-	Andrew Worsley <amworsley@gmail.com>,
-	Chris Bainbridge <chris.bainbridge@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, zajec5@gmail.com
-Subject: Re: [PATCH] x86: Add early quirk to reset Apple AirPort card
-Message-ID: <20160609225758.GC19309@localhost>
-References: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:16345 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753383AbcFHU46 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jun 2016 16:56:58 -0400
+Date: Wed, 8 Jun 2016 14:56:56 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: "Busch, Keith" <keith.busch@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCHv2] x86/vmd: Initialize list item in irq disable
+Message-ID: <20160608205656.GA3568@localhost.localdomain>
+References: <1463505738-30666-1-git-send-email-keith.busch@intel.com>
+ <20160517185101.GA1975@localhost.localdomain>
+ <8D943B239464E04C9184454D8B3F5CFF0AD53672@ORSMSX101.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <8D943B239464E04C9184454D8B3F5CFF0AD53672@ORSMSX101.amr.corp.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 29, 2016 at 01:35:28AM +0200, Lukas Wunner wrote:
-> The EFI firmware on Macs contains a full-fledged network stack for
-> downloading OS X images from osrecovery.apple.com. Unfortunately
-> on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
-> wireless card on every boot and leaves it enabled even after
-> ExitBootServices has been called. The card continues to assert its IRQ
-> line, causing spurious interrupts if the IRQ is shared. It also corrupts
-> memory by DMAing received packets, allowing for remote code execution
-> over the air. This only stops when a driver is loaded for the wireless
-> card, which may be never if the driver is not installed or blacklisted.
-> ...
+Hi Bjorn,
 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111781
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=728916
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951#c16
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1098621
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632#c5
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1279130
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1332732
+Let me know if there's anything else needing to be done to get this set in.
 
-I think I saw mail about this being applied via the x86 tree.  Let me
-know if I need to do anything more here.
+Thanks,
+Jon
+
+On Wed, Jun 01, 2016 at 03:10:30PM -0600, Derrick, Jonathan wrote:
+> Hi Bjorn,
+> 
+> Any plans to get this set in?
+> 
+> Thanks,
+> J
+> 
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Jon Derrick
+> Sent: Tuesday, May 17, 2016 12:51 PM
+> To: Busch, Keith <keith.busch@intel.com>
+> Cc: linux-pci@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>
+> Subject: Re: [PATCHv2] x86/vmd: Initialize list item in irq disable
+> 
+> Acked-by Jon Derrick: <jonathan.derrick@intel.com>
+> 
+> On Tue, May 17, 2016 at 11:22:18AM -0600, Keith Busch wrote:
+> > Multiple calls to disable an IRQ would have caused the driver to 
+> > dereference a poisoned list item. This re-initializes the list to 
+> > allow multiple requests to disable the irq.
+> > 
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> > v1 -> v2:
+> >   Used the patch with the correct macro
+> > 
+> >  arch/x86/pci/vmd.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c index 
+> > b1662bf..3519a15 100644
+> > --- a/arch/x86/pci/vmd.c
+> > +++ b/arch/x86/pci/vmd.c
+> > @@ -135,6 +135,7 @@ static void vmd_irq_disable(struct irq_data *data)
+> >  
+> >  	raw_spin_lock(&list_lock);
+> >  	list_del_rcu(&vmdirq->node);
+> > +	INIT_LIST_HEAD_RCU(&vmdirq->node);
+> >  	raw_spin_unlock(&list_lock);
+> >  }
+> >  
+> > --
+> > 2.7.2
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
