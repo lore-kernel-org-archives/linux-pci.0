@@ -1,42 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59513 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751390AbcFZThT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 26 Jun 2016 15:37:19 -0400
-Date: Sun, 26 Jun 2016 21:40:23 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: automatic interrupt affinity for MSI/MSI-X capable devices V2
-Message-ID: <20160626194023.GB20915@agordeev.lab.eng.brq.redhat.com>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Rui Wang <rui.y.wang@intel.com>
+To: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
+	bhelgaas@google.com
+Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, rui.y.wang@intel.com
+Subject: [PATCH V2 2/3] x86/ioapic: Fix wrong pointers in ioapic_setup_resources()
+Date: Wed,  8 Jun 2016 14:59:52 +0800
+Message-Id: <1465369193-4816-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1465369193-4816-1-git-send-email-rui.y.wang@intel.com>
+References: <1465369193-4816-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 14, 2016 at 09:58:53PM +0200, Christoph Hellwig wrote:
-> This series enhances the irq and PCI code to allow spreading around MSI and
-> MSI-X vectors so that they have per-cpu affinity if possible, or at least
-> per-node.  For that it takes the algorithm from blk-mq, moves it to
-> a common place, and makes it available through a vastly simplified PCI
-> interrupt allocation API.  It then switches blk-mq to be able to pick up
-> the queue mapping from the device if available, and demonstrates all this
-> using the NVMe driver.
+On a 4-socket brickland, hot-removing one ioapic is fine. Hot-removing
+the 2nd one causes panic in mp_unregister_ioapic() while calling
+release_resource(). It is because the iomem_res pointer has already been
+released when removing the first ioapic.
 
-Hi Christoph,
+Fix it by assigning the correct pointers to ioapics[i].iomem_res in
+ioapic_setup_resources().
 
-One general comment. As result of this series there will be
-three locations to store/point to affinities: IRQ descriptor,
-MSI descriptor and PCI device descriptor.
+To explain the use of &res[num] here: res is assigned to ioapic_resources,
+and later in ioapic_insert_resources() we do
 
-IRQ and MSI descriptors merely refer to duplicate masks while
-the PCI device mask is the sum of all its MSI interrupts' masks.
+	struct resource *r = ioapic_resources;
+        for_each_ioapic(i) {
+                insert_resource(&iomem_resource, r);
+                r++;
+        }
 
-Besides, MSI descriptors and PCI device affinity masks are only
-used just once - at MSI initialization.
+Here r is treated as an arry of struct resource, and the r++ ensures that
+each element of the array is inserted separately. Thus we should call
+release_resouce() on each element at &res[num].
 
-Overall, it looks like some cleanup is possible here.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ arch/x86/kernel/apic/io_apic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 84e33ff..446702e 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2588,8 +2588,8 @@ static struct resource * __init ioapic_setup_resources(void)
+ 		res[num].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+ 		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+ 		mem += IOAPIC_RESOURCE_NAME_SIZE;
++		ioapics[i].iomem_res = &res[num];
+ 		num++;
+-		ioapics[i].iomem_res = res;
+ 	}
+ 
+ 	ioapic_resources = res;
+-- 
+1.8.3.1
+
