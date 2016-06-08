@@ -1,95 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47906 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751180AbcFKRZE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 11 Jun 2016 13:25:04 -0400
-Date: Sat, 11 Jun 2016 12:24:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jayachandran C <jchandra@broadcom.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: Handle Broadcom Vulcan DMA alias calculation
- quirk
-Message-ID: <20160611172457.GK16462@localhost>
-References: <linux-pci@vger.kernel.org>
- <1462700001-30086-2-git-send-email-jchandra@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462700001-30086-2-git-send-email-jchandra@broadcom.com>
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:36642 "EHLO
+	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475AbcFHAIL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2016 20:08:11 -0400
+Received: by mail-yw0-f196.google.com with SMTP id l126so24887974ywe.3
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jun 2016 17:08:10 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: l.stach@pengutronix.de, hongxing.zhu@nxp.com,
+	chf.fritz@googlemail.com, shawnguo@kernel.org,
+	linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
+Subject: [PATCH] PCI: imx6: Add support for MX6SX LDO PCIE domain regulator
+Date: Tue,  7 Jun 2016 21:07:52 -0300
+Message-Id: <1465344472-15703-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 08, 2016 at 03:03:21PM +0530, Jayachandran C wrote:
-> The Broadcom Vulcan PCI topology is slightly unusual, for a multi-node
-> system, it looks like:
-> 
->  [bus 0]
->      |
->      +--[node 0 PCI bridge 0.0.0]
->      |           |
->      |        [bus 1]
->      |           +---[SoC PCI devices 1.4.x, 1.5.x] ........
->      |           +---[Glue bridges    1.a.x, 1.b.x]         \
->      |                    |                        .....{node 0 GIC ITS}
->      |                    |                       /
->      |                    +----[SoC PCIe controller root ports]
->      |                                |         \...... {SMMUv3 0..3}
->      |                                |
->      |                                +---- [external PCI devices]
->      +- [node 1 PCI bridge 0.0.1]
->      |           |
->      |        [bus n - similar to bus 1 above]
->      ...
-> 
-> The for_each_dma_alias call for external PCI devices should not go
-> beyond the PCIe controllers where the SMMU and ITS is associated, going
-> further above to the glue bridges or the node bridges will find aliases
-> which are not valid. For internal devices, the association is at the
-> node level bridge and the alias search should not go further.
+From: Fabio Estevam <fabio.estevam@nxp.com>
 
-I like the line of reasoning that we should not iterate higher in the
-hierarchy than where the translation hardware is attached.  That seems
-like a reasonable thing in general, not just for this hardware.
+MX6SX has an internal LDO regulator for the PCIE domain, which needs
+to be turned on for PCIE functionality.
 
-Is there some generic way to learn where the translation hardware is
-attached?  If there is, we could make pci_for_each_dma_alias() use
-that information, and maybe we could solve the problem for other
-systems as well as for Vulcan.
+Add support for it.
 
-> To handle this quirk, we mark the SoC PCIe bridges and node PCI bridge
-> with flag PCI_DEV_FLAGS_DMA_ALIAS_ROOT so that the alias and RID
-> calculations are correct.
-> 
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> ---
->  drivers/pci/quirks.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 8e67802..62664b5 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3734,6 +3734,20 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
->  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
->  
->  /*
-> + * The IOMMU and interrupt controller of Broadcom vulcan are associated
-> + * not at the root bus, but at a bridge below. The DMA alias search should
-> + * not go above the bridge at which the association exists.
-> + */
-> +static void quirk_bridge_brcm_vulcan_pcie_root(struct pci_dev *pdev)
-> +{
-> +	pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_ROOT;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
-> +				quirk_bridge_brcm_vulcan_pcie_root);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
-> +				quirk_bridge_brcm_vulcan_pcie_root);
-> +
-> +/*
->   * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
->   * class code.  Fix it.
->   */
-> -- 
-> 1.9.1
-> 
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  2 ++
+ drivers/pci/host/pci-imx6.c                        | 29 +++++++++++++++++++++-
+ 2 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index f3d26f47..cfb0e86 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -33,6 +33,8 @@ Optional properties:
+ Additional required properties for imx6sx-pcie:
+ - clock names: Must include the following additional entry:
+ 	- "pcie_inbound_axi"
++- pcie-phy-supply: Must point to the internal PCIE power domain regulator:
++		   <&reg_pcie>;
+ 
+ Example:
+ 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index b741a36..ad9cc8b 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -27,6 +27,7 @@
+ #include <linux/signal.h>
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
++#include <linux/regulator/consumer.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -55,6 +56,7 @@ struct imx6_pcie {
+ 	u32			tx_swing_full;
+ 	u32			tx_swing_low;
+ 	int			link_gen;
++	struct regulator	*phy_regulator;
+ };
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+@@ -96,6 +98,8 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+ 
++#define MX6SX_PCIE_LDO				1100000
++
+ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+ {
+ 	u32 val;
+@@ -407,11 +411,26 @@ err_pcie_phy:
+ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	int ret;
++
++	if (imx6_pcie->variant == IMX6SX) {
++		ret = regulator_set_voltage(imx6_pcie->phy_regulator,
++					    MX6SX_PCIE_LDO, MX6SX_PCIE_LDO);
++		if (ret) {
++			dev_err(pp->dev, "failed to set pcie phy voltage.\n");
++			return ret;
++		}
++
++		ret = regulator_enable(imx6_pcie->phy_regulator);
++		if (ret) {
++			dev_err(pp->dev, "failed to enable pcie regulator.\n");
++			return;
++		}
+ 
+-	if (imx6_pcie->variant == IMX6SX)
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
+ 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
++	}
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+@@ -680,6 +699,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 				"pcie_incbound_axi clock missing or invalid\n");
+ 			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
+ 		}
++
++		imx6_pcie->phy_regulator = devm_regulator_get(pp->dev,
++							      "pcie-phy");
++		if (IS_ERR(imx6_pcie->phy_regulator)) {
++			dev_err(&pdev->dev,
++				"failed to get pcie-phy regulator\n");
++			return PTR_ERR(imx6_pcie->phy_regulator);
++		}
+ 	}
+ 
+ 	/* Grab GPR config register range */
+-- 
+1.9.1
+
