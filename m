@@ -1,31 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58532 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:34121 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751930AbcFPQU5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Jun 2016 12:20:57 -0400
-Date: Thu, 16 Jun 2016 11:20:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mike Marciniszyn <mike.marciniszyn@intel.com>,
-	Dennis Dalessandro <dennis.dalessandro@intel.com>
-Cc: Doug Ledford <dledford@redhat.com>,
-	Sean Hefty <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: hfi1 use of PCI internals
-Message-ID: <20160616162052.GA2144@localhost>
+	id S1161418AbcFHH25 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jun 2016 03:28:57 -0400
+Date: Wed, 8 Jun 2016 09:28:54 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme@lists.infradead.org,
+	James Smart <james.smart@avagotech.com>,
+	Dick Kennedy <dick.kennedy@avagotech.com>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jay Cliburn <jcliburn@gmail.com>,
+	Chris Snook <chris.snook@gmail.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org
+Subject: Re: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
+Message-ID: <20160608072854.ivcfvtlgxab2xkmp@c203.arch.suse.de>
+References: <cover.1465200424.git.jthumshirn@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I noticed drivers/infiniband/hw/hfi1 got moved from staging to
-drivers/ for v4.7.  It does a bunch of grubbing around in PCIe ASPM
-configuration, e.g., see drivers/infiniband/hw/hfi1/aspm.h.
+On Tue, Jun 07, 2016 at 09:44:00AM +0200, Johannes Thumshirn wrote:
+> The first patch in this series introduces the following 4 helper functions to
+> the PCI core:
+> 
+> * pci_request_mem_regions()
+> * pci_request_io_regions()
+> * pci_release_mem_regions()
+> * pci_release_io_regions()
+> 
+> which encapsulate the request and release of a PCI device's memory or I/O
+> bars.
+> 
+> The subsequent patches convert the drivers, which use the
+> pci_request_selected_regions(pdev, 
+> 	pci_select_bars(pdev, IORESOURCE_MEM), name); 
+> and similar pattern to use the new interface.
+> 
+> This was suggested by Christoph Hellwig in
+> http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
+> tested on kernel v4.6 with NVMe.
+> 
 
-I know there have been lots of ASPM issues, both hardware problems and
-Linux kernel problems, but it is *supposed* to be manageable by the
-core, without special driver support.  What's the justification for
-having to do this in the hfi1 driver?
+Btw, as I've seen already Jeff applying the Intel Ethernet patch to his
+tree, I think this should go via the PCI tree as the build dependency is
+the PCI patch.
 
-Bjorn
+Thanks,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
