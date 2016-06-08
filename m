@@ -1,48 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52042 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161150AbcFQL1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jun 2016 07:27:22 -0400
-Date: Fri, 17 Jun 2016 13:27:16 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1465427086.2736.93.camel@intel.com>
+Subject: Re: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>,
 	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v3 2/6] NVMe: Use pci_(request|release)_mem_regions
-Message-ID: <20160617112716.74e4hgy5bhkkgmi6@c203.arch.suse.de>
+	linux-nvme@lists.infradead.org,
+	James Smart <james.smart@avagotech.com>,
+	Dick Kennedy <dick.kennedy@avagotech.com>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jay Cliburn <jcliburn@gmail.com>,
+	Chris Snook <chris.snook@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org
+Date: Wed, 08 Jun 2016 16:04:46 -0700
+In-Reply-To: <20160608072854.ivcfvtlgxab2xkmp@c203.arch.suse.de>
 References: <cover.1465200424.git.jthumshirn@suse.de>
- <5c9932602e6d43ef8ad77856c686765f9e63aa9c.1465200424.git.jthumshirn@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <5c9932602e6d43ef8ad77856c686765f9e63aa9c.1465200424.git.jthumshirn@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+	 <20160608072854.ivcfvtlgxab2xkmp@c203.arch.suse.de>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-zC7eTGCNtDeX7ZGFAIvU"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 07, 2016 at 09:44:02AM +0200, Johannes Thumshirn wrote:
-> Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-> hand, use it in the NVMe driver.
-> 
-> Suggested-by: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Jens Axboe <axboe@fb.com>
-> Cc: linux-nvme@lists.infradead.org
 
-Bjorn, 
+--=-zC7eTGCNtDeX7ZGFAIvU
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Jens merged a band aid here which conflicts with the patch. Shall I send you
-this patch re-based or the entire series?
+On Wed, 2016-06-08 at 09:28 +0200, Johannes Thumshirn wrote:
+> On Tue, Jun 07, 2016 at 09:44:00AM +0200, Johannes Thumshirn wrote:
+> > The first patch in this series introduces the following 4 helper
+> functions to
+> > the PCI core:
+> >=C2=A0
+> > * pci_request_mem_regions()
+> > * pci_request_io_regions()
+> > * pci_release_mem_regions()
+> > * pci_release_io_regions()
+> >=C2=A0
+> > which encapsulate the request and release of a PCI device's memory or
+> I/O
+> > bars.
+> >=C2=A0
+> > The subsequent patches convert the drivers, which use the
+> > pci_request_selected_regions(pdev,=C2=A0
+> >=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0pci_select_bars(pdev, IORESOUR=
+CE_MEM), name);=C2=A0
+> > and similar pattern to use the new interface.
+> >=C2=A0
+> > This was suggested by Christoph Hellwig in
+> > http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html=C2=
+=A0an
+> d
+> > tested on kernel v4.6 with NVMe.
+> >=C2=A0
+>=20
+> Btw, as I've seen already Jeff applying the Intel Ethernet patch to his
+> tree, I think this should go via the PCI tree as the build dependency is
+> the PCI patch.
 
-Thanks,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Bjorn should pick up the entire series, I just applied the Intel patch (and
+dependent patches) so we could touch test it.
+--=-zC7eTGCNtDeX7ZGFAIvU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJXWKSOAAoJEOVv75VaS+3OAnQP+wVbbdkRZ4OU3PFunU41inCW
+RWb2kuv+vlvJp/8mXaDTKLFZ0tV7q9J+9DEGrJox1EzUz8W+IY2tY1Z8qYKsozHF
+Z42pe7dtY9wHCB4y1AaEynVEjzf5Y2Fo1Un9K7G2xSjnjMn7aPXfLTPCkb3cluIg
+xFWcXncbpeyrU73AS3I9FeGNbMa9xG9iklFBrCdFpeQU+KQGm/BigZ12ymb+0VBk
+Ny592PXXaa/y+tFOdreTu7gX2TF2Y0hoXYeOw847PIdJL14oWm1jSugi7nUSapoM
+KCXz9+QcLSNmjFhzrfbRjh/j9CSTp3BU00kl2GfO84nOqXfVAaIpgC7sNf3vkwL+
+oMzV1eK7KTwT5Ot3xDJ6XTKYOWgjKCOqgBW8wHhq9T5/OFPLM8/iecWwiP6xpf5S
+PryHTuCZaIcAPqoAIryGn9SwWUlEQkzz5z0/l8ybJZpjeQXq++c6qaWE+uRWeIim
+IBGSx8kweHEHy2qzCnSPrc45pU0UTRBcWji7XsXJVToZSxsrqcRytBu9UlcOm8VB
+9kCMiIdsqTPG7aEaCxHTfiBU3AUtusPYjIY3VNXQHk/CpcqN/T19JO7aaG0rroGI
+D5yl1Afmy22xD/c95o+Q8rtxBfqFmBiltNHktyAsPi5o9MFbdQtdZ3FqYEHskTFk
+Ia8cJZsdmf0eVqHVVNGR
+=smmk
+-----END PGP SIGNATURE-----
+
+--=-zC7eTGCNtDeX7ZGFAIvU--
