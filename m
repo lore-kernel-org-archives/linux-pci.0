@@ -1,75 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36154 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752101AbcFTTFf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jun 2016 15:05:35 -0400
-Date: Mon, 20 Jun 2016 14:05:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH] PCI: Document connection between pci_power_t and
- hardware PM capability
-Message-ID: <20160620190445.GA15674@localhost>
-References: <20160618180056.7267.67911.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <1466336986.30123.164.camel@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RESEND PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X
+ table
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, iommu@lists.linux-foundation.org
+References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
+From: Auger Eric <eric.auger@redhat.com>
+Message-ID: <e03d36bb-c8ff-ec95-780e-5f625bdaf78e@redhat.com>
+Date: Wed, 8 Jun 2016 09:41:05 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466336986.30123.164.camel@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 19, 2016 at 02:49:46PM +0300, Andy Shevchenko wrote:
-> On Sat, 2016-06-18 at 13:00 -0500, Bjorn Helgaas wrote:
-> > The dev.pme_support field, pci_pm_init(), and pci_pme_capable() depend
-> > on
-> > the fact that the pci_power_t values (PCI_D0, PCI_D1, etc.) match the
-> > definition of the PME_Support field of the Power Management
-> > Capabilities
-> > register in the Power Management capability (see PCI Bus Power
-> > Management
-> > spec r1.2, sec 3.2.3).
+Hi Yongji,
+
+Le 02/06/2016 à 08:09, Yongji Xie a écrit :
+> Current vfio-pci implementation disallows to mmap the page
+> containing MSI-X table in case that users can write directly
+> to MSI-X table and generate an incorrect MSIs.
 > 
-> Nice to know! Thanks.
+> However, this will cause some performance issue when there
+> are some critical device registers in the same page as the 
+> MSI-X table. We have to handle the mmio access to these
+> registers in QEMU emulation rather than in guest.
 > 
-> If it matters:
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> To solve this issue, this series allows to expose MSI-X table
+> to userspace when hardware enables the capability of interrupt
+> remapping which can ensure that a given PCI device can only
+> shoot the MSIs assigned for it. And we introduce a new bus_flags
+> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+> for different archs.
+> 
+> The patch 3 are based on the proposed patchset[1].
+You may have noticed I sent a respin of [1] yesterday:
+http://www.gossamer-threads.com/lists/linux/kernel/2455187.
 
-Definitely!  I updated based on Lukas' comment and added your and Mika's
-Reviewed-by:
+Unfortunately you will see I removed the patch defining the new
+msi_domain_info MSI_FLAG_IRQ_REMAPPING flag you rely on in this series.
+I did so because I was not using it anymore. At the beginning this was
+used to detect whether the MSI assignment was safe but this
+method was covering cases where the MSI controller was
+upstream to the IOMMU. So now I rely on a mechanism where MSI controller
+are supposed to register their MSI doorbells and tag whether it is safe.
 
-commit 224abb67e6eb5ac062de9239163136d5ec3155c8
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Jun 17 15:23:52 2016 -0500
+I don't know yet how this change will be welcomed though. Depending
+on reviews/discussions, might happen we revert to the previous flag.
 
-    PCI: Document connection between pci_power_t and hardware PM capability
-    
-    The dev.pme_support field, pci_pm_init(), pci_pme_capable(), and
-    pci_raw_set_power_state() depend on the fact that the pci_power_t values
-    (PCI_D0, PCI_D1, etc.) match the definition of the Capabilities PME_Support
-    and the Control/Status PowerState fields in the Power Management capability
-    (see PCI Bus Power Management spec r1.2, sec 3.2.3).
-    
-    Add a note to this effect at the pci_power_t typedef.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-    Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+If you need the feature you can embed the used patches in your series and
+follow the review process separately. Sorry for the setback.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8597b42..0a1a9e3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -101,6 +101,10 @@ enum {
- 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
- };
- 
-+/*
-+ * pci_power_t values must match the bits in the Capabilities PME_Support
-+ * and Control/Status PowerState fields in the Power Management capability.
-+ */
- typedef int __bitwise pci_power_t;
- 
- #define PCI_D0		((pci_power_t __force) 0)
+Best Regards
+
+Eric
+> 
+> Changelog v2: 
+> - Make the commit log more clear
+> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+>   so that we could clearly know what the function does
+> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+>   of iommu_bus_notifier()
+> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+>   table so that we can know whether we allow to mmap MSI-X table
+>   in QEMU
+> 
+> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+> 
+> Yongji Xie (6):
+>   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+>   PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
+>   PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+>   iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+>   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+>   vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+> 
+>  arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+>  drivers/iommu/iommu.c                     |    8 ++++++++
+>  drivers/pci/msi.c                         |   15 +++++++++++++++
+>  drivers/pci/probe.c                       |    7 +++++++
+>  drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
+>  drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
+>  include/linux/msi.h                       |    5 ++++-
+>  include/linux/pci.h                       |    1 +
+>  8 files changed, 59 insertions(+), 5 deletions(-)
+> 
