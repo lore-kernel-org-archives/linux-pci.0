@@ -1,77 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 24 Jun 2016 07:12:39 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] pci: Add support for unbinding the generic PCI host
- controller
-Message-ID: <20160624061238.GD29165@arm.com>
-References: <57698276.6050606@siemens.com>
- <20160622060638.GY29165@arm.com>
- <576C1CF6.7020804@siemens.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:65211 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbcFIMma (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jun 2016 08:42:30 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: Rockchip: Add Rockchip PCIe controller support
+Date: Wed, 08 Jun 2016 22:06:21 +0200
+Message-ID: <19495840.MdNPOj1Q7K@wuerfel>
+In-Reply-To: <5757E397.40401@arm.com>
+References: <1465373154-882-1-git-send-email-shawn.lin@rock-chips.com> <5757E397.40401@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <576C1CF6.7020804@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 23, 2016 at 07:31:34PM +0200, Jan Kiszka wrote:
-> On 2016-06-22 08:06, Will Deacon wrote:
-> > On Tue, Jun 21, 2016 at 08:07:50PM +0200, Jan Kiszka wrote:
-> >> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-> >> index 8cba7ab..c0ff4b1 100644
-> >> --- a/drivers/pci/host/pci-host-common.c
-> >> +++ b/drivers/pci/host/pci-host-common.c
-> >> @@ -164,6 +164,19 @@ int pci_host_common_probe(struct platform_device *pdev,
-> >>  	}
-> >>  
-> >>  	pci_bus_add_devices(bus);
-> >> +	platform_set_drvdata(pdev, bus);
-> >> +	return 0;
-> >> +}
-> >> +
-> >> +int pci_host_common_remove(struct platform_device *pdev)
-> >> +{
-> >> +	struct pci_bus *bus = platform_get_drvdata(pdev);
-> >> +
-> >> +	pci_lock_rescan_remove();
-> >> +	pci_stop_root_bus(bus);
-> >> +	pci_remove_root_bus(bus);
-> >> +	pci_unlock_rescan_remove();
-> > 
-> > A couple of comments/questions about this:
-> > 
-> >   - The probe path seems to have some stateful operations outside of PCI
-> >     resources. For example, kzalloc'ing the bus_range resource in
-> >     of_pci_get_host_bridge_resources. Do we need to clean these up
-> >     explicitly?
-> > 
-> >   - Similarly, we don't seem to tear-down the config space mappings and
-> >     data structures for that, so we leak VA space afaict.
-> > 
+On Wednesday, June 8, 2016 10:21:27 AM CEST Marc Zyngier wrote:
+> > +     rockchip_pcie_enable_interrupts(port);
+> > +     if (!IS_ENABLED(CONFIG_PCI_MSI)) {
+> > +             err = rockchip_pcie_init_irq_domain(port);
+> > +             if (err < 0)
+> > +                     goto err_vpcie;
 > 
-> Good points. But to my understanding, everything is released
-> automatically on pci_remove_root_bus because all the resources are
-> registered with the bus which takes care of them during destruction. And
-> if I trace the release, I find this e.g.
-> 
-> ...
-> devres_release_all() {
->   _raw_spin_lock_irqsave();
->   release_nodes() {
->     _raw_spin_unlock_irqrestore();
->     devm_action_release() {
->       gen_pci_unmap_cfg() {
+> Why are you excluding wired interrupts if you have PCI_MSI configured?
+> MSI allocation can fail, and wired interrupts become handy....
 
-Ah, thanks for investigating that -- I completely missed the explicit
-devm_ callback. That resolves my concern about the config space mappings,
-but I still don't understand what happens to the resources allocated
-in of_pci_get_host_bridge_resources. It looks like they should actually
-be freed within that function, since pci_add_resource{_offset} copy the
-resources into their own resource_entries anyway.
+Also, a lot of drivers don't do MSI and rely on legacy interrupts.
 
-Am I missing something?
-
-Will
+	Arnd
