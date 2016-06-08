@@ -1,62 +1,125 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v1 11/25] PCI: xilinx-nwl: Request host bridge window resources
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 06 Jun 2016 18:06:07 -0500
-Message-ID: <20160606230606.20936.88648.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
- rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
- linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
- Michal Simek <michal.simek@xilinx.com>,
- =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Rui Wang <rui.y.wang@intel.com>
+To: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
+	bhelgaas@google.com
+Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, rui.y.wang@intel.com
+Subject: [PATCH V3 1/3] x86/ioapic: Support hot-removal of IOAPICs present during boot
+Date: Wed,  8 Jun 2016 17:32:44 +0800
+Message-Id: <1465378364-5982-1-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1465369193-4816-2-git-send-email-rui.y.wang@intel.com>
+References: <1465369193-4816-2-git-send-email-rui.y.wang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Request host bridge window resources so they appear in ioport_resource and
-iomem_resource and are reflected in /proc/ioports and /proc/iomem.
+v3: Previous versions break mips. This version fixes it.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+IOAPICs present during system boot aren't added to ioapic_list,
+thus are unable to be hot-removed. Fix it by calling
+acpi_ioapic_add() during root bus enumeration.
+
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 ---
- drivers/pci/host/pcie-xilinx-nwl.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/acpi/internal.h | 2 --
+ drivers/acpi/ioapic.c   | 7 ++++---
+ drivers/acpi/pci_root.c | 2 +-
+ drivers/pci/setup-bus.c | 7 ++++++-
+ include/linux/acpi.h    | 3 +++
+ 5 files changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 506da7b..3c16bbf 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -829,6 +829,10 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 		return err;
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 9bb0773..bb567a7 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -40,10 +40,8 @@ int acpi_sysfs_init(void);
+ void acpi_container_init(void);
+ void acpi_memory_hotplug_init(void);
+ #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
+-int acpi_ioapic_add(struct acpi_pci_root *root);
+ int acpi_ioapic_remove(struct acpi_pci_root *root);
+ #else
+-static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
+ static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
+ #endif
+ #ifdef CONFIG_ACPI_DOCK
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index ccdc8db..0f272e2 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -189,16 +189,17 @@ exit:
+ 	return AE_OK;
+ }
+ 
+-int acpi_ioapic_add(struct acpi_pci_root *root)
++int acpi_ioapic_add(acpi_handle root_handle)
+ {
+ 	acpi_status status, retval = AE_OK;
+ 
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root_handle,
+ 				     UINT_MAX, handle_ioapic_add, NULL,
+-				     root->device->handle, (void **)&retval);
++				     root_handle, (void **)&retval);
+ 
+ 	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
+ }
++EXPORT_SYMBOL_GPL(acpi_ioapic_add);
+ 
+ int acpi_ioapic_remove(struct acpi_pci_root *root)
+ {
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..53f5965 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -614,7 +614,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
+-		acpi_ioapic_add(root);
++		acpi_ioapic_add(root->device->handle);
  	}
  
-+	err = devm_request_pci_bus_resources(pcie->dev, &res);
-+	if (err)
-+		goto error;
-+
- 	err = nwl_pcie_init_irq_domain(pcie);
- 	if (err) {
- 		dev_err(pcie->dev, "Failed creating IRQ Domain\n");
+ 	pci_lock_rescan_remove();
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..0658921 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -25,6 +25,7 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <linux/acpi.h>
+ #include "pci.h"
+ 
+ unsigned int pci_flags;
+@@ -1779,8 +1780,12 @@ void __init pci_assign_unassigned_resources(void)
+ {
+ 	struct pci_bus *root_bus;
+ 
+-	list_for_each_entry(root_bus, &pci_root_buses, node)
++	list_for_each_entry(root_bus, &pci_root_buses, node) {
+ 		pci_assign_unassigned_root_bus_resources(root_bus);
++#ifdef CONFIG_X86
++		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
++#endif
++	}
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 288fac5..3ed22df 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -262,6 +262,9 @@ int acpi_unmap_cpu(int cpu);
+ 
+ #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
+ int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
++int acpi_ioapic_add(acpi_handle root);
++#else
++static inline int acpi_ioapic_add(acpi_handle root) { return 0; }
+ #endif
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+-- 
+1.8.3.1
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
