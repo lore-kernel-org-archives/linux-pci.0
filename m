@@ -1,186 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29594 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751328AbcF2Ihd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jun 2016 04:37:33 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v2 8/8] thunderbolt: Networking doc
-Date: Wed, 29 Jun 2016 11:35:36 +0300
-Message-Id: <1467189336-29556-9-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
-References: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Jun 2016 08:17:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [PATCH V8 7/9] acpi: Add generic MCFG table handling
+Message-ID: <20160608131709.GB16764@localhost>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <1464621262-26770-8-git-send-email-tn@semihalf.com>
+ <20160608015631.GE4759@localhost> <57580DCA.7000703@semihalf.com>
+MIME-Version: 1.0
+In-Reply-To: <57580DCA.7000703@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
+ okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org,
+ Lorenzo.Pieralisi@arm.com, linaro-acpi@lists.linaro.org,
+ ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
+ robert.richter@caviumnetworks.com, liudongdong3@huawei.com,
+ catalin.marinas@arm.com, Liviu.Dudau@arm.com, arnd@arndb.de, jcm@redhat.com,
+ msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com,
+ linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com, dhdang@apm.com,
+ linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org,
+ Suravee.Suthikulpanit@amd.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding Thunderbolt(TM) networking documentation.
+On Wed, Jun 08, 2016 at 02:21:30PM +0200, Tomasz Nowicki wrote:
+> On 08.06.2016 03:56, Bjorn Helgaas wrote:
+> >On Mon, May 30, 2016 at 05:14:20PM +0200, Tomasz Nowicki wrote:
+> >>In order to handle PCI config space regions properly in ACPI, new MCFG
+> >>interface is defined which does sanity checks on MCFG table and keeps its
+> >>root pointer. The user is able to lookup MCFG regions based on
+> >>host bridge root structure and domain:bus_start:bus_end touple.
+> >>Use pci_mmcfg_late_init old prototype to avoid another function name.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- Documentation/00-INDEX                   |   2 +
- Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
- 2 files changed, 137 insertions(+)
- create mode 100644 Documentation/thunderbolt-networking.txt
+> >>+	/* found matching entry, bus range check */
+> >>+	if (entry->end_bus_number != bus_res->end) {
+> >>+		resource_size_t bus_end = min_t(resource_size_t,
+> >>+					entry->end_bus_number, bus_res->end);
+> >>+		pr_warn("%04x:%pR bus end mismatch, using %02lx\n",
+> >>+			root->segment, bus_res, (unsigned long)bus_end);
+> >>+		bus_res->end = bus_end;
+> >>+	}
+> 
+> What about bus end mismatch case? Should we trim the host bridge bus
+> range or expect MCFG entry covers that range? Sometimes we get
+> _BBN-0xFF bus range, not from _CRS.
 
-diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
-index cd077ca..8cf1717 100644
---- a/Documentation/00-INDEX
-+++ b/Documentation/00-INDEX
-@@ -439,6 +439,8 @@ this_cpu_ops.txt
- 	- List rationale behind and the way to use this_cpu operations.
- thermal/
- 	- directory with information on managing thermal issues (CPU/temp)
-+thunderbolt-networking.txt
-+	- Thunderbolt(TM) Networking driver description.
- trace/
- 	- directory with info on tracing technologies within linux
- unaligned-memory-access.txt
-diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
-new file mode 100644
-index 0000000..b7714cf
---- /dev/null
-+++ b/Documentation/thunderbolt-networking.txt
-@@ -0,0 +1,135 @@
-+Intel Thunderbolt(TM) Linux driver
-+==================================
-+
-+Copyright(c) 2013 - 2016 Intel Corporation.
-+
-+Contact Information:
-+Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
-+Edited by Michael Jamet <michael.jamet@intel.com>
-+
-+Overview
-+========
-+
-+Thunderbolt(TM) Networking mode is introduced with this driver.
-+This kernel code creates an ethernet device utilized in computer to computer
-+communication over a Thunderbolt cable.
-+This driver has been added on the top of the existing thunderbolt driver
-+for systems with firwmare (FW) based Thunderbolt controllers supporting
-+Thunderbolt Networking.
-+
-+Files
-+=====
-+
-+- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
-+		In addition, they create an interface for netlink communication with
-+		a user space daemon.
-+
-+- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
-+		networking.
-+
-+Interface to user space
-+=======================
-+
-+The interface to the user space module is implemented through a Generic Netlink.
-+In order to be accessed by the user space module, both kernel and user space
-+modules have to register with the same GENL_NAME. In our case, this is
-+simply "thunderbolt".
-+The registration is done at driver initialization time for all instances of
-+the Thunderbolt controllers.
-+The communication is then carried through pre-defined Thunderbolt messages.
-+Each specific message has a callback function that is called when
-+the related message is received.
-+
-+The messages are defined as follows:
-+* NHI_CMD_UNSPEC: Not used.
-+* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
-+  communication channel.
-+* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
-+  to close communication channel.
-+* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
-+  driver version, FW version offset, number of ports in the controller
-+  and DMA port.
-+* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
-+* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
-+* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
-+  changes or disconnect path.
-+* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
-+  module to FW to establish path.
-+* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
-+
-+Communication with ICM (Firmware)
-+=================================
-+
-+The communication with ICM is principally achieved through
-+a DMA mechanism on Ring 0.
-+The driver allocates a shared memory that is physically mapped onto
-+the DMA physical space at Ring 0.
-+
-+Interrupts
-+==========
-+
-+Thunderbolt relies on MSI-X interrupts.
-+The MSI-X vector is allocated as follows:
-+ICM
-+     - Tx: MSI-X vector index 0
-+     - Rx: MSI-X vector index 1
-+
-+Port 0
-+     - Tx: MSI-X vector index 2
-+     - Rx: MSI-X vector index 3
-+
-+Port 1
-+     - Tx: MSI-X vector index 4
-+     - Rx: MSI-X vector index 5
-+
-+ICM interrupts are used for communication with ICM only.
-+Port 0 and Port 1 interrupts are used for Thunderbolt Networking
-+communications.
-+In case MSI-X is not available, the driver requests to enable MSI only.
-+
-+Mutexes, semaphores and spinlocks
-+=================================
-+
-+The driver should be able to operate in an environment where hardware
-+is asynchronously accessed by multiple entities such as netlink,
-+multiple controllers etc.
-+
-+* send_sem: This semaphore enforces unique sender (one sender at a time)
-+  to avoid wrong impairing with responses. FW may process one message
-+  at the time.
-+* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
-+  to avoid continuing to send messages to FW.
-+* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
-+  avoid continuing to send commands to mailbox.
-+* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
-+  for the mailbox command.
-+  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
-+  to get the command response.
-+* lock: This spinlock protects from simultaneous changes during
-+  disable/enable interrupts.
-+* state_lock: This mutex comes to protect changes during net device state
-+  changes and net_device operations.
-+* controllers_list_rwsem: This read/write sempahore syncs the access to
-+  the controllers list when there are multiple controllers in the system.
-+
-+FW path enablement
-+==================
-+
-+In order to SW to communicate with the FW, the driver needs to send to FW
-+the PDF driver ready command and receive response from FW.
-+The driver ready command PDF value is 12 and the response is 13.
-+Once the exchange is completed, the user space module should be able to send
-+messages through the driver to the FW and FW starts to send notifications
-+about HW/FW events.
-+
-+Information
-+===========
-+
-+Mailing list:
-+	thunderbolt-software@lists.01.org
-+	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
-+	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
-+
-+For additional information about Thunderbolt technology visit:
-+	https://01.org/thunderbolt-sw
-+	https://thunderbolttechnology.net/
--- 
-2.7.4
+Lack of a bus range in _CRS is a firmware defect.  There's a comment
+about this in acpi_pci_root_add().  On x86, we probably had to live
+with firmware in the field that had this defect.  I think we should
+expect all ARM64 systems to provide a bus number range in _CRS, and
+fail the attach if it's not there.
 
+I don't think we should warn about an MCFG entry that covers more than
+the _CRS bus range.  On x86, it's common to have something like:
+
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7f])
+  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-ff])
+
+with a single MCFG entry that covers [bus 00-ff].  That seems
+reasonable and I don't think it's worth warning about it.
+
+If the MCFG entry doesn't cover all of a _CRS bus range, we should
+just fail so we can find and fix broken firmware.
+
+> >>+/* Interface called by ACPI - parse and save MCFG table */
+> >
+> >I think we save a *pointer* to the MCFG table, not the table itself.
+> 
+> Right, the comment is broken.
+> 
+> >And acpi_table_parse() calls early_acpi_os_unmap_memory() immediately
+> >after it calls pci_mcfg_parse(), so I'm doubtful that the pointer
+> >remains valid.
+> 
+> At this stage early_acpi_os_unmap_memory() is doing nothing since
+> acpi_early_init() set acpi_gbl_permanent_mmap to 1 way before. The
+> pointer is fine then.
+
+Hmmm...  I see your argument, but this is a problem waiting to happen.
+We should not depend on the internal implementation of
+early_acpi_os_unmap_memory().  The pattern of:
+
+  y = x;
+  unmap(x);
+  z = *y;
+
+is just broken and we shouldn't expect readers to recognize that "oh,
+unmap() isn't really unmapping anything in this special case, so this
+looks wrong but is really fine."
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
