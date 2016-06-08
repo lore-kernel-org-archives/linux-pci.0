@@ -1,192 +1,273 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "liudongdong (C)" <liudongdong3@huawei.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com"
-	<Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "tn@semihalf.com"
-	<tn@semihalf.com>
-CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "Liviu.Dudau@arm.com"
-	<Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
-	<ddaney@caviumnetworks.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "linaro-acpi@lists.linaro.org"
-	<linaro-acpi@lists.linaro.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "dhdang@apm.com"
-	<dhdang@apm.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "cov@codeaurora.org" <cov@codeaurora.org>,
-        "Chenxin (Charles)"
-	<charles.chenxin@huawei.com>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: RE: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
- against platfrom specific ECAM quirks
-Date: Mon, 13 Jun 2016 13:54:03 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
- <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
+In-Reply-To: <1464858585-10963-3-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1464858585-10963-3-git-send-email-thomas.petazzoni@free-electrons.com>
+Date: Wed, 8 Jun 2016 17:15:08 +0200
+Message-ID: <CAPv3WKcznGD4p-YO3QLLYw+y+7w4ha-d_Nt6FHue7d2_SiyK0w@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: host: new PCI host controller driver for Marvell
+ Armada 3700
+From: Marcin Wojtas <mw@semihalf.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+ Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
+ linux-pci@vger.kernel.org, Hanna Hawa <hannah@marvell.com>,
+ Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgVG9tYXN6LCBKb24NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBs
-aXVkb25nZG9uZyAoQykNCj4gU2VudDogMTMgSnVuZSAyMDE2IDE0OjAyDQo+IFRvOiBoZWxnYWFz
-QGtlcm5lbC5vcmc7IGFybmRAYXJuZGIuZGU7IHdpbGwuZGVhY29uQGFybS5jb207DQo+IGNhdGFs
-aW4ubWFyaW5hc0Bhcm0uY29tOyByYWZhZWxAa2VybmVsLm9yZzsgaGFuanVuLmd1b0BsaW5hcm8u
-b3JnOw0KPiBMb3JlbnpvLlBpZXJhbGlzaUBhcm0uY29tOyBva2F5YUBjb2RlYXVyb3JhLm9yZzsg
-amNoYW5kcmFAYnJvYWRjb20uY29tOw0KPiB0bkBzZW1paGFsZi5jb20NCj4gQ2M6IHJvYmVydC5y
-aWNodGVyQGNhdml1bW5ldHdvcmtzLmNvbTsgbXdAc2VtaWhhbGYuY29tOw0KPiBMaXZpdS5EdWRh
-dUBhcm0uY29tOyBkZGFuZXlAY2F2aXVtbmV0d29ya3MuY29tOyBXYW5neWlqaW5nOw0KPiBTdXJh
-dmVlLlN1dGhpa3VscGFuaXRAYW1kLmNvbTsgbXNhbHRlckByZWRoYXQuY29tOyBsaW51eC0NCj4g
-cGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
-OyBsaW51eC0NCj4gYWNwaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
-bC5vcmc7IGxpbmFyby0NCj4gYWNwaUBsaXN0cy5saW5hcm8ub3JnOyBqY21AcmVkaGF0LmNvbTsg
-YW5kcmVhLmdhbGxvQGxpbmFyby5vcmc7DQo+IGRoZGFuZ0BhcG0uY29tOyBqZXJlbXkubGludG9u
-QGFybS5jb207IGxpdWRvbmdkb25nIChDKTsNCj4gY292QGNvZGVhdXJvcmEub3JnOyBHYWJyaWVs
-ZSBQYW9sb25pOyBDaGVueGluIChDaGFybGVzKTsgTGludXhhcm0NCj4gU3ViamVjdDogW1JGQyBQ
-QVRDSCBWMiAxLzJdIEFDUEkvUENJOiBNYXRjaCBQQ0kgY29uZmlnIHNwYWNlIGFjY2Vzc29ycw0K
-PiBhZ2FpbnN0IHBsYXRmcm9tIHNwZWNpZmljIEVDQU0gcXVpcmtzDQo+IA0KPiBGcm9tOiBUb21h
-c3ogTm93aWNraSA8dG5Ac2VtaWhhbGYuY29tPg0KPiANCj4gU29tZSBwbGF0Zm9ybXMgbWF5IG5v
-dCBiZSBmdWxseSBjb21wbGlhbnQgd2l0aCBnZW5lcmljIHNldCBvZiBQQ0kNCj4gY29uZmlnDQo+
-IGFjY2Vzc29ycy4gRm9yIHRoZXNlIGNhc2VzIHdlIGltcGxlbWVudCB0aGUgd2F5IHRvIG92ZXJ3
-cml0ZSBhY2Nlc3NvcnMNCj4gc2V0LiBBbGdvcml0aG0gdHJhdmVyc2VzIGF2YWlsYWJsZSBxdWly
-ayBsaXN0LCBtYXRjaGVzIGFnYWluc3QNCj4gPG9lbV9pZCwgb2VtX3RhYmxlX2lkLCBkb21haW4s
-IGJ1cyBudW1iZXI+IHR1cGxlIGFuZCByZXR1cm5zDQo+IGNvcnJlc3BvbmRpbmcNCj4gUENJIGNv
-bmZpZyBvcHMuIG9lbV9pZCBhbmQgb2VtX3RhYmxlX2lkIGNvbWUgZnJvbSBNQ0ZHIHRhYmxlIHN0
-YW5kYXJkDQo+IGhlYWRlci4NCj4gQWxsIHF1aXJrcyBjYW4gYmUgZGVmaW5lZCB1c2luZyBERUNM
-QVJFX0FDUElfTUNGR19GSVhVUCgpIG1hY3JvIGFuZA0KPiBrZXB0IHNlbGYgY29udGFpbmVkLiBF
-eGFtcGxlOg0KPiANCj4gLyogQ3VzdG9tIFBDSSBjb25maWcgb3BzICovDQo+IHN0YXRpYyBzdHJ1
-Y3QgcGNpX2dlbmVyaWNfZWNhbV9vcHMgZm9vX3BjaV9vcHMgPSB7DQo+IAkuYnVzX3NoaWZ0CT0g
-MjQsDQo+IAkucGNpX29wcyA9IHsNCj4gCQkubWFwX2J1cyA9IHBjaV9lY2FtX21hcF9idXMsDQo+
-IAkJLnJlYWQgPSBmb29fZWNhbV9jb25maWdfcmVhZCwNCj4gCQkud3JpdGUgPSBmb29fZWNhbV9j
-b25maWdfd3JpdGUsDQo+IAl9DQo+IH07DQo+IA0KPiBERUNMQVJFX0FDUElfTUNGR19GSVhVUCgm
-Zm9vX3BjaV9vcHMsIDxvZW1faWRfc3RyPiwgPG9lbV90YWJsZV9pZD4sDQo+IDxkb21haW5fbnI+
-LCA8YnVzX25yPik7DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBUb21hc3ogTm93aWNraSA8dG5Ac2Vt
-aWhhbGYuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBEb25nZG9uZyBMaXUgPGxpdWRvbmdkb25nM0Bo
-dWF3ZWkuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvYWNwaS9wY2lfbWNmZy5jICAgICAgICAgICB8
-IDQxDQo+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLQ0KPiAgaW5jbHVk
-ZS9hc20tZ2VuZXJpYy92bWxpbnV4Lmxkcy5oIHwgIDcgKysrKysrKw0KPiAgaW5jbHVkZS9saW51
-eC9wY2ktYWNwaS5oICAgICAgICAgIHwgMjAgKysrKysrKysrKysrKysrKysrKw0KPiAgMyBmaWxl
-cyBjaGFuZ2VkLCA2NSBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvYWNwaS9wY2lfbWNmZy5jIGIvZHJpdmVycy9hY3BpL3BjaV9tY2ZnLmMN
-Cj4gaW5kZXggZDNjM2U4NS4uNDk2MTJiMyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9hY3BpL3Bj
-aV9tY2ZnLmMNCj4gKysrIGIvZHJpdmVycy9hY3BpL3BjaV9tY2ZnLmMNCj4gQEAgLTIyLDYgKzIy
-LDEwIEBADQo+ICAjaW5jbHVkZSA8bGludXgva2VybmVsLmg+DQo+ICAjaW5jbHVkZSA8bGludXgv
-cGNpLmg+DQo+ICAjaW5jbHVkZSA8bGludXgvcGNpLWFjcGkuaD4NCj4gKyNpbmNsdWRlIDxsaW51
-eC9wY2ktZWNhbS5oPg0KPiArDQo+ICsvKiBSb290IHBvaW50ZXIgdG8gdGhlIG1hcHBlZCBNQ0ZH
-IHRhYmxlICovDQo+ICtzdGF0aWMgc3RydWN0IGFjcGlfdGFibGVfbWNmZyAqbWNmZ190YWJsZTsN
-Cj4gDQo+ICAvKiBTdHJ1Y3R1cmUgdG8gaG9sZCBlbnRyaWVzIGZyb20gdGhlIE1DRkcgdGFibGUg
-Ki8NCj4gIHN0cnVjdCBtY2ZnX2VudHJ5IHsNCj4gQEAgLTM1LDYgKzM5LDM4IEBAIHN0cnVjdCBt
-Y2ZnX2VudHJ5IHsNCj4gIC8qIExpc3QgdG8gc2F2ZSBtY2ZnIGVudHJpZXMgKi8NCj4gIHN0YXRp
-YyBMSVNUX0hFQUQocGNpX21jZmdfbGlzdCk7DQo+IA0KPiArZXh0ZXJuIHN0cnVjdCBwY2lfY2Zn
-X2ZpeHVwIF9fc3RhcnRfYWNwaV9tY2ZnX2ZpeHVwc1tdOw0KPiArZXh0ZXJuIHN0cnVjdCBwY2lf
-Y2ZnX2ZpeHVwIF9fZW5kX2FjcGlfbWNmZ19maXh1cHNbXTsNCj4gKw0KPiArc3RydWN0IHBjaV9l
-Y2FtX29wcyAqcGNpX21jZmdfZ2V0X29wcyhzdHJ1Y3QgYWNwaV9wY2lfcm9vdCAqcm9vdCkNCj4g
-K3sNCj4gKwlpbnQgYnVzX251bSA9IHJvb3QtPnNlY29uZGFyeS5zdGFydDsNCj4gKwlpbnQgZG9t
-YWluID0gcm9vdC0+c2VnbWVudDsNCj4gKwlzdHJ1Y3QgcGNpX2NmZ19maXh1cCAqZjsNCj4gKw0K
-PiArCWlmICghbWNmZ190YWJsZSkNCj4gKwkJcmV0dXJuICZwY2lfZ2VuZXJpY19lY2FtX29wczsN
-Cj4gKw0KPiArCS8qDQo+ICsJICogTWF0Y2ggYWdhaW5zdCBwbGF0Zm9ybSBzcGVjaWZpYyBxdWly
-a3MgYW5kIHJldHVybg0KPiBjb3JyZXNwb25kaW5nDQo+ICsJICogQ0FNIG9wcy4NCj4gKwkgKg0K
-PiArCSAqIEZpcnN0IG1hdGNoIGFnYWluc3QgUENJIHRvcG9sb2d5IDxkb21haW46YnVzPiB0aGVu
-IHVzZSBPRU0gSUQNCj4gYW5kDQo+ICsJICogT0VNIHJldmlzaW9uIGZyb20gTUNGRyB0YWJsZSBz
-dGFuZGFyZCBoZWFkZXIuDQo+ICsJICovDQo+ICsJZm9yIChmID0gX19zdGFydF9hY3BpX21jZmdf
-Zml4dXBzOyBmIDwgX19lbmRfYWNwaV9tY2ZnX2ZpeHVwczsNCj4gZisrKSB7DQo+ICsJCWlmICgo
-Zi0+ZG9tYWluID09IGRvbWFpbiB8fCBmLT5kb21haW4gPT0NCj4gUENJX01DRkdfRE9NQUlOX0FO
-WSkgJiYNCj4gKwkJICAgIChmLT5idXNfbnVtID09IGJ1c19udW0gfHwgZi0+YnVzX251bSA9PQ0K
-PiBQQ0lfTUNGR19CVVNfQU5ZKSAmJg0KPiArCQkgICAgKCFzdHJuY21wKGYtPm9lbV9pZCwgbWNm
-Z190YWJsZS0+aGVhZGVyLm9lbV9pZCwNCj4gKwkJCSAgICAgIEFDUElfT0VNX0lEX1NJWkUpKSAm
-Jg0KPiArCQkgICAgKCFzdHJuY21wKGYtPm9lbV90YWJsZV9pZCwgbWNmZ190YWJsZS0NCj4gPmhl
-YWRlci5vZW1fdGFibGVfaWQsDQo+ICsJCQkgICAgICBBQ1BJX09FTV9UQUJMRV9JRF9TSVpFKSkp
-DQoNCkFzIHlvdSBjYW4gc2VlIGhlcmUgTGl1ZG9uZ2RvbmcgaGFzIHJlcGxhY2VkIG9lbV9yZXZp
-c2lvbiB3aXRoDQpvZW1fdGFibGVfaWQuDQoNCk5vdyBpdCBzZWVtcyB0aGF0IHRoZXJlIGFyZSBz
-b21lIHBsYXRmb3JtcyB0aGF0IGhhdmUgYWxyZWFkeSBzaGlwcGVkDQp1c2luZyBhIG1hdGNoaW5n
-IGJhc2VkIG9uIHRoZSBvZW1fcmV2aXNpb24gKHJpZ2h0IEpvbj8pDQoNCkhvd2V2ZXIgSSBndWVz
-cyB0aGF0IGlmIGluIEZXIHRoZXkgaGF2ZSBkZWZpbmVkIG9lbV90YWJsZV9pZCBwcm9wZXJseQ0K
-dGhleSBzaG91bGQgYmUgYWJsZSB0byB1c2UgdGhpcyBtZWNoYW5pc20gd2l0aG91dCBuZWVkaW5n
-IHRvIGEgRlcgdXBkYXRlLg0KDQpDYW4gdGhlc2UgdmVuZG9ycyBjb25maXJtIHRoaXM/DQoNClRv
-bWFzeiBkbyB5b3UgdGhpbmsgdGhpcyBjYW4gd29yayBmb3IgQ2F2aXVtIFRodW5kZXI/DQoNClRo
-YW5rcw0KDQpHYWINCg0KDQo+ICsJCQlyZXR1cm4gZi0+b3BzOw0KPiArCX0NCj4gKwkvKiBObyBx
-dWlya3MsIHVzZSBFQ0FNICovDQo+ICsJcmV0dXJuICZwY2lfZ2VuZXJpY19lY2FtX29wczsNCj4g
-K30NCj4gKw0KPiAgcGh5c19hZGRyX3QgcGNpX21jZmdfbG9va3VwKHUxNiBzZWcsIHN0cnVjdCBy
-ZXNvdXJjZSAqYnVzX3JlcykNCj4gIHsNCj4gIAlzdHJ1Y3QgbWNmZ19lbnRyeSAqZTsNCj4gQEAg
-LTU0LDcgKzkwLDYgQEAgcGh5c19hZGRyX3QgcGNpX21jZmdfbG9va3VwKHUxNiBzZWcsIHN0cnVj
-dCByZXNvdXJjZQ0KPiAqYnVzX3JlcykNCj4gDQo+ICBzdGF0aWMgX19pbml0IGludCBwY2lfbWNm
-Z19wYXJzZShzdHJ1Y3QgYWNwaV90YWJsZV9oZWFkZXIgKmhlYWRlcikNCj4gIHsNCj4gLQlzdHJ1
-Y3QgYWNwaV90YWJsZV9tY2ZnICptY2ZnOw0KPiAgCXN0cnVjdCBhY3BpX21jZmdfYWxsb2NhdGlv
-biAqbXB0cjsNCj4gIAlzdHJ1Y3QgbWNmZ19lbnRyeSAqZSwgKmFycjsNCj4gIAlpbnQgaSwgbjsN
-Cj4gQEAgLTY0LDggKzk5LDggQEAgc3RhdGljIF9faW5pdCBpbnQgcGNpX21jZmdfcGFyc2Uoc3Ry
-dWN0DQo+IGFjcGlfdGFibGVfaGVhZGVyICpoZWFkZXIpDQo+IA0KPiAgCW4gPSAoaGVhZGVyLT5s
-ZW5ndGggLSBzaXplb2Yoc3RydWN0IGFjcGlfdGFibGVfbWNmZykpIC8NCj4gIAkJCQkJc2l6ZW9m
-KHN0cnVjdCBhY3BpX21jZmdfYWxsb2NhdGlvbik7DQo+IC0JbWNmZyA9IChzdHJ1Y3QgYWNwaV90
-YWJsZV9tY2ZnICopaGVhZGVyOw0KPiAtCW1wdHIgPSAoc3RydWN0IGFjcGlfbWNmZ19hbGxvY2F0
-aW9uICopICZtY2ZnWzFdOw0KPiArCW1jZmdfdGFibGUgPSAoc3RydWN0IGFjcGlfdGFibGVfbWNm
-ZyAqKWhlYWRlcjsNCj4gKwltcHRyID0gKHN0cnVjdCBhY3BpX21jZmdfYWxsb2NhdGlvbiAqKSAm
-bWNmZ190YWJsZVsxXTsNCj4gDQo+ICAJYXJyID0ga2NhbGxvYyhuLCBzaXplb2YoKmFyciksIEdG
-UF9LRVJORUwpOw0KPiAgCWlmICghYXJyKQ0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9hc20tZ2Vu
-ZXJpYy92bWxpbnV4Lmxkcy5oIGIvaW5jbHVkZS9hc20tDQo+IGdlbmVyaWMvdm1saW51eC5sZHMu
-aA0KPiBpbmRleCA2YTY3YWI5Li40MzYwNGZjIDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL2FzbS1n
-ZW5lcmljL3ZtbGludXgubGRzLmgNCj4gKysrIGIvaW5jbHVkZS9hc20tZ2VuZXJpYy92bWxpbnV4
-Lmxkcy5oDQo+IEBAIC0zMDAsNiArMzAwLDEzIEBADQo+ICAJCVZNTElOVVhfU1lNQk9MKF9fZW5k
-X3BjaV9maXh1cHNfc3VzcGVuZF9sYXRlKSA9IC47CVwNCj4gIAl9CQkJCQkJCQlcDQo+ICAJCQkJ
-CQkJCQlcDQo+ICsJLyogQUNQSSBNQ0ZHIHF1aXJrcyAqLwkJCQkJCVwNCj4gKwkuYWNwaV9maXh1
-cCAgICAgICAgOiBBVChBRERSKC5hY3BpX2ZpeHVwKSAtIExPQURfT0ZGU0VUKSB7CVwNCj4gKwkJ
-Vk1MSU5VWF9TWU1CT0woX19zdGFydF9hY3BpX21jZmdfZml4dXBzKSA9IC47CQlcDQo+ICsJCSoo
-LmFjcGlfZml4dXBfbWNmZykJCQkJCVwNCj4gKwkJVk1MSU5VWF9TWU1CT0woX19lbmRfYWNwaV9t
-Y2ZnX2ZpeHVwcykgPSAuOwkJXA0KPiArCX0JCQkJCQkJCVwNCj4gKwkJCQkJCQkJCVwNCj4gIAkv
-KiBCdWlsdC1pbiBmaXJtd2FyZSBibG9icyAqLwkJCQkJXA0KPiAgCS5idWlsdGluX2Z3ICAgICAg
-ICA6IEFUKEFERFIoLmJ1aWx0aW5fZncpIC0gTE9BRF9PRkZTRVQpIHsJXA0KPiAgCQlWTUxJTlVY
-X1NZTUJPTChfX3N0YXJ0X2J1aWx0aW5fZncpID0gLjsJCQlcDQo+IGRpZmYgLS1naXQgYS9pbmNs
-dWRlL2xpbnV4L3BjaS1hY3BpLmggYi9pbmNsdWRlL2xpbnV4L3BjaS1hY3BpLmgNCj4gaW5kZXgg
-N2Q2M2E2Ni4uMDg4YTFkYSAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9saW51eC9wY2ktYWNwaS5o
-DQo+ICsrKyBiL2luY2x1ZGUvbGludXgvcGNpLWFjcGkuaA0KPiBAQCAtMjUsNiArMjUsNyBAQCBz
-dGF0aWMgaW5saW5lIGFjcGlfc3RhdHVzDQo+IHBjaV9hY3BpX3JlbW92ZV9wbV9ub3RpZmllcihz
-dHJ1Y3QgYWNwaV9kZXZpY2UgKmRldikNCj4gIGV4dGVybiBwaHlzX2FkZHJfdCBhY3BpX3BjaV9y
-b290X2dldF9tY2ZnX2FkZHIoYWNwaV9oYW5kbGUgaGFuZGxlKTsNCj4gDQo+ICBleHRlcm4gcGh5
-c19hZGRyX3QgcGNpX21jZmdfbG9va3VwKHUxNiBkb21haW4sIHN0cnVjdCByZXNvdXJjZQ0KPiAq
-YnVzX3Jlcyk7DQo+ICtleHRlcm4gc3RydWN0IHBjaV9lY2FtX29wcyAqcGNpX21jZmdfZ2V0X29w
-cyhzdHJ1Y3QgYWNwaV9wY2lfcm9vdA0KPiAqcm9vdCk7DQo+IA0KPiAgc3RhdGljIGlubGluZSBh
-Y3BpX2hhbmRsZSBhY3BpX2ZpbmRfcm9vdF9icmlkZ2VfaGFuZGxlKHN0cnVjdCBwY2lfZGV2DQo+
-ICpwZGV2KQ0KPiAgew0KPiBAQCAtNzIsNiArNzMsMjUgQEAgc3RydWN0IGFjcGlfcGNpX3Jvb3Rf
-b3BzIHsNCj4gIAlpbnQgKCpwcmVwYXJlX3Jlc291cmNlcykoc3RydWN0IGFjcGlfcGNpX3Jvb3Rf
-aW5mbyAqaW5mbyk7DQo+ICB9Ow0KPiANCj4gK3N0cnVjdCBwY2lfY2ZnX2ZpeHVwIHsNCj4gKwlz
-dHJ1Y3QgcGNpX2VjYW1fb3BzICpvcHM7DQo+ICsJY2hhciAqb2VtX2lkOw0KPiArCWNoYXIgKm9l
-bV90YWJsZV9pZDsNCj4gKwlpbnQgZG9tYWluOw0KPiArCWludCBidXNfbnVtOw0KPiArfTsNCj4g
-Kw0KPiArI2RlZmluZSBQQ0lfTUNGR19ET01BSU5fQU5ZCS0xDQo+ICsjZGVmaW5lIFBDSV9NQ0ZH
-X0JVU19BTlkJLTENCj4gKw0KPiArLyogRGVzaWduYXRlIGEgcm91dGluZSB0byBmaXggdXAgYnVn
-Z3kgTUNGRyAqLw0KPiArI2RlZmluZSBERUNMQVJFX0FDUElfTUNGR19GSVhVUChvcHMsIG9lbV9p
-ZCwgb2VtX3RhYmxlX2lkLCBkb20sIGJ1cykNCj4gCVwNCj4gKwlzdGF0aWMgY29uc3Qgc3RydWN0
-IHBjaV9jZmdfZml4dXAJCQkJXA0KPiArCV9fbWNmZ19maXh1cF8jI29lbV9pZCMjb2VtX3RhYmxl
-X2lkIyNkb20jI2J1cwkJCVwNCj4gKwlfX3VzZWQJX19hdHRyaWJ1dGVfXygoX19zZWN0aW9uX18o
-Ii5hY3BpX2ZpeHVwX21jZmciKSwNCj4gCVwNCj4gKwkJCQlhbGlnbmVkKChzaXplb2Yodm9pZCAq
-KSkpKSkgPQkJXA0KPiArCXsgb3BzLCBvZW1faWQsIG9lbV90YWJsZV9pZCwgZG9tLCBidXMgfTsN
-Cj4gKw0KPiAgZXh0ZXJuIGludCBhY3BpX3BjaV9wcm9iZV9yb290X3Jlc291cmNlcyhzdHJ1Y3Qg
-YWNwaV9wY2lfcm9vdF9pbmZvDQo+ICppbmZvKTsNCj4gIGV4dGVybiBzdHJ1Y3QgcGNpX2J1cyAq
-YWNwaV9wY2lfcm9vdF9jcmVhdGUoc3RydWN0IGFjcGlfcGNpX3Jvb3QgKnJvb3QsDQo+ICAJCQkJ
-CSAgICBzdHJ1Y3QgYWNwaV9wY2lfcm9vdF9vcHMgKm9wcywNCj4gLS0NCj4gMS45LjENCg0K
+Hi Thomas,
+
+
+> +static const struct irq_domain_ops advk_pcie_msi_irq_ops = {
+> +       .map = advk_pcie_msi_map,
+> +};
+> +
+> +static void advk_pcie_irq_mask(struct irq_data *d)
+> +{
+> +       struct advk_pcie *pcie = d->domain->host_data;
+> +       irq_hw_number_t hwirq = irqd_to_hwirq(d);
+> +       u32 mask;
+> +
+> +       mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+> +       mask |= PCIE_ISR0_INTX_ASSERT(hwirq) |
+> +               PCIE_ISR0_INTX_DEASSERT(hwirq);
+> +       advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
+> +}
+> +
+> +static void advk_pcie_irq_unmask(struct irq_data *d)
+> +{
+> +       struct advk_pcie *pcie = d->domain->host_data;
+> +       irq_hw_number_t hwirq = irqd_to_hwirq(d);
+> +       u32 mask;
+> +
+> +       mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+> +       mask &= ~(PCIE_ISR0_INTX_ASSERT(hwirq) |
+> +                 PCIE_ISR0_INTX_DEASSERT(hwirq));
+
+Have you checked my latest improvements of interrupt handling in this
+controller? As DEASSERT is polled in advk_pcie_handle_int() I don't
+think it should be able to trigger root complex interrupt at all.
+Hence I think it shouldn't be unmasked.
+
+> +       advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
+> +}
+> +
+> +static int advk_pcie_irq_map(struct irq_domain *h,
+> +                            unsigned int virq, irq_hw_number_t hwirq)
+> +{
+> +       struct advk_pcie *pcie = h->host_data;
+> +
+> +       advk_pcie_irq_mask(irq_get_irq_data(virq));
+> +       irq_set_status_flags(virq, IRQ_LEVEL);
+> +       irq_set_chip_and_handler(virq, &pcie->irq_chip,
+> +                                handle_level_irq);
+> +       irq_set_chip_data(virq, pcie);
+> +
+> +       return 0;
+> +}
+> +
+> +static const struct irq_domain_ops advk_pcie_irq_domain_ops = {
+> +       .map = advk_pcie_irq_map,
+> +       .xlate = irq_domain_xlate_onecell,
+> +};
+> +
+> +static int advk_pcie_init_irq(struct advk_pcie *pcie)
+> +{
+> +       struct device *dev = &pcie->pdev->dev;
+> +       struct device_node *node = dev->of_node;
+> +       struct device_node *pcie_intc_node;
+> +       struct irq_chip *irq_chip, *msi_irq_chip;
+> +       struct msi_controller *msi;
+> +       phys_addr_t msi_msg_phys;
+> +
+> +       pcie_intc_node =  of_get_next_child(node, NULL);
+> +       if (!pcie_intc_node) {
+> +               dev_err(dev, "No PCIe Intc node found\n");
+> +               return PTR_ERR(pcie_intc_node);
+> +       }
+> +
+> +       irq_chip = &pcie->irq_chip;
+> +
+> +       irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
+> +                                       dev_name(dev));
+> +       if (!irq_chip->name)
+> +               return -ENOMEM;
+> +       irq_chip->irq_mask = advk_pcie_irq_mask;
+> +       irq_chip->irq_mask_ack = advk_pcie_irq_mask;
+> +       irq_chip->irq_unmask = advk_pcie_irq_unmask;
+> +
+> +       pcie->irq_domain =
+> +               irq_domain_add_linear(pcie_intc_node, LEGACY_IRQ_NUM,
+> +                                     &advk_pcie_irq_domain_ops, pcie);
+> +       if (!pcie->irq_domain) {
+> +               dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> +               return PTR_ERR(pcie->irq_domain);
+> +       }
+> +
+> +       msi_irq_chip = &pcie->msi_irq_chip;
+> +
+> +       msi_irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-msi",
+> +                                                dev_name(dev));
+> +       if (!msi_irq_chip->name) {
+> +               irq_domain_remove(pcie->irq_domain);
+> +               return -ENOMEM;
+> +       }
+> +
+> +       msi_irq_chip->irq_enable = pci_msi_unmask_irq;
+> +       msi_irq_chip->irq_disable = pci_msi_mask_irq;
+> +       msi_irq_chip->irq_mask = pci_msi_mask_irq;
+> +       msi_irq_chip->irq_unmask = pci_msi_unmask_irq;
+> +
+> +       msi = &pcie->msi;
+
+Do we consciously resign from CONFIG_MSI dependency? I know it should
+always be enabled, but just making sure.
+
+> +
+> +       msi->setup_irq = advk_pcie_setup_msi_irq;
+> +       msi->teardown_irq = advk_pcie_teardown_msi_irq;
+> +       msi->of_node = node;
+> +
+> +       mutex_init(&pcie->msi_used_lock);
+> +
+> +       msi_msg_phys = virt_to_phys(&pcie->msi_msg);
+> +
+> +       advk_writel(pcie, lower_32_bits(msi_msg_phys),
+> +                   PCIE_MSI_ADDR_LOW_REG);
+> +       advk_writel(pcie, upper_32_bits(msi_msg_phys),
+> +                   PCIE_MSI_ADDR_HIGH_REG);
+> +
+> +       pcie->msi_domain =
+> +               irq_domain_add_linear(NULL, MSI_IRQ_NUM,
+> +                                     &advk_pcie_msi_irq_ops, pcie);
+> +       if (!pcie->msi_domain) {
+> +               irq_domain_remove(pcie->irq_domain);
+> +               return -ENOMEM;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static void advk_pcie_handle_msi(struct advk_pcie *pcie)
+> +{
+> +       u32 msi_val, msi_mask, msi_status, msi_idx;
+> +       u16 msi_data;
+> +
+> +       msi_mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
+> +       msi_val = advk_readl(pcie, PCIE_MSI_STATUS_REG);
+> +       msi_status = msi_val & ~msi_mask;
+> +
+> +       for (msi_idx = 0; msi_idx < MSI_IRQ_NUM; msi_idx++) {
+> +               if (!(BIT(msi_idx) & msi_status))
+> +                       continue;
+> +
+> +               advk_writel(pcie, BIT(msi_idx), PCIE_MSI_STATUS_REG);
+> +               msi_data = advk_readl(pcie, PCIE_MSI_PAYLOAD_REG) & 0xFF;
+> +               generic_handle_irq(msi_data);
+> +       }
+> +
+> +       advk_writel(pcie, PCIE_ISR0_MSI_INT_PENDING,
+> +                   PCIE_ISR0_REG);
+> +}
+> +
+> +static void advk_pcie_handle_int(struct advk_pcie *pcie)
+> +{
+> +       u32 val, mask, status;
+> +
+> +       val = advk_readl(pcie, PCIE_ISR0_REG);
+> +       mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+> +       status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
+> +
+> +       if (!status) {
+> +               advk_writel(pcie, val, PCIE_ISR0_REG);
+> +               return;
+> +       }
+> +
+> +       /* Process MSI interrupts */
+> +       if (status & PCIE_ISR0_MSI_INT_PENDING)
+> +               advk_pcie_handle_msi(pcie);
+> +
+> +       /* Process legacy interrupts */
+> +       do {
+> +               int i;
+> +
+> +               /*
+> +                * As documented in the datasheet, we need to raise an
+> +                * interrupt for each ASSERT(i) bit that is set, and
+> +                * continue to deliver the interrupt until the
+> +                * DEASSERT(i) bit gets set
+> +                */
+
+Below code will result in spurious interrupt flood (I can provide test
+details with SATA3.0 card). I know this part of specs very well, but
+expected EP operation flow should look like this:
+a. EP interrupt
+b. INTX_ASSERT signal
+c. root complex interrupt
+d. clear INTX_ASSERT bit
+e. execute EP handler
+f. INTX_DEASSERT signal
+g. clear INTX_DEASSERT bit
+h. exit interrupt
+
+Now between d. and f., in case of any shortest delay we will force
+executing EP handler numerous of times, which IMO is not desired. All
+of them for e.g. the SATA3.0 card are registered as spurious
+interrupts, pretty quickly resulting in "switching to irq poll"
+failure after 100k of such happenings. Actually I think that after
+executing generic_handle_irq(virq); we should leave root complex isr
+asap, the polling for DEASSERT in such case is not resulting in any
+benefits. In my code I ignored DEASSERT signal existence - it neither
+triggers interrupt nor we don't poll for it. Under big stress nothing
+wrong happens. We rely only on interrupts triggered by INTX_ASSERT
+signal, so we care only for its status.
+
+> +               for (i = 0; i < LEGACY_IRQ_NUM; i++) {
+> +                       if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
+> +                               continue;
+> +
+> +                       do {
+> +                               int virq;
+> +
+> +                               advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
+> +                                           PCIE_ISR0_REG);
+> +                               virq = irq_find_mapping(pcie->irq_domain, i);
+> +                               generic_handle_irq(virq);
+> +                               status = advk_readl(pcie, PCIE_ISR0_REG);
+> +                       } while (!(status & PCIE_ISR0_INTX_DEASSERT(i)));
+> +
+> +                       advk_writel(pcie, PCIE_ISR0_INTX_DEASSERT(i),
+> +                                   PCIE_ISR0_REG);
+> +               }
+> +
+> +               status = advk_readl(pcie, PCIE_ISR0_REG);
+> +       } while (status & PCIE_ISR0_INTX_MASK);
+
+How about simplifying code a bit and remove this do-while loop? IMO
+it's enough to do single iterating through INTA/B/C/D and exit - in
+such case we wouldn't spent too much time in single top half handler.
+
+I'm looking forward to your feedback.
+
+Best regards,
+Marcin
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
