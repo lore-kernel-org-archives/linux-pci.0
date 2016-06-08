@@ -1,70 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26002 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753579AbcFRCZl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2016 22:25:41 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v13 14/16] PCI: Add has_mem64 for struct host_bridge
-Date: Fri, 17 Jun 2016 19:24:59 -0700
-Message-Id: <20160618022501.15648-15-yinghai@kernel.org>
-In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
-References: <20160618022501.15648-1-yinghai@kernel.org>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33127 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754102AbcFHUou (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2016 16:44:50 -0400
+Date: Wed, 8 Jun 2016 15:44:48 -0500
+From: Rob Herring <robh@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+Message-ID: <20160608204448.GA26861@rob-hp-laptop>
+References: <1465373117-823-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465373117-823-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add has_mem64 for struct host_bridge, on root bus that does not support
-mmio64 above 4g, will not set that.
+On Wed, Jun 08, 2016 at 04:05:17PM +0800, Shawn Lin wrote:
+> This patch adds a binding that describes the Rockchip PCIe controller
+> found on Rockchip SoCs PCIe interface.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+> 
+> Changes in v2:
+> - fix lots clk/reset stuff suggested by Heiko
+> - remove msi-parent and add msi-map suggested by Marc
+> - drop phy related stuff
+> - some others minor fixes
+> 
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 86 ++++++++++++++++++++++
+>  1 file changed, 86 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> new file mode 100644
+> index 0000000..eb92e29
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -0,0 +1,86 @@
+> +* Rockchip AXI PCIe Root Port Bridge DT description
+> +
+> +Required properties:
+> +- #address-cells: Address representation for root ports, set to <3>
+> +- #size-cells: Size representation for root ports, set to <2>
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +		interrupt source. The value must be 1.
+> +- compatible: Should contain "rockchip,rk3399-pcie"
+> +- reg: Two register ranges as listed in the reg-names property
+> +- reg-names: Must include the following names
+> +	- "axi-base"
+> +	- "apb-base"
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +		See ../clocks/clock-bindings.txt for details.
+> +- clock-names: Must include the following entries:
+> +	- "aclk"
+> +	- "aclk-perf"
+> +	- "hclk"
+> +	- "pm"
+> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+> +- phy-names:  MUST be "pcie-phy".
 
-We will use that info next two following patches:
-1. Don't treat non-pref mmio64 as pref mmio, so will not put
-   it under bridge's pref range when rescan the devices
-2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+phy-names is kind of pointless for 1 phy.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/probe.c | 7 +++++++
- include/linux/pci.h | 1 +
- 2 files changed, 8 insertions(+)
+> +- interrupts: Three interrupt entries must be specified.
+> +- interrupt-names: Must include the following names
+> +	- "sys"
+> +	- "legacy"
+> +	- "client"
+> +- resets: Must contain five entries for each entry in reset-names.
+> +	   See ../reset/reset.txt for details.
+> +- reset-names: Must include the following names
+> +	- "core"
+> +	- "mgmt"
+> +	- "mgmt-sticky"
+> +	- "pipe"
+> +- pinctrl-names : The pin control state names
+> +- pinctrl-0: The "default" pinctrl state
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +- interrupt-controller: identifies the node as an interrupt controller
+> +
+> +Optional Property:
+> +- ep-gpios: contain the entry for pre-reset gpio
+> +- num-lanes: number of lanes to use
+> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie. If this
+> +  is specified we'll defer probe until we can find this regulator.
+> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie. If this
+> +  is specified we'll defer probe until we can find this regulator.
+> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie. If this
+> +  is specified we'll defer probe until we can find this regulator.
+> +
+> +Example:
+> +
+> +pcie0: pcie@f8000000 {
+> +	compatible = "rockchip,rk3399-pcie";
+> +	#address-cells = <3>;
+> +	#size-cells = <2>;
+> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
+> +		 <&cru PCLK_PCIE>;
+> +	clock-names = "aclk", "aclk-perf",
+> +		      "hclk";
+> +	bus-range = <0x0 0x1>;
+> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+> +	interrupt-names: "sys", "legacy", "client";
+> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+> +	assigned-clock-rates = <100000000>;
+> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
+> +	ranges = < 0x82000000 0 0xfa000000 0x0 0xfa000000 0 0x600000
+> +		   0x81000000 0 0xfa600000 0x0 0xfa600000 0 0x100000 >;
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5d11dec..90091fa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2231,6 +2231,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		} else
- 			bus_addr[0] = '\0';
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
-+
-+		if (resource_type(res) == IORESOURCE_MEM) {
-+			if ((res->end - offset) > 0xffffffff)
-+				bridge->has_mem64 = 1;
-+			if ((res->start - offset) > 0xffffffff)
-+				res->flags |= IORESOURCE_MEM_64;
-+		}
- 	}
- 
- 	down_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3f158c4..5bb8441 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -406,6 +406,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-+	unsigned int has_mem64:1;
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
--- 
-2.8.3
+No 64-bit memory space?
 
+> +	num-lanes = <4>;
+> +	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
+> +	reg-name = "axi-base", "apb-base";
+> +	resets = <&cru SRST_PCIEPHY>, <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
+> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
+> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
+> +	phys = <&pcie_phy>;
+> +	phy-names = "pcie-phy";
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pcie_clkreq>;
+> +	#interrupt-cells = <1>;
+> +	interrupt-controller;
+> +	interrupt-map-mask = <0 0 0 7>;
+> +	interrupt-map = <0 0 0 1 &pcie0 1>,
+> +			<0 0 0 2 &pcie0 2>,
+> +			<0 0 0 3 &pcie0 3>,
+> +			<0 0 0 4 &pcie0 4>;
+> +};
+> -- 
+> 2.3.7
+> 
+> 
