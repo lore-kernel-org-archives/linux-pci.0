@@ -1,61 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0059.outbound.protection.outlook.com ([104.47.36.59]:62560
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751259AbcFNLkI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 07:40:08 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Sinan Kaya <okaya@codeaurora.org>,
-	Vinod Koul <vinod.koul@intel.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>,
-	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>
-Subject: RE: PCIe EndPoint DMA driver with DMA Framework
-Date: Tue, 14 Jun 2016 11:40:00 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258B33B8@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B267B@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160613052531.GZ16910@localhost> <575EBE09.9090603@codeaurora.org>
-In-Reply-To: <575EBE09.9090603@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:57790 "HELO
+	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752248AbcFHAM6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2016 20:12:58 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH v1 1/1] PCI / PM: enforce type casting for pci_power_t
+Date: Wed, 08 Jun 2016 02:16:58 +0200
+Message-ID: <1652791.MK3RD42PLf@vostro.rjw.lan>
+In-Reply-To: <1465321713-146178-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1465321713-146178-1-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Vinod/kanya,
+On Tuesday, June 07, 2016 08:48:33 PM Andy Shevchenko wrote:
+> When cast pci_power_t type of variables a static analizer tool complains on
+> that.
+> 
+> 	include/linux/pci.h:119:37: warning: cast from restricted pci_power_t
+> 
+> Enforce type casting to make static analizer happy.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-> On 6/13/2016 1:25 AM, Vinod Koul wrote:
-> >> We are planning to write a PCIe EndPoint DMA driver with DMA
-> >> Framework
-> >> > targeting x86 machine.  (
-> >> >
-> "https://www.kernel.org/doc/Documentation/dmaengine/provider.txt")
-> >> > Our DMA controller is part of PCIe End Point.  We are targeting to
-> >> > measure PCIe performance with this Framework driver.
-> >> >
-> >> > But when I see DMA Framework drivers is kernel source "drivers/dma"
-> >> > most of the drivers are platform drivers.
-> > wrong, there are bunch of PCI X86 driver. Look closely dw, ioat etc
->
-> I usually see endpoint specific DMA code to reside in the endpoint device
-> driver not in the dmaengine directory.
->
-> I think the main question is who the consumer of this DMA controller is like
-> Vinod asked.
->
-> If it is a general purpose DMA controller then dmaengine would be the right
-> place.
->
-> If it is specific to your endpoint, then it should be set up and used in your
-> endpoint device driver.
->
-Our DMA controller is specific to EP.
+ACK
 
-Thanks a lot kanya and vinod for the clarifications.
-
-Bharat
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+> ---
+>  include/linux/pci.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index b67e4df..8d74834 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -116,7 +116,7 @@ extern const char *pci_power_names[];
+>  
+>  static inline const char *pci_power_name(pci_power_t state)
+>  {
+> -	return pci_power_names[1 + (int) state];
+> +	return pci_power_names[1 + (__force int) state];
+>  }
+>  
+>  #define PCI_PM_D2_DELAY		200
+> 
 
