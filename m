@@ -1,104 +1,68 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Thu, 2 Jun 2016 17:50:18 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
-	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
-Subject: Re: [PATCH V8 3/9] pci: Add new function to unmap IO resources.
-Message-ID: <20160602165018.GG13962@red-moon>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-4-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48986 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751035AbcFIRCD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jun 2016 13:02:03 -0400
+Date: Thu, 9 Jun 2016 12:01:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack
+ overflow"
+Message-ID: <20160609170156.GB1109@localhost>
+References: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <m3inxt17zo.fsf@t19.piap.pl>
+ <11128570.JeBAgI5zQr@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464621262-26770-4-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <11128570.JeBAgI5zQr@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 05:14:16PM +0200, Tomasz Nowicki wrote:
-> We need to release I/O resources so that the same I/O resources
-> can be allocated again (pci_remap_iospace), like in PCI hotplug removal
-> scenario. Therefore this patch implements new pci_unmap_iospace call which
-> unmaps I/O space as the symmetry to pci_remap_iospace.
+On Wed, Jun 01, 2016 at 11:09:47PM +0200, Arnd Bergmann wrote:
+> On Wednesday, June 1, 2016 1:08:59 PM CEST Krzysztof Hałasa wrote:
+> > Bjorn Helgaas <bhelgaas@google.com> writes:
+> > 
+> > > This reverts commit 498a92d42596a7a32c042319eb62a4c3d8081cf1.
+> > >
+> > > Krzysztof reported that this change broke Cavium CNS3xxx, ARMv6 (Laguna
+> > > GW-2388) because the MRRS setting is never written to the hardware.
+> > >
+> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > CC: Arnd Bergmann <arnd@arndb.de>
+> > > CC: Krzysztof Hałasa <khalasa@piap.pl>
+> > > ---
+> > >  arch/arm/mach-cns3xxx/pcie.c |   71 ++++++++++++++++++++++++------------------
+> > >  1 file changed, 41 insertions(+), 30 deletions(-)
+> > 
+> > This, applied to v4.7-rc1, fixes the problem on my Laguna boards.
+> > 
+> > Tested-by: Krzysztof Hałasa <khalasa@piap.pl>
+> > 
+> > And as well
+> > 
+> > Acked-by: Krzysztof Hałasa <khalasa@piap.pl>
 > 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> ---
->  drivers/pci/pci.c   | 18 ++++++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 19 insertions(+)
+> Thank!
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index c8b4dbd..eb431b5 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -25,6 +25,7 @@
->  #include <linux/device.h>
->  #include <linux/pm_runtime.h>
->  #include <linux/pci_hotplug.h>
-> +#include <linux/vmalloc.h>
->  #include <asm/setup.h>
->  #include <linux/aer.h>
->  #include "pci.h"
-> @@ -3165,6 +3166,23 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
->  #endif
->  }
->  
-> +/**
-> + *	pci_unmap_iospace - Unmap the memory mapped I/O space
-> + *	@res: resource to be unmapped
-> + *
-> + *	Unmap the CPU virtual address @res from virtual address space.
-> + *	Only architectures that have memory mapped IO functions defined
-> + *	(and the PCI_IOBASE value defined) should call this function.
-> + */
-> +void pci_unmap_iospace(struct resource *res)
-> +{
-> +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-> +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
-> +
-> +	unmap_kernel_range(vaddr, resource_size(res));
-> +#endif
-> +}
-
-Rafael mentioned that, it would be cleaner to move the ifdef outside
-the function and add an empty static inline (but that probably should
-be done in one go along with pci_remap_iospace() and
-pci_pio_to_address() and pci_address_to_pio()) it would be weird
-to do it just for pci_unmap_iospace().
-
-It is true that unmap_kernel_range() is not commonly used in generic
-code, but to the best of my knowledge it does what's required here,
-(ie clear page table entries and flush tlbs, given that it is used
-in conjuction with ioremap_page_range() that maps a physical address
-to a specific preallocated virtual address ie PCI_IOBASE), so:
-
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> +
->  static void __pci_set_master(struct pci_dev *dev, bool enable)
->  {
->  	u16 old_cmd, cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index b67e4df..12349de 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1167,6 +1167,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  unsigned long pci_address_to_pio(phys_addr_t addr);
->  phys_addr_t pci_pio_to_address(unsigned long pio);
->  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> +void pci_unmap_iospace(struct resource *res);
->  
->  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
->  {
-> -- 
-> 1.9.1
+> Obviously, I'd rather not bring back the gcc warning or the potential
+> stack overflow (however unlikely).
 > 
+> What exactly is the problem we are seeing, and is there a way to fix
+> it on top of my patch? Are we perhaps just missing a call to
+> pcie_bus_configure_settings()?
+> 
+> Note that cns3xxx is in a bit of an odd state, as only half of the
+> platform code is even present in the kernel, and there is no effort
+> to change that. As far as I know, the board that this was tested on
+> is not present in the mainline kernel, and the board we support
+> is a development system that few people even own at this point.
+
+I'm sure there's a good, simple fix for this that would be better than
+the revert.  Unfortunately I don't have time to work on it right now.
+I'll be on vacation for the last 2-3 weeks before v4.7 releases, so
+I'm scrambling to get the big chunks merged before 6/22 or so.
+
+Bjorn
