@@ -1,87 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:35736 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932067AbcF3Jcu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 05:32:50 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v3 3/3] arm64: dts: marvell: Aardvark PCIe support for Armada 3700
-Date: Thu, 30 Jun 2016 11:32:32 +0200
-Message-Id: <1467279152-5717-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <mathias.koehrer@etas.com>
+Return-Path: <mathias.koehrer@etas.com>
+From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"helgaas@kernel.org" <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH] Extending kernel option pci=resource_alignment to be able
+ to specify PCI device/vendor IDs
+Date: Thu, 9 Jun 2016 12:40:30 +0000
+Message-ID: <a6dc1dbf212c46fc99533fff0b1720cd@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds the SoC-level description of the PCIe controller found
-on the Marvell Armada 3700, and also enables this PCIe controller on the
-development board for this SoC.
+Hi Bjorn,
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm64/boot/dts/marvell/armada-3720-db.dts |  5 +++++
- arch/arm64/boot/dts/marvell/armada-37xx.dtsi   | 25 +++++++++++++++++++++++++
- 2 files changed, 30 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/marvell/armada-3720-db.dts b/arch/arm64/boot/dts/marvell/armada-3720-db.dts
-index 86110a6..1372e9a6 100644
---- a/arch/arm64/boot/dts/marvell/armada-3720-db.dts
-+++ b/arch/arm64/boot/dts/marvell/armada-3720-db.dts
-@@ -76,3 +76,8 @@
- &usb3 {
- 	status = "okay";
- };
-+
-+/* CON17 (PCIe) / CON12 (mini-PCIe) */
-+&pcie0 {
-+	status = "okay";
-+};
-diff --git a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-index 9e2efb8..8a9cae9 100644
---- a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-+++ b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-@@ -141,5 +141,30 @@
- 				      <0x1d40000 0x40000>; /* GICR */
- 			};
- 		};
-+
-+		pcie0: pcie@d0070000 {
-+			compatible = "marvell,armada-3700-pcie";
-+			device_type = "pci";
-+			status = "disabled";
-+			reg = <0 0xd0070000 0 0x20000>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			bus-range = <0x00 0xff>;
-+			interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
-+			#interrupt-cells = <1>;
-+			msi-parent = <&pcie0>;
-+			msi-controller;
-+			ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
-+				  0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+					<0 0 0 2 &pcie_intc 1>,
-+					<0 0 0 3 &pcie_intc 2>,
-+					<0 0 0 4 &pcie_intc 3>;
-+			pcie_intc: interrupt-controller {
-+				interrupt-controller;
-+				#interrupt-cells = <1>;
-+			};
-+		};
- 	};
- };
--- 
-2.7.4
-
+can you please comment on that?
+> > > Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
+> > >
+> > > ---
+> > >  Documentation/kernel-parameters.txt |    2 +
+> > >  drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++=
+-----------
+> > >  2 files changed, 49 insertions(+), 19 deletions(-)
+> >
+> > This looks better, but wow, messy.  I'll defer to the PCI maintainer
+> > and developers now, this is in their camp, not mine :)
+> It looks messy as I had to change the indentation of existing code...
+> A "diff -u -w" on pci.c delivers a much simpler diff:
+>=20
+> --- pci.c.orig	2016-05-29 16:29:24.000000000 +0000
+> +++ pci.c	2016-06-08 06:08:05.000000000 +0000
+> @@ -4755,6 +4755,7 @@
+>  static resource_size_t pci_specified_resource_alignment(struct pci_dev *=
+dev)
+> {
+>  	int seg, bus, slot, func, align_order, count;
+> +	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+>  	resource_size_t align =3D 0;
+>  	char *p;
+>=20
+> @@ -4768,6 +4769,32 @@
+>  		} else {
+>  			align_order =3D -1;
+>  		}
+> +		if (strncmp(p, "pci:", 4) =3D=3D 0) {
+> +			/* PCI vendor/device (subvendor/subdevice) ids are
+> specified */
+> +			p +=3D 4;
+> +			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
+> +				&vendor, &device, &subsystem_vendor,
+> &subsystem_device, &count) !=3D 4) {
+> +				if (sscanf(p, "%hx:%hx%n", &vendor, &device,
+> &count) !=3D 2) {
+> +					printk(KERN_ERR "PCI: Can't parse
+> resource_alignment parameter: pci:%s\n",
+> +						p);
+> +					break;
+> +				}
+> +				subsystem_vendor =3D subsystem_device =3D 0;
+> +			}
+> +			p +=3D count;
+> +			if ((!vendor || (vendor =3D=3D dev->vendor)) &&
+> +				(!device || (device =3D=3D dev->device)) &&
+> +				(!subsystem_vendor || (subsystem_vendor =3D=3D
+> dev->subsystem_vendor)) &&
+> +				(!subsystem_device || (subsystem_device =3D=3D
+> dev->subsystem_device))) {
+> +				if (align_order =3D=3D -1)
+> +					align =3D PAGE_SIZE;
+> +				else
+> +					align =3D 1 << align_order;
+> +				/* Found */
+> +				break;
+> +			}
+> +		}
+> +		else {
+>  		if (sscanf(p, "%x:%x:%x.%x%n",
+>  			&seg, &bus, &slot, &func, &count) !=3D 4) {
+>  			seg =3D 0;
+> @@ -4791,6 +4818,7 @@
+>  			/* Found */
+>  			break;
+>  		}
+> +		}
+>  		if (*p !=3D ';' && *p !=3D ',') {
+>  			/* End of param or invalid format */
+>  			break;
+>=20
+>=20
+Thanks
+Mathias
