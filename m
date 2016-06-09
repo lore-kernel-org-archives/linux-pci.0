@@ -1,161 +1,165 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Jun 2016 09:26:23 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 9 Jun 2016 11:50:11 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v1 19/25] PCI: rcar Gen2: Request host bridge window
- resources
-Message-ID: <20160621142623.GA29966@localhost>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160606230706.20936.13086.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <CAMuHMdVgLfTD-BjRZ+gVKgYE8dkDZzQ6DnYtkUs+jVPthJsEdQ@mail.gmail.com>
+To: Chen Yu <yu.c.chen@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arch <linux-arch@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
+Message-ID: <20160609165011.GA1109@localhost>
+References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
+ <20160530213305.GA21322@localhost>
+ <574D03F9.6050201@intel.com>
+ <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
+ <574D3AAA.6090503@intel.com>
+ <20160531131658.GA23837@localhost>
+ <57579F9F.6010200@intel.com>
+ <20160608124742.GA16764@localhost>
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdVgLfTD-BjRZ+gVKgYE8dkDZzQ6DnYtkUs+jVPthJsEdQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org,
- Bjorn Helgaas <bhelgaas@google.com>, Thierry Reding <thierry.reding@gmail.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Pratyush Anand <pratyush.anand@gmail.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Valentine Barshak <valentine.barshak@cogentembedded.com>,
- linux-arm-kernel@lists.infradead.org, Jason Cooper <jason@lakedaemon.net>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- Simon Horman <horms@verge.net.au>, linux-tegra@vger.kernel.org,
- =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Scott Branden <sbranden@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- Ley Foon Tan <lftan@altera.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160608124742.GA16764@localhost>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Valentine]
-
-Hi Geert,
-
-Thanks a lot for testing this, and sorry for the breakage.
-
-On Tue, Jun 21, 2016 at 12:41:31PM +0200, Geert Uytterhoeven wrote:
-> On Tue, Jun 7, 2016 at 1:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > Request host bridge window resources so they appear in ioport_resource and
-> > iomem_resource and are reflected in /proc/ioports and /proc/iomem.
-> >
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/pci/host/pci-rcar-gen2.c |    4 ++++
-> >  1 file changed, 4 insertions(+)
-> >
-> > diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> > index 9980a4b..617a6b2 100644
-> > --- a/drivers/pci/host/pci-rcar-gen2.c
-> > +++ b/drivers/pci/host/pci-rcar-gen2.c
-> > @@ -194,6 +194,7 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
-> >         struct rcar_pci_priv *priv = sys->private_data;
-> >         void __iomem *reg = priv->reg;
-> >         u32 val;
-> > +       int ret;
-> >
-> >         pm_runtime_enable(priv->dev);
-> >         pm_runtime_get_sync(priv->dev);
-> > @@ -275,6 +276,9 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
-> >         /* Add PCI resources */
-> >         pci_add_resource(&sys->resources, &priv->io_res);
-> >         pci_add_resource(&sys->resources, &priv->mem_res);
-> > +       ret = devm_request_pci_bus_resources(priv->dev, &sys->resources);
-> > +       if (ret < 0)
-> > +               return ret;
-> >
-> >         /* Setup bus number based on platform device id / of bus-range */
-> >         sys->busnr = priv->busnr;
+On Wed, Jun 08, 2016 at 07:47:42AM -0500, Bjorn Helgaas wrote:
+> On Wed, Jun 08, 2016 at 12:31:27PM +0800, Chen Yu wrote:
+> > Hi Bjorn,
+> > 
+> > On 2016年05月31日 21:16, Bjorn Helgaas wrote:
+> > >On Tue, May 31, 2016 at 03:18:02PM +0800, Chen Yu wrote:
+> > >>On 2016年05月31日 15:00, Yinghai Lu wrote:
+> > >>>On Mon, May 30, 2016 at 8:24 PM, Chen Yu <yu.c.chen@intel.com> wrote:
+> > >>>
+> > >>>>and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
+> > >>>>resource window and then update related base/limit registers:
+> > >>>>
+> > >>>>[    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to [bus
+> > >>>>02] add_size 1000
+> > >>>>[    0.865343] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff
+> > >>>>64bit pref] to [bus 02] add_size 200000 add_align 100000
+> > >>>>[    0.865344] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff]
+> > >>>>to [bus 02] add_size 200000 add_align 100000
+> > >>>>
+> > >>>That is for hotplug bridge, then we could use following instead.
+> > >>>
+> > >>>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > >>>index ee72ebe..d3ec833 100644
+> > >>>--- a/drivers/pci/quirks.c
+> > >>>+++ b/drivers/pci/quirks.c
+> > >>>@@ -2775,6 +2775,13 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+> > >>>
+> > >>>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+> > >>>
+> > >>>+static void quirk_hotplug_bridge_skip(struct pci_dev *dev)
+> > >>>+{
+> > >>>+       dev->is_hotplug_bridge = 0;
+> > >>>+}
+> > >>>+
+> > >>>+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10,
+> > >>>quirk_hotplug_bridge_skip);
+> > >>>+
+> > >>>  /*
+> > >>>   * This is a quirk for the Ricoh MMC controller found as a part of
+> > >>>   * some mulifunction chips.
+> > >>Good idea, but in this way we might not have io window allocated for
+> > >>it?I'm not sure
+> > >>if this would break wifi,etc, I'll suggest reporters to have a try.
+> > >Let's figure out the root cause before trying more random fixes.  I
+> > >have the same objection to the patch above.  No doubt there are many
+> > >ways we could "fix" this, but unless we know the root cause, we're
+> > >likely to make a change that's not a complete fix or will cause other
+> > >issues in the future.
+> > >
+> > I just let the reporter  paste their lspci in Mac OS, it looks that
+> > Mac OS also
+> > does not allocate any resource for this broken pci bridge, and other pci
+> > devices have almost the same resource region as it is in linux, so I think
+> > this is an evidence that Apple does not want to use this firmware for now,
+> > maybe reserved for future use, declaim resource for this pci bridge might
+> > cause unpredictable result, how about adding a dmi+pci quirk for this
+> > special platform?
 > 
-> This patch (commit 1bd019707b7c9249d34c5d348f1ef75eb4d83e89 in pci/next)
-> broke PCI on r8a7791/koelsch. Dmesg differences are:
+> This is not a root cause.  We still have no idea why the problem
+> occurs.  I do not think a quirk is a good idea until we know what the
+> problem is and exactly how a quirk would fix it.
 > 
->  pci-rcar-gen2 ee090000.pci: PCI: bus0 revision 11
-> -pci-rcar-gen2 ee090000.pci: PCI host bridge to bus 0000:00
-> -pci_bus 0000:00: root bus resource [io  0xee080000-0xee0810ff]
-> -pci_bus 0000:00: root bus resource [mem 0xee080000-0xee0810ff]
+> > lspci result from Mac OS, there's no resource behind this bridge:
+> > https://bugzilla.kernel.org/attachment.cgi?id=219321
 
-This is probably a result of this code in drivers/pci/host/pci-rcar-gen2.c:
+Here are some ideas for debugging this:
 
-        /*
-         * The controller does not support/use port I/O,
-         * so setup a dummy port I/O region here.
-         */
-        priv->io_res.start = priv->mem_res.start;
-        priv->io_res.end = priv->mem_res.end;
-        priv->io_res.flags = IORESOURCE_IO;
+1) Apparently the problem is sensitive to programming the prefetchable
+   memory aperture of 00:1c.0 to [mem 0x7fc00000-0x7fdfffff 64bit
+   pref].  The only effect of that *should* be that the bridge will
+   now claim accesses in the aperture, when it didn't before.
 
-We try to avoid adding dummy regions like this, but maybe we missed
-this one.  I haven't found any email discussion about it yet, so I
-don't know what the reason for this one is.  Valentine, do you
-remember?
+   We *think* there's nothing else at the address of that aperture,
+   but if there is an unreported device there, it may stop working.  I
+   would pore over the E820 memory map, EFI memory map, all ACPI _CRS
+   methods, etc., looking for anything in that area that we haven't
+   accounted for.
 
-Can you try the patch below (apply it before the 1bd019707b7c patch
-that broke things)?
+   There are lots of anomalies in this system, e.g., (these are from
+   Bastien's dmesg log at
+   https://bugzilla.kernel.org/attachment.cgi?id=208961)
 
+     BIOS-e820: [mem 0x00000000e00f8000-0x00000000e00f8fff] reserved
+     PCI: MMCONFIG for domain 0000 [bus 00-9b] at [mem 0xe0000000-0xe9bfffff] (base 0xe0000000)
+     acpi PNP0A08:00: [Firmware Info]: MMCONFIG for domain 0000 [bus 00-9b] only partially covers this bridge
+     pci_bus 0000:00: root bus resource [mem 0x7fa00000-0xfeafffff window]
+     system 00:04: [mem 0xe0000000-0xefffffff] could not be reserved
+     ACPI Warning: SystemIO range 0x000000000000EFA0-0x000000000000EFBF conflicts with OpRegion 0x000000000000EFA0-0x000000000000EFAF (\_SB.PCI0.SBUS.SMBI)
 
-commit b64dc28f5f2b3afe47ee4a42fb79db84ec4227f8
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue Jun 21 09:19:34 2016 -0500
+   The MMCONFIG area appears correctly described in the 00:04 _CRS,
+   but incorrectly in MCFG.  The E820 region appears to be a chunk in
+   the middle of the MMCONFIG area.  The host bridge window 
+   [mem 0x7fa00000-0xfeafffff window] is clearly bogus -- it includes
+   the MMCONFIG area, which is definitely not a window.  I doubt
+   anything above 0xdfffffff should be included.
 
-    PCI: rcar: Drop gen2 dummy I/O port region
-    
-    Previously we added a dummy I/O port region even though the R-Car
-    controller doesn't support PCI port I/O.  This resulted in bogus root bus
-    resources like this:
-    
-      pci_bus 0000:00: root bus resource [io  0xee080000-0xee0810ff]
-      pci_bus 0000:00: root bus resource [mem 0xee080000-0xee0810ff]
-    
-    Drop the unused dummy I/O port region.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+   I don't know what the ACPI conflict warning is about, but I'd try
+   to figure it out.
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 9980a4b..53ae619 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -97,7 +97,6 @@
- struct rcar_pci_priv {
- 	struct device *dev;
- 	void __iomem *reg;
--	struct resource io_res;
- 	struct resource mem_res;
- 	struct resource *cfg_res;
- 	unsigned busnr;
-@@ -273,7 +272,6 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
- 		rcar_pci_setup_errirq(priv);
- 
- 	/* Add PCI resources */
--	pci_add_resource(&sys->resources, &priv->io_res);
- 	pci_add_resource(&sys->resources, &priv->mem_res);
- 
- 	/* Setup bus number based on platform device id / of bus-range */
-@@ -371,14 +369,6 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	priv->mem_res = *mem_res;
--	/*
--	 * The controller does not support/use port I/O,
--	 * so setup a dummy port I/O region here.
--	 */
--	priv->io_res.start = priv->mem_res.start;
--	priv->io_res.end = priv->mem_res.end;
--	priv->io_res.flags = IORESOURCE_IO;
--
- 	priv->cfg_res = cfg_res;
- 
- 	priv->irq = platform_get_irq(pdev, 0);
+   Either the firmware is badly broken, or we're not interpreting
+   something correctly.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+   I'd try assigning the 00:1c.0 aperture at the end of the actual
+   aperture instead of the beginning.  I think Windows, and likely
+   MacOS uses a top-down allocation strategy instead of bottom-up like
+   Linux does.  If that makes poweroff work, there is likely an
+   unreported device in the [mem 0x7fc00000-0x7fdfffff 64bit pref]
+   area.
+
+   This experimentation could all be done with setpci, without
+   requiring kernel patches.
+
+2) I would explore exactly what the grub "halt" command does and how
+   it compares to what Linux is doing.  I see the assertion that this
+   is related to [io 0x1804], but I don't know what that's based on.
+   Programming the 00:1c.0 prefetchable aperture shouldn't have
+   anything to do with I/O ports, so if it really is related, there
+   might be some SMM magic or something where SMM code is doing
+   something that relates to the memory aperture.
+
+3) The lspci output at https://bugzilla.kernel.org/attachment.cgi?id=219321
+   (I think this is from MacOS) shows invalid data for devices
+   starting at 04:00.0.  Why?  Maybe this is an unrelated artifact,
+   but it doesn't smell right.
+
+4) If you can hot-add devices under MacOS, look to see what address
+   space they get assigned.  That may tell you what allocation
+   strategy MacOS uses.
+
+5) 00:1c.0 claims to have a slot that supports hotplug.  Is that
+   actually true?  Could you add a device below it?  If not, maybe the
+   problem is that the BIOS should have configured 00:1c.0 so it
+   doesn't report a slot.  If it didn't report a slot, we shouldn't
+   assign resources to it, since there is no possibility of a device
+   below it.
+
+Bjorn
