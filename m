@@ -1,93 +1,75 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
-To: Christopher Covington <cov@codeaurora.org>, Duc Dang <dhdang@apm.com>
-References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
- <1467100442-28078-4-git-send-email-tn@semihalf.com>
- <577275EA.7010002@codeaurora.org>
- <CADaLNDkhPZuG7UJ4SK_j5v_nXbd782Q17LAcXduG0uEObaFF=g@mail.gmail.com>
- <5773A773.8040700@semihalf.com> <5773CE49.1050802@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
- Will Deacon <will.deacon@arm.com>, Catalin Marinas
- <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
- Hanjun Guo <hanjun.guo@linaro.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Sinan Kaya <okaya@codeaurora.org>, Jayachandran C <jchandra@broadcom.com>,
- Robert Richter <robert.richter@caviumnetworks.com>,
- Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
- David Daney <ddaney@caviumnetworks.com>, Yijing Wang
- <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>,
- linux-pci@vger.kernel.org, linux-arm <linux-arm-kernel@lists.infradead.org>,
- linux-acpi@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>,
- Andrea Gallo <andrea.gallo@linaro.org>, jeremy.linton@arm.com,
- Dongdong Liu <liudongdong3@huawei.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jeffrey Hugo <jhugo@codeaurora.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5773D284.8060404@semihalf.com>
-Date: Wed, 29 Jun 2016 15:52:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <5773CE49.1050802@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [193.47.165.129] ([193.47.165.129]:38789 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750759AbcFIMN1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jun 2016 08:13:27 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [PATCH 0/4] VFIO SR-IOV support
+Date: Thu,  9 Jun 2016 15:09:28 +0300
+Message-Id: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29.06.2016 15:34, Christopher Covington wrote:
-> I'm confused by this statement. OEMID is defined as 6 bytes long and OEM
-> Table ID as 8 bytes long in the ACPI specification. As far as I can
-> tell, if your string isn't exactly that long, padding up to that length
-> is required.
+Changes from RFC V2:
+        1. pci_disable_sriov() is now called from a workqueue
+        To avoid the situation where a process is blocked
+        in pci_disable_sriov() wating for itself to relase the VFs.
+        2. a mutex was added to synchronize calls to
+        pci_enable_sriov() and pci_disable_sriov()
 
-Well, I cannot find that requirement in ACPI spec. but I might missed 
-something.
+Changes from RFC V1:
+        Due to the security concern raised in RFC V1, we add two patches
+        to make sure the VFs belong to the same IOMMU group as
+        the PF and are probed by VFIO.
 
-I dumped my x86 machine ACPI tables and here is an example of MCFG:
+Today the QEMU hypervisor allows assigning a physical device to a VM,
+facilitating driver development. However, it does not support enabling
+SR-IOV by the VM kernel driver. Our goal is to implement such support,
+allowing developers working on SR-IOV physical function drivers to work
+inside VMs as well.
 
-$ cat mcfg.dsl
-/*
-  * Intel ACPI Component Architecture
-  * AML/ASL+ Disassembler version 20160108-64
-  * Copyright (c) 2000 - 2016 Intel Corporation
-  *
-  * Disassembly of mcfg.dat, Wed Jun 29 15:48:16 2016
-  *
-  * ACPI Data Table [MCFG]
-  *
-  * Format: [HexOffset DecimalOffset ByteLength]  FieldName : FieldValue
-  */
+This patch series implements the kernel side of our solution.  It extends
+the VFIO driver to support the PCIE SRIOV extended capability with
+following features:
+1. The ability to probe SR-IOV BAR sizes.
+2. The ability to enable and disable SR-IOV.
 
-[000h 0000   4]                    Signature : "MCFG"    [Memory Mapped 
-Configuration table]
-[004h 0004   4]                 Table Length : 0000003C
-[008h 0008   1]                     Revision : 01
-[009h 0009   1]                     Checksum : A9
-[00Ah 0010   6]                       Oem ID : "ALASKA"
-[010h 0016   8]                 Oem Table ID : "A M I"
-[018h 0024   4]                 Oem Revision : 01072009
-[01Ch 0028   4]              Asl Compiler ID : "MSFT"
-[020h 0032   4]        Asl Compiler Revision : 00000097
+This patch series is going to be used by QEMU to expose SR-IOV capabilities
+to VM. We already have an early prototype based on Knut Omang's patches for
+SR-IOV[1].
 
-[024h 0036   8]                     Reserved : 0000000000000000
+Limitations:
+1. Per SR-IOV spec section 3.3.12, PFs are required to support
+4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes.
+Unfourtently the kernel currently initializes the System Page Size register once
+and assumes it doesn't change therefore we cannot allow guests to change this
+register at will. We currently map both the Supported Page sizes and
+System Page Size as virtualized and read only in violation of the spec.
+In practice this is not an issue since both the hypervisor and the
+guest typically select the same System Page Size.
 
-[02Ch 0044   8]                 Base Address : 00000000F8000000
-[034h 0052   2]         Segment Group Number : 0000
-[036h 0054   1]             Start Bus Number : 00
-[037h 0055   1]               End Bus Number : 3F
-[038h 0056   4]                     Reserved : 00000000
+[1] https://github.com/knuto/qemu/tree/sriov_patches_v6
 
-Raw Table Data: Length 60 (0x3C)
+Ilya Lesokhin (4):
+  VFIO: Probe new devices in a live VFIO group with the VFIO driver
+  IOMMU: Force the VFs of an untrusted PF device to be in the PFs IOMMU
+    group
+  PCI: Expose iov_set_numvfs and iov_resource_size for modules.
+  VFIO: Add support for SR-IOV extended capablity
 
-00000000  4d 43 46 47 3c 00 00 00  01 a9 41 4c 41 53 4b 41 
-|MCFG<.....ALASKA|
-00000010  41 20 4d 20 49 00 00 00  09 20 07 01 4d 53 46 54  |A M I.... 
-..MSFT|
-00000020  97 00 00 00 00 00 00 00  00 00 00 00 00 00 00 f8 
-|................|
-00000030  00 00 00 00 00 00 00 3f  00 00 00 00              |.......?....|
+ drivers/iommu/iommu.c               |   4 +
+ drivers/pci/iov.c                   |   4 +-
+ drivers/vfio/pci/vfio_pci.c         |   4 +
+ drivers/vfio/pci/vfio_pci_config.c  | 208 +++++++++++++++++++++++++++++++++---
+ drivers/vfio/pci/vfio_pci_private.h |   1 +
+ drivers/vfio/vfio.c                 |  18 +++-
+ include/linux/pci.h                 |   7 ++
+ 7 files changed, 224 insertions(+), 22 deletions(-)
 
-So in this example I have OEM table ID "A M I" 6 character long and 0 
-padding.
+-- 
+1.8.3.1
 
-Tomasz
