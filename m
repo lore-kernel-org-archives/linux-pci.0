@@ -1,109 +1,66 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Thu, 2 Jun 2016 11:13:56 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
-	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
-Subject: Re: [PATCH V8 2/9] PCI: ecam: Add parent device field to
- pci_config_window
-Message-ID: <20160602101356.GD13962@red-moon>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-3-git-send-email-tn@semihalf.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464621262-26770-3-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [193.47.165.129] ([193.47.165.129]:38877 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751180AbcFIMOA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jun 2016 08:14:00 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [PATCH 1/4] VFIO: Probe new devices in a live VFIO group with the VFIO driver
+Date: Thu,  9 Jun 2016 15:09:29 +0300
+Message-Id: <1465474173-53960-2-git-send-email-ilyal@mellanox.com>
+In-Reply-To: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
+References: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 05:14:15PM +0200, Tomasz Nowicki wrote:
-> From: Jayachandran C <jchandra@broadcom.com>
-> 
-> Add a parent device field to struct pci_config_window. The parent
-> is not saved now, but will be useful to save it in some cases.
-> Specifically in case of ACPI for ARM64, it can be used to setup
-> ACPI companion and domain.
-> 
-> Since the parent dev is in struct pci_config_window now, we need
-> not pass it to he init function as a separate argument.
+When a new device is added to a live VFIO group,
+use driver_override to force the device to be probed by
+the VFIO driver.
 
-Nit: "the init function"
+Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
+---
+ drivers/vfio/vfio.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> ---
->  drivers/pci/ecam.c                 | 3 ++-
->  drivers/pci/host/pci-thunder-pem.c | 3 ++-
->  include/linux/pci-ecam.h           | 4 ++--
->  3 files changed, 6 insertions(+), 4 deletions(-)
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index 6fd6fa5..32bc1b4 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -646,6 +646,7 @@ static int vfio_dev_viable(struct device *dev, void *data)
+ static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
+ {
+ 	struct vfio_device *device;
++	struct pci_dev *pdev;
+ 
+ 	/* Do we already know about it?  We shouldn't */
+ 	device = vfio_group_get_device(group, dev);
+@@ -658,10 +659,19 @@ static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
+ 	if (!atomic_read(&group->container_users))
+ 		return 0;
+ 
+-	/* TODO Prevent device auto probing */
+-	WARN(1, "Device %s added to live group %d!\n", dev_name(dev),
+-	     iommu_group_id(group->iommu_group));
+-
++	if (dev_is_pci(dev)) {
++		/* a device that shares a group with another VFIO
++		 * device should also be probed by VFIO
++		 */
++		pdev = to_pci_dev(dev);
++		if (pdev->driver_override)
++			kfree(pdev->driver_override);
++		pdev->driver_override = kstrdup("vfio-pci", GFP_KERNEL);
++	} else {
++		/* TODO Prevent device auto probing */
++		WARN(1, "Device %s added to live group %d!\n", dev_name(dev),
++		     iommu_group_id(group->iommu_group));
++	}
+ 	return 0;
+ }
+ 
+-- 
+1.8.3.1
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> index 820e26b..66e0d71 100644
-> --- a/drivers/pci/ecam.c
-> +++ b/drivers/pci/ecam.c
-> @@ -51,6 +51,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->  	if (!cfg)
->  		return ERR_PTR(-ENOMEM);
->  
-> +	cfg->parent = dev;
->  	cfg->ops = ops;
->  	cfg->busr.start = busr->start;
->  	cfg->busr.end = busr->end;
-> @@ -94,7 +95,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->  	}
->  
->  	if (ops->init) {
-> -		err = ops->init(dev, cfg);
-> +		err = ops->init(cfg);
->  		if (err)
->  			goto err_exit;
->  	}
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index 5020d3d..91f6fc6 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -284,8 +284,9 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
->  	return pci_generic_config_write(bus, devfn, where, size, val);
->  }
->  
-> -static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
-> +static int thunder_pem_init(struct pci_config_window *cfg)
->  {
-> +	struct device *dev = cfg->parent;
->  	resource_size_t bar4_start;
->  	struct resource *res_pem;
->  	struct thunder_pem_pci *pem_pci;
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> index 9878beb..7adad20 100644
-> --- a/include/linux/pci-ecam.h
-> +++ b/include/linux/pci-ecam.h
-> @@ -27,8 +27,7 @@ struct pci_config_window;
->  struct pci_ecam_ops {
->  	unsigned int			bus_shift;
->  	struct pci_ops			pci_ops;
-> -	int				(*init)(struct device *,
-> -						struct pci_config_window *);
-> +	int				(*init)(struct pci_config_window *);
->  };
->  
->  /*
-> @@ -45,6 +44,7 @@ struct pci_config_window {
->  		void __iomem		*win;	/* 64-bit single mapping */
->  		void __iomem		**winp; /* 32-bit per-bus mapping */
->  	};
-> +	struct device			*parent;/* ECAM res was from this dev */
->  };
->  
->  /* create and free pci_config_window */
-> -- 
-> 1.9.1
-> 
