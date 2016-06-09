@@ -1,156 +1,122 @@
-Return-Path: <jcm@redhat.com>
-Return-Path: <jcm@redhat.com>
-Content-Type: text/plain;
-	charset=us-ascii
-From: Jon Masters <jcm@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:58884 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933071AbcFISU2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jun 2016 14:20:28 -0400
+Subject: [PATCH v1 2/3] powerpc/pci: Remove __pci_mmap_set_pgprot()
+To: Yinghai Lu <yinghai@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michal Simek <monstr@monstr.eu>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 09 Jun 2016 13:20:23 -0500
+Message-ID: <20160609182023.13455.82564.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160609181102.13455.33593.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160609181102.13455.33593.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Subject: Re: [Linaro-acpi] [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors against platfrom specific ECAM quirks
-Message-Id: <891827D4-0ECE-4A55-B79D-E5C7C23A0B04@redhat.com>
-Date: Thu, 16 Jun 2016 03:54:46 -0400 (EDT)
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com> <1465822923-33599-2-git-send-email-liudongdong3@huawei.com> <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx> <e3174a09-e6f8-126d-d3c5-648d1cfd2b74@redhat.com> <CADaLNDnjEuGvWxCMPb=9fiCeVMgF0RRzT2n1SjNw3o57gRUhcg@mail.gmail.com>
-To: Duc Dang <dhdang@apm.com>
-In-Reply-To: <CADaLNDnjEuGvWxCMPb=9fiCeVMgF0RRzT2n1SjNw3o57gRUhcg@mail.gmail.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "Chenxin (Charles)" <charles.chenxin@huawei.com>,
-        "cov@codeaurora.org" <cov@codeaurora.org>,
-        Wangyijing <wangyijing@huawei.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-:) We should be good with a match on XGENE (but be careful with substring ma=
-tching) as long as future platforms change that to eg XGENE3 (which is a pub=
-licly announced future chip). What you want to avoid is a shorter match late=
-r triggering on a future generation.
+From: Yinghai Lu <yinghai@kernel.org>
 
-There are a lot of folks eagerly awaiting Moonshot running an upstream kerne=
-l in F25, both for 64 and 32-bit (VMs running 32-bit can replace older build=
-ers). I can picture a wonderful world in which this whole ARM server ecosyst=
-em works properly with folks doing what they should have three years ago and=
- development happening on upstream kernels with ACPI. Then things become inc=
-redibly dull just like x86 - do the dev against upstream, pull into an enter=
-prise distro after it is tested out in a Fedora cycle...and no random nonsen=
-se patches. Next thing we know there will be media reports covering silicon t=
-hat won't end with a rant about how they couldn't get the right firmware and=
- hacked up Ubuntu kernel booting.
+The powerpc-specific __pci_mmap_set_pgprot() does two things:
 
-Best, and goodnight :)
+  1) Disables write combining for I/O port space mappings
 
-Jon.
+     This only affects procfs mappings.  The pci_mmap_resource() sysfs path
+     only requests write combining for resources with IORESOURCE_PREFETCH
+     set, which doesn't include I/O resources.
 
---=20
-Computer Architect | Sent from my 64-bit #ARM Powered phone
+     The only way to request write combining for I/O port space mappings
+     was via the PCIIOC_WRITE_COMBINE ioctl and the proc_bus_pci_mmap()
+     path, and we recently changed that path to ignore write combining for
+     I/O, so this code in powerpc is no longer needed.
 
-> On Jun 16, 2016, at 03:46, Duc Dang <dhdang@apm.com> wrote:
->=20
->> On Wed, Jun 15, 2016 at 11:31 PM, Jon Masters <jcm@redhat.com> wrote:
->>> On 06/13/2016 09:54 AM, Gabriele Paoloni wrote:
->>> Hi Tomasz, Jon
->>=20
->> Hi Gab,
->>=20
->> Sorry for the lag in following up.
->>=20
->> <snip>
->>=20
->>> As you can see here Liudongdong has replaced oem_revision with
->>> oem_table_id.
->>>=20
->>> Now it seems that there are some platforms that have already shipped
->>> using a matching based on the oem_revision (right Jon?)
->>=20
->> Actually, it turns out (Cov is correct) that we can just match on OEM
->> Table ID. The revision should not generally be needed and the vendors
->> will just need to make sure that they change OEM Table ID in future
->> silicon. An example from two shipping platforms:
->>=20
->> 1). AppliedMicro Mustang:
->>=20
->> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
->> Configuration table]
->> [004h 0004   4]                 Table Length : 0000003C
->> [008h 0008   1]                     Revision : 01
->> [009h 0009   1]                     Checksum : 4A
->> [00Ah 0010   6]                       Oem ID : "APM   "
->> [010h 0016   8]                 Oem Table ID : "XGENE   "
->> [018h 0024   4]                 Oem Revision : 00000002
->> [01Ch 0028   4]              Asl Compiler ID : "INTL"
->> [020h 0032   4]        Asl Compiler Revision : 20140724
->>=20
->> 2). HP(E[0]) Moonshot:
->>=20
->> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
->> Configuration table]
->> [004h 0004   4]                 Table Length : 0000003C
->> [008h 0008   1]                     Revision : 01
->> [009h 0009   1]                     Checksum : 48
->> [00Ah 0010   6]                       Oem ID : "APM   "
->> [010h 0016   8]                 Oem Table ID : "XGENE   "
->> [018h 0024   4]                 Oem Revision : 00000001
->> [01Ch 0028   4]              Asl Compiler ID : "HP  "
->> [020h 0032   4]        Asl Compiler Revision : 00000001
->>=20
->> I have pinged the semiconductor (Applied) and insisted upon a written
->> plan (which I have now) for handling the first affect generation(s) and
->> future chip roadmap stuff, along with how they plan to upstream this
->> immediately as part of this thread. I have also done similar with each
->> of the other vendors (this is something ARM or Linaro should be doing).
->> But I particularly care about X-Gene because I want it to be loved as
->> shipping silicon in production systems (Moonshot) that are sitting and
->> waiting in the Fedora Phoenix datacenter in large quantity to come
->> online if only an upstream kernel would actually boot on them :)
->=20
-> Thanks for the MCFG information on Moonshot system, Jon.
->=20
-> I will make sure the posted quirk for X-Gene takes care for HPE
-> Moonshot system as well.
->=20
-> Regards,
-> Duc Dang.
->=20
->>=20
->>> However I guess that if in FW they have defined oem_table_id properly
->>> they should be able to use this mechanism without needing to a FW update=
-.
->>=20
->> Correct.
->>=20
->>> Can these vendors confirm this?
->>=20
->> I've checked all current shipping silicon and prototypes.
->>=20
->>> Tomasz do you think this can work for Cavium Thunder?
->>=20
->> Will let the vendors followup directly as well.
->>=20
->> Jon.
->>=20
->> [0] Fortunately that name change doesn't factor when using semiconductor
->> matching...hopefully none of the non-complaint IP companies in gen1
->> stuff get bought and change their table names. In the unlikely event
->> that that does happen, I will preemptively beat them up and ensure that
->> something crazy doesn't happen with table contents.
->>=20
->> --
->> Computer Architect | Sent from my Fedora powered laptop
+  2) Automatically enables write combining for mappings of prefetchable
+     resources, even if not requested by the user
+
+     Both procfs (via PCIIOC_MMAP_IS_MEM and PCIIOC_WRITE_COMBINE ioctls)
+     and sysfs (via "resourceN_wc" files, which are created for resources
+     with IORESOURCE_PREFETCH) provide ways for the user to map PCI memory
+     space with write combining.
+
+     Users that desire write combining should use one of those ways instead
+     of relying on powerpc-specific behavior.
+
+Remove the powerpc-specific __pci_mmap_set_pgprot().
+
+The user-visible effect of this change is that users mapping prefetchable
+PCI memory space via procfs without PCIIOC_WRITE_COMBINE or via sysfs
+"resourceN" (not "resourceN_wc") will get regular uncacheable mappings
+instead of the write combining mappings they used to get.
+
+The new behavior matches the behavior on all other arches that support
+write combining mapping.
+
+[bhelgaas: changelog]
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/kernel/pci-common.c |   37 ++++---------------------------------
+ 1 file changed, 4 insertions(+), 33 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..8c6beb0 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -356,36 +356,6 @@ static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
+ }
+ 
+ /*
+- * Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
+- * device mapping.
+- */
+-static pgprot_t __pci_mmap_set_pgprot(struct pci_dev *dev, struct resource *rp,
+-				      pgprot_t protection,
+-				      enum pci_mmap_state mmap_state,
+-				      int write_combine)
+-{
+-
+-	/* Write combine is always 0 on non-memory space mappings. On
+-	 * memory space, if the user didn't pass 1, we check for a
+-	 * "prefetchable" resource. This is a bit hackish, but we use
+-	 * this to workaround the inability of /sysfs to provide a write
+-	 * combine bit
+-	 */
+-	if (mmap_state != pci_mmap_mem)
+-		write_combine = 0;
+-	else if (write_combine == 0) {
+-		if (rp->flags & IORESOURCE_PREFETCH)
+-			write_combine = 1;
+-	}
+-
+-	/* XXX would be nice to have a way to ask for write-through */
+-	if (write_combine)
+-		return pgprot_noncached_wc(protection);
+-	else
+-		return pgprot_noncached(protection);
+-}
+-
+-/*
+  * This one is used by /dev/mem and fbdev who have no clue about the
+  * PCI device, it tries to find the PCI device first and calls the
+  * above routine
+@@ -458,9 +428,10 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 		return -EINVAL;
+ 
+ 	vma->vm_pgoff = offset >> PAGE_SHIFT;
+-	vma->vm_page_prot = __pci_mmap_set_pgprot(dev, rp,
+-						  vma->vm_page_prot,
+-						  mmap_state, write_combine);
++	if (write_combine)
++		vma->vm_page_prot = pgprot_noncached_wc(vma->vm_page_prot);
++	else
++		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+ 
+ 	ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+ 			       vma->vm_end - vma->vm_start, vma->vm_page_prot);
+
