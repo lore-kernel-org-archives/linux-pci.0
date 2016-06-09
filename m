@@ -1,28 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0097.outbound.protection.outlook.com ([157.56.111.97]:15722
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751683AbcFPJF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Jun 2016 05:05:58 -0400
-Subject: Re: [PATCH 01/13] irq/msi: Remove unused MSI_FLAG_IDENTITY_MAP
-To: Christoph Hellwig <hch@lst.de>, <tglx@linutronix.de>,
-	<axboe@fb.com>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
- <1465934346-20648-2-git-send-email-hch@lst.de>
-CC: <linux-block@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-nvme@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Message-ID: <4686a1f6-3cda-282a-f307-78ece3206b83@sandisk.com>
-Date: Thu, 16 Jun 2016 11:05:46 +0200
+Received: from down.free-electrons.com ([37.187.137.238]:55247 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751196AbcFIMgY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jun 2016 08:36:24 -0400
+Date: Thu, 9 Jun 2016 14:36:21 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Hanna Hawa <hannah@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Marcin Wojtas <mw@semihalf.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 2/3] PCI: host: new PCI host controller driver for
+ Marvell Armada 3700
+Message-ID: <20160609143621.5291dda5@free-electrons.com>
+In-Reply-To: <11140978.npsCNQs782@wuerfel>
+References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<3112077.0RPfokLCAs@wuerfel>
+	<20160609111921.11975627@free-electrons.com>
+	<11140978.npsCNQs782@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <1465934346-20648-2-git-send-email-hch@lst.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/14/2016 09:58 PM, Christoph Hellwig wrote:
-> From: Thomas Gleixner <tglx@linutronix.de>
->
-> No user and we definitely don't want to grow one.
+Hello,
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+On Thu, 09 Jun 2016 14:19:07 +0200, Arnd Bergmann wrote:
+
+> > There is a GIC-500, but Marcin told me that attempts to use MSI with it
+> > have not been successful so far. There will be investigation on this
+> > topic in the future, but for the moment, we'd like to have the MSI
+> > functionality built into the PCIe driver supported. We can migrate
+> > later to GIC-500 powered MSIs once working.  
+> 
+> I think you should still add the msi-parent or msi-map properties then,
+> just have them point at the PCI host node instead of the GIC-500,
+> and evaluate that to get the built-in controller.
+
+Sure, I'll have a look at doing that.
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
