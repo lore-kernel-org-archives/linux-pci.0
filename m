@@ -1,63 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 2/7] PCI: Ignore enforced alignment to VF BARs
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1467283993-3185-3-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160701003959.GB15147@gwshan>
-Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	linux-doc@vger.kernel.org, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, corbet@lwn.net,
-	linux-kernel@vger.kernel.org, warrier@linux.vnet.ibm.com,
-	alex.williamson@redhat.com, paulus@samba.org, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Fri, 1 Jul 2016 13:27:17 +0800
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Fri, 10 Jun 2016 16:49:08 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
+	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
+Subject: Re: [PATCH V8 5/9] pci, acpi: add acpi hook to assign domain number.
+Message-ID: <20160610154908.GB23638@red-moon>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <1464621262-26770-6-git-send-email-tn@semihalf.com>
+ <20160608001559.GD4759@localhost>
+ <20160610151458.GA23638@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <20160701003959.GB15147@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <21112bd7-d343-46b6-1df1-b20cc1c1b24e@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160610151458.GA23638@red-moon>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
+On Fri, Jun 10, 2016 at 04:14:58PM +0100, Lorenzo Pieralisi wrote:
+> Hi Bjorn, Tomasz,
+> 
+> On Tue, Jun 07, 2016 at 07:15:59PM -0500, Bjorn Helgaas wrote:
+> 
+> [...]
+> 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index eb431b5..2b52178 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -7,6 +7,7 @@
+> > >   *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+> > >   */
+> > >  
+> > > +#include <linux/acpi.h>
+> > >  #include <linux/kernel.h>
+> > >  #include <linux/delay.h>
+> > >  #include <linux/init.h>
+> > > @@ -4941,7 +4942,7 @@ int pci_get_new_domain_nr(void)
+> > >  }
+> > >  
+> > >  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > > +static int of_pci_bus_domain_nr(struct device *parent)
+> > 
+> > Can we do a little cleanup before this patch?  
+> > 
+> >   - pci_bus_assign_domain_nr() is only used inside drivers/pci, so
+> >     maybe we move the prototype to drivers/pci/pci.h?
+> > 
+> >   - I don't really like the style of calling a function that
+> >     internally assigns bus->domain_nr.  Could we do something like
+> >     this instead?
+> > 
+> >     int pci_bus_domain_nr(...)
+> >     {
+> >       ...
+> >       return domain;
+> >     }
+> > 
+> >     ... pci_create_root_bus(...)
+> >     {
+> >       ...
+> >       b->domain_nr = pci_bus_domain_nr(...);
+> 
+> We noticed while preparing v9, that this would force us to
+> write an empty pci_bus_domain_nr() prototype for
+> !PCI_DOMAINS_GENERIC (ie every arch but ARM/ARM64) that should
+> return 0 to keep current behaviour unchanged.
+> 
+> That's why pci_bus_assign_domain_nr() was there, so that it
+> was compiled out on !PCI_DOMAINS_GENERIC.
+> 
+> I really would like v9 to be final so let's fix it before posting it
+> shortly please.
+> 
+> For the above we have three options:
+> 
+> 1) Leave code as-is in v8
+> 
+> 2) in pci_create_root_bus():
+> #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>        b->domain_nr = pci_bus_domain_nr(...);
+> #endif
+> 
+> + other changes requested above
+> 
+> 3) in pci_create_root_bus()
+> 
+> b->domain_nr = pci_bus_domain_nr(...);
+> 
+> unguarded and a stub:
+> 
+> #ifndef CONFIG_PCI_DOMAINS_GENERIC
+> static inline int pci_bus_domain_nr() { return 0; }
+> #endif
+> 
+> + other changes requested above
 
-On 2016/7/1 8:39, Gavin Shan wrote:
-
-> On Thu, Jun 30, 2016 at 06:53:08PM +0800, Yongji Xie wrote:
->> VF BARs are read-only zeroes according to SRIOV spec,
->> the normal way(writing BARs) of allocating resources wouldn't
->> be applied to VFs. The VFs' resources would be allocated
->> when we enable SR-IOV capability. So we should not try to
->> reassign alignment after we enable VFs. It's meaningless
->> and will release the allocated resources which leads to a bug.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> drivers/pci/pci.c |    4 ++++
->> 1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index be8f72c..6ae02de 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4822,6 +4822,10 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->> 	resource_size_t align, size;
->> 	u16 command;
->>
->> +	/* We should never try to reassign VF's alignment */
->> +	if (dev->is_virtfn)
->> +		return;
->> +
-> Yongji, I think it's correct to ignore VF's BARs. Another concern is:
-> it's safe to apply alignment to PF's IOV BARs? Lets have an extreme
-> example here: one PF has 16 VFs; each VF has only one 1KB. It means
-> the only PF IOV BAR is 16KB. I don't see how it works after expanding
-> it to 64KB which is the page size. It might be not a problem on PowerNV
-> platform, but potentially a issue on x86?
-
-Seems like the alignment would not be applied to IOV BARs because
-pci_reassigndev_resource_alignment() will be called before
-sriov_init().
+Actually, Tomasz made me notice that pci_bus.domain_nr is
+only declared for CONFIG_PCI_DOMAINS_GENERIC so (3) is not
+even an option and IMO (2) is not much nicer than code in
+v8 as-is with an ifdef in the middle of pci_create_root_bus().
 
 Thanks,
-Yongji
+Lorenzo
