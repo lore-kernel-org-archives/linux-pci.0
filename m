@@ -1,77 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39732 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750986AbcFQVxR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jun 2016 17:53:17 -0400
-Date: Fri, 17 Jun 2016 16:53:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 08/13] PCI: Allow runtime PM for Thunderbolt hotplug
- ports on Macs
-Message-ID: <20160617215312.GC12254@localhost>
-References: <cover.1463134231.git.lukas@wunner.de>
- <47f9e4a9ca09e854d2d01812a4c05b7c6df02259.1463134231.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47f9e4a9ca09e854d2d01812a4c05b7c6df02259.1463134231.git.lukas@wunner.de>
+Received: from down.free-electrons.com ([37.187.137.238]:35461 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933184AbcFJPym (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2016 11:54:42 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v2 1/3] dt-bindings: add DT binding for the Aardvark PCIe controller
+Date: Fri, 10 Jun 2016 17:54:14 +0200
+Message-Id: <1465574056-8787-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1465574056-8787-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1465574056-8787-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> Thunderbolt controllers have a pin to signal plug events while the
-> controller is powered down.  On Macs this pin is wired to the
-> southbridge and causes a GPE to be fired.  The OS may then power up the
-> controller to probe the newly connected device.  It is thus okay to let
-> Thunderbolt hotplug ports go to D3 on Macs.
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pcie/portdrv_pci.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index f75d4b5..7860ab3 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -224,9 +224,12 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  	 * to enumerate devices behind this port properly (the port is
->  	 * powered down preventing all config space accesses to the
->  	 * subordinate devices).  We can't be sure for native PCIe hotplug
-> -	 * either so prevent that as well.
-> +	 * either so prevent that as well.  However Thunderbolt controllers
-> +	 * on Macs are capable of side-band signaling plug events while
-> +	 * powered down, so allow them to suspend.
->  	 */
-> -	if (!dev->is_hotplug_bridge) {
-> +	if (!dev->is_hotplug_bridge ||
-> +	    (dev->is_thunderbolt && dmi_match(DMI_SYS_VENDOR, "Apple Inc."))) {
+This commit adds the documentation for the Device Tree binding used to
+describe the Aardvark PCIe controller, found on Marvell Armada 3700
+ARM64 SoCs.
 
-I'd rather have a bit in the pci_dev to control this.  I don't know
-how this would be different from the recently-added "bridge_d3" bit.
-The bit could be set by a quirk.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ .../devicetree/bindings/pci/aardvark-pci.txt       | 56 ++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/aardvark-pci.txt
 
-It'd be nice if it were a single bit so we don't have to test
-is_hotplug_bridge *and* another bit.
+diff --git a/Documentation/devicetree/bindings/pci/aardvark-pci.txt b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
+new file mode 100644
+index 0000000..683830d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
+@@ -0,0 +1,56 @@
++Aardvark PCIe controller
++
++This PCIe controller is used on the Marvell Armada 3700 ARM64 SoC.
++
++The Device Tree node describing an Aardvark PCIe controller must
++contain the following properties:
++
++ - compatible: Should be "marvell,armada-3700-pcie"
++ - reg: range of registers for the PCIe controller
++ - interrupts: the interrupt line of the PCIe controller
++ - #address-cells: set to <3>
++ - #size-cells: set to <2>
++ - device_type: set to "pci"
++ - ranges: ranges for the PCI memory and I/O regions
++ - #interrupt-cells: set to <1>
++ - msi-controller: indicates that the PCIe controller can itself
++   handled MSI interrupts
++ - msi-parent: pointer to the MSI controller to be used
++ - interrupt-map-mask and interrupt-map: standard PCI properties to
++   define the mapping of the PCIe interface to interrupt numbers.
++ - bus-range: PCI bus numbers covered
++
++In addition, the Device Tree describing an Aardvark PCIe controller
++must include a sub-node that describes the legacy interrupt controller
++built into the PCIe controller. This sub-node must have the following
++properties:
++
++ - interrupt-controller
++ - #interrupt-cells: set to <1>
++
++Example:
++
++	pcie0: pcie@d0070000 {
++		compatible = "marvell,armada-3700-pcie";
++		device_type = "pci";
++		status = "disabled";
++		reg = <0 0xd0070000 0 0x20000>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		bus-range = <0x00 0xff>;
++		interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
++		#interrupt-cells = <1>;
++		msi-controller;
++		msi-parent = <&pcie0>;
++		ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
++			  0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc 0>,
++				<0 0 0 2 &pcie_intc 1>,
++				<0 0 0 3 &pcie_intc 2>,
++				<0 0 0 4 &pcie_intc 3>;
++		pcie_intc: interrupt-controller {
++			interrupt-controller;
++			#interrupt-cells = <1>;
++		};
++	};
+-- 
+2.7.4
 
->  		/*
->  		 * Keep the port resumed 10ms to make sure things like
->  		 * config space accesses from userspace (lspci) will not
-> @@ -243,7 +246,8 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  
->  static void pcie_portdrv_remove(struct pci_dev *dev)
->  {
-> -	if (!dev->is_hotplug_bridge) {
-> +	if (!dev->is_hotplug_bridge ||
-> +	    (dev->is_thunderbolt && dmi_match(DMI_SYS_VENDOR, "Apple Inc."))) {
->  		pm_runtime_forbid(&dev->dev);
->  		pm_runtime_get_noresume(&dev->dev);
->  		pm_runtime_dont_use_autosuspend(&dev->dev);
-> -- 
-> 2.8.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
