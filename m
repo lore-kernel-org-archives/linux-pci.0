@@ -1,77 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:39879 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbcFBGOX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 02:14:23 -0400
-Received: from localhost
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 2 Jun 2016 00:14:21 -0600
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-Subject: [RESEND PATCH v2 0/6] vfio-pci: Add support for mmapping MSI-X table
-Date: Thu,  2 Jun 2016 14:09:57 +0800
-Message-Id: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 04/11] ACPI/PCI: Support IO resources when parsing PCI host bridge resources
+Date: Fri, 10 Jun 2016 21:55:12 +0200
+Message-Id: <1465588519-11334-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap the page
-containing MSI-X table in case that users can write directly
-to MSI-X table and generate an incorrect MSIs.
+From: Jayachandran C <jchandra@broadcom.com>
 
-However, this will cause some performance issue when there
-are some critical device registers in the same page as the 
-MSI-X table. We have to handle the mmio access to these
-registers in QEMU emulation rather than in guest.
+Platforms that have memory mapped IO port (such as ARM64) need special
+handling for PCI I/O resources. For host bridge's resource probing case
+these resources need to be fixed up with
+pci_register_io_range()/pci_remap_iospace() etc.
 
-To solve this issue, this series allows to expose MSI-X table
-to userspace when hardware enables the capability of interrupt
-remapping which can ensure that a given PCI device can only
-shoot the MSIs assigned for it. And we introduce a new bus_flags
-PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
-for different archs.
+The same I/O resources need to be released after hotplug
+removal so that it can be re-added back by the pci_remap_iospace()
+function during insertion. As a consequence unmap I/O resources
+with pci_unmap_iospace() when we release host bridge resources.
 
-The patch 3 are based on the proposed patchset[1].
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+[ Tomasz: merged in Sinan's patch to unmap IO resources properly, updated changelog]
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/acpi/pci_root.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-Changelog v2: 
-- Make the commit log more clear
-- Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
-  so that we could clearly know what the function does
-- Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
-  of iommu_bus_notifier()
-- Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
-  table so that we can know whether we allow to mmap MSI-X table
-  in QEMU
-
-[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-
-Yongji Xie (6):
-  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ remapping
-  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
-  iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
-  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-  vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
-
- arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
- drivers/iommu/iommu.c                     |    8 ++++++++
- drivers/pci/msi.c                         |   15 +++++++++++++++
- drivers/pci/probe.c                       |    7 +++++++
- drivers/vfio/pci/vfio_pci.c               |   17 ++++++++++++++---
- drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
- include/linux/msi.h                       |    5 ++++-
- include/linux/pci.h                       |    1 +
- 8 files changed, 59 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..9a26dd1 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -720,6 +720,40 @@ next:
+ 	}
+ }
+ 
++#ifdef PCI_IOBASE
++static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
++{
++	struct resource *res = entry->res;
++	resource_size_t cpu_addr = res->start;
++	resource_size_t pci_addr = cpu_addr - entry->offset;
++	resource_size_t length = resource_size(res);
++	unsigned long port;
++
++	if (pci_register_io_range(cpu_addr, length))
++		goto err;
++
++	port = pci_address_to_pio(cpu_addr);
++	if (port == (unsigned long)-1)
++		goto err;
++
++	res->start = port;
++	res->end = port + length - 1;
++	entry->offset = port - pci_addr;
++
++	if (pci_remap_iospace(res, cpu_addr) < 0)
++		goto err;
++
++	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
++	return;
++err:
++	res->flags |= IORESOURCE_DISABLED;
++}
++#else
++static inline void acpi_pci_root_remap_iospace(struct resource_entry *entry)
++{
++}
++#endif
++
+ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ {
+ 	int ret;
+@@ -740,6 +774,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ 			"no IO and memory resources present in _CRS\n");
+ 	else {
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
++			if (entry->res->flags & IORESOURCE_IO)
++				acpi_pci_root_remap_iospace(entry);
++
+ 			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+ 			else
+@@ -811,6 +848,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+ 
+ 	resource_list_for_each_entry(entry, &bridge->windows) {
+ 		res = entry->res;
++		if (res->flags & IORESOURCE_IO)
++			pci_unmap_iospace(res);
+ 		if (res->parent &&
+ 		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+ 			release_resource(res);
 -- 
-1.7.9.5
-
+1.9.1
