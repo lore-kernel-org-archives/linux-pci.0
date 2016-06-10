@@ -1,127 +1,76 @@
-Return-Path: <jcm@redhat.com>
-Return-Path: <jcm@redhat.com>
-Subject: Re: [Linaro-acpi] [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space
- accessors against platfrom specific ECAM quirks
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "tn@semihalf.com" <tn@semihalf.com>
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
- <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
-Cc: "jcm@redhat.com" <jcm@redhat.com>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dhdang@apm.com" <dhdang@apm.com>,
-        "Liviu.Dudau@arm.com"
- <Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
- <ddaney@caviumnetworks.com>,
-        "jeremy.linton@arm.com"
- <jeremy.linton@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "Chenxin (Charles)" <charles.chenxin@huawei.com>,
-        "cov@codeaurora.org" <cov@codeaurora.org>,
-        Wangyijing
- <wangyijing@huawei.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <e3174a09-e6f8-126d-d3c5-648d1cfd2b74@redhat.com>
-Date: Thu, 16 Jun 2016 02:31:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 07/11] PCI: Factor DT specific pci_bus_find_domain_nr() code out
+Date: Fri, 10 Jun 2016 21:55:15 +0200
+Message-Id: <1465588519-11334-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/13/2016 09:54 AM, Gabriele Paoloni wrote:
-> Hi Tomasz, Jon
+pci_bus_find_domain_nr() retrieves the host bridge domain number in a DT
+specific way. Factor our pci_bus_find_domain_nr() in a separate DT
+function (ie of_pci_bus_find_domain_nr()) so that DT code is self
+contained, paving the way for retrieving domain number in
+pci_bus_find_domain_nr() with additional firmware methods (ie ACPI).
 
-Hi Gab,
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/pci/pci.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Sorry for the lag in following up.
-
-<snip>
-
-> As you can see here Liudongdong has replaced oem_revision with
-> oem_table_id.
-> 
-> Now it seems that there are some platforms that have already shipped
-> using a matching based on the oem_revision (right Jon?)
-
-Actually, it turns out (Cov is correct) that we can just match on OEM
-Table ID. The revision should not generally be needed and the vendors
-will just need to make sure that they change OEM Table ID in future
-silicon. An example from two shipping platforms:
-
-1). AppliedMicro Mustang:
-
-[000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
-Configuration table]
-[004h 0004   4]                 Table Length : 0000003C
-[008h 0008   1]                     Revision : 01
-[009h 0009   1]                     Checksum : 4A
-[00Ah 0010   6]                       Oem ID : "APM   "
-[010h 0016   8]                 Oem Table ID : "XGENE   "
-[018h 0024   4]                 Oem Revision : 00000002
-[01Ch 0028   4]              Asl Compiler ID : "INTL"
-[020h 0032   4]        Asl Compiler Revision : 20140724
-
-2). HP(E[0]) Moonshot:
-
-[000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
-Configuration table]
-[004h 0004   4]                 Table Length : 0000003C
-[008h 0008   1]                     Revision : 01
-[009h 0009   1]                     Checksum : 48
-[00Ah 0010   6]                       Oem ID : "APM   "
-[010h 0016   8]                 Oem Table ID : "XGENE   "
-[018h 0024   4]                 Oem Revision : 00000001
-[01Ch 0028   4]              Asl Compiler ID : "HP  "
-[020h 0032   4]        Asl Compiler Revision : 00000001
-
-I have pinged the semiconductor (Applied) and insisted upon a written
-plan (which I have now) for handling the first affect generation(s) and
-future chip roadmap stuff, along with how they plan to upstream this
-immediately as part of this thread. I have also done similar with each
-of the other vendors (this is something ARM or Linaro should be doing).
-But I particularly care about X-Gene because I want it to be loved as
-shipping silicon in production systems (Moonshot) that are sitting and
-waiting in the Fedora Phoenix datacenter in large quantity to come
-online if only an upstream kernel would actually boot on them :)
-
-> However I guess that if in FW they have defined oem_table_id properly
-> they should be able to use this mechanism without needing to a FW update.
-
-Correct.
-
-> Can these vendors confirm this?
-
-I've checked all current shipping silicon and prototypes.
-
-> Tomasz do you think this can work for Cavium Thunder?
-
-Will let the vendors followup directly as well.
-
-Jon.
-
-[0] Fortunately that name change doesn't factor when using semiconductor
-matching...hopefully none of the non-complaint IP companies in gen1
-stuff get bought and change their table names. In the unlikely event
-that that does happen, I will preemptively beat them up and ensure that
-something crazy doesn't happen with table contents.
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b9a7833..327828d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4941,7 +4941,7 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
++static int of_pci_bus_find_domain_nr(struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+ 	int domain = -1;
+@@ -4987,6 +4987,11 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+ 
+ 	return domain;
+ }
++
++int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	return of_pci_bus_find_domain_nr(parent);
++}
+ #endif
+ #endif
+ 
 -- 
-Computer Architect | Sent from my Fedora powered laptop
+1.9.1
