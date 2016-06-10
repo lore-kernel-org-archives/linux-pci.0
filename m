@@ -1,38 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59514 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1424199AbcFMU61 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jun 2016 16:58:27 -0400
-Date: Mon, 13 Jun 2016 15:58:23 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Jun 2016 11:13:43 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
-Message-ID: <20160613205823.GA18747@localhost>
-References: <cover.1463134231.git.lukas@wunner.de>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] PCI: Use device_match_always()
+Message-ID: <20160610161343.GH19309@localhost>
+References: <20160606073238.1073-1-thierry.reding@gmail.com>
+ <20160606073238.1073-2-thierry.reding@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160606073238.1073-2-thierry.reding@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> This series powers Thunderbolt controllers on Macs down when nothing is
-> plugged in, saving 1.7 W on machines with a Light Ridge controller and
-> reportedly 4 W on Cactus Ridge 4C and Falcon Ridge 4C.
+On Mon, Jun 06, 2016 at 09:32:37AM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> There is now a common implementation for a match function that will
+> always match, so the PCI-specific implementation can be removed.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-Hi Lukas,
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-I suppose these depend on Mika's runtime PM patches (at least, I see
-Mika's commits in your github tree).  Would you mind rebasing your
-patches so they apply on my pci/pm branch?  I couldn't import them
-directly into stg.
+I'm sort of OK with this.  It's clearly not going to break anything.
 
-I'm sure git could pull them in easily, but I use git in a very
-simple-minded way.
+But I would far rather figure out a way to remove no_pci_devices()
+completely.  There's only one in-tree caller, and it's sort of
+dubious, although the idea was added by Linus (2bff5e94f1bf).
 
-Bjorn
+I suppose nowadays we would use ACPI or DMI to do this.  But I guess
+this is OK as-is.  It'd be pretty hard to find a PC110 to test any
+real driver changes.
+
+I assume all three of these patches would get merged together by
+somebody else.
+
+> ---
+>  drivers/pci/probe.c | 7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 8e3ef720997d..3db06d8d6497 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -62,11 +62,6 @@ static struct resource *get_pci_domain_busn_res(int domain_nr)
+>  	return &r->res;
+>  }
+>  
+> -static int find_anything(struct device *dev, void *data)
+> -{
+> -	return 1;
+> -}
+> -
+>  /*
+>   * Some device drivers need know if pci is initiated.
+>   * Basically, we think pci is not initiated when there
+> @@ -77,7 +72,7 @@ int no_pci_devices(void)
+>  	struct device *dev;
+>  	int no_devices;
+>  
+> -	dev = bus_find_device(&pci_bus_type, NULL, NULL, find_anything);
+> +	dev = bus_find_device(&pci_bus_type, NULL, NULL, device_match_always);
+>  	no_devices = (dev == NULL);
+>  	put_device(dev);
+>  	return no_devices;
+> -- 
+> 2.8.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
