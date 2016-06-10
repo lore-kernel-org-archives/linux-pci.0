@@ -1,77 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:62965 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752151AbcF3Kxq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 06:53:46 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5UArXn2128489
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:45 -0400
-Received: from e28smtp09.in.ibm.com (e28smtp09.in.ibm.com [125.16.236.9])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 23uvafhk5v-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:44 -0400
-Received: from localhost
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 30 Jun 2016 16:23:30 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v3 3/7] PCI: Do not disable memory decoding in pci_reassigndev_resource_alignment()
-Date: Thu, 30 Jun 2016 18:53:09 +0800
-In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1467283993-3185-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from ni.piap.pl ([195.187.100.4]:35673 "EHLO ni.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750710AbcFJKKV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Jun 2016 06:10:21 -0400
+From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack overflow"
+References: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<11128570.JeBAgI5zQr@wuerfel> <m37fdydikf.fsf@t19.piap.pl>
+	<7440319.e8dDgNlZLB@wuerfel>
+Date: Fri, 10 Jun 2016 12:10:14 +0200
+In-Reply-To: <7440319.e8dDgNlZLB@wuerfel> (Arnd Bergmann's message of "Thu, 09
+	Jun 2016 16:42:03 +0200")
+Message-ID: <m3oa79bbi1.fsf@t19.piap.pl>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not disable memory decoding when we reassign alignment
-in pci_reassigndev_resource_alignment(). It's meaningless and
-have some side effect. For example, some fixup functions such as
-quirk_e100_interrupt() read PCI_COMMAND_MEMORY to know whether
-the devices has been initialized by the firmware or not. If we
-disable memory decoding here, these functions will get a wrong
-information that the devices was not initialized by the firmware
-which may cause a wrong fixup. Besides, disabling memory decoding
-may also break some devices that need to have memory decoding
-always-on during probing.
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/pci.c |    8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+> Before that, we were always setting both mrrs and mps. As we don't know
+> who uses PCIE_BUS_PEER2PEER, maybe another option would be to add yet
+> another pcie_bus_config value for this particular quirk?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6ae02de..6241cfc 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4820,7 +4820,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	int i;
- 	struct resource *r;
- 	resource_size_t align, size;
--	u16 command;
- 
- 	/* We should never try to reassign VF's alignment */
- 	if (dev->is_virtfn)
-@@ -4838,12 +4837,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		return;
- 	}
- 
--	dev_info(&dev->dev,
--		"Disabling memory decoding and releasing memory resources.\n");
--	pci_read_config_word(dev, PCI_COMMAND, &command);
--	command &= ~PCI_COMMAND_MEMORY;
--	pci_write_config_word(dev, PCI_COMMAND, command);
--
-+	dev_info(&dev->dev, "Releasing memory resources.\n");
- 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
- 		r = &dev->resource[i];
- 		if (!(r->flags & IORESOURCE_MEM))
+It would be a safe approach.
+Or, maybe another non-pcie_bus_config thing, I don't know (so
+the pcie_bus_config is left for the user).
+
+> I started the DT conversion a long time ago (see the DT parsing in
+> arch/arm/mach-cns3xxx/core.c) but I never had any hardware to test
+> on, and it was at a time when we didn't even have DT support in all
+> the subsystems.
+>
+> I'd definitely help you get the rest of the DT support in place if
+> you can test it. This is now the only SMP platform and one of
+> the last users of GIC and l2x0 that does not use DT, so I'd love
+> to see that converted just so we can remove the legacy probing from
+> those drivers.
+
+Ok. Is there a DT skeleton file somewhere, so I can try to boot the
+board (without Laguna extras) in DT mode?
+At first, I only need CPU + RAM + console serial port.
+
+> Converting what we have in mainline should be fairly straightforward,
+> but there is more code in 
+> target/linux/cns3xxx/files/arch/arm/mach-cns3xxx/laguna.c that requires
+> more work, in particular we need to come up with a way to handle
+> the laguna_net_data and laguna_info structures, which have some of
+> the same data that is normall in DT.
+
+I assume adding this to U-Boot should be acceptable (for Gateworks,
+too). They are already doing this to their i.MX6 line Ventana.
+
+> Also, the gpio driver doesn't
+> have a trivial conversion to DT and requires some work to define
+> a binding and implement that.
+
+GPIO is a bit less important ATM, since the boards can boot without it.
 -- 
-1.7.9.5
+Krzysztof Halasa
 
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
