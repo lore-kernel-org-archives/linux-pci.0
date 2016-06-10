@@ -1,79 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f46.google.com ([209.85.213.46]:36110 "EHLO
-	mail-vk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbcFJEBD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2016 00:01:03 -0400
-Received: by mail-vk0-f46.google.com with SMTP id g67so82139507vkb.3
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jun 2016 21:01:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1465373117-823-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1465373117-823-1-git-send-email-shawn.lin@rock-chips.com>
-From: Doug Anderson <dianders@chromium.org>
-Date: Thu, 9 Jun 2016 21:01:01 -0700
-Message-ID: <CAD=FV=XiRgjAU2STck4mcWAERqZDvNSsCUytHDnWD+SHL2sRrQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 06/11] PCI: Refactor generic bus domain assignment
+Date: Fri, 10 Jun 2016 21:55:14 +0200
+Message-Id: <1465588519-11334-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Shawn,
+Change the way PCI bus domain number is assigned and improve function
+name to reflect what function does. No functional changes.
 
-On Wed, Jun 8, 2016 at 1:05 AM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
-> +pcie0: pcie@f8000000 {
-> +       compatible = "rockchip,rk3399-pcie";
-> +       #address-cells = <3>;
-> +       #size-cells = <2>;
-> +       clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-> +                <&cru PCLK_PCIE>;
-> +       clock-names = "aclk", "aclk-perf",
-> +                     "hclk";
+Instead of assigning bus domain number inside of pci_bus_assign_domain_nr()
+simply return domain number and let pci_create_root_bus() do assignment.
+This way pci_create_root_bus() setups bus structure data in the consistent
+way. Since pci_bus_assign_domain_nr() now does not assign but retrieves
+domain number instead, rename it to pci_bus_find_domain_nr().
 
-Code also requires a "pm" clock.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/pci/pci.c   | 4 ++--
+ drivers/pci/probe.c | 4 +++-
+ include/linux/pci.h | 7 +------
+ 3 files changed, 6 insertions(+), 9 deletions(-)
 
-> +       bus-range = <0x0 0x1>;
-> +       interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
-> +                    <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
-> +       interrupt-names: "sys", "legacy", "client";
-
-Shouldn't be ":", should be "=".
-
-
-> +       assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
-> +       assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
-> +       assigned-clock-rates = <100000000>;
-> +       ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
-> +       ranges = < 0x82000000 0 0xfa000000 0x0 0xfa000000 0 0x600000
-> +                  0x81000000 0 0xfa600000 0x0 0xfa600000 0 0x100000 >;
-
-nit: I don't thin it's common to have spaces before/after the ">" and "<".
-nit: Be consistent about 0 vs. 0x0 in ranges.
-
-
-> +       num-lanes = <4>;
-> +       reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
-> +       reg-name = "axi-base", "apb-base";
-
-Should be "reg-names" (with an "s")
-
-
-> +       resets = <&cru SRST_PCIEPHY>, <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-> +                <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-> +       reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-
-You have 5 resets but 4 reset names.  That doesn't seem right.  Code
-shows you only getting 4, so presumably you need to remove the
-SRST_PCIEPHY one.
-
-
--Doug
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index eb431b5..b9a7833 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4941,7 +4941,7 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+ 	int domain = -1;
+@@ -4985,7 +4985,7 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
+ }
+ #endif
+ #endif
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8e3ef72..380d46d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2127,7 +2127,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
+-	pci_bus_assign_domain_nr(b, parent);
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	b->domain_nr = pci_bus_find_domain_nr(b, parent);
++#endif
+ 	b2 = pci_find_bus(pci_domain_nr(b), bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ce03d65..48839e8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1390,12 +1390,7 @@ static inline int pci_domain_nr(struct pci_bus *bus)
+ {
+ 	return bus->domain_nr;
+ }
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
+-#else
+-static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+-					struct device *parent)
+-{
+-}
++int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
+ #endif
+ 
+ /* some architectures require additional setup to direct VGA traffic */
+-- 
+1.9.1
