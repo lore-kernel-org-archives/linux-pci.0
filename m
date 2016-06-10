@@ -1,110 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38472 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752843AbcFVXCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Jun 2016 19:02:00 -0400
-Date: Wed, 22 Jun 2016 18:01:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v3 0/4] ARM/ARM64: PCI: PCI_PROBE_ONLY clean-up
-Message-ID: <20160622230151.GH25485@localhost>
-References: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH V9 08/11] ARM64/PCI: Add ACPI hook to assign domain number
+Date: Fri, 10 Jun 2016 21:55:16 +0200
+Message-Id: <1465588519-11334-9-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 08, 2016 at 12:04:46PM +0100, Lorenzo Pieralisi wrote:
-> Current arm/arm64 code prevents enabling resources in the respective
-> pcibios_enable_device() callbacks if the PCI_PROBE_ONLY flag is set,
-> in that on those platforms the resources tree was not validated properly
-> since PCI resources are not currently claimed on arm/arm64 PCI_PROBE_ONLY
-> systems.
-> 
-> This is a temporary kludge, in that PCI_PROBE_ONLY flag is used to
-> describe systems with fixed resources, that can nonetheless be enabled
-> through the standard pci_enable_resources() call present in PCI core code,
-> (ie via the generic pcibios_enable_device() call).
-> 
-> To remove the PCI_PROBE_ONLY flag in arm/arm64 pcibios_enable_device()
-> callbacks, the PCI host controllers that can be used with
-> PCI_PROBE_ONLY configurations must make sure that devices resources are
-> validated and inserted in the kernel resource tree even on PCI_PROBE_ONLY
-> systems so that the generic pcibios_enable_device() generic code, while
-> enabling resources (pci_enable_resources()), does not find dangling
-> resources pointers (ie missing parent pointers) that are omens of
-> an incomplete resource tree, causing failures in resources enablement.
-> 
-> PCI core code provides interfaces to assign/reassign/reallocate PCI
-> bus resources but it is currently lacking an interface to claim
-> resources for a specific bus. Arches implement resources claiming through
-> ad-hoc code built on top of pci_claim_resource() API, but that code
-> cannot be leveraged on architectures like arm/arm64 that rely on the
-> generic PCI infrastructure to carry out resources claiming/assignment.
-> 
-> Therefore, to clean up the arm/arm64 resources enablement on
-> PCI_PROBE_ONLY systems this patchset implements four patches:
-> 
-> PATCH 1: Create PCI core code infrastructure to claim bus resources
-> PATCH 2: Leverage the infrastructure in PATCH 1 to claim resources in
->          the PCI generic host controller on PCI_PROBE_ONLY systems
-> 
-> PATCH 3: Remove the PCI_PROBE_ONLY kludge from the arm64 PCI back-end to
->          complete the clean-up and leverage the PCI generic
->          pcibios_enable_device() implementation
-> 
-> PATCH 4: Remove the PCI_PROBE_ONLY kludge from the arm PCI back-end to
->          complete the clean-up and leverage the PCI generic
->          pcibios_enable_device() implementation
-> 
-> Tested on arm/arm64 systems with kvmtool and PCI host generic.
-> 
-> v2 -> v3
-> 
-> - Split patch 3 in two patches so that arm and arm64 are handled
->   in different patches
-> - Improved commits logs, clarified resource parent assignment
-> - Rebased against v4.7-rc2
-> 
-> v2: https://patchwork.ozlabs.org/patch/590556/
-> 
-> v1 -> v2
-> 
-> - Rewrote patch 1 to recursively claim resources for the whole PCI bus
->   hierarchy
-> - Updated commits logs/tags
-> - Rebased against v4.5-rc6
-> 
-> v1: https://patchwork.ozlabs.org/patch/545669/
-> 
-> Lorenzo Pieralisi (4):
->   PCI: add generic code to claim bus resources
->   PCI: host-generic: claim bus resources on PCI_PROBE_ONLY set-ups
->   ARM64/PCI: remove arch specific pcibios_enable_device()
->   ARM/PCI: remove arch specific pcibios_enable_device()
-> 
->  arch/arm/kernel/bios32.c           | 12 -------
->  arch/arm64/kernel/pci.c            | 13 --------
->  drivers/pci/host/pci-host-common.c | 27 +++++++++++++--
->  drivers/pci/setup-bus.c            | 68 ++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h                |  1 +
->  5 files changed, 94 insertions(+), 27 deletions(-)
+PCI core code provides a config option (CONFIG_PCI_DOMAINS_GENERIC)
+that allows assigning the PCI bus domain number generically by
+relying on device tree bindings, and falling back to a simple counter
+when the respective DT properties (ie "linux,pci-domain") are not
+specified in the host bridge device tree node.
 
-I applied these to pci/resource for v4.8, thanks, Lorenzo!
+In a similar way, when a system is booted through ACPI, architectures
+that are selecting CONFIG_PCI_DOMAINS_GENERIC (ie ARM64) require kernel
+hooks to retrieve the domain number so that the PCI bus domain number
+set-up can be handled seamlessly with DT and ACPI in generic core code
+when CONFIG_PCI_DOMAINS_GENERIC is selected.
 
-It's awesome to get rid of that PCI_PROBE_ONLY hack.
+Since currently it is not possible to retrieve a pointer to the PCI
+host bridge ACPI device backing the host bridge from core PCI code
+(which would allow retrieving the domain number in an arch agnostic
+way through the ACPI _SEG method), an arch specific ACPI hook has to
+be declared and implemented by all arches that rely on
+CONFIG_PCI_DOMAINS_GENERIC to retrieve the domain number and set it
+up in core PCI code.
 
-We might still tweak this a little based on my question about
-pci_common_init_dev(), so don't build things on top of this yet (good
-advice in general for my branches: I often rebase and remerge them, so
-it's best to base things on my "master" branch unless you actually
-depend on something that's not in there.)
+For the aforementioned reasons, introduce acpi_pci_bus_find_domain_nr()
+hook to retrieve the domain number on a per-arch basis when the system
+boots through ACPI. ARM64 dummy implementation of the same is provided
+in first place in preparation for ARM64 ACPI based PCI host controller
+driver.
+
+acpi_pci_bus_find_domain_nr() is called from generic
+pci_bus_find_domain_nr() as an ACPI option to DT domain assignment.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ arch/arm64/kernel/pci.c | 7 +++++++
+ drivers/pci/pci.c       | 4 +++-
+ include/linux/pci.h     | 7 +++++++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 3c4e308..d5d3d26 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -17,6 +17,7 @@
+ #include <linux/mm.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
++#include <linux/pci.h>
+ #include <linux/slab.h>
+ 
+ /*
+@@ -85,6 +86,12 @@ EXPORT_SYMBOL(pcibus_to_node);
+ #endif
+ 
+ #ifdef CONFIG_ACPI
++
++int acpi_pci_bus_find_domain_nr(struct pci_bus *bus)
++{
++	return 0;
++}
++
+ /* Root bridge scanning */
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 327828d..4834cee 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -7,6 +7,7 @@
+  *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/init.h>
+@@ -4990,7 +4991,8 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+ 
+ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+-	return of_pci_bus_find_domain_nr(parent) ;
++	return acpi_disabled ? of_pci_bus_find_domain_nr(parent) :
++			       acpi_pci_bus_find_domain_nr(bus);
+ }
+ #endif
+ #endif
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 48839e8..49ba8af 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1390,6 +1390,13 @@ static inline int pci_domain_nr(struct pci_bus *bus)
+ {
+ 	return bus->domain_nr;
+ }
++/* Arch specific ACPI hook to set-up domain number */
++#ifdef CONFIG_ACPI
++int acpi_pci_bus_find_domain_nr(struct pci_bus *bus);
++#else
++static inline int acpi_pci_bus_find_domain_nr(struct pci_bus *bus)
++{ return 0; }
++#endif
+ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
+ #endif
+ 
+-- 
+1.9.1
