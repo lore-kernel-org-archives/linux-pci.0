@@ -1,98 +1,96 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com"
-	<Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>
-CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "Liviu.Dudau@arm.com"
-	<Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
-	<ddaney@caviumnetworks.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "linaro-acpi@lists.linaro.org"
-	<linaro-acpi@lists.linaro.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "dhdang@apm.com"
-	<dhdang@apm.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "cov@codeaurora.org"
-	<cov@codeaurora.org>
-Subject: RE: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host controller
-Date: Thu, 2 Jun 2016 09:58:42 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F769A84@lhreml507-mbx>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F767865@lhreml507-mbx>
- <574FF3BE.4010903@semihalf.com>
-In-Reply-To: <574FF3BE.4010903@semihalf.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Fri, 10 Jun 2016 21:54:23 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
+	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
+Subject: Re: [PATCH V9 10/11] ARM64/PCI: Implement ACPI low-level calls to
+ access PCI_Config region from AML
+Message-ID: <20160610205423.GC24178@red-moon>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+ <1465588519-11334-11-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465588519-11334-11-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz
+On Fri, Jun 10, 2016 at 09:55:18PM +0200, Tomasz Nowicki wrote:
+> ACPI spec6.1 - chapter: 5.5.2.4 defines OperationRegion (Declare Operation
+> Region). Following the spec: " [...] An Operation Region is a specific
+> region of operation within an address space that is declared as a subset
+> of the entire address space using a starting address (offset) and a length.
+> Control methods must have exclusive access to any address accessed via
+> fields declared in Operation Regions. [...]".
+> 
+> OperationRegion allows to declare various of operation region address space
 
-> -----Original Message-----
-> From: Tomasz Nowicki [mailto:tn@semihalf.com]
-> Sent: 02 June 2016 09:52
-> To: Gabriele Paoloni; helgaas@kernel.org; arnd@arndb.de;
-> will.deacon@arm.com; catalin.marinas@arm.com; rafael@kernel.org;
-> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
-> jchandra@broadcom.com
-> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
-> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
-> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
-> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
-> dhdang@apm.com; jeremy.linton@arm.com; liudongdong (C);
-> cov@codeaurora.org
-> Subject: Re: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host
-> controller
->=20
-> Hi Gabriele,
->=20
-> On 01.06.2016 09:36, Gabriele Paoloni wrote:
-> > I think maybe it is worth to post this quirk mechanism as RFC on
-> > top of this v8 patchset, so that we can start to review it and
-> > make some progress on the quirks.
->=20
-> I've just posted my RFC patches, please see:
-> https://patchwork.ozlabs.org/patch/629121/
->=20
-> We can start review from there so that this series is not blocked.
+s/of//
 
-Many Thanks for this!
+> identifiers including PCI_Config. PCI_Config is meant to access PCI
+> configuration space from the ASL. So every time ASL opcode operates
+> on PCI_Config space region, ASL interpreter dispatches accesses to OS
+> low-level calls - raw_pci_write() and raw_pci_read() for Linux - so-called
+> ACPI RAW accessors.
+> 
+> In order to support PCI_Config operation region, implement mentioned
+> raw_pci_write() and raw_pci_read() calls so they find associated bus
+> and call read/write ops.
+> 
+> Waiting for clarification in the ACPI specifications in relation
+> to PCI_Config space handling before PCI bus enumeration is completed,
+> current code does not support PCI_Config region accesses before PCI bus
+> enumeration whilst providing full AML PCI_Config access availability
+> when the PCI bus enumeration is completed by the kernel so that
+> RAW accessors can look-up PCI operations through the struct pci_bus
+> associated with a PCI bus.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
 
-Sure let's start working on this.
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-Cheers
-
-Gab
-
->=20
-> Thanks,
-> Tomasz
+> ---
+>  arch/arm64/kernel/pci.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index b3b8a2c..328f857 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -71,13 +71,21 @@ int pcibios_alloc_irq(struct pci_dev *dev)
+>  int raw_pci_read(unsigned int domain, unsigned int bus,
+>  		  unsigned int devfn, int reg, int len, u32 *val)
+>  {
+> -	return -ENXIO;
+> +	struct pci_bus *b = pci_find_bus(domain, bus);
+> +
+> +	if (!b)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	return b->ops->read(b, devfn, reg, len, val);
+>  }
+>  
+>  int raw_pci_write(unsigned int domain, unsigned int bus,
+>  		unsigned int devfn, int reg, int len, u32 val)
+>  {
+> -	return -ENXIO;
+> +	struct pci_bus *b = pci_find_bus(domain, bus);
+> +
+> +	if (!b)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	return b->ops->write(b, devfn, reg, len, val);
+>  }
+>  
+>  #ifdef CONFIG_NUMA
+> -- 
+> 1.9.1
+> 
