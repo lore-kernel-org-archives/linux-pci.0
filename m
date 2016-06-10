@@ -1,106 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:35925 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424358AbcFMOmE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2016 10:42:04 -0400
-Received: by mail-lf0-f54.google.com with SMTP id q132so48139714lfe.3
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jun 2016 07:42:03 -0700 (PDT)
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
 From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
-Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 6/7] irqchip/gicv3-its: Factor out code that might be reused for ACPI
-Date: Mon, 13 Jun 2016 16:41:12 +0200
-Message-Id: <1465828873-23498-7-git-send-email-tn@semihalf.com>
-In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 09/11] ARM64/PCI: ACPI support for legacy IRQs parsing and consolidation with DT code
+Date: Fri, 10 Jun 2016 21:55:17 +0200
+Message-Id: <1465588519-11334-10-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Firmware agnostic code lands in common functions which do necessary
-domain initialization based on unique domain handler. DT specific
-code goes to DT specific init call.
+To enable PCI legacy IRQs on platforms booting with ACPI, arch code
+should include ACPI specific callbacks that parse and set-up the
+device IRQ number, equivalent to the DT boot path. Owing to the current
+ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
+cannot be parsed at device add time, since that would trigger ACPI scan
+handlers ordering issues depending on how the ACPI tables are defined.
+
+To solve this problem and consolidate FW PCI legacy IRQs parsing in
+one single pcibios callback (pending final removal), this patch moves
+DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
+PCI core code at device probe time) and adds ACPI PCI legacy IRQs
+parsing to the same callback too, so that FW PCI legacy IRQs parsing
+is confined in one single arch callback that can be easily removed
+when code parsing PCI legacy IRQs is consolidated and moved to core
+PCI code.
 
 Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 ---
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 +++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 15 deletions(-)
+ arch/arm64/kernel/pci.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index aee60ed..23679ae 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -106,34 +106,48 @@ static struct of_device_id its_device_id[] = {
- 	{},
- };
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index d5d3d26..b3b8a2c 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -51,11 +51,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ }
  
--static int __init its_pci_msi_init(void)
-+static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
-+				       const char *name)
+ /*
+- * Try to assign the IRQ number from DT when adding a new device
++ * Try to assign the IRQ number when probing a new device
+  */
+-int pcibios_add_device(struct pci_dev *dev)
++int pcibios_alloc_irq(struct pci_dev *dev)
  {
--	struct device_node *np;
- 	struct irq_domain *parent;
- 
-+	parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
-+	if (!parent || !msi_get_domain_info(parent)) {
-+		pr_err("%s: Unable to locate ITS domain\n", name);
-+		return -ENXIO;
-+	}
-+
-+	if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
-+				       parent)) {
-+		pr_err("%s: Unable to create PCI domain\n", name);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init its_pci_of_msi_init(void)
-+{
-+	struct device_node *np;
-+
- 	for (np = of_find_matching_node(NULL, its_device_id); np;
- 	     np = of_find_matching_node(np, its_device_id)) {
- 		if (!of_property_read_bool(np, "msi-controller"))
- 			continue;
- 
--		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
--		if (!parent || !msi_get_domain_info(parent)) {
--			pr_err("%s: unable to locate ITS domain\n",
--			       np->full_name);
-+		if (its_pci_msi_init_one(of_node_to_fwnode(np), np->full_name))
- 			continue;
--		}
--
--		if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
--					       &its_pci_msi_domain_info,
--					       parent)) {
--			pr_err("%s: unable to create PCI domain\n",
--			       np->full_name);
--			continue;
--		}
- 
- 		pr_info("PCI/MSI: %s domain created\n", np->full_name);
- 	}
+-	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++	if (acpi_disabled)
++		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++#ifdef CONFIG_ACPI
++	else
++		return acpi_pci_irq_enable(dev);
++#endif
  
  	return 0;
  }
-+
-+static int __init its_pci_msi_init(void)
-+{
-+	its_pci_of_msi_init();
-+	return 0;
-+}
-+
- early_initcall(its_pci_msi_init);
 -- 
 1.9.1
-
