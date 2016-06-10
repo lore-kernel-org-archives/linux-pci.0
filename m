@@ -1,102 +1,119 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
- <1467188859-28188-2-git-send-email-okaya@codeaurora.org>
- <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
- <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
- <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <280859fd-07a0-9cea-c9d4-f956241e8986@codeaurora.org>
-Date: Wed, 29 Jun 2016 17:21:27 -0400
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V8 5/9] pci, acpi: add acpi hook to assign domain number.
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <1464621262-26770-6-git-send-email-tn@semihalf.com>
+ <20160608001559.GD4759@localhost> <20160610151458.GA23638@red-moon>
+ <20160610154908.GB23638@red-moon>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+ rafael@kernel.org, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ jchandra@broadcom.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
+ Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, wangyijing@huawei.com,
+ Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ cov@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <575AEF9C.4090205@semihalf.com>
+Date: Fri, 10 Jun 2016 18:49:32 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- eric.auger@redhat.com, Jon Masters <jcm@redhat.com>,
- Timur Tabi <timur@codeaurora.org>, Andy Gross <agross@codeaurora.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, tiwai@suse.com, perex@perex.cz,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Christopher Covington <cov@codeaurora.org>,
- Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
- linux-arm-msm@vger.kernel.org, Len Brown <lenb@kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20160610154908.GB23638@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2016 5:19 PM, Rafael J. Wysocki wrote:
-> On Wed, Jun 29, 2016 at 8:47 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> On 6/29/2016 9:13 AM, Rafael J. Wysocki wrote:
->>> On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>>> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
->>>> resource requirements") omitted the initially assigned POSSIBLE penalty
->>>> when the IRQ is active.
->>>
->>> It would be good to say what can go wrong with that here.
->>>
+On 10.06.2016 17:49, Lorenzo Pieralisi wrote:
+> On Fri, Jun 10, 2016 at 04:14:58PM +0100, Lorenzo Pieralisi wrote:
+>> Hi Bjorn, Tomasz,
 >>
->> I can add more description. Here is a first attempt.
+>> On Tue, Jun 07, 2016 at 07:15:59PM -0500, Bjorn Helgaas wrote:
 >>
->> Incorrect calculation of penalty leads to ACPI code assigning the wrong
->> interrupt number to PCI INTx interrupts.
+>> [...]
 >>
->> This would not be as bad as it sounds in theory. You would just cause the
->> interrupts to be shared and observe performance penalty.
->>
->> However, some drivers like parallel port driver doesn't like interrupt
->> sharing as in this example and causes all other PCI drivers sharing the interrupt
->> to malfunction.
->>
->> The issue has not been caught because the behavior is platform specific
->> and depends on the peripheral drivers sharing the IRQ.
->>
->> I can claim that this could be a BIOS bug. if interrupt 7 is not good for PCI,
->> it shouldn't have been listed in the possible PCI interrupts to begin with.
->> Given this is an existing platform, I don't think we have the luxury to request
->> all BIOS to be updated. This bugfix is needed to support existing platforms.
->>
->>
->> Feel free to request more information if the above description is not clear.
-> 
-> It is clear enough.  I can add it to the changelog when applying the patch.
-
-OK
-
-> 
->>
->>>> The original code would assign the POSSIBLE value divided by the number
->>>> of possible IRQs during initialization.
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index eb431b5..2b52178 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -7,6 +7,7 @@
+>>>>    *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+>>>>    */
 >>>>
->>>> Later, if the IRQ is chosen as the active IRQ or if the IRQ is in use
->>>> by ISA; additional penalties get added.
-> 
-> Does "later" here mean "later in that code path" or "in a later patch"?
+>>>> +#include <linux/acpi.h>
+>>>>   #include <linux/kernel.h>
+>>>>   #include <linux/delay.h>
+>>>>   #include <linux/init.h>
+>>>> @@ -4941,7 +4942,7 @@ int pci_get_new_domain_nr(void)
+>>>>   }
+>>>>
+>>>>   #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>>>> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>>>> +static int of_pci_bus_domain_nr(struct device *parent)
+>>>
+>>> Can we do a little cleanup before this patch?
+>>>
+>>>    - pci_bus_assign_domain_nr() is only used inside drivers/pci, so
+>>>      maybe we move the prototype to drivers/pci/pci.h?
+>>>
+>>>    - I don't really like the style of calling a function that
+>>>      internally assigns bus->domain_nr.  Could we do something like
+>>>      this instead?
+>>>
+>>>      int pci_bus_domain_nr(...)
+>>>      {
+>>>        ...
+>>>        return domain;
+>>>      }
+>>>
+>>>      ... pci_create_root_bus(...)
+>>>      {
+>>>        ...
+>>>        b->domain_nr = pci_bus_domain_nr(...);
+>>
+>> We noticed while preparing v9, that this would force us to
+>> write an empty pci_bus_domain_nr() prototype for
+>> !PCI_DOMAINS_GENERIC (ie every arch but ARM/ARM64) that should
+>> return 0 to keep current behaviour unchanged.
+>>
+>> That's why pci_bus_assign_domain_nr() was there, so that it
+>> was compiled out on !PCI_DOMAINS_GENERIC.
+>>
+>> I really would like v9 to be final so let's fix it before posting it
+>> shortly please.
+>>
+>> For the above we have three options:
+>>
+>> 1) Leave code as-is in v8
+>>
+>> 2) in pci_create_root_bus():
+>> #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>>         b->domain_nr = pci_bus_domain_nr(...);
+>> #endif
+>>
+>> + other changes requested above
+>>
+>> 3) in pci_create_root_bus()
+>>
+>> b->domain_nr = pci_bus_domain_nr(...);
+>>
+>> unguarded and a stub:
+>>
+>> #ifndef CONFIG_PCI_DOMAINS_GENERIC
+>> static inline int pci_bus_domain_nr() { return 0; }
+>> #endif
+>>
+>> + other changes requested above
+>
+> Actually, Tomasz made me notice that pci_bus.domain_nr is
+> only declared for CONFIG_PCI_DOMAINS_GENERIC so (3) is not
+> even an option and IMO (2) is not much nicer than code in
+> v8 as-is with an ifdef in the middle of pci_create_root_bus().
+>
 
-"later in that code path"
+To me (1) is nicer too. Bjorn what is your take on this? This is last 
+bit before sending v9.
 
-> 
-> Thanks,
-> Rafael
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Tomasz
