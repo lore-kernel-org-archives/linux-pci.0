@@ -1,51 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:61764 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932711AbcFBNxc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 09:53:32 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>,
-	Lior Amsalem <alior@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	Hanna Hawa <hannah@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marcin Wojtas <mw@semihalf.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH 1/3] dt-bindings: add DT binding for the Aardvark PCIe controller
-Date: Thu, 02 Jun 2016 15:53:33 +0200
-Message-ID: <7070543.PV5raqmBSF@wuerfel>
-In-Reply-To: <20160602144542.6bc1b421@free-electrons.com>
-References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com> <8313817.cgODJZVrao@wuerfel> <20160602144542.6bc1b421@free-electrons.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH v2 13/15] drivers: acpi: iort: introduce
+ iort_iommu_configure
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ iommu@lists.linux-foundation.org
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1465306270-27076-14-git-send-email-lorenzo.pieralisi@arm.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <575AB6C0.4050808@semihalf.com>
+Date: Fri, 10 Jun 2016 14:46:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1465306270-27076-14-git-send-email-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ linux-acpi@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
+ Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 2, 2016 2:45:42 PM CEST Thomas Petazzoni wrote:
-> 
-> On Thu, 02 Jun 2016 14:34:14 +0200, Arnd Bergmann wrote:
-> 
-> > I think some other PCI hosts just move the interrupt-controller
-> > and #interrupt-cells properties into the PCI host node itself,
-> > which avoids the ambiguity here.
-> 
-> Do you have an example of this? I have modeled my DT binding after the
-> one used by the pci-dra7xx driver, which is in the same situation as I
-> am in terms of interrupt handling.
-> 
-> But I can indeed try to make the top-level PCIe controller node the
-> interrupt controller. Let me try that quickly.
-> 
+On 07.06.2016 15:31, Lorenzo Pieralisi wrote:
+> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+> +{
+> +	u32 *rid = data;
+> +
+> +	*rid = alias;
+> +	return 0;
+> +}
+> +
+> +/**
+> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
+> + *
+> + * @dev: device to configure
+> + *
+> + * Returns: iommu_ops pointer on configuration success
+> + *          NULL on configuration failure
+> + */
+> +const struct iommu_ops *iort_iommu_configure(struct device *dev)
+> +{
+> +	struct acpi_iort_node *node, *parent;
+> +	const struct iort_ops_node *iort_ops;
+> +	u32 rid = 0, devid = 0;
+> +
+> +	if (dev_is_pci(dev)) {
+> +		struct pci_bus *bus = to_pci_dev(dev)->bus;
+> +
+> +		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
+> +				       &rid);
 
-Looking at the binding files, I see only this one:
+I think we should find here the root bus which is connected to RC IORT node.
 
-Documentation/devicetree/bindings/pci/altera-pcie.txt
+> +
+> +		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> +				      iort_find_dev_callback, &bus->dev);
+> +	} else {
+> +		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> +				      iort_find_dev_callback, dev);
+> +	}
+> +
+> +	if (!node)
+> +		return NULL;
+> +
+> +	parent = iort_find_parent_node(node);
+> +
+> +	if (!parent)
+> +		return NULL;
+> +
+> +	iort_ops = iort_smmu_get_ops_node(parent);
+> +
+> +	if (iort_ops && iort_ops->iommu_xlate) {
+> +		iort_dev_map_rid(node, rid, &devid, parent->type);
+> +		iort_ops->iommu_xlate(dev, devid, parent);
+> +		return iort_ops->ops;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
 
-and a couple of others using a child node.
+Thanks,
+Tomasz
 
-	Arnd
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
