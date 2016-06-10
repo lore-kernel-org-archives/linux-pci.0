@@ -1,92 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34015 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbcF2VZa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 17:25:30 -0400
+Return-Path: <jcm@jonmasters.org>
+Return-Path: <jcm@jonmasters.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+ <20160610234107.GC7671@localhost>
+Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
+ okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org,
+ linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com,
+ linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+ catalin.marinas@arm.com, Liviu.Dudau@arm.com, arnd@arndb.de, jcm@redhat.com,
+ cov@codeaurora.org, mw@semihalf.com, linux-arm-kernel@lists.infradead.org,
+ jchandra@broadcom.com, dhdang@apm.com, linux-kernel@vger.kernel.org,
+ jeremy.linton@arm.com
+From: Jon Masters <jcm@jonmasters.org>
+Message-ID: <2e8ae0dc-d04e-3264-86d4-e2640060750c@jonmasters.org>
+Date: Fri, 10 Jun 2016 19:58:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <280859fd-07a0-9cea-c9d4-f956241e8986@codeaurora.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
- <1467188859-28188-2-git-send-email-okaya@codeaurora.org> <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
- <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org> <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
- <280859fd-07a0-9cea-c9d4-f956241e8986@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 29 Jun 2016 23:25:28 +0200
-Message-ID: <CAJZ5v0gQeT41e07OuSKtWY_tER8O0-_F3M8h5MhaH+QTvoJzYQ@mail.gmail.com>
-Subject: Re: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>,
-	linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160610234107.GC7671@localhost>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [Linaro-acpi] [PATCH V9 00/11] Support for ARM64 ACPI based PCI
+ host controller
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 11:21 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 6/29/2016 5:19 PM, Rafael J. Wysocki wrote:
->> On Wed, Jun 29, 2016 at 8:47 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>> On 6/29/2016 9:13 AM, Rafael J. Wysocki wrote:
->>>> On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>>>> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
->>>>> resource requirements") omitted the initially assigned POSSIBLE penalty
->>>>> when the IRQ is active.
->>>>
->>>> It would be good to say what can go wrong with that here.
->>>>
->>>
->>> I can add more description. Here is a first attempt.
->>>
->>> Incorrect calculation of penalty leads to ACPI code assigning the wrong
->>> interrupt number to PCI INTx interrupts.
->>>
->>> This would not be as bad as it sounds in theory. You would just cause the
->>> interrupts to be shared and observe performance penalty.
->>>
->>> However, some drivers like parallel port driver doesn't like interrupt
->>> sharing as in this example and causes all other PCI drivers sharing the interrupt
->>> to malfunction.
->>>
->>> The issue has not been caught because the behavior is platform specific
->>> and depends on the peripheral drivers sharing the IRQ.
->>>
->>> I can claim that this could be a BIOS bug. if interrupt 7 is not good for PCI,
->>> it shouldn't have been listed in the possible PCI interrupts to begin with.
->>> Given this is an existing platform, I don't think we have the luxury to request
->>> all BIOS to be updated. This bugfix is needed to support existing platforms.
->>>
->>>
->>> Feel free to request more information if the above description is not clear.
->>
->> It is clear enough.  I can add it to the changelog when applying the patch.
->
-> OK
->
->>
->>>
->>>>> The original code would assign the POSSIBLE value divided by the number
->>>>> of possible IRQs during initialization.
->>>>>
->>>>> Later, if the IRQ is chosen as the active IRQ or if the IRQ is in use
->>>>> by ISA; additional penalties get added.
->>
->> Does "later" here mean "later in that code path" or "in a later patch"?
->
-> "later in that code path"
+On 06/10/2016 07:41 PM, Bjorn Helgaas wrote:
+> On Fri, Jun 10, 2016 at 09:55:08PM +0200, Tomasz Nowicki wrote:
+>> From the functionality point of view this series may be split into the
+>> following logic parts:
+>> 1. Export ECAM API and add parent device to pci_config_window
+>> 2. Add IO resources handling to PCI core code
+>> 3. New MCFG driver
+>> 4. Cleanups and support for generic domain assignment based on ACPI
+>> 5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64/
+> 
+> This is beautiful!  It really turned out well.
+> 
+> I applied all these to pci/arm64-acpi for v4.8.
 
-OK
+Quick followup - I've forwarded your mail to the Linaro Enterprise Group
+members and started nudging the vendors to prep any remaining pieces for
+post-merge. That includes quirks, and then any drivers that anyone has
+been sitting on until this was upstream.
 
-I'm hoping we'll hear from the reporter shortly.
+Looking forward to F25 Server booting out of the box, and finally
+getting to a point where Fedora is once again upstream of RHEL(SA).
 
-Thanks,
-Rafael
+Jon.
