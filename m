@@ -1,69 +1,141 @@
-Return-Path: <jayachandran.c@broadcom.com>
-Return-Path: <jayachandran.c@broadcom.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 10 Jun 2016 13:18:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, arnd@arndb.de,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org, okaya@codeaurora.org, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
+	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
+Subject: Re: [PATCH V8 5/9] pci, acpi: add acpi hook to assign domain number.
+Message-ID: <20160610181836.GA7843@localhost>
+References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+ <1464621262-26770-6-git-send-email-tn@semihalf.com>
+ <20160608001559.GD4759@localhost>
+ <20160610151458.GA23638@red-moon>
+ <20160610154908.GB23638@red-moon>
+ <575AEF9C.4090205@semihalf.com>
 MIME-Version: 1.0
-In-Reply-To: <20160611172457.GK16462@localhost>
-References: <linux-pci@vger.kernel.org> <1462700001-30086-2-git-send-email-jchandra@broadcom.com>
- <20160611172457.GK16462@localhost>
-From: Jayachandran C <jchandra@broadcom.com>
-Date: Tue, 14 Jun 2016 21:40:36 +0530
-Message-ID: <CAKc_7PXfydUJspWdgj6YT_VhFhHcjaK_PDTH+-dRYofW=4sQ3A@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] PCI: Handle Broadcom Vulcan DMA alias calculation quirk
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
-	Linux PCI <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>, marc.zyngier@arm.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <575AEF9C.4090205@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Adding ARM GIC and SMMU maintainers]
+On Fri, Jun 10, 2016 at 06:49:32PM +0200, Tomasz Nowicki wrote:
+> On 10.06.2016 17:49, Lorenzo Pieralisi wrote:
+> >On Fri, Jun 10, 2016 at 04:14:58PM +0100, Lorenzo Pieralisi wrote:
+> >>Hi Bjorn, Tomasz,
+> >>
+> >>On Tue, Jun 07, 2016 at 07:15:59PM -0500, Bjorn Helgaas wrote:
+> >>
+> >>[...]
+> >>
+> >>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >>>>index eb431b5..2b52178 100644
+> >>>>--- a/drivers/pci/pci.c
+> >>>>+++ b/drivers/pci/pci.c
+> >>>>@@ -7,6 +7,7 @@
+> >>>>   *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+> >>>>   */
+> >>>>
+> >>>>+#include <linux/acpi.h>
+> >>>>  #include <linux/kernel.h>
+> >>>>  #include <linux/delay.h>
+> >>>>  #include <linux/init.h>
+> >>>>@@ -4941,7 +4942,7 @@ int pci_get_new_domain_nr(void)
+> >>>>  }
+> >>>>
+> >>>>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> >>>>-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> >>>>+static int of_pci_bus_domain_nr(struct device *parent)
+> >>>
+> >>>Can we do a little cleanup before this patch?
+> >>>
+> >>>   - pci_bus_assign_domain_nr() is only used inside drivers/pci, so
+> >>>     maybe we move the prototype to drivers/pci/pci.h?
+> >>>
+> >>>   - I don't really like the style of calling a function that
+> >>>     internally assigns bus->domain_nr.  Could we do something like
+> >>>     this instead?
+> >>>
+> >>>     int pci_bus_domain_nr(...)
+> >>>     {
+> >>>       ...
+> >>>       return domain;
+> >>>     }
+> >>>
+> >>>     ... pci_create_root_bus(...)
+> >>>     {
+> >>>       ...
+> >>>       b->domain_nr = pci_bus_domain_nr(...);
+> >>
+> >>We noticed while preparing v9, that this would force us to
+> >>write an empty pci_bus_domain_nr() prototype for
+> >>!PCI_DOMAINS_GENERIC (ie every arch but ARM/ARM64) that should
+> >>return 0 to keep current behaviour unchanged.
+> >>
+> >>That's why pci_bus_assign_domain_nr() was there, so that it
+> >>was compiled out on !PCI_DOMAINS_GENERIC.
+> >>
+> >>I really would like v9 to be final so let's fix it before posting it
+> >>shortly please.
+> >>
+> >>For the above we have three options:
+> >>
+> >>1) Leave code as-is in v8
+> >>
+> >>2) in pci_create_root_bus():
+> >>#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> >>        b->domain_nr = pci_bus_domain_nr(...);
+> >>#endif
+> >>
+> >>+ other changes requested above
+> >>
+> >>3) in pci_create_root_bus()
+> >>
+> >>b->domain_nr = pci_bus_domain_nr(...);
+> >>
+> >>unguarded and a stub:
+> >>
+> >>#ifndef CONFIG_PCI_DOMAINS_GENERIC
+> >>static inline int pci_bus_domain_nr() { return 0; }
+> >>#endif
+> >>
+> >>+ other changes requested above
+> >
+> >Actually, Tomasz made me notice that pci_bus.domain_nr is
+> >only declared for CONFIG_PCI_DOMAINS_GENERIC so (3) is not
+> >even an option and IMO (2) is not much nicer than code in
+> >v8 as-is with an ifdef in the middle of pci_create_root_bus().
+> >
+> 
+> To me (1) is nicer too. Bjorn what is your take on this? This is
+> last bit before sending v9.
 
-On Sat, Jun 11, 2016 at 10:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Sun, May 08, 2016 at 03:03:21PM +0530, Jayachandran C wrote:
->> The Broadcom Vulcan PCI topology is slightly unusual, for a multi-node
->> system, it looks like:
->>
->>  [bus 0]
->>      |
->>      +--[node 0 PCI bridge 0.0.0]
->>      |           |
->>      |        [bus 1]
->>      |           +---[SoC PCI devices 1.4.x, 1.5.x] ........
->>      |           +---[Glue bridges    1.a.x, 1.b.x]         \
->>      |                    |                        .....{node 0 GIC ITS}
->>      |                    |                       /
->>      |                    +----[SoC PCIe controller root ports]
->>      |                                |         \...... {SMMUv3 0..3}
->>      |                                |
->>      |                                +---- [external PCI devices]
->>      +- [node 1 PCI bridge 0.0.1]
->>      |           |
->>      |        [bus n - similar to bus 1 above]
->>      ...
->>
->> The for_each_dma_alias call for external PCI devices should not go
->> beyond the PCIe controllers where the SMMU and ITS is associated, going
->> further above to the glue bridges or the node bridges will find aliases
->> which are not valid. For internal devices, the association is at the
->> node level bridge and the alias search should not go further.
->
-> I like the line of reasoning that we should not iterate higher in the
-> hierarchy than where the translation hardware is attached.  That seems
-> like a reasonable thing in general, not just for this hardware.
->
-> Is there some generic way to learn where the translation hardware is
-> attached?  If there is, we could make pci_for_each_dma_alias() use
-> that information, and maybe we could solve the problem for other
-> systems as well as for Vulcan.
+My preference is (2).  The ifdef in pci_create_root_bus() is a little
+ugly, but I like it better because it will fit nicely into Arnd's
+idea of having the native drivers allocate and fill in a host bridge
+structure before calling the PCI core.  The domain is one thing those
+drivers could fill in.  I like that model much better than having the
+PCI core make callbacks to get information that we should have passed
+in to begin with.
 
-There was discussion on using the return value of the callback function
-to stop the alias search when we reach the bridge to which the IOMMU
-or MSI controller is attached[1]. There was an iommu patch proposed to
-handle this for the device tree case[2], It is possible that we can do
-something similar for MSI and extend it to work when ACPI IORT is
-used as well.
+The current code suggests that assigning the domain is the PCI core's
+responsibility, and that's not really the case -- for ACPI it's
+totally up to pci_root.c, for other drivers it comes from the DT, and
+for others it might depend on the driver's knowledge of the hardware
+(I'm thinking of parisc, where, I think we currently put all the
+bridges in the same domain, but IIRC they *could* each be in their own
+domain with a full [bus 00-ff] range for each bridge because each
+bridge has its own config space access mechanism).
 
-I will spend some time to see if this can be done.
+But it's not that big a deal either way -- we could do this bit of
+restructuring later, too.
 
-JC.
-[1] http://www.spinics.net/lists/linux-pci/msg51093.html
-[2] http://www.spinics.net/lists/arm-kernel/msg508266.html
+Bjorn
