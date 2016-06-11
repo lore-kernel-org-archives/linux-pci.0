@@ -1,113 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V6 0/7] Introduce ACPI world to ITS irqchip
-To: Marc Zyngier <marc.zyngier@arm.com>, rjw@rjwysocki.net,
-	bhelgaas@google.com, lorenzo.pieralisi@arm.com
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
- <20160615100919.6b507b57@arm.com>
-Cc: tglx@linutronix.de, jason@lakedaemon.net,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
-	al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <57612108.4050407@semihalf.com>
-Date: Wed, 15 Jun 2016 11:34:00 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47906 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751180AbcFKRZE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 11 Jun 2016 13:25:04 -0400
+Date: Sat, 11 Jun 2016 12:24:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jayachandran C <jchandra@broadcom.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: Handle Broadcom Vulcan DMA alias calculation
+ quirk
+Message-ID: <20160611172457.GK16462@localhost>
+References: <linux-pci@vger.kernel.org>
+ <1462700001-30086-2-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20160615100919.6b507b57@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462700001-30086-2-git-send-email-jchandra@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15.06.2016 11:09, Marc Zyngier wrote:
-> On Mon, 13 Jun 2016 16:41:06 +0200
-> Tomasz Nowicki <tn@semihalf.com> wrote:
->
->> The series builds the PCI/MSI domain stack based on initial IORT driver
->> which is added in first place. As a reference please see IORT spec:
->> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>
->> Patches were built on top of accepted ARM64 ACPI PCI support and can be found
->> all together here:
->> https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v6)
->>
->> Tested on Cavium ThunderX server.
->>
->> v5 -> v6
->> - added locking mechanism for IORT list with domain token
->> - IORT function name improvements
->> - extended IORT RID mapping helper
->> - reworked IORT to be more SMMU friendly
->> - IORT functions which map RID and find corresponding domain are not
->>    PCI specific any more (struct pci_dev -> struct device)
->> - bug fixes
->>
->> v4 -> v5
->> - rebased against v4.7-rc1
->> - drop generic layer and call IORT functions directly
->> - improve resource abstraction and string formatting
->>
->> v3 -> v4
->> - rebased against v4.5
->> - add ACPI support for IRQ domain handling on a per-device basis
->> - reorder domain setup step
->> - improve error handling
->> - code style improvements
->>
->> v2 -> v3
->> - rebased on top of 4.4
->> - fixes and improvements for redistributor init via GICC structures
->> - fixes as per kbuild reports
->>
->> v1 -> v2
->> - rebased on top of 4.4-rc4
->> - use pci_msi_domain_get_msi_rid for requester ID to device ID translation
->>
->> Tomasz Nowicki (7):
->>    ACPI: I/O Remapping Table (IORT) initial support
->>    PCI/MSI: Setup MSI domain on a per-devices basis using IORT ACPI table
->>    irqchip/gicv3-its: Cleanup for ITS domain initialization
->>    irqchip/gicv3-its: Refator ITS DT init code to prepare for ACPI
->>    irqchip/gicv3-its: Probe ITS in the ACPI way
->>    irqchip/gicv3-its: Factor out code that might be reused for ACPI
->>    irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain
->>      initialization
->>
->>   drivers/acpi/Kconfig                     |   3 +
->>   drivers/acpi/Makefile                    |   1 +
->>   drivers/acpi/iort.c                      | 386 +++++++++++++++++++++++++++++++
->>   drivers/irqchip/Kconfig                  |   1 +
->>   drivers/irqchip/irq-gic-v3-its-pci-msi.c |  88 +++++--
->>   drivers/irqchip/irq-gic-v3-its.c         | 185 ++++++++++-----
->>   drivers/irqchip/irq-gic-v3.c             |   7 +-
->>   drivers/pci/msi.c                        |  11 +-
->>   include/linux/iort.h                     |  38 +++
->>   include/linux/irqchip/arm-gic-v3.h       |   4 +-
->>   10 files changed, 646 insertions(+), 78 deletions(-)
->>   create mode 100644 drivers/acpi/iort.c
->>   create mode 100644 include/linux/iort.h
->>
->
->
-> Once you've addressed the couple of remarks I had, and unless someone
-> has further objections, this should be in a sane state.
+On Sun, May 08, 2016 at 03:03:21PM +0530, Jayachandran C wrote:
+> The Broadcom Vulcan PCI topology is slightly unusual, for a multi-node
+> system, it looks like:
+> 
+>  [bus 0]
+>      |
+>      +--[node 0 PCI bridge 0.0.0]
+>      |           |
+>      |        [bus 1]
+>      |           +---[SoC PCI devices 1.4.x, 1.5.x] ........
+>      |           +---[Glue bridges    1.a.x, 1.b.x]         \
+>      |                    |                        .....{node 0 GIC ITS}
+>      |                    |                       /
+>      |                    +----[SoC PCIe controller root ports]
+>      |                                |         \...... {SMMUv3 0..3}
+>      |                                |
+>      |                                +---- [external PCI devices]
+>      +- [node 1 PCI bridge 0.0.1]
+>      |           |
+>      |        [bus n - similar to bus 1 above]
+>      ...
+> 
+> The for_each_dma_alias call for external PCI devices should not go
+> beyond the PCIe controllers where the SMMU and ITS is associated, going
+> further above to the glue bridges or the node bridges will find aliases
+> which are not valid. For internal devices, the association is at the
+> node level bridge and the alias search should not go further.
 
-Thanks for having a look !
+I like the line of reasoning that we should not iterate higher in the
+hierarchy than where the translation hardware is attached.  That seems
+like a reasonable thing in general, not just for this hardware.
 
->
-> Of course, the following question would be "who merges this thing". I'm
-> happy to take it (mostly because it makes my life easier on the ITS
-> side), but it needs to be Acked by the usual suspects (Rafael, Bjorn,
-> Lorenzo).
->
+Is there some generic way to learn where the translation hardware is
+attached?  If there is, we could make pci_for_each_dma_alias() use
+that information, and maybe we could solve the problem for other
+systems as well as for Vulcan.
 
-As for me, I am fine you to merge it.
-
-Bjorn, Rafael, Lorenzo,
-
-Can you please check on respective patches? Thanks in advance.
-
-Tomasz
+> To handle this quirk, we mark the SoC PCIe bridges and node PCI bridge
+> with flag PCI_DEV_FLAGS_DMA_ALIAS_ROOT so that the alias and RID
+> calculations are correct.
+> 
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> ---
+>  drivers/pci/quirks.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 8e67802..62664b5 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3734,6 +3734,20 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+>  
+>  /*
+> + * The IOMMU and interrupt controller of Broadcom vulcan are associated
+> + * not at the root bus, but at a bridge below. The DMA alias search should
+> + * not go above the bridge at which the association exists.
+> + */
+> +static void quirk_bridge_brcm_vulcan_pcie_root(struct pci_dev *pdev)
+> +{
+> +	pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_ROOT;
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
+> +				quirk_bridge_brcm_vulcan_pcie_root);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
+> +				quirk_bridge_brcm_vulcan_pcie_root);
+> +
+> +/*
+>   * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+>   * class code.  Fix it.
+>   */
+> -- 
+> 1.9.1
+> 
