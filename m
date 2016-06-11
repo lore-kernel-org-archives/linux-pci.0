@@ -1,49 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34553 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752815AbcFPWTQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2016 18:19:16 -0400
-Date: Thu, 16 Jun 2016 17:19:14 -0500
-From: Rob Herring <robh@kernel.org>
-To: Po Liu <po.liu@nxp.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-	Stuart Yoder <stuart.yoder@nxp.com>,
-	Yang-Leo Li <leoyang.li@nxp.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Minghuan Lian <minghuan.lian@nxp.com>,
-	Murali Karicheri <m-karicheri2@ti.com>
-Subject: Re: [PATCH v3 1/2] nxp/dts: add pcie aer interrupt-name property in
- the dts
-Message-ID: <20160616221914.GA2602@rob-hp-laptop>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-1-git-send-email-po.liu@nxp.com>
+Received: from mail.kernel.org ([198.145.29.136]:50454 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752292AbcFKAUB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Jun 2016 20:20:01 -0400
+Date: Fri, 10 Jun 2016 19:19:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v1 1/1] PCI / PM: enforce type casting for pci_power_t
+Message-ID: <20160611001956.GH16462@localhost>
+References: <1465321713-146178-1-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465892645-32381-1-git-send-email-po.liu@nxp.com>
+In-Reply-To: <1465321713-146178-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 14, 2016 at 04:24:04PM +0800, Po Liu wrote:
-> NXP some platforms aer interrupt was not MSI/MSI-X/INTx
-> but using interrupt line independently. This patch add a "aer"
-> interrupt-names for aer interrupt.
-
-Please put your explanation why this is okay to change in the commit 
-message.
-
+On Tue, Jun 07, 2016 at 08:48:33PM +0300, Andy Shevchenko wrote:
+> When cast pci_power_t type of variables a static analizer tool complains on
+> that.
 > 
-> Signed-off-by: Po Liu <po.liu@nxp.com>
+> 	include/linux/pci.h:119:37: warning: cast from restricted pci_power_t
+> 
+> Enforce type casting to make static analizer happy.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+Applied to pci/pm for v4.8, thanks, Andy.
+
 > ---
-> changes for v3:
-> 	- None;
+>  include/linux/pci.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
->  .../devicetree/bindings/pci/layerscape-pci.txt         |  4 ++--
->  arch/arm/boot/dts/ls1021a.dtsi                         |  6 ++++--
->  arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi         | 18 +++++++++---------
->  arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi         | 16 ++++++++--------
->  4 files changed, 23 insertions(+), 21 deletions(-)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index b67e4df..8d74834 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -116,7 +116,7 @@ extern const char *pci_power_names[];
+>  
+>  static inline const char *pci_power_name(pci_power_t state)
+>  {
+> -	return pci_power_names[1 + (int) state];
+> +	return pci_power_names[1 + (__force int) state];
+>  }
+>  
+>  #define PCI_PM_D2_DELAY		200
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
