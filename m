@@ -1,94 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57634 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932073AbcFJGj3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2016 02:39:29 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5A6cZFN112733
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jun 2016 02:39:27 -0400
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 23e9m57381-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jun 2016 02:39:27 -0400
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 10 Jun 2016 16:39:24 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 5C4E32CE8060
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jun 2016 16:39:14 +1000 (EST)
-Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u5A6dEqo6685182
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jun 2016 16:39:14 +1000
-Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
-	by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u5A6d7iq027282
-	for <linux-pci@vger.kernel.org>; Fri, 10 Jun 2016 16:39:07 +1000
-Date: Fri, 10 Jun 2016 16:37:58 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, alistair@popple.id.au,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v10 09/18] powerpc/powernv: Extend PCI bridge resources
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1463726502-14679-10-git-send-email-gwshan@linux.vnet.ibm.com>
- <9bd72b5a-c4c5-9ab7-7c82-cb4d7e8d51fd@ozlabs.ru>
- <20160610043349.GA17817@gwshan>
- <fb22a56a-92fe-b12b-2f79-dc77e26fcc09@ozlabs.ru>
- <1465537530.2948.51.camel@kernel.crashing.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 11 Jun 2016 14:10:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: niklass@axis.com, jespern@axis.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] dt-bindings: pci: add DT binding for Axis
+ ARTPEC-6 PCIe controller
+Message-ID: <20160611191033.GL16462@localhost>
+References: <1462794507-30262-1-git-send-email-niklass@axis.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1465537530.2948.51.camel@kernel.crashing.org>
-Message-Id: <20160610063758.GA6836@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462794507-30262-1-git-send-email-niklass@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 10, 2016 at 03:45:30PM +1000, Benjamin Herrenschmidt wrote:
->On Fri, 2016-06-10 at 15:28 +1000, Alexey Kardashevskiy wrote:
->> > Actually, it's likely caused by hardware defect
->> > - we can't set 2GB (0x80000000 - 0xffffffff) to RC's memory window.
->> > Otherwise, it *seems* the window is disabled. I tried updating the
->> > window with (0x80000000 - 0xffefffff) or (0x80000000 - 0xffdffff), no
->> > EEH error was seen. I already got 0x00001000 on read despite whatever
->> > I wrote to 0x20 reg.
->> > 
->> > The hardware is broken. In order to fix this, I intend to include a
->> > bitmap for every PHB device node in skiboot. Kernel uses this to apply
->> > fixup accordingly. One bit is reserved on Garrison platform to avoid
->> > this issue. The fix can be a patch inserted before this patch in next
->> > revision
->> 
->> This sounds better as preserves bisectability. Thanks.
->
->Ah yes they made those registers read-only. Look at my PHB4 code, I
->implement a cache for them in SW.
->
+On Mon, May 09, 2016 at 01:48:27PM +0200, Niklas Cassel wrote:
+> From: Niklas Cassel <niklas.cassel@axis.com>
+> 
+> This commit adds the Device Tree binding documentation that allows to
+> describe the PCIe controller found in the Axis ARTPEC-6 SoC.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 
-Ben, thanks for your confirm. Could you please share the link to
-your PHB4 code? I think writing to SW cache, not going to hardware
-will fix the issue.
+I applied both of these, with Rob's ack on the first, to
+pci/host-artpec for v4.8, thanks!
 
-Currently, skiboot supports emulated config regiters with help of
-(struct pci_cfg_reg_filter) that was introduced for CAPI M64 BAR
-issue on Garrison platform. Potentially, I can have similar thing
-for 0x20 (memory window) to avoid writing to the register. However,
-I need take a look on your PHB4 code to see if there is anything I
-can lend. Otherwise, I will reuse the struct pci_cfg_reg_filter.
-At same time, I guess the bitmap (mentioned as above) is still
-needed to ensure (new kernel + old skiboot) works well, but it
-depends on how much Garrison boxes have been deployed.
+I made the following minor edits; hopefully I didn't break anything:
 
->Cheers,
->Ben.
->
-
-Thanks,
-Gavin
-
->_______________________________________________
->Linuxppc-dev mailing list
->Linuxppc-dev@lists.ozlabs.org
->https://lists.ozlabs.org/listinfo/linuxppc-dev
-
+diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+index f91b916..330a45b 100644
+--- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+@@ -1,11 +1,11 @@
+ * Axis ARTPEC-6 PCIe interface
+ 
+-This PCIe host controller is based on the Synopsys Designware PCIe IP
++This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+ and thus inherits all the common properties defined in designware-pcie.txt.
+ 
+ Required properties:
+ - compatible: "axis,artpec6-pcie", "snps,dw-pcie"
+-- reg: base addresses and lengths of the pcie controller (DBI),
++- reg: base addresses and lengths of the PCIe controller (DBI),
+ 	the phy controller, and configuration address space.
+ - reg-names: Must include the following entries:
+ 	- "dbi"
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 1a2de8f..033d9ad 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -250,5 +250,8 @@ config PCIE_ARTPEC6
+ 	depends on MACH_ARTPEC6
+ 	select PCIE_DW
+ 	select PCIEPORTBUS
++	help
++	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
++	  SoCs.  This PCIe controller uses the DesignWare core.
+ 
+ endmenu
+diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/host/pcie-artpec6.c
+index d53dbaf..19adc77 100644
+--- a/drivers/pci/host/pcie-artpec6.c
++++ b/drivers/pci/host/pcie-artpec6.c
+@@ -61,7 +61,7 @@ struct artpec6_pcie {
+ #define PHY_STATUS			0x118
+ #define PHY_COSPLLLOCK			(1 << 0)
+ 
+-#define ARTPEC6_CPU_TO_BUS_ADDR		0x0FFFFFFF
++#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
+ 
+ static int artpec6_pcie_establish_link(struct pcie_port *pp)
+ {
+@@ -241,35 +241,26 @@ static int __init artpec6_pcie_probe(struct platform_device *pdev)
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+ 	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
+-	if (IS_ERR(pp->dbi_base)) {
+-		ret = PTR_ERR(pp->dbi_base);
+-		goto fail;
+-	}
++	if (IS_ERR(pp->dbi_base))
++		return PTR_ERR(pp->dbi_base);
+ 
+ 	phy_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
+ 	artpec6_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy_base);
+-	if (IS_ERR(artpec6_pcie->phy_base)) {
+-		ret = PTR_ERR(artpec6_pcie->phy_base);
+-		goto fail;
+-	}
++	if (IS_ERR(artpec6_pcie->phy_base))
++		return PTR_ERR(artpec6_pcie->phy_base);
+ 
+ 	artpec6_pcie->regmap =
+ 		syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
+ 						"axis,syscon-pcie");
+-	if (IS_ERR(artpec6_pcie->regmap)) {
+-		ret = PTR_ERR(artpec6_pcie->regmap);
+-		goto fail;
+-	}
++	if (IS_ERR(artpec6_pcie->regmap))
++		return PTR_ERR(artpec6_pcie->regmap);
+ 
+ 	ret = artpec6_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+-		goto fail;
++		return ret;
+ 
+ 	platform_set_drvdata(pdev, artpec6_pcie);
+ 	return 0;
+-
+-fail:
+-	return ret;
+ }
+ 
+ static const struct of_device_id artpec6_pcie_of_match[] = {
