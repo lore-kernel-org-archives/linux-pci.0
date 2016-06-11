@@ -1,75 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35434 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751941AbcFUWaN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jun 2016 18:30:13 -0400
-Date: Tue, 21 Jun 2016 17:28:30 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Jun 2016 19:06:19 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme@lists.infradead.org,
-	James Smart <james.smart@avagotech.com>,
-	Dick Kennedy <dick.kennedy@avagotech.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jay Cliburn <jcliburn@gmail.com>,
-	Chris Snook <chris.snook@gmail.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Subject: Re: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
-Message-ID: <20160621222830.GF7603@localhost>
-References: <cover.1465200424.git.jthumshirn@suse.de>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 35/54] MAINTAINERS: Add file patterns for pci device tree
+ bindings
+Message-ID: <20160611000619.GE16462@localhost>
+References: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
+ <1463907991-7916-36-git-send-email-geert@linux-m68k.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1463907991-7916-36-git-send-email-geert@linux-m68k.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 07, 2016 at 09:44:00AM +0200, Johannes Thumshirn wrote:
-> The first patch in this series introduces the following 4 helper functions to
-> the PCI core:
+On Sun, May 22, 2016 at 11:06:12AM +0200, Geert Uytterhoeven wrote:
+> Submitters of device tree binding documentation may forget to CC
+> the subsystem maintainer if this is missing.
 > 
-> * pci_request_mem_regions()
-> * pci_request_io_regions()
-> * pci_release_mem_regions()
-> * pci_release_io_regions()
-> 
-> which encapsulate the request and release of a PCI device's memory or I/O
-> bars.
-> 
-> The subsequent patches convert the drivers, which use the
-> pci_request_selected_regions(pdev, 
-> 	pci_select_bars(pdev, IORESOURCE_MEM), name); 
-> and similar pattern to use the new interface.
-> 
-> This was suggested by Christoph Hellwig in
-> http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
-> tested on kernel v4.6 with NVMe.
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
 
-I applied all six of these to pci/resources for v4.8, thanks, Johannes.
+Applied to pci/misc for v4.8, thanks, Geert.
 
-> Johannes Thumshirn (6):
->   PCI: Add helpers to request/release memory and I/O regions
->   NVMe: Use pci_(request|release)_mem_regions
->   lpfc: Use pci_(request|release)_mem_regions
->   GenWQE: Use pci_(request|release)_mem_regions
->   ethernet/intel: Use pci_(request|release)_mem_regions
->   alx: Use pci_(request|release)_mem_regions
+> ---
+> Please apply this patch directly if you want to be involved in device
+> tree binding documentation for your subsystem.
+> ---
+>  MAINTAINERS | 1 +
+>  1 file changed, 1 insertion(+)
 > 
->  drivers/misc/genwqe/card_base.c               | 13 +++++--------
->  drivers/net/ethernet/atheros/alx/main.c       | 12 +++++-------
->  drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
->  drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++--------
->  drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
->  drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++-------
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
->  drivers/nvme/host/pci.c                       | 10 +++-------
->  drivers/scsi/lpfc/lpfc_init.c                 | 15 ++++----------
->  include/linux/pci.h                           | 28 +++++++++++++++++++++++++++
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 868111d26536f086..2e4bacda7f40a7e8 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -8695,6 +8695,7 @@ L:	linux-pci@vger.kernel.org
+>  Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>  S:	Supported
+> +F:	Documentation/devicetree/bindings/pci/
+>  F:	Documentation/PCI/
+>  F:	drivers/pci/
+>  F:	include/linux/pci*
+> -- 
+> 1.9.1
+> 
