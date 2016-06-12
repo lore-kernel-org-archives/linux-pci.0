@@ -1,273 +1,166 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:39394 "EHLO
+	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752216AbcFLBmb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jun 2016 21:42:31 -0400
+Subject: Re: [PATCH v2 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+To: Rob Herring <robh@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>
+References: <1465373117-823-1-git-send-email-shawn.lin@rock-chips.com>
+ <20160608204448.GA26861@rob-hp-laptop>
+Cc: devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	linux-kernel@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	linux-rockchip@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <af7b8d26-e88d-97df-9cce-30a6aaba0e1c@rock-chips.com>
+Date: Sun, 12 Jun 2016 09:42:12 +0800
 MIME-Version: 1.0
-In-Reply-To: <1464858585-10963-3-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1464858585-10963-3-git-send-email-thomas.petazzoni@free-electrons.com>
-Date: Wed, 8 Jun 2016 17:15:08 +0200
-Message-ID: <CAPv3WKcznGD4p-YO3QLLYw+y+7w4ha-d_Nt6FHue7d2_SiyK0w@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: host: new PCI host controller driver for Marvell
- Armada 3700
-From: Marcin Wojtas <mw@semihalf.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
- Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
- linux-pci@vger.kernel.org, Hanna Hawa <hannah@marvell.com>,
- Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20160608204448.GA26861@rob-hp-laptop>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
+On 2016/6/9 4:44, Rob Herring wrote:
+> On Wed, Jun 08, 2016 at 04:05:17PM +0800, Shawn Lin wrote:
+>> This patch adds a binding that describes the Rockchip PCIe controller
+>> found on Rockchip SoCs PCIe interface.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> ---
+>>
+>> Changes in v2:
+>> - fix lots clk/reset stuff suggested by Heiko
+>> - remove msi-parent and add msi-map suggested by Marc
+>> - drop phy related stuff
+>> - some others minor fixes
+>>
+>>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 86 ++++++++++++++++++++++
+>>  1 file changed, 86 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> new file mode 100644
+>> index 0000000..eb92e29
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> @@ -0,0 +1,86 @@
+>> +* Rockchip AXI PCIe Root Port Bridge DT description
+>> +
+>> +Required properties:
+>> +- #address-cells: Address representation for root ports, set to <3>
+>> +- #size-cells: Size representation for root ports, set to <2>
+>> +- #interrupt-cells: specifies the number of cells needed to encode an
+>> +		interrupt source. The value must be 1.
+>> +- compatible: Should contain "rockchip,rk3399-pcie"
+>> +- reg: Two register ranges as listed in the reg-names property
+>> +- reg-names: Must include the following names
+>> +	- "axi-base"
+>> +	- "apb-base"
+>> +- clocks: Must contain an entry for each entry in clock-names.
+>> +		See ../clocks/clock-bindings.txt for details.
+>> +- clock-names: Must include the following entries:
+>> +	- "aclk"
+>> +	- "aclk-perf"
+>> +	- "hclk"
+>> +	- "pm"
+>> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+>> +- phy-names:  MUST be "pcie-phy".
+>
+> phy-names is kind of pointless for 1 phy.
+
+ok, I will remove it.
+
+>
+>> +- interrupts: Three interrupt entries must be specified.
+>> +- interrupt-names: Must include the following names
+>> +	- "sys"
+>> +	- "legacy"
+>> +	- "client"
+>> +- resets: Must contain five entries for each entry in reset-names.
+>> +	   See ../reset/reset.txt for details.
+>> +- reset-names: Must include the following names
+>> +	- "core"
+>> +	- "mgmt"
+>> +	- "mgmt-sticky"
+>> +	- "pipe"
+>> +- pinctrl-names : The pin control state names
+>> +- pinctrl-0: The "default" pinctrl state
+>> +- interrupt-map-mask and interrupt-map: standard PCI properties
+>> +- interrupt-controller: identifies the node as an interrupt controller
+>> +
+>> +Optional Property:
+>> +- ep-gpios: contain the entry for pre-reset gpio
+>> +- num-lanes: number of lanes to use
+>> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie. If this
+>> +  is specified we'll defer probe until we can find this regulator.
+>> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie. If this
+>> +  is specified we'll defer probe until we can find this regulator.
+>> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie. If this
+>> +  is specified we'll defer probe until we can find this regulator.
+>> +
+>> +Example:
+>> +
+>> +pcie0: pcie@f8000000 {
+>> +	compatible = "rockchip,rk3399-pcie";
+>> +	#address-cells = <3>;
+>> +	#size-cells = <2>;
+>> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
+>> +		 <&cru PCLK_PCIE>;
+>> +	clock-names = "aclk", "aclk-perf",
+>> +		      "hclk";
+>> +	bus-range = <0x0 0x1>;
+>> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+>> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+>> +	interrupt-names: "sys", "legacy", "client";
+>> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+>> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+>> +	assigned-clock-rates = <100000000>;
+>> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
+>> +	ranges = < 0x82000000 0 0xfa000000 0x0 0xfa000000 0 0x600000
+>> +		   0x81000000 0 0xfa600000 0x0 0xfa600000 0 0x100000 >;
+>
+> No 64-bit memory space?
+
+Will fix this example. Thanks for catching this:)
+
+>
+>> +	num-lanes = <4>;
+>> +	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
+>> +	reg-name = "axi-base", "apb-base";
+>> +	resets = <&cru SRST_PCIEPHY>, <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
+>> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
+>> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
+>> +	phys = <&pcie_phy>;
+>> +	phy-names = "pcie-phy";
+>> +	pinctrl-names = "default";
+>> +	pinctrl-0 = <&pcie_clkreq>;
+>> +	#interrupt-cells = <1>;
+>> +	interrupt-controller;
+>> +	interrupt-map-mask = <0 0 0 7>;
+>> +	interrupt-map = <0 0 0 1 &pcie0 1>,
+>> +			<0 0 0 2 &pcie0 2>,
+>> +			<0 0 0 3 &pcie0 3>,
+>> +			<0 0 0 4 &pcie0 4>;
+>> +};
+>> --
+>> 2.3.7
+>>
+>>
+>
+> _______________________________________________
+> Linux-rockchip mailing list
+> Linux-rockchip@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-rockchip
+>
 
 
-> +static const struct irq_domain_ops advk_pcie_msi_irq_ops = {
-> +       .map = advk_pcie_msi_map,
-> +};
-> +
-> +static void advk_pcie_irq_mask(struct irq_data *d)
-> +{
-> +       struct advk_pcie *pcie = d->domain->host_data;
-> +       irq_hw_number_t hwirq = irqd_to_hwirq(d);
-> +       u32 mask;
-> +
-> +       mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-> +       mask |= PCIE_ISR0_INTX_ASSERT(hwirq) |
-> +               PCIE_ISR0_INTX_DEASSERT(hwirq);
-> +       advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-> +}
-> +
-> +static void advk_pcie_irq_unmask(struct irq_data *d)
-> +{
-> +       struct advk_pcie *pcie = d->domain->host_data;
-> +       irq_hw_number_t hwirq = irqd_to_hwirq(d);
-> +       u32 mask;
-> +
-> +       mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-> +       mask &= ~(PCIE_ISR0_INTX_ASSERT(hwirq) |
-> +                 PCIE_ISR0_INTX_DEASSERT(hwirq));
+-- 
+Best Regards
+Shawn Lin
 
-Have you checked my latest improvements of interrupt handling in this
-controller? As DEASSERT is polled in advk_pcie_handle_int() I don't
-think it should be able to trigger root complex interrupt at all.
-Hence I think it shouldn't be unmasked.
-
-> +       advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-> +}
-> +
-> +static int advk_pcie_irq_map(struct irq_domain *h,
-> +                            unsigned int virq, irq_hw_number_t hwirq)
-> +{
-> +       struct advk_pcie *pcie = h->host_data;
-> +
-> +       advk_pcie_irq_mask(irq_get_irq_data(virq));
-> +       irq_set_status_flags(virq, IRQ_LEVEL);
-> +       irq_set_chip_and_handler(virq, &pcie->irq_chip,
-> +                                handle_level_irq);
-> +       irq_set_chip_data(virq, pcie);
-> +
-> +       return 0;
-> +}
-> +
-> +static const struct irq_domain_ops advk_pcie_irq_domain_ops = {
-> +       .map = advk_pcie_irq_map,
-> +       .xlate = irq_domain_xlate_onecell,
-> +};
-> +
-> +static int advk_pcie_init_irq(struct advk_pcie *pcie)
-> +{
-> +       struct device *dev = &pcie->pdev->dev;
-> +       struct device_node *node = dev->of_node;
-> +       struct device_node *pcie_intc_node;
-> +       struct irq_chip *irq_chip, *msi_irq_chip;
-> +       struct msi_controller *msi;
-> +       phys_addr_t msi_msg_phys;
-> +
-> +       pcie_intc_node =  of_get_next_child(node, NULL);
-> +       if (!pcie_intc_node) {
-> +               dev_err(dev, "No PCIe Intc node found\n");
-> +               return PTR_ERR(pcie_intc_node);
-> +       }
-> +
-> +       irq_chip = &pcie->irq_chip;
-> +
-> +       irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
-> +                                       dev_name(dev));
-> +       if (!irq_chip->name)
-> +               return -ENOMEM;
-> +       irq_chip->irq_mask = advk_pcie_irq_mask;
-> +       irq_chip->irq_mask_ack = advk_pcie_irq_mask;
-> +       irq_chip->irq_unmask = advk_pcie_irq_unmask;
-> +
-> +       pcie->irq_domain =
-> +               irq_domain_add_linear(pcie_intc_node, LEGACY_IRQ_NUM,
-> +                                     &advk_pcie_irq_domain_ops, pcie);
-> +       if (!pcie->irq_domain) {
-> +               dev_err(dev, "Failed to get a INTx IRQ domain\n");
-> +               return PTR_ERR(pcie->irq_domain);
-> +       }
-> +
-> +       msi_irq_chip = &pcie->msi_irq_chip;
-> +
-> +       msi_irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-msi",
-> +                                                dev_name(dev));
-> +       if (!msi_irq_chip->name) {
-> +               irq_domain_remove(pcie->irq_domain);
-> +               return -ENOMEM;
-> +       }
-> +
-> +       msi_irq_chip->irq_enable = pci_msi_unmask_irq;
-> +       msi_irq_chip->irq_disable = pci_msi_mask_irq;
-> +       msi_irq_chip->irq_mask = pci_msi_mask_irq;
-> +       msi_irq_chip->irq_unmask = pci_msi_unmask_irq;
-> +
-> +       msi = &pcie->msi;
-
-Do we consciously resign from CONFIG_MSI dependency? I know it should
-always be enabled, but just making sure.
-
-> +
-> +       msi->setup_irq = advk_pcie_setup_msi_irq;
-> +       msi->teardown_irq = advk_pcie_teardown_msi_irq;
-> +       msi->of_node = node;
-> +
-> +       mutex_init(&pcie->msi_used_lock);
-> +
-> +       msi_msg_phys = virt_to_phys(&pcie->msi_msg);
-> +
-> +       advk_writel(pcie, lower_32_bits(msi_msg_phys),
-> +                   PCIE_MSI_ADDR_LOW_REG);
-> +       advk_writel(pcie, upper_32_bits(msi_msg_phys),
-> +                   PCIE_MSI_ADDR_HIGH_REG);
-> +
-> +       pcie->msi_domain =
-> +               irq_domain_add_linear(NULL, MSI_IRQ_NUM,
-> +                                     &advk_pcie_msi_irq_ops, pcie);
-> +       if (!pcie->msi_domain) {
-> +               irq_domain_remove(pcie->irq_domain);
-> +               return -ENOMEM;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static void advk_pcie_handle_msi(struct advk_pcie *pcie)
-> +{
-> +       u32 msi_val, msi_mask, msi_status, msi_idx;
-> +       u16 msi_data;
-> +
-> +       msi_mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-> +       msi_val = advk_readl(pcie, PCIE_MSI_STATUS_REG);
-> +       msi_status = msi_val & ~msi_mask;
-> +
-> +       for (msi_idx = 0; msi_idx < MSI_IRQ_NUM; msi_idx++) {
-> +               if (!(BIT(msi_idx) & msi_status))
-> +                       continue;
-> +
-> +               advk_writel(pcie, BIT(msi_idx), PCIE_MSI_STATUS_REG);
-> +               msi_data = advk_readl(pcie, PCIE_MSI_PAYLOAD_REG) & 0xFF;
-> +               generic_handle_irq(msi_data);
-> +       }
-> +
-> +       advk_writel(pcie, PCIE_ISR0_MSI_INT_PENDING,
-> +                   PCIE_ISR0_REG);
-> +}
-> +
-> +static void advk_pcie_handle_int(struct advk_pcie *pcie)
-> +{
-> +       u32 val, mask, status;
-> +
-> +       val = advk_readl(pcie, PCIE_ISR0_REG);
-> +       mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-> +       status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
-> +
-> +       if (!status) {
-> +               advk_writel(pcie, val, PCIE_ISR0_REG);
-> +               return;
-> +       }
-> +
-> +       /* Process MSI interrupts */
-> +       if (status & PCIE_ISR0_MSI_INT_PENDING)
-> +               advk_pcie_handle_msi(pcie);
-> +
-> +       /* Process legacy interrupts */
-> +       do {
-> +               int i;
-> +
-> +               /*
-> +                * As documented in the datasheet, we need to raise an
-> +                * interrupt for each ASSERT(i) bit that is set, and
-> +                * continue to deliver the interrupt until the
-> +                * DEASSERT(i) bit gets set
-> +                */
-
-Below code will result in spurious interrupt flood (I can provide test
-details with SATA3.0 card). I know this part of specs very well, but
-expected EP operation flow should look like this:
-a. EP interrupt
-b. INTX_ASSERT signal
-c. root complex interrupt
-d. clear INTX_ASSERT bit
-e. execute EP handler
-f. INTX_DEASSERT signal
-g. clear INTX_DEASSERT bit
-h. exit interrupt
-
-Now between d. and f., in case of any shortest delay we will force
-executing EP handler numerous of times, which IMO is not desired. All
-of them for e.g. the SATA3.0 card are registered as spurious
-interrupts, pretty quickly resulting in "switching to irq poll"
-failure after 100k of such happenings. Actually I think that after
-executing generic_handle_irq(virq); we should leave root complex isr
-asap, the polling for DEASSERT in such case is not resulting in any
-benefits. In my code I ignored DEASSERT signal existence - it neither
-triggers interrupt nor we don't poll for it. Under big stress nothing
-wrong happens. We rely only on interrupts triggered by INTX_ASSERT
-signal, so we care only for its status.
-
-> +               for (i = 0; i < LEGACY_IRQ_NUM; i++) {
-> +                       if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
-> +                               continue;
-> +
-> +                       do {
-> +                               int virq;
-> +
-> +                               advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
-> +                                           PCIE_ISR0_REG);
-> +                               virq = irq_find_mapping(pcie->irq_domain, i);
-> +                               generic_handle_irq(virq);
-> +                               status = advk_readl(pcie, PCIE_ISR0_REG);
-> +                       } while (!(status & PCIE_ISR0_INTX_DEASSERT(i)));
-> +
-> +                       advk_writel(pcie, PCIE_ISR0_INTX_DEASSERT(i),
-> +                                   PCIE_ISR0_REG);
-> +               }
-> +
-> +               status = advk_readl(pcie, PCIE_ISR0_REG);
-> +       } while (status & PCIE_ISR0_INTX_MASK);
-
-How about simplifying code a bit and remove this do-while loop? IMO
-it's enough to do single iterating through INTA/B/C/D and exit - in
-such case we wouldn't spent too much time in single top half handler.
-
-I'm looking forward to your feedback.
-
-Best regards,
-Marcin
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
