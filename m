@@ -1,74 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Jun 2016 09:58:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Niklas Cassel <niklas.cassel@axis.com>, bhelgaas@google.com,
-	niklass@axis.com, jespern@axis.com,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Miller <davem@davemloft.net>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	mchehab@osg.samsung.com, linux@roeck-us.net, jslaby@suse.cz,
-	robh@kernel.org, marc.zyngier@arm.com, rjui@broadcom.com,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>, geert+renesas@glider.be,
-	lftan@altera.com, bharat.kumar.gogada@xilinx.com, hauke@hauke-m.de,
-	thomas.petazzoni@free-electrons.com, simon.horman@netronome.com,
-	phil.edworthy@renesas.com, svarbanov@mm-sol.com, dhdang@apm.com,
-	wangzhou1@hisilicon.com, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@axis.com
-Subject: Re: [PATCH v2 2/2] pci: host: new driver for Axis ARTPEC-6 PCIe
- controller
-Message-ID: <20160621145819.GA31917@localhost>
-References: <1462794543-30317-1-git-send-email-niklass@axis.com>
- <CAP=VYLo00R4iv+9_=x2BjjurEfArJzY46Zc=doEtav=BwNhPzg@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sun, 12 Jun 2016 20:32:45 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi
+ <lorenzo.pieralisi@arm.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+ "Arnd Bergmann" <arnd@arndb.de>
+Subject: [RFC] implement gpio_pci_platform_pm to put pci device into D3cold
+Message-ID: <20160612203245.66fbd54a@xhacker>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAP=VYLo00R4iv+9_=x2BjjurEfArJzY46Zc=doEtav=BwNhPzg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 20, 2016 at 03:50:07PM -0400, Paul Gortmaker wrote:
-> On Mon, May 9, 2016 at 7:49 AM, Niklas Cassel <niklas.cassel@axis.com> wrote:
-> > From: Niklas Cassel <niklas.cassel@axis.com>
-> >
-> > The Axis ARTPEC-6 SoC integrates a PCIe controller from Synopsys.
-> > This commit adds a new driver that provides the small glue
-> > needed to use the existing Designware driver to make it work on
-> > the Axis ARTPEC-6 SoC.
-> >
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> 
-> [...]
-> 
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -244,4 +244,10 @@ config PCIE_ARMADA_8K
-> >           Designware hardware and therefore the driver re-uses the
-> >           Designware core functions to implement the driver.
-> >
-> > +config PCIE_ARTPEC6
-> > +       bool "Axis ARTPEC-6 PCIe controller"
-> 
-> Bjorn,
-> 
-> Can we please start requiring new PCI/PCI-e drivers to either:
-> 
->   (a)  be merged and tested as tristate, or
-> 
->   (b)  remain bool, but not gratuitously use module macros
+Dear all,
 
-That requires somebody to enforce it, which I suppose would end up
-being me, and that's not really practical unless you help out by
-watching for them.  I know that's not really practical for you either.
+I want to solve one problem: we have pcie in a DT based arm64 system, now we
+want to put the device into D3cold when runtime suspended. The pcie
+device could be power down by operating one gpio pin, this is the D3cold the
+platform could support. 
 
-I hoped that we could convert them to be modular, but that hasn't
-started happening, so I think we need to fall back to your original
-proposal of making them bool and removing the modular junk.
-Eventually people who feel the pain of building in all the drivers
-might step up and make them modular.
+My solution is to register a gpio_pci_platform_pm with pci_set_platform_pm()
+but the key is how to setup a mapping between pci_dev and gpio through DT
 
-Do you want to update your series that removed the gratuitous module
-code?  I'll be on vacation June 25-July 17, but maybe we can still
-squeeze it in this cycle.
+I think this is a general case, could you please kindly give some suggestions?
 
-Bjorn
+Thanks,
+Jisheng
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
