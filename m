@@ -1,60 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45392 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751095AbcFQXgQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jun 2016 19:36:16 -0400
-Date: Fri, 17 Jun 2016 18:36:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Stefan Roese <sr@denx.de>, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	Russell King <rmk+kernel@arm.linux.org.uk>,
-	Jisheng Zhang <jszhang@marvell.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?iso-8859-1?Q?Gr=E9gory?= Clement
-	<gregory.clement@free-electrons.com>, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] PCI: mvebu: Don't try to add an MBus window that already
- exists
-Message-ID: <20160617233612.GC21200@localhost>
-References: <20160602125247.17566-1-sr@denx.de>
- <20160602151818.0989ee50@free-electrons.com>
- <57511C4E.5040501@denx.de>
- <20160603093042.26e325d1@free-electrons.com>
+Received: from mail-it0-f41.google.com ([209.85.214.41]:36376 "EHLO
+	mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319AbcFLN5E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Jun 2016 09:57:04 -0400
+Received: by mail-it0-f41.google.com with SMTP id a5so30218738ita.1
+        for <linux-pci@vger.kernel.org>; Sun, 12 Jun 2016 06:57:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160603093042.26e325d1@free-electrons.com>
+In-Reply-To: <1465378523.1870.26.camel@googlemail.com>
+References: <1465344472-15703-1-git-send-email-festevam@gmail.com> <1465378523.1870.26.camel@googlemail.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Sun, 12 Jun 2016 10:51:04 -0300
+Message-ID: <CAOMZO5Bix1Bgrsbn2K_1sh7ee=dxRccU1zk2fJei-WU4vvpCgg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: imx6: Add support for MX6SX LDO PCIE domain regulator
+To: Christoph Fritz <chf.fritz@googlemail.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@nxp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 03, 2016 at 09:30:42AM +0200, Thomas Petazzoni wrote:
-> Hello,
-> 
-> On Fri, 3 Jun 2016 07:57:34 +0200, Stefan Roese wrote:
-> 
-> > > The pci-mvebu driver deletes the MBus windows for a given PCI device
-> > > when invalid memory base/limits are set in the emulated PCI bridge.
-> > > Shouldn't this happen over a rescan?  
-> > 
-> > I'm not sure what *should* happen upon rescan. But testing shows, that
-> > no MBus window is removed upon rescan. I just tested what happens,
-> > if the PCI devices are "removed" via sysfs. And this also does not
-> > delete any of the MBus windows.
-> 
-> Then maybe that's a question for the PCI folks. Is it normal that when
-> a PCI device gets removed, the configuration of the PCI bridge does not
-> get adjusted accordingly?
+Hi Christoph,
 
-I'm not sure I completely understand the question.
+On Wed, Jun 8, 2016 at 6:35 AM, Christoph Fritz
+<chf.fritz@googlemail.com> wrote:
 
-When a PCI device is removed, I don't think we touch any upstream
-devices.  The device is gone; there's no reason to change any bridge
-windows leading to it.
+> There was a discussion doing the handling of the regulator inside the PM
+> backend:
 
-When we rescan, we should try to assign resources to BARs of any new
-devices we find.  Theoretically that could involve configuring windows
-of upstream bridges, but I don't think we actually do that, because
-we'd have to be careful not to break any active devices, and I don't
-think we're smart enough for that.
+Thanks for pointing me to this discussion.
 
-Bjorn
+>
+>> On Mon, 2016-02-15 at 07:24 +0000, Richard Zhu wrote:
+>> > As Lucas discussed with me before,  the GPC regulator operations should[n't] be touched in
+>> > Imx pcie driver at all.  These bits operations should be encapsulate into the PM system,
+>> >  for example, the regulator driver.
+>
+> On Thu, 2016-02-18 at 12:59 +0100, Christoph Fritz wrote:
+>> Ok, for an initial version, I'll just leave the regulator in my
+>> devicetree enabled. For further enhancements I suppose
+>> arch/arm/mach-imx/gpc.c needs to get touched?
+>>
+> @Richard and @Lucas: Any further hints on this?
+
+Yes, would appreciate some hints or examples as to how to properly
+handle the PCI LDO regulator on mx6sx.
+
+Thanks
