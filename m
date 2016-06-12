@@ -1,160 +1,106 @@
-Return-Path: <dhdang@apm.com>
-Return-Path: <dhdang@apm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([59.151.112.132]:42672 "EHLO
+	heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752224AbcFLDD0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jun 2016 23:03:26 -0400
+Subject: Re: [Qemu-devel] [RFC PATCH 0/3] x86: Add support for guest DMA dirty
+ page tracking
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com>
+ <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com>
+ <CAKgT0UeY9+BJoGtM+Fqa4Zve36GBJQpYVyoo2CPJZdELH6cEbg@mail.gmail.com>
+ <df81dd53-dc03-667e-4d53-3c67f90aab8f@cn.fujitsu.com>
+ <CAMt9YRpzAKt1KQW17VBzx0PT5BxiL_1+U1-AEK2A_Ao9KQjmGg@mail.gmail.com>
+ <6a7bef5b-3f96-f582-d3cf-cb59f5308e28@cn.fujitsu.com>
+ <CAKgT0UeXeq+GQo1ak9wUEQqzLvE+LN=5tAvZoTtSua1=X3R55A@mail.gmail.com>
+CC: Alex Duyck <aduyck@mirantis.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	<kvm@vger.kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	the arch/x86 maintainers <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	<qemu-devel@nongnu.org>, Alexander Graf <agraf@suse.de>,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	=?UTF-8?B?SXp1bWksIFRha3Uv5rOJIOaLkw==?=
+	<izumi.taku@jp.fujitsu.com>
+From: Zhou Jie <zhoujie2011@cn.fujitsu.com>
+Message-ID: <d6b476e6-de3c-8190-dbb4-c34837fad4a2@cn.fujitsu.com>
+Date: Sun, 12 Jun 2016 11:03:17 +0800
 MIME-Version: 1.0
-In-Reply-To: <036882b9-b781-cb56-2bcf-35afb21b2812@codeaurora.org>
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
- <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx> <575EBD13.8080808@codeaurora.org>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F782E15@lhreml507-mbx> <b7202ebbb30f2c715427fbb387129e9c@codeaurora.org>
- <036882b9-b781-cb56-2bcf-35afb21b2812@codeaurora.org>
-From: Duc Dang <dhdang@apm.com>
-Date: Mon, 13 Jun 2016 14:07:23 -0700
-Message-ID: <CADaLND=aWkENZVK1Ce9NT4LygGa3LTtG1dCabokDADjEJEgeFQ@mail.gmail.com>
-Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
- against platfrom specific ECAM quirks
-To: Jeffrey Hugo <jhugo@codeaurora.org>
-Cc: okaya@codeaurora.org, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
-	"Chenxin (Charles)" <charles.chenxin@huawei.com>, Wangyijing <wangyijing@huawei.com>,
-	Andrea Gallo <andrea.gallo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>, linaro-acpi@lists.linaro.org,
-	David Daney <ddaney@caviumnetworks.com>, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Bjorn Helgaas <helgaas@kernel.org>,
-	"liudongdong (C)" <liudongdong3@huawei.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	Jon Masters <jcm@redhat.com>, Arnd Bergmann <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Mark Salter <msalter@redhat.com>, Christopher Covington <cov@codeaurora.org>, Marcin Wojtas <mw@semihalf.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jeremy.linton@arm.com,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAKgT0UeXeq+GQo1ak9wUEQqzLvE+LN=5tAvZoTtSua1=X3R55A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 13, 2016 at 8:59 AM, Jeffrey Hugo <jhugo@codeaurora.org> wrote:
-> On 6/13/2016 9:12 AM, okaya@codeaurora.org wrote:
->>
->> On 2016-06-13 10:29, Gabriele Paoloni wrote:
->>>
->>> Hi Sinan
->>>
->>>> -----Original Message-----
->>>> From: Sinan Kaya [mailto:okaya@codeaurora.org]
->>>> Sent: 13 June 2016 15:03
->>>> To: Gabriele Paoloni; liudongdong (C); helgaas@kernel.org;
->>>> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
->>>> rafael@kernel.org; hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com;
->>>> jchandra@broadcom.com; tn@semihalf.com
->>>> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
->>>> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
->>>> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
->>>> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
->>>> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
->>>> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
->>>> dhdang@apm.com; jeremy.linton@arm.com; cov@codeaurora.org; Chenxin
->>>> (Charles); Linuxarm
->>>> Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space
->>>> accessors against platfrom specific ECAM quirks
->>>>
->>>> On 6/13/2016 9:54 AM, Gabriele Paoloni wrote:
->>>> > As you can see here Liudongdong has replaced oem_revision with
->>>> > oem_table_id.
->>>> >
->>>> > Now it seems that there are some platforms that have already shipped
->>>> > using a matching based on the oem_revision (right Jon?)
->>>> >
->>>> > However I guess that if in FW they have defined oem_table_id properly
->>>> > they should be able to use this mechanism without needing to a FW
->>>> update.
->>>> >
->>>> > Can these vendors confirm this?
->>>> >
->>>> > Tomasz do you think this can work for Cavium Thunder?
->>>> >
->>>> > Thanks
->>>> >
->>>> > Gab
->>>>
->>>> Why not have all three of them?
->>>>
->>>> The initial approach was OEM id and revision id.
->>>>
->>>> Jeff Hugo indicated that addition (not removing any other fields) of
->>>> table id
->>>> would make more sense.
->>>
->>>
->>> Mmm from last email of Jeff Hugo on "[RFC PATCH 1/3] pci, acpi: Match
->>> PCI config space accessors against platfrom specific ECAM quirks."
->>>
->>> I quote:
->>>
->>>  "Using the OEM revision
->>>  field does not seem to be appropriate since these are different
->>>  platforms and the revision field appears to be for the purpose of
->>>  tracking differences within a single platform.  Therefore, Cov is
->>>  proposing using the OEM table id as a mechanism to distinguish
->>>  platform A (needs quirk applied) vs platform B (no quirks) from the
->>>  same OEM."
->>>
->>> So it looks to me that he pointed out that using the OEM revision field
->>> is wrong...and this is why I have asked if replacing it with the table
->>> id can work for other vendors....
->>>
->>> Thanks
->>>
->>> Gab
->>>
->>
->> I had an internal discussion with jeff and cov before posting on the
->> maillist.
->>
->> I think there is missing info in the email.
->>
->> Usage of oem id + table id + revision is ok.
->>
->> Usage of oem id + revision is not ok as one oem can build multiple chips
->> with the same oem id and revision id but different table id. Otherwise,
->> we can run out of revisions very quickly.
->
->
-> Agreed.
->
-> I'm sorry for the confusion.  My intent was to point out that revision alone
-> appeared insufficient to address all the identified problems, but I believe
-> there is still a case for using revision. Table id is useful for
-> differentiating between platforms/chips.  Revision is useful for
-> differentiation between different versions of a single platform/chip
-> assuming the silicon is respun or some other fix is applied.  Both solve
-> different scenarios, and I'm not aware of a reason why they could not be
-> used together to solve all currently identified cases.
+Hi, Alex
 
-Using OEM ID + Table ID + Revision will work for X-Gene platforms as well.
+On 2016/6/9 23:39, Alexander Duyck wrote:
+> On Thu, Jun 9, 2016 at 3:14 AM, Zhou Jie <zhoujie2011@cn.fujitsu.com> wrote:
+>> TO Alex
+>> TO Michael
+>>
+>>    In your solution you add a emulate PCI bridge to act as
+>>    a bridge between direct assigned devices and the host bridge.
+>>    Do you mean put all direct assigned devices to
+>>    one emulate PCI bridge?
+>>    If yes, this maybe bring some problems.
+>>
+>>    We are writing a patchset to support aer feature in qemu.
+>>    When assigning a vfio device with AER enabled, we must check whether
+>>    the device supports a host bus reset (ie. hot reset) as this may be
+>>    used by the guest OS in order to recover the device from an AER
+>>    error.
+>>    QEMU must therefore have the ability to perform a physical
+>>    host bus reset using the existing vfio APIs in response to a virtual
+>>    bus reset in the VM.
+>>    A physical bus reset affects all of the devices on the host bus.
+>>    Therefore all physical devices affected by a bus reset must be
+>>    configured on the same virtual bus in the VM.
+>>    And no devices unaffected by the bus reset,
+>>    be configured on the same virtual bus.
+>>
+>>    http://lists.nongnu.org/archive/html/qemu-devel/2016-05/msg02989.html
+>>
+>> Sincerely,
+>> Zhou Jie
+>
+> That makes sense, but I don't think you have to worry much about this
+> at this point at least on my side as this was mostly just theory and I
+> haven't had a chance to put any of it into practice as of yet.
+>
+> My idea has been evolving on this for a while.  One thought I had is
+> that we may want to have something like an emulated IOMMU and if
+> possible we would want to split it up over multiple domains just so we
+> can be certain that the virtual interfaces and the physical ones
+> existed in separate domains.  In regards to your concerns perhaps what
+> we could do is put each assigned device into its own domain to prevent
+> them from affecting each other.  To that end we could probably break
+> things up so that each device effectively lives in its own PCIe slot
+> in the emulated system.  Then when we start a migration of the guest
+> the assigned device domains would then have to be tracked for unmap
+> and sync calls when the direction is from the device.
+>
+> I will keep your concerns in mind in the future when I get some time
+> to look at exploring this solution further.
+>
+> - Alex
 
-Regards,
-Duc Dang.
->
->>
->>>
->>>>
->>>> --
->>>> Sinan Kaya
->>>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center,
->>>> Inc.
->>>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
->>>> Linux Foundation Collaborative Project
->>
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->
->
->
-> --
-> Jeffrey Hugo
-> Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
-> Foundation Collaborative Project
+I am thinking about the practice of migration of passthrough device.
+
+In your solution, you use a vendor specific configuration space to
+negotiate with guest.
+If you put each assigned device into its own domain,
+how can qemu negotiate with guest?
+Add the vendor specific configuration space to every pci bus which
+is assigned a passthrough device?
+
+Sincerely
+Zhou Jie
+
+
