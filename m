@@ -1,86 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41494 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:46196 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750835AbcFUPPE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jun 2016 11:15:04 -0400
-Date: Tue, 21 Jun 2016 10:14:07 -0500
+	id S932891AbcFLWSv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 12 Jun 2016 18:18:51 -0400
+Date: Sun, 12 Jun 2016 17:18:47 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tyler Baker <tyler.baker@linaro.org>, linux-pci@vger.kernel.org,
-	rfi@lists.rocketboards.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kevin's boot bot <khilman@kernel.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-	Simon Horman <horms@verge.net.au>, linux-tegra@vger.kernel.org,
-	Alex Benn??e <alex.bennee@linaro.org>,
-	S??ren Brinkmann <soren.brinkmann@xilinx.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-renesas-soc@vger.kernel.org, Ley Foon Tan <lftan@altera.com>
-Subject: Re: [PATCH v1 15/25] PCI: generic: Free resource list close to where
- it's allocated
-Message-ID: <20160621151407.GC31917@localhost>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160606230636.20936.29083.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <CANMBJr41muA9mTNAa6MtWuMmeNLQxT4NjLe45=ExdFiH8vwzyw@mail.gmail.com>
- <20160620172240.GA30625@red-moon>
+To: "Yong, Jonathan" <jonathan.yong@intel.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH v5] PCI: PTM preliminary implementation
+Message-ID: <20160612221847.GM16462@localhost>
+References: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com>
+ <1462956446-27361-2-git-send-email-jonathan.yong@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160620172240.GA30625@red-moon>
+In-Reply-To: <1462956446-27361-2-git-send-email-jonathan.yong@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 20, 2016 at 06:22:40PM +0100, Lorenzo Pieralisi wrote:
-> On Mon, Jun 20, 2016 at 09:56:45AM -0700, Tyler Baker wrote:
-> > Hi Bjorn,
-> > 
-> > On 6 June 2016 at 16:06, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > > Previously we allocated the PCI resource list in
-> > > gen_pci_parse_request_of_pci_ranges(), but if we had an error, we freed it
-> > > on error in gen_pci_init().
-> > >
-> > > Reorder gen_pci_init() so we can take care of error path cleanup in
-> > > gen_pci_parse_request_of_pci_ranges() instead.
-> > >
-> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > The kernelci.org bot has reported[0] new qemu-aarch64
-> > (arm64-defconfig) boot failures[1][2] in next-20160620. I've
-> > bisected[3] this boot failure down to this patch, and confirmed
-> > reverting it on top of next-20160620 resolves the boot issue.
-> > 
-> > I have not investigated further, but you can easily reproduce[4] the
-> > boot failure on an x86 host running qemu-system-aarch64 (I'm running
-> > qemu-system 2.6).
-> 
-> That's most likely because pci_ecam_create() requires the bus_range
-> resource (its busr parameter) to be initialized when it is called
-> and that's not the case after this patch is applied if I read it
-> correctly.
-> 
-> It is probably a NULL pointer dereference in pci_ecam_create().
+Hi Jonathan,
 
-Yep, thanks everybody, I dropped that ill-considered patch altogether.
-
-> > [0] https://kernelci.org/boot/all/job/next/kernel/next-20160620/
-> > [1] https://storage.kernelci.org/next/next-20160620/arm64-defconfig/lab-cambridge/boot-apm-mustang-kvm-guest.txt
-> > [2] https://storage.kernelci.org/next/next-20160620/arm64-defconfig/lab-tbaker/boot-qemu-aarch64,legacy.txt
-> > [3] http://hastebin.com/segiruribu.vbs
-> > [4] http://hastebin.com/dafuzicuyi.avrasm
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
+On Wed, May 11, 2016 at 08:47:26AM +0000, Yong, Jonathan wrote:
+> Simplified Precision Time Measurement driver, activates PTM feature
+> if a PCIe PTM requester (as per PCI Express 3.1 Base Specification
+> section 7.32)is found, but not before checking if the rest of the
+> PCI hierarchy can support it.
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> The driver does not take part in facilitating PTM conversations,
+> neither does it provide any useful services, it is only responsible
+> for setting up the required configuration space bits.
+> 
+> As of writing, there aren't any PTM capable devices on the market
+> yet, but it is supported by the Intel Apollo Lake platform.
+
+I'm still trying to understand what PTM should look like from the
+driver's perspective.  I know the PCIe spec doesn't define any way to
+initiate PTM dialogs or read the results.  But I don't know what the
+intended usage model is and how the device, driver, and PCI core
+pieces should fit together.
+
+  - Do we expect endpoints to notice that PTM is enabled and
+    automatically start using it, without the driver doing anything?
+    Would driver changes be needed, e.g., to tell the device to add
+    timestamps to network packet DMAs?
+
+  - Should there be a pci_enable_ptm() interface for a driver to
+    enable PTM for its device?  If PTM isn't useful without driver
+    changes, e.g., to tell the device to add timestamps, we probably
+    should have such an interface so we don't enable PTM when it won't
+    be useful.
+
+  - If the PCI core instead enables PTM automatically whenever
+    possible (as in the current patch), what performance impact do we
+    expect?  I know you probably can't measure it yet, but can we at
+    least calculate the worst-case bandwidth usage, based on the
+    message size and frequency?  I previously assumed it would be
+    small, but I hate to give up *any* performance unless there is
+    some benefit.
+
+  - The PTM benefit is mostly for endpoints, and not so much for root
+    ports or switches themselves.  If the PCI core enabled PTM
+    automatically only on non-endpoints, would there be any overhead?
+
+    Here's my line of thought: If an endpoint never issued a PTM
+    request, obviously there would never be a PTM dialog on the link
+    between the last switch and the endpoint.  What about on links
+    farther upstream?  Would the switch ever issue a PTM request
+    itself, without having received a request from the endpoint?  If
+    not, the PCI core could enable PTM on all non-endpoint devices,
+    and there should be no performance effect at all.  This would be
+    nice because a driver call to enable PTM would only need to touch
+    the endpoint; it wouldn't need to touch any upstream devices.
+
+Bjorn
