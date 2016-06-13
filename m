@@ -1,164 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host controller
-To: Tomasz Nowicki <tn@semihalf.com>, <helgaas@kernel.org>, <arnd@arndb.de>,
- <will.deacon@arm.com>, <catalin.marinas@arm.com>, <rafael@kernel.org>,
- <hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>, <okaya@codeaurora.org>,
- <jchandra@broadcom.com>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Message-ID: <8a23e566-3aae-3af2-7b9f-e94edf1076e9@amd.com>
-Date: Thu, 9 Jun 2016 11:45:36 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-am1on0057.outbound.protection.outlook.com ([157.56.112.57]:48928
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030202AbcFMHTP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2016 03:19:15 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Noa Osherovich <noaos@mellanox.com>,
+	Haggai Eran <haggaie@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Liran Liss <liranl@mellanox.com>
+Subject: RE: [PATCH 1/4] VFIO: Probe new devices in a live VFIO group with the
+ VFIO driver
+Date: Mon, 13 Jun 2016 06:33:53 +0000
+Message-ID: <VI1PR0501MB1968DDC0D3A32A946B72C7D7D4530@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+References: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
+	<1465474173-53960-2-git-send-email-ilyal@mellanox.com>
+ <20160609162139.13eb22b4@ul30vt.home>
+In-Reply-To: <20160609162139.13eb22b4@ul30vt.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: jcm@redhat.com, linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
- dhdang@apm.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
- jeremy.linton@arm.com, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
- cov@codeaurora.org, liudongdong3@huawei.com, msalter@redhat.com,
- wangyijing@huawei.com, mw@semihalf.com, andrea.gallo@linaro.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/30/2016 10:14 AM, Tomasz Nowicki wrote:
-> From the functionality point of view this series may be split into the
-> following logic parts:
-> 1. Export ECAM API and add parent device to pci_config_window
-> 2. Add IO resources handling to PCI core code
-> 3. Support for generic domain assignment based on ACPI
-> 4. New MCFG driver
-> 5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64/
->
-> Patches has been built on top of 4.7-rc1 and can be found here:
-> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v8)
->
-> This has been tested on Cavium ThunderX server. Any help in reviewing and
-> testing is very appreciated.
->
-> v7 -> v8
-> - move code from drivers/acpi/pci_root_generic.c to arch/arm64/kernel/pci.c
-> - minor changes around domain assignment
-> - pci_mcfg.c improvements for parsing MCFG tables and lookup its entries
->
-> v6 -> v7
-> - drop quirks handling
-> - changes for ACPI companion and domain number assignment approach
-> - implement arch pcibios_{add|remove}_bus and call acpi_pci_{add|remove}_bus from there
-> - cleanups around nomenclature
-> - use resources oriented API for ECAM
-> - fix for based address calculation before mapping ECAM region
-> - remove useless lock for MCFG lookup
-> - move MCFG stuff to separated file pci_mcfg.c
-> - drop MCFG entries caching
-> - rebase against 4.6-rc7
->
-> v5 -> v6
-> - drop idea of x86 MMCONFIG code refactoring
-> - integrate JC's patches which introduce new ECAM API:
->   https://lkml.org/lkml/2016/4/11/907
->   git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
-> - integrate Sinan's fix for releasing IO resources, see patch [06/13]
-> - added ACPI support for ThunderX ECAM and PEM drivers
-> - rebase against 4.6-rc2
->
-> v4 -> v5
-> - drop MCFG refactoring group patches 1-6 from series v4 and integrate Jayachandran's patch
->   https://patchwork.ozlabs.org/patch/575525/
-> - rewrite PCI legacy IRQs allocation
-> - squash two patches 11 and 12 from series v4, fixed bisection issue
-> - changelog improvements
-> - rebase against 4.5-rc3
->
-> v3 -> v4
-> - drop Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-> - add Lorenzo's fix patch 19/24
-> - ACPI PCI bus domain number assigning cleanup
-> - change resource management, we now claim and reassign resources
-> - improvements for applying quirks
-> - drop Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-> - rebase against 4.5-rc1
->
-> v2 -> v3
-> - fix legacy IRQ assigning and IO ports registration
-> - remove reference to arch specific companion device for ia64
-> - move ACPI PCI host controller driver to pci_root.c
-> - drop generic domain assignment for x86 and ia64 as I am not
->   able to run all necessary test variants
-> - drop patch which cleaned legacy IRQ assignment since it belongs to
->   Mathew's series:
->   https://patchwork.ozlabs.org/patch/557504/
-> - extend MCFG quirk code
-> - rebase against 4.4
->
-> v1 -> v2
-> - move non-arch specific piece of code to dirver/acpi/ directory
-> - fix IO resource handling
-> - introduce PCI config accessors quirks matching
-> - moved ACPI_COMPANION_SET to generic code
->
-> v1 - https://lkml.org/lkml/2015/10/27/504
-> v2 - https://lkml.org/lkml/2015/12/16/246
-> v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-> v4 - https://lkml.org/lkml/2016/2/4/646
-> v5 - https://lkml.org/lkml/2016/2/16/426
-> v6 - https://lkml.org/lkml/2016/4/15/594
->
-> Jayachandran C (2):
->   PCI: ecam: move ecam.h to linux/include/pci-ecam.h
->   PCI: ecam: Add parent device field to pci_config_window
->
-> Tomasz Nowicki (7):
->   pci: Add new function to unmap IO resources.
->   acpi, pci: Support IO resources when parsing PCI host bridge
->     resources.
->   pci, acpi: add acpi hook to assign domain number.
->   arm64, pci, acpi: ACPI support for legacy IRQs parsing and
->     consolidation with DT code.
->   acpi: Add generic MCFG table handling
->   arm64, pci, acpi: Provide ACPI-specific prerequisites for PCI bus
->     enumeration.
->   pci, acpi: ARM64 support for ACPI based generic PCI host controller
->
->  arch/arm64/Kconfig                  |   2 +
->  arch/arm64/kernel/pci.c             | 143 ++++++++++++++++++++++++++++++++++--
->  drivers/acpi/Kconfig                |   3 +
->  drivers/acpi/Makefile               |   1 +
->  drivers/acpi/pci_mcfg.c             |  94 ++++++++++++++++++++++++
->  drivers/acpi/pci_root.c             |  39 ++++++++++
->  drivers/pci/ecam.c                  |   6 +-
->  drivers/pci/ecam.h                  |  67 -----------------
->  drivers/pci/host/pci-host-common.c  |   3 +-
->  drivers/pci/host/pci-host-generic.c |   3 +-
->  drivers/pci/host/pci-thunder-ecam.c |   3 +-
->  drivers/pci/host/pci-thunder-pem.c  |   6 +-
->  drivers/pci/pci.c                   |  29 +++++++-
->  include/linux/pci-acpi.h            |   2 +
->  include/linux/pci-ecam.h            |  67 +++++++++++++++++
->  include/linux/pci.h                 |   9 ++-
->  16 files changed, 387 insertions(+), 90 deletions(-)
->  create mode 100644 drivers/acpi/pci_mcfg.c
->  delete mode 100644 drivers/pci/ecam.h
->  create mode 100644 include/linux/pci-ecam.h
->
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Friday, June 10, 2016 1:22 AM
+> To: Ilya Lesokhin <ilyal@mellanox.com>
+> Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; bhelgaas@google.com;
+> Noa Osherovich <noaos@mellanox.com>; Haggai Eran
+> <haggaie@mellanox.com>; Or Gerlitz <ogerlitz@mellanox.com>; Liran Liss
+> <liranl@mellanox.com>
+> Subject: Re: [PATCH 1/4] VFIO: Probe new devices in a live VFIO group with
+> the VFIO driver
+...
+> > +		pdev = to_pci_dev(dev);
+> > +		if (pdev->driver_override)
+> > +			kfree(pdev->driver_override);
+> > +		pdev->driver_override = kstrdup("vfio-pci", GFP_KERNEL);
+> 
+> kstrdup can fail.  Probably want to issue a about capturing
+> the device as well.  Thanks,
+> 
 
-For the series,
-
-Tested-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Any recommendation as to what I should do in case kstrdup fails?
+Fallback to the existing warning ("device added to a live group") ? 
 
 Thanks,
-Suravee
+Ilya.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
