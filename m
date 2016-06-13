@@ -1,99 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:57643 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110AbcFBGOj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 02:14:39 -0400
-Received: from localhost
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 2 Jun 2016 00:14:33 -0600
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-Subject: [RESEND PATCH v2 6/6] vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
-Date: Thu,  2 Jun 2016 14:10:03 +0800
-Message-Id: <1464847803-22756-7-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1464847803-22756-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <Liviu.Dudau@arm.com>
+Return-Path: <Liviu.Dudau@arm.com>
+Date: Mon, 13 Jun 2016 16:56:46 +0100
+From: Liviu.Dudau@arm.com
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, ddaney@caviumnetworks.com, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jcm@redhat.com,
+	andrea.gallo@linaro.org, dhdang@apm.com, jeremy.linton@arm.com,
+	liudongdong3@huawei.com, cov@codeaurora.org
+Subject: Re: [PATCH V9 09/11] ARM64/PCI: ACPI support for legacy IRQs parsing
+ and consolidation with DT code
+Message-ID: <20160613155646.GF1165@e106497-lin.cambridge.arm.com>
+References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+ <1465588519-11334-10-git-send-email-tn@semihalf.com>
+ <20160610233612.GB7671@localhost>
+ <20160613104005.GA26738@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160613104005.GA26738@red-moon>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch tries to expose MSI-X tables to userspace if hardware
-enables interrupt remapping. This capability can ensure that a
-given PCI device can only shoot the MSIs assigned for it. That
-means a userspace driver could never hurt other devices or system
-by writing to the exposed MSI-X table directly.
+On Mon, Jun 13, 2016 at 11:40:05AM +0100, Lorenzo Pieralisi wrote:
+> On Fri, Jun 10, 2016 at 06:36:12PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Jun 10, 2016 at 09:55:17PM +0200, Tomasz Nowicki wrote:
+> > > To enable PCI legacy IRQs on platforms booting with ACPI, arch code
+> > > should include ACPI specific callbacks that parse and set-up the
+> > > device IRQ number, equivalent to the DT boot path. Owing to the current
+> > > ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
+> > > cannot be parsed at device add time, since that would trigger ACPI scan
+> > > handlers ordering issues depending on how the ACPI tables are defined.
+> > 
+> > Uh, OK :)  I can't figure out exactly what the problem is here -- I
+> > don't know where to look if I wanted to fix the scan handler ordering
+> > issues, and I don't know how I could tell if it would ever be safe to
+> > move this from driver probe-time back to device add-time.
+> 
+> Right, the commit log could have been more informative.
+> 
+> pcibios_add_device() was added in:
+> 
+> commit d1e6dc91b532 ("arm64: Add architectural support for PCI")
+> 
+> whose commit log does not specify why legacy IRQ parsing should
+> be done at pcibios_add_device() either, so honestly we had to
+> do with the information we have at hand.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/vfio/pci/vfio_pci.c      |   17 ++++++++++++++---
- drivers/vfio/pci/vfio_pci_rdwr.c |    3 ++-
- 2 files changed, 16 insertions(+), 4 deletions(-)
+Because at that time (September 2014) there was no pcibios_alloc_irq() (added
+June 2015 by commit 890e4847587fcf) and after that nobody bothered to update
+the arm64 code to make use of the new API.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 188b1ff..6bae388 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -487,8 +487,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
- 
- 	end = pci_resource_len(vdev->pdev, vdev->msix_bar);
- 
--	/* If MSI-X table is aligned to the start or end, only one area */
--	if (((vdev->msix_offset & PAGE_MASK) == 0) ||
-+	/*
-+	 * If MSI-X table is allowed to mmap because of the capability
-+	 * of IRQ remapping or aligned to the start or end, only one area
-+	 */
-+	if ((vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) ||
-+	    ((vdev->msix_offset & PAGE_MASK) == 0) ||
- 	    (PAGE_ALIGN(vdev->msix_offset + vdev->msix_size) >= end))
- 		nr_areas = 1;
- 
-@@ -503,6 +507,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
- 			      struct vfio_region_info_cap_sparse_mmap, header);
- 	sparse->nr_areas = nr_areas;
- 
-+	if (vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) {
-+		sparse->areas[i].offset = 0;
-+		sparse->areas[i].size = end;
-+		return 0;
-+	}
-+
- 	if (vdev->msix_offset & PAGE_MASK) {
- 		sparse->areas[i].offset = 0;
- 		sparse->areas[i].size = vdev->msix_offset & PAGE_MASK;
-@@ -1061,7 +1071,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
- 	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
- 		return -EINVAL;
- 
--	if (index == vdev->msix_bar) {
-+	if (index == vdev->msix_bar &&
-+		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
- 		/*
- 		 * Disallow mmaps overlapping the MSI-X table; users don't
- 		 * get to touch this directly.  We could find somewhere
-diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
-index 5ffd1d9..dbf9cd0 100644
---- a/drivers/vfio/pci/vfio_pci_rdwr.c
-+++ b/drivers/vfio/pci/vfio_pci_rdwr.c
-@@ -164,7 +164,8 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
- 	} else
- 		io = vdev->barmap[bar];
- 
--	if (bar == vdev->msix_bar) {
-+	if (bar == vdev->msix_bar &&
-+		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
- 		x_start = vdev->msix_offset;
- 		x_end = vdev->msix_offset + vdev->msix_size;
- 	}
+Best regards,
+Liviu
+
+> 
+> > I also notice that x86 and ia64 call acpi_pci_irq_enable() even later,
+> > when the driver *enables* the device.  Is there a reason you didn't do
+> > it at the same time as x86 and ia64?  This is another of those pcibios
+> > hooks that really don't do anything arch-specific, so I can imagine
+> > refactoring this somehow, someday.
+> 
+> Yes, with [1], that was the goal, that stopped because [1] does not
+> work on x86.
+> 
+> Only DT platform(s) affected by this change are all platforms relying on
+> drivers/pci/host/pci-xgene.c (others rely on pci_fixup_irqs() that
+> should be removed too), if on those platforms probing IRQs at device
+> enable time works ok I can update this patch (it can be done through [1]
+> once we figure out what to do with it on x86) and move the IRQ set-up at
+> pcibios_enable_device() time.
+> 
+> @Duc: any feedback on this ?
+> 
+> Thanks,
+> Lorenzo
+> 
+> [1] http://www.spinics.net/lists/linux-pci/msg45950.html
+> 
+> > Did we have this conversation before?  It seems vaguely familiar, so I
+> > apologize if you already explained this once.
+> > 
+> > > To solve this problem and consolidate FW PCI legacy IRQs parsing in
+> > > one single pcibios callback (pending final removal), this patch moves
+> > > DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
+> > > PCI core code at device probe time) and adds ACPI PCI legacy IRQs
+> > > parsing to the same callback too, so that FW PCI legacy IRQs parsing
+> > > is confined in one single arch callback that can be easily removed
+> > > when code parsing PCI legacy IRQs is consolidated and moved to core
+> > > PCI code.
+> > > 
+> > > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> > > Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > ---
+> > >  arch/arm64/kernel/pci.c | 11 ++++++++---
+> > >  1 file changed, 8 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > > index d5d3d26..b3b8a2c 100644
+> > > --- a/arch/arm64/kernel/pci.c
+> > > +++ b/arch/arm64/kernel/pci.c
+> > > @@ -51,11 +51,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+> > >  }
+> > >  
+> > >  /*
+> > > - * Try to assign the IRQ number from DT when adding a new device
+> > > + * Try to assign the IRQ number when probing a new device
+> > >   */
+> > > -int pcibios_add_device(struct pci_dev *dev)
+> > > +int pcibios_alloc_irq(struct pci_dev *dev)
+> > >  {
+> > > -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > > +	if (acpi_disabled)
+> > > +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > > +#ifdef CONFIG_ACPI
+> > > +	else
+> > > +		return acpi_pci_irq_enable(dev);
+> > > +#endif
+> > >  
+> > >  	return 0;
+> > >  }
+> > > -- 
+> > > 1.9.1
+> > > 
+> > 
+> 
+
 -- 
-1.7.9.5
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
