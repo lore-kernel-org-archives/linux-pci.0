@@ -1,95 +1,70 @@
-Return-Path: <ddaney.cavm@gmail.com>
-Return-Path: <ddaney.cavm@gmail.com>
-Message-ID: <5751B704.7010208@gmail.com>
-Date: Fri, 03 Jun 2016 09:57:40 -0700
-From: David Daney <ddaney.cavm@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60314 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161183AbcFMVEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jun 2016 17:04:24 -0400
+Date: Mon, 13 Jun 2016 16:04:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH 1/2] x86/vmd: Select device dma ops to override
+Message-ID: <20160613210418.GB18747@localhost>
+References: <1463505205-30431-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: Christopher Covington <cov@codeaurora.org>,
- Tomasz Nowicki <tn@semihalf.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>,
- "arnd@arndb.de" <arnd@arndb.de>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "rafael@kernel.org" <rafael@kernel.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "jchandra@broadcom.com" <jchandra@broadcom.com>,
- "liudongdong (C)" <liudongdong3@huawei.com>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- "jcm@redhat.com" <jcm@redhat.com>,
- "dhdang@apm.com" <dhdang@apm.com>,
- "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
- "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
- "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
- "msalter@redhat.com" <msalter@redhat.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Wangyijing <wangyijing@huawei.com>, "mw@semihalf.com" <mw@semihalf.com>,
- "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors against
- platfrom specific ECAM quirks.
-References: <1464856864-18049-1-git-send-email-tn@semihalf.com> <1464856864-18049-2-git-send-email-tn@semihalf.com> <57519F09.2010201@codeaurora.org> <EE11001F9E5DDD47B7634E2F8A612F2E1F76E9D7@lhreml507-mbx>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F76E9D7@lhreml507-mbx>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1463505205-30431-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/03/2016 08:32 AM, Gabriele Paoloni wrote:
-[...]
->>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
->>> +{
->>> +	int bus_num = root->secondary.start;
->>> +	int domain = root->segment;
->>> +	struct pci_cfg_fixup *f;
->>> +
->>> +	if (!mcfg_table)
->>> +		return &pci_generic_ecam_ops;
->>> +
->>> +	/*
->>> +	 * Match against platform specific quirks and return
->> corresponding
->>> +	 * CAM ops.
->>> +	 *
->>> +	 * First match against PCI topology <domain:bus> then use OEM ID
->> and
->>> +	 * OEM revision from MCFG table standard header.
->>> +	 */
->>> +	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
->> f++) {
->>> +		if ((f->domain == domain || f->domain ==
->> PCI_MCFG_DOMAIN_ANY) &&
->>> +		    (f->bus_num == bus_num || f->bus_num ==
->> PCI_MCFG_BUS_ANY) &&
->>> +		    (!strncmp(f->oem_id, mcfg_table->header.oem_id,
->>> +			      ACPI_OEM_ID_SIZE)) &&
->>> +		    (f->oem_revision == mcfg_table->header.oem_revision))
->>
->> Is this more likely to be updated between quirky and fixed platforms
->> than oem_table_id? What do folks think about using oem_table_id instead
->> of, or in addition to, oem_revision?
->
->  From my understanding we need to stick to this mechanism as (otherwise)
-> there are platforms out in the field that would need a FW update.
->
-> So I don't think that using oem_table_id "instead" is possible; about
-> "in addition" I think it is doable, but I do not see the advantage much.
-> I mean that if a platform gets fixed the oem revision should change too,
-> Right?
+On Tue, May 17, 2016 at 11:13:24AM -0600, Keith Busch wrote:
+> VMD device doesn't usually have device archdata specific dma_ops, so we
+> need to override the default ops for VMD devices.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-I think you are correct.  My take away on discussions about using this 
-style of quirk matching was that we would require the oem_revision to 
-change as different quirks (or lack of quirks) were required.
+I applied this and the v2 2/2 patch with Jon's acks to pci/host-vmd for
+v4.8, thanks!
 
-David Daney
-
-
->
-> Thanks
->
-> Gab
->
+> ---
+>  arch/x86/pci/vmd.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index 7792aba..b1662bf 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -261,7 +261,7 @@ static struct device *to_vmd_dev(struct device *dev)
+>  
+>  static struct dma_map_ops *vmd_dma_ops(struct device *dev)
+>  {
+> -	return to_vmd_dev(dev)->archdata.dma_ops;
+> +	return get_dma_ops(to_vmd_dev(dev));
+>  }
+>  
+>  static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *addr,
+> @@ -367,7 +367,7 @@ static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
+>  {
+>  	struct dma_domain *domain = &vmd->dma_domain;
+>  
+> -	if (vmd->dev->dev.archdata.dma_ops)
+> +	if (get_dma_ops(&vmd->dev->dev))
+>  		del_dma_domain(domain);
+>  }
+>  
+> @@ -379,7 +379,7 @@ static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
+>  
+>  static void vmd_setup_dma_ops(struct vmd_dev *vmd)
+>  {
+> -	const struct dma_map_ops *source = vmd->dev->dev.archdata.dma_ops;
+> +	const struct dma_map_ops *source = get_dma_ops(&vmd->dev->dev);
+>  	struct dma_map_ops *dest = &vmd->dma_ops;
+>  	struct dma_domain *domain = &vmd->dma_domain;
+>  
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
