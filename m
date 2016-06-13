@@ -1,74 +1,85 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
- against platfrom specific ECAM quirks
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "liudongdong (C)" <liudongdong3@huawei.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "rafael@kernel.org" <rafael@kernel.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
- "jchandra@broadcom.com" <jchandra@broadcom.com>,
- "tn@semihalf.com" <tn@semihalf.com>
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
- <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
-Cc: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
- "mw@semihalf.com" <mw@semihalf.com>,
- "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
- "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
- Wangyijing <wangyijing@huawei.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "msalter@redhat.com" <msalter@redhat.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- "jcm@redhat.com" <jcm@redhat.com>,
- "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
- "dhdang@apm.com" <dhdang@apm.com>,
- "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
- "cov@codeaurora.org" <cov@codeaurora.org>,
- "Chenxin (Charles)" <charles.chenxin@huawei.com>,
- Linuxarm <linuxarm@huawei.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <575EBD13.8080808@codeaurora.org>
-Date: Mon, 13 Jun 2016 10:02:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
-Content-Type: text/plain; charset=gbk
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 0/7] Introduce ACPI world to ITS irqchip
+Date: Mon, 13 Jun 2016 16:41:06 +0200
+Message-Id: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/13/2016 9:54 AM, Gabriele Paoloni wrote:
-> As you can see here Liudongdong has replaced oem_revision with
-> oem_table_id.
-> 
-> Now it seems that there are some platforms that have already shipped
-> using a matching based on the oem_revision (right Jon?)
-> 
-> However I guess that if in FW they have defined oem_table_id properly
-> they should be able to use this mechanism without needing to a FW update.
-> 
-> Can these vendors confirm this?
-> 
-> Tomasz do you think this can work for Cavium Thunder?
-> 
-> Thanks
-> 
-> Gab
+The series builds the PCI/MSI domain stack based on initial IORT driver
+which is added in first place. As a reference please see IORT spec:
+http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
 
-Why not have all three of them? 
+Patches were built on top of accepted ARM64 ACPI PCI support and can be found
+all together here:
+https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v6)
 
-The initial approach was OEM id and revision id. 
+Tested on Cavium ThunderX server.
 
-Jeff Hugo indicated that addition (not removing any other fields) of table id
-would make more sense.
+v5 -> v6
+- added locking mechanism for IORT list with domain token
+- IORT function name improvements
+- extended IORT RID mapping helper
+- reworked IORT to be more SMMU friendly
+- IORT functions which map RID and find corresponding domain are not
+  PCI specific any more (struct pci_dev -> struct device)
+- bug fixes
+
+v4 -> v5
+- rebased against v4.7-rc1
+- drop generic layer and call IORT functions directly
+- improve resource abstraction and string formatting
+
+v3 -> v4
+- rebased against v4.5
+- add ACPI support for IRQ domain handling on a per-device basis
+- reorder domain setup step
+- improve error handling
+- code style improvements
+
+v2 -> v3
+- rebased on top of 4.4
+- fixes and improvements for redistributor init via GICC structures
+- fixes as per kbuild reports
+
+v1 -> v2
+- rebased on top of 4.4-rc4
+- use pci_msi_domain_get_msi_rid for requester ID to device ID translation
+
+Tomasz Nowicki (7):
+  ACPI: I/O Remapping Table (IORT) initial support
+  PCI/MSI: Setup MSI domain on a per-devices basis using IORT ACPI table
+  irqchip/gicv3-its: Cleanup for ITS domain initialization
+  irqchip/gicv3-its: Refator ITS DT init code to prepare for ACPI
+  irqchip/gicv3-its: Probe ITS in the ACPI way
+  irqchip/gicv3-its: Factor out code that might be reused for ACPI
+  irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain
+    initialization
+
+ drivers/acpi/Kconfig                     |   3 +
+ drivers/acpi/Makefile                    |   1 +
+ drivers/acpi/iort.c                      | 386 +++++++++++++++++++++++++++++++
+ drivers/irqchip/Kconfig                  |   1 +
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c |  88 +++++--
+ drivers/irqchip/irq-gic-v3-its.c         | 185 ++++++++++-----
+ drivers/irqchip/irq-gic-v3.c             |   7 +-
+ drivers/pci/msi.c                        |  11 +-
+ include/linux/iort.h                     |  38 +++
+ include/linux/irqchip/arm-gic-v3.h       |   4 +-
+ 10 files changed, 646 insertions(+), 78 deletions(-)
+ create mode 100644 drivers/acpi/iort.c
+ create mode 100644 include/linux/iort.h
 
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+1.9.1
+
