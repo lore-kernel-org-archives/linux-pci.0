@@ -1,148 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:41413 "EHLO
-	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052AbcGAB1I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 21:27:08 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 1/2] Documentation: bindings: add dt doc for Rockchip PCIe controller
-Date: Fri,  1 Jul 2016 09:24:49 +0800
-Message-Id: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.136]:55942 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161183AbcFMU27 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jun 2016 16:28:59 -0400
+Date: Mon, 13 Jun 2016 15:28:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Engraf <david.engraf@sysgo.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix __pci_bus_size_bridges when bridge is not
+ available
+Message-ID: <20160613202855.GB14934@localhost>
+References: <5734293A.6040702@sysgo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5734293A.6040702@sysgo.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a binding that describes the Rockchip PCIe controller
-found on Rockchip SoCs PCIe interface.
+On Thu, May 12, 2016 at 08:56:58AM +0200, David Engraf wrote:
+> A virtual PCI controller may not have a bridge device, thus when
+> __pci_bus_size_bridges is called, it will generate a NULL pointer
+> exception when accessing bus->self->class. The attached patch adds a
+> check to verify if a bridge has been set. Without a bridge device,
+> the function returns.
+> 
+> Signed-off-by: David Engraf <david.engraf <at> sysgo.com>
+> 
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 55641a3..ddb3381 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1245,6 +1245,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  	if (pci_is_root_bus(bus))
+>  		return;
+>  
+> +	/* bridge device available? */
+> +	if (!bus->self)
+> +		return;
 
----
+I'd like to see the code that relies on this, i.e., the virtual PCI
+controller driver.
 
-Changes in v4:
-- fix example of adding intermediate interrupt controller for pcie
-  legacy interrrupt
+I don't know how we would handle resource assignment if there's no bridge.
+When we assign resources to a device, we normally look at the upstream
+bridge to see what resources are available.
 
-Changes in v3:
-- fix example dts code suggested by Rob and Marc
-- remove driver's behaviour of regulator
+Here's an example from my laptop:
 
-Changes in v2:
-- fix lots clk/reset stuff suggested by Heiko
-- remove msi-parent and add msi-map suggested by Marc
-- drop phy related stuff
-- some others minor fixes
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-fe])
+  pci_bus 0000:00: root bus resource [mem 0xbf200000-0xdfffffff window]
+  pci 0000:00:1c.3: PCI bridge to [bus 02]
+  pci 0000:00:1c.3:   bridge window [mem 0xd0500000-0xd05fffff]
+  pci 0000:02:00.0: reg 0x10: [mem 0xd0500000-0xd0501fff 64bit]
 
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 91 ++++++++++++++++++++++
- 1 file changed, 91 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+PCI0 is the host bridge, and it forwards transactions in the range
+[mem 0xbf200000-0xdfffffff] to PCI bus 00.  The 00:1c.3 bridge
+forwards transactions in the range [mem 0xd0500000-0xd05fffff] from
+bus 00 to bus 02.  So if we want to assign resources to the BARs of
+02:00.0, we have to take them from the 00:1c.3 window.
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-new file mode 100644
-index 0000000..8092fc5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -0,0 +1,91 @@
-+* Rockchip AXI PCIe Root Port Bridge DT description
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+		interrupt source. The value must be 1.
-+- compatible: Should contain "rockchip,rk3399-pcie"
-+- reg: Two register ranges as listed in the reg-names property
-+- reg-names: Must include the following names
-+	- "axi-base"
-+	- "apb-base"
-+- clocks: Must contain an entry for each entry in clock-names.
-+		See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+	- "aclk"
-+	- "aclk-perf"
-+	- "hclk"
-+	- "pm"
-+- msi-map: Maps a Requester ID to an MSI controller and associated.
-+		See ./pci-msi.txt
-+- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-+- phy-names:  MUST be "pcie-phy".
-+- interrupts: Three interrupt entries must be specified.
-+- interrupt-names: Must include the following names
-+	- "sys"
-+	- "legacy"
-+	- "client"
-+- resets: Must contain five entries for each entry in reset-names.
-+	   See ../reset/reset.txt for details.
-+- reset-names: Must include the following names
-+	- "core"
-+	- "mgmt"
-+	- "mgmt-sticky"
-+	- "pipe"
-+- pinctrl-names : The pin control state names
-+- pinctrl-0: The "default" pinctrl state
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+- interrupt-controller: identifies the node as an interrupt controller
-+
-+Optional Property:
-+- ep-gpios: contain the entry for pre-reset gpio
-+- num-lanes: number of lanes to use
-+- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
-+- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
-+- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
-+
-+Example:
-+
-+pcie0: pcie@f8000000 {
-+	compatible = "rockchip,rk3399-pcie";
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-+		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-+	clock-names = "aclk", "aclk-perf",
-+		      "hclk", "pm";
-+	bus-range = <0x0 0x1>;
-+	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
-+		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
-+	interrupt-names = "sys", "legacy", "client";
-+	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
-+	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
-+	assigned-clock-rates = <100000000>;
-+	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
-+	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
-+		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
-+	num-lanes = <4>;
-+	msi-map = <0x0 &its 0x0 0x1000>;
-+	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
-+	reg-names = "axi-base", "apb-base";
-+	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-+	phys = <&pcie_phy>;
-+	phy-names = "pcie-phy";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_clkreq>;
-+	#interrupt-cells = <1>;
-+	interrupt-controller;
-+	interrupt-map-mask = <0 0 0 7>;
-+	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
-+			<0 0 0 2 &pcie0_intc 2>,
-+			<0 0 0 3 &pcie0_intc 3>,
-+			<0 0 0 4 &pcie0_intc 4>;
-+	pcie0_intc: interrupt-controller {
-+		interrupt-controller;
-+		#address-cells = <0>;
-+		#interrupt-cells = <1>;
-+	};
-+};
--- 
-2.3.7
+In your virtual PCI controller situation, it sounds like you could
+have a device like 02:00.0 that is not on a root bus and does not have
+an upstream bridge.  How would we assign resources to it?
 
+>  	switch (bus->self->class >> 8) {
+>  	case PCI_CLASS_BRIDGE_CARDBUS:
+>  		/* don't size cardbuses yet. */
 
