@@ -1,98 +1,66 @@
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [RESEND PATCH v2 1/4] PCI: Ignore resource_alignment if
- PCI_PROBE_ONLY was set\\
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1464846411-16895-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1464846411-16895-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160621014346.GA30307@localhost>
- <6b457696-5cb6-66ba-911a-fec42bb3e0d3@linux.vnet.ibm.com>
-Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com, corbet@lwn.net,
-        aik@ozlabs.ru, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-        bhelgaas@google.com, alex.williamson@redhat.com, paulus@samba.org,
-        warrier@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Tue, 21 Jun 2016 16:38:26 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33226 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161222AbcFMVOR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jun 2016 17:14:17 -0400
+Date: Mon, 13 Jun 2016 16:14:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
+	Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
+Message-ID: <20160613211411.GC18747@localhost>
+References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <6b457696-5cb6-66ba-911a-fec42bb3e0d3@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <5162fcfc-5ba2-eb63-b706-dfb495cad7d1@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/6/21 10:16, Yongji Xie wrote:
+On Tue, May 17, 2016 at 03:39:58PM -0600, Keith Busch wrote:
+> Every sriov capable driver has to check if any guest is using a virtual
+> function prior to disabling, so let's make it common code.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-> On 2016/6/21 9:43, Bjorn Helgaas wrote:
->
->> On Thu, Jun 02, 2016 at 01:46:48PM +0800, Yongji Xie wrote:
->>> The resource_alignment will releases memory resources allocated
->>> by firmware so that kernel can reassign new resources later on.
->>> But this will cause the problem that no resources can be
->>> allocated by kernel if PCI_PROBE_ONLY was set, e.g. on pSeries
->>> platform because PCI_PROBE_ONLY force kernel to use firmware
->>> setup and not to reassign any resources.
->>>
->>> To solve this problem, this patch ignores resource_alignment
->>> if PCI_PROBE_ONLY was set.
->>>
->>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->>> ---
->>>   drivers/pci/pci.c |    6 ++++++
->>>   1 file changed, 6 insertions(+)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index c8b4dbd..a259394 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -4761,6 +4761,12 @@ static resource_size_t 
->>> pci_specified_resource_alignment(struct pci_dev *dev)
->>>       spin_lock(&resource_alignment_lock);
->>>       p = resource_alignment_param;
->>>       while (*p) {
->>> +        if (pci_has_flag(PCI_PROBE_ONLY)) {
->>> +            printk(KERN_ERR "PCI: Ignore resource_alignment 
->>> parameter: %s with PCI_PROBE_ONLY set\n",
->>> +                    p);
->>> +            *p = 0;
->>> +            break;
->> Wouldn't it be simpler to make pci_set_resource_alignment_param() fail
->> if PCI_PROBE_ONLY is set?
->
-> I add the check here because I want to print some logs so that users
-> could know the reason why resource_alignment doesn't work when
-> they add this parameter.
->
-> Thanks,
-> Yongji
->
+If I understand the discussion correctly, this is still racy but
+nobody objects to adding this until we have a better, non-racy
+solution.
 
-Sorry, please ignore the previous reply. I didn't add this check in
-pci_set_resource_alignment_param() because PCI_PROBE_ONLY
-may be set after we parse "resource_alignment".
+However, you added this in common code and took advantage of it in
+nvme.  Good so far.  But we have about a dozen other drivers that call
+pci_vfs_assigned().  I assume some of those places could be changed so
+they take advantage of this check in the core instead?
 
-And it seems that printk_once() may be better here so that
-we don't need to set *p = 0.
+Can we do that at the same time?  If we add good new stuff and only
+use it one place, there's not as much overall goodness as there would
+be if we updated everybody to do it similarly.
 
-Thanks,
-Yongji
-
->>> +        }
->>>           count = 0;
->>>           if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
->>>                               p[count] == '@') {
->>> -- 
->>> 1.7.9.5
->>>
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->> _______________________________________________
->> Linuxppc-dev mailing list
->> Linuxppc-dev@lists.ozlabs.org
->> https://lists.ozlabs.org/listinfo/linuxppc-dev
->
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
+> ---
+>  drivers/pci/pci-sysfs.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 342b691..5011fa9 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -487,6 +487,11 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  
+>  	if (num_vfs == 0) {
+>  		/* disable VFs */
+> +		if (pci_vfs_assigned(pdev)) {
+> +			dev_warn(&pdev->dev,
+> +				"Cannot disable SR-IOV VFs while assigned\n");
+> +			return -EPERM;
+> +		}
+>  		ret = pdev->driver->sriov_configure(pdev, 0);
+>  		if (ret < 0)
+>  			return ret;
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
