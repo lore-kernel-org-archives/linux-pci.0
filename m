@@ -1,94 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1465427086.2736.93.camel@intel.com>
-Subject: Re: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: Johannes Thumshirn <jthumshirn@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme@lists.infradead.org,
-	James Smart <james.smart@avagotech.com>,
-	Dick Kennedy <dick.kennedy@avagotech.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Frank Haverkamp <haver@linux.vnet.ibm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jay Cliburn <jcliburn@gmail.com>,
-	Chris Snook <chris.snook@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Date: Wed, 08 Jun 2016 16:04:46 -0700
-In-Reply-To: <20160608072854.ivcfvtlgxab2xkmp@c203.arch.suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
-	 <20160608072854.ivcfvtlgxab2xkmp@c203.arch.suse.de>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-zC7eTGCNtDeX7ZGFAIvU"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <will.deacon@arm.com>,
+	<catalin.marinas@arm.com>, <rafael@kernel.org>,
+	<hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>,
+	<okaya@codeaurora.org>, <jchandra@broadcom.com>, <tn@semihalf.com>
+CC: <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
+	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
+	<wangyijing@huawei.com>, <Suravee.Suthikulpanit@amd.com>,
+	<msalter@redhat.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linaro-acpi@lists.linaro.org>, <jcm@redhat.com>,
+	<andrea.gallo@linaro.org>, <dhdang@apm.com>,
+	<jeremy.linton@arm.com>, <liudongdong3@huawei.com>,
+	<cov@codeaurora.org>, <gabriele.paoloni@huawei.com>,
+	<charles.chenxin@huawei.com>, <linuxarm@huawei.com>
+Subject: [RFC PATCH V2 2/2] ARM64/PCI: Start using quirks handling for ACPI based PCI host controller
+Date: Mon, 13 Jun 2016 21:02:03 +0800
+Message-ID: <1465822923-33599-3-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
+References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Tomasz Nowicki <tn@semihalf.com>
 
---=-zC7eTGCNtDeX7ZGFAIvU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+pci_generic_ecam_ops is used by default. Since there are platforms
+which have non-compliant ECAM space we need to overwrite these
+accessors prior to PCI buses enumeration. In order to do that
+we call pci_mcfg_get_ops to retrieve pci_ecam_ops structure so that
+we can use proper PCI config space accessors and bus_shift.
 
-On Wed, 2016-06-08 at 09:28 +0200, Johannes Thumshirn wrote:
-> On Tue, Jun 07, 2016 at 09:44:00AM +0200, Johannes Thumshirn wrote:
-> > The first patch in this series introduces the following 4 helper
-> functions to
-> > the PCI core:
-> >=C2=A0
-> > * pci_request_mem_regions()
-> > * pci_request_io_regions()
-> > * pci_release_mem_regions()
-> > * pci_release_io_regions()
-> >=C2=A0
-> > which encapsulate the request and release of a PCI device's memory or
-> I/O
-> > bars.
-> >=C2=A0
-> > The subsequent patches convert the drivers, which use the
-> > pci_request_selected_regions(pdev,=C2=A0
-> >=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0pci_select_bars(pdev, IORESOUR=
-CE_MEM), name);=C2=A0
-> > and similar pattern to use the new interface.
-> >=C2=A0
-> > This was suggested by Christoph Hellwig in
-> > http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html=C2=
-=A0an
-> d
-> > tested on kernel v4.6 with NVMe.
-> >=C2=A0
->=20
-> Btw, as I've seen already Jeff applying the Intel Ethernet patch to his
-> tree, I think this should go via the PCI tree as the build dependency is
-> the PCI patch.
+pci_generic_ecam_ops is still used for platforms free from quirks.
 
-Bjorn should pick up the entire series, I just applied the Intel patch (and
-dependent patches) so we could touch test it.
---=-zC7eTGCNtDeX7ZGFAIvU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ arch/arm64/kernel/pci.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 94cd43c..a891bda 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -139,6 +139,7 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 	struct pci_config_window *cfg;
+ 	struct resource cfgres;
+ 	unsigned int bsz;
++	struct pci_ecam_ops *ops;
+ 
+ 	/* Use address from _CBA if present, otherwise lookup MCFG */
+ 	if (!root->mcfg_addr)
+@@ -150,12 +151,12 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 		return NULL;
+ 	}
+ 
+-	bsz = 1 << pci_generic_ecam_ops.bus_shift;
++	ops = pci_mcfg_get_ops(root);
++	bsz = 1 << ops->bus_shift;
+ 	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+ 	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+ 	cfgres.flags = IORESOURCE_MEM;
+-	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+-			      &pci_generic_ecam_ops);
++	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, ops);
+ 	if (IS_ERR(cfg)) {
+ 		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+ 			seg, bus_res, PTR_ERR(cfg));
+-- 
+1.9.1
 
-iQIcBAABCgAGBQJXWKSOAAoJEOVv75VaS+3OAnQP+wVbbdkRZ4OU3PFunU41inCW
-RWb2kuv+vlvJp/8mXaDTKLFZ0tV7q9J+9DEGrJox1EzUz8W+IY2tY1Z8qYKsozHF
-Z42pe7dtY9wHCB4y1AaEynVEjzf5Y2Fo1Un9K7G2xSjnjMn7aPXfLTPCkb3cluIg
-xFWcXncbpeyrU73AS3I9FeGNbMa9xG9iklFBrCdFpeQU+KQGm/BigZ12ymb+0VBk
-Ny592PXXaa/y+tFOdreTu7gX2TF2Y0hoXYeOw847PIdJL14oWm1jSugi7nUSapoM
-KCXz9+QcLSNmjFhzrfbRjh/j9CSTp3BU00kl2GfO84nOqXfVAaIpgC7sNf3vkwL+
-oMzV1eK7KTwT5Ot3xDJ6XTKYOWgjKCOqgBW8wHhq9T5/OFPLM8/iecWwiP6xpf5S
-PryHTuCZaIcAPqoAIryGn9SwWUlEQkzz5z0/l8ybJZpjeQXq++c6qaWE+uRWeIim
-IBGSx8kweHEHy2qzCnSPrc45pU0UTRBcWji7XsXJVToZSxsrqcRytBu9UlcOm8VB
-9kCMiIdsqTPG7aEaCxHTfiBU3AUtusPYjIY3VNXQHk/CpcqN/T19JO7aaG0rroGI
-D5yl1Afmy22xD/c95o+Q8rtxBfqFmBiltNHktyAsPi5o9MFbdQtdZ3FqYEHskTFk
-Ia8cJZsdmf0eVqHVVNGR
-=smmk
------END PGP SIGNATURE-----
-
---=-zC7eTGCNtDeX7ZGFAIvU--
