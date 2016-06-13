@@ -1,75 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56839 "EHLO mx2.suse.de"
+Received: from foss.arm.com ([217.140.101.70]:53659 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751399AbcFGHoM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jun 2016 03:44:12 -0400
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v3 1/6] PCI: Add helpers to request/release memory and I/O regions
-Date: Tue,  7 Jun 2016 09:44:01 +0200
-Message-Id: <a671e7f69275a39dfc63f88fd0969d664c218cab.1465200424.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
+	id S1423015AbcFMRRw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jun 2016 13:17:52 -0400
+Date: Mon, 13 Jun 2016 18:18:23 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Auger Eric <eric.auger@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: LPC16 PCI microconference - Call for sessions proposals
+Message-ID: <20160613171823.GA29621@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add helpers to request and release a device's memory or I/O regions.
+Hi,
 
-With these helpers in place, one does not need to select a device's memory or
-I/O regions with pci_select_bars() prior to requesting or releasing them.
+following the official LPC16 PCI uconf acceptance notification:
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Christoph Hellwig <hch@infradead.org>
----
- include/linux/pci.h | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+https://www.linuxplumbersconf.org/2016/pci-microconference-accepted-into-2016-linux-plumbers-conference/
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 932ec74..9ee6569 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1401,6 +1401,34 @@ typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
- 		      unsigned int command_bits, u32 flags);
- void pci_register_set_vga_state(arch_set_vga_state_t func);
- 
-+static inline int
-+pci_request_io_regions(struct pci_dev *pdev, const char *name)
-+{
-+	return pci_request_selected_regions(pdev,
-+			    pci_select_bars(pdev, IORESOURCE_IO), name);
-+}
-+
-+static inline void
-+pci_release_io_regions(struct pci_dev *pdev)
-+{
-+	return pci_release_selected_regions(pdev,
-+			    pci_select_bars(pdev, IORESOURCE_IO));
-+}
-+
-+static inline int
-+pci_request_mem_regions(struct pci_dev *pdev, const char *name)
-+{
-+	return pci_request_selected_regions(pdev,
-+			    pci_select_bars(pdev, IORESOURCE_MEM), name);
-+}
-+
-+static inline void
-+pci_release_mem_regions(struct pci_dev *pdev)
-+{
-+	return pci_release_selected_regions(pdev,
-+			    pci_select_bars(pdev, IORESOURCE_MEM));
-+}
-+
- #else /* CONFIG_PCI is not enabled */
- 
- static inline void pci_set_flags(int flags) { }
--- 
-1.8.5.6
+I am sending out a call for sessions proposals open to all developers
+interested/involved in Linux kernel PCI development.
 
+The LPC16 uconf wiki provides a list of topics that we put forward for
+the microconference submission:
+
+http://wiki.linuxplumbersconf.org/2016:pci
+
+The wiki is there to provide a list of topics that we considered key
+and it should not be considered final, actually it is a starting point
+to define a possible schedule structure.
+
+Session proposals for the LPC16 PCI microconference are warmly encouraged
+and can be submitted here:
+
+http://www.linuxplumbersconf.org/2016/ocw/events/LPC2016/tracks/531
+
+Maintainers in CC, as an initial step we singled out the main subtracks
+below and I would be grateful if you could add a session through the link
+above and run the respective session (in brackets people whom I know are
+involved in the topic and are likely to be asked to run/take part in the
+session; NB: it is obviously incomplete, and it is based on what we
+could infer from current PCI related patches, please do manifest your
+interest):
+
+- PCI resources allocation/validation/cross-arch consolidation
+  ([Bjorn, Lorenzo, Yinghai, Benjamin, Jesse, Arnd])
+- PCI Virtualization (cross-topic)
+  ([Alex, Bjorn, Eric, Marc, Joerg, Will, David])
+- PCI MSI ([Alex, Eric, Marc])
+- PCI IOMMU ([Joerg, David, Jesse, Will, Marc])
+- PCIe (ATS, PRI) ([Jesse, Will])
+- PCIe root ports power management ([Rafael])
+- PCI DT/ACPI - consolidation ([Bjorn, Lorenzo, Arnd, Rob])
+
+Anyone involved in PCI kernel development, if you wish to add sessions and
+attend the microconference consider yourself welcome, for any questions
+just reply to this thread or drop me a line.
+
+Looking forward to meeting you all in Santa Fe for this interesting track !
+
+Lorenzo
