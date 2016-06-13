@@ -1,295 +1,192 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "liudongdong (C)" <liudongdong3@huawei.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org"
+	<hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com"
+	<Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>,
+        "tn@semihalf.com"
+	<tn@semihalf.com>
+CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "Liviu.Dudau@arm.com"
+	<Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com"
+	<ddaney@caviumnetworks.com>,
+        Wangyijing <wangyijing@huawei.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "linaro-acpi@lists.linaro.org"
+	<linaro-acpi@lists.linaro.org>,
+        "jcm@redhat.com" <jcm@redhat.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "dhdang@apm.com"
+	<dhdang@apm.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "cov@codeaurora.org" <cov@codeaurora.org>,
+        "Chenxin (Charles)"
+	<charles.chenxin@huawei.com>,
+        Linuxarm <linuxarm@huawei.com>
+Subject: RE: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
  against platfrom specific ECAM quirks
-To: Dongdong Liu <liudongdong3@huawei.com>, Duc Dang <dhdang@apm.com>
+Date: Mon, 13 Jun 2016 13:54:03 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
 References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
  <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
- <575ED57F.6050503@codeaurora.org>
- <CADaLNDkfKxxXWmG3eAawH1H=B+4ia6ZYh41anjTuOdTWGbhfNg@mail.gmail.com>
- <575F9B4D.8080501@huawei.com>
- <CADaLND=esW9rwrfdKtAvkyPhCs4F9hMH9LDY4DWTpOv0ZgoT9w@mail.gmail.com>
- <575FD253.3070508@huawei.com>
-Cc: Christopher Covington <cov@codeaurora.org>,
- Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
- Will Deacon <will.deacon@arm.com>, Catalin Marinas
- <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
- Hanjun Guo <hanjun.guo@linaro.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, okaya@codeaurora.org,
- Jayachandran C <jchandra@broadcom.com>, robert.richter@caviumnetworks.com,
- Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
- David Daney <ddaney@caviumnetworks.com>, Yijing Wang
- <wangyijing@huawei.com>,
- Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
- Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
- linux-arm <linux-arm-kernel@lists.infradead.org>,
- linux-acpi@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>,
- Andrea Gallo <andrea.gallo@linaro.org>, jeremy.linton@arm.com,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "Chenxin (Charles)" <charles.chenxin@huawei.com>,
- Linuxarm <linuxarm@huawei.com>, "liudong-1989@163.com" <liudong-1989@163.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <575FEFF1.9020105@semihalf.com>
-Date: Tue, 14 Jun 2016 13:52:17 +0200
+In-Reply-To: <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <575FD253.3070508@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14.06.2016 11:45, Dongdong Liu wrote:
-> Hi Duc
->
-> 在 2016/6/14 17:00, Duc Dang 写道:
->> On Mon, Jun 13, 2016 at 10:51 PM, Dongdong Liu
->> <liudongdong3@huawei.com> wrote:
->>> Hi Duc
->>>
->>> 在 2016/6/14 4:57, Duc Dang 写道:
->>>>
->>>> On Mon, Jun 13, 2016 at 8:47 AM, Christopher Covington
->>>> <cov@codeaurora.org> wrote:
->>>>>
->>>>> Hi Dongdong,
->>>>>
->>>>> On 06/13/2016 09:02 AM, Dongdong Liu wrote:
->>>>>>
->>>>>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->>>>>> index d3c3e85..49612b3 100644
->>>>>> --- a/drivers/acpi/pci_mcfg.c
->>>>>> +++ b/drivers/acpi/pci_mcfg.c
->>>>>> @@ -22,6 +22,10 @@
->>>>>>    #include <linux/kernel.h>
->>>>>>    #include <linux/pci.h>
->>>>>>    #include <linux/pci-acpi.h>
->>>>>> +#include <linux/pci-ecam.h>
->>>>>> +
->>>>>> +/* Root pointer to the mapped MCFG table */
->>>>>> +static struct acpi_table_mcfg *mcfg_table;
->>>>>>
->>>>>>    /* Structure to hold entries from the MCFG table */
->>>>>>    struct mcfg_entry {
->>>>>> @@ -35,6 +39,38 @@ struct mcfg_entry {
->>>>>>    /* List to save mcfg entries */
->>>>>>    static LIST_HEAD(pci_mcfg_list);
->>>>>>
->>>>>> +extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
->>>>>> +extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
->>>>>> +
->>>>>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
->>>>>> +{
->>>>>> +     int bus_num = root->secondary.start;
->>>>>> +     int domain = root->segment;
->>>>>> +     struct pci_cfg_fixup *f;
->>>>>> +
->>>>>> +     if (!mcfg_table)
->>>>>> +             return &pci_generic_ecam_ops;
->>>>>> +
->>>>>> +     /*
->>>>>> +      * Match against platform specific quirks and return
->>>>>> corresponding
->>>>>> +      * CAM ops.
->>>>>> +      *
->>>>>> +      * First match against PCI topology <domain:bus> then use
->>>>>> OEM ID
->>>>>> and
->>>>>> +      * OEM revision from MCFG table standard header.
->>>>>> +      */
->>>>>> +     for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
->>>>>> f++) {
->>>>>> +             if ((f->domain == domain || f->domain ==
->>>>>> PCI_MCFG_DOMAIN_ANY) &&
->>>>>> +                 (f->bus_num == bus_num || f->bus_num ==
->>>>>> PCI_MCFG_BUS_ANY) &&
->>>>>> +                 (!strncmp(f->oem_id, mcfg_table->header.oem_id,
->>>>>> +                           ACPI_OEM_ID_SIZE)) &&
->>>>>> +                 (!strncmp(f->oem_table_id,
->>>>>> mcfg_table->header.oem_table_id,
->>>>>> +                           ACPI_OEM_TABLE_ID_SIZE)))
->>>>>
->>>>>
->>>>> This would just be a small convenience, but if the character count
->>>>> used
->>>>> here were
->>>>>
->>>>> min(strlen(f->oem_id), ACPI_OEM_ID_SIZE)
->>>>>
->>>>> then the parameters to DECLARE_ACPI_MCFG_FIXUP macro could be
->>>>> substrings
->>>>> and
->>>>> wouldn't need to be padded out to the full length.
->>>>>
->>>>>> +                     return f->ops;
->>>>>> +     }
->>>>>> +     /* No quirks, use ECAM */
->>>>>> +     return &pci_generic_ecam_ops;
->>>>>> +}
->>>>>
->>>>>
->>>>>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->>>>>> index 7d63a66..088a1da 100644
->>>>>> --- a/include/linux/pci-acpi.h
->>>>>> +++ b/include/linux/pci-acpi.h
->>>>>> @@ -25,6 +25,7 @@ static inline acpi_status
->>>>>> pci_acpi_remove_pm_notifier(struct acpi_device *dev)
->>>>>>    extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle
->>>>>> handle);
->>>>>>
->>>>>>    extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource
->>>>>> *bus_res);
->>>>>> +extern struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root
->>>>>> *root);
->>>>>>
->>>>>>    static inline acpi_handle acpi_find_root_bridge_handle(struct
->>>>>> pci_dev
->>>>>> *pdev)
->>>>>>    {
->>>>>> @@ -72,6 +73,25 @@ struct acpi_pci_root_ops {
->>>>>>         int (*prepare_resources)(struct acpi_pci_root_info *info);
->>>>>>    };
->>>>>>
->>>>>> +struct pci_cfg_fixup {
->>>>>> +     struct pci_ecam_ops *ops;
->>>>>> +     char *oem_id;
->>>>>> +     char *oem_table_id;
->>>>>> +     int domain;
->>>>>> +     int bus_num;
->>>>>> +};
->>>>>> +
->>>>>> +#define PCI_MCFG_DOMAIN_ANY  -1
->>>>>> +#define PCI_MCFG_BUS_ANY     -1
->>>>>> +
->>>>>> +/* Designate a routine to fix up buggy MCFG */
->>>>>> +#define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, oem_table_id, dom,
->>>>>> bus) \
->>>>>> +     static const struct
->>>>>> pci_cfg_fixup                               \
->>>>>> +
->>>>>> __mcfg_fixup_##oem_id##oem_table_id##dom##bus                   \
->>>>>
->>>>>
->>>>> I'm not entirely sure that this is the right fix--I'm pretty blindly
->>>>> following a GCC documentation suggestion [1]--but removing the
->>>>> first two
->>>>> preprocessor concatenation operators "##" solved the following build
->>>>> error
->>>>> for me.
->>>>>
->>>>> include/linux/pci-acpi.h:90:2: error: pasting "__mcfg_fixup_" and
->>>>> ""QCOM"" does not give a valid preprocessing token
->>>>>     __mcfg_fixup_##oem_id##oem_table_id##dom##bus   \
->>>>
->>>>
->>>> I think the problem is gcc is not happy with quoted string when
->>>> processing these tokens
->>>> (""QCOM"", the extra "" are added by gcc). So should we not concat
->>>> string tokens and
->>>> use the fixup definition in v1 of this RFC:
->>>> /* Designate a routine to fix up buggy MCFG */
->>>> #define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, rev, dom,
->>>> bus)             \
->>>>           static const struct pci_cfg_fixup
->>>> __mcfg_fixup_##system##dom##bus\
->>>>            __used
->>>> __attribute__((__section__(".acpi_fixup_mcfg"),         \
->>>>                                   aligned((sizeof(void *)))))
->>>> =           \
->>>>           { ops, oem_id, rev, dom, bus };
->>>
->>>
->>> V1 fixup exist the redefinition error when compiling mutiple
->>> DECLARE_ACPI_MCFG_FIXUP
->>> with the same PCI_MCFG_DOMAIN_ANY and PCI_MCFG_BUS_ANY.
->>>
->>> #define EFI_ACPI_HISI_OEM_ID "HISI"
->>> #define EFI_ACPI_HISI_D02_OEM_TABLE_ID "HISI-D02"
->>> #define EFI_ACPI_HISI_D03_OEM_TABLE_ID "HISI-D03"
->>>
->>> DECLARE_ACPI_MCFG_FIXUP(&hisi_pcie_ecam_ops, EFI_ACPI_HISI_OEM_ID,
->>>         EFI_ACPI_HISI_D02_OEM_TABLE_ID, PCI_MCFG_DOMAIN_ANY,
->>> PCI_MCFG_BUS_ANY);
->>>
->>> DECLARE_ACPI_MCFG_FIXUP(&hisi_pcie_ecam_ops, EFI_ACPI_HISI_OEM_ID,
->>>         EFI_ACPI_HISI_D03_OEM_TABLE_ID, PCI_MCFG_DOMAIN_ANY,
->>> PCI_MCFG_BUS_ANY);
->>>
->>> In file included from drivers/pci/host/pcie-hisi-acpi.c:15:0:
->>> include/linux/pci-acpi.h:98:43: error: redefinition of
->>> '__mcfg_fixup_systemPCI_MCFG_DOMAIN_ANYPCI_MCFG_BUS_ANY'
->>>           static const struct pci_cfg_fixup
->>> __mcfg_fixup_##system##dom##bus\
->>>                                             ^
->>> drivers/pci/host/pcie-hisi-acpi.c:215:1: note: in expansion of macro
->>> 'DECLARE_ACPI_MCFG_FIXUP'
->>>   DECLARE_ACPI_MCFG_FIXUP(&hisi_pcie_ecam_ops, EFI_ACPI_HISI_OEM_ID,
->>>   ^
->>> include/linux/pci-acpi.h:98:43: note: previous definition of
->>> '__mcfg_fixup_systemPCI_MCFG_DOMAIN_ANYPCI_MCFG_BUS_ANY' was here
->>>           static const struct pci_cfg_fixup
->>> __mcfg_fixup_##system##dom##bus\
->>>                                             ^
->>> drivers/pci/host/pcie-hisi-acpi.c:212:1: note: in expansion of macro
->>> 'DECLARE_ACPI_MCFG_FIXUP'
->>>
->>>
->>> V2 fixup can resolve the redefinition error, but need to use macro.
->>> We can see that the name of macro is not replace with it's value in
->>> "__mcfg_fixup_EFI_ACPI_HISI_OEM_IDEFI_ACPI_HISI_D03_OEM_TABLE_IDPCI_MCFG_DOMAIN_ANYPCI_MCFG_BUS_ANY".
->>>
->>>
->>> Any good idea is appreciated.
->> Hmmm.
->>
->> I was testing # op and using min_t to get the min-len when doing
->> strncmp similar to Chris' suggestion (using min_t avoids type
->> warnings)
->>
->> /* Designate a routine to fix up buggy MCFG */
->> #define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, oem_table_id, rev, dom,
->> bus) \
->>          static const struct pci_cfg_fixup
->> __mcfg_fixup##oem_id##oem_table_id##rev##dom##bus\
->>           __used
->> __attribute__((__section__(".acpi_fixup_mcfg"),         \
->>                                  aligned((sizeof(void *)))))
->> =           \
->
->>          { ops, #oem_id, #oem_table_id, rev, dom, bus };
->
->
-> This should change to { ops, oem_id, oem_table_id, rev, dom, bus };
-> ‘#’ is not need.
-
-Both solutions are OK.
-
-1. This works when we use macros as OEM ID and OEM table ID:
-
-#define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, oem_table_id, rev, dom, bus)\
-	static const struct pci_cfg_fixup				\
-		__mcfg_fixup_##oem_id##oem_table_id##dom##bus		\
-	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
-				aligned((sizeof(void *))))) =		\
-	{ ops, oem_id, oem_table_id, rev, dom, bus };
-
-#define OEM_ID "XXXXXX"
-#define OEM_TABLE_ID "YYYYYYYY"
-
-DECLARE_ACPI_MCFG_FIXUP(&quirk_ops, OEM_ID, OEM_TABLE_ID, 1, 
-PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
-
-2. This works w/o macro which means we need to define OEM ID and OEM as 
-string w/o quotation marks:
-
-#define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, oem_table_id, rev, dom, bus)\
-static const struct pci_cfg_fixup \
-__mcfg_fixup_##oem_id##oem_table_id##dom##bus \
-__used __attribute__((__section__(".acpi_fixup_mcfg"), \
-aligned((sizeof(void *))))) = \
-{ ops, #oem_id, #oem_table_id, rev, dom, bus };
-
-DECLARE_ACPI_MCFG_FIXUP(&quirk_ops, XXXXXX, YYYYYYYY, 1, 
-PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
-
-Personally I think that (2) is better, no need for macro definitions.
-Tomasz
+SGkgVG9tYXN6LCBKb24NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBs
+aXVkb25nZG9uZyAoQykNCj4gU2VudDogMTMgSnVuZSAyMDE2IDE0OjAyDQo+IFRvOiBoZWxnYWFz
+QGtlcm5lbC5vcmc7IGFybmRAYXJuZGIuZGU7IHdpbGwuZGVhY29uQGFybS5jb207DQo+IGNhdGFs
+aW4ubWFyaW5hc0Bhcm0uY29tOyByYWZhZWxAa2VybmVsLm9yZzsgaGFuanVuLmd1b0BsaW5hcm8u
+b3JnOw0KPiBMb3JlbnpvLlBpZXJhbGlzaUBhcm0uY29tOyBva2F5YUBjb2RlYXVyb3JhLm9yZzsg
+amNoYW5kcmFAYnJvYWRjb20uY29tOw0KPiB0bkBzZW1paGFsZi5jb20NCj4gQ2M6IHJvYmVydC5y
+aWNodGVyQGNhdml1bW5ldHdvcmtzLmNvbTsgbXdAc2VtaWhhbGYuY29tOw0KPiBMaXZpdS5EdWRh
+dUBhcm0uY29tOyBkZGFuZXlAY2F2aXVtbmV0d29ya3MuY29tOyBXYW5neWlqaW5nOw0KPiBTdXJh
+dmVlLlN1dGhpa3VscGFuaXRAYW1kLmNvbTsgbXNhbHRlckByZWRoYXQuY29tOyBsaW51eC0NCj4g
+cGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
+OyBsaW51eC0NCj4gYWNwaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
+bC5vcmc7IGxpbmFyby0NCj4gYWNwaUBsaXN0cy5saW5hcm8ub3JnOyBqY21AcmVkaGF0LmNvbTsg
+YW5kcmVhLmdhbGxvQGxpbmFyby5vcmc7DQo+IGRoZGFuZ0BhcG0uY29tOyBqZXJlbXkubGludG9u
+QGFybS5jb207IGxpdWRvbmdkb25nIChDKTsNCj4gY292QGNvZGVhdXJvcmEub3JnOyBHYWJyaWVs
+ZSBQYW9sb25pOyBDaGVueGluIChDaGFybGVzKTsgTGludXhhcm0NCj4gU3ViamVjdDogW1JGQyBQ
+QVRDSCBWMiAxLzJdIEFDUEkvUENJOiBNYXRjaCBQQ0kgY29uZmlnIHNwYWNlIGFjY2Vzc29ycw0K
+PiBhZ2FpbnN0IHBsYXRmcm9tIHNwZWNpZmljIEVDQU0gcXVpcmtzDQo+IA0KPiBGcm9tOiBUb21h
+c3ogTm93aWNraSA8dG5Ac2VtaWhhbGYuY29tPg0KPiANCj4gU29tZSBwbGF0Zm9ybXMgbWF5IG5v
+dCBiZSBmdWxseSBjb21wbGlhbnQgd2l0aCBnZW5lcmljIHNldCBvZiBQQ0kNCj4gY29uZmlnDQo+
+IGFjY2Vzc29ycy4gRm9yIHRoZXNlIGNhc2VzIHdlIGltcGxlbWVudCB0aGUgd2F5IHRvIG92ZXJ3
+cml0ZSBhY2Nlc3NvcnMNCj4gc2V0LiBBbGdvcml0aG0gdHJhdmVyc2VzIGF2YWlsYWJsZSBxdWly
+ayBsaXN0LCBtYXRjaGVzIGFnYWluc3QNCj4gPG9lbV9pZCwgb2VtX3RhYmxlX2lkLCBkb21haW4s
+IGJ1cyBudW1iZXI+IHR1cGxlIGFuZCByZXR1cm5zDQo+IGNvcnJlc3BvbmRpbmcNCj4gUENJIGNv
+bmZpZyBvcHMuIG9lbV9pZCBhbmQgb2VtX3RhYmxlX2lkIGNvbWUgZnJvbSBNQ0ZHIHRhYmxlIHN0
+YW5kYXJkDQo+IGhlYWRlci4NCj4gQWxsIHF1aXJrcyBjYW4gYmUgZGVmaW5lZCB1c2luZyBERUNM
+QVJFX0FDUElfTUNGR19GSVhVUCgpIG1hY3JvIGFuZA0KPiBrZXB0IHNlbGYgY29udGFpbmVkLiBF
+eGFtcGxlOg0KPiANCj4gLyogQ3VzdG9tIFBDSSBjb25maWcgb3BzICovDQo+IHN0YXRpYyBzdHJ1
+Y3QgcGNpX2dlbmVyaWNfZWNhbV9vcHMgZm9vX3BjaV9vcHMgPSB7DQo+IAkuYnVzX3NoaWZ0CT0g
+MjQsDQo+IAkucGNpX29wcyA9IHsNCj4gCQkubWFwX2J1cyA9IHBjaV9lY2FtX21hcF9idXMsDQo+
+IAkJLnJlYWQgPSBmb29fZWNhbV9jb25maWdfcmVhZCwNCj4gCQkud3JpdGUgPSBmb29fZWNhbV9j
+b25maWdfd3JpdGUsDQo+IAl9DQo+IH07DQo+IA0KPiBERUNMQVJFX0FDUElfTUNGR19GSVhVUCgm
+Zm9vX3BjaV9vcHMsIDxvZW1faWRfc3RyPiwgPG9lbV90YWJsZV9pZD4sDQo+IDxkb21haW5fbnI+
+LCA8YnVzX25yPik7DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBUb21hc3ogTm93aWNraSA8dG5Ac2Vt
+aWhhbGYuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBEb25nZG9uZyBMaXUgPGxpdWRvbmdkb25nM0Bo
+dWF3ZWkuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvYWNwaS9wY2lfbWNmZy5jICAgICAgICAgICB8
+IDQxDQo+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLQ0KPiAgaW5jbHVk
+ZS9hc20tZ2VuZXJpYy92bWxpbnV4Lmxkcy5oIHwgIDcgKysrKysrKw0KPiAgaW5jbHVkZS9saW51
+eC9wY2ktYWNwaS5oICAgICAgICAgIHwgMjAgKysrKysrKysrKysrKysrKysrKw0KPiAgMyBmaWxl
+cyBjaGFuZ2VkLCA2NSBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvYWNwaS9wY2lfbWNmZy5jIGIvZHJpdmVycy9hY3BpL3BjaV9tY2ZnLmMN
+Cj4gaW5kZXggZDNjM2U4NS4uNDk2MTJiMyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9hY3BpL3Bj
+aV9tY2ZnLmMNCj4gKysrIGIvZHJpdmVycy9hY3BpL3BjaV9tY2ZnLmMNCj4gQEAgLTIyLDYgKzIy
+LDEwIEBADQo+ICAjaW5jbHVkZSA8bGludXgva2VybmVsLmg+DQo+ICAjaW5jbHVkZSA8bGludXgv
+cGNpLmg+DQo+ICAjaW5jbHVkZSA8bGludXgvcGNpLWFjcGkuaD4NCj4gKyNpbmNsdWRlIDxsaW51
+eC9wY2ktZWNhbS5oPg0KPiArDQo+ICsvKiBSb290IHBvaW50ZXIgdG8gdGhlIG1hcHBlZCBNQ0ZH
+IHRhYmxlICovDQo+ICtzdGF0aWMgc3RydWN0IGFjcGlfdGFibGVfbWNmZyAqbWNmZ190YWJsZTsN
+Cj4gDQo+ICAvKiBTdHJ1Y3R1cmUgdG8gaG9sZCBlbnRyaWVzIGZyb20gdGhlIE1DRkcgdGFibGUg
+Ki8NCj4gIHN0cnVjdCBtY2ZnX2VudHJ5IHsNCj4gQEAgLTM1LDYgKzM5LDM4IEBAIHN0cnVjdCBt
+Y2ZnX2VudHJ5IHsNCj4gIC8qIExpc3QgdG8gc2F2ZSBtY2ZnIGVudHJpZXMgKi8NCj4gIHN0YXRp
+YyBMSVNUX0hFQUQocGNpX21jZmdfbGlzdCk7DQo+IA0KPiArZXh0ZXJuIHN0cnVjdCBwY2lfY2Zn
+X2ZpeHVwIF9fc3RhcnRfYWNwaV9tY2ZnX2ZpeHVwc1tdOw0KPiArZXh0ZXJuIHN0cnVjdCBwY2lf
+Y2ZnX2ZpeHVwIF9fZW5kX2FjcGlfbWNmZ19maXh1cHNbXTsNCj4gKw0KPiArc3RydWN0IHBjaV9l
+Y2FtX29wcyAqcGNpX21jZmdfZ2V0X29wcyhzdHJ1Y3QgYWNwaV9wY2lfcm9vdCAqcm9vdCkNCj4g
+K3sNCj4gKwlpbnQgYnVzX251bSA9IHJvb3QtPnNlY29uZGFyeS5zdGFydDsNCj4gKwlpbnQgZG9t
+YWluID0gcm9vdC0+c2VnbWVudDsNCj4gKwlzdHJ1Y3QgcGNpX2NmZ19maXh1cCAqZjsNCj4gKw0K
+PiArCWlmICghbWNmZ190YWJsZSkNCj4gKwkJcmV0dXJuICZwY2lfZ2VuZXJpY19lY2FtX29wczsN
+Cj4gKw0KPiArCS8qDQo+ICsJICogTWF0Y2ggYWdhaW5zdCBwbGF0Zm9ybSBzcGVjaWZpYyBxdWly
+a3MgYW5kIHJldHVybg0KPiBjb3JyZXNwb25kaW5nDQo+ICsJICogQ0FNIG9wcy4NCj4gKwkgKg0K
+PiArCSAqIEZpcnN0IG1hdGNoIGFnYWluc3QgUENJIHRvcG9sb2d5IDxkb21haW46YnVzPiB0aGVu
+IHVzZSBPRU0gSUQNCj4gYW5kDQo+ICsJICogT0VNIHJldmlzaW9uIGZyb20gTUNGRyB0YWJsZSBz
+dGFuZGFyZCBoZWFkZXIuDQo+ICsJICovDQo+ICsJZm9yIChmID0gX19zdGFydF9hY3BpX21jZmdf
+Zml4dXBzOyBmIDwgX19lbmRfYWNwaV9tY2ZnX2ZpeHVwczsNCj4gZisrKSB7DQo+ICsJCWlmICgo
+Zi0+ZG9tYWluID09IGRvbWFpbiB8fCBmLT5kb21haW4gPT0NCj4gUENJX01DRkdfRE9NQUlOX0FO
+WSkgJiYNCj4gKwkJICAgIChmLT5idXNfbnVtID09IGJ1c19udW0gfHwgZi0+YnVzX251bSA9PQ0K
+PiBQQ0lfTUNGR19CVVNfQU5ZKSAmJg0KPiArCQkgICAgKCFzdHJuY21wKGYtPm9lbV9pZCwgbWNm
+Z190YWJsZS0+aGVhZGVyLm9lbV9pZCwNCj4gKwkJCSAgICAgIEFDUElfT0VNX0lEX1NJWkUpKSAm
+Jg0KPiArCQkgICAgKCFzdHJuY21wKGYtPm9lbV90YWJsZV9pZCwgbWNmZ190YWJsZS0NCj4gPmhl
+YWRlci5vZW1fdGFibGVfaWQsDQo+ICsJCQkgICAgICBBQ1BJX09FTV9UQUJMRV9JRF9TSVpFKSkp
+DQoNCkFzIHlvdSBjYW4gc2VlIGhlcmUgTGl1ZG9uZ2RvbmcgaGFzIHJlcGxhY2VkIG9lbV9yZXZp
+c2lvbiB3aXRoDQpvZW1fdGFibGVfaWQuDQoNCk5vdyBpdCBzZWVtcyB0aGF0IHRoZXJlIGFyZSBz
+b21lIHBsYXRmb3JtcyB0aGF0IGhhdmUgYWxyZWFkeSBzaGlwcGVkDQp1c2luZyBhIG1hdGNoaW5n
+IGJhc2VkIG9uIHRoZSBvZW1fcmV2aXNpb24gKHJpZ2h0IEpvbj8pDQoNCkhvd2V2ZXIgSSBndWVz
+cyB0aGF0IGlmIGluIEZXIHRoZXkgaGF2ZSBkZWZpbmVkIG9lbV90YWJsZV9pZCBwcm9wZXJseQ0K
+dGhleSBzaG91bGQgYmUgYWJsZSB0byB1c2UgdGhpcyBtZWNoYW5pc20gd2l0aG91dCBuZWVkaW5n
+IHRvIGEgRlcgdXBkYXRlLg0KDQpDYW4gdGhlc2UgdmVuZG9ycyBjb25maXJtIHRoaXM/DQoNClRv
+bWFzeiBkbyB5b3UgdGhpbmsgdGhpcyBjYW4gd29yayBmb3IgQ2F2aXVtIFRodW5kZXI/DQoNClRo
+YW5rcw0KDQpHYWINCg0KDQo+ICsJCQlyZXR1cm4gZi0+b3BzOw0KPiArCX0NCj4gKwkvKiBObyBx
+dWlya3MsIHVzZSBFQ0FNICovDQo+ICsJcmV0dXJuICZwY2lfZ2VuZXJpY19lY2FtX29wczsNCj4g
+K30NCj4gKw0KPiAgcGh5c19hZGRyX3QgcGNpX21jZmdfbG9va3VwKHUxNiBzZWcsIHN0cnVjdCBy
+ZXNvdXJjZSAqYnVzX3JlcykNCj4gIHsNCj4gIAlzdHJ1Y3QgbWNmZ19lbnRyeSAqZTsNCj4gQEAg
+LTU0LDcgKzkwLDYgQEAgcGh5c19hZGRyX3QgcGNpX21jZmdfbG9va3VwKHUxNiBzZWcsIHN0cnVj
+dCByZXNvdXJjZQ0KPiAqYnVzX3JlcykNCj4gDQo+ICBzdGF0aWMgX19pbml0IGludCBwY2lfbWNm
+Z19wYXJzZShzdHJ1Y3QgYWNwaV90YWJsZV9oZWFkZXIgKmhlYWRlcikNCj4gIHsNCj4gLQlzdHJ1
+Y3QgYWNwaV90YWJsZV9tY2ZnICptY2ZnOw0KPiAgCXN0cnVjdCBhY3BpX21jZmdfYWxsb2NhdGlv
+biAqbXB0cjsNCj4gIAlzdHJ1Y3QgbWNmZ19lbnRyeSAqZSwgKmFycjsNCj4gIAlpbnQgaSwgbjsN
+Cj4gQEAgLTY0LDggKzk5LDggQEAgc3RhdGljIF9faW5pdCBpbnQgcGNpX21jZmdfcGFyc2Uoc3Ry
+dWN0DQo+IGFjcGlfdGFibGVfaGVhZGVyICpoZWFkZXIpDQo+IA0KPiAgCW4gPSAoaGVhZGVyLT5s
+ZW5ndGggLSBzaXplb2Yoc3RydWN0IGFjcGlfdGFibGVfbWNmZykpIC8NCj4gIAkJCQkJc2l6ZW9m
+KHN0cnVjdCBhY3BpX21jZmdfYWxsb2NhdGlvbik7DQo+IC0JbWNmZyA9IChzdHJ1Y3QgYWNwaV90
+YWJsZV9tY2ZnICopaGVhZGVyOw0KPiAtCW1wdHIgPSAoc3RydWN0IGFjcGlfbWNmZ19hbGxvY2F0
+aW9uICopICZtY2ZnWzFdOw0KPiArCW1jZmdfdGFibGUgPSAoc3RydWN0IGFjcGlfdGFibGVfbWNm
+ZyAqKWhlYWRlcjsNCj4gKwltcHRyID0gKHN0cnVjdCBhY3BpX21jZmdfYWxsb2NhdGlvbiAqKSAm
+bWNmZ190YWJsZVsxXTsNCj4gDQo+ICAJYXJyID0ga2NhbGxvYyhuLCBzaXplb2YoKmFyciksIEdG
+UF9LRVJORUwpOw0KPiAgCWlmICghYXJyKQ0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9hc20tZ2Vu
+ZXJpYy92bWxpbnV4Lmxkcy5oIGIvaW5jbHVkZS9hc20tDQo+IGdlbmVyaWMvdm1saW51eC5sZHMu
+aA0KPiBpbmRleCA2YTY3YWI5Li40MzYwNGZjIDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL2FzbS1n
+ZW5lcmljL3ZtbGludXgubGRzLmgNCj4gKysrIGIvaW5jbHVkZS9hc20tZ2VuZXJpYy92bWxpbnV4
+Lmxkcy5oDQo+IEBAIC0zMDAsNiArMzAwLDEzIEBADQo+ICAJCVZNTElOVVhfU1lNQk9MKF9fZW5k
+X3BjaV9maXh1cHNfc3VzcGVuZF9sYXRlKSA9IC47CVwNCj4gIAl9CQkJCQkJCQlcDQo+ICAJCQkJ
+CQkJCQlcDQo+ICsJLyogQUNQSSBNQ0ZHIHF1aXJrcyAqLwkJCQkJCVwNCj4gKwkuYWNwaV9maXh1
+cCAgICAgICAgOiBBVChBRERSKC5hY3BpX2ZpeHVwKSAtIExPQURfT0ZGU0VUKSB7CVwNCj4gKwkJ
+Vk1MSU5VWF9TWU1CT0woX19zdGFydF9hY3BpX21jZmdfZml4dXBzKSA9IC47CQlcDQo+ICsJCSoo
+LmFjcGlfZml4dXBfbWNmZykJCQkJCVwNCj4gKwkJVk1MSU5VWF9TWU1CT0woX19lbmRfYWNwaV9t
+Y2ZnX2ZpeHVwcykgPSAuOwkJXA0KPiArCX0JCQkJCQkJCVwNCj4gKwkJCQkJCQkJCVwNCj4gIAkv
+KiBCdWlsdC1pbiBmaXJtd2FyZSBibG9icyAqLwkJCQkJXA0KPiAgCS5idWlsdGluX2Z3ICAgICAg
+ICA6IEFUKEFERFIoLmJ1aWx0aW5fZncpIC0gTE9BRF9PRkZTRVQpIHsJXA0KPiAgCQlWTUxJTlVY
+X1NZTUJPTChfX3N0YXJ0X2J1aWx0aW5fZncpID0gLjsJCQlcDQo+IGRpZmYgLS1naXQgYS9pbmNs
+dWRlL2xpbnV4L3BjaS1hY3BpLmggYi9pbmNsdWRlL2xpbnV4L3BjaS1hY3BpLmgNCj4gaW5kZXgg
+N2Q2M2E2Ni4uMDg4YTFkYSAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9saW51eC9wY2ktYWNwaS5o
+DQo+ICsrKyBiL2luY2x1ZGUvbGludXgvcGNpLWFjcGkuaA0KPiBAQCAtMjUsNiArMjUsNyBAQCBz
+dGF0aWMgaW5saW5lIGFjcGlfc3RhdHVzDQo+IHBjaV9hY3BpX3JlbW92ZV9wbV9ub3RpZmllcihz
+dHJ1Y3QgYWNwaV9kZXZpY2UgKmRldikNCj4gIGV4dGVybiBwaHlzX2FkZHJfdCBhY3BpX3BjaV9y
+b290X2dldF9tY2ZnX2FkZHIoYWNwaV9oYW5kbGUgaGFuZGxlKTsNCj4gDQo+ICBleHRlcm4gcGh5
+c19hZGRyX3QgcGNpX21jZmdfbG9va3VwKHUxNiBkb21haW4sIHN0cnVjdCByZXNvdXJjZQ0KPiAq
+YnVzX3Jlcyk7DQo+ICtleHRlcm4gc3RydWN0IHBjaV9lY2FtX29wcyAqcGNpX21jZmdfZ2V0X29w
+cyhzdHJ1Y3QgYWNwaV9wY2lfcm9vdA0KPiAqcm9vdCk7DQo+IA0KPiAgc3RhdGljIGlubGluZSBh
+Y3BpX2hhbmRsZSBhY3BpX2ZpbmRfcm9vdF9icmlkZ2VfaGFuZGxlKHN0cnVjdCBwY2lfZGV2DQo+
+ICpwZGV2KQ0KPiAgew0KPiBAQCAtNzIsNiArNzMsMjUgQEAgc3RydWN0IGFjcGlfcGNpX3Jvb3Rf
+b3BzIHsNCj4gIAlpbnQgKCpwcmVwYXJlX3Jlc291cmNlcykoc3RydWN0IGFjcGlfcGNpX3Jvb3Rf
+aW5mbyAqaW5mbyk7DQo+ICB9Ow0KPiANCj4gK3N0cnVjdCBwY2lfY2ZnX2ZpeHVwIHsNCj4gKwlz
+dHJ1Y3QgcGNpX2VjYW1fb3BzICpvcHM7DQo+ICsJY2hhciAqb2VtX2lkOw0KPiArCWNoYXIgKm9l
+bV90YWJsZV9pZDsNCj4gKwlpbnQgZG9tYWluOw0KPiArCWludCBidXNfbnVtOw0KPiArfTsNCj4g
+Kw0KPiArI2RlZmluZSBQQ0lfTUNGR19ET01BSU5fQU5ZCS0xDQo+ICsjZGVmaW5lIFBDSV9NQ0ZH
+X0JVU19BTlkJLTENCj4gKw0KPiArLyogRGVzaWduYXRlIGEgcm91dGluZSB0byBmaXggdXAgYnVn
+Z3kgTUNGRyAqLw0KPiArI2RlZmluZSBERUNMQVJFX0FDUElfTUNGR19GSVhVUChvcHMsIG9lbV9p
+ZCwgb2VtX3RhYmxlX2lkLCBkb20sIGJ1cykNCj4gCVwNCj4gKwlzdGF0aWMgY29uc3Qgc3RydWN0
+IHBjaV9jZmdfZml4dXAJCQkJXA0KPiArCV9fbWNmZ19maXh1cF8jI29lbV9pZCMjb2VtX3RhYmxl
+X2lkIyNkb20jI2J1cwkJCVwNCj4gKwlfX3VzZWQJX19hdHRyaWJ1dGVfXygoX19zZWN0aW9uX18o
+Ii5hY3BpX2ZpeHVwX21jZmciKSwNCj4gCVwNCj4gKwkJCQlhbGlnbmVkKChzaXplb2Yodm9pZCAq
+KSkpKSkgPQkJXA0KPiArCXsgb3BzLCBvZW1faWQsIG9lbV90YWJsZV9pZCwgZG9tLCBidXMgfTsN
+Cj4gKw0KPiAgZXh0ZXJuIGludCBhY3BpX3BjaV9wcm9iZV9yb290X3Jlc291cmNlcyhzdHJ1Y3Qg
+YWNwaV9wY2lfcm9vdF9pbmZvDQo+ICppbmZvKTsNCj4gIGV4dGVybiBzdHJ1Y3QgcGNpX2J1cyAq
+YWNwaV9wY2lfcm9vdF9jcmVhdGUoc3RydWN0IGFjcGlfcGNpX3Jvb3QgKnJvb3QsDQo+ICAJCQkJ
+CSAgICBzdHJ1Y3QgYWNwaV9wY2lfcm9vdF9vcHMgKm9wcywNCj4gLS0NCj4gMS45LjENCg0K
