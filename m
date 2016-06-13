@@ -1,179 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH v2 11/15] drivers: iommu: arm-smmu-v3: add IORT iommu configuration
-Date: Tue,  7 Jun 2016 14:31:06 +0100
-Message-Id: <1465306270-27076-12-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 13 Jun 2016 10:55:31 +0530
+From: Vinod Koul <vinod.koul@intel.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>,
+	"dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>
+Subject: Re: PCIe EndPoint DMA driver with DMA Framework
+Message-ID: <20160613052531.GZ16910@localhost>
+References: <8520D5D51A55D047800579B094147198258B267B@XAP-PVEXMBX01.xlnx.xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8520D5D51A55D047800579B094147198258B267B@XAP-PVEXMBX01.xlnx.xilinx.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In ACPI bases systems, in order to be able to create platform
-devices and initialize them for arm-smmu-v3 components, the IORT
-infrastructure requires ARM SMMU drivers to initialize a set of
-operations that are used by the IORT kernel layer to configure platform
-devices for ARM SMMU components in turn.
+On Fri, Jun 10, 2016 at 03:39:15PM +0000, Bharat Kumar Gogada wrote:
+> Hi,
+> 
 
-This patch adds the IORT IOMMU configuration for the ARM SMMU v3 kernel
-driver.
+PLEASE wrap your replied to 80 chars..  I have reflown below..
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/arm-smmu-v3.c | 101 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iort.h        |  12 +++++-
- 2 files changed, 112 insertions(+), 1 deletion(-)
+> We are planning to write a PCIe EndPoint DMA driver with DMA Framework
+> targeting x86 machine.  (
+> "https://www.kernel.org/doc/Documentation/dmaengine/provider.txt") Our DMA
+> controller is part of PCIe End Point.  We are targeting to measure PCIe
+> performance with this Framework driver.
+> 
+> But when I see DMA Framework drivers is kernel source "drivers/dma" most
+> of the drivers are platform drivers.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 90745a8..7acb6b5 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2687,6 +2687,107 @@ static int __init arm_smmu_of_init(struct device_node *np)
- }
- IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
- 
-+#ifdef CONFIG_ACPI
-+static int acpi_smmu_init(struct acpi_iort_node *node)
-+{
-+	iort_smmu_set_ops(node, &arm_smmu_ops, NULL);
-+
-+	return 0;
-+}
-+
-+static void acpi_smmu_register_irq(int hwirq, const char *name,
-+				   struct resource *res)
-+{
-+	int irq = acpi_register_gsi(NULL, hwirq, ACPI_EDGE_SENSITIVE,
-+				    ACPI_ACTIVE_HIGH);
-+
-+	if (irq < 0) {
-+		pr_err("could not register gsi hwirq %d name [%s]\n", hwirq,
-+								      name);
-+		return;
-+	}
-+
-+	res->start = irq;
-+	res->end = irq;
-+	res->flags = IORESOURCE_IRQ;
-+	res->name = name;
-+}
-+
-+static int arm_smmu_count_resources(struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu_v3 *smmu;
-+	/* Always present mem resource */
-+	int num_res = 1;
-+
-+	/* Retrieve SMMUv3 specific data */
-+	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	if (smmu->event_gsiv)
-+		num_res++;
-+
-+	if (smmu->pri_gsiv)
-+		num_res++;
-+
-+	if (smmu->gerr_gsiv)
-+		num_res++;
-+
-+	if (smmu->sync_gsiv)
-+		num_res++;
-+
-+	return num_res;
-+}
-+
-+static void arm_smmu_init_resources(struct resource *res,
-+				    struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu_v3 *smmu;
-+	int num_res = 0;
-+
-+	/* Retrieve SMMUv3 specific data */
-+	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	res[num_res].start = smmu->base_address;
-+	res[num_res].end = smmu->base_address + SZ_128K - 1;
-+	res[num_res].flags = IORESOURCE_MEM;
-+
-+	num_res++;
-+
-+	if (smmu->event_gsiv)
-+		acpi_smmu_register_irq(smmu->event_gsiv, "eventq",
-+				       &res[num_res++]);
-+
-+	if (smmu->pri_gsiv)
-+		acpi_smmu_register_irq(smmu->pri_gsiv, "priq",
-+				       &res[num_res++]);
-+
-+	if (smmu->gerr_gsiv)
-+		acpi_smmu_register_irq(smmu->gerr_gsiv, "gerror",
-+				       &res[num_res++]);
-+
-+	if (smmu->sync_gsiv)
-+		acpi_smmu_register_irq(smmu->sync_gsiv, "cmdq-sync",
-+				       &res[num_res++]);
-+}
-+
-+static bool arm_smmu_is_coherent(struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_smmu_v3 *smmu;
-+
-+	/* Retrieve SMMUv3 specific data */
-+	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-+
-+	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
-+}
-+
-+const struct iort_iommu_config iort_arm_smmu_v3_cfg = {
-+	.name = "arm-smmu-v3",
-+	.iommu_init = acpi_smmu_init,
-+	.iommu_is_coherent = arm_smmu_is_coherent,
-+	.iommu_count_resources = arm_smmu_count_resources,
-+	.iommu_init_resources = arm_smmu_init_resources
-+};
-+#endif
-+
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
- MODULE_LICENSE("GPL v2");
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index ced3054..5dcfa09 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -55,7 +55,17 @@ struct iort_iommu_config {
- static inline const struct iort_iommu_config *
- iort_get_iommu_config(struct acpi_iort_node *node)
- {
--	return NULL;
-+	switch (node->type) {
-+#if IS_ENABLED(CONFIG_ARM_SMMU_V3)
-+	case ACPI_IORT_NODE_SMMU_V3: {
-+		extern const struct iort_iommu_config iort_arm_smmu_v3_cfg;
-+
-+		return &iort_arm_smmu_v3_cfg;
-+	}
-+#endif
-+	default:
-+		return NULL;
-+	}
- }
- 
- #endif /* __IORT_H__ */
+wrong, there are bunch of PCI X86 driver. Look closely dw, ioat etc
+> 
+> So DMA Framework is mainly targeted for platform drivers?
+
+First it is dmaengine framework.
+
+And your assumption is wrong, btw did you see anything is dmaengine APIs
+to make the assumption that dmaengine frameowrk is suited for platform
+drivers. The frameworks do not care which type of device you have.
+
+> 
+> With current design model we need to have one DMA controller driver and
+> PCIe EP client driver?
+
+That depends on what you are trying to do but yes the dmaengine driver
+will provide dma services and a client needs to use it
+
+> 
+> In which part of kernel source PCIe EP client driver will go?
+
+whatever that client is trying to do DMA for. If its network then it
+should go in network.
+
+What exactly are you trying to do?
+
+> 
+> Can we use DMA Framework on x86 ?
+
+And asking same question multiple times does not change the answer, which is
+yes.
+
+> 
+> Thanks & Regards, Bharat
+> 
+> 
+> 
+> This email and any attachments are intended for the sole use of the named
+> recipient(s) and contain(s) confidential information that may be
+> proprietary, privileged or copyrighted under applicable law. If you are
+> not the intended recipient, do not read, copy, or forward this email
+> message or any attachments. Delete this email message and any attachments
+> immediately.
+
+What confidential information you have here?
+
 -- 
-2.6.4
-
+~Vinod
