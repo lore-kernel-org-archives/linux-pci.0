@@ -1,87 +1,44 @@
-Return-Path: <jonathan.yong@intel.com>
-Return-Path: <jonathan.yong@intel.com>
-Message-ID: <575E2184.6090701@intel.com>
-Date: Mon, 13 Jun 2016 10:59:16 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42952 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423152AbcFMS4v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jun 2016 14:56:51 -0400
+Date: Mon, 13 Jun 2016 13:56:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Yong, Jonathan" <jonathan.yong@intel.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
 Subject: Re: [PATCH v5] PCI: PTM preliminary implementation
-References: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com> <1462956446-27361-2-git-send-email-jonathan.yong@intel.com> <20160612221847.GM16462@localhost>
-In-Reply-To: <20160612221847.GM16462@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-ID: <20160613185648.GA6901@localhost>
+References: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com>
+ <1462956446-27361-2-git-send-email-jonathan.yong@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462956446-27361-2-git-send-email-jonathan.yong@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/13/2016 06:18, Bjorn Helgaas wrote:
->
-> I'm still trying to understand what PTM should look like from the
-> driver's perspective.  I know the PCIe spec doesn't define any way to
-> initiate PTM dialogs or read the results.  But I don't know what the
-> intended usage model is and how the device, driver, and PCI core
-> pieces should fit together.
->
-> - Do we expect endpoints to notice that PTM is enabled and
-> automatically start using it, without the driver doing anything?
-> Would driver changes be needed, e.g., to tell the device to add
-> timestamps to network packet DMAs?
->
+On Wed, May 11, 2016 at 08:47:26AM +0000, Yong, Jonathan wrote:
+> Simplified Precision Time Measurement driver, activates PTM feature
+> if a PCIe PTM requester (as per PCI Express 3.1 Base Specification
+> section 7.32)is found, but not before checking if the rest of the
+> PCI hierarchy can support it.
+> 
+> The driver does not take part in facilitating PTM conversations,
+> neither does it provide any useful services, it is only responsible
+> for setting up the required configuration space bits.
 
-As far as I understand, it is a flag to tell the device that it may 
-begin using PTM to synchronize the on-board clock with PTM. From the 
-text in the specification (6.22.3.1 PTM Requester Role):
+I'm not convinced we should blindly enable PTM on every device that
+supports it (especially endpoints), and I think the logic here is more
+complicated than necessary.
 
-PTM Requesters are permitted to request PTM Master Time only when PTM is 
-enabled. The mechanism for directing a PTM Requester to issue such a 
-request is implementation specific.
+I'm going to post a v6 as a draft.  My draft is probably not
+complicated *enough*, but maybe we can figure out some point
+in the middle.
 
-If any, there won't be a generic way to trigger a PTM conversation.
+I'm also a little confused about how Root Complex Integrated Endpoints
+are supposed to use PTM, since they don't have an upstream bridge.
+Maybe it has to do with an RCRB (Root Complex Register Block, spec
+r3.1, sec 7.2.3)?  I don't think Linux really has any support for that
+(yet).
 
-> - Should there be a pci_enable_ptm() interface for a driver to
-> enable PTM for its device?  If PTM isn't useful without driver
-> changes, e.g., to tell the device to add timestamps, we probably
-> should have such an interface so we don't enable PTM when it won't be
-> useful.
->
-> - If the PCI core instead enables PTM automatically whenever
-> possible (as in the current patch), what performance impact do we
-> expect?  I know you probably can't measure it yet, but can we at
-> least calculate the worst-case bandwidth usage, based on the message
-> size and frequency?  I previously assumed it would be small, but I
-> hate to give up *any* performance unless there is some benefit.
->
-
-If the driver is already utilizing timestamps from the device, it would 
-be more precise and compensated for link delays. According to the 
-Implementation Note part in the specs, it says it can be used to 
-approximate the round trip message transit time and from there, measure 
-the link delay times, assuming upstream/downstream delays are symmetrical.
-
-> - The PTM benefit is mostly for endpoints, and not so much for root
-> ports or switches themselves.  If the PCI core enabled PTM
-> automatically only on non-endpoints, would there be any overhead?
->
-
-If it has any local clocks (noted with a requester bit, I have not seen 
-such a switch), it may start sending synchronization requests, but from 
-the specs...
-
-> Here's my line of thought: If an endpoint never issued a PTM
-> request, obviously there would never be a PTM dialog on the link
-> between the last switch and the endpoint.  What about on links
-> farther upstream? Would the switch ever issue a PTM request itself,
-> without having received a request from the endpoint?  If not, the PCI
-> core could enable PTM on all non-endpoint devices, and there should
-> be no performance effect at all.  This would be nice because a driver
-> call to enable PTM would only need to touch the endpoint; it wouldn't
-> need to touch any upstream devices.
->
-
- From the wording (6.22.2 PTM Link Protocol):
-
-The Upstream Port, on behalf of the PTM Requester, initiates the PTM 
-dialog by transmitting a PTM Request message.
-The Downstream Port, on behalf of the PTM Responder, has knowledge of or 
-access (directly or indirectly) to the PTM Master Time.
-
-My naive interpretation tells me switches will only act on behalf of 
-requester/responder, never for itself.
+Bjorn
