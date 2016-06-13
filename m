@@ -1,59 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:55508 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932699AbcFOPG1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jun 2016 11:06:27 -0400
-Date: Wed, 15 Jun 2016 11:14:15 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	"axboe@fb.com" <axboe@fb.com>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
-Message-ID: <20160615151415.GA1919@localhost.localdomain>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
- <1465934346-20648-3-git-send-email-hch@lst.de>
- <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com>
- <20160615102311.GA16619@lst.de>
- <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 3/7] irqchip/gicv3-its: Cleanup for ITS domain initialization
+Date: Mon, 13 Jun 2016 16:41:09 +0200
+Message-Id: <1465828873-23498-4-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 15, 2016 at 12:42:53PM +0200, Bart Van Assche wrote:
-> Today irqbalanced is responsible for deciding how to assign interrupts from
-> different adapters to CPU cores. Does the above mean that for adapters that
-> support multiple MSI-X interrupts the kernel will have full responsibility
-> for assigning interrupt vectors to CPU cores?
+There is no point to initialize ITS without having msi-controller
+property in corresponding DT node. However, its_probe is checking
+msi-controller presence at the end, so we can save our time and do that
+check prior to its_probe call. Also, for the code clarity purpose,
+we put domain initialization to separate function.
 
-Hi Bart,
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c | 57 ++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 23 deletions(-)
 
-Right, the kernel would be responsible for assigning interrupt vectors to
-cores. The kernel is already responsible for setting the affinity hint,
-but we want direct control because we can do a better than irqbalance,
-which has been a problem point for users.
-
-Many adapters gain significant performance when irqbalance is using
-"exact" hint policy. But that's not irqbalance's default setting, and
-we don't necessarily want to enforce "exact" on the entire system when
-only a subset of devices benefit from such a setup.
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 5eb1f9e..43d32fc 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -1507,13 +1507,37 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
+ }
  
-> If two identical adapters are present in a system, will these generate the
-> same irq_affinity mask? Do you agree that interrupt vectors from different
-> adapters should be assigned to different CPU cores if enough CPU cores are
-> available? If so, which software layer will assign interrupt vectors from
-> different adapters to different CPU cores?
++static int its_init_domain(struct device_node *node, struct its_node *its,
++			   struct irq_domain *parent)
++{
++	struct irq_domain *inner_domain;
++	struct msi_domain_info *info;
++
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	if (!inner_domain) {
++		kfree(info);
++		return -ENOMEM;
++	}
++
++	inner_domain->parent = parent;
++	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
++	info->ops = &its_msi_domain_ops;
++	info->data = its;
++	inner_domain->host_data = info;
++
++	return 0;
++}
++
+ static int __init its_probe(struct device_node *node,
+ 			    struct irq_domain *parent)
+ {
+ 	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+-	struct irq_domain *inner_domain;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+@@ -1605,28 +1629,9 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	if (of_property_read_bool(node, "msi-controller")) {
+-		struct msi_domain_info *info;
+-
+-		info = kzalloc(sizeof(*info), GFP_KERNEL);
+-		if (!info) {
+-			err = -ENOMEM;
+-			goto out_free_tables;
+-		}
+-
+-		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
+-		if (!inner_domain) {
+-			err = -ENOMEM;
+-			kfree(info);
+-			goto out_free_tables;
+-		}
+-
+-		inner_domain->parent = parent;
+-		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+-		info->ops = &its_msi_domain_ops;
+-		info->data = its;
+-		inner_domain->host_data = info;
+-	}
++	err = its_init_domain(node, its, parent);
++	if (err)
++		goto out_free_tables;
+ 
+ 	spin_lock(&its_lock);
+ 	list_add(&its->entry, &its_nodes);
+@@ -1677,6 +1682,12 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
++		if (!of_property_read_bool(np, "msi-controller")) {
++			pr_warn("%s: no msi-controller property, ITS ignored\n",
++				np->full_name);
++			continue;
++		}
++
+ 		its_probe(np, parent_domain);
+ 	}
+ 
+-- 
+1.9.1
 
-I think the idea is have the irq_affinity mask match the CPU mapping on
-the submission side context associated with that particular vector. If
-two identical adapters generate the same submission CPU mapping, I don't
-think we can do better than matching irq_affinity masks.
-
-Thanks,
-Keith
