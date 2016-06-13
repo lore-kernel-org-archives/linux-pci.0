@@ -1,268 +1,302 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21390 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbcFDAJY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jun 2016 20:09:24 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v12 11/15] PCI: Check pref compatible bit for mem64 resource of PCIe device
-Date: Fri,  3 Jun 2016 17:06:38 -0700
-Message-Id: <20160604000642.28162-12-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 4/7] irqchip/gicv3-its: Refator ITS DT init code to prepare for ACPI
+Date: Mon, 13 Jun 2016 16:41:10 +0200
+Message-Id: <1465828873-23498-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We still get "no compatible bridge window" warning on sparc T5-8
-after we add support for 64bit resource parsing for root bus.
+In order to add ACPI support we need to isolate ACPI&DT common code and
+move DT logic to corresponding functions. To achieve this we are using
+firmware agnostic handle which can be unpacked to either DT or ACPI node.
 
- PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
- PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
- PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
- pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
+No functional changes other than a very minor one:
+1. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+as a bonus we get nice string formatting.
+2. Since there is only one of ITS parent domain convert it to static global
+variable and drop the parameter from its_probe_one. Users can refer to it
+in more convenient way then.
 
-All the bridges 64-bit resource have pref bit, but the device resource does not
-have pref set, then we can not find parent for the device resource,
-as we can not put non-pref mmio under pref mmio.
-
-According to pcie spec errta
-https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-page 13, in some case it is ok to mark some as pref.
-
-Mark if the entire path from the host to the adapter is over PCI Express.
-Set pref compatible bit for claim/sizing/assign for 64bit mem resource
-on that pcie device.
-
--v2: set pref for mmio 64 when whole path is PCI Express, according to David Miller.
--v3: don't set pref directly, change to UNDER_PREF, and set PREF before
-     sizing and assign resource, and cleart PREF afterwards. requested by BenH.
--v4: use on_all_pcie_path device flag instead.
--v6: update after pci_find_bus_resource() change
-
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: sparclinux@vger.kernel.org
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- arch/sparc/kernel/pci_common.c |  2 +-
- drivers/pci/pci.c              |  8 +++++---
- drivers/pci/pci.h              |  2 ++
- drivers/pci/probe.c            | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c        | 23 +++++++++++++++++++----
- drivers/pci/setup-res.c        |  4 ++++
- include/linux/pci.h            |  3 ++-
- 7 files changed, 66 insertions(+), 9 deletions(-)
+ drivers/irqchip/irq-gic-v3-its.c   | 79 +++++++++++++++++++++-----------------
+ drivers/irqchip/irq-gic-v3.c       |  6 +--
+ include/linux/irqchip/arm-gic-v3.h |  4 +-
+ 3 files changed, 48 insertions(+), 41 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 1ebc7ff..6f206a1 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -343,7 +343,7 @@ static void pci_register_region(struct pci_bus *bus, const char *name,
- 	region.start = rstart;
- 	region.end = rstart + size - 1UL;
- 	pcibios_bus_to_resource(bus, res, &region);
--	bus_res = pci_find_bus_resource(bus, res);
-+	bus_res = pci_find_bus_resource(bus, res, res->flags);
- 	if (!bus_res) {
- 		kfree(res);
- 		return;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81c6cf9..f4ad1e0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -415,7 +415,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 43d32fc..f033fd8 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -74,7 +74,7 @@ struct its_node {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	entry;
+ 	void __iomem		*base;
+-	unsigned long		phys_base;
++	phys_addr_t		phys_base;
+ 	struct its_cmd_block	*cmd_base;
+ 	struct its_cmd_block	*cmd_write;
+ 	struct its_baser	tables[GITS_BASER_NR_REGS];
+@@ -114,6 +114,7 @@ struct its_device {
+ static LIST_HEAD(its_nodes);
+ static DEFINE_SPINLOCK(its_lock);
+ static struct rdists *gic_rdists;
++static struct irq_domain *its_parent;
  
- struct resource *pci_find_bus_resource(const struct pci_bus *bus,
--					struct resource *res)
-+					struct resource *res, int flags)
- {
- 	struct resource *r;
- 	int i;
-@@ -430,7 +430,7 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- 			 * not, the allocator made a mistake.
- 			 */
- 			if (r->flags & IORESOURCE_PREFETCH &&
--			    !(res->flags & IORESOURCE_PREFETCH))
-+			    !(flags & IORESOURCE_PREFETCH))
- 				return NULL;
- 
- 			/*
-@@ -458,7 +458,9 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 					  struct resource *res)
- {
--	return pci_find_bus_resource(dev->bus, res);
-+	int flags = pci_resource_pref_compatible(dev, res);
-+
-+	return pci_find_bus_resource(dev->bus, res, flags);
- }
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 7d339c3..4508a1f 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -336,4 +336,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- }
- #endif
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8e3ef72..5d11dec 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1732,6 +1732,36 @@ static void pci_dma_configure(struct pci_dev *dev)
- 	pci_put_host_bridge_device(bridge);
- }
- 
-+static bool pci_up_path_over_pcie(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !pci_is_pcie(bus->self))
-+		return false;
-+
-+	return pci_up_path_over_pcie(bus->parent);
-+}
-+
-+/*
-+ * According to
-+ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-+ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-+ * on some cases.
-+ * Let's mark if entire path from the host to the adapter is over PCI
-+ * Express. later will use that compute pref compaitable bit.
-+ */
-+static void pci_set_on_all_pcie_path(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!pci_up_path_over_pcie(dev->bus))
-+		return;
-+
-+	dev->on_all_pcie_path = 1;
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1762,6 +1792,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
- 
-+	/* After pcie_cap is assigned */
-+	pci_set_on_all_pcie_path(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 55641a3..b3b1565 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -738,6 +738,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res)
-+{
-+	if (res->flags & IORESOURCE_PREFETCH)
-+		return res->flags;
-+
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    (res->flags & IORESOURCE_MEM_64) &&
-+	    dev->on_all_pcie_path)
-+		return res->flags | IORESOURCE_PREFETCH;
-+
-+	return res->flags;
-+}
-+
- /* Check whether the bridge supports optional I/O and
-    prefetchable memory ranges. If not, the respective
-    base/limit registers must be read-only and read as 0. */
-@@ -1035,11 +1049,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size;
-+			int flags = pci_resource_pref_compatible(dev, r);
- 
--			if (r->parent || (r->flags & IORESOURCE_PCI_FIXED) ||
--			    ((r->flags & mask) != type &&
--			     (r->flags & mask) != type2 &&
--			     (r->flags & mask) != type3))
-+			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
-+			    ((flags & mask) != type &&
-+			     (flags & mask) != type2 &&
-+			     (flags & mask) != type3))
- 				continue;
- 			r_size = resource_size(r);
- #ifdef CONFIG_PCI_IOV
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 66c4d8f..f741fed 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -257,15 +257,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 				resource_size_t size, resource_size_t min_align)
- {
-+	struct resource *res = dev->resource + resno;
-+	int old_flags = res->flags;
- 	struct pci_bus *bus;
- 	int ret;
- 
-+	res->flags = pci_resource_pref_compatible(dev, res);
- 	bus = dev->bus;
- 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
- 		if (!bus->parent || !bus->self->transparent)
- 			break;
- 		bus = bus->parent;
+ #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
+ #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
+@@ -837,7 +838,7 @@ static void its_free_tables(struct its_node *its)
  	}
-+	res->flags = old_flags;
- 
- 	return ret;
  }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 11b216d..daaac38 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -309,6 +309,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
  
-@@ -812,7 +813,7 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
- struct resource *pci_find_bus_resource(const struct pci_bus *bus,
--					struct resource *res);
-+					struct resource *res, int flags);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+-static int its_alloc_tables(const char *node_name, struct its_node *its)
++static int its_alloc_tables(struct its_node *its)
+ {
+ 	int err;
+ 	int i;
+@@ -893,8 +894,8 @@ static int its_alloc_tables(const char *node_name, struct its_node *its)
+ 				    order);
+ 			if (order >= MAX_ORDER) {
+ 				order = MAX_ORDER - 1;
+-				pr_warn("%s: Device Table too large, reduce its page order to %u\n",
+-					node_name, order);
++				pr_warn("ITS@%pa: Device Table too large, reduce its page order to %u\n",
++					&its->phys_base, order);
+ 			}
+ 		}
+ 
+@@ -903,8 +904,8 @@ retry_alloc_baser:
+ 		if (alloc_pages > GITS_BASER_PAGES_MAX) {
+ 			alloc_pages = GITS_BASER_PAGES_MAX;
+ 			order = get_order(GITS_BASER_PAGES_MAX * psz);
+-			pr_warn("%s: Device Table too large, reduce its page order to %u (%u pages)\n",
+-				node_name, order, alloc_pages);
++			pr_warn("ITS@%pa: Device Table too large, reduce its page order to %u (%u pages)\n",
++				&its->phys_base, order, alloc_pages);
+ 		}
+ 
+ 		base = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO, order);
+@@ -978,8 +979,8 @@ retry_baser:
+ 		}
+ 
+ 		if (val != tmp) {
+-			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
+-			       node_name, i,
++			pr_err("ITS@%pa: GITS_BASER%d doesn't stick: %lx %lx\n",
++			       &its->phys_base, i,
+ 			       (unsigned long) val, (unsigned long) tmp);
+ 			err = -ENXIO;
+ 			goto out_free;
+@@ -1507,8 +1508,7 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
+ }
+ 
+-static int its_init_domain(struct device_node *node, struct its_node *its,
+-			   struct irq_domain *parent)
++static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
+ {
+ 	struct irq_domain *inner_domain;
+ 	struct msi_domain_info *info;
+@@ -1517,13 +1517,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	if (!info)
+ 		return -ENOMEM;
+ 
+-	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
+ 	if (!inner_domain) {
+ 		kfree(info);
+ 		return -ENOMEM;
+ 	}
+ 
+-	inner_domain->parent = parent;
++	inner_domain->parent = its_parent;
+ 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 	info->ops = &its_msi_domain_ops;
+ 	info->data = its;
+@@ -1532,43 +1532,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	return 0;
+ }
+ 
+-static int __init its_probe(struct device_node *node,
+-			    struct irq_domain *parent)
++static int __init its_probe_one(struct resource *res,
++				struct fwnode_handle *handle, int numa_node)
+ {
+-	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+ 
+-	err = of_address_to_resource(node, 0, &res);
+-	if (err) {
+-		pr_warn("%s: no regs?\n", node->full_name);
+-		return -ENXIO;
+-	}
+-
+-	its_base = ioremap(res.start, resource_size(&res));
++	its_base = ioremap(res->start, resource_size(res));
+ 	if (!its_base) {
+-		pr_warn("%s: unable to map registers\n", node->full_name);
++		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+ 		return -ENOMEM;
+ 	}
+ 
+ 	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+ 	if (val != 0x30 && val != 0x40) {
+-		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
++		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+ 		err = -ENODEV;
+ 		goto out_unmap;
+ 	}
+ 
+ 	err = its_force_quiescent(its_base);
+ 	if (err) {
+-		pr_warn("%s: failed to quiesce, giving up\n",
+-			node->full_name);
++		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+ 		goto out_unmap;
+ 	}
+ 
+-	pr_info("ITS: %s\n", node->full_name);
++	pr_info("ITS@%pa\n", &res->start);
+ 
+ 	its = kzalloc(sizeof(*its), GFP_KERNEL);
+ 	if (!its) {
+@@ -1580,9 +1572,9 @@ static int __init its_probe(struct device_node *node,
+ 	INIT_LIST_HEAD(&its->entry);
+ 	INIT_LIST_HEAD(&its->its_device_list);
+ 	its->base = its_base;
+-	its->phys_base = res.start;
++	its->phys_base = res->start;
+ 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+-	its->numa_node = of_node_to_nid(node);
++	its->numa_node = numa_node;
+ 
+ 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+ 	if (!its->cmd_base) {
+@@ -1593,7 +1585,7 @@ static int __init its_probe(struct device_node *node,
+ 
+ 	its_enable_quirks(its);
+ 
+-	err = its_alloc_tables(node->full_name, its);
++	err = its_alloc_tables(its);
+ 	if (err)
+ 		goto out_free_cmd;
+ 
+@@ -1629,7 +1621,7 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	err = its_init_domain(node, its, parent);
++	err = its_init_domain(handle, its);
+ 	if (err)
+ 		goto out_free_tables;
+ 
+@@ -1647,7 +1639,7 @@ out_free_its:
+ 	kfree(its);
+ out_unmap:
+ 	iounmap(its_base);
+-	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
++	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
+ 	return err;
+ }
+ 
+@@ -1675,10 +1667,10 @@ static struct of_device_id its_device_id[] = {
+ 	{},
+ };
+ 
+-int __init its_init(struct device_node *node, struct rdists *rdists,
+-	     struct irq_domain *parent_domain)
++static int __init its_of_probe(struct device_node *node)
+ {
+ 	struct device_node *np;
++	struct resource res;
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
+@@ -1688,8 +1680,25 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 			continue;
+ 		}
+ 
+-		its_probe(np, parent_domain);
++		if (of_address_to_resource(np, 0, &res)) {
++			pr_warn("%s: no regs?\n", np->full_name);
++			continue;
++		}
++
++		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
+ 	}
++	return 0;
++}
++
++int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
++		    struct irq_domain *parent_domain)
++{
++	struct device_node *of_node;
++
++	its_parent = parent_domain;
++	of_node = to_of_node(handle);
++	if (of_node)
++		its_of_probe(of_node);
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index 2c5ba0e..019b442 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -911,7 +911,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 				 u64 redist_stride,
+ 				 struct fwnode_handle *handle)
+ {
+-	struct device_node *node;
+ 	u32 typer;
+ 	int gic_irqs;
+ 	int err;
+@@ -952,10 +951,9 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 
+ 	set_handle_irq(gic_handle_irq);
+ 
+-	node = to_of_node(handle);
+ 	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
+-	    node) /* Temp hack to prevent ITS init for ACPI */
+-		its_init(node, &gic_data.rdists, gic_data.domain);
++	    to_of_node(handle)) /* Temp hack to prevent ITS init for ACPI */
++		its_init(handle, &gic_data.rdists, gic_data.domain);
+ 
+ 	gic_smp_init();
+ 	gic_dist_init();
+diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+index dc493e0..2136639 100644
+--- a/include/linux/irqchip/arm-gic-v3.h
++++ b/include/linux/irqchip/arm-gic-v3.h
+@@ -334,9 +334,9 @@ struct rdists {
+ };
+ 
+ struct irq_domain;
+-struct device_node;
++struct fwnode_handle;
+ int its_cpu_init(void);
+-int its_init(struct device_node *node, struct rdists *rdists,
++int its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	     struct irq_domain *domain);
+ 
+ static inline bool gic_enable_sre(void)
 -- 
-2.8.3
+1.9.1
 
