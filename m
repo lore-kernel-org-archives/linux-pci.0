@@ -1,205 +1,139 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 15 Jun 2016 09:52:48 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH v2 11/15] drivers: iommu: arm-smmu-v3: add IORT iommu
- configuration
-Message-ID: <20160615085248.GA32390@red-moon>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1465306270-27076-12-git-send-email-lorenzo.pieralisi@arm.com>
- <20160614183939.GL16531@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59728 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423357AbcFMNeC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jun 2016 09:34:02 -0400
+Date: Mon, 13 Jun 2016 08:33:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: bhelgaas@google.com, jespern@axis.com, akpm@linux-foundation.org,
+	davem@davemloft.net, gregkh@linuxfoundation.org,
+	mchehab@osg.samsung.com, linux@roeck-us.net, jslaby@suse.cz,
+	robh@kernel.org, marc.zyngier@arm.com, rjui@broadcom.com,
+	arnd@arndb.de, david.daney@cavium.com, geert+renesas@glider.be,
+	lftan@altera.com, bharat.kumar.gogada@xilinx.com, hauke@hauke-m.de,
+	thomas.petazzoni@free-electrons.com, simon.horman@netronome.com,
+	phil.edworthy@renesas.com, svarbanov@mm-sol.com, dhdang@apm.com,
+	wangzhou1@hisilicon.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@axis.com
+Subject: Re: [PATCH v2 2/2] pci: host: new driver for Axis ARTPEC-6 PCIe
+ controller
+Message-ID: <20160613133357.GA12221@localhost>
+References: <1462794543-30317-1-git-send-email-niklass@axis.com>
+ <20160609224125.GB19309@localhost>
+ <575EB12D.1040206@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160614183939.GL16531@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <575EB12D.1040206@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 14, 2016 at 07:39:39PM +0100, Will Deacon wrote:
-> On Tue, Jun 07, 2016 at 02:31:06PM +0100, Lorenzo Pieralisi wrote:
-> > In ACPI bases systems, in order to be able to create platform
-> > devices and initialize them for arm-smmu-v3 components, the IORT
-> > infrastructure requires ARM SMMU drivers to initialize a set of
-> > operations that are used by the IORT kernel layer to configure platform
-> > devices for ARM SMMU components in turn.
-> > 
-> > This patch adds the IORT IOMMU configuration for the ARM SMMU v3 kernel
-> > driver.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Robin Murphy <robin.murphy@arm.com>
-> > Cc: Joerg Roedel <joro@8bytes.org>
-> > ---
-> >  drivers/iommu/arm-smmu-v3.c | 101 ++++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/iort.h        |  12 +++++-
-> >  2 files changed, 112 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> > index 90745a8..7acb6b5 100644
-> > --- a/drivers/iommu/arm-smmu-v3.c
-> > +++ b/drivers/iommu/arm-smmu-v3.c
-> > @@ -2687,6 +2687,107 @@ static int __init arm_smmu_of_init(struct device_node *np)
-> >  }
-> >  IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
-> >  
-> > +#ifdef CONFIG_ACPI
-> > +static int acpi_smmu_init(struct acpi_iort_node *node)
-> > +{
-> > +	iort_smmu_set_ops(node, &arm_smmu_ops, NULL);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static void acpi_smmu_register_irq(int hwirq, const char *name,
-> > +				   struct resource *res)
-> > +{
-> > +	int irq = acpi_register_gsi(NULL, hwirq, ACPI_EDGE_SENSITIVE,
-> > +				    ACPI_ACTIVE_HIGH);
-> > +
-> > +	if (irq < 0) {
-> > +		pr_err("could not register gsi hwirq %d name [%s]\n", hwirq,
-> > +								      name);
-> > +		return;
-> > +	}
-> > +
-> > +	res->start = irq;
-> > +	res->end = irq;
-> > +	res->flags = IORESOURCE_IRQ;
-> > +	res->name = name;
-> > +}
-> > +
-> > +static int arm_smmu_count_resources(struct acpi_iort_node *node)
-> > +{
-> > +	struct acpi_iort_smmu_v3 *smmu;
-> > +	/* Always present mem resource */
-> > +	int num_res = 1;
-> > +
-> > +	/* Retrieve SMMUv3 specific data */
-> > +	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-> > +
-> > +	if (smmu->event_gsiv)
-> > +		num_res++;
-> > +
-> > +	if (smmu->pri_gsiv)
-> > +		num_res++;
-> > +
-> > +	if (smmu->gerr_gsiv)
-> > +		num_res++;
-> > +
-> > +	if (smmu->sync_gsiv)
-> > +		num_res++;
-> > +
-> > +	return num_res;
-> > +}
-> > +
-> > +static void arm_smmu_init_resources(struct resource *res,
-> > +				    struct acpi_iort_node *node)
-> > +{
-> > +	struct acpi_iort_smmu_v3 *smmu;
-> > +	int num_res = 0;
-> > +
-> > +	/* Retrieve SMMUv3 specific data */
-> > +	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-> > +
-> > +	res[num_res].start = smmu->base_address;
-> > +	res[num_res].end = smmu->base_address + SZ_128K - 1;
-> > +	res[num_res].flags = IORESOURCE_MEM;
-> > +
-> > +	num_res++;
-> > +
-> > +	if (smmu->event_gsiv)
-> > +		acpi_smmu_register_irq(smmu->event_gsiv, "eventq",
-> > +				       &res[num_res++]);
-> > +
-> > +	if (smmu->pri_gsiv)
-> > +		acpi_smmu_register_irq(smmu->pri_gsiv, "priq",
-> > +				       &res[num_res++]);
-> > +
-> > +	if (smmu->gerr_gsiv)
-> > +		acpi_smmu_register_irq(smmu->gerr_gsiv, "gerror",
-> > +				       &res[num_res++]);
-> > +
-> > +	if (smmu->sync_gsiv)
-> > +		acpi_smmu_register_irq(smmu->sync_gsiv, "cmdq-sync",
-> > +				       &res[num_res++]);
-> > +}
-> > +
-> > +static bool arm_smmu_is_coherent(struct acpi_iort_node *node)
-> > +{
-> > +	struct acpi_iort_smmu_v3 *smmu;
-> > +
-> > +	/* Retrieve SMMUv3 specific data */
-> > +	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
-> > +
-> > +	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
-> > +}
-> > +
-> > +const struct iort_iommu_config iort_arm_smmu_v3_cfg = {
-> > +	.name = "arm-smmu-v3",
-> > +	.iommu_init = acpi_smmu_init,
-> > +	.iommu_is_coherent = arm_smmu_is_coherent,
-> > +	.iommu_count_resources = arm_smmu_count_resources,
-> > +	.iommu_init_resources = arm_smmu_init_resources
-> > +};
-> > +#endif
-> > +
-> >  MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
-> >  MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
-> >  MODULE_LICENSE("GPL v2");
-> > diff --git a/include/linux/iort.h b/include/linux/iort.h
-> > index ced3054..5dcfa09 100644
-> > --- a/include/linux/iort.h
-> > +++ b/include/linux/iort.h
-> > @@ -55,7 +55,17 @@ struct iort_iommu_config {
-> >  static inline const struct iort_iommu_config *
-> >  iort_get_iommu_config(struct acpi_iort_node *node)
-> >  {
-> > -	return NULL;
-> > +	switch (node->type) {
-> > +#if IS_ENABLED(CONFIG_ARM_SMMU_V3)
-> > +	case ACPI_IORT_NODE_SMMU_V3: {
-> > +		extern const struct iort_iommu_config iort_arm_smmu_v3_cfg;
-> > +
-> > +		return &iort_arm_smmu_v3_cfg;
-> > +	}
-> > +#endif
+On Mon, Jun 13, 2016 at 03:12:13PM +0200, Niklas Cassel wrote:
+> On 06/10/2016 12:41 AM, Bjorn Helgaas wrote:
+> > On Mon, May 09, 2016 at 01:49:03PM +0200, Niklas Cassel wrote:
+> >> From: Niklas Cassel <niklas.cassel@axis.com>
+> >>
+> >> The Axis ARTPEC-6 SoC integrates a PCIe controller from Synopsys.
+> >> This commit adds a new driver that provides the small glue
+> >> needed to use the existing Designware driver to make it work on
+> >> the Axis ARTPEC-6 SoC.
+> >>
+> >> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > Hi Niklas,
+> >
+> > I'll review this soon.  In the meantime, can you send /proc/iomem and
+> > /proc/ioport contents?  I'm looking to avoid problems like this:
+> > http://lkml.kernel.org/r/20160606230537.20936.2892.stgit@bhelgaas-glaptop2.roam.corp.google.com
+> >
+> > It looks like this is based on DesignWare, so it probably has the
+> > problem, and will probably be fixed by these:
+> >
+> > http://lkml.kernel.org/r/20160606230452.20936.28937.stgit@bhelgaas-glaptop2.roam.corp.google.com
+> > http://lkml.kernel.org/r/20160606230501.20936.71818.stgit@bhelgaas-glaptop2.roam.corp.google.com
+> > http://lkml.kernel.org/r/20160606230508.20936.81845.stgit@bhelgaas-glaptop2.roam.corp.google.com
+> >
+> > If you wanted to apply those and then send /proc/iomem and
+> > /proc/ioports, that would be even better.
+> >
+> > Bjorn
+> >
 > 
-> Oh, yuck! I really don't like this mixture of SMMU driver code and IORT
-> code over two files using a global structure of largely stateless function
-> pointers.
+> Output with your patches applied:
+
+Great, thanks, Niklas!  Comments below:
+
+> [    2.107320] PCI host bridge /pcie@f8050000 ranges:
+> [    2.112138]   No bus range found for /pcie@f8050000, using [bus 00-ff]
+
+Your DT *should* provide a bus number range.  There is no way for the
+PCI core to correctly determine the range.
+
+> [    2.118684]    IO 0xc0010000..0xc001ffff -> 0x00010000
+> [    2.123835]   MEM 0xc0020000..0xdfffffff -> 0xc0020000
+> [    2.245559] artpec6-pcie f8050000.pcie: link up
+> [    2.250228] artpec6-pcie f8050000.pcie: PCI host bridge to bus 0000:00
+> [    2.256773] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    2.262273] pci_bus 0000:00: root bus resource [io  0x0000-0xffff] (bus address [0x10000-0x1ffff])
+
+This looks questionable.  This says we're using I/O ports
+0x10000-0x1ffff on the PCI bus.  That's legal, but unusual.
+
+The conventional PCI spec allowed the upper 16 bits of I/O BARs
+to be hard-wired to zero "for devices intended for 16-bit I/O
+systems, such as PC compatibles."
+
+I don't know whether a PCIe device with an I/O BAR with the
+upper bits hard-wired to zero exists.  The conservative approach
+would be to use ports 0x0000-0xffff on PCI.
+
+> [    2.271250] pci_bus 0000:00: root bus resource [mem 0xc0020000-0xdfffffff]
+> [    2.278407] PCI: bus0: Fast back to back transfers disabled
+> [    2.293358] PCI: bus1: Fast back to back transfers disabled
+> [    2.299018] pci 0000:00:00.0: BAR 0: assigned [mem 0xc0100000-0xc01fffff]
+> [    2.305825] pci 0000:00:00.0: BAR 1: assigned [mem 0xc0200000-0xc02fffff]
+> [    2.312627] pci 0000:00:00.0: BAR 8: assigned [mem 0xc0300000-0xc07fffff]
+> [    2.319430] pci 0000:01:00.0: BAR 1: assigned [mem 0xc0400000-0xc05fffff]
+> [    2.326241] pci 0000:01:00.0: BAR 2: assigned [mem 0xc0600000-0xc07fffff]
+> [    2.333052] pci 0000:01:00.0: BAR 0: assigned [mem 0xc0300000-0xc0303fff]
+> [    2.339862] pci 0000:00:00.0: PCI bridge to [bus 01]
+> [    2.344838] pci 0000:00:00.0:   bridge window [mem 0xc0300000-0xc07fffff]
 > 
-> I think you have two options:
+> # cat /proc/iomem
+> 00000000-0fffffff : System RAM
+>   00208000-01071b2f : Kernel code
+>   01300000-01465347 : Kernel data
+> c0020000-dfffffff : MEM
+>   c0100000-c01fffff : 0000:00:00.0
+>   c0200000-c02fffff : 0000:00:00.0
+>   c0300000-c07fffff : PCI Bus 0000:01
+>     c0300000-c0303fff : 0000:01:00.0
+>       c0301000-c0301007 : serial
+>       c0301200-c0301207 : serial
+>     c0400000-c05fffff : 0000:01:00.0
+>     c0600000-c07fffff : 0000:01:00.0
+> f8010000-f8013fff : /amba@0/ethernet@f8010000
+> f8036000-f8036fff : /amba@0/serial@f8036000
+>   f8036000-f8036fff : /amba@0/serial@f8036000
+> f8037000-f8037fff : /amba@0/serial@f8037000
+>   f8037000-f8037fff : /amba@0/serial@f8037000
+> f8038000-f8038fff : /amba@0/serial@f8038000
+>   f8038000-f8038fff : /amba@0/serial@f8038000
+> f8039000-f8039fff : /amba@0/serial@f8039000
+>   f8039000-f8039fff : /amba@0/serial@f8039000
+> f8040000-f8040fff : phy
+> f8050000-f8051fff : dbi
 > 
->   (1) Move this all into iort.c (my preference)
->   (2) Introduce something like SMMU_ACPI_DECLARE which allows drivers to
->       register a callback if they're matched in the IORT.
+> # cat /proc/ioports
+> 00000000-0000ffff : I/O
 > 
-> that at least keeps internal data in one place, rather than spreading it
-> around.
+> 
+> Without your patches applied:
+> /proc/ioports is empty.
+> /proc/iomem is missing the node "c0020000-dfffffff : MEM"
+> and all of its child nodes.
 
-(1) is possible for most of the function pointers. Problem is that iort.c
-has to know ARM SMMU v3 driver internals (driver name for platform
-device matching and IRQ resources names - I wanted to keep the ARM SMMU
-v3 probing routine as FW agnostic as possible), it is obviously doable
-but I have to make sure I keep them in sync.
+Good, that's exactly what I expected.  We could use better names for
+the resources, so they're connected to the PCIe controller, but at
+least we have the entries.
 
-We still need (2) to have an IOMMU_OF_DECLARE() equivalent (ie to
-make sure that we can carry out the of_xlate() equivalent when
-devices are probed), I did not want to add a linker script section
-for two components (ARM SMMUv1/v2 and v3) but that's doable too,
-I will make changes for v3.
-
-Thanks for having a look !
-
-Lorenzo
+Bjorn
