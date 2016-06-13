@@ -1,360 +1,114 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
- against platfrom specific ECAM quirks
-To: Duc Dang <dhdang@apm.com>
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
- <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
- <575ED57F.6050503@codeaurora.org>
- <CADaLNDkfKxxXWmG3eAawH1H=B+4ia6ZYh41anjTuOdTWGbhfNg@mail.gmail.com>
- <575F9B4D.8080501@huawei.com>
- <CADaLND=esW9rwrfdKtAvkyPhCs4F9hMH9LDY4DWTpOv0ZgoT9w@mail.gmail.com>
-CC: Christopher Covington <cov@codeaurora.org>,
-        Bjorn Helgaas
-	<helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon
-	<will.deacon@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        "Rafael
- Wysocki" <rafael@kernel.org>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        "Lorenzo
- Pieralisi" <Lorenzo.Pieralisi@arm.com>,
-        <okaya@codeaurora.org>, Jayachandran
- C <jchandra@broadcom.com>,
-        Tomasz Nowicki <tn@semihalf.com>, <robert.richter@caviumnetworks.com>,
-        Marcin Wojtas <mw@semihalf.com>, "Liviu
- Dudau" <Liviu.Dudau@arm.com>,
-        David Daney <ddaney@caviumnetworks.com>,
-        "Yijing Wang" <wangyijing@huawei.com>,
-        Suravee Suthikulpanit
-	<Suravee.Suthikulpanit@amd.com>,
-        Mark Salter <msalter@redhat.com>, <linux-pci@vger.kernel.org>,
-        linux-arm
-	<linux-arm-kernel@lists.infradead.org>,
-        <linux-acpi@vger.kernel.org>,
-        "Linux
- Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-        <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>,
-        Andrea Gallo
-	<andrea.gallo@linaro.org>, <jeremy.linton@arm.com>,
-        Gabriele Paoloni
-	<gabriele.paoloni@huawei.com>,
-        "Chenxin (Charles)"
-	<charles.chenxin@huawei.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "liudong-1989@163.com" <liudong-1989@163.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <575FD253.3070508@huawei.com>
-Date: Tue, 14 Jun 2016 17:45:55 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f42.google.com ([209.85.214.42]:33100 "EHLO
+	mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933059AbcFMB2u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Jun 2016 21:28:50 -0400
 MIME-Version: 1.0
-In-Reply-To: <CADaLND=esW9rwrfdKtAvkyPhCs4F9hMH9LDY4DWTpOv0ZgoT9w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <d6b476e6-de3c-8190-dbb4-c34837fad4a2@cn.fujitsu.com>
+References: <20151213212557.5410.48577.stgit@localhost.localdomain>
+ <20160104204104.GB17427@char.us.oracle.com> <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+ <20160105113317-mutt-send-email-mst@redhat.com> <CAKgT0UeY9+BJoGtM+Fqa4Zve36GBJQpYVyoo2CPJZdELH6cEbg@mail.gmail.com>
+ <df81dd53-dc03-667e-4d53-3c67f90aab8f@cn.fujitsu.com> <CAMt9YRpzAKt1KQW17VBzx0PT5BxiL_1+U1-AEK2A_Ao9KQjmGg@mail.gmail.com>
+ <6a7bef5b-3f96-f582-d3cf-cb59f5308e28@cn.fujitsu.com> <CAKgT0UeXeq+GQo1ak9wUEQqzLvE+LN=5tAvZoTtSua1=X3R55A@mail.gmail.com>
+ <d6b476e6-de3c-8190-dbb4-c34837fad4a2@cn.fujitsu.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Sun, 12 Jun 2016 18:28:48 -0700
+Message-ID: <CAKgT0UeOPVLHtkBwCkz_aeXy01rn6A30vnqscs5SttHfQY8fVg@mail.gmail.com>
+Subject: Re: [Qemu-devel] [RFC PATCH 0/3] x86: Add support for guest DMA dirty
+ page tracking
+To: Zhou Jie <zhoujie2011@cn.fujitsu.com>
+Cc: Alex Duyck <aduyck@mirantis.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Yang Zhang <yang.zhang.wz@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	kvm@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	qemu-devel@nongnu.org, Alexander Graf <agraf@suse.de>,
+	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
+	=?UTF-8?B?SXp1bWksIFRha3Uv5rOJIOaLkw==?=
+	<izumi.taku@jp.fujitsu.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Duc
-
-在 2016/6/14 17:00, Duc Dang 写道:
-> On Mon, Jun 13, 2016 at 10:51 PM, Dongdong Liu <liudongdong3@huawei.com> wrote:
->> Hi Duc
->>
->> 在 2016/6/14 4:57, Duc Dang 写道:
->>>
->>> On Mon, Jun 13, 2016 at 8:47 AM, Christopher Covington
->>> <cov@codeaurora.org> wrote:
->>>>
->>>> Hi Dongdong,
->>>>
->>>> On 06/13/2016 09:02 AM, Dongdong Liu wrote:
->>>>>
->>>>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->>>>> index d3c3e85..49612b3 100644
->>>>> --- a/drivers/acpi/pci_mcfg.c
->>>>> +++ b/drivers/acpi/pci_mcfg.c
->>>>> @@ -22,6 +22,10 @@
->>>>>    #include <linux/kernel.h>
->>>>>    #include <linux/pci.h>
->>>>>    #include <linux/pci-acpi.h>
->>>>> +#include <linux/pci-ecam.h>
->>>>> +
->>>>> +/* Root pointer to the mapped MCFG table */
->>>>> +static struct acpi_table_mcfg *mcfg_table;
->>>>>
->>>>>    /* Structure to hold entries from the MCFG table */
->>>>>    struct mcfg_entry {
->>>>> @@ -35,6 +39,38 @@ struct mcfg_entry {
->>>>>    /* List to save mcfg entries */
->>>>>    static LIST_HEAD(pci_mcfg_list);
->>>>>
->>>>> +extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
->>>>> +extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
->>>>> +
->>>>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
->>>>> +{
->>>>> +     int bus_num = root->secondary.start;
->>>>> +     int domain = root->segment;
->>>>> +     struct pci_cfg_fixup *f;
->>>>> +
->>>>> +     if (!mcfg_table)
->>>>> +             return &pci_generic_ecam_ops;
->>>>> +
->>>>> +     /*
->>>>> +      * Match against platform specific quirks and return corresponding
->>>>> +      * CAM ops.
->>>>> +      *
->>>>> +      * First match against PCI topology <domain:bus> then use OEM ID
->>>>> and
->>>>> +      * OEM revision from MCFG table standard header.
->>>>> +      */
->>>>> +     for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
->>>>> f++) {
->>>>> +             if ((f->domain == domain || f->domain ==
->>>>> PCI_MCFG_DOMAIN_ANY) &&
->>>>> +                 (f->bus_num == bus_num || f->bus_num ==
->>>>> PCI_MCFG_BUS_ANY) &&
->>>>> +                 (!strncmp(f->oem_id, mcfg_table->header.oem_id,
->>>>> +                           ACPI_OEM_ID_SIZE)) &&
->>>>> +                 (!strncmp(f->oem_table_id,
->>>>> mcfg_table->header.oem_table_id,
->>>>> +                           ACPI_OEM_TABLE_ID_SIZE)))
->>>>
->>>>
->>>> This would just be a small convenience, but if the character count used
->>>> here were
->>>>
->>>> min(strlen(f->oem_id), ACPI_OEM_ID_SIZE)
->>>>
->>>> then the parameters to DECLARE_ACPI_MCFG_FIXUP macro could be substrings
->>>> and
->>>> wouldn't need to be padded out to the full length.
->>>>
->>>>> +                     return f->ops;
->>>>> +     }
->>>>> +     /* No quirks, use ECAM */
->>>>> +     return &pci_generic_ecam_ops;
->>>>> +}
->>>>
->>>>
->>>>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->>>>> index 7d63a66..088a1da 100644
->>>>> --- a/include/linux/pci-acpi.h
->>>>> +++ b/include/linux/pci-acpi.h
->>>>> @@ -25,6 +25,7 @@ static inline acpi_status
->>>>> pci_acpi_remove_pm_notifier(struct acpi_device *dev)
->>>>>    extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
->>>>>
->>>>>    extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource
->>>>> *bus_res);
->>>>> +extern struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root
->>>>> *root);
->>>>>
->>>>>    static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev
->>>>> *pdev)
->>>>>    {
->>>>> @@ -72,6 +73,25 @@ struct acpi_pci_root_ops {
->>>>>         int (*prepare_resources)(struct acpi_pci_root_info *info);
->>>>>    };
->>>>>
->>>>> +struct pci_cfg_fixup {
->>>>> +     struct pci_ecam_ops *ops;
->>>>> +     char *oem_id;
->>>>> +     char *oem_table_id;
->>>>> +     int domain;
->>>>> +     int bus_num;
->>>>> +};
->>>>> +
->>>>> +#define PCI_MCFG_DOMAIN_ANY  -1
->>>>> +#define PCI_MCFG_BUS_ANY     -1
->>>>> +
->>>>> +/* Designate a routine to fix up buggy MCFG */
->>>>> +#define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, oem_table_id, dom, bus) \
->>>>> +     static const struct pci_cfg_fixup                               \
->>>>> +     __mcfg_fixup_##oem_id##oem_table_id##dom##bus                   \
->>>>
->>>>
->>>> I'm not entirely sure that this is the right fix--I'm pretty blindly
->>>> following a GCC documentation suggestion [1]--but removing the first two
->>>> preprocessor concatenation operators "##" solved the following build
->>>> error
->>>> for me.
->>>>
->>>> include/linux/pci-acpi.h:90:2: error: pasting "__mcfg_fixup_" and
->>>> ""QCOM"" does not give a valid preprocessing token
->>>>     __mcfg_fixup_##oem_id##oem_table_id##dom##bus   \
->>>
->>>
->>> I think the problem is gcc is not happy with quoted string when
->>> processing these tokens
->>> (""QCOM"", the extra "" are added by gcc). So should we not concat
->>> string tokens and
->>> use the fixup definition in v1 of this RFC:
->>> /* Designate a routine to fix up buggy MCFG */
->>> #define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, rev, dom, bus)             \
->>>           static const struct pci_cfg_fixup
->>> __mcfg_fixup_##system##dom##bus\
->>>            __used __attribute__((__section__(".acpi_fixup_mcfg"),         \
->>>                                   aligned((sizeof(void *))))) =           \
->>>           { ops, oem_id, rev, dom, bus };
->>
->>
->> V1 fixup exist the redefinition error when compiling mutiple
->> DECLARE_ACPI_MCFG_FIXUP
->> with the same PCI_MCFG_DOMAIN_ANY and PCI_MCFG_BUS_ANY.
->>
->> #define EFI_ACPI_HISI_OEM_ID "HISI"
->> #define EFI_ACPI_HISI_D02_OEM_TABLE_ID "HISI-D02"
->> #define EFI_ACPI_HISI_D03_OEM_TABLE_ID "HISI-D03"
->>
->> DECLARE_ACPI_MCFG_FIXUP(&hisi_pcie_ecam_ops, EFI_ACPI_HISI_OEM_ID,
->>         EFI_ACPI_HISI_D02_OEM_TABLE_ID, PCI_MCFG_DOMAIN_ANY,
->> PCI_MCFG_BUS_ANY);
->>
->> DECLARE_ACPI_MCFG_FIXUP(&hisi_pcie_ecam_ops, EFI_ACPI_HISI_OEM_ID,
->>         EFI_ACPI_HISI_D03_OEM_TABLE_ID, PCI_MCFG_DOMAIN_ANY,
->> PCI_MCFG_BUS_ANY);
->>
->> In file included from drivers/pci/host/pcie-hisi-acpi.c:15:0:
->> include/linux/pci-acpi.h:98:43: error: redefinition of
->> '__mcfg_fixup_systemPCI_MCFG_DOMAIN_ANYPCI_MCFG_BUS_ANY'
->>           static const struct pci_cfg_fixup __mcfg_fixup_##system##dom##bus\
->>                                             ^
->> drivers/pci/host/pcie-hisi-acpi.c:215:1: note: in expansion of macro
->> 'DECLARE_ACPI_MCFG_FIXUP'
->>   DECLARE_ACPI_MCFG_FIXUP(&hisi_pcie_ecam_ops, EFI_ACPI_HISI_OEM_ID,
->>   ^
->> include/linux/pci-acpi.h:98:43: note: previous definition of
->> '__mcfg_fixup_systemPCI_MCFG_DOMAIN_ANYPCI_MCFG_BUS_ANY' was here
->>           static const struct pci_cfg_fixup __mcfg_fixup_##system##dom##bus\
->>                                             ^
->> drivers/pci/host/pcie-hisi-acpi.c:212:1: note: in expansion of macro
->> 'DECLARE_ACPI_MCFG_FIXUP'
->>
->>
->> V2 fixup can resolve the redefinition error, but need to use macro.
->> We can see that the name of macro is not replace with it's value in
->> "__mcfg_fixup_EFI_ACPI_HISI_OEM_IDEFI_ACPI_HISI_D03_OEM_TABLE_IDPCI_MCFG_DOMAIN_ANYPCI_MCFG_BUS_ANY".
->>
->> Any good idea is appreciated.
-> Hmmm.
+On Sat, Jun 11, 2016 at 8:03 PM, Zhou Jie <zhoujie2011@cn.fujitsu.com> wrote:
+> Hi, Alex
 >
-> I was testing # op and using min_t to get the min-len when doing
-> strncmp similar to Chris' suggestion (using min_t avoids type
-> warnings)
 >
-> /* Designate a routine to fix up buggy MCFG */
-> #define DECLARE_ACPI_MCFG_FIXUP(ops, oem_id, oem_table_id, rev, dom, bus) \
->          static const struct pci_cfg_fixup
-> __mcfg_fixup##oem_id##oem_table_id##rev##dom##bus\
->           __used __attribute__((__section__(".acpi_fixup_mcfg"),         \
->                                  aligned((sizeof(void *))))) =           \
-
->          { ops, #oem_id, #oem_table_id, rev, dom, bus };
-
-
-This should change to { ops, oem_id, oem_table_id, rev, dom, bus };
-‘#’ is not need.
-
->
-> My fixup definition:
-> DECLARE_ACPI_MCFG_FIXUP(&xgene_pcie_ecam_ops, APM, XGENE, 2,
->                                                 PCI_MCFG_DOMAIN_ANY,
-> PCI_MCFG_BUS_ANY);
-> My match condition is:
->                 if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
->                     (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
->                     (!strncmp(f->oem_id, mcfg->header.oem_id,
->                               min_t(size_t, strlen(f->oem_id),
->                                     ACPI_OEM_ID_SIZE))) &&
->                     (!strncmp(f->oem_table_id, mcfg->header.oem_table_id,
->                               min_t(size_t, strlen(f->oem_table_id),
->                                     ACPI_OEM_TABLE_ID_SIZE))) &&
->                     (f->oem_revision == mcfg->header.oem_revision)) {
->                         return f->ops;
->                 }
->
-> But this still does not work for your case as having HISI-D02 as
-> oem_table_id will cause error.
-
-In my case, I have tested  and it worked ok.
-Could you show the detail error information that you met?
-
-Thanks
-Dongdong
->
+> On 2016/6/9 23:39, Alexander Duyck wrote:
 >>
->> Thanks
->> Dongdong
+>> On Thu, Jun 9, 2016 at 3:14 AM, Zhou Jie <zhoujie2011@cn.fujitsu.com>
+>> wrote:
+>>>
+>>> TO Alex
+>>> TO Michael
+>>>
+>>>    In your solution you add a emulate PCI bridge to act as
+>>>    a bridge between direct assigned devices and the host bridge.
+>>>    Do you mean put all direct assigned devices to
+>>>    one emulate PCI bridge?
+>>>    If yes, this maybe bring some problems.
+>>>
+>>>    We are writing a patchset to support aer feature in qemu.
+>>>    When assigning a vfio device with AER enabled, we must check whether
+>>>    the device supports a host bus reset (ie. hot reset) as this may be
+>>>    used by the guest OS in order to recover the device from an AER
+>>>    error.
+>>>    QEMU must therefore have the ability to perform a physical
+>>>    host bus reset using the existing vfio APIs in response to a virtual
+>>>    bus reset in the VM.
+>>>    A physical bus reset affects all of the devices on the host bus.
+>>>    Therefore all physical devices affected by a bus reset must be
+>>>    configured on the same virtual bus in the VM.
+>>>    And no devices unaffected by the bus reset,
+>>>    be configured on the same virtual bus.
+>>>
+>>>    http://lists.nongnu.org/archive/html/qemu-devel/2016-05/msg02989.html
+>>>
+>>> Sincerely,
+>>> Zhou Jie
 >>
->>>
->>> Regards,
->>> Duc Dang.
->>>
->>>
->>>>     ^
->>>> arch/arm64/kernel/pci.c:225:1: note: in expansion of macro
->>>> ‘DECLARE_ACPI_MCFG_FIXUP’
->>>>    DECLARE_ACPI_MCFG_FIXUP(&pci_32b_ecam_ops, "QCOM", "QDF2432",
->>>> PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
->>>>    ^
->>>> arch/arm64/kernel/pci.c:225:44: error: pasting ""QCOM"" and ""QDF2432""
->>>> does not give a valid preprocessing token
->>>>    DECLARE_ACPI_MCFG_FIXUP(&pci_32b_ecam_ops, "QCOM", "QDF2432",
->>>> PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
->>>>                                               ^
->>>> include/linux/pci-acpi.h:90:17: note: in definition of macro
->>>> ‘DECLARE_ACPI_MCFG_FIXUP’
->>>>     __mcfg_fixup_##oem_id##oem_table_id##dom##bus   \
->>>>                    ^
->>>> arch/arm64/kernel/pci.c:225:52: error: pasting ""QDF2432"" and
->>>> "PCI_MCFG_DOMAIN_ANY" does not give a valid preprocessi
->>>> ng token
->>>>    DECLARE_ACPI_MCFG_FIXUP(&pci_32b_ecam_ops, "QCOM", "QDF2432",
->>>> PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
->>>>                                                       ^
->>>> include/linux/pci-acpi.h:90:25: note: in definition of macro
->>>> ‘DECLARE_ACPI_MCFG_FIXUP’
->>>>     __mcfg_fixup_##oem_id##oem_table_id##dom##bus   \
->>>>                            ^
->>>> arch/arm64/kernel/pci.c:225:44: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or
->>>> ‘__attribute__’ before string constant
->>>>    DECLARE_ACPI_MCFG_FIXUP(&pci_32b_ecam_ops, "QCOM", "QDF2432",
->>>> PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
->>>>                                               ^
->>>> include/linux/pci-acpi.h:90:17: note: in definition of macro
->>>> ‘DECLARE_ACPI_MCFG_FIXUP’
->>>>     __mcfg_fixup_##oem_id##oem_table_id##dom##bus   \
->>>>                    ^
->>>> make[1]: *** [arch/arm64/kernel/pci.o] Error 1
->>>> make: *** [arch/arm64/kernel] Error 2
->>>>
->>>> 1. https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html#Concatenation
->>>>
->>>>> +     __used  __attribute__((__section__(".acpi_fixup_mcfg"),         \
->>>>> +                             aligned((sizeof(void *))))) =           \
->>>>> +     { ops, oem_id, oem_table_id, dom, bus };
->>>>> +
->>>>>    extern int acpi_pci_probe_root_resources(struct acpi_pci_root_info
->>>>> *info);
->>>>>    extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root
->>>>> *root,
->>>>>                                             struct acpi_pci_root_ops
->>>>> *ops,
->>>>>
->>>>
->>>> Thanks,
->>>> Cov
->>>>
->>>> --
->>>> Qualcomm Innovation Center, Inc.
->>>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
->>>> a Linux Foundation Collaborative Project
->>>
->>>
->>> .
->>>
 >>
-> Regards
-> Duc Dang.
+>> That makes sense, but I don't think you have to worry much about this
+>> at this point at least on my side as this was mostly just theory and I
+>> haven't had a chance to put any of it into practice as of yet.
+>>
+>> My idea has been evolving on this for a while.  One thought I had is
+>> that we may want to have something like an emulated IOMMU and if
+>> possible we would want to split it up over multiple domains just so we
+>> can be certain that the virtual interfaces and the physical ones
+>> existed in separate domains.  In regards to your concerns perhaps what
+>> we could do is put each assigned device into its own domain to prevent
+>> them from affecting each other.  To that end we could probably break
+>> things up so that each device effectively lives in its own PCIe slot
+>> in the emulated system.  Then when we start a migration of the guest
+>> the assigned device domains would then have to be tracked for unmap
+>> and sync calls when the direction is from the device.
+>>
+>> I will keep your concerns in mind in the future when I get some time
+>> to look at exploring this solution further.
+>>
+>> - Alex
 >
-> .
 >
+> I am thinking about the practice of migration of passthrough device.
+>
+> In your solution, you use a vendor specific configuration space to
+> negotiate with guest.
+> If you put each assigned device into its own domain,
+> how can qemu negotiate with guest?
+> Add the vendor specific configuration space to every pci bus which
+> is assigned a passthrough device?
+
+This is kind of the direction I was thinking of heading in, so yes.
+Basically in my mind we should be emulating a PCIe hierarchy if we
+want so support device assignment.  That way we can already make use
+of things like hot-plug and AER natively.  So if we have a root port
+assigned to each assigned device we should be able to place some extra
+logic there to handle things like this.
+
+- Alex
