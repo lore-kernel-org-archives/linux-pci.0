@@ -1,38 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 10 Jun 2016 18:41:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
-	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
-	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
-Subject: Re: [PATCH V9 00/11] Support for ARM64 ACPI based PCI host controller
-Message-ID: <20160610234107.GC7671@localhost>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <andriy.shevchenko@linux.intel.com>
+Return-Path: <andriy.shevchenko@linux.intel.com>
+Message-ID: <1465818054.30123.10.camel@linux.intel.com>
+Subject: Re: [PATCH v1 1/1] PCI / PM: enforce type casting for pci_power_t
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael
+	J . Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Date: Mon, 13 Jun 2016 14:40:54 +0300
+In-Reply-To: <20160611001956.GH16462@localhost>
+References: 
+	<1465321713-146178-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <20160611001956.GH16462@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 10, 2016 at 09:55:08PM +0200, Tomasz Nowicki wrote:
-> From the functionality point of view this series may be split into the
-> following logic parts:
-> 1. Export ECAM API and add parent device to pci_config_window
-> 2. Add IO resources handling to PCI core code
-> 3. New MCFG driver
-> 4. Cleanups and support for generic domain assignment based on ACPI
-> 5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64/
+On Fri, 2016-06-10 at 19:19 -0500, Bjorn Helgaas wrote:
+> On Tue, Jun 07, 2016 at 08:48:33PM +0300, Andy Shevchenko wrote:
+> > When cast pci_power_t type of variables a static analizer tool
+> > complains on
+> > that.
+> > 
+> > 	include/linux/pci.h:119:37: warning: cast from restricted
+> > pci_power_t
+> > 
+> > Enforce type casting to make static analizer happy.
+> > 
+> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> 
+> Applied to pci/pm for v4.8, thanks, Andy.
 
-This is beautiful!  It really turned out well.
+Thanks.
 
-I applied all these to pci/arm64-acpi for v4.8.
+By the way, what was the main point to use __bitwise annotation to this
+type in the first place?
 
-Bjorn
+> 
+> > ---
+> >  include/linux/pci.h | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index b67e4df..8d74834 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -116,7 +116,7 @@ extern const char *pci_power_names[];
+> >  
+> >  static inline const char *pci_power_name(pci_power_t state)
+> >  {
+> > -	return pci_power_names[1 + (int) state];
+> > +	return pci_power_names[1 + (__force int) state];
+> >  }
+> >  
+> >  #define PCI_PM_D2_DELAY		200
+> > -- 
+> > 2.8.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" 
+> > in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
