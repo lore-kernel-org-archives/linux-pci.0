@@ -1,63 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
-To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
- rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
- robert.richter@caviumnetworks.com, shijie.huang@arm.com,
- Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
-References: <1466420541-20101-2-git-send-email-tn@semihalf.com>
- <1466598909-27504-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <576A873C.3050107@semihalf.com>
-Date: Wed, 22 Jun 2016 14:40:28 +0200
-MIME-Version: 1.0
-In-Reply-To: <1466598909-27504-1-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
- will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
- mw@semihalf.com, andrea.gallo@linaro.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 7/7] irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain initialization
+Date: Mon, 13 Jun 2016 16:41:13 +0200
+Message-Id: <1465828873-23498-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22.06.2016 14:35, Tomasz Nowicki wrote:
-> IORT shows representation of IO topology for ARM based systems.
-> It describes how various components are connected together on
-> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
-> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->
-> Initial support allows to detect IORT table presence and save its
-> root pointer obtained through acpi_get_table(). The pointer validity
-> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
-> is not set while using IORT nodes we would dereference unmapped pointers.
->
-> For the aforementioned reason call iort_table_detect() from acpi_init()
-> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->
-> Add generic helpers which are helpful for scanning and retrieving
-> information from IORT table content. List of the most important helpers:
-> - iort_find_dev_node() finds IORT node for a given device
-> - iort_node_map_rid() maps device RID and returns IORT node which provides
->    final translation
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Let ACPI build ITS PCI MSI domain. ACPI is responsible for retrieving
+inner domain token and passing it on to its_pci_msi_init_one generic
+init call.
 
-The updated patch incorporates fixes and addresses Lorenzo's comments.
-The whole series is here:
-https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v7.1)
+We have now full PCI MSI domain stack, thus we can enable ITS initialization
+from GICv3 core driver for ACPI scenario.
 
-Thanks,
-Tomasz
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c | 46 +++++++++++++++++++++++++++++++-
+ drivers/irqchip/irq-gic-v3.c             |  3 +--
+ 2 files changed, 46 insertions(+), 3 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+index 23679ae..ae7221c 100644
+--- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+@@ -15,6 +15,7 @@
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++#include <linux/iort.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+@@ -144,10 +145,53 @@ static int __init its_pci_of_msi_init(void)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++
++static int __init
++its_pci_msi_parse_madt(struct acpi_subtable_header *header,
++		       const unsigned long end)
++{
++	struct acpi_madt_generic_translator *its_entry;
++	struct fwnode_handle *dom_handle;
++	const char *node_name;
++	int err = -ENXIO;
++
++	its_entry = (struct acpi_madt_generic_translator *)header;
++	node_name = kasprintf(GFP_KERNEL, "ITS@0x%lx",
++			      (long)its_entry->base_address);
++	dom_handle = iort_find_domain_token(its_entry->translation_id);
++	if (!dom_handle) {
++		pr_err("%s: Unable to locate ITS domain handle\n", node_name);
++		goto out;
++	}
++
++	err = its_pci_msi_init_one(dom_handle, node_name);
++	if (!err)
++		pr_info("PCI/MSI: %s domain created\n", node_name);
++
++out:
++	kfree(node_name);
++	return err;
++}
++
++static int __init its_pci_acpi_msi_init(void)
++{
++	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
++			      its_pci_msi_parse_madt, 0);
++	return 0;
++}
++#else
++static int __init its_pci_acpi_msi_init(void)
++{
++	return 0;
++}
++#endif
++
+ static int __init its_pci_msi_init(void)
+ {
+ 	its_pci_of_msi_init();
++	its_pci_acpi_msi_init();
++
+ 	return 0;
+ }
+-
+ early_initcall(its_pci_msi_init);
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index 019b442..2a8b2e1 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -951,8 +951,7 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 
+ 	set_handle_irq(gic_handle_irq);
+ 
+-	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
+-	    to_of_node(handle)) /* Temp hack to prevent ITS init for ACPI */
++	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis())
+ 		its_init(handle, &gic_data.rdists, gic_data.domain);
+ 
+ 	gic_smp_init();
+-- 
+1.9.1
+
