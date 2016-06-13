@@ -1,156 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Jun 2016 17:06:47 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: [RFC PATCH v2 03/15] arm64: mm: change IOMMU notifier action to
- attach DMA ops
-Message-ID: <20160621160637.GA31761@red-moon>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1465306270-27076-4-git-send-email-lorenzo.pieralisi@arm.com>
- <5763C27A.9030306@arm.com>
- <03c537e7-0acf-edca-d0e0-369490c828df@samsung.com>
-MIME-Version: 1.0
-In-Reply-To: <03c537e7-0acf-edca-d0e0-369490c828df@samsung.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jon Masters <jcm@redhat.com>, Marc Zyngier <marc.zyngier@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci@vger.kernel.org,
- Tomasz Nowicki <tn@semihalf.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db3on0071.outbound.protection.outlook.com ([157.55.234.71]:40211
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030181AbcFMHiU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2016 03:38:20 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Noa Osherovich <noaos@mellanox.com>,
+	Haggai Eran <haggaie@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Liran Liss <liranl@mellanox.com>
+Subject: RE: [PATCH 2/4] IOMMU: Force the VFs of an untrusted PF device to be
+ in the PFs IOMMU group
+Date: Mon, 13 Jun 2016 07:08:03 +0000
+Message-ID: <VI1PR0501MB1968BCE6073C3DD40C8DA2AED4530@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+References: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
+	<1465474173-53960-3-git-send-email-ilyal@mellanox.com>
+ <20160609162120.43082847@ul30vt.home>
+In-Reply-To: <20160609162120.43082847@ul30vt.home>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Friday, June 10, 2016 1:21 AM
+> To: Ilya Lesokhin <ilyal@mellanox.com>
+> Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; bhelgaas@google.com;
+> Noa Osherovich <noaos@mellanox.com>; Haggai Eran
+> <haggaie@mellanox.com>; Or Gerlitz <ogerlitz@mellanox.com>; Liran Liss
+> <liranl@mellanox.com>
+> Subject: Re: [PATCH 2/4] IOMMU: Force the VFs of an untrusted PF device to
+> be in the PFs IOMMU group
+...
+> This deserves a comment in the code as well as the commit log, but more
+> importantly the side effect of this is that the user can't make use of separate
+> IOMMU domains for the PF vs the VF.  I think this ends up making the entire
+> solution incompatible with things like vIOMMU since we really need to be
+> able to create separate address spaces per device to make that work.  What's
+> the point of enabling SR-IOV from userspace if we can't do things like assign
+> VFs to nested guests or userspace in the guest?  This is an incomplete
+> feature with that restriction.
 
-On Tue, Jun 21, 2016 at 09:53:20AM +0200, Marek Szyprowski wrote:
-> Hi Robin,
-> 
-> 
-> On 2016-06-17 11:27, Robin Murphy wrote:
-> >Hi Lorenzo,
-> >
-> >I think this patch makes sense even independent of the rest of the
-> >series, one nit inline notwithstanding.
-> >
-> >Marek; I'm curious as to whether this could make the workaround in
-> >722ec35f7 obsolete as well, or are all the drivers also bound
-> >super-early in the setup you had there?
-> 
-> Yes, this will solve that problem too. I will also hide some possible
-> deferred probe issues, because the moment at which IOMMU is activated
-> will be postponed. The only drawback with this approach is the fact
-> that is drivers won't be allowed to do any dma-mapping operations on
-> devices, which they don't own. This should not be a big issue, but
-> this was the reason to setup IOMMU on device add instead of driver
-> bind.
-> 
-> While at it, please make sure that the case of failed client driver
-> probe will be handled properly. IOMMU might do some operations while
-> setting up and if the client driver fails to probe (for whatever
-> reason, might be a deferred probe too), those operation has to be
-> undone. However the current code of the driver core won't call any
-> notifier (like BUS_NOTIFY_UNBOUND_DRIVER or whatever else) in such
-> case.
+I agree that this is a problem and I will mention this limitation in the commit log.
+However to address this properly you need nested IOMMU group which don't really exist.
+This feature is still useful, at least for us, as you can enable sriov in a guest and work with
+probed VFs in the same guest.
+Furthermore, if you have a real nested IOMMU you should be able to do nested device 
+assignment even though the PF and VF's belong to the same group.
 
-Isn't Andy's commit 14b6257a5f3d enough ? Is that what you had in
-mind ?
-
-> Long time ago I used BUS_NOTIFY_BIND_DRIVER based approach for my
-> Exynos IOMMU patches and had to extend bus core with such patch:
-> https://patchwork.kernel.org/patch/4678181/ to properly cleanup
-> after failed client driver probe and avoid leaking resources. Please
-> read the discussion, because some changes were requested to it.
-
-It looks like commit 14b6257a5f3d ("device core: add
-BUS_NOTIFY_DRIVER_NOT_BOUND notification") does what you
-are requesting, please let me know if that's enough.
-
-I will revert the changes in 722ec35f7 and fold them in the
-new version along with Robin's suggestions.
+I think we should push this feature with the limitation and hopefully
+it will be addressed in the future, agree?
 
 Thanks,
-Lorenzo
-
-> 
-> 
-> Best regards
-> Marek Szyprowski, PhD
-> Samsung R&D Institute Poland
-> 
-> >
-> >On 07/06/16 14:30, Lorenzo Pieralisi wrote:
-> >>Current bus notifier in ARM64 (__iommu_attach_notifier)
-> >>attempts to attach dma_ops to a device on BUS_NOTIFY_ADD_DEVICE
-> >>action notification.
-> >>
-> >>This causes issues on ACPI based systems, where PCI devices
-> >>can be added before the IOMMUs the devices are attached to
-> >>had a chance to be probed, causing failures on attempts to
-> >>attach dma_ops in that the domain for the respective IOMMU
-> >>may not be set-up yet by the time the bus notifier is run.
-> >>
-> >>Devices dma_ops do not require to be set-up till the matching
-> >>device drivers are probed. This means that instead of running
-> >>the notifier attaching dma_ops to devices (__iommu_attach_notifier)
-> >>on BUS_NOTIFY_ADD_DEVICE action, it can be run just before the
-> >>device driver is bound to the device in question (on action
-> >>BUS_NOTIFY_BIND_DRIVER) so that it is certain that its IOMMU
-> >>group and domain are set-up accordingly at the time the
-> >>notifier is triggered.
-> >>
-> >>This patch changes the notifier action upon which dma_ops
-> >>are attached to devices and defer it to driver binding time,
-> >>so that IOMMU devices have a chance to be probed and to register
-> >>their bus notifiers before the dma_ops attach sequence for a
-> >>device is actually carried out.
-> >>
-> >>Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >>Cc: Will Deacon <will.deacon@arm.com>
-> >>Cc: Catalin Marinas <catalin.marinas@arm.com>
-> >>Cc: Robin Murphy <robin.murphy@arm.com>
-> >>---
-> >>  arch/arm64/mm/dma-mapping.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >>diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-> >>index c566ec8..79b0882 100644
-> >>--- a/arch/arm64/mm/dma-mapping.c
-> >>+++ b/arch/arm64/mm/dma-mapping.c
-> >>@@ -848,7 +848,7 @@ static int __iommu_attach_notifier(struct
-> >>notifier_block *nb,
-> >>  {
-> >>      struct iommu_dma_notifier_data *master, *tmp;
-> >>
-> >>-    if (action != BUS_NOTIFY_ADD_DEVICE)
-> >>+    if (action != BUS_NOTIFY_BIND_DRIVER)
-> >
-> >With this, you can also get rid of the priority setting and big
-> >fat explanatory comment in register_iommu_dma_ops_notifier().
-> >
-> >Robin.
-> >
-> >>          return 0;
-> >>
-> >>      mutex_lock(&iommu_dma_notifier_lock);
-> >>
-> >
-> >
-> >
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Ilya
