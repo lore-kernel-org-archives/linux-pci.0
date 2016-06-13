@@ -1,32 +1,52 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Mon, 13 Jun 2016 17:57:37 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
-Message-ID: <20160613215736.GH12766@localhost.localdomain>
-References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
- <20160613211411.GC18747@localhost>
- <20160613212810.GG12766@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160613212810.GG12766@localhost.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:45785 "EHLO
+	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964790AbcFMK7H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2016 06:59:07 -0400
+Message-ID: <1465815543.2313.9.camel@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6: Add missing required clocks
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: bhelgaas@google.com, hongxing.zhu@nxp.com,
+	linux-pci@vger.kernel.org
+Date: Mon, 13 Jun 2016 12:59:03 +0200
+In-Reply-To: <1465392461-3469-1-git-send-email-fabio.estevam@nxp.com>
+References: <1465392461-3469-1-git-send-email-fabio.estevam@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 13, 2016 at 05:28:10PM -0400, Keith Busch wrote:
-> On Mon, Jun 13, 2016 at 04:14:11PM -0500, Bjorn Helgaas wrote:
-> > Can we do that at the same time?  If we add good new stuff and only
-> > use it one place, there's not as much overall goodness as there would
-> > be if we updated everybody to do it similarly.
+Am Mittwoch, den 08.06.2016, 10:27 -0300 schrieb Fabio Estevam:
+> The PCI hardware on imx6 requires the following clocks:
+> "pcie", "pcie_bus" and "pcie_phy", so add the missing clocks
+> in the clock-names property.
 > 
-> Sounds good, I'll send a series taking advantage of this for all the
-> other PF drivers duplicating this check in their sriov_configure.
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+> ---
+>  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 83aeb1f..94ab92c 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -10,8 +10,8 @@ Required properties:
+>    entry for each entry in the interrupt-names property.
+>  - interrupt-names: Must include the following entries:
+>  	- "msi": The interrupt that is asserted when an MSI is received
+> -- clock-names: Must include the following additional entries:
+> -	- "pcie_phy"
+> +- clock-names: Must include the following entries:
+> +	- "pcie", "pcie_bus" and "pcie_phy".
 
-Heh, I thought "no big deal", thinking all use was similar to
-NVMe's. However, most network drivers have multiple paths to sriov
-configuration, or have other requirements to changing the live
-count! There's only two drivers I find that can immediately use the
-simplification safely. I'll send those updates to just those ones.
+NACK.
+
+Both "pcie" and "pcie_bus" are inherited from the common
+designware-pcie.txt binding. That's why it reads "must include the
+following ADDITIONAL entries".
+
+Regards,
+Lucas
+
+
