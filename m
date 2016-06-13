@@ -1,42 +1,145 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Mon, 13 Jun 2016 17:28:10 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
-Message-ID: <20160613212810.GG12766@localhost.localdomain>
-References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
- <20160613211411.GC18747@localhost>
+Return-Path: <jhugo@codeaurora.org>
+Return-Path: <jhugo@codeaurora.org>
+Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
+ against platfrom specific ECAM quirks
+To: okaya@codeaurora.org, Gabriele Paoloni <gabriele.paoloni@huawei.com>
+References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
+ <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
+ <575EBD13.8080808@codeaurora.org>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F782E15@lhreml507-mbx>
+ <b7202ebbb30f2c715427fbb387129e9c@codeaurora.org>
+Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
+ Linuxarm <linuxarm@huawei.com>,
+ "Chenxin (Charles)" <charles.chenxin@huawei.com>,
+ Wangyijing <wangyijing@huawei.com>, andrea.gallo@linaro.org,
+ Lorenzo.Pieralisi@arm.com, tn@semihalf.com, linaro-acpi@lists.linaro.org,
+ ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
+ robert.richter@caviumnetworks.com, helgaas@kernel.org,
+ "liudongdong (C)" <liudongdong3@huawei.com>, catalin.marinas@arm.com,
+ jcm@redhat.com, arnd@arndb.de, Liviu.Dudau@arm.com, msalter@redhat.com,
+ cov@codeaurora.org, mw@semihalf.com, linux-arm-kernel@lists.infradead.org,
+ jchandra@broadcom.com, dhdang@apm.com, linux-kernel@vger.kernel.org,
+ jeremy.linton@arm.com, hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com
+From: Jeffrey Hugo <jhugo@codeaurora.org>
+Message-ID: <036882b9-b781-cb56-2bcf-35afb21b2812@codeaurora.org>
+Date: Mon, 13 Jun 2016 09:59:21 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160613211411.GC18747@localhost>
+In-Reply-To: <b7202ebbb30f2c715427fbb387129e9c@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 13, 2016 at 04:14:11PM -0500, Bjorn Helgaas wrote:
-> On Tue, May 17, 2016 at 03:39:58PM -0600, Keith Busch wrote:
-> > Every sriov capable driver has to check if any guest is using a virtual
-> > function prior to disabling, so let's make it common code.
-> > 
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> 
-> If I understand the discussion correctly, this is still racy but
-> nobody objects to adding this until we have a better, non-racy
-> solution.
+On 6/13/2016 9:12 AM, okaya@codeaurora.org wrote:
+> On 2016-06-13 10:29, Gabriele Paoloni wrote:
+>> Hi Sinan
+>>
+>>> -----Original Message-----
+>>> From: Sinan Kaya [mailto:okaya@codeaurora.org]
+>>> Sent: 13 June 2016 15:03
+>>> To: Gabriele Paoloni; liudongdong (C); helgaas@kernel.org;
+>>> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
+>>> rafael@kernel.org; hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com;
+>>> jchandra@broadcom.com; tn@semihalf.com
+>>> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
+>>> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
+>>> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+>>> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+>>> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+>>> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
+>>> dhdang@apm.com; jeremy.linton@arm.com; cov@codeaurora.org; Chenxin
+>>> (Charles); Linuxarm
+>>> Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space
+>>> accessors against platfrom specific ECAM quirks
+>>>
+>>> On 6/13/2016 9:54 AM, Gabriele Paoloni wrote:
+>>> > As you can see here Liudongdong has replaced oem_revision with
+>>> > oem_table_id.
+>>> >
+>>> > Now it seems that there are some platforms that have already shipped
+>>> > using a matching based on the oem_revision (right Jon?)
+>>> >
+>>> > However I guess that if in FW they have defined oem_table_id properly
+>>> > they should be able to use this mechanism without needing to a FW
+>>> update.
+>>> >
+>>> > Can these vendors confirm this?
+>>> >
+>>> > Tomasz do you think this can work for Cavium Thunder?
+>>> >
+>>> > Thanks
+>>> >
+>>> > Gab
+>>>
+>>> Why not have all three of them?
+>>>
+>>> The initial approach was OEM id and revision id.
+>>>
+>>> Jeff Hugo indicated that addition (not removing any other fields) of
+>>> table id
+>>> would make more sense.
+>>
+>> Mmm from last email of Jeff Hugo on "[RFC PATCH 1/3] pci, acpi: Match
+>> PCI config space accessors against platfrom specific ECAM quirks."
+>>
+>> I quote:
+>>
+>>  "Using the OEM revision
+>>  field does not seem to be appropriate since these are different
+>>  platforms and the revision field appears to be for the purpose of
+>>  tracking differences within a single platform.  Therefore, Cov is
+>>  proposing using the OEM table id as a mechanism to distinguish
+>>  platform A (needs quirk applied) vs platform B (no quirks) from the
+>>  same OEM."
+>>
+>> So it looks to me that he pointed out that using the OEM revision field
+>> is wrong...and this is why I have asked if replacing it with the table
+>> id can work for other vendors....
+>>
+>> Thanks
+>>
+>> Gab
+>>
+>
+> I had an internal discussion with jeff and cov before posting on the
+> maillist.
+>
+> I think there is missing info in the email.
+>
+> Usage of oem id + table id + revision is ok.
+>
+> Usage of oem id + revision is not ok as one oem can build multiple chips
+> with the same oem id and revision id but different table id. Otherwise,
+> we can run out of revisions very quickly.
 
-My understanding as well: there's a potential race, but no different
-than what exists with today.
- 
-> However, you added this in common code and took advantage of it in
-> nvme.  Good so far.  But we have about a dozen other drivers that call
-> pci_vfs_assigned().  I assume some of those places could be changed so
-> they take advantage of this check in the core instead?
+Agreed.
 
-> Can we do that at the same time?  If we add good new stuff and only
-> use it one place, there's not as much overall goodness as there would
-> be if we updated everybody to do it similarly.
+I'm sorry for the confusion.  My intent was to point out that revision 
+alone appeared insufficient to address all the identified problems, but 
+I believe there is still a case for using revision. Table id is useful 
+for differentiating between platforms/chips.  Revision is useful for 
+differentiation between different versions of a single platform/chip 
+assuming the silicon is respun or some other fix is applied.  Both solve 
+different scenarios, and I'm not aware of a reason why they could not be 
+used together to solve all currently identified cases.
 
-Sounds good, I'll send a series taking advantage of this for all the
-other PF drivers duplicating this check in their sriov_configure.
+>
+>>
+>>>
+>>> --
+>>> Sinan Kaya
+>>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center,
+>>> Inc.
+>>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+>>> Linux Foundation Collaborative Project
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+
+-- 
+Jeffrey Hugo
+Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
