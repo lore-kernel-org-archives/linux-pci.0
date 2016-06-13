@@ -1,90 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53375 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750933AbcFFIOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jun 2016 04:14:19 -0400
-Date: Mon, 6 Jun 2016 10:14:16 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/6] PCI: Add helpers to request/release memory and
- I/O regions
-Message-ID: <20160606081416.qjv5hoqjfo2dmpov@c203.arch.suse.de>
-References: <2a5ab5c7cdf2d068395a2c97c934c258ae8d58c0.1464795082.git.jthumshirn@suse.de>
- <201606050757.3lyBOdJT%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201606050757.3lyBOdJT%fengguang.wu@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 5/7] irqchip/gicv3-its: Probe ITS in the ACPI way
+Date: Mon, 13 Jun 2016 16:41:11 +0200
+Message-Id: <1465828873-23498-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 05, 2016 at 07:32:13AM +0800, kbuild test robot wrote:
-> Hi,
-> 
-> [auto build test ERROR on jkirsher-next-queue/dev-queue]
-> [also build test ERROR on v4.7-rc1 next-20160603]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Johannes-Thumshirn/Introduce-pci_-request-release-_-mem-io-_regions/20160602-153400
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/next-queue.git dev-queue
-> config: mips-rt305x_defconfig (attached as .config)
-> compiler: mips-linux-gnu-gcc (Debian 5.3.1-8) 5.3.1 20160205
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=mips 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    In file included from lib/pci_iomap.c:6:0:
->    include/linux/pci.h: In function 'pci_request_io_regions':
-> >> include/linux/pci.h:2021:9: error: implicit declaration of function 'pci_request_selected_regions' [-Werror=implicit-function-declaration]
->      return pci_request_selected_regions(pdev,
->             ^
-> >> include/linux/pci.h:2022:8: error: implicit declaration of function 'pci_select_bars' [-Werror=implicit-function-declaration]
->            pci_select_bars(pdev, IORESOURCE_IO), name);
->            ^
->    include/linux/pci.h: In function 'pci_release_io_regions':
->    include/linux/pci.h:2028:9: error: implicit declaration of function 'pci_release_selected_regions' [-Werror=implicit-function-declaration]
->      return pci_release_selected_regions(pdev,
->             ^
->    include/linux/pci.h:2028:9: warning: 'return' with a value, in function returning void
->    include/linux/pci.h: In function 'pci_release_mem_regions':
->    include/linux/pci.h:2042:9: warning: 'return' with a value, in function returning void
->      return pci_release_selected_regions(pdev,
->             ^
->    cc1: some warnings being treated as errors
-> 
-> vim +/pci_request_selected_regions +2021 include/linux/pci.h
-> 
->   2015		return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) == PCI_DEV_FLAGS_ASSIGNED;
->   2016	}
->   2017	
->   2018	static inline int
->   2019	pci_request_io_regions(struct pci_dev *pdev, const char *name)
->   2020	{
-> > 2021		return pci_request_selected_regions(pdev,
-> > 2022				    pci_select_bars(pdev, IORESOURCE_IO), name);
->   2023	}
->   2024	
->   2025	static inline void
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ITS is prepared for being initialized different than DT,
+therefore we can initialize it in ACPI way. We collect register base
+address from MADT table and pass mandatory info to firmware-agnostic
+ITS init call.
 
-Problem got addressed, waiting for an reply from Dick Kenedy on the lpfc patch
-before re-submission,
+Use here IORT lib to register ITS domain which then can be found and
+used on to build another PCI MSI domain in hierarchical stack domain.
 
-Thanks for reporting,
-	Johannes
+NOTE: Waiting for proper ITS and NUMA node relation description in IORT
+table, we pass around NUMA_NO_NODE to the its_probe_one init call.
+This means that Cavium ThunderX erratum 23144 (pass1.1 only)
+is not supported for ACPI boot method yet.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/irqchip/Kconfig          |  1 +
+ drivers/irqchip/irq-gic-v3-its.c | 59 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 60 insertions(+)
+
+diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+index fa33c50..c6e652f 100644
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -32,6 +32,7 @@ config ARM_GIC_V3
+ config ARM_GIC_V3_ITS
+ 	bool
+ 	select PCI_MSI_IRQ_DOMAIN
++	select IORT_TABLE if ACPI
+ 
+ config ARM_NVIC
+ 	bool
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index f033fd8..7315263 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -15,10 +15,13 @@
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/bitmap.h>
+ #include <linux/cpu.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irqdomain.h>
++#include <linux/iort.h>
+ #include <linux/log2.h>
+ #include <linux/mm.h>
+ #include <linux/msi.h>
+@@ -1336,6 +1339,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
+ 		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
+ 		fwspec.param[1] = hwirq;
+ 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
++	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
++		fwspec.fwnode = domain->parent->fwnode;
++		fwspec.param_count = 2;
++		fwspec.param[0] = hwirq;
++		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
+ 	} else {
+ 		return -EINVAL;
+ 	}
+@@ -1690,6 +1698,55 @@ static int __init its_of_probe(struct device_node *node)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++
++#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
++
++static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
++					  const unsigned long end)
++{
++	struct acpi_madt_generic_translator *its_entry;
++	struct fwnode_handle *dom_handle;
++	struct resource res;
++	int err;
++
++	its_entry = (struct acpi_madt_generic_translator *)header;
++	res.start = its_entry->base_address;
++	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
++
++	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
++	if (!dom_handle) {
++		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
++		       &res.start);
++		return -ENOMEM;
++	}
++
++	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
++	if (err) {
++		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
++		       &res.start, its_entry->translation_id);
++		goto dom_err;
++	}
++
++	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
++	if (!err)
++		return 0;
++
++	iort_deregister_domain_token(its_entry->translation_id);
++dom_err:
++	irq_domain_free_fwnode(dom_handle);
++	return err;
++}
++
++static void __init its_acpi_probe(void)
++{
++	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
++			      gic_acpi_parse_madt_its, 0);
++}
++#else
++static void __init its_acpi_probe(void) { }
++#endif
++
+ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 		    struct irq_domain *parent_domain)
+ {
+@@ -1699,6 +1756,8 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	of_node = to_of_node(handle);
+ 	if (of_node)
+ 		its_of_probe(of_node);
++	else
++		its_acpi_probe();
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.9.1
