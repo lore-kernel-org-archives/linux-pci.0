@@ -1,112 +1,87 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V9 09/11] ARM64/PCI: ACPI support for legacy IRQs parsing
- and consolidation with DT code
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
- <1465588519-11334-10-git-send-email-tn@semihalf.com>
- <20160610233612.GB7671@localhost>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
- rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
- okaya@codeaurora.org, jchandra@broadcom.com,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com,
- Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
- cov@codeaurora.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <575E8431.9000104@semihalf.com>
-Date: Mon, 13 Jun 2016 12:00:17 +0200
+Return-Path: <jonathan.yong@intel.com>
+Return-Path: <jonathan.yong@intel.com>
+Message-ID: <575E2184.6090701@intel.com>
+Date: Mon, 13 Jun 2016 10:59:16 +0800
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160610233612.GB7671@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH v5] PCI: PTM preliminary implementation
+References: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com> <1462956446-27361-2-git-send-email-jonathan.yong@intel.com> <20160612221847.GM16462@localhost>
+In-Reply-To: <20160612221847.GM16462@localhost>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11.06.2016 01:36, Bjorn Helgaas wrote:
-> On Fri, Jun 10, 2016 at 09:55:17PM +0200, Tomasz Nowicki wrote:
->> To enable PCI legacy IRQs on platforms booting with ACPI, arch code
->> should include ACPI specific callbacks that parse and set-up the
->> device IRQ number, equivalent to the DT boot path. Owing to the current
->> ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
->> cannot be parsed at device add time, since that would trigger ACPI scan
->> handlers ordering issues depending on how the ACPI tables are defined.
+On 06/13/2016 06:18, Bjorn Helgaas wrote:
 >
-> Uh, OK :)  I can't figure out exactly what the problem is here -- I
-> don't know where to look if I wanted to fix the scan handler ordering
-> issues, and I don't know how I could tell if it would ever be safe to
-> move this from driver probe-time back to device add-time.
+> I'm still trying to understand what PTM should look like from the
+> driver's perspective.  I know the PCIe spec doesn't define any way to
+> initiate PTM dialogs or read the results.  But I don't know what the
+> intended usage model is and how the device, driver, and PCI core
+> pieces should fit together.
 >
-> I also notice that x86 and ia64 call acpi_pci_irq_enable() even later,
-> when the driver *enables* the device.  Is there a reason you didn't do
-> it at the same time as x86 and ia64?  This is another of those pcibios
-> hooks that really don't do anything arch-specific, so I can imagine
-> refactoring this somehow, someday.
+> - Do we expect endpoints to notice that PTM is enabled and
+> automatically start using it, without the driver doing anything?
+> Would driver changes be needed, e.g., to tell the device to add
+> timestamps to network packet DMAs?
 >
-> Did we have this conversation before?  It seems vaguely familiar, so I
-> apologize if you already explained this once.
 
-It stared with a scan handler ordering issue, please see:
-https://lists.linaro.org/pipermail/linaro-acpi/2015-October/005944.html
-hence we decided to postpone ACPI legacy IRQs parsing. We also decided 
-to keep ACPI and DT legacy IRQs parsing all together as the candidate 
-for further PCI legacy IRQs consolidation, please see [1].
-This will allow us to remove it from here (as you pointed out is is not 
-arch-specific at all).
+As far as I understand, it is a flag to tell the device that it may 
+begin using PTM to synchronize the on-board clock with PTM. From the 
+text in the specification (6.22.3.1 PTM Requester Role):
 
-I share Lorenzo's option. We could put this to pcibios_enable_device 
-instead of pcibios_alloc_irq but since ACPI and DT code is in one call 
-we wanted to avoid regressions on PCI host controllers that do not call 
-pci_fixup_irqs(), but rely on the legacy IRQ routing to be done in arm64
-pcibios_add_device().
+PTM Requesters are permitted to request PTM Master Time only when PTM is 
+enabled. The mechanism for directing a PTM Requester to issue such a 
+request is implementation specific.
 
-[1] http://www.spinics.net/lists/linux-pci/msg45950.html
+If any, there won't be a generic way to trigger a PTM conversation.
 
-Thanks,
-Tomasz
-
+> - Should there be a pci_enable_ptm() interface for a driver to
+> enable PTM for its device?  If PTM isn't useful without driver
+> changes, e.g., to tell the device to add timestamps, we probably
+> should have such an interface so we don't enable PTM when it won't be
+> useful.
 >
->> To solve this problem and consolidate FW PCI legacy IRQs parsing in
->> one single pcibios callback (pending final removal), this patch moves
->> DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
->> PCI core code at device probe time) and adds ACPI PCI legacy IRQs
->> parsing to the same callback too, so that FW PCI legacy IRQs parsing
->> is confined in one single arch callback that can be easily removed
->> when code parsing PCI legacy IRQs is consolidated and moved to core
->> PCI code.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> ---
->>   arch/arm64/kernel/pci.c | 11 ++++++++---
->>   1 file changed, 8 insertions(+), 3 deletions(-)
->>
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index d5d3d26..b3b8a2c 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -51,11 +51,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->>   }
->>
->>   /*
->> - * Try to assign the IRQ number from DT when adding a new device
->> + * Try to assign the IRQ number when probing a new device
->>    */
->> -int pcibios_add_device(struct pci_dev *dev)
->> +int pcibios_alloc_irq(struct pci_dev *dev)
->>   {
->> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +	if (acpi_disabled)
->> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->> +#ifdef CONFIG_ACPI
->> +	else
->> +		return acpi_pci_irq_enable(dev);
->> +#endif
->>
->>   	return 0;
->>   }
->> --
->> 1.9.1
->>
+> - If the PCI core instead enables PTM automatically whenever
+> possible (as in the current patch), what performance impact do we
+> expect?  I know you probably can't measure it yet, but can we at
+> least calculate the worst-case bandwidth usage, based on the message
+> size and frequency?  I previously assumed it would be small, but I
+> hate to give up *any* performance unless there is some benefit.
+>
+
+If the driver is already utilizing timestamps from the device, it would 
+be more precise and compensated for link delays. According to the 
+Implementation Note part in the specs, it says it can be used to 
+approximate the round trip message transit time and from there, measure 
+the link delay times, assuming upstream/downstream delays are symmetrical.
+
+> - The PTM benefit is mostly for endpoints, and not so much for root
+> ports or switches themselves.  If the PCI core enabled PTM
+> automatically only on non-endpoints, would there be any overhead?
+>
+
+If it has any local clocks (noted with a requester bit, I have not seen 
+such a switch), it may start sending synchronization requests, but from 
+the specs...
+
+> Here's my line of thought: If an endpoint never issued a PTM
+> request, obviously there would never be a PTM dialog on the link
+> between the last switch and the endpoint.  What about on links
+> farther upstream? Would the switch ever issue a PTM request itself,
+> without having received a request from the endpoint?  If not, the PCI
+> core could enable PTM on all non-endpoint devices, and there should
+> be no performance effect at all.  This would be nice because a driver
+> call to enable PTM would only need to touch the endpoint; it wouldn't
+> need to touch any upstream devices.
+>
+
+ From the wording (6.22.2 PTM Link Protocol):
+
+The Upstream Port, on behalf of the PTM Requester, initiates the PTM 
+dialog by transmitting a PTM Request message.
+The Downstream Port, on behalf of the PTM Responder, has knowledge of or 
+access (directly or indirectly) to the PTM Master Time.
+
+My naive interpretation tells me switches will only act on behalf of 
+requester/responder, never for itself.
