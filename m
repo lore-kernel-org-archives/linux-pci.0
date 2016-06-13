@@ -1,81 +1,38 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH 2/3] arm64, pci: Start using quirks handling for ACPI based PCI host controller.
-Date: Thu,  2 Jun 2016 10:41:02 +0200
-Message-Id: <1464856864-18049-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1464856864-18049-1-git-send-email-tn@semihalf.com>
-References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59514 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1424199AbcFMU61 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jun 2016 16:58:27 -0400
+Date: Mon, 13 Jun 2016 15:58:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
+Message-ID: <20160613205823.GA18747@localhost>
+References: <cover.1463134231.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_generic_ecam_ops is used by default. Since there are platforms
-which have non-compliant ECAM space we need to overwrite these
-accessors prior to PCI buses enumeration. In order to do that
-we call pci_mcfg_get_ops to retrieve pci_ecam_ops structure so that
-we can use proper PCI config space accessors and bus_shift.
+On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
+> This series powers Thunderbolt controllers on Macs down when nothing is
+> plugged in, saving 1.7 W on machines with a Light Ridge controller and
+> reportedly 4 W on Cactus Ridge 4C and Falcon Ridge 4C.
 
-pci_generic_ecam_ops is still used for platforms free from quirks.
+Hi Lukas,
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- arch/arm64/kernel/pci.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+I suppose these depend on Mika's runtime PM patches (at least, I see
+Mika's commits in your github tree).  Would you mind rebasing your
+patches so they apply on my pci/pm branch?  I couldn't import them
+directly into stg.
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 39f2a40..3a83c28 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -140,6 +140,7 @@ static int pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root,
- 	struct resource cfgres;
- 	unsigned int bsz;
- 	int err;
-+	struct pci_ecam_ops *ops;
- 
- 	err = pci_mcfg_lookup(root);
- 	if (err) {
-@@ -147,12 +148,12 @@ static int pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root,
- 		return err;
- 	}
- 
--	bsz = 1 << pci_generic_ecam_ops.bus_shift;
-+	ops = pci_mcfg_get_ops(root);
-+	bsz = 1 << ops->bus_shift;
- 	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
- 	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
- 	cfgres.flags = IORESOURCE_MEM;
--	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
--			      &pci_generic_ecam_ops);
-+	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, ops);
- 	if (IS_ERR(cfg)) {
- 		pr_err("%04x:%pR error %ld mapping CAM\n", seg, bus_res,
- 		       PTR_ERR(cfg));
--- 
-1.9.1
+I'm sure git could pull them in easily, but I use git in a very
+simple-minded way.
+
+Bjorn
