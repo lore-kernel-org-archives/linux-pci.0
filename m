@@ -1,142 +1,118 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 4/8] irqchip/gicv3-its: Cleanup for ITS domain
- initialization
-To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
- tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
- bhelgaas@google.com, lorenzo.pieralisi@arm.com,
- robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors
+ against platfrom specific ECAM quirks.
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
+ <9294389.sZPDtyjoUs@wuerfel> <57503626.9050208@semihalf.com>
+ <4608372.hbXNF1lbNO@wuerfel>
+Cc: linux-arm-kernel@lists.infradead.org, rafael@kernel.org,
+ linux-pci@vger.kernel.org, will.deacon@arm.com, okaya@codeaurora.org,
+ wangyijing@huawei.com, andrea.gallo@linaro.org, Lorenzo.Pieralisi@arm.com,
+ linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com,
+ linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+ helgaas@kernel.org, liudongdong3@huawei.com, catalin.marinas@arm.com,
+ Liviu.Dudau@arm.com, jcm@redhat.com, msalter@redhat.com, cov@codeaurora.org,
+ mw@semihalf.com, jchandra@broadcom.com, dhdang@apm.com,
+ linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org,
  Suravee.Suthikulpanit@amd.com
-References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
- <1466420541-20101-5-git-send-email-tn@semihalf.com>
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <7718646e-4f4c-eee9-30fd-02578679e3d6@linaro.org>
-Date: Tue, 21 Jun 2016 15:44:09 +0800
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <575FC925.9000608@semihalf.com>
+Date: Tue, 14 Jun 2016 11:06:45 +0200
 MIME-Version: 1.0
-In-Reply-To: <1466420541-20101-5-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
- will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
- mw@semihalf.com, andrea.gallo@linaro.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <4608372.hbXNF1lbNO@wuerfel>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/6/20 19:02, Tomasz Nowicki wrote:
-> There is no point to initialize ITS without having msi-controller
-> property in corresponding DT node. However, its_probe is checking
-> msi-controller presence at the end, so we can save our time and do that
-> check prior to its_probe call. Also, for the code clarity purpose,
-> we put domain initialization to separate function.
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/irqchip/irq-gic-v3-its.c | 57 ++++++++++++++++++++++++----------------
->  1 file changed, 34 insertions(+), 23 deletions(-)
->
-> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-> index 7ceaba8..bd43de1 100644
-> --- a/drivers/irqchip/irq-gic-v3-its.c
-> +++ b/drivers/irqchip/irq-gic-v3-its.c
-> @@ -1609,13 +1609,37 @@ static void its_enable_quirks(struct its_node *its)
->  	gic_enable_quirks(iidr, its_quirks, its);
->  }
->
-> +static int its_init_domain(struct device_node *node, struct its_node *its,
-> +			   struct irq_domain *parent)
-> +{
-> +	struct irq_domain *inner_domain;
-> +	struct msi_domain_info *info;
-> +
-> +	info = kzalloc(sizeof(*info), GFP_KERNEL);
-> +	if (!info)
-> +		return -ENOMEM;
-> +
-> +	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
-> +	if (!inner_domain) {
-> +		kfree(info);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	inner_domain->parent = parent;
-> +	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
-> +	info->ops = &its_msi_domain_ops;
-> +	info->data = its;
-> +	inner_domain->host_data = info;
-> +
-> +	return 0;
-> +}
-> +
->  static int __init its_probe(struct device_node *node,
->  			    struct irq_domain *parent)
->  {
->  	struct resource res;
->  	struct its_node *its;
->  	void __iomem *its_base;
-> -	struct irq_domain *inner_domain;
->  	u32 val;
->  	u64 baser, tmp;
->  	int err;
-> @@ -1707,28 +1731,9 @@ static int __init its_probe(struct device_node *node,
->  	writeq_relaxed(0, its->base + GITS_CWRITER);
->  	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
->
-> -	if (of_property_read_bool(node, "msi-controller")) {
-> -		struct msi_domain_info *info;
-> -
-> -		info = kzalloc(sizeof(*info), GFP_KERNEL);
-> -		if (!info) {
-> -			err = -ENOMEM;
-> -			goto out_free_tables;
-> -		}
-> -
-> -		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
-> -		if (!inner_domain) {
-> -			err = -ENOMEM;
-> -			kfree(info);
-> -			goto out_free_tables;
-> -		}
-> -
-> -		inner_domain->parent = parent;
-> -		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
-> -		info->ops = &its_msi_domain_ops;
-> -		info->data = its;
-> -		inner_domain->host_data = info;
-> -	}
-> +	err = its_init_domain(node, its, parent);
-> +	if (err)
-> +		goto out_free_tables;
->
->  	spin_lock(&its_lock);
->  	list_add(&its->entry, &its_nodes);
-> @@ -1779,6 +1784,12 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
->
->  	for (np = of_find_matching_node(node, its_device_id); np;
->  	     np = of_find_matching_node(np, its_device_id)) {
-> +		if (!of_property_read_bool(np, "msi-controller")) {
-> +			pr_warn("%s: no msi-controller property, ITS ignored\n",
-> +				np->full_name);
-> +			continue;
-> +		}
-> +
->  		its_probe(np, parent_domain);
->  	}
+Hi Arnd,
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Sorry for late response. Please see comments inline.
 
-Thanks
-Hanjun
+On 02.06.2016 17:19, Arnd Bergmann wrote:
+> On Thursday, June 2, 2016 3:35:34 PM CEST Tomasz Nowicki wrote:
+>> On 02.06.2016 14:32, Arnd Bergmann wrote:
+>>> On Thursday, June 2, 2016 2:07:43 PM CEST Tomasz Nowicki wrote:
+>>>> On 02.06.2016 13:42, Arnd Bergmann wrote:
+>>>>> On Thursday, June 2, 2016 10:41:01 AM CEST Tomasz Nowicki wrote:
+>>>>>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+>>>>>> +{
+>>>>>> +       int bus_num = root->secondary.start;
+>>>>>> +       int domain = root->segment;
+>>>>>> +       struct pci_cfg_fixup *f;
+>>>>>> +
+>>>>>> +       if (!mcfg_table)
+>>>>>> +               return &pci_generic_ecam_ops;
+>>>>>> +
+>>>>>> +       /*
+>>>>>> +        * Match against platform specific quirks and return corresponding
+>>>>>> +        * CAM ops.
+>>>>>> +        *
+>>>>>> +        * First match against PCI topology <domain:bus> then use OEM ID and
+>>>>>> +        * OEM revision from MCFG table standard header.
+>>>>>> +        */
+>>>>>> +       for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
+>>>>>> +               if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
+>>>>>> +                   (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
+>>>>>> +                   (!strncmp(f->oem_id, mcfg_table->header.oem_id,
+>>>>>> +                             ACPI_OEM_ID_SIZE)) &&
+>>>>>> +                   (f->oem_revision == mcfg_table->header.oem_revision))
+>>>>>> +                       return f->ops;
+>>>>>> +       }
+>>>>>> +       /* No quirks, use ECAM */
+>>>>>> +       return &pci_generic_ecam_ops;
+>>>>>> +}
+>>>>>> +
+>>>>>>     int pci_mcfg_lookup(struct acpi_pci_root *root)
+>>>>>
+>>>>> Can you explain the use of pci_ecam_ops instead of pci_ops here?
+>>>>>
+>>>>
+>>>> I wanted to get associated bus_shift and use it to setup configuration
+>>>> region properly before calling pci_ecam_create. Please see next patch.
+>>>>
+>>>
+>>> I see. It feels really odd to do it this way though, since having a
+>>> nonstandard bus_shift essentially means not using anything resembling
+>>> ECAM to start with.
+>>>
+>>> I realize that a lot of the host bridges are not ECAM, but because
+>>> of this, it would be more logical to have their own pci_ops instead
+>>> of pci_ecam_ops.
+>>
+>> Well, we have bus_shift there to express bus shift differentiation. So I
+>> would say we should change just structure name to prevent misunderstanding.
+>
+> I'm not really convinced here. We use the bus_shift for two
+> completely different things in the end: for sizing the MMIO window
+> that gets mapped by ACPI and for the pci_ecam_map_bus() function
+> that isn't actually used for the typical fixups that override the
+> pci_ops.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Since we overwrite the whole pci_ecam_ops structure (next patch):
+-	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+-			      &pci_generic_ecam_ops);
++	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, ops);
+
+IMO bus_shift is used in the right way. So if anybody decides to put 
+different bus_shift there he also needs to implement map_bus and use 
+there bus_shift appropriate to quirk requirements. Obviously we can use 
+standard pci_ecam_map_bus() as map_bus but that would mean quirk nature 
+needs that, like for ThunderX one.
+
+>
+> I see now that this sneaks in an .init callback for the quirk
+> through the backdoor, by adding it to the pci_ecam_ops. I think
+> that is not good: if the idea is to have the config space access
+> be adapted to various quirks that is one thing, but if we actually
+> need a function to be called for the quirk we should do just that
+> and have it be obvious. That function can then override the
+> pci_ops.
+
+Actually we do not need to call a function for each quirk. At the same 
+time we already have .init callback adopted to configuration space 
+access quirk. This way there is really small amount of code duplication. 
+On the other hand I understand that .init call should be more explicit. 
+Any suggestions are very appreciated.
+
+Thanks,
+Tomasz
