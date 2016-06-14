@@ -1,73 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:57504 "EHLO vps0.lunn.ch"
+Received: from mga04.intel.com ([192.55.52.120]:56008 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811AbcFBMYJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jun 2016 08:24:09 -0400
-Date: Thu, 2 Jun 2016 14:24:05 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Marcin Wojtas <mw@semihalf.com>
-Subject: Re: [PATCH 1/3] dt-bindings: add DT binding for the Aardvark PCIe
- controller
-Message-ID: <20160602122405.GG17343@lunn.ch>
-References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1464858585-10963-2-git-send-email-thomas.petazzoni@free-electrons.com>
+	id S1752096AbcFNRi2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jun 2016 13:38:28 -0400
+Date: Tue, 14 Jun 2016 10:38:26 -0700
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management Unit
+ driver
+Message-ID: <20160614173826.GC16566@psi-dev26.jf.intel.com>
+References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <1465919118.30123.73.camel@linux.intel.com>
+ <20160614155835.GA29820@gmail.com>
+ <1465920434.30123.87.camel@linux.intel.com>
+ <20160614172621.GA16566@psi-dev26.jf.intel.com>
+ <1465925834.30123.90.camel@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464858585-10963-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1465925834.30123.90.camel@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> +In addition, the Device Tree describing an Aardvark PCIe controller
-> +must include a sub-node that describes the legacy interrupt controller
-> +built into the PCIe controller. This sub-node must have the following
-> +properties:
-> +
-> + - interrupt-controller
-> + - #interrupt-cells: set to <1>
-> +
-> +Example:
-> +
-> +	pcie0: pcie@d0070000 {
-> +		compatible = "marvell,armada-3700-pcie";
-> +		device_type = "pci";
-> +		status = "disabled";
-> +		reg = <0 0xd0070000 0 0x20000>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		bus-range = <0x00 0xff>;
-> +		interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
-> +		#interrupt-cells = <1>;
-> +		ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
-> +			  0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0 0 0 1 &pcie_intc 0>,
-> +				<0 0 0 2 &pcie_intc 1>,
-> +				<0 0 0 3 &pcie_intc 2>,
-> +				<0 0 0 4 &pcie_intc 3>;
-> +		pcie_intc: interrupt-controller {
-> +			interrupt-controller;
-> +			#interrupt-cells = <1>;
-> +		};
+On Tue, Jun 14, 2016 at 08:37:14PM +0300, Andy Shevchenko wrote:
+> On Tue, 2016-06-14 at 10:26 -0700, David Cohen wrote:
+> 
+> > > Yes. Will rename in this way, re-test and re-send.
+> > 
+> > I'm curious about that. What pmu prefix would stand for?
+> 
+> It's indeed widely used as Performance Monitoring Unit
 
-Hi Thomas
+Thanks :)
 
-It is possible to list PCIe devices on the bus here as child
-nodes. I've done this when i needed a phandle to an intel ethernet
-controller on the PCIe bus, which i know is soldered onto the board.
-
-I think your current implementation simply uses the first child
-node. It would be good to document that ordering is important. It must
-be the first child node, and any pcie devices children must come
-afterwards.
-
-      Andrew
