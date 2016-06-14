@@ -1,142 +1,43 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v12 15/15] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-Date: Fri,  3 Jun 2016 17:06:42 -0700
-Message-Id: <20160604000642.28162-16-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CADxRZqzd3uDAAGsU0Tsg7vzxEvdtCv+QQDp8UM=6nVNk2VqO=A@mail.gmail.com>
+References: <alpine.LRH.2.20.1606022203030.24438@math.ut.ee>
+ <CADxRZqwuOnz8Cyedjiamyxz1nE80HxmoFANPmtZy-svr8wKfvg@mail.gmail.com>
+ <alpine.LRH.2.20.1606131548260.25241@math.ut.ee> <CADxRZqzd3uDAAGsU0Tsg7vzxEvdtCv+QQDp8UM=6nVNk2VqO=A@mail.gmail.com>
+From: Anatoly Pugachev <matorola@gmail.com>
+Date: Wed, 15 Jun 2016 01:38:50 +0300
+Message-ID: <CADxRZqw4jG3kPz6wG5Yx5DoZV0h+Xak5j682c7stq0fNOiopZQ@mail.gmail.com>
+Subject: Re: 4.6-rc*: Kernel unaligned access at pci_bus_read_config_dword+0x64/0x80
+To: Meelis Roos <mroos@linux.ee>
+Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
-resources), we change the logic for pref mmio allocation:
-When bridge pref support mmio64, we will only put children pref
-that support mmio64 into it, and will put children pref mmio32
-into bridge's non-pref mmio32.
+On Tue, Jun 14, 2016 at 4:02 PM, Anatoly Pugachev <matorola@gmail.com> wrote:
+> On Mon, Jun 13, 2016 at 3:49 PM, Meelis Roos <mroos@linux.ee> wrote:
+>>> > Between 4.5.0 and 4.6.0-rc3, my Spar Enterprise T5120 has started
+>>> > showing the following messages during bootup:
+>> [...]
+>>>
+>>> got the same messages on my t5120 with kernel 4.6.1 :
+>> [...]
+>>> but 4.7.0-rc2+ (from git), does not have it, probably fixed.
+>>
+>> Nope, I still get them on 4.7-rc3:
+>>
+>> [ 4742.646120] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
+>> [ 4742.646197] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
+>> [ 4742.646265] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
+>> [ 4742.646333] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
+>> [ 4742.646401] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
+>
+>
+> Still don't see it with current git (4.7.0-rc3+) kernel on my T5120.
+> Probably difference with kernel config file. Can you please share your
+> kernel config file, so I can try it on my t5120 ?
 
-That could leave bridge pref bar not used when that pref bar is mmio64,
-and children res only has mmio32.
-Also could have allocation failure when non-pref mmio32 is not big
-enough space for those children pref mmio32.
-
-That is not rational when the host bridge does not have 64bit mmio
-above 4g at all.
-
-The patch restore to old logic:
-when host bridge does not have has_mem64, put children pref mmio64 and
-pref mmio32 all under bridges pref bars.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/bus.c       |  4 +++-
- drivers/pci/setup-bus.c | 13 +++++++++----
- drivers/pci/setup-res.c |  9 ++++++---
- 3 files changed, 18 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index dd7cdbe..f116296 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -204,8 +204,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
--	if (res->flags & IORESOURCE_MEM_64) {
-+	if (res->flags & mmio64) {
- 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
- 					       type_mask, alignf, alignf_data,
- 					       &pci_high);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9404032..0845a57 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1311,7 +1311,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if (b_res[2].flags & IORESOURCE_MEM_64) {
-+		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
-+		    pci_find_host_bridge(bus)->has_mem64) {
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
-@@ -1513,17 +1514,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 *	  io port.
- 	 *     2. if there is non pref mmio assign fail, release bridge
- 	 *	  nonpref mmio.
--	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-+	 *     3. if there is pref mmio assign fail, and host bridge does
-+	 *	  have 64bit mmio, release bridge pref mmio.
-+	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
- 	 *	  is 64bit, release bridge pref mmio.
--	 *     4. if there is pref mmio assign fail, and bridge pref is
-+	 *     5. if there is pref mmio assign fail, and bridge pref is
- 	 *	  32bit mmio, release bridge pref mmio
--	 *     5. if there is pref mmio assign fail, and bridge pref is not
-+	 *     6. if there is pref mmio assign fail, and bridge pref is not
- 	 *	  assigned, release bridge nonpref mmio.
- 	 */
- 	if (type & IORESOURCE_IO)
- 		idx = 0;
- 	else if (!(type & IORESOURCE_PREFETCH))
- 		idx = 1;
-+	else if (!pci_find_host_bridge(bus)->has_mem64)
-+		idx = 2;
- 	else if ((type & IORESOURCE_MEM_64) &&
- 		 (b_res[2].flags & IORESOURCE_MEM_64))
- 		idx = 2;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index f741fed..59271ee 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -212,6 +212,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t min;
- 	int ret;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
- 
-@@ -223,7 +225,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * things differently than they were sized, not everything will fit.
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
--				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
-+				     IORESOURCE_PREFETCH | mmio64,
- 				     pcibios_align_resource, dev);
- 	if (ret == 0)
- 		return 0;
-@@ -232,7 +234,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * If the prefetchable window is only 32 bits wide, we can put
- 	 * 64-bit prefetchable resources in it.
- 	 */
--	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-+	if (mmio64 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
-@@ -247,7 +250,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * non-prefetchable, the first call already tried the only possibility
- 	 * so we don't need to try again.
- 	 */
--	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
-+	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
- 					     pcibios_align_resource, dev);
- 
--- 
-2.8.3
+Got config, compared and it was indeed different kernel config files.
+Tracked down it , that enabling CONFIG_PCIEPORTBUS=y makes this
+messages appear on my t5120 as well.
