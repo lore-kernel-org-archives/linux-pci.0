@@ -1,51 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 1 Jun 2016 17:26:40 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
+Date: Tue, 14 Jun 2016 17:58:35 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jay Cliburn <jcliburn@gmail.com>,
-	Chris Snook <chris.snook@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Subject: Re: [PATCH 5/5] ethernet: Use pci_(request|release)_mem_regions
-Message-ID: <20160601152640.tzhn5itms73q5fbw@c203.arch.suse.de>
-References: <cover.1464694724.git.jthumshirn@suse.de>
- <3f24b687c31dea31a03cd3a529de790e942dd5bb.1464694724.git.jthumshirn@suse.de>
- <20160601075956.GD11923@infradead.org>
- <20160601085112.ve6k7bzspapjsswf@c203.arch.suse.de>
- <1464793005.2960.3.camel@intel.com>
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management Unit
+ driver
+Message-ID: <20160614155835.GA29820@gmail.com>
+References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <1465919118.30123.73.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1464793005.2960.3.camel@intel.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1465919118.30123.73.camel@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 01, 2016 at 07:56:45AM -0700, Jeff Kirsher wrote:
-> On Wed, 2016-06-01 at 10:51 +0200, Johannes Thumshirn wrote:
-> > On Wed, Jun 01, 2016 at 12:59:56AM -0700, Christoph Hellwig wrote:
-> > > On Tue, May 31, 2016 at 02:05:13PM +0200, Johannes Thumshirn wrote:
-> > > > Now that we do have pci_request_mem_regions() and
-> > pci_release_mem_regions() at
-> > > > hand, use it in the ethernet drivers.
-> > > 
-> > > This should probably be one patch per driver.
-> > 
-> > I though if I do one patch per subsystem it'll be less a hassle for the
-> > individual maintainers, but if the netdev people want it as split up,
-> > I'll be
-> > doing it of cause.
+
+* Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+
+> On Tue, 2016-06-14 at 17:29 +0200, Ingo Molnar wrote:
 > 
-> Since almost all the changes are to Intel wired LAN drivers, if you just
-> split off the atheros change into a separate patch, I would be happy.  Then
-> you could keep just one patch to change all the Intel drivers.
+> > * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+> > 
+> > > On Tue, 2016-06-14 at 12:43 +0200, Ingo Molnar wrote:
+> > > In the TRM it's called Power Management Unit, though once or twice
+> > > in someÂ 
+> > > documents as Power Management Controller. I actually woudn't like to
+> > > use PMCÂ 
+> > > abbreviation to not be confused with pmc_atom.c and many other
+> > > variation ofÂ 
+> > > existing PMC drivers of other Intel platforms.
+> > > 
+> > > PM* as a prefix might be too short to conflict with Power Management
+> > > frameworkÂ 
+> > > in the kernel. P-Unit (punit*) is existing part in SoC which will
+> > > have its ownÂ 
+> > > driver in the future, so, can't use it either.
+> > > 
+> > > pwr*, pwrmu*, scpmu* (as of South Complex Power Management Unit) â€”
+> > > one of them?
+> > 
+> > 'pwr' certainly sounds good to me! PWMU perhaps?
+> 
+> Wouldn't be a bit confusing with pwm? I would stay at 'pwr'.
 
-That should be doable. I'll send a v2 with all requested changes tomorrow.
+Yeah, indeed - so pwr it is?
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Thanks,
+
+	Ingo
