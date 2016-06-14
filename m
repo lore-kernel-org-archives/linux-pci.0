@@ -1,73 +1,135 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Subject: [RFC PATCH v2 02/15] drivers: irqchip: its: fix its_acpi_probe()
- prototype
-Date: Tue,  7 Jun 2016 14:30:57 +0100
-Message-Id: <1465306270-27076-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
- Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
- Hanjun Guo <hanjun.guo@linaro.org>, Jon Masters <jcm@redhat.com>,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:37948 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932206AbcFNT73 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:29 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 06/13] irq: add a helper spread an affinity mask for MSI/MSI-X vectors
+Date: Tue, 14 Jun 2016 21:58:59 +0200
+Message-Id: <1465934346-20648-7-git-send-email-hch@lst.de>
+In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The empty stub for its_acpi_probe() on !CONFIG_ACPI systems has
-a wrong prototype, which causes compilation errors:
+This is lifted from the blk-mq code and adopted to use the affinity mask
+concept just intruced in the irq handling code.
 
-drivers/irqchip/irq-gic-v3-its.c: In function 'its_init':
-drivers/irqchip/irq-gic-v3-its.c:1762:3: error: too few arguments to
-function 'its_acpi_probe'
-   its_acpi_probe();
-   ^
-drivers/irqchip/irq-gic-v3-its.c:1749:27: note: declared here
- static inline void __init its_acpi_probe(struct irq_domain
-*parent_domain) { }
-
-This patch fixes the prototype and the corresponding compilation
-errors.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/irqchip/irq-gic-v3-its.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/interrupt.h | 11 +++++++++
+ kernel/irq/Makefile       |  1 +
+ kernel/irq/affinity.c     | 60 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 72 insertions(+)
+ create mode 100644 kernel/irq/affinity.c
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index c8f36a5..1846800 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1700,7 +1700,7 @@ void __init its_acpi_probe(void)
- 		pr_info("No valid GIC ITS entries exist\n");
- }
- #else
--static inline void __init its_acpi_probe(struct irq_domain *parent_domain) { }
-+static inline void __init its_acpi_probe(void) { }
- #endif
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 9fcabeb..12003c0 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -278,6 +278,9 @@ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
+ extern int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
  
- int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
++int irq_create_affinity_mask(struct cpumask **affinity_mask,
++		unsigned int *nr_vecs);
++
+ #else /* CONFIG_SMP */
+ 
+ static inline int irq_set_affinity(unsigned int irq, const struct cpumask *m)
+@@ -308,6 +311,14 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
+ {
+ 	return 0;
+ }
++
++static inline int irq_create_affinity_mask(struct cpumask **affinity_mask,
++		unsigned int *nr_vecs)
++{
++	*affinity_mask = NULL;
++	*nr_vecs = 1;
++	return 0;
++}
+ #endif /* CONFIG_SMP */
+ 
+ /*
+diff --git a/kernel/irq/Makefile b/kernel/irq/Makefile
+index 2ee42e9..1d3ee31 100644
+--- a/kernel/irq/Makefile
++++ b/kernel/irq/Makefile
+@@ -9,3 +9,4 @@ obj-$(CONFIG_GENERIC_IRQ_MIGRATION) += cpuhotplug.o
+ obj-$(CONFIG_PM_SLEEP) += pm.o
+ obj-$(CONFIG_GENERIC_MSI_IRQ) += msi.o
+ obj-$(CONFIG_GENERIC_IRQ_IPI) += ipi.o
++obj-$(CONFIG_SMP) += affinity.o
+diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+new file mode 100644
+index 0000000..1daf8fb
+--- /dev/null
++++ b/kernel/irq/affinity.c
+@@ -0,0 +1,60 @@
++
++#include <linux/interrupt.h>
++#include <linux/kernel.h>
++#include <linux/slab.h>
++#include <linux/cpu.h>
++
++static int get_first_sibling(unsigned int cpu)
++{
++	unsigned int ret;
++
++	ret = cpumask_first(topology_sibling_cpumask(cpu));
++	if (ret < nr_cpu_ids)
++		return ret;
++	return cpu;
++}
++
++/*
++ * Take a map of online CPUs and the number of available interrupt vectors
++ * and generate an output cpumask suitable for spreading MSI/MSI-X vectors
++ * so that they are distributed as good as possible around the CPUs.  If
++ * more vectors than CPUs are available we'll map one to each CPU,
++ * otherwise we map one to the first sibling of each socket.
++ *
++ * If there are more vectors than CPUs we will still only have one bit
++ * set per CPU, but interrupt code will keep on assining the vectors from
++ * the start of the bitmap until we run out of vectors.
++ */
++int irq_create_affinity_mask(struct cpumask **affinity_mask,
++		unsigned int *nr_vecs)
++{
++	unsigned int vecs = 0;
++
++	if (*nr_vecs == 1) {
++		*affinity_mask = NULL;
++		return 0;
++	}
++
++	*affinity_mask = kzalloc(cpumask_size(), GFP_KERNEL);
++	if (!*affinity_mask)
++		return -ENOMEM;
++
++	if (*nr_vecs >= num_online_cpus()) {
++		cpumask_copy(*affinity_mask, cpu_online_mask);
++	} else {
++		unsigned int cpu;
++
++		for_each_online_cpu(cpu) {
++			if (cpu == get_first_sibling(cpu)) {
++				cpumask_set_cpu(cpu, *affinity_mask);
++				vecs++;
++			}
++
++			if (--(*nr_vecs) == 0)
++				break;
++		}
++	}
++
++	*nr_vecs = vecs;
++	return 0;
++}
 -- 
-2.6.4
+2.1.4
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
