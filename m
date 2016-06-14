@@ -1,208 +1,175 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Murali Karicheri <m-karicheri2@ti.com>
-Subject: RE: [PATCH 2/2] aer: add support aer interrupt with none
- MSI/MSI-X/INTx mode
-Date: Tue, 7 Jun 2016 10:07:40 +0000
-Message-ID: <VI1PR0401MB17093077A7F0E3C52AC3392D925D0@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <20160602034828.GA10240@localhost>
- <VI1PR0401MB1709E215DCE264B2C27B3DAB92580@VI1PR0401MB1709.eurprd04.prod.outlook.com>
- <20160602135546.GA8262@localhost> <575052B8.3090203@ti.com>
- <20160603040952.GA17904@localhost> <5751BEDF.3040300@ti.com>
- <20160604034852.GA15143@localhost>
- <DB5PR0401MB1702AF829693255DFC347448925C0@DB5PR0401MB1702.eurprd04.prod.outlook.com>
- <57558248.4010502@ti.com> <20160606181049.GA15171@localhost>
-In-Reply-To: <20160606181049.GA15171@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 14 Jun 2016 11:37:04 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
+Message-ID: <20160614163703.GA31488@localhost>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <CAMxnaaU_3z6BSmSnYfi4ee=aTKm3aPyUaXds=G29wdp8O0m5Cw@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Marc Zyngier <marc.zyngier@arm.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
- Mingkai Hu <mingkai.hu@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Yang-Leo Li <leoyang.li@nxp.com>, Shawn Guo <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMxnaaU_3z6BSmSnYfi4ee=aTKm3aPyUaXds=G29wdp8O0m5Cw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+[+cc linux-kernel]
 
->  -----Original Message-----
->  
->  On Mon, Jun 06, 2016 at 10:01:44AM -0400, Murali Karicheri wrote:
->  > On 06/06/2016 03:32 AM, Po Liu wrote:
->  > > Hi Bjorn,
->  > > I confirm we met same problem with KeyStone base on DesignWare
->  design.
->  > >
->  > >
->  > > Best regards,
->  > > Liu Po
->  > >
->  > >>  -----Original Message-----
->  > >>  From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->  > >>  Sent: Saturday, June 04, 2016 11:49 AM
->  > >>  To: Murali Karicheri
->  > >>  Cc: Po Liu; linux-pci@vger.kernel.org; linux-arm-
->  > >> kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
->  > >> devicetree@vger.kernel.org; Arnd Bergmann; Roy Zang; Marc Zyngier;
->  > >> Stuart Yoder; Yang-Leo Li; Minghuan Lian; Bjorn Helgaas; Shawn Guo;
->  > >> Mingkai Hu; Rob Herring
->  > >>  Subject: Re: [PATCH 2/2] aer: add support aer interrupt with none
->  > >> MSI/MSI-X/INTx mode
->  > >>
->  > >>  On Fri, Jun 03, 2016 at 01:31:11PM -0400, Murali Karicheri wrote:
->  > >>  > Po,
->  > >>  >
->  > >>  > Sorry to hijack your discussion, but the problem seems to be
->  > >> same for  > Keystone PCI controller which is also designware (old
->  version) based.
->  > >>  >
->  > >>  > On 06/03/2016 12:09 AM, Bjorn Helgaas wrote:
->  > >>  > > On Thu, Jun 02, 2016 at 11:37:28AM -0400, Murali Karicheri
->  wrote:
->  > >>  > >> On 06/02/2016 09:55 AM, Bjorn Helgaas wrote:
->  > >>  > >>> On Thu, Jun 02, 2016 at 05:01:19AM +0000, Po Liu wrote:
->  > >>  > >>>>>  -----Original Message-----  > >>>>>  From: Bjorn Helgaas
->  > >> [mailto:helgaas@kernel.org]  > >>>>>  Sent: Thursday, June 02, 2016
->  > >> 11:48 AM  > >>>>>  To: Po Liu  > >>>>>  Cc:
->  > >> linux-pci@vger.kernel.org;  > >>>>>
->  > >> linux-arm-kernel@lists.infradead.org;
->  > >>  > >>>>>  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
->  > >> Arnd  > >>>>> Bergmann;  Roy Zang; Marc Zyngier; Stuart Yoder;
->  > >> Yang-Leo Li;  > >>>>> Minghuan Lian; Bjorn  Helgaas; Shawn Guo;
->  > >> Mingkai Hu; Rob  > >>>>> Herring  > >>>>>  Subject: Re: [PATCH 2/2]
->  > >> aer: add support aer interrupt with  > >>>>> none  MSI/MSI-X/INTx
->  > >> mode  > >>>>>  > >>>>>  [+cc Rob]  > >>>>>  > >>>>>  Hi Po,  >
->  > >> >>>>>  > >>>>>  On Thu, May 26, 2016 at 02:00:06PM +0800, Po Liu
->  > >> wrote:
->  > >>  > >>>>>  > On some platforms, root port doesn't support
->  > >> MSI/MSI-X/INTx  in RC mode.
->  > >>  > >>>>>  > When chip support the aer interrupt with none
->  > >> MSI/MSI-X/INTx  > >>>>> mode,  > maybe there is interrupt line for
->  > >> aer pme etc. Search  > >>>>> the interrupt  > number in the fdt
->  file.
->  > >>  > >>>>>
->  > >>  > >>>>>  My understanding is that AER interrupt signaling can be
->  > >> done  > >>>>> via INTx,  MSI, or MSI-X (PCIe spec r3.0, sec
->  6.2.4.1.2).
->  > >>  > >>>>> Apparently your device  doesn't support MSI or MSI-X.  Are
->  > >> you  > >>>>> saying it doesn't support INTx  either?  How is the
->  > >> interrupt  you're requesting here different from INTx?
->  > >>  > >>>>
->  > >>  > >>>> Layerscape use none of MSI or MSI-X or INTx to indicate the
->  > >> > >>>> devices or root error in RC mode. But use an independent SPI
->  > >> > >>>> interrupt(arm interrupt controller) line.
->  > >>  > >>>
->  > >>  > >>> The Root Port is a PCI device and should follow the normal
->  > >> PCI  > >>> rules for interrupts.  As far as I understand, that
->  > >> means it  > >>> should use MSI, MSI-X, or INTx.  If your Root Port
->  > >> doesn't use MSI  > >>> or MSI-X, it should use INTx, the
->  > >> PCI_INTERRUPT_PIN register  > >>> should tell us which (INTA/
->  > >> INTB/etc.), and  PCI_COMMAND_INTX_DISABLE should work to disable it.
->  > >>  > >>> That's all from the PCI point of view, of course.
->  > >>  > >>
->  > >>  > >> I am faced with the same issue on Keystone PCI hardware and
->  > >> it has  > >> been on my TODO list  for quite some time. Keystone
->  > >> PCI hardware  > >> also doesn't use MSI or MSI-X or INTx for
->  > >> reporting errors received  > >> at the root port, but use a
->  > >> platform interrupt instead (not  > >> complaint to PCI standard as
->  > >> per PCI base spec). So I would need  > >> similar change to have
->  > >> the error interrupt passed to the aer  > >> driver. So there are
->  > >> hardware out there like Keystone which  requires to support this
->  through platform IRQ.
->  > >>  > >
->  > >>  > > This is not a new area of the spec, and it's hard for me to
->  > >> believe  > > that these two new PCIe controllers are both broken
->  > >> the same way  > > (although I guess both are DesignWare-based, so
->  > >> maybe this is the  > > same underlying problem in both cases?).  I
->  > >> think it's more likely  > > that we just haven't figured out the
->  > >> right way to describe this in  the DT.
->  > >>  >
->  > >>  > Keystone is using an older version of the designware IP and it
->  > >> > implements all of the interrupts in the application register
->  > >> space  > unlike other newer version of the hardware. So I assume,
->  > >> the version  > used on Layerscape is also an older version and the
->  > >> both have same  > issue in terms of non standard platform interrupt
->  > >> used for error  reporting.
->  > >>  >
->  > >>  > > I assume you have a Root Port with an AER capability, no MSI
->  > >> > > capability, and no MSI-X capability, right?
->  > >>  >
->  > >>  > Has AER capability and both MSI and INTx (legacy) capability  >
->  > >> > > What does its Interrupt  > > Pin register contain?  If it's
->  > >> zero, it doesn't use INTx either, so  > > according to the spec it
->  > >> should generate no interrupts.
->  > >>  > >
->  > >>  > At address offset 0x3C by default has a value of 1, but it is
->  > >> writable  > by software. So default is INTx A.
->  > >>
->  > >>  0x3c is the Interrupt *Line*, which is read/write.  The Interrupt
->  > >>  *Pin* is at 0x3d and should be read-only.
->  > >>
->  >
->  > You are right. But default is 1 at this address.
->  >
->  > >>  Does your Keystone driver support MSI?  If so, since your Root
->  > >> Port  supports MSI, I would think we would use that by default, and
->  > >> the INTx  stuff wouldn't even matter.
->  > >
->  > > Layerscape is also shows "Both message signaled interrupts (MSI) and
->  legacy INTx are supported."
->  > > But both of them not work for AER interrupt when devices or root
->  port report aer error.
->  > > But another GIC interrupt line do.
->  >
->  > Same with Keystone. Even though both MSI and INTx are supported error
->  > interrupt at root port is reported on a different interrupt line than
->  > MSI/INTx. So for Power Management event interrupt is also different
->  > line.
->  
->  I'm looking at the "Error Message Controls" diagram in the PCIe spec
->  r3.0, sec 6.2.6.  Does this hardware fit into the platform-specific
->  "System Error" case there?  Do the Root Control enable bits (in the PCIe
->  Capability) control this interrupt?  If so, maybe this makes more sense
->  than I thought.
+On Sat, May 21, 2016 at 11:48:42AM +0200, Andreas Noever wrote:
+> 
+> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+>
+> Tested on MacBookPro10,1
+> 
+> On Fri, May 13, 2016 at 1:15 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > This series powers Thunderbolt controllers on Macs down when nothing is
+> > plugged in, saving 1.7 W on machines with a Light Ridge controller and
+> > reportedly 4 W on Cactus Ridge 4C and Falcon Ridge 4C.
+> >
+> > Briefly, a custom ACPI method provided by Apple is used to cut power to
+> > the controller.  A GPE is enabled while the controller is powered down
+> > which side-band signals a plug event, whereupon power is reinstated using
+> > the ACPI method.  Note that even though this mechanism is ACPI-based,
+> > it does not use _PSx methods and is thus entirely nonstandard.
 
-It supposedly not the "System Error" case. But "the Error Interrupt" case.
-Which means " Root Error Command register " could control the interrupt
- line we have now. (refer PCIe spec r3.0, sec 6.2.6)
+I think the current arrangement was that Andreas would ack Thunderbolt
+patches and I would merge them via the PCI tree.  That makes some sense
+because Thunderbolt and PCIe are related, but the more I think about
+it, the less I'm happy with it.
 
-May this kind of hardware design route broken the spec? 
+This series is a good example.  I'm sure it's good work and
+worthwhile.  But I can't really say anything about the content of it
+because most of it is Thunderbolt-specific and there's no public spec.
+It seems like this is basically a collection of reverse-engineered
+quirks that happen to work with the current state of Linux PM on
+certain Macs.  We don't know what might change on future Macs.  We
+don't know what might break when we make changes to Linux PM.
 
->  
->  We have to assume both notification paths work (the normal INTx/MSI/MSI-
->  X AER interrupts as well as the platform-specific System Errors), so if
->  we add support for System Errors, it should be structured so we prefer
->  INTx/MSI/MSI-X, and only fall back to System Errors if they don't work.
->  AER would have to know which path it's using so aer_enable_rootport()
->  can disable the other one (currently it always disables System Errors).
->  
->  Then you'd have to add quirks to mark MSI/MSI-X/INTx as being broken on
->  your devices to force the fallback to System Errors.
->  
->  How much would this screw up other PCIe services (PME, hotplug, VC, etc)?
->  Does MSI work for them?
+I can't test this series, nor do I want to.  I can't test most of the
+patches I merge, but I can at least read the spec and see whether the
+patches make sense.  What I would *like* is to have public Thunderbolt
+specs and a kernel developer's guide so we know what to expect from
+the hardware and the firmware and we can write code that should work
+not just on current Macs, but also on non-Macs and future Macs.
 
-PME also like the AER. Hotplug is not supported. Others not known.
-Po Liu
+I don't think the current situation is really maintainable, and I'm
+not comfortable merging code that I can't maintain.
 
->  
->  Bjorn
+I know I don't understand the whole situation, so somebody please tell
+me why I'm being unreasonable here.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > A Thunderbolt controller appears to the OS as a set of PCI devices:  One
+> > NHI (Native Host Interface) and multiple bridges.  Power is cut to the
+> > entire set of devices:
+> >
+> >   (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+> >                                      +-- Downstream Bridge 1 --
+> >                                      +-- Downstream Bridge 2 --
+> >                                      ...
+> >
+> > v1 of this series shoehorned power control into the NHI driver.  This
+> > violated the Linux pm model which assumes that a child cannot resume
+> > before its parent. As seen above, the NHI is a child, so the child cut
+> > power to the bridges above it.
+> >
+> > v2 resolves this by positioning power control on the controller's
+> > topmost device, which is the upstream bridge.  That is achieved by
+> > binding to it as a Thunderbolt port service driver.  portdrv already
+> > calls down to each service driver on ->suspend and ->resume and I
+> > extended that scheme to further PM callbacks.  E.g. when the upstream
+> > bridge is runtime suspended, portdrv invokes the ->runtime_suspend
+> > callback of each attached service driver, and the Thunderbolt service
+> > driver's callback in turn invokes the ACPI method to cut power to the
+> > controller.
+> >
+> >
+> > For such a nonstandard ACPI-based PM mechanism one would normally assign
+> > a dev_pm_domain to the upstream bridge which overrides the PCI subsystem
+> > PM callbacks.  But that's not an option here because dev_pm_domain_set()
+> > can only be called during driver probe.  The driver is portdrv and
+> > obviously loads earlier than the thunderbolt port service driver.
+> > So one has to make do with the PCI subsystem PM callbacks.
+> >
+> > The PCI core currently assumes that devices can only be put into D3cold
+> > by the platform, i.e. using the standard ACPI _PSx methods.  I extended
+> > the PCI core so that it can deal with devices which are put into D3cold
+> > by the driver callbacks.  It turns out only two changes are needed to
+> > make this work, and they are in patches [09/13] and [10/13].  Runtime
+> > suspend works out of the box, but runtime resume tries to set the device
+> > power state *before* invoking the driver callback, and this goes awry
+> > since the device is still in D3cold.  I solved this by returning an error
+> > in pci_raw_set_power_state() if the device's current_state is D3cold
+> > (patch [09/13]).
+> >
+> > Theoretically it would also be possible to patch the missing _PSx methods
+> > into the ACPI namespace at runtime but I suspect it wouldn't be pretty:
+> > I think I'd have to include pre-compiled AML methods in the kernel and
+> > modify those blobs at runtime (adjust GPE number etc) before patching
+> > them into the namespace.
+> >
+> >
+> > To make direct-complete work for such non-platform-power-managed devices,
+> > I also had to modify pci_target_state() (patch [10/13]).
+> >
+> > Finally, I wanted to avoid the mandatory runtime resume after direct-
+> > complete which was introduced by Rafael with 58a1fbbb2ee8 ("PM / PCI /
+> > ACPI: Kick devices that might have been reset by firmware"), so I added
+> > the possibility to opt out of it (patch [11/13]).
+> >
+> >
+> > I've pushed these patches to GitHub where they can be reviewed more
+> > comfortably with green/red highlighting:
+> > https://github.com/l1k/linux/commits/thunderbolt_runpm_v2
+> >
+> > For reference, here's a link to v1:
+> > http://thread.gmane.org/gmane.linux.power-management.general/73197
+> >
+> > Thanks in advance for your comments.
+> >
+> > Lukas
+> >
+> >
+> > Lukas Wunner (13):
+> >   PCI: Recognize Thunderbolt devices
+> >   PCI: Allow D3 for Thunderbolt ports
+> >   PCI: Add Thunderbolt portdrv service type
+> >   PCI: Generalize portdrv pm iterator
+> >   PCI: Use portdrv pm iterator on further callbacks
+> >   PCI: pciehp: Support runtime pm
+> >   PCI: pciehp: Ignore interrupts during D3cold
+> >   PCI: Allow runtime PM for Thunderbolt hotplug ports on Macs
+> >   PCI: Do not write to PM control register while in D3cold
+> >   PCI: Avoid going from D3cold to D3hot for system sleep
+> >   PM / sleep: Allow opt-out from runtime resume after direct-complete
+> >   thunderbolt: Support runtime pm on upstream bridge
+> >   thunderbolt: Support runtime pm on NHI
+> >
+> >  drivers/base/power/generic_ops.c  |   3 +-
+> >  drivers/pci/hotplug/pciehp_ctrl.c |   9 +-
+> >  drivers/pci/hotplug/pciehp_hpc.c  |   4 +
+> >  drivers/pci/pci.c                 |  50 ++----
+> >  drivers/pci/pci.h                 |   2 +
+> >  drivers/pci/pcie/portdrv.h        |   6 +-
+> >  drivers/pci/pcie/portdrv_core.c   |  47 +-----
+> >  drivers/pci/pcie/portdrv_pci.c    |  88 ++++++++--
+> >  drivers/pci/probe.c               |  17 ++
+> >  drivers/thunderbolt/Kconfig       |   4 +-
+> >  drivers/thunderbolt/Makefile      |   4 +-
+> >  drivers/thunderbolt/nhi.c         |  32 +++-
+> >  drivers/thunderbolt/switch.c      |   9 +
+> >  drivers/thunderbolt/tb.c          |  13 ++
+> >  drivers/thunderbolt/upstream.c    | 345 ++++++++++++++++++++++++++++++++++++++
+> >  include/linux/pci.h               |   1 +
+> >  include/linux/pcieport_if.h       |   7 +
+> >  include/linux/pm.h                |   1 +
+> >  18 files changed, 539 insertions(+), 103 deletions(-)
+> >  create mode 100644 drivers/thunderbolt/upstream.c
+> >
+> > --
+> > 2.8.1
+> >
