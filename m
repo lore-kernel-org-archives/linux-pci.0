@@ -1,54 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49815 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932430AbcFOKXO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jun 2016 06:23:14 -0400
-Date: Wed, 15 Jun 2016 12:23:11 +0200
+Received: from bombadil.infradead.org ([198.137.202.9]:37914 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932119AbcFNT71 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:27 -0400
 From: Christoph Hellwig <hch@lst.de>
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de, axboe@fb.com,
-	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
-Message-ID: <20160615102311.GA16619@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de> <1465934346-20648-3-git-send-email-hch@lst.de> <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com>
+Subject: [PATCH 05/13] irq/msi: Make use of affinity aware allocations
+Date: Tue, 14 Jun 2016 21:58:58 +0200
+Message-Id: <1465934346-20648-6-git-send-email-hch@lst.de>
+In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bart,
+From: Thomas Gleixner <tglx@linutronix.de>
 
-On Wed, Jun 15, 2016 at 10:44:37AM +0200, Bart Van Assche wrote:
-> However, is excluding these interrupts from irqbalanced really the 
-> way to go?
+Allow the MSI code to provide affinity hints per MSI descriptor.
 
-What positive effect will irqbalanced have on explcititly spread
-interrupts?
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ include/linux/msi.h | 2 ++
+ kernel/irq/msi.c    | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-> Suppose e.g. that a system is equipped with two RDMA adapters, 
-> that these adapters are used by a blk-mq enabled block initiator driver and 
-> that each adapter supports eight MSI-X vectors. Should the interrupts of 
-> the two RDMA adapters be assigned to different CPU cores? If so, which 
-> software layer should realize this? The kernel or user space?
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index c33abfa..4f0bfe5 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -47,6 +47,7 @@ struct fsl_mc_msi_desc {
+  * @nvec_used:	The number of vectors used
+  * @dev:	Pointer to the device which uses this descriptor
+  * @msg:	The last set MSI message cached for reuse
++ * @affinity:	Optional pointer to a cpu affinity mask for this descriptor
+  *
+  * @masked:	[PCI MSI/X] Mask bits
+  * @is_msix:	[PCI MSI/X] True if MSI-X
+@@ -67,6 +68,7 @@ struct msi_desc {
+ 	unsigned int			nvec_used;
+ 	struct device			*dev;
+ 	struct msi_msg			msg;
++	const struct cpumask		*affinity;
+ 
+ 	union {
+ 		/* PCI MSI/X specific data */
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 58dbbac..0e2a736 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -335,7 +335,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 
+ 		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
+ 					       dev_to_node(dev), &arg, false,
+-					       NULL);
++					       desc->affinity);
+ 		if (virq < 0) {
+ 			ret = -ENOSPC;
+ 			if (ops->handle_error)
+-- 
+2.1.4
 
-RDMA should eventually use the interrupt spreading implemented in this
-series, as should networking (RDMA actually is on my near term todo list).
-
-RDMA block protocols will then pick up the queue information from the
-HCA driver.  I've not actually implemented this yet, but my current idea
-is:
-
- - the HCA drivers are switch to use pci_alloc_irq_vectors to spread
-   their interrupt vectors around the system
- - the HCA drivers will expose the irq_affinity affinity array
-   in struct ib_device (we'll need to consider what do about the
-   odd completion vectors instead of irq terminology in the RDMA stack,
-   but that's not a show stopper)
- - multiqueue aware block drivers will then feed the irq_affinity
-   cpumask from the hca driver to blk-mq.  We'll also need to ensure
-   the number of protocol queues aligns nicely to the number of hardware
-   queues.  My current thinking is that they should be the same or
-   a fraction of the hardware completion queues, but this might need
-   some careful benchmarking.
