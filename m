@@ -1,50 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36206 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752175AbcFTTFi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jun 2016 15:05:38 -0400
-Date: Mon, 20 Jun 2016 14:05:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: export devm_request_pci_bus_resources to modules
-Message-ID: <20160620190533.GB15674@localhost>
-References: <20160620154604.2280100-1-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160620154604.2280100-1-arnd@arndb.de>
+Received: from bombadil.infradead.org ([198.137.202.9]:37777 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392AbcFNT7L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:11 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: automatic interrupt affinity for MSI/MSI-X capable devices V2
+Date: Tue, 14 Jun 2016 21:58:53 +0200
+Message-Id: <1465934346-20648-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 20, 2016 at 05:45:41PM +0200, Arnd Bergmann wrote:
-> Host drivers can be loadable modules, so we might run into this
-> build error with the new interface:
-> 
-> ERROR: devm_request_pci_bus_resources [drivers/pci/host/pcie-iproc.ko] undefined!
-> 
-> This adds an EXPORT_SYMBOL_GPL() line.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+This series enhances the irq and PCI code to allow spreading around MSI and
+MSI-X vectors so that they have per-cpu affinity if possible, or at least
+per-node.  For that it takes the algorithm from blk-mq, moves it to
+a common place, and makes it available through a vastly simplified PCI
+interrupt allocation API.  It then switches blk-mq to be able to pick up
+the queue mapping from the device if available, and demonstrates all this
+using the NVMe driver.
 
-Folded in, thanks, Arnd!
+There also is a git tree available at:
 
-> ---
->  drivers/pci/bus.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 4c42a1013e3b..32efe8f5d5e9 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -132,6 +132,7 @@ int devm_request_pci_bus_resources(struct device *dev,
->  
->  	return 0;
->  }
-> +EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
->  
->  static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
->  #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-> -- 
-> 2.9.0
-> 
+   git://git.infradead.org/users/hch/block.git
+
+Gitweb:
+
+   http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/msix-spreading.4
+
+Changes since V1:
+ - irq core improvements to properly assign the affinity before
+   request_irq (tglx)
+ - better handling of the MSI vs MSI-X differences in the low level
+   MSI allocator (hch and tglx)
+ - various improvements to pci_alloc_irq_vectors (hch)
+ - remove blk-mq hardware queue reassigned on hotplug cpu events (hch)
+ - forward ported to Jens' current for-next tree (hch)
+
