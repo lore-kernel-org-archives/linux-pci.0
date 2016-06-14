@@ -1,53 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:47699 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752116AbcFBMpp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 08:45:45 -0400
-Date: Thu, 2 Jun 2016 14:45:42 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>,
-	Lior Amsalem <alior@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	Hanna Hawa <hannah@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marcin Wojtas <mw@semihalf.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH 1/3] dt-bindings: add DT binding for the Aardvark PCIe
- controller
-Message-ID: <20160602144542.6bc1b421@free-electrons.com>
-In-Reply-To: <8313817.cgODJZVrao@wuerfel>
-References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1464858585-10963-2-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20160602122405.GG17343@lunn.ch>
-	<8313817.cgODJZVrao@wuerfel>
+Return-Path: <jayachandran.c@broadcom.com>
+Return-Path: <jayachandran.c@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160611172457.GK16462@localhost>
+References: <linux-pci@vger.kernel.org> <1462700001-30086-2-git-send-email-jchandra@broadcom.com>
+ <20160611172457.GK16462@localhost>
+From: Jayachandran C <jchandra@broadcom.com>
+Date: Tue, 14 Jun 2016 21:40:36 +0530
+Message-ID: <CAKc_7PXfydUJspWdgj6YT_VhFhHcjaK_PDTH+-dRYofW=4sQ3A@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] PCI: Handle Broadcom Vulcan DMA alias calculation quirk
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
+	Linux PCI <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>, marc.zyngier@arm.com
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+[Adding ARM GIC and SMMU maintainers]
 
-On Thu, 02 Jun 2016 14:34:14 +0200, Arnd Bergmann wrote:
+On Sat, Jun 11, 2016 at 10:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Sun, May 08, 2016 at 03:03:21PM +0530, Jayachandran C wrote:
+>> The Broadcom Vulcan PCI topology is slightly unusual, for a multi-node
+>> system, it looks like:
+>>
+>>  [bus 0]
+>>      |
+>>      +--[node 0 PCI bridge 0.0.0]
+>>      |           |
+>>      |        [bus 1]
+>>      |           +---[SoC PCI devices 1.4.x, 1.5.x] ........
+>>      |           +---[Glue bridges    1.a.x, 1.b.x]         \
+>>      |                    |                        .....{node 0 GIC ITS}
+>>      |                    |                       /
+>>      |                    +----[SoC PCIe controller root ports]
+>>      |                                |         \...... {SMMUv3 0..3}
+>>      |                                |
+>>      |                                +---- [external PCI devices]
+>>      +- [node 1 PCI bridge 0.0.1]
+>>      |           |
+>>      |        [bus n - similar to bus 1 above]
+>>      ...
+>>
+>> The for_each_dma_alias call for external PCI devices should not go
+>> beyond the PCIe controllers where the SMMU and ITS is associated, going
+>> further above to the glue bridges or the node bridges will find aliases
+>> which are not valid. For internal devices, the association is at the
+>> node level bridge and the alias search should not go further.
+>
+> I like the line of reasoning that we should not iterate higher in the
+> hierarchy than where the translation hardware is attached.  That seems
+> like a reasonable thing in general, not just for this hardware.
+>
+> Is there some generic way to learn where the translation hardware is
+> attached?  If there is, we could make pci_for_each_dma_alias() use
+> that information, and maybe we could solve the problem for other
+> systems as well as for Vulcan.
 
-> I think some other PCI hosts just move the interrupt-controller
-> and #interrupt-cells properties into the PCI host node itself,
-> which avoids the ambiguity here.
+There was discussion on using the return value of the callback function
+to stop the alias search when we reach the bridge to which the IOMMU
+or MSI controller is attached[1]. There was an iommu patch proposed to
+handle this for the device tree case[2], It is possible that we can do
+something similar for MSI and extend it to work when ACPI IORT is
+used as well.
 
-Do you have an example of this? I have modeled my DT binding after the
-one used by the pci-dra7xx driver, which is in the same situation as I
-am in terms of interrupt handling.
+I will spend some time to see if this can be done.
 
-But I can indeed try to make the top-level PCIe controller node the
-interrupt controller. Let me try that quickly.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+JC.
+[1] http://www.spinics.net/lists/linux-pci/msg51093.html
+[2] http://www.spinics.net/lists/arm-kernel/msg508266.html
