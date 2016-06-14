@@ -1,122 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58884 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933071AbcFISU2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jun 2016 14:20:28 -0400
-Subject: [PATCH v1 2/3] powerpc/pci: Remove __pci_mmap_set_pgprot()
-To: Yinghai Lu <yinghai@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 09 Jun 2016 13:20:23 -0500
-Message-ID: <20160609182023.13455.82564.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160609181102.13455.33593.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160609181102.13455.33593.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 14 Jun 2016 19:09:16 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH v2 09/15] drivers: iommu: arm-smmu-v3: split probe
+ functions into DT/generic portions
+Message-ID: <20160614180916.GH16531@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1465306270-27076-10-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465306270-27076-10-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+On Tue, Jun 07, 2016 at 02:31:04PM +0100, Lorenzo Pieralisi wrote:
+> Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
+> initialization functions to detect and programme the ARM SMMU v3 driver
+> features. In order to allow probing the ARM SMMUv3 with other firmwares
+> than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
+> specific portions so that other FW interfaces (ie ACPI) can reuse the HW
+> probing functions and skip the DT portion accordingly.
+> 
+> This patch implements no functional change, only code reshuffling.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> ---
+>  drivers/iommu/arm-smmu-v3.c | 63 +++++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 52 insertions(+), 11 deletions(-)
 
-The powerpc-specific __pci_mmap_set_pgprot() does two things:
+This looks sensible to me.
 
-  1) Disables write combining for I/O port space mappings
+Acked-by: Will Deacon <will.deacon@arm.com>
 
-     This only affects procfs mappings.  The pci_mmap_resource() sysfs path
-     only requests write combining for resources with IORESOURCE_PREFETCH
-     set, which doesn't include I/O resources.
-
-     The only way to request write combining for I/O port space mappings
-     was via the PCIIOC_WRITE_COMBINE ioctl and the proc_bus_pci_mmap()
-     path, and we recently changed that path to ignore write combining for
-     I/O, so this code in powerpc is no longer needed.
-
-  2) Automatically enables write combining for mappings of prefetchable
-     resources, even if not requested by the user
-
-     Both procfs (via PCIIOC_MMAP_IS_MEM and PCIIOC_WRITE_COMBINE ioctls)
-     and sysfs (via "resourceN_wc" files, which are created for resources
-     with IORESOURCE_PREFETCH) provide ways for the user to map PCI memory
-     space with write combining.
-
-     Users that desire write combining should use one of those ways instead
-     of relying on powerpc-specific behavior.
-
-Remove the powerpc-specific __pci_mmap_set_pgprot().
-
-The user-visible effect of this change is that users mapping prefetchable
-PCI memory space via procfs without PCIIOC_WRITE_COMBINE or via sysfs
-"resourceN" (not "resourceN_wc") will get regular uncacheable mappings
-instead of the write combining mappings they used to get.
-
-The new behavior matches the behavior on all other arches that support
-write combining mapping.
-
-[bhelgaas: changelog]
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/powerpc/kernel/pci-common.c |   37 ++++---------------------------------
- 1 file changed, 4 insertions(+), 33 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0f7a60f..8c6beb0 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -356,36 +356,6 @@ static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
- }
- 
- /*
-- * Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-- * device mapping.
-- */
--static pgprot_t __pci_mmap_set_pgprot(struct pci_dev *dev, struct resource *rp,
--				      pgprot_t protection,
--				      enum pci_mmap_state mmap_state,
--				      int write_combine)
--{
--
--	/* Write combine is always 0 on non-memory space mappings. On
--	 * memory space, if the user didn't pass 1, we check for a
--	 * "prefetchable" resource. This is a bit hackish, but we use
--	 * this to workaround the inability of /sysfs to provide a write
--	 * combine bit
--	 */
--	if (mmap_state != pci_mmap_mem)
--		write_combine = 0;
--	else if (write_combine == 0) {
--		if (rp->flags & IORESOURCE_PREFETCH)
--			write_combine = 1;
--	}
--
--	/* XXX would be nice to have a way to ask for write-through */
--	if (write_combine)
--		return pgprot_noncached_wc(protection);
--	else
--		return pgprot_noncached(protection);
--}
--
--/*
-  * This one is used by /dev/mem and fbdev who have no clue about the
-  * PCI device, it tries to find the PCI device first and calls the
-  * above routine
-@@ -458,9 +428,10 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 		return -EINVAL;
- 
- 	vma->vm_pgoff = offset >> PAGE_SHIFT;
--	vma->vm_page_prot = __pci_mmap_set_pgprot(dev, rp,
--						  vma->vm_page_prot,
--						  mmap_state, write_combine);
-+	if (write_combine)
-+		vma->vm_page_prot = pgprot_noncached_wc(vma->vm_page_prot);
-+	else
-+		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
- 
- 	ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
- 			       vma->vm_end - vma->vm_start, vma->vm_page_prot);
-
+Will
