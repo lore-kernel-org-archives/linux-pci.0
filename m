@@ -1,116 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 15 Jun 2016 14:34:23 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
-	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
-	bhelgaas@google.com, robert.richter@caviumnetworks.com,
-	shijie.huang@arm.com, Suravee.Suthikulpanit@amd.com,
-	hanjun.guo@linaro.org, al.stone@linaro.org, mw@semihalf.com,
-	graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
-	will.deacon@arm.com, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	ddaney.cavm@gmail.com, andrea.gallo@linaro.org,
-	linux-pci@vger.kernel.org,
-	"Abdulhamid, Harb" <harba@codeaurora.org>
-Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
-Message-ID: <20160615133423.GA766@red-moon>
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
- <1465828873-23498-2-git-send-email-tn@semihalf.com>
- <576155FA.9080706@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <576155FA.9080706@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 08/13] pci: spread interrupt vectors in pci_alloc_irq_vectors
+Date: Tue, 14 Jun 2016 21:59:01 +0200
+Message-Id: <1465934346-20648-9-git-send-email-hch@lst.de>
+In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 15, 2016 at 09:19:54AM -0400, Sinan Kaya wrote:
-> Hi Tomasz,
-> 
-> > +static acpi_status
-> > +iort_match_node_callback(struct acpi_iort_node *node, void *context)
-> > +{
-> > +	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
-> > +		struct acpi_iort_root_complex *pci_rc;
-> > +		struct pci_bus *bus;
-> > +
-> > +		bus = to_pci_bus(dev);
-> > +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
-> > +
-> > +		/*
-> > +		 * It is assumed that PCI segment numbers maps one-to-one
-> > +		 * with root complexes. Each segment number can represent only
-> > +		 * one root complex.
-> > +		 */
-> > +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
-> > +			return AE_OK;
-> > +
-> 
-> There is problem with the find_dev_node and callback for PCIe here. It assumes
-> a one-to-one relationship between an SMMU and root complex. 
-> 
-> Just checked with Charles offline to see if there is anything in the IORT spec that forces
-> this. And, the answer was no. 
-> 
-> Pasting the IORT requirements for you below.
-> 
-> ?The IORT was intended to be flexible enough to define static RID to SID mappings, which should cover 
-> the following configurations:
-> -	Dedicated SMMU per RC
-> -	Multiple RC?s per SMMU (as you described)
-> -	Multiple SMMU?s per RC (with static RID:SID range per SMMU)
-> 
-> The SMMU instance must be identified by either a device ID *or* a combination of 
-> segment ID *and* Requestor ID. ?
-> 
-> If a root complex has multiple SMMUs, this code is going to return the
-> first SMMU. This needs to be corrected.
+Set the affinity_mask before allocating vectors.
 
-What you say above is correct, but the problem is not here. This
-callback returns either a named component IORT node or a root complex
-IORT node corresponding to a device, the problem you are referring to is
-related to detecting which SMMU a given named component or root
-complex refers too, which is not done here, I will take care of that
-on my SMMU series.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c   | 26 ++++++++++++++++++++++++--
+ include/linux/pci.h |  1 +
+ 2 files changed, 25 insertions(+), 2 deletions(-)
 
-When we look for the SMMU a PCI device is connected to, we must first
-retrieve the IORT node of its root complex and walk its list of
-mappings and match through RID range instead of picking the first
-one, as I assumed, wrongly.
-
-Lorenzo
-
-> 
-> > +		break;
-> > +	}
-> > +	}
-> > +
-> > +	return AE_NOT_FOUND;
-> > +}
-> > +
-> 
-> > +
-> > +static struct acpi_iort_node *
-> > +iort_find_dev_node(struct device *dev)
-> > +{
-> > +	struct pci_bus *pbus;
-> > +
-> > +	if (!dev_is_pci(dev))
-> > +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-> > +				      iort_match_node_callback, dev);
-> > +
-> > +	/* Find a PCI root bus */
-> > +	pbus = to_pci_dev(dev)->bus;
-> > +	while (!pci_is_root_bus(pbus))
-> > +		pbus = pbus->parent;
-> > +
-> > +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-> > +			      iort_match_node_callback, &pbus->dev);
-> > +}
-> > +
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
-> 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a33adec..50d694c 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -568,6 +568,7 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
+ 	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
+ 	entry->msi_attrib.multiple	= ilog2(__roundup_pow_of_two(nvec));
+ 	entry->nvec_used		= nvec;
++	entry->affinity			= dev->irq_affinity;
+ 
+ 	if (control & PCI_MSI_FLAGS_64BIT)
+ 		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+@@ -679,10 +680,18 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 			      struct msix_entry *entries, int nvec)
+ {
++	const struct cpumask *mask = NULL;
+ 	struct msi_desc *entry;
+-	int i;
++	int cpu = -1, i;
+ 
+ 	for (i = 0; i < nvec; i++) {
++		if (dev->irq_affinity) {
++			cpu = cpumask_next(cpu, dev->irq_affinity);
++			if (cpu >= nr_cpu_ids)
++				cpu = cpumask_first(dev->irq_affinity);
++			mask = cpumask_of(cpu);
++		}
++
+ 		entry = alloc_msi_entry(&dev->dev);
+ 		if (!entry) {
+ 			if (!i)
+@@ -699,6 +708,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 		entry->msi_attrib.default_irq	= dev->irq;
+ 		entry->mask_base		= base;
+ 		entry->nvec_used		= 1;
++		entry->affinity			= mask;
+ 
+ 		list_add_tail(&entry->list, dev_to_msi_list(&dev->dev));
+ 	}
+@@ -1176,12 +1186,20 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ {
+ 	unsigned int vecs, i;
+ 	u32 *irqs;
++	int ret;
+ 
+ 	max_vecs = min(max_vecs, pci_nr_irq_vectors(dev));
+ 
++	ret = irq_create_affinity_mask(&dev->irq_affinity, &max_vecs);
++	if (ret)
++		return ret;
++	if (max_vecs < min_vecs)
++		return -ENOSPC;
++
++	ret = -ENOMEM;
+ 	irqs = kcalloc(max_vecs, sizeof(u32), GFP_KERNEL);
+ 	if (!irqs)
+-		return -ENOMEM;
++		goto out_free_affinity;
+ 
+ 	if (!(flags & PCI_IRQ_NOMSIX)) {
+ 		vecs = pci_enable_msix_range_wrapper(dev, irqs, min_vecs,
+@@ -1208,6 +1226,10 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ done:
+ 	dev->irqs = irqs;
+ 	return vecs;
++out_free_affinity:
++	kfree(dev->irq_affinity);
++	dev->irq_affinity = NULL;
++	return ret;
+ }
+ EXPORT_SYMBOL(pci_alloc_irq_vectors);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 84a20fc..f474611 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -321,6 +321,7 @@ struct pci_dev {
+ 	 */
+ 	unsigned int	irq;
+ 	unsigned int	*irqs;
++	struct cpumask	*irq_affinity;
+ 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+ 
+ 	bool match_driver;		/* Skip attaching driver */
+-- 
+2.1.4
