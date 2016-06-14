@@ -1,68 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60314 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:51810 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161183AbcFMVEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jun 2016 17:04:24 -0400
-Date: Mon, 13 Jun 2016 16:04:18 -0500
+	id S1752015AbcFNTkI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jun 2016 15:40:08 -0400
+Date: Tue, 14 Jun 2016 14:40:03 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCH 1/2] x86/vmd: Select device dma ops to override
-Message-ID: <20160613210418.GB18747@localhost>
-References: <1463505205-30431-1-git-send-email-keith.busch@intel.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, jespern@axis.com,
+	Niklas Cassel <niklass@axis.com>
+Subject: Re: [PATCH] PCI: artpec: correct section mismatch for function
+ artpec6_pcie_probe
+Message-ID: <20160614194003.GA6003@localhost>
+References: <201606141525.f3Gs5A4F%fengguang.wu@intel.com>
+ <1465932023-10606-1-git-send-email-niklass@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1463505205-30431-1-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1465932023-10606-1-git-send-email-niklass@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 17, 2016 at 11:13:24AM -0600, Keith Busch wrote:
-> VMD device doesn't usually have device archdata specific dma_ops, so we
-> need to override the default ops for VMD devices.
+On Tue, Jun 14, 2016 at 09:20:23PM +0200, Niklas Cassel wrote:
+> From: Niklas Cassel <niklas.cassel@axis.com>
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> WARNING: drivers/pci/host/built-in.o(.data+0xb00): Section mismatch in reference from the variable artpec6_pcie_driver to the function .init.text:artpec6_pcie_probe()
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 
-I applied this and the v2 2/2 patch with Jon's acks to pci/host-vmd for
-v4.8, thanks!
+Folded into the pci/host-artpec branch, thanks, Niklas!
 
 > ---
->  arch/x86/pci/vmd.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> Reported by kbuild test robot.
+> I converted to using module_platform_driver macro in
+> v2 of this series, unfortunately I missed the
+> section mismatch warning.
+> Feel free to fold this into the original patch.
 > 
-> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-> index 7792aba..b1662bf 100644
-> --- a/arch/x86/pci/vmd.c
-> +++ b/arch/x86/pci/vmd.c
-> @@ -261,7 +261,7 @@ static struct device *to_vmd_dev(struct device *dev)
->  
->  static struct dma_map_ops *vmd_dma_ops(struct device *dev)
->  {
-> -	return to_vmd_dev(dev)->archdata.dma_ops;
-> +	return get_dma_ops(to_vmd_dev(dev));
+>  drivers/pci/host/pcie-artpec6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/host/pcie-artpec6.c
+> index 19adc77..be54fad 100644
+> --- a/drivers/pci/host/pcie-artpec6.c
+> +++ b/drivers/pci/host/pcie-artpec6.c
+> @@ -223,7 +223,7 @@ static int __init artpec6_add_pcie_port(struct pcie_port *pp,
+>  	return 0;
 >  }
 >  
->  static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *addr,
-> @@ -367,7 +367,7 @@ static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
+> -static int __init artpec6_pcie_probe(struct platform_device *pdev)
+> +static int artpec6_pcie_probe(struct platform_device *pdev)
 >  {
->  	struct dma_domain *domain = &vmd->dma_domain;
->  
-> -	if (vmd->dev->dev.archdata.dma_ops)
-> +	if (get_dma_ops(&vmd->dev->dev))
->  		del_dma_domain(domain);
->  }
->  
-> @@ -379,7 +379,7 @@ static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
->  
->  static void vmd_setup_dma_ops(struct vmd_dev *vmd)
->  {
-> -	const struct dma_map_ops *source = vmd->dev->dev.archdata.dma_ops;
-> +	const struct dma_map_ops *source = get_dma_ops(&vmd->dev->dev);
->  	struct dma_map_ops *dest = &vmd->dma_ops;
->  	struct dma_domain *domain = &vmd->dma_domain;
->  
+>  	struct artpec6_pcie *artpec6_pcie;
+>  	struct pcie_port *pp;
 > -- 
-> 2.7.2
+> 2.1.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
