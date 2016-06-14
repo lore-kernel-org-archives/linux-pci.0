@@ -1,79 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25995 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbcFDAYD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jun 2016 20:24:03 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v12 07/15] sparc/PCI: Keep resource idx order with bridge register number
-Date: Fri,  3 Jun 2016 17:06:34 -0700
-Message-Id: <20160604000642.28162-8-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:37788 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787AbcFNT7P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:15 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 01/13] irq/msi: Remove unused MSI_FLAG_IDENTITY_MAP
+Date: Tue, 14 Jun 2016 21:58:54 +0200
+Message-Id: <1465934346-20648-2-git-send-email-hch@lst.de>
+In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On one system found strange "no compatible bridge window" warning
-even we already had pref_compat support that add extra pref bit for device
-resource.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
-PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
-pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
+No user and we definitely don't want to grow one.
 
-It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
-just check resource with bridge pref mmio register idx 15, and we have put
-resource to use mmio register idx 14 during of_scan_pci_bridge()
-as the bridge does not have mmio resource.
-
-We already fix pci_up_path_over_pref_mem64() to check all bus resources.
-
-And at the same time, this patch make resource to have consistent sequence
-like other arch or directly from pci_read_bridge_bases(),
-even when non-pref mmio is missing, or out of ordering in firmware reporting.
-
-Just hold i = 1 for non pref mmio, and i = 2 for pref mmio.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: sparclinux@vger.kernel.org
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/sparc/kernel/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ include/linux/msi.h | 6 ++----
+ kernel/irq/msi.c    | 8 ++------
+ 2 files changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index e7fbf56..e84fa8c 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -481,7 +481,7 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 		pci_read_bridge_bases(bus);
- 		goto after_ranges;
- 	}
--	i = 1;
-+	i = 3;
- 	for (; len >= 32; len -= 32, ranges += 8) {
- 		u64 start;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8b425c6..c33abfa 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -264,12 +264,10 @@ enum {
+ 	 * callbacks.
+ 	 */
+ 	MSI_FLAG_USE_DEF_CHIP_OPS	= (1 << 1),
+-	/* Build identity map between hwirq and irq */
+-	MSI_FLAG_IDENTITY_MAP		= (1 << 2),
+ 	/* Support multiple PCI MSI interrupts */
+-	MSI_FLAG_MULTI_PCI_MSI		= (1 << 3),
++	MSI_FLAG_MULTI_PCI_MSI		= (1 << 2),
+ 	/* Support PCI MSIX interrupts */
+-	MSI_FLAG_PCI_MSIX		= (1 << 4),
++	MSI_FLAG_PCI_MSIX		= (1 << 3),
+ };
  
-@@ -513,6 +513,12 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
-+		} else if ((flags & IORESOURCE_PREFETCH) &&
-+			   !bus->resource[2]->flags) {
-+			res = bus->resource[2];
-+		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
-+			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
-+			res = bus->resource[1];
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 38e89ce..eb5bf2b 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -324,7 +324,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 	struct msi_domain_ops *ops = info->ops;
+ 	msi_alloc_info_t arg;
+ 	struct msi_desc *desc;
+-	int i, ret, virq = -1;
++	int i, ret, virq;
+ 
+ 	ret = msi_domain_prepare_irqs(domain, dev, nvec, &arg);
+ 	if (ret)
+@@ -332,12 +332,8 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 
+ 	for_each_msi_entry(desc, dev) {
+ 		ops->set_desc(&arg, desc);
+-		if (info->flags & MSI_FLAG_IDENTITY_MAP)
+-			virq = (int)ops->get_hwirq(info, &arg);
+-		else
+-			virq = -1;
+ 
+-		virq = __irq_domain_alloc_irqs(domain, virq, desc->nvec_used,
++		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
+ 					       dev_to_node(dev), &arg, false);
+ 		if (virq < 0) {
+ 			ret = -ENOSPC;
 -- 
-2.8.3
+2.1.4
 
