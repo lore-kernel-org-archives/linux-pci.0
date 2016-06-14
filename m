@@ -1,140 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp6-v.fe.bosch.de ([139.15.237.11]:50898 "EHLO
-	smtp6-v.fe.bosch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132AbcFGOYU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2016 10:24:20 -0400
-From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
-Subject: [PATCH] Extending kernel option pci=resource_alignment to be able to
- specify PCI device/vendor IDs
-Date: Tue, 7 Jun 2016 14:24:17 +0000
-Message-ID: <22400b8828ad44ddbccb876cc5ca3b11@FE-MBX1012.de.bosch.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:38513 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751221AbcFNPoF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jun 2016 11:44:05 -0400
+Message-ID: <1465919118.30123.73.camel@linux.intel.com>
+Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management
+ Unit driver
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Date: Tue, 14 Jun 2016 18:45:18 +0300
+In-Reply-To: <20160614152911.GB28601@gmail.com>
+References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <20160614104355.GC13439@gmail.com>
+ <1465912766.30123.55.camel@linux.intel.com>
+	 <20160614152911.GB28601@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned 
-PCI memory resources are not page aligned.
-By using the kernel option "pci=resource_alignment" it is possible to force
-single PCI boards to use page alignment for their memory resources.
-However, this is fairly cumbersome if multiple of these boards are in use as 
-the specification of the cards has to be done via PCI bus/slot/function number
-which might change e.g. by adding another board.
-This patch extends the kernel option "pci=resource_alignment" to allow to
-specify the relevant boards via PCI device/vendor (and subdevice/subvendor) ids.
-The specification of the devices via device/vendor is indicated by a leading
-string "pci:" as argument to "pci=resource_alignment".
-The format of the specification is
-  pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+On Tue, 2016-06-14 at 17:29 +0200, Ingo Molnar wrote:
 
-Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
+> * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+> 
+> > On Tue, 2016-06-14 at 12:43 +0200, Ingo Molnar wrote:
+> > In the TRM it's called Power Management Unit, though once or twice
+> > in some 
+> > documents as Power Management Controller. I actually woudn't like to
+> > use PMC 
+> > abbreviation to not be confused with pmc_atom.c and many other
+> > variation of 
+> > existing PMC drivers of other Intel platforms.
+> > 
+> > PM* as a prefix might be too short to conflict with Power Management
+> > framework 
+> > in the kernel. P-Unit (punit*) is existing part in SoC which will
+> > have its own 
+> > driver in the future, so, can't use it either.
+> > 
+> > pwr*, pwrmu*, scpmu* (as of South Complex Power Management Unit) —
+> > one of them?
+> 
+> 'pwr' certainly sounds good to me! PWMU perhaps?
 
----
- Documentation/kernel-parameters.txt |    2 +
- drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
- 2 files changed, 49 insertions(+), 19 deletions(-)
+Wouldn't be a bit confusing with pwm? I would stay at 'pwr'.
 
-Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
-===================================================================
---- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
-+++ linux-4.7-rc1/Documentation/kernel-parameters.txt
-@@ -2998,6 +2998,8 @@ bytes respectively. Such letter suffixes
- 		resource_alignment=
- 				Format:
- 				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-+				[<order of align>@]pci:<vendor>:<device>\
-+						[:<subvendor>:<subdevice>][; ...] 
- 				Specifies alignment and device to reassign
- 				aligned memory resources.
- 				If <order of align> is not specified,
-Index: linux-4.7-rc1/drivers/pci/pci.c
-===================================================================
---- linux-4.7-rc1.orig/drivers/pci/pci.c
-+++ linux-4.7-rc1/drivers/pci/pci.c
-@@ -4755,6 +4755,7 @@ static DEFINE_SPINLOCK(resource_alignmen
- static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- {
- 	int seg, bus, slot, func, align_order, count;
-+	unsigned short vendor, device, subsystem_vendor, subsystem_device;
- 	resource_size_t align = 0;
- 	char *p;
- 
-@@ -4768,28 +4769,55 @@ static resource_size_t pci_specified_res
- 		} else {
- 			align_order = -1;
- 		}
--		if (sscanf(p, "%x:%x:%x.%x%n",
--			&seg, &bus, &slot, &func, &count) != 4) {
--			seg = 0;
--			if (sscanf(p, "%x:%x.%x%n",
--					&bus, &slot, &func, &count) != 3) {
--				/* Invalid format */
--				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
--					p);
-+		if (strncmp(p, "pci:", 4) == 0) {
-+			/* PCI vendor/device (subvendor/subdevice) ids are specified */
-+			p += 4;
-+			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
-+				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
-+				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
-+					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
-+						p);
-+					break;
-+				}
-+				subsystem_vendor = subsystem_device = 0;
-+			}
-+			p += count;
-+			if ((!vendor || (vendor == dev->vendor)) &&
-+				(!device || (device == dev->device)) &&
-+				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
-+				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
-+				if (align_order == -1)
-+					align = PAGE_SIZE;
-+				else
-+					align = 1 << align_order;
-+				/* Found */
- 				break;
- 			}
- 		}
--		p += count;
--		if (seg == pci_domain_nr(dev->bus) &&
--			bus == dev->bus->number &&
--			slot == PCI_SLOT(dev->devfn) &&
--			func == PCI_FUNC(dev->devfn)) {
--			if (align_order == -1)
--				align = PAGE_SIZE;
--			else
--				align = 1 << align_order;
--			/* Found */
--			break;
-+		else {
-+			if (sscanf(p, "%x:%x:%x.%x%n",
-+				&seg, &bus, &slot, &func, &count) != 4) {
-+				seg = 0;
-+				if (sscanf(p, "%x:%x.%x%n",
-+						&bus, &slot, &func, &count) != 3) {
-+					/* Invalid format */
-+					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
-+						p);
-+					break;
-+				}
-+			}
-+			p += count;
-+			if (seg == pci_domain_nr(dev->bus) &&
-+				bus == dev->bus->number &&
-+				slot == PCI_SLOT(dev->devfn) &&
-+				func == PCI_FUNC(dev->devfn)) {
-+				if (align_order == -1)
-+					align = PAGE_SIZE;
-+				else
-+					align = 1 << align_order;
-+				/* Found */
-+				break;
-+			}
- 		}
- 		if (*p != ';' && *p != ',') {
- 			/* End of param or invalid format */
+P.S. I have sent an indentation fix as a separate patch.
+
+-- 
+
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
