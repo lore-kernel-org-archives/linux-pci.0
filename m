@@ -1,59 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0083.outbound.protection.outlook.com ([104.47.38.83]:25673
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933284AbcFIDOq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2016 23:14:46 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, nofooter <nofooter@xilinx.com>
-Subject: RE: PCIe EP DMA driver with DMA Framework
-Date: Thu, 9 Jun 2016 03:14:39 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258B1EEC@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B1EC7@XAP-PVEXMBX01.xlnx.xilinx.com>
-In-Reply-To: <8520D5D51A55D047800579B094147198258B1EC7@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from bombadil.infradead.org ([198.137.202.9]:37800 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752015AbcFNT7T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:19 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
+Date: Tue, 14 Jun 2016 21:58:55 +0200
+Message-Id: <1465934346-20648-3-git-send-email-hch@lst.de>
+In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry Please neglect the footer. Forgot to configure some settings.
-> Hi All,
->
-> We are planning to write a PCIe EndPoint DMA driver with DMA Framework
-> on x86 machine.
-> ("https://www.kernel.org/doc/Documentation/dmaengine/provider.txt")
-> We are targeting to measure PCIe performance with this Framework driver.
->
-> But I did not find any PCIe driver with DMA Framework. Please let me know if
-> any such PCIe driver exists.
->
-> If there isn't any such driver, Please let me know if there are any limitations
-> with DMA Framework to be used with PCIe or Is this DMA Engine Framework
-> is targeted for different purpose and not for PCIe ?
->
->
-> Thanks
-> Bharat
->
->
->
->
->
-> This email and any attachments are intended for the sole use of the named
-> recipient(s) and contain(s) confidential information that may be proprietary,
-> privileged or copyrighted under applicable law. If you are not the intended
-> recipient, do not read, copy, or forward this email message or any
-> attachments. Delete this email message and any attachments immediately.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+From: Thomas Gleixner <tglx@linutronix.de>
 
+Interupts marked with this flag are excluded from user space interrupt
+affinity changes. Contrary to the IRQ_NO_BALANCING flag, the kernel internal
+affinity mechanism is not blocked.
 
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+This flag will be used for multi-queue device interrupts.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ include/linux/irq.h    |  7 +++++++
+ kernel/irq/internals.h |  2 ++
+ kernel/irq/manage.c    | 21 ++++++++++++++++++---
+ kernel/irq/proc.c      |  2 +-
+ 4 files changed, 28 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 4d758a7..49d66d1 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -197,6 +197,7 @@ struct irq_data {
+  * IRQD_IRQ_INPROGRESS		- In progress state of the interrupt
+  * IRQD_WAKEUP_ARMED		- Wakeup mode armed
+  * IRQD_FORWARDED_TO_VCPU	- The interrupt is forwarded to a VCPU
++ * IRQD_AFFINITY_MANAGED	- Affinity is managed automatically
+  */
+ enum {
+ 	IRQD_TRIGGER_MASK		= 0xf,
+@@ -212,6 +213,7 @@ enum {
+ 	IRQD_IRQ_INPROGRESS		= (1 << 18),
+ 	IRQD_WAKEUP_ARMED		= (1 << 19),
+ 	IRQD_FORWARDED_TO_VCPU		= (1 << 20),
++	IRQD_AFFINITY_MANAGED		= (1 << 21),
+ };
+ 
+ #define __irqd_to_state(d) ACCESS_PRIVATE((d)->common, state_use_accessors)
+@@ -305,6 +307,11 @@ static inline void irqd_clr_forwarded_to_vcpu(struct irq_data *d)
+ 	__irqd_to_state(d) &= ~IRQD_FORWARDED_TO_VCPU;
+ }
+ 
++static inline bool irqd_affinity_is_managed(struct irq_data *d)
++{
++	return __irqd_to_state(d) & IRQD_AFFINITY_MANAGED;
++}
++
+ #undef __irqd_to_state
+ 
+ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index 09be2c9..b15aa3b 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -105,6 +105,8 @@ static inline void unregister_handler_proc(unsigned int irq,
+ 					   struct irqaction *action) { }
+ #endif
+ 
++extern bool irq_can_set_affinity_usr(unsigned int irq);
++
+ extern int irq_select_affinity_usr(unsigned int irq, struct cpumask *mask);
+ 
+ extern void irq_set_thread_affinity(struct irq_desc *desc);
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index ef0bc02..30658e9 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -115,12 +115,12 @@ EXPORT_SYMBOL(synchronize_irq);
+ #ifdef CONFIG_SMP
+ cpumask_var_t irq_default_affinity;
+ 
+-static int __irq_can_set_affinity(struct irq_desc *desc)
++static bool __irq_can_set_affinity(struct irq_desc *desc)
+ {
+ 	if (!desc || !irqd_can_balance(&desc->irq_data) ||
+ 	    !desc->irq_data.chip || !desc->irq_data.chip->irq_set_affinity)
+-		return 0;
+-	return 1;
++		return false;
++	return true;
+ }
+ 
+ /**
+@@ -134,6 +134,21 @@ int irq_can_set_affinity(unsigned int irq)
+ }
+ 
+ /**
++ * irq_can_set_affinity_usr - Check if affinity of a irq can be set from user space
++ * @irq:	Interrupt to check
++ *
++ * Like irq_can_set_affinity() above, but additionally checks for the
++ * AFFINITY_MANAGED flag.
++ */
++bool irq_can_set_affinity_usr(unsigned int irq)
++{
++	struct irq_desc *desc = irq_to_desc(irq);
++
++	return __irq_can_set_affinity(desc) &&
++		!irqd_affinity_is_managed(&desc->irq_data);
++}
++
++/**
+  *	irq_set_thread_affinity - Notify irq threads to adjust affinity
+  *	@desc:		irq descriptor which has affitnity changed
+  *
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index 4e1b947..40bdcdc 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -96,7 +96,7 @@ static ssize_t write_irq_affinity(int type, struct file *file,
+ 	cpumask_var_t new_value;
+ 	int err;
+ 
+-	if (!irq_can_set_affinity(irq) || no_irq_affinity)
++	if (!irq_can_set_affinity_usr(irq) || no_irq_affinity)
+ 		return -EIO;
+ 
+ 	if (!alloc_cpumask_var(&new_value, GFP_KERNEL))
+-- 
+2.1.4
 
