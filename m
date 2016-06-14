@@ -1,57 +1,111 @@
-Return-Path: <wim@djo.tudelft.nl>
-Return-Path: <wim@djo.tudelft.nl>
-Date: Mon, 27 Jun 2016 08:27:24 +0200
-From: Wim Osterholt <wim@djo.tudelft.nl>
-To: okaya@codeaurora.org
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-  "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
-  linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
-  Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org,
-  Alex Williamson <alex.williamson@redhat.com>,
-  Wim Osterholt <wim@djo.tudelft.nl>
-Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
-Message-ID: <20160627062724.GA6713@djo.tudelft.nl>
-Reply-To: wim@djo.tudelft.nl
-References: <576943BA.1000001@codeaurora.org>
- <20160621221347.GA28603@djo.tudelft.nl>
- <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
- <20160623141234.GA14662@djo.tudelft.nl>
- <576BF86E.8060302@codeaurora.org>
- <576C042B.20507@codeaurora.org>
- <20160623232533.GA14984@djo.tudelft.nl>
- <f85fb7c7-53aa-3a1e-0635-bb245d08e804@codeaurora.org>
- <20160625013920.GA26737@djo.tudelft.nl>
- <3bf1261bc7a931cb5e1e93ea0d66b265@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3bf1261bc7a931cb5e1e93ea0d66b265@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:38199 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932418AbcFNT7l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:41 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 10/13] blk-mq: only allocate a single mq_map per tag_set
+Date: Tue, 14 Jun 2016 21:59:03 +0200
+Message-Id: <1465934346-20648-11-git-send-email-hch@lst.de>
+In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 25, 2016 at 04:51:03AM -0400, okaya@codeaurora.org wrote:
-> On 2016-06-24 21:39, Wim Osterholt wrote:
-> 
-> Please apply the patches on top of clean 4.7-rc4 tree and apply them in 
-> order with
-> 
-> git am 0001...
-> git am 0002...
+The mapping is identical for all queues in a tag_set, so stop wasting
+memory for building multiple.  Note that for now I've kept the mq_map
+pointer in the request_queue, but we'll need to investigate if we can
+remove it without suffering from the additional indirection.  The same
+would apply to the mq_ops pointer as well.
 
-It doesn't work that way.
-Beginners problems with git.
-Tried all kinds of things, including a new git clone to no avail.
-Took a long time to discover that in the above example these were the names
-of the 'attachments'.
-It didn't work. Error 'could not find out the kind of patch' or some such.
-Took much longer to find out that in that mail and in the saved attachments
-there were lines beginning with '>From' that were the culprit.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-mq.c         | 22 ++++++++++++++--------
+ include/linux/blk-mq.h |  1 +
+ 2 files changed, 15 insertions(+), 8 deletions(-)
 
-Still not found out how to make patch work without errors.
-Anyway, by doing it with more manual intervention om a stock kernel-4.7-rc4
-on my (very slow) Inspiron 4100 it seems to work like before. Hooray.
-However, an earlier try on my Inspiron 510m did not work.
-I'll do a clean retry later today, just to make sure.
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index f972d32..622cb22 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1930,7 +1930,6 @@ void blk_mq_release(struct request_queue *q)
+ 		kfree(hctx);
+ 	}
+ 
+-	kfree(q->mq_map);
+ 	q->mq_map = NULL;
+ 
+ 	kfree(q->queue_hw_ctx);
+@@ -2029,9 +2028,7 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 	if (!q->queue_hw_ctx)
+ 		goto err_percpu;
+ 
+-	q->mq_map = blk_mq_make_queue_map(set);
+-	if (!q->mq_map)
+-		goto err_map;
++	q->mq_map = set->mq_map;
+ 
+ 	blk_mq_realloc_hw_ctxs(set, q);
+ 	if (!q->nr_hw_queues)
+@@ -2081,8 +2078,6 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 	return q;
+ 
+ err_hctxs:
+-	kfree(q->mq_map);
+-err_map:
+ 	kfree(q->queue_hw_ctx);
+ err_percpu:
+ 	free_percpu(q->queue_ctx);
+@@ -2304,14 +2299,22 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
+ 	if (!set->tags)
+ 		return -ENOMEM;
+ 
++	set->mq_map = blk_mq_make_queue_map(set);
++	if (!set->mq_map)
++		goto out_free_tags;
++
+ 	if (blk_mq_alloc_rq_maps(set))
+-		goto enomem;
++		goto out_free_mq_map;
+ 
+ 	mutex_init(&set->tag_list_lock);
+ 	INIT_LIST_HEAD(&set->tag_list);
+ 
+ 	return 0;
+-enomem:
++
++out_free_mq_map:
++	kfree(set->mq_map);
++	set->mq_map = NULL;
++out_free_tags:
+ 	kfree(set->tags);
+ 	set->tags = NULL;
+ 	return -ENOMEM;
+@@ -2327,6 +2330,9 @@ void blk_mq_free_tag_set(struct blk_mq_tag_set *set)
+ 			blk_mq_free_rq_map(set, set->tags[i], i);
+ 	}
+ 
++	kfree(set->mq_map);
++	set->mq_map = NULL;
++
+ 	kfree(set->tags);
+ 	set->tags = NULL;
+ }
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 2498fdf..0a3b138 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -65,6 +65,7 @@ struct blk_mq_hw_ctx {
+ };
+ 
+ struct blk_mq_tag_set {
++	unsigned int		*mq_map;
+ 	struct blk_mq_ops	*ops;
+ 	unsigned int		nr_hw_queues;
+ 	unsigned int		queue_depth;	/* max hw supported */
+-- 
+2.1.4
 
-regards, Wim.
-
-
------ wim@djo.tudelft.nl -----
