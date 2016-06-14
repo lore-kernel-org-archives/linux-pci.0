@@ -1,107 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 17 Jun 2016 15:15:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	linux-arm-kernel@lists.infradead.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will.deacon@arm.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>
-Subject: Re: [RFC PATCH v2 03/15] arm64: mm: change IOMMU notifier action to
- attach DMA ops
-Message-ID: <20160617141536.GA24840@red-moon>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1465306270-27076-4-git-send-email-lorenzo.pieralisi@arm.com>
- <5763C27A.9030306@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5763C27A.9030306@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:33020 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751345AbcFNRgD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jun 2016 13:36:03 -0400
+Message-ID: <1465925834.30123.90.camel@linux.intel.com>
+Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management
+ Unit driver
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: David Cohen <david.a.cohen@linux.intel.com>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Date: Tue, 14 Jun 2016 20:37:14 +0300
+In-Reply-To: <20160614172621.GA16566@psi-dev26.jf.intel.com>
+References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <1465919118.30123.73.camel@linux.intel.com>
+ <20160614155835.GA29820@gmail.com>
+ <1465920434.30123.87.camel@linux.intel.com>
+	 <20160614172621.GA16566@psi-dev26.jf.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
+On Tue, 2016-06-14 at 10:26 -0700, David Cohen wrote:
 
-On Fri, Jun 17, 2016 at 10:27:22AM +0100, Robin Murphy wrote:
-> Hi Lorenzo,
+> > Yes. Will rename in this way, re-test and re-send.
 > 
-> I think this patch makes sense even independent of the rest of the
-> series, one nit inline notwithstanding.
+> I'm curious about that. What pmu prefix would stand for?
 
-Thanks. Yes I added it to this series since it is not strictly
-necessary (ie it does not fix anything) in the mainline, but
-it *is* necessary for this whole series to function when we
-boot through ACPI.
+It's indeed widely used as Performance Monitoring Unit
 
-I will send it out in a separate patch and fold changes you
-request below, it would be good to have some coverage for
-it before merging it.
+-- 
 
-Thank you !
-Lorenzo
-
-> Marek; I'm curious as to whether this could make the workaround in
-> 722ec35f7 obsolete as well, or are all the drivers also bound
-> super-early in the setup you had there?
-> 
-> On 07/06/16 14:30, Lorenzo Pieralisi wrote:
-> >Current bus notifier in ARM64 (__iommu_attach_notifier)
-> >attempts to attach dma_ops to a device on BUS_NOTIFY_ADD_DEVICE
-> >action notification.
-> >
-> >This causes issues on ACPI based systems, where PCI devices
-> >can be added before the IOMMUs the devices are attached to
-> >had a chance to be probed, causing failures on attempts to
-> >attach dma_ops in that the domain for the respective IOMMU
-> >may not be set-up yet by the time the bus notifier is run.
-> >
-> >Devices dma_ops do not require to be set-up till the matching
-> >device drivers are probed. This means that instead of running
-> >the notifier attaching dma_ops to devices (__iommu_attach_notifier)
-> >on BUS_NOTIFY_ADD_DEVICE action, it can be run just before the
-> >device driver is bound to the device in question (on action
-> >BUS_NOTIFY_BIND_DRIVER) so that it is certain that its IOMMU
-> >group and domain are set-up accordingly at the time the
-> >notifier is triggered.
-> >
-> >This patch changes the notifier action upon which dma_ops
-> >are attached to devices and defer it to driver binding time,
-> >so that IOMMU devices have a chance to be probed and to register
-> >their bus notifiers before the dma_ops attach sequence for a
-> >device is actually carried out.
-> >
-> >Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >Cc: Will Deacon <will.deacon@arm.com>
-> >Cc: Catalin Marinas <catalin.marinas@arm.com>
-> >Cc: Robin Murphy <robin.murphy@arm.com>
-> >---
-> >  arch/arm64/mm/dma-mapping.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> >diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-> >index c566ec8..79b0882 100644
-> >--- a/arch/arm64/mm/dma-mapping.c
-> >+++ b/arch/arm64/mm/dma-mapping.c
-> >@@ -848,7 +848,7 @@ static int __iommu_attach_notifier(struct notifier_block *nb,
-> >  {
-> >  	struct iommu_dma_notifier_data *master, *tmp;
-> >
-> >-	if (action != BUS_NOTIFY_ADD_DEVICE)
-> >+	if (action != BUS_NOTIFY_BIND_DRIVER)
-> 
-> With this, you can also get rid of the priority setting and big fat
-> explanatory comment in register_iommu_dma_ops_notifier().
-> 
-> Robin.
-> 
-> >  		return 0;
-> >
-> >  	mutex_lock(&iommu_dma_notifier_lock);
-> >
-> 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
