@@ -1,93 +1,208 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30935 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980AbcF1IQD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2016 04:16:03 -0400
-Subject: [PATCH] Exchange the Assignments of `MEMORYs' and `CFGs/IOs' in
- Designware PCIe Driver
-References: <1467100302-221983-1-git-send-email-zhaonenglong@hisilicon.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-From: "dongbo (E)" <dongbo4@huawei.com>
-CC: Linuxarm <linuxarm@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhanweitao <zhanweitao@hisilicon.com>
-Message-ID: <c72d2b44-a5d2-bd8f-16a7-2a80ae2b71eb@huawei.com>
-Date: Tue, 28 Jun 2016 16:12:29 +0800
-MIME-Version: 1.0
-In-Reply-To: <1467100302-221983-1-git-send-email-zhaonenglong@hisilicon.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 07/13] pci: Provide sensible irq vector alloc/free routines
+Date: Tue, 14 Jun 2016 21:59:00 +0200
+Message-Id: <1465934346-20648-8-git-send-email-hch@lst.de>
+In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dong Bo <dongbo4@huawei.com>
+Add a helper to allocate a range of interrupt vectors, which will
+transparently use MSI-X and MSI if available or fallback to legacy
+vectors.  The interrupts are available in a core managed array
+in the pci_dev structure, and can also be released using a similar
+helper.
 
-In designware PCIe driver, the iatu0 is used for both CFG and IO accesses.
-When sending CFGs to peripherals (e.g. lspci), iatu0 frequently switches
-between CFG and IO alternatively.
+The next patch will also add automatic spreading of MSI / MSI-X
+vectors to this function.
 
-A MEMORY probably be sent as an IOs by mistake. Considering the following
-configurations:
-MEMORY          ->      BASE_ADDR: 0xb4100000, LIMIT: 0xb4100FFF, TYPE=mem
-CFG             ->      BASE_ADDR: 0xb4000000, LIMIT: 0xb4000FFF, TYPE=cfg
-IO              ->      BASE_ADDR: 0xFFFFFFFF, LIMIT: 0xFFFFFFFE, TYPE=io
-
-Suppose PCIe has just completed a CFG access, to switch back to IO, it set
-the BASE_ADDR to 0xFFFFFFFF, LIMIT 0xFFFFFFFE and TYPE to io. When another
-CFG comes, the BASE_ADDR is set to 0xb4000000 to switch to CFG. At this
-moment, a MEMORY access shows up, since it matches with iatu0
-(due to 0xb4000000 <= MEMORY BASE_ADDR <= MEMORY LIMIE <= 0xFFFFFFF), it
-is treated as an IO access by mistake, then sent to perpheral.
-
-This patch fixes the problem by exchanging the assignments of `MEMORYs'
-and `CFGs/IOs', which assigning MEMEORYs to iatu0, CFGs and IOs to iatu1.
-
-Signed-off-by: Dong Bo <dongbo4@huawei.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/host/pcie-designware.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/msi.c   | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  18 +++++++++
+ 2 files changed, 128 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index aafd766..1bd88d9 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -599,11 +599,11 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		va_cfg_base = pp->va_cfg1_base;
- 	}
- -	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
--	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 				  PCIE_ATU_TYPE_IO, pp->io_base,
- 				  pp->io_bus_addr, pp->io_size);
- @@ -636,11 +636,11 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		va_cfg_base = pp->va_cfg1_base;
- 	}
- -	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
- 	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
--	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-+	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 				  PCIE_ATU_TYPE_IO, pp->io_base,
- 				  pp->io_bus_addr, pp->io_size);
- @@ -779,7 +779,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	 * we should not program the ATU here.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a080f44..a33adec 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -4,6 +4,7 @@
+  *
+  * Copyright (C) 2003-2004 Intel
+  * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
++ * Copyright (c) 2016 Christoph Hellwig.
+  */
+ 
+ #include <linux/err.h>
+@@ -1120,6 +1121,115 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+ }
+ EXPORT_SYMBOL(pci_enable_msix_range);
+ 
++static unsigned int pci_nr_irq_vectors(struct pci_dev *pdev)
++{
++	int nr_entries;
++
++	nr_entries = pci_msix_vec_count(pdev);
++	if (nr_entries <= 0 && pci_msi_supported(pdev, 1))
++		nr_entries = pci_msi_vec_count(pdev);
++	if (nr_entries <= 0)
++		nr_entries = 1;
++	return nr_entries;
++}
++
++static int pci_enable_msix_range_wrapper(struct pci_dev *pdev, u32 *irqs,
++		unsigned int min_vecs, unsigned int max_vecs)
++{
++	struct msix_entry *msix_entries;
++	int vecs, i;
++
++	msix_entries = kcalloc(max_vecs, sizeof(struct msix_entry), GFP_KERNEL);
++	if (!msix_entries)
++		return -ENOMEM;
++
++	for (i = 0; i < max_vecs; i++)
++		msix_entries[i].entry = i;
++
++	vecs = pci_enable_msix_range(pdev, msix_entries, min_vecs, max_vecs);
++	if (vecs > 0) {
++		for (i = 0; i < vecs; i++)
++			irqs[i] = msix_entries[i].vector;
++	}
++
++	kfree(msix_entries);
++	return vecs;
++}
++
++/**
++ * pci_alloc_irq_vectors - allocate multiple IRQs for a device
++ * @dev:		PCI device to operate on
++ * @min_vecs:		minimum number of vectors required (must be >= 1)
++ * @max_vecs:		maximum (desired) number of vectors
++ * @flags:		flags or quirks for the allocation
++ *
++ * Allocate up to @max_vecs interrupt vectors for @dev, using MSI-X or MSI
++ * vectors if available, and fall back to a single legacy vector
++ * if neither is available.  Return the number of vectors allocated,
++ * (which might be smaller than @max_vecs) if successful, or a negative
++ * error code on error.  The Linux irq numbers for the allocated
++ * vectors are stored in pdev->irqs.  If less than @min_vecs interrupt
++ * vectors are available for @dev the function will fail with -ENOSPC.
++ */
++int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
++		unsigned int max_vecs, unsigned int flags)
++{
++	unsigned int vecs, i;
++	u32 *irqs;
++
++	max_vecs = min(max_vecs, pci_nr_irq_vectors(dev));
++
++	irqs = kcalloc(max_vecs, sizeof(u32), GFP_KERNEL);
++	if (!irqs)
++		return -ENOMEM;
++
++	if (!(flags & PCI_IRQ_NOMSIX)) {
++		vecs = pci_enable_msix_range_wrapper(dev, irqs, min_vecs,
++				max_vecs);
++		if (vecs > 0)
++			goto done;
++	}
++
++	vecs = pci_enable_msi_range(dev, min_vecs, max_vecs);
++	if (vecs > 0) {
++		for (i = 0; i < vecs; i++)
++			irqs[i] = dev->irq + i;
++		goto done;
++	}
++
++	if (min_vecs > 1)
++		return -ENOSPC;
++
++	/* use legacy irq */
++	kfree(irqs);
++	dev->irqs = &dev->irq;
++	return 1;
++
++done:
++	dev->irqs = irqs;
++	return vecs;
++}
++EXPORT_SYMBOL(pci_alloc_irq_vectors);
++
++/**
++ * pci_free_irq_vectors - free previously allocated IRQs for a device
++ * @dev:		PCI device to operate on
++ *
++ * Undoes the allocations and enabling in pci_alloc_irq_vectors().
++ */
++void pci_free_irq_vectors(struct pci_dev *dev)
++{
++	if (dev->msix_enabled)
++		pci_disable_msix(dev);
++	else if (dev->msi_enabled)
++		pci_disable_msi(dev);
++
++	if (dev->irqs != &dev->irq)
++		kfree(dev->irqs);
++}
++EXPORT_SYMBOL(pci_free_irq_vectors);
++
++
+ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+ {
+ 	return to_pci_dev(desc->dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..84a20fc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -320,6 +320,7 @@ struct pci_dev {
+ 	 * directly, use the values stored here. They might be different!
  	 */
- 	if (!pp->ops->rd_other_conf)
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
- 					  pp->mem_bus_addr, pp->mem_size);
- -- 1.9.1
-
-
-.
-
-
+ 	unsigned int	irq;
++	unsigned int	*irqs;
+ 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+ 
+ 	bool match_driver;		/* Skip attaching driver */
+@@ -1237,6 +1238,8 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
+ 
++#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
++
+ /* kmem_cache style wrapper around pci_alloc_consistent() */
+ 
+ #include <linux/pci-dma.h>
+@@ -1284,6 +1287,9 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+ 		return rc;
+ 	return 0;
+ }
++int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
++		unsigned int max_vecs, unsigned int flags);
++void pci_free_irq_vectors(struct pci_dev *dev);
+ #else
+ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+ static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+@@ -1307,6 +1313,18 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
+ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+ 		      struct msix_entry *entries, int nvec)
+ { return -ENOSYS; }
++static inline int pci_alloc_irq_vectors(struct pci_dev *dev,
++		unsigned int min_vecs, unsigned int max_vecs,
++		unsigned int flags)
++{
++	if (min_vecs > 1)
++		return -ENOSPC;
++	dev->irqs = &dev->irq;
++	return 1;
++}
++static inline void pci_free_irq_vectors(struct pci_dev *dev)
++{
++}
+ #endif
+ 
+ #ifdef CONFIG_PCIEPORTBUS
+-- 
+2.1.4
