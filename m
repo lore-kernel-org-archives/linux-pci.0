@@ -1,49 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 10 Jun 2016 19:06:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 35/54] MAINTAINERS: Add file patterns for pci device tree
- bindings
-Message-ID: <20160611000619.GE16462@localhost>
-References: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
- <1463907991-7916-36-git-send-email-geert@linux-m68k.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:28900 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751364AbcFNR0X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jun 2016 13:26:23 -0400
+Date: Tue, 14 Jun 2016 10:26:21 -0700
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management Unit
+ driver
+Message-ID: <20160614172621.GA16566@psi-dev26.jf.intel.com>
+References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <1465919118.30123.73.camel@linux.intel.com>
+ <20160614155835.GA29820@gmail.com>
+ <1465920434.30123.87.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1463907991-7916-36-git-send-email-geert@linux-m68k.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1465920434.30123.87.camel@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 22, 2016 at 11:06:12AM +0200, Geert Uytterhoeven wrote:
-> Submitters of device tree binding documentation may forget to CC
-> the subsystem maintainer if this is missing.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
+Hi,
 
-Applied to pci/misc for v4.8, thanks, Geert.
+On Tue, Jun 14, 2016 at 07:07:14PM +0300, Andy Shevchenko wrote:
+> On Tue, 2016-06-14 at 17:58 +0200, Ingo Molnar wrote:
+> > * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+> > 
+> > > On Tue, 2016-06-14 at 17:29 +0200, Ingo Molnar wrote:
+> > > 
+> > > > * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+> > > > 
+> > > > > On Tue, 2016-06-14 at 12:43 +0200, Ingo Molnar wrote:
+> > > > > In the TRM it's called Power Management Unit, though once or
+> > > > > twice
+> > > > > in some 
+> > > > > documents as Power Management Controller. I actually woudn't
+> > > > > like to
+> > > > > use PMC 
+> > > > > abbreviation to not be confused with pmc_atom.c and many other
+> > > > > variation of 
+> > > > > existing PMC drivers of other Intel platforms.
+> > > > > 
+> > > > > PM* as a prefix might be too short to conflict with Power
+> > > > > Management
+> > > > > framework 
+> > > > > in the kernel. P-Unit (punit*) is existing part in SoC which
+> > > > > will
+> > > > > have its own 
+> > > > > driver in the future, so, can't use it either.
+> > > > > 
+> > > > > pwr*, pwrmu*, scpmu* (as of South Complex Power Management Unit)
+> > > > > —
+> > > > > one of them?
+> > > > 
+> > > > 'pwr' certainly sounds good to me! PWMU perhaps?
+> > > 
+> > > Wouldn't be a bit confusing with pwm? I would stay at 'pwr'.
+> > 
+> > Yeah, indeed - so pwr it is?
+> 
+> Yes. Will rename in this way, re-test and re-send.
 
-> ---
-> Please apply this patch directly if you want to be involved in device
-> tree binding documentation for your subsystem.
-> ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 868111d26536f086..2e4bacda7f40a7e8 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -8695,6 +8695,7 @@ L:	linux-pci@vger.kernel.org
->  Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
->  S:	Supported
-> +F:	Documentation/devicetree/bindings/pci/
->  F:	Documentation/PCI/
->  F:	drivers/pci/
->  F:	include/linux/pci*
-> -- 
-> 1.9.1
-> 
+I'm curious about that. What pmu prefix would stand for?
+
+Br, David
