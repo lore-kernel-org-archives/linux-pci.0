@@ -1,73 +1,221 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57275 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751089AbcFXGu0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Jun 2016 02:50:26 -0400
-Date: Fri, 24 Jun 2016 07:50:28 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] pci: Add support for unbinding the generic PCI host
- controller
-Message-ID: <20160624065028.GG29165@arm.com>
-References: <57698276.6050606@siemens.com>
- <20160622060638.GY29165@arm.com>
- <576C1CF6.7020804@siemens.com>
- <20160624061238.GD29165@arm.com>
- <576CD58C.5020900@siemens.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33918 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194AbcFNKoA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 06:44:00 -0400
+Date: Tue, 14 Jun 2016 12:43:55 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	David Cohen <david.a.cohen@linux.intel.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management Unit
+ driver
+Message-ID: <20160614104355.GC13439@gmail.com>
+References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <576CD58C.5020900@siemens.com>
+In-Reply-To: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 24, 2016 at 08:39:08AM +0200, Jan Kiszka wrote:
-> On 2016-06-24 08:12, Will Deacon wrote:
-> > On Thu, Jun 23, 2016 at 07:31:34PM +0200, Jan Kiszka wrote:
-> >> On 2016-06-22 08:06, Will Deacon wrote:
-> >>>   - The probe path seems to have some stateful operations outside of PCI
-> >>>     resources. For example, kzalloc'ing the bus_range resource in
-> >>>     of_pci_get_host_bridge_resources. Do we need to clean these up
-> >>>     explicitly?
-> >>>
-> >>>   - Similarly, we don't seem to tear-down the config space mappings and
-> >>>     data structures for that, so we leak VA space afaict.
-> >>>
-> >>
-> >> Good points. But to my understanding, everything is released
-> >> automatically on pci_remove_root_bus because all the resources are
-> >> registered with the bus which takes care of them during destruction. And
-> >> if I trace the release, I find this e.g.
-> >>
-> >> ...
-> >> devres_release_all() {
-> >>   _raw_spin_lock_irqsave();
-> >>   release_nodes() {
-> >>     _raw_spin_unlock_irqrestore();
-> >>     devm_action_release() {
-> >>       gen_pci_unmap_cfg() {
-> > 
-> > Ah, thanks for investigating that -- I completely missed the explicit
-> > devm_ callback. That resolves my concern about the config space mappings,
-> > but I still don't understand what happens to the resources allocated
-> > in of_pci_get_host_bridge_resources. It looks like they should actually
-> > be freed within that function, since pci_add_resource{_offset} copy the
-> > resources into their own resource_entries anyway.
-> > 
-> > Am I missing something?
+
+* Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+
+> Add Power Management Unit driver to handle power states of South Complex
+> devices on Intel Tangier. In the future it might be expanded to cover North
+> Complex devices as well.
 > 
-> Tracing kmalloc and kfree in addition, it seems you are right. But then
-> we already have leaks in the code in case the setup fails somewhere in
-> the middle, no? gen_pci_init only releases the resource list on errors,
-> but not bus_range. And pci_host_common_probe does non of both if
-> pci_scan_root_bus fails. Anything else?
+> With this driver the power state of the host controllers such as SPI, I2C,
+> UART, eMMC, and DMA would be managed.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  arch/x86/include/asm/intel-mid.h     |   8 +
+>  arch/x86/pci/intel_mid_pci.c         |  35 +++-
+>  arch/x86/platform/intel-mid/Makefile |   2 +-
+>  arch/x86/platform/intel-mid/pmu.c    | 392 +++++++++++++++++++++++++++++++++++
+>  drivers/pci/Makefile                 |   3 +
+>  drivers/pci/pci-mid.c                |  77 +++++++
+>  6 files changed, 515 insertions(+), 2 deletions(-)
+>  create mode 100644 arch/x86/platform/intel-mid/pmu.c
+>  create mode 100644 drivers/pci/pci-mid.c
 
-Yeah, it's a right old mess. of_pci_get_host_bridge_resources even cleans
-up after itself, but gen_pci_init can fail in other ways and then doesn't
-clean up properly.
+So this collides with perf's 'PMU' naming massively. Can we pick another name 
+before hillarious kernel-wide confusion spreads?
 
-I wonder why of_pci_get_host_bridge_resources can't just use devm_kzalloc.
+how about intel/mid/pm.c plus renaming all the pmu* internal names to pm*?
 
-Will
+We could call it 'power management interface', and in a single line mention that 
+this is also a 'Power Management Unit' in Intel-speak?
+
+>  extern int intel_mid_pci_init(void);
+> +int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
+> +
+> +#define INTEL_MID_PMU_LSS_OFFSET	4
+> +#define INTEL_MID_PMU_LSS_TYPE		(1 << 7)
+> +
+> +int intel_mid_pmu_get_lss_id(struct pci_dev *pdev);
+
+Yeah, so please be consistent about 'extern'.
+
+Also, I had a look at the resulting arch/x86/include/asm/intel-mid.h and the 
+vertical alignments are all over the map.
+
+Here is how it looks like:
+
+#define FSB_FREQ_83SKU  83200
+#define FSB_FREQ_100SKU 99840
+#define FSB_FREQ_133SKU 133000
+
+#define FSB_FREQ_167SKU 167000
+#define FSB_FREQ_200SKU 200000
+#define FSB_FREQ_267SKU 267000
+#define FSB_FREQ_333SKU 333000
+#define FSB_FREQ_400SKU 400000
+
+/* Bus Select SoC Fuse value */
+#define BSEL_SOC_FUSE_MASK      0x7
+#define BSEL_SOC_FUSE_001       0x1 /* FSB 133MHz */
+#define BSEL_SOC_FUSE_101       0x5 /* FSB 100MHz */
+#define BSEL_SOC_FUSE_111       0x7 /* FSB 83MHz */
+
+#define SFI_MTMR_MAX_NUM 8
+#define SFI_MRTC_MAX    8
+
+Can we please improve that?
+
+> +
+> +static void mrst_power_off_unused_dev(struct pci_dev *dev)
+> +{
+> +	mid_power_off_dev(dev);
+> +}
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0801, mrst_power_off_unused_dev);
+
+So we add mrst_power_off_unused_dev() just to make it to mid_power_off_dev()?
+
+Also, newlines ran out when the above bit was written.
+
+> +++ b/arch/x86/platform/intel-mid/pmu.c
+> @@ -0,0 +1,392 @@
+> +/*
+> + * Intel MID Power Management Unit device driver
+
+Could we please write a bit longer description about what this driver does, what 
+interfaces/capabilities it enables, etc.? People like the warm fuzzy feeling 
+associated with knowing what's going on.
+
+> +#include <linux/delay.h>
+> +#include <linux/errno.h>
+> +#include <linux/init.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/mutex.h>
+> +#include <linux/pci.h>
+> +#include <linux/types.h>
+
+Was that types.h include really needed?
+
+> +/* Registers */
+> +#define PM_STS		0x00
+> +#define PM_CMD		0x04
+> +#define PM_ICS		0x08
+> +#define PM_WKC(x)	(0x10 + (x) * 4)
+> +#define PM_WKS(x)	(0x18 + (x) * 4)
+> +#define PM_SSC(x)	(0x20 + (x) * 4)
+> +#define PM_SSS(x)	(0x30 + (x) * 4)
+> +
+> +/* Bits in PM_STS */
+> +#define PM_STS_BUSY		(1 << 8)
+> +
+> +/* Bits in PM_CMD */
+> +#define PM_CMD_CMD(x)		((x) << 0)
+> +#define PM_CMD_IOC		(1 << 8)
+> +#define PM_CMD_D3cold		(1 << 21)
+> +
+> +/* List of commands */
+> +#define CMD_SET_CFG		0x01
+> +
+> +/* Bits in PM_ICS */
+> +#define PM_ICS_INT_STATUS(x)	((x) & 0xff)
+> +#define PM_ICS_IE		(1 << 8)
+> +#define PM_ICS_IP		(1 << 9)
+> +#define PM_ICS_SW_INT_STS	(1 << 10)
+> +
+> +/* List of interrupts */
+> +#define INT_INVALID		0
+> +#define INT_CMD_COMPLETE	1
+> +#define INT_CMD_ERR		2
+> +#define INT_WAKE_EVENT		3
+> +#define INT_LSS_POWER_ERR	4
+> +#define INT_S0iX_MSG_ERR	5
+> +#define INT_NO_C6		6
+> +#define INT_TRIGGER_ERR		7
+> +#define INT_INACTIVITY		8
+> +
+> +/* South Complex devices */
+> +#define LSS_MAX_SHARED_DEVS		4
+> +#define LSS_MAX_DEVS			64
+> +
+> +#define LSS_WS_BITS			1	/* wake state width */
+> +#define LSS_PWS_BITS			2	/* power state width */
+> +
+> +/* Supported device IDs */
+> +#define PCI_DEVICE_ID_TANGIER		0x11a1
+
+Again essentially randomized vertical alignment. Is anyone supposed to read this 
+code?
+
+> +	/* Find device in cache or first free cell */
+> +	for (j = 0; j < LSS_MAX_SHARED_DEVS; j++)
+> +		if (lss[j].pdev == pdev || !lss[j].pdev)
+> +			break;
+
+... missing curly braces. That's a problem in other places as well, please fix all 
+of them.
+
+> +static int tng_set_initial_state(struct mid_pmu *pmu)
+> +{
+> +	unsigned int i, j;
+> +	int ret;
+> +
+> +	/* Enable wake events */
+> +	mid_pmu_set_wake(pmu, 0, 0xffffffff);
+> +	mid_pmu_set_wake(pmu, 1, 0xffffffff);
+> +
+> +	/* Power off unused devices */
+> +	mid_pmu_set_state(pmu, 0, 0xffffffff);
+> +	mid_pmu_set_state(pmu, 1, 0xffffffff);
+> +	mid_pmu_set_state(pmu, 2, 0xffffffff);
+> +	mid_pmu_set_state(pmu, 3, 0xffffffff);
+
+What are these magic numbers of 0/1/2/3?
+
+> +static struct pci_driver mid_pmu_pci_driver = {
+> +	.name		= "intel_mid_pmu",
+> +	.probe		= mid_pmu_probe,
+> +	.id_table	= mid_pmu_pci_ids,
+> +};
+
+This structure initialization has a nice vertical layout.
+
+> +static struct pci_platform_pm_ops mid_pci_platform_pm = {
+> +	.is_manageable = mid_pci_power_manageable,
+> +	.set_state = mid_pci_set_power_state,
+> +	.choose_state = mid_pci_choose_state,
+> +	.sleep_wake = mid_pci_sleep_wake,
+> +	.run_wake = mid_pci_run_wake,
+> +	.need_resume = mid_pci_need_resume,
+> +};
+
+This one, not so much.
+
+Thanks,
+
+	Ingo
