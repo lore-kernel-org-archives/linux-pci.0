@@ -1,37 +1,105 @@
-Return-Path: <ashutosh.dixit@intel.com>
-Return-Path: <ashutosh.dixit@intel.com>
-From: Ashutosh Dixit <ashutosh.dixit@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Marciniszyn\, Mike" <mike.marciniszyn@intel.com>,  "Dalessandro\, Dennis" <dennis.dalessandro@intel.com>,  Doug Ledford <dledford@redhat.com>,  "Hefty\, Sean" <sean.hefty@intel.com>,  Hal Rosenstock <hal.rosenstock@gmail.com>,  "linux-rdma\@vger.kernel.org" <linux-rdma@vger.kernel.org>,  "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,  "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: hfi1 use of PCI internals
-References: <20160616162052.GA2144@localhost>
-Date: Thu, 16 Jun 2016 14:48:30 -0400
-In-Reply-To: <20160616162052.GA2144@localhost> (Bjorn Helgaas's message of
-	"Thu, 16 Jun 2016 10:20:52 -0600")
-Message-ID: <tnm1toa71hsw1.fsf@phwtpriv05.ph.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 15 Jun 2016 10:09:19 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
+	al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V6 0/7] Introduce ACPI world to ITS irqchip
+Message-ID: <20160615100919.6b507b57@arm.com>
+In-Reply-To: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 16 2016 at 12:20:52 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> I noticed drivers/infiniband/hw/hfi1 got moved from staging to
-> drivers/ for v4.7.  It does a bunch of grubbing around in PCIe ASPM
-> configuration, e.g., see drivers/infiniband/hw/hfi1/aspm.h.
->
-> I know there have been lots of ASPM issues, both hardware problems and
-> Linux kernel problems, but it is *supposed* to be manageable by the
-> core, without special driver support.  What's the justification for
-> having to do this in the hfi1 driver?
+On Mon, 13 Jun 2016 16:41:06 +0200
+Tomasz Nowicki <tn@semihalf.com> wrote:
 
-The description for commit affa48de84 "staging/rdma/hfi1: Add support
-for enabling/disabling PCIe ASPM" anticipates this question and
-describes why this was done in the hfi1 driver:
+> The series builds the PCI/MSI domain stack based on initial IORT driver
+> which is added in first place. As a reference please see IORT spec:
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+> 
+> Patches were built on top of accepted ARM64 ACPI PCI support and can be found
+> all together here:
+> https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v6)
+> 
+> Tested on Cavium ThunderX server.
+> 
+> v5 -> v6
+> - added locking mechanism for IORT list with domain token
+> - IORT function name improvements
+> - extended IORT RID mapping helper
+> - reworked IORT to be more SMMU friendly
+> - IORT functions which map RID and find corresponding domain are not
+>   PCI specific any more (struct pci_dev -> struct device)
+> - bug fixes
+> 
+> v4 -> v5
+> - rebased against v4.7-rc1
+> - drop generic layer and call IORT functions directly
+> - improve resource abstraction and string formatting
+> 
+> v3 -> v4
+> - rebased against v4.5
+> - add ACPI support for IRQ domain handling on a per-device basis
+> - reorder domain setup step
+> - improve error handling
+> - code style improvements
+> 
+> v2 -> v3
+> - rebased on top of 4.4
+> - fixes and improvements for redistributor init via GICC structures
+> - fixes as per kbuild reports
+> 
+> v1 -> v2
+> - rebased on top of 4.4-rc4
+> - use pci_msi_domain_get_msi_rid for requester ID to device ID translation
+> 
+> Tomasz Nowicki (7):
+>   ACPI: I/O Remapping Table (IORT) initial support
+>   PCI/MSI: Setup MSI domain on a per-devices basis using IORT ACPI table
+>   irqchip/gicv3-its: Cleanup for ITS domain initialization
+>   irqchip/gicv3-its: Refator ITS DT init code to prepare for ACPI
+>   irqchip/gicv3-its: Probe ITS in the ACPI way
+>   irqchip/gicv3-its: Factor out code that might be reused for ACPI
+>   irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain
+>     initialization
+> 
+>  drivers/acpi/Kconfig                     |   3 +
+>  drivers/acpi/Makefile                    |   1 +
+>  drivers/acpi/iort.c                      | 386 +++++++++++++++++++++++++++++++
+>  drivers/irqchip/Kconfig                  |   1 +
+>  drivers/irqchip/irq-gic-v3-its-pci-msi.c |  88 +++++--
+>  drivers/irqchip/irq-gic-v3-its.c         | 185 ++++++++++-----
+>  drivers/irqchip/irq-gic-v3.c             |   7 +-
+>  drivers/pci/msi.c                        |  11 +-
+>  include/linux/iort.h                     |  38 +++
+>  include/linux/irqchip/arm-gic-v3.h       |   4 +-
+>  10 files changed, 646 insertions(+), 78 deletions(-)
+>  create mode 100644 drivers/acpi/iort.c
+>  create mode 100644 include/linux/iort.h
+> 
 
-    Finally, the kernel ASPM API is not used in this patch. This is
-    because this patch does several non-standard things as SW
-    workarounds for HW issues. As mentioned above, it enables ASPM even
-    when advertised actual latencies are greater than acceptable
-    latencies. Also, whereas the kernel API only allows drivers to
-    disable ASPM from driver probe, this patch enables/disables ASPM
-    directly from interrupt context. Due to these reasons the kernel
-    ASPM API was not used.
+
+Once you've addressed the couple of remarks I had, and unless someone
+has further objections, this should be in a sane state.
+
+Of course, the following question would be "who merges this thing". I'm
+happy to take it (mostly because it makes my life easier on the ITS
+side), but it needs to be Acked by the usual suspects (Rafael, Bjorn,
+Lorenzo).
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny.
