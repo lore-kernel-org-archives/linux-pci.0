@@ -1,60 +1,216 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32768 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753018AbcFBIRa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jun 2016 04:17:30 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Peter Wu <peter@lekensteyn.nl>,
-	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v6 1/5] PCI: Don't clear d3cold_allowed for PCIe ports
-Date: Thu,  2 Jun 2016 11:17:11 +0300
-Message-Id: <1464855435-32960-2-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+ <1465828873-23498-2-git-send-email-tn@semihalf.com>
+ <576155FA.9080706@codeaurora.org> <20160615133423.GA766@red-moon>
+ <57615C35.709@codeaurora.org> <20160615141355.GB766@red-moon>
+Cc: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, robert.richter@caviumnetworks.com,
+	shijie.huang@arm.com, Suravee.Suthikulpanit@amd.com,
+	hanjun.guo@linaro.org, al.stone@linaro.org, mw@semihalf.com,
+	graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
+	will.deacon@arm.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	ddaney.cavm@gmail.com, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org,
+	"Abdulhamid, Harb" <harba@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <576169E5.2050004@codeaurora.org>
+Date: Wed, 15 Jun 2016 10:44:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160615141355.GB766@red-moon>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI core skips bridges and ports when the system is suspended.  The PCI
-core checks return value of pci_has_subordinate() in pci_pm_suspend_noirq()
-to skip all devices where it is non-zero (which means PCI bridges and PCIe
-ports).
+On 6/15/2016 10:13 AM, Lorenzo Pieralisi wrote:
+> On Wed, Jun 15, 2016 at 09:46:29AM -0400, Sinan Kaya wrote:
+>> On 6/15/2016 9:34 AM, Lorenzo Pieralisi wrote:
+>>> On Wed, Jun 15, 2016 at 09:19:54AM -0400, Sinan Kaya wrote:
+>>>> Hi Tomasz,
+>>>>
+>>>>> +static acpi_status
+>>>>> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
+>>>>> +{
+>>>>> +	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
+>>>>> +		struct acpi_iort_root_complex *pci_rc;
+>>>>> +		struct pci_bus *bus;
+>>>>> +
+>>>>> +		bus = to_pci_bus(dev);
+>>>>> +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
+>>>>> +
+>>>>> +		/*
+>>>>> +		 * It is assumed that PCI segment numbers maps one-to-one
+>>>>> +		 * with root complexes. Each segment number can represent only
+>>>>> +		 * one root complex.
+>>>>> +		 */
+>>>>> +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
+>>>>> +			return AE_OK;
+>>>>> +
+>>>>
+>>>> There is problem with the find_dev_node and callback for PCIe here. It assumes
+>>>> a one-to-one relationship between an SMMU and root complex. 
+>>>>
+>>>> Just checked with Charles offline to see if there is anything in the IORT spec that forces
+>>>> this. And, the answer was no. 
+>>>>
+>>>> Pasting the IORT requirements for you below.
+>>>>
+>>>> ?The IORT was intended to be flexible enough to define static RID to SID mappings, which should cover 
+>>>> the following configurations:
+>>>> -	Dedicated SMMU per RC
+>>>> -	Multiple RC?s per SMMU (as you described)
+>>>> -	Multiple SMMU?s per RC (with static RID:SID range per SMMU)
+>>>>
+>>>> The SMMU instance must be identified by either a device ID *or* a combination of 
+>>>> segment ID *and* Requestor ID. ?
+>>>>
+>>>> If a root complex has multiple SMMUs, this code is going to return the
+>>>> first SMMU. This needs to be corrected.
+>>>
+>>> What you say above is correct, but the problem is not here. This
+>>> callback returns either a named component IORT node or a root complex
+>>> IORT node corresponding to a device, the problem you are referring to is
+>>> related to detecting which SMMU a given named component or root
+>>> complex refers too, which is not done here, I will take care of that
+>>> on my SMMU series.
+>>>
+>>> When we look for the SMMU a PCI device is connected to, we must first
+>>> retrieve the IORT node of its root complex and walk its list of
+>>> mappings and match through RID range instead of picking the first
+>>> one, as I assumed, wrongly.
+>>>
+>>> Lorenzo
+>>>
+>>
+>> Thanks for posting. I was trying to be more explicit by a follow up
+>> email.  You sent before me. 
+>>
+>> The summary is that iort_find_dev_node function below will locate the
+>> wrong IORT root complex node in a multiple root port inside the same
+>> root complex configuration. 
+>>
+>> I wish I could share the picture Harb drew here. Let me put it in text.
+>>
+>> You can have a use case where you have two root ports in a single root complex.
+>>
+>> Each root port has its own SMMU. Root ports are described in the MCFG
+>> table and in the DSDT table as root bridge with their respective bus
+>> start and end addresses. They both participate in the same root
+>> complex with the same segment number.
+>>
+>> First root port requester id range (0x0-0x3ff) and second root port
+>> requester id range (0x400-0x7ff).
+> 
+> Ok, so why a single IORT node root complex entry with multiple node
+> mappings (with different RID ranges AND SMMU output references)
+> would not do here ?
 
-Since PCIe ports are never suspended in the first place, there is no need
-to set d3cold_allowed for them.
+Just talked to Harb following your recommendation. Your suggestion makes more sense.
+The mapping is an array. Spec-wise this is doable. 
 
-Tested-by: Lukas Wunner <lukas@wunner.de>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/portdrv_pci.c | 5 -----
- 1 file changed, 5 deletions(-)
+We assumed that you could only have one mapping under a PCIe RC node. That's why,
+we were thinking of multiple root complex nodes with a single unique mapping.
+It was an oversight from my side.
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index be35da2e105e..6c6bb03392ea 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 		return status;
- 
- 	pci_save_state(dev);
--	/*
--	 * D3cold may not work properly on some PCIe port, so disable
--	 * it by default.
--	 */
--	dev->d3cold_allowed = false;
- 	return 0;
- }
- 
+> 
+> Sorry for being blunt but I would like to understand where the
+> problem is here.
+> 
+>> The IORT table has two root complex entries for each root port. The
+>> first entry describes the requester id range (0x0-0x3ff) and points to
+>> first smmu behind id.
+> 
+> I lost you here. Do you mean the IORT table has one root complex IORT
+> node with two node mappings ?
+
+Two root complex entries with one mapping.
+
+> 
+>> The second entry also describes the id range (0x400-0x7ff) and points to second smmu id.
+>>
+>> The iort_find_dev_node function tries to locate an IORT node for a given PCIe device id.
+>>
+>> If the requester id is 0x400 and segment id is 0, then this function
+>> will stop searching as soon as it finds the first node with segment id
+>> 0 as it only uses the segment id as a qualifier. 
+> 
+> Well yes. The question is whether we should have two root complexes
+> IORT nodes with the same segment id or a single root complex IORT node
+> with multiple mappings.
+> 
+> If we have one PCI root complex IORT node with multiple node mappings,
+> where is the problem ?
+
+No problem. That works. Let's make sure that the ITS and SMMU implementation allows this
+though. From the spec point of view and ACPI table point of view, multiple node mappings make
+perfect sense.
+
+Thanks
+
+> 
+> Thanks !
+> Lorenzo
+> 
+>>
+>> It will locate the PCIe root complex node with requester id range (0x0-0x3ff) and use the 
+>> wrong smmu to do the ITS device id mapping.
+>>
+>> "The SMMU instance must be identified by either a device ID *or* a combination of 
+>>   segment ID *and* Requestor ID. ?"
+>>
+>>
+>>>>
+>>>>> +		break;
+>>>>> +	}
+>>>>> +	}
+>>>>> +
+>>>>> +	return AE_NOT_FOUND;
+>>>>> +}
+>>>>> +
+>>>>
+>>>>> +
+>>>>> +static struct acpi_iort_node *
+>>>>> +iort_find_dev_node(struct device *dev)
+>>>>> +{
+>>>>> +	struct pci_bus *pbus;
+>>>>> +
+>>>>> +	if (!dev_is_pci(dev))
+>>>>> +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+>>>>> +				      iort_match_node_callback, dev);
+>>>>> +
+>>>>> +	/* Find a PCI root bus */
+>>>>> +	pbus = to_pci_dev(dev)->bus;
+>>>>> +	while (!pci_is_root_bus(pbus))
+>>>>> +		pbus = pbus->parent;
+>>>>> +
+>>>>> +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+>>>>> +			      iort_match_node_callback, &pbus->dev);
+>>>>> +}
+>>>>> +
+>>>>
+>>>> -- 
+>>>> Sinan Kaya
+>>>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+>>>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+>>>>
+>>
+>>
+>> -- 
+>> Sinan Kaya
+>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
 -- 
-2.8.1
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
