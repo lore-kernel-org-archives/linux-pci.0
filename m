@@ -1,259 +1,187 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Jeffrey Hugo <jhugo@codeaurora.org>,
-        Christopher Covington
-	<cov@codeaurora.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com"
-	<Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>
-CC: "liudongdong (C)" <liudongdong3@huawei.com>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        "jcm@redhat.com" <jcm@redhat.com>, "dhdang@apm.com" <dhdang@apm.com>,
-        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
-	<ddaney@caviumnetworks.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "Suravee.Suthikulpanit@amd.com"
-	<Suravee.Suthikulpanit@amd.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        Wangyijing <wangyijing@huawei.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "andrea.gallo@linaro.org"
-	<andrea.gallo@linaro.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors
- against platfrom specific ECAM quirks.
-Date: Mon, 6 Jun 2016 07:27:17 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F7710AD@lhreml507-mbx>
-References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
- <1464856864-18049-2-git-send-email-tn@semihalf.com>
- <57519F09.2010201@codeaurora.org>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F76E9D7@lhreml507-mbx>
- <470f6d93-4c83-e271-7e99-7e23f3f76e71@codeaurora.org>
-In-Reply-To: <470f6d93-4c83-e271-7e99-7e23f3f76e71@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 15 Jun 2016 15:13:55 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, robert.richter@caviumnetworks.com,
+	shijie.huang@arm.com, Suravee.Suthikulpanit@amd.com,
+	hanjun.guo@linaro.org, al.stone@linaro.org, mw@semihalf.com,
+	graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
+	will.deacon@arm.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	ddaney.cavm@gmail.com, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org,
+	"Abdulhamid, Harb" <harba@codeaurora.org>
+Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
+Message-ID: <20160615141355.GB766@red-moon>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+ <1465828873-23498-2-git-send-email-tn@semihalf.com>
+ <576155FA.9080706@codeaurora.org>
+ <20160615133423.GA766@red-moon>
+ <57615C35.709@codeaurora.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57615C35.709@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jeffrey
-
-> -----Original Message-----
-> From: Jeffrey Hugo [mailto:jhugo@codeaurora.org]
-> Sent: 03 June 2016 18:00
-> To: Gabriele Paoloni; Christopher Covington; Tomasz Nowicki;
-> helgaas@kernel.org; arnd@arndb.de; will.deacon@arm.com;
-> catalin.marinas@arm.com; rafael@kernel.org; hanjun.guo@linaro.org;
-> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org; jchandra@broadcom.com
-> Cc: liudongdong (C); linaro-acpi@lists.linaro.org; jcm@redhat.com;
-> dhdang@apm.com; Liviu.Dudau@arm.com; ddaney@caviumnetworks.com;
-> jeremy.linton@arm.com; linux-kernel@vger.kernel.org; linux-
-> acpi@vger.kernel.org; robert.richter@caviumnetworks.com;
-> msalter@redhat.com; Suravee.Suthikulpanit@amd.com; linux-
-> pci@vger.kernel.org; Wangyijing; mw@semihalf.com;
-> andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space
-> accessors against platfrom specific ECAM quirks.
->=20
-> On 6/3/2016 9:32 AM, Gabriele Paoloni wrote:
-> > Hi Cov
-> >
-> >> -----Original Message-----
-> >> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> >> owner@vger.kernel.org] On Behalf Of Christopher Covington
-> >> Sent: 03 June 2016 16:15
-> >> To: Tomasz Nowicki; helgaas@kernel.org; arnd@arndb.de;
-> >> will.deacon@arm.com; catalin.marinas@arm.com; rafael@kernel.org;
-> >> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com;
-> okaya@codeaurora.org;
-> >> jchandra@broadcom.com
-> >> Cc: jcm@redhat.com; linaro-acpi@lists.linaro.org; linux-
-> >> pci@vger.kernel.org; dhdang@apm.com; Liviu.Dudau@arm.com;
-> >> ddaney@caviumnetworks.com; jeremy.linton@arm.com; linux-
-> >> kernel@vger.kernel.org; linux-acpi@vger.kernel.org;
-> >> robert.richter@caviumnetworks.com; Suravee.Suthikulpanit@amd.com;
-> >> msalter@redhat.com; Wangyijing; mw@semihalf.com;
-> >> andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org;
-> >> liudongdong (C); Gabriele Paoloni
-> >> Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space
-> >> accessors against platfrom specific ECAM quirks.
-> >>
+On Wed, Jun 15, 2016 at 09:46:29AM -0400, Sinan Kaya wrote:
+> On 6/15/2016 9:34 AM, Lorenzo Pieralisi wrote:
+> > On Wed, Jun 15, 2016 at 09:19:54AM -0400, Sinan Kaya wrote:
 > >> Hi Tomasz,
 > >>
-> >> Thanks for your work on this.
-> >>
-> >> On 06/02/2016 04:41 AM, Tomasz Nowicki wrote:
-> >>> Some platforms may not be fully compliant with generic set of PCI
-> >> config
-> >>> accessors. For these cases we implement the way to overwrite
-> >> accessors
-> >>> set. Algorithm traverses available quirk list, matches against
-> >>> <oem_id, oem_rev, domain, bus number> tuple and returns
-> corresponding
-> >>> PCI config ops. oem_id and oem_rev come from MCFG table standard
-> >> header.
-> >>> All quirks can be defined using DECLARE_ACPI_MCFG_FIXUP() macro and
-> >>> kept self contained. Example:
-> >>>
-> >>> /* Custom PCI config ops */
-> >>> static struct pci_generic_ecam_ops foo_pci_ops =3D {
-> >>> 	.bus_shift	=3D 24,
-> >>> 	.pci_ops =3D {
-> >>> 		.map_bus =3D pci_ecam_map_bus,
-> >>> 		.read =3D foo_ecam_config_read,
-> >>> 		.write =3D foo_ecam_config_write,
-> >>> 	}
-> >>> };
-> >>>
-> >>> DECLARE_ACPI_MCFG_FIXUP(&foo_pci_ops, <oem_id_str>, <oem_rev>,
-> >> <domain_nr>, <bus_nr>);
-> >>>
-> >>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> >>> ---
-> >>>  drivers/acpi/pci_mcfg.c           | 32
-> >> ++++++++++++++++++++++++++++++++
-> >>>  include/asm-generic/vmlinux.lds.h |  7 +++++++
-> >>>  include/linux/pci-acpi.h          | 19 +++++++++++++++++++
-> >>>  3 files changed, 58 insertions(+)
-> >>>
-> >>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> >>> index 1847f74..f3d4570 100644
-> >>> --- a/drivers/acpi/pci_mcfg.c
-> >>> +++ b/drivers/acpi/pci_mcfg.c
-> >>> @@ -22,11 +22,43 @@
-> >>>  #include <linux/kernel.h>
-> >>>  #include <linux/pci.h>
-> >>>  #include <linux/pci-acpi.h>
-> >>> +#include <linux/pci-ecam.h>
-> >>>
-> >>>  /* Root pointer to the mapped MCFG table */
-> >>>  static struct acpi_table_mcfg *mcfg_table;
-> >>>  static int mcfg_entries;
-> >>>
-> >>> +extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
-> >>> +extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
-> >>> +
-> >>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+> >>> +static acpi_status
+> >>> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
 > >>> +{
-> >>> +	int bus_num =3D root->secondary.start;
-> >>> +	int domain =3D root->segment;
-> >>> +	struct pci_cfg_fixup *f;
+> >>> +	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
+> >>> +		struct acpi_iort_root_complex *pci_rc;
+> >>> +		struct pci_bus *bus;
 > >>> +
-> >>> +	if (!mcfg_table)
-> >>> +		return &pci_generic_ecam_ops;
+> >>> +		bus = to_pci_bus(dev);
+> >>> +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
 > >>> +
-> >>> +	/*
-> >>> +	 * Match against platform specific quirks and return
-> >> corresponding
-> >>> +	 * CAM ops.
-> >>> +	 *
-> >>> +	 * First match against PCI topology <domain:bus> then use OEM ID
-> >> and
-> >>> +	 * OEM revision from MCFG table standard header.
-> >>> +	 */
-> >>> +	for (f =3D __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
-> >> f++) {
-> >>> +		if ((f->domain =3D=3D domain || f->domain =3D=3D
-> >> PCI_MCFG_DOMAIN_ANY) &&
-> >>> +		    (f->bus_num =3D=3D bus_num || f->bus_num =3D=3D
-> >> PCI_MCFG_BUS_ANY) &&
-> >>> +		    (!strncmp(f->oem_id, mcfg_table->header.oem_id,
-> >>> +			      ACPI_OEM_ID_SIZE)) &&
-> >>> +		    (f->oem_revision =3D=3D mcfg_table->header.oem_revision))
+> >>> +		/*
+> >>> +		 * It is assumed that PCI segment numbers maps one-to-one
+> >>> +		 * with root complexes. Each segment number can represent only
+> >>> +		 * one root complex.
+> >>> +		 */
+> >>> +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
+> >>> +			return AE_OK;
+> >>> +
 > >>
-> >> Is this more likely to be updated between quirky and fixed platforms
-> >> than oem_table_id? What do folks think about using oem_table_id
-> instead
-> >> of, or in addition to, oem_revision?
-> >
-> > From my understanding we need to stick to this mechanism as
-> (otherwise)
-> > there are platforms out in the field that would need a FW update.
-> >
-> > So I don't think that using oem_table_id "instead" is possible; about
-> > "in addition" I think it is doable, but I do not see the advantage
-> much.
-> > I mean that if a platform gets fixed the oem revision should change
-> too,
-> > Right?
->=20
-> Cov and I had a discussion about this, so hopefully I can bring a
-> slightly different perspective that will make sense.
->=20
-> We forsee a situation where we have platform A that needs a quirk, and
-> platform B that does not.  The OEM id is the same for both platforms as
-> they are different platforms from the same OEM.  Using the OEM revision
-> field does not seem to be appropriate since these are different
-> platforms and the revision field appears to be for the purpose of
-> tracking differences within a single platform.  Therefore, Cov is
-> proposing using the OEM table id as a mechanism to distinguish platform
-> A (needs quirk applied) vs platform B (no quirks) from the same OEM.
-
-Ah yes I see now...
-
-Probably it should be ok to have a check on all three OEM fields.
-
-Thanks for explaining
-
-Gab=20
-
->=20
-> >
-> > Thanks
-> >
-> > Gab
-> >
+> >> There is problem with the find_dev_node and callback for PCIe here. It assumes
+> >> a one-to-one relationship between an SMMU and root complex. 
 > >>
-> >> In case these details are helpful, here was my simple prototype of
-> an
-> >> MCFG based approach:
+> >> Just checked with Charles offline to see if there is anything in the IORT spec that forces
+> >> this. And, the answer was no. 
 > >>
-> >> https://codeaurora.org/cgit/quic/server/kernel/commit/?h=3Dcov/4.7-
-> rc1-
-> >> testing&id=3Dc5d8bc49a198fd8f61f82c7d8f169564d6176b07
-> >> https://codeaurora.org/cgit/quic/server/kernel/commit/?h=3Dcov/4.7-
-> rc1-
-> >> testing&id=3D50bfe77ccd1639e6ce8c7c4fcca187d50e0bead4
+> >> Pasting the IORT requirements for you below.
 > >>
-> >> Thanks,
-> >> Cov
+> >> ?The IORT was intended to be flexible enough to define static RID to SID mappings, which should cover 
+> >> the following configurations:
+> >> -	Dedicated SMMU per RC
+> >> -	Multiple RC?s per SMMU (as you described)
+> >> -	Multiple SMMU?s per RC (with static RID:SID range per SMMU)
 > >>
-> >> --
-> >> Qualcomm Innovation Center, Inc.
-> >> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-> >> a Linux Foundation Collaborative Project
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> >
->=20
->=20
-> --
-> Jeffrey Hugo
-> Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-> Linux Foundation Collaborative Project
+> >> The SMMU instance must be identified by either a device ID *or* a combination of 
+> >> segment ID *and* Requestor ID. ?
+> >>
+> >> If a root complex has multiple SMMUs, this code is going to return the
+> >> first SMMU. This needs to be corrected.
+> > 
+> > What you say above is correct, but the problem is not here. This
+> > callback returns either a named component IORT node or a root complex
+> > IORT node corresponding to a device, the problem you are referring to is
+> > related to detecting which SMMU a given named component or root
+> > complex refers too, which is not done here, I will take care of that
+> > on my SMMU series.
+> > 
+> > When we look for the SMMU a PCI device is connected to, we must first
+> > retrieve the IORT node of its root complex and walk its list of
+> > mappings and match through RID range instead of picking the first
+> > one, as I assumed, wrongly.
+> > 
+> > Lorenzo
+> > 
+> 
+> Thanks for posting. I was trying to be more explicit by a follow up
+> email.  You sent before me. 
+> 
+> The summary is that iort_find_dev_node function below will locate the
+> wrong IORT root complex node in a multiple root port inside the same
+> root complex configuration. 
+> 
+> I wish I could share the picture Harb drew here. Let me put it in text.
+> 
+> You can have a use case where you have two root ports in a single root complex.
+> 
+> Each root port has its own SMMU. Root ports are described in the MCFG
+> table and in the DSDT table as root bridge with their respective bus
+> start and end addresses. They both participate in the same root
+> complex with the same segment number.
+> 
+> First root port requester id range (0x0-0x3ff) and second root port
+> requester id range (0x400-0x7ff).
+
+Ok, so why a single IORT node root complex entry with multiple node
+mappings (with different RID ranges AND SMMU output references)
+would not do here ?
+
+Sorry for being blunt but I would like to understand where the
+problem is here.
+
+> The IORT table has two root complex entries for each root port. The
+> first entry describes the requester id range (0x0-0x3ff) and points to
+> first smmu behind id.
+
+I lost you here. Do you mean the IORT table has one root complex IORT
+node with two node mappings ?
+
+> The second entry also describes the id range (0x400-0x7ff) and points to second smmu id.
+> 
+> The iort_find_dev_node function tries to locate an IORT node for a given PCIe device id.
+> 
+> If the requester id is 0x400 and segment id is 0, then this function
+> will stop searching as soon as it finds the first node with segment id
+> 0 as it only uses the segment id as a qualifier. 
+
+Well yes. The question is whether we should have two root complexes
+IORT nodes with the same segment id or a single root complex IORT node
+with multiple mappings.
+
+If we have one PCI root complex IORT node with multiple node mappings,
+where is the problem ?
+
+Thanks !
+Lorenzo
+
+> 
+> It will locate the PCIe root complex node with requester id range (0x0-0x3ff) and use the 
+> wrong smmu to do the ITS device id mapping.
+> 
+> "The SMMU instance must be identified by either a device ID *or* a combination of 
+>   segment ID *and* Requestor ID. ?"
+> 
+> 
+> >>
+> >>> +		break;
+> >>> +	}
+> >>> +	}
+> >>> +
+> >>> +	return AE_NOT_FOUND;
+> >>> +}
+> >>> +
+> >>
+> >>> +
+> >>> +static struct acpi_iort_node *
+> >>> +iort_find_dev_node(struct device *dev)
+> >>> +{
+> >>> +	struct pci_bus *pbus;
+> >>> +
+> >>> +	if (!dev_is_pci(dev))
+> >>> +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> >>> +				      iort_match_node_callback, dev);
+> >>> +
+> >>> +	/* Find a PCI root bus */
+> >>> +	pbus = to_pci_dev(dev)->bus;
+> >>> +	while (!pci_is_root_bus(pbus))
+> >>> +		pbus = pbus->parent;
+> >>> +
+> >>> +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> >>> +			      iort_match_node_callback, &pbus->dev);
+> >>> +}
+> >>> +
+> >>
+> >> -- 
+> >> Sinan Kaya
+> >> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> >> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+> >>
+> 
+> 
+> -- 
+> Sinan Kaya
+> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+> 
