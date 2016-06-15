@@ -1,142 +1,338 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Qemu-devel] [RFC PATCH 0/3] x86: Add support for guest DMA dirty
- page tracking
-To: Alex Duyck <aduyck@mirantis.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
- <20160104204104.GB17427@char.us.oracle.com>
- <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
- <20160105113317-mutt-send-email-mst@redhat.com>
- <CAKgT0UeY9+BJoGtM+Fqa4Zve36GBJQpYVyoo2CPJZdELH6cEbg@mail.gmail.com>
- <df81dd53-dc03-667e-4d53-3c67f90aab8f@cn.fujitsu.com>
- <CAMt9YRpzAKt1KQW17VBzx0PT5BxiL_1+U1-AEK2A_Ao9KQjmGg@mail.gmail.com>
-CC: Alexander Duyck <alexander.duyck@gmail.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	<kvm@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	<x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<qemu-devel@nongnu.org>, Alexander Graf <agraf@suse.de>,
-	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
-	=?UTF-8?B?SXp1bWksIFRha3Uv5rOJIOaLkw==?=
-	<izumi.taku@jp.fujitsu.com>
-From: Zhou Jie <zhoujie2011@cn.fujitsu.com>
-Message-ID: <6a7bef5b-3f96-f582-d3cf-cb59f5308e28@cn.fujitsu.com>
-Date: Thu, 9 Jun 2016 18:14:40 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.133]:57476 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932834AbcFOUJZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jun 2016 16:09:25 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@armlinux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Gregory CLEMENT <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Nicolas Pitre <nicolas.pitre@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Ray Jui <rjui@broadcom.com>, Ley Foon Tan <lftan@altera.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] arm/arm64/irqchip/pci: fix PCI_MSI dependencies
+Date: Wed, 15 Jun 2016 22:09:38 +0200
+Message-ID: <8531046.3ceRqUA835@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <CAMt9YRpzAKt1KQW17VBzx0PT5BxiL_1+U1-AEK2A_Ao9KQjmGg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-TO Alex
-TO Michael
+The PCI_MSI symbol is used inconsistently throughout the tree,
+with some drivers using 'select' and others using 'depends on',
+or using conditional selects. This keeps causing problems,
+and the latest one is a result of ARCH_ALPINE using a 'select'
+statement to enable its platform specific MSI driver but not
+enabling MSI support first:
 
-    In your solution you add a emulate PCI bridge to act as
-    a bridge between direct assigned devices and the host bridge.
-    Do you mean put all direct assigned devices to
-    one emulate PCI bridge?
-    If yes, this maybe bring some problems.
+warning: (ARCH_ALPINE) selects ALPINE_MSI which has unmet direct dependencies (PCI && PCI_MSI)
+drivers/irqchip/irq-alpine-msi.c:104:15: error: variable 'alpine_msix_domain_info' has initializer but incomplete type
+ static struct msi_domain_info alpine_msix_domain_info = {
+               ^~~~~~~~~~~~~~~
+drivers/irqchip/irq-alpine-msi.c:105:2: error: unknown field 'flags' specified in initializer
+  .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+  ^
+drivers/irqchip/irq-alpine-msi.c:105:11: error: 'MSI_FLAG_USE_DEF_DOM_OPS' undeclared here (not in a function)
+  .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+           ^~~~~~~~~~~~~~~~~~~~~~~~
 
-    We are writing a patchset to support aer feature in qemu.
-    When assigning a vfio device with AER enabled, we must check whether
-    the device supports a host bus reset (ie. hot reset) as this may be
-    used by the guest OS in order to recover the device from an AER
-    error.
-    QEMU must therefore have the ability to perform a physical
-    host bus reset using the existing vfio APIs in response to a virtual
-    bus reset in the VM.
-    A physical bus reset affects all of the devices on the host bus.
-    Therefore all physical devices affected by a bus reset must be
-    configured on the same virtual bus in the VM.
-    And no devices unaffected by the bus reset,
-    be configured on the same virtual bus.
+There is little reason to enable PCI support for a platform that
+uses MSI but then leaving MSI disabled at compile time.
 
-    http://lists.nongnu.org/archive/html/qemu-devel/2016-05/msg02989.html
+I sent an earlier version that used 'select PCI_MSI' everywhere
+in March, but that caused build regressions on x86.
 
-Sincerely,
-Zhou Jie
+This version instead selects PCI_MSI from irqchips that implement MSI,
+and makes PCI host bridges that use MSI on ARM depend on PCI_MSI_IRQ_DOMAIN,
+which in turn is now enabled by default on all three architectures that
+support it, whenever MSI is enabled.
 
-On 2016/6/7 0:04, Alex Duyck wrote:
-> On Mon, Jun 6, 2016 at 2:18 AM, Zhou Jie <zhoujie2011@cn.fujitsu.com> wrote:
->> Hi Alex,
->>
->>
->> On 2016/1/6 0:18, Alexander Duyck wrote:
->>>
->>> On Tue, Jan 5, 2016 at 1:40 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
->>>>
->>>> On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
->>>>>>>
->>>>>>> The two mechanisms referenced above would likely require coordination
->>>>>>> with
->>>>>>> QEMU and as such are open to discussion.  I haven't attempted to
->>>>>>> address
->>>>>>> them as I am not sure there is a consensus as of yet.  My personal
->>>>>>> preference would be to add a vendor-specific configuration block to
->>>>>>> the
->>>>>>> emulated pci-bridge interfaces created by QEMU that would allow us to
->>>>>>> essentially extend shpc to support guest live migration with
->>>>>>> pass-through
->>>>>>> devices.
->>>>>>
->>>>>>
->>>>>> shpc?
->>>>>
->>>>>
->>>>> That is kind of what I was thinking.  We basically need some mechanism
->>>>> to allow for the host to ask the device to quiesce.  It has been
->>>>> proposed to possibly even look at something like an ACPI interface
->>>>> since I know ACPI is used by QEMU to manage hot-plug in the standard
->>>>> case.
->>>>>
->>>>> - Alex
->>>>
->>>>
->>>>
->>>> Start by using hot-unplug for this!
->>>>
->>>> Really use your patch guest side, and write host side
->>>> to allow starting migration with the device, but
->>>> defer completing it.
->>>
->>>
->>> Yeah, I'm fully on board with this idea, though I'm not really working
->>> on this right now since last I knew the folks on this thread from
->>> Intel were working on it.  My patches were mostly meant to be a nudge
->>> in this direction so that we could get away from the driver specific
->>> code.
->>
->>
->> I have seen your email about live migration.
->>
->> I conclude the idea you proposed as following.
->> 1. Extend swiotlb to allow for a page dirtying functionality.
->> 2. Use pci express capability to implement of a PCI bridge to act
->>    as a bridge between direct assigned devices and the host bridge.
->> 3. Using APCI event or extend shpc driver to support device pause.
->> Is it right?
->>
->> Will you implement the patchs for live migration?
->
-> That is pretty much the heart of the proposal I had.  I submitted an
-> RFC as a proof-of-concept for item 1 in the hopes that someone else
-> might try tackling items 2 and 3 but I haven't seen any updates since
-> then.  The trick is to find a way to make it so that item 1 doesn't
-> slow down standard SWIOTLB when you are not migrating a VM. If nothing
-> else we would probably just need to add a static key that we could
-> default to false unless there is a PCI bridge indicating we are
-> starting a migration.
->
-> I haven't had time to really work on this though. In addition I am not
-> that familiar with QEMU and the internals of live migration so pieces
-> 2 and 3 would take me some additional time to work on.
->
-> - Alex
->
->
-> .
->
+I think it makes most sense to merge this patch through the PCI tree,
+as new PCI host drivers get added occasionally, and they all need to
+be adapted for this change.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Suggested-by: Marc Zyngier <marc.zyngier@arm.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 2171e5d97541..81e018710673 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -703,7 +703,7 @@ config ARCH_VIRT
+ 	depends on ARCH_MULTI_V7
+ 	select ARM_AMBA
+ 	select ARM_GIC
+-	select ARM_GIC_V2M if PCI_MSI
++	select ARM_GIC_V2M if PCI
+ 	select ARM_GIC_V3
+ 	select ARM_PSCI
+ 	select HAVE_ARM_ARCH_TIMER
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index d87e042059a1..9343d2738bf0 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -20,9 +20,9 @@ config ARM64
+ 	select ARM_ARCH_TIMER
+ 	select ARM_GIC
+ 	select AUDIT_ARCH_COMPAT_GENERIC
+-	select ARM_GIC_V2M if PCI_MSI
++	select ARM_GIC_V2M if PCI
+ 	select ARM_GIC_V3
+-	select ARM_GIC_V3_ITS if PCI_MSI
++	select ARM_GIC_V3_ITS if PCI
+ 	select ARM_PSCI_FW
+ 	select BUILDTIME_EXTABLE_SORT
+ 	select CLONE_BACKWARDS
+@@ -1038,6 +1038,8 @@ source "arch/arm64/Kconfig.debug"
+ source "security/Kconfig"
+ 
+ source "crypto/Kconfig"
++if CRYPTO
+ source "arch/arm64/crypto/Kconfig"
++endif
+ 
+ source "lib/Kconfig"
+diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+index 5495a5ba8039..7f8728984f44 100644
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -21,9 +21,9 @@ config ARM_GIC_MAX_NR
+ 
+ config ARM_GIC_V2M
+ 	bool
+-	depends on ARM_GIC
+-	depends on PCI && PCI_MSI
+-	select PCI_MSI_IRQ_DOMAIN
++	depends on PCI
++	select ARM_GIC
++	select PCI_MSI
+ 
+ config GIC_NON_BANKED
+ 	bool
+@@ -37,7 +37,8 @@ config ARM_GIC_V3
+ 
+ config ARM_GIC_V3_ITS
+ 	bool
+-	select PCI_MSI_IRQ_DOMAIN
++	depends on PCI
++	depends on PCI_MSI
+ 
+ config ARM_NVIC
+ 	bool
+@@ -62,13 +63,13 @@ config ARM_VIC_NR
+ config ARMADA_370_XP_IRQ
+ 	bool
+ 	select GENERIC_IRQ_CHIP
+-	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
++	select PCI_MSI if PCI
+ 
+ config ALPINE_MSI
+ 	bool
+-	depends on PCI && PCI_MSI
++	depends on PCI
++	select PCI_MSI
+ 	select GENERIC_IRQ_CHIP
+-	select PCI_MSI_IRQ_DOMAIN
+ 
+ config ATMEL_AIC_IRQ
+ 	bool
+@@ -117,7 +118,6 @@ config HISILICON_IRQ_MBIGEN
+ 	bool
+ 	select ARM_GIC_V3
+ 	select ARM_GIC_V3_ITS
+-	select GENERIC_MSI_IRQ_DOMAIN
+ 
+ config IMGPDC_IRQ
+ 	bool
+@@ -250,12 +250,10 @@ config IRQ_MXS
+ 
+ config MVEBU_ODMI
+ 	bool
+-	select GENERIC_MSI_IRQ_DOMAIN
+ 
+ config LS_SCFG_MSI
+ 	def_bool y if SOC_LS1021A || ARCH_LAYERSCAPE
+ 	depends on PCI && PCI_MSI
+-	select PCI_MSI_IRQ_DOMAIN
+ 
+ config PARTITION_PERCPU
+ 	bool
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 56389be5d08b..67f9916ff14d 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -25,7 +25,7 @@ config PCI_MSI
+ 	   If you don't know what to do here, say Y.
+ 
+ config PCI_MSI_IRQ_DOMAIN
+-	bool
++	def_bool ARM || ARM64 || X86
+ 	depends on PCI_MSI
+ 	select GENERIC_MSI_IRQ_DOMAIN
+ 
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 2057f71d855c..ccf317e73705 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -3,8 +3,9 @@ menu "PCI host controller drivers"
+ 
+ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
+-	select PCIE_DW
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
++	depends on PCI_MSI_IRQ_DOMAIN
++	select PCIE_DW
+ 	help
+ 	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+ 	 are two instances of PCIe controller in DRA7xx.  This controller can
+@@ -20,7 +21,7 @@ config PCI_MVEBU
+ config PCIE_XILINX_NWL
+ 	bool "NWL PCIe Core"
+ 	depends on ARCH_ZYNQMP
+-	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	help
+ 	 Say 'Y' here if you want kernel support for Xilinx
+ 	 NWL PCIe controller. The controller can act as Root Port
+@@ -29,6 +30,7 @@ config PCIE_XILINX_NWL
+ 
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW
+ 	---help---
+ 	 This selects the DesignWare PCIe controller support. Select this if
+@@ -40,16 +42,19 @@ config PCIE_DW_PLAT
+ 
+ config PCIE_DW
+ 	bool
++	depends on PCI_MSI_IRQ_DOMAIN
+ 
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+ 	depends on SOC_EXYNOS5440
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+ 	depends on SOC_IMX6Q
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+@@ -72,8 +77,7 @@ config PCI_RCAR_GEN2
+ config PCIE_RCAR
+ 	bool "Renesas R-Car PCIe controller"
+ 	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+-	select PCI_MSI
+-	select PCI_MSI_IRQ_DOMAIN
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	help
+ 	  Say Y here if you want PCIe controller support on R-Car SoCs.
+ 
+@@ -93,6 +97,7 @@ config PCI_HOST_GENERIC
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+ 	depends on ARCH_SPEAR13XX
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 	help
+@@ -101,6 +106,7 @@ config PCIE_SPEAR13XX
+ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+ 	depends on ARCH_KEYSTONE
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW
+ 	select PCIEPORTBUS
+ 	help
+@@ -121,7 +127,6 @@ config PCI_XGENE
+ 	depends on ARCH_XGENE
+ 	depends on OF
+ 	select PCIEPORTBUS
+-	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+ 	help
+ 	  Say Y here if you want internal PCI support on APM X-Gene SoC.
+ 	  There are 5 internal PCIe ports available. Each port is GEN3 capable
+@@ -129,7 +134,8 @@ config PCI_XGENE
+ 
+ config PCI_XGENE_MSI
+ 	bool "X-Gene v1 PCIe MSI feature"
+-	depends on PCI_XGENE && PCI_MSI
++	depends on PCI_XGENE
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	default y
+ 	help
+ 	  Say Y here if you want PCIe MSI support for the APM X-Gene v1 SoC.
+@@ -138,6 +144,7 @@ config PCI_XGENE_MSI
+ config PCI_LAYERSCAPE
+ 	bool "Freescale Layerscape PCIe controller"
+ 	depends on OF && (ARM || ARCH_LAYERSCAPE)
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW
+ 	select MFD_SYSCON
+ 	help
+@@ -178,8 +185,7 @@ config PCIE_IPROC_BCMA
+ config PCIE_IPROC_MSI
+ 	bool "Broadcom iProc PCIe MSI support"
+ 	depends on PCIE_IPROC_PLATFORM || PCIE_IPROC_BCMA
+-	depends on PCI_MSI
+-	select PCI_MSI_IRQ_DOMAIN
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	default ARCH_BCM_IPROC
+ 	help
+ 	  Say Y here if you want to enable MSI support for Broadcom's iProc
+@@ -196,8 +202,8 @@ config PCIE_ALTERA
+ 
+ config PCIE_ALTERA_MSI
+ 	bool "Altera PCIe MSI feature"
+-	depends on PCIE_ALTERA && PCI_MSI
+-	select PCI_MSI_IRQ_DOMAIN
++	depends on PCIE_ALTERA
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	help
+ 	  Say Y here if you want PCIe MSI support for the Altera FPGA.
+ 	  This MSI driver supports Altera MSI to GIC controller IP.
+@@ -205,6 +211,7 @@ config PCIE_ALTERA_MSI
+ config PCI_HISI
+ 	depends on OF && ARM64
+ 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 	help
+@@ -214,6 +221,7 @@ config PCI_HISI
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+ 	depends on ARCH_QCOM && OF
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW
+ 	select PCIEPORTBUS
+ 	help
+@@ -238,6 +246,7 @@ config PCI_HOST_THUNDER_ECAM
+ config PCIE_ARMADA_8K
+ 	bool "Marvell Armada-8K PCIe controller"
+ 	depends on ARCH_MVEBU
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW
+ 	select PCIEPORTBUS
+ 	help
+
