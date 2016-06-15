@@ -1,95 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45131 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134AbcFRCZh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2016 22:25:37 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v13 05/16] PCI: Add pci_find_bus_resource()
-Date: Fri, 17 Jun 2016 19:24:50 -0700
-Message-Id: <20160618022501.15648-6-yinghai@kernel.org>
-In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
-References: <20160618022501.15648-1-yinghai@kernel.org>
+Received: from mail-bl2on0076.outbound.protection.outlook.com ([65.55.169.76]:11663
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751061AbcFOUvH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jun 2016 16:51:07 -0400
+Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
+To: Keith Busch <keith.busch@intel.com>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+ <1465934346-20648-3-git-send-email-hch@lst.de>
+ <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com>
+ <20160615102311.GA16619@lst.de>
+ <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com>
+ <20160615151415.GA1919@localhost.localdomain>
+ <7f0b16bd-b39f-99e6-c1c1-6a508bf9bbbf@sandisk.com>
+ <20160615160316.GB1919@localhost.localdomain>
+ <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com>
+ <20160615200655.GB7637@localhost.localdomain>
+ <20160615201213.GC7637@localhost.localdomain>
+CC: Christoph Hellwig <hch@lst.de>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"axboe@fb.com" <axboe@fb.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Message-ID: <7a61fe73-2808-70b4-e3b2-b6a924559d9d@sandisk.com>
+Date: Wed, 15 Jun 2016 22:50:53 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160615201213.GC7637@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_find_bus_resource() to return bus resource for input resource.
+On 06/15/2016 10:12 PM, Keith Busch wrote:
+> On Wed, Jun 15, 2016 at 04:06:55PM -0400, Keith Busch wrote:
+>>>
+>>> 0: A0 B0
+>>> 1: A1 B1
+>>> 2: A2 B2
+>>> 3: A3 B3
+>>> 4: A4 B4
+>>> 5: A5 B5
+>>> 6: A6 B6
+>>> 7: A7 B7
+>>> 8: (none)
+>>> ...
+>>> 31: (none)
+>>
+>> I'll need to look at the follow on patches do to confirm, but that's
+>> not what this should do. All CPU's should have a vector assigned because
+>> every CPU needs to be assigned a submission context using a vector. In
+>> your example, every vector's affinity mask should be assigned to 4 CPUs:
+>> vector '8' starts over with A0 B0, '9' gets A1 B1, and so on.
+>
+>   ^^^^^^
+>
+> Sorry, I meant "CPU '8'", not "vector '8'".
 
-In some case, we may only have bus instead of dev.
-It is same as pci_find_parent_resource, but take bus as input.
+Hello Keith,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci.c   | 27 ++++++++++++++++-----------
- include/linux/pci.h |  2 ++
- 2 files changed, 18 insertions(+), 11 deletions(-)
+Does it matter on x86 systems whether or not these interrupt vectors are 
+also associated with a CPU with a higher CPU number? Although multiple 
+bits can be set in /proc/irq/<n>/smp_affinity only the first bit counts 
+on x86 platforms. In default_cpu_mask_to_apicid_and() it is easy to see 
+that only the first bit that has been set in that mask counts on x86 
+systems.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c8b4dbd..81c6cf9 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -414,18 +414,9 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- }
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
- 
--/**
-- * pci_find_parent_resource - return resource region of parent bus of given region
-- * @dev: PCI device structure contains resources to be searched
-- * @res: child resource record for which parent is sought
-- *
-- *  For given resource region of given device, return the resource
-- *  region of parent bus the given region is contained in.
-- */
--struct resource *pci_find_parent_resource(const struct pci_dev *dev,
--					  struct resource *res)
-+struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					struct resource *res)
- {
--	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
- 	int i;
- 
-@@ -455,6 +446,20 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 	}
- 	return NULL;
- }
-+
-+/**
-+ * pci_find_parent_resource - return resource region of parent bus of given region
-+ * @dev: PCI device structure contains resources to be searched
-+ * @res: child resource record for which parent is sought
-+ *
-+ *  For given resource region of given device, return the resource
-+ *  region of parent bus the given region is contained in.
-+ */
-+struct resource *pci_find_parent_resource(const struct pci_dev *dev,
-+					  struct resource *res)
-+{
-+	return pci_find_bus_resource(dev->bus, res);
-+}
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9c201d4..8214b24 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -805,6 +805,8 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res);
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
-+struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					struct resource *res);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--- 
-2.8.3
-
+Bart.
