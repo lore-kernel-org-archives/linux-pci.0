@@ -1,49 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56570 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751676AbcFRSA7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 18 Jun 2016 14:00:59 -0400
-Subject: [PATCH] PCI: Document connection between pci_power_t and hardware
- PM capability
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>
-Date: Sat, 18 Jun 2016 13:00:56 -0500
-Message-ID: <20160618180056.7267.67911.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 15 Jun 2016 10:00:34 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
+	al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V6 6/7] irqchip/gicv3-its: Factor out code that might be
+ reused for ACPI
+Message-ID: <20160615100034.3393b90c@arm.com>
+In-Reply-To: <1465828873-23498-7-git-send-email-tn@semihalf.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+	<1465828873-23498-7-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The dev.pme_support field, pci_pm_init(), and pci_pme_capable() depend on
-the fact that the pci_power_t values (PCI_D0, PCI_D1, etc.) match the
-definition of the PME_Support field of the Power Management Capabilities
-register in the Power Management capability (see PCI Bus Power Management
-spec r1.2, sec 3.2.3).
+On Mon, 13 Jun 2016 16:41:12 +0200
+Tomasz Nowicki <tn@semihalf.com> wrote:
 
-Add a note to this effect at the pci_power_t typedef.
+> Firmware agnostic code lands in common functions which do necessary
+> domain initialization based on unique domain handler. DT specific
+> code goes to DT specific init call.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/pci.h |    4 ++++
- 1 file changed, 4 insertions(+)
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8597b42..85cede3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -101,6 +101,10 @@ enum {
- 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
- };
- 
-+/*
-+ * pci_power_t values must match the bits in the PME_Support field of the
-+ * Power Management Capabilities register in the Power Management capability.
-+ */
- typedef int __bitwise pci_power_t;
- 
- #define PCI_D0		((pci_power_t __force) 0)
-
+	M.
+-- 
+Jazz is not dead. It just smells funny.
