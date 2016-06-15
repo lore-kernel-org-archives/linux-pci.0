@@ -1,125 +1,103 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 04/11] ACPI/PCI: Support IO resources when parsing PCI host bridge resources
-Date: Fri, 10 Jun 2016 21:55:12 +0200
-Message-Id: <1465588519-11334-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0072.outbound.protection.outlook.com ([157.56.110.72]:1296
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751907AbcFOThJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jun 2016 15:37:09 -0400
+Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
+To: Keith Busch <keith.busch@intel.com>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+ <1465934346-20648-3-git-send-email-hch@lst.de>
+ <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com>
+ <20160615102311.GA16619@lst.de>
+ <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com>
+ <20160615151415.GA1919@localhost.localdomain>
+ <7f0b16bd-b39f-99e6-c1c1-6a508bf9bbbf@sandisk.com>
+ <20160615160316.GB1919@localhost.localdomain>
+CC: Christoph Hellwig <hch@lst.de>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"axboe@fb.com" <axboe@fb.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Message-ID: <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com>
+Date: Wed, 15 Jun 2016 21:36:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160615160316.GB1919@localhost.localdomain>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jayachandran C <jchandra@broadcom.com>
+On 06/15/2016 06:03 PM, Keith Busch wrote:
+> On Wed, Jun 15, 2016 at 05:28:54PM +0200, Bart Van Assche wrote:
+>> On 06/15/2016 05:14 PM, Keith Busch wrote:
+>>> I think the idea is have the irq_affinity mask match the CPU mapping on
+>>> the submission side context associated with that particular vector. If
+>>> two identical adapters generate the same submission CPU mapping, I don't
+>>> think we can do better than matching irq_affinity masks.
+>>
+>> Has this been verified by measurements? Sorry but I'm not convinced that
+>> using the same mapping for multiple identical adapters instead of spreading
+>> interrupts will result in better performance.
+>
+> The interrupts automatically spread based on which CPU submitted the
+> work. If you want to spread interrupts across more CPUs, then you can
+> spread submissions to the CPUs you want to service the interrupts.
+>
+> Completing work on the same CPU that submitted it is quickest with
+> its cache hot access. I have equipment available to demo this. What
+> affinty_mask policy would you like to see compared with the proposal?
 
-Platforms that have memory mapped IO port (such as ARM64) need special
-handling for PCI I/O resources. For host bridge's resource probing case
-these resources need to be fixed up with
-pci_register_io_range()/pci_remap_iospace() etc.
+Hello Keith,
 
-The same I/O resources need to be released after hotplug
-removal so that it can be re-added back by the pci_remap_iospace()
-function during insertion. As a consequence unmap I/O resources
-with pci_unmap_iospace() when we release host bridge resources.
+Sorry that I had not yet this made this clear but my concern is about a 
+system equipped with two or more adapters and with more CPU cores than 
+the number of MSI-X interrupts per adapter. Consider e.g. a system with 
+two adapters (A and B), 8 interrupts per adapter (A0..A7 and B0..B7), 32 
+CPU cores and two NUMA nodes. Assuming that hyperthreading is disabled, 
+will the patches from this patch series generate the following interrupt 
+assignment?
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-[ Tomasz: merged in Sinan's patch to unmap IO resources properly, updated changelog]
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/acpi/pci_root.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+0: A0 B0
+1: A1 B1
+2: A2 B2
+3: A3 B3
+4: A4 B4
+5: A5 B5
+6: A6 B6
+7: A7 B7
+8: (none)
+...
+31: (none)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..9a26dd1 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -720,6 +720,40 @@ next:
- 	}
- }
- 
-+#ifdef PCI_IOBASE
-+static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+{
-+	struct resource *res = entry->res;
-+	resource_size_t cpu_addr = res->start;
-+	resource_size_t pci_addr = cpu_addr - entry->offset;
-+	resource_size_t length = resource_size(res);
-+	unsigned long port;
-+
-+	if (pci_register_io_range(cpu_addr, length))
-+		goto err;
-+
-+	port = pci_address_to_pio(cpu_addr);
-+	if (port == (unsigned long)-1)
-+		goto err;
-+
-+	res->start = port;
-+	res->end = port + length - 1;
-+	entry->offset = port - pci_addr;
-+
-+	if (pci_remap_iospace(res, cpu_addr) < 0)
-+		goto err;
-+
-+	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
-+	return;
-+err:
-+	res->flags |= IORESOURCE_DISABLED;
-+}
-+#else
-+static inline void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+{
-+}
-+#endif
-+
- int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- {
- 	int ret;
-@@ -740,6 +774,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 			"no IO and memory resources present in _CRS\n");
- 	else {
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
-+			if (entry->res->flags & IORESOURCE_IO)
-+				acpi_pci_root_remap_iospace(entry);
-+
- 			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
- 			else
-@@ -811,6 +848,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 
- 	resource_list_for_each_entry(entry, &bridge->windows) {
- 		res = entry->res;
-+		if (res->flags & IORESOURCE_IO)
-+			pci_unmap_iospace(res);
- 		if (res->parent &&
- 		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
- 			release_resource(res);
--- 
-1.9.1
+The mapping I would like to see is as follows (assuming CPU cores 0..15 
+correspond to NUMA node 0 and CPU cores 16..31 correspond to NUMA node 1):
+
+0: A0
+1: B0
+2: (none)
+3: (none)
+4: A1
+5: B1
+6: (none)
+7: (none)
+8: A2
+9: B2
+10: (none)
+11: (none)
+12: A3
+13: B3
+14: (none)
+15: (none)
+...
+31: (none)
+
+Do you agree that - ignoring other interrupt assignments - that the 
+latter interrupt assignment scheme would result in higher throughput and 
+lower interrupt processing latency?
+
+Thanks,
+
+Bart.
