@@ -1,82 +1,85 @@
-Return-Path: <dhdang@apm.com>
-Return-Path: <dhdang@apm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34386 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753076AbcFOVCQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jun 2016 17:02:16 -0400
+Date: Wed, 15 Jun 2016 16:02:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Gregory CLEMENT <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Nicolas Pitre <nicolas.pitre@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Ray Jui <rjui@broadcom.com>, Ley Foon Tan <lftan@altera.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] arm/arm64/irqchip/pci: fix PCI_MSI dependencies
+Message-ID: <20160615210211.GA17504@localhost>
+References: <8531046.3ceRqUA835@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <577275EA.7010002@codeaurora.org>
-References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
- <1467100442-28078-4-git-send-email-tn@semihalf.com> <577275EA.7010002@codeaurora.org>
-From: Duc Dang <dhdang@apm.com>
-Date: Tue, 28 Jun 2016 09:12:55 -0700
-Message-ID: <CADaLNDkhPZuG7UJ4SK_j5v_nXbd782Q17LAcXduG0uEObaFF=g@mail.gmail.com>
-Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
-To: Christopher Covington <cov@codeaurora.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	Rafael Wysocki <rafael@kernel.org>, Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
-	Jayachandran C <jchandra@broadcom.com>, Robert Richter <robert.richter@caviumnetworks.com>,
-	Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	David Daney <ddaney@caviumnetworks.com>, Yijing Wang <wangyijing@huawei.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>, linux-acpi@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>, jeremy.linton@arm.com,
-	Dongdong Liu <liudongdong3@huawei.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jeffrey Hugo <jhugo@codeaurora.org>, Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8531046.3ceRqUA835@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 28, 2016 at 6:04 AM, Christopher Covington
-<cov@codeaurora.org> wrote:
-> Hi Tomasz,
->
-> On 06/28/2016 03:54 AM, Tomasz Nowicki wrote:
->
->> diff --git a/drivers/pci/host/mcfg-quirks.c b/drivers/pci/host/mcfg-quirks.c
->> new file mode 100644
->> index 0000000..fb2b184
->> --- /dev/null
->> +++ b/drivers/pci/host/mcfg-quirks.c
->> @@ -0,0 +1,88 @@
->
->> +static bool pci_mcfg_fixup_match(struct pci_cfg_fixup *f,
->> +                              struct acpi_table_header *mcfg_header)
->> +{
->> +     int olen = min_t(u8, strlen(f->oem_id), ACPI_OEM_ID_SIZE);
->> +     int tlen = min_t(u8, strlen(f->oem_table_id), ACPI_OEM_TABLE_ID_SIZE);
->> +
->> +     return (!strncmp(f->oem_id, mcfg_header->oem_id, olen) &&
->> +             !strncmp(f->oem_table_id, mcfg_header->oem_table_id, tlen) &&
->> +             f->oem_revision == mcfg_header->oem_revision);
->> +}
->
-> Ard's comments on v3 included:
->
-> "... exact OEM table/rev id matches ..."
-> "... substring match ... out of the question ..."
->
-> I originally advocated the substring match approach because
-> space-padding the input strings was unfamiliar. But given that some
-> vendors have a "PLAT    " then "PLAT2   " naming scheme, where the
-> former needs quirks and the latter (hopefully) doesn't, I agree with Ard
-> and think space-padded inputs is the better way to go. Sorry for the
-> lack of foresight.
+On Wed, Jun 15, 2016 at 10:09:38PM +0200, Arnd Bergmann wrote:
+> The PCI_MSI symbol is used inconsistently throughout the tree,
+> with some drivers using 'select' and others using 'depends on',
+> or using conditional selects. This keeps causing problems,
+> and the latest one is a result of ARCH_ALPINE using a 'select'
+> statement to enable its platform specific MSI driver but not
+> enabling MSI support first:
+> 
+> warning: (ARCH_ALPINE) selects ALPINE_MSI which has unmet direct dependencies (PCI && PCI_MSI)
+> drivers/irqchip/irq-alpine-msi.c:104:15: error: variable 'alpine_msix_domain_info' has initializer but incomplete type
+>  static struct msi_domain_info alpine_msix_domain_info = {
+>                ^~~~~~~~~~~~~~~
+> drivers/irqchip/irq-alpine-msi.c:105:2: error: unknown field 'flags' specified in initializer
+>   .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+>   ^
+> drivers/irqchip/irq-alpine-msi.c:105:11: error: 'MSI_FLAG_USE_DEF_DOM_OPS' undeclared here (not in a function)
+>   .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+>            ^~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> There is little reason to enable PCI support for a platform that
+> uses MSI but then leaving MSI disabled at compile time.
+> 
+> I sent an earlier version that used 'select PCI_MSI' everywhere
+> in March, but that caused build regressions on x86.
+> 
+> This version instead selects PCI_MSI from irqchips that implement MSI,
+> and makes PCI host bridges that use MSI on ARM depend on PCI_MSI_IRQ_DOMAIN,
+> which in turn is now enabled by default on all three architectures that
+> support it, whenever MSI is enabled.
+> 
+> I think it makes most sense to merge this patch through the PCI tree,
+> as new PCI host drivers get added occasionally, and they all need to
+> be adapted for this change.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Suggested-by: Marc Zyngier <marc.zyngier@arm.com>
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
 
-I think having OEM Table ID as "PLAT   " and then "PLAT2  " (the the
-next version of the SoC)
-is common. So yes, matching full string is better as we can use "PLAT2  "
-in MCFG table and not worry about the "PLAT" sub-string match causes the quirk
-to be applied unintentionally.
+I applied this to pci/msi, minus the crypto change that looks unrelated:
 
->
-> (I'm happy to rip it out, test, and communicate the delta however you'd
-> prefer--just let me know.)
->
-> Regards,
-> Cov
->
-> --
-> Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-> a Linux Foundation Collaborative Project
-Regards,
-Duc Dang.
+> @@ -1038,6 +1038,8 @@ source "arch/arm64/Kconfig.debug"
+>  source "security/Kconfig"
+>  
+>  source "crypto/Kconfig"
+> +if CRYPTO
+>  source "arch/arm64/crypto/Kconfig"
+> +endif
