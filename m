@@ -1,104 +1,62 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Jon Masters <jcm@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "catalin.marinas@arm.com"
-	<catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com"
-	<Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>
-CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "Liviu.Dudau@arm.com"
-	<Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
-	<ddaney@caviumnetworks.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "linaro-acpi@lists.linaro.org"
-	<linaro-acpi@lists.linaro.org>,
-        "andrea.gallo@linaro.org"
-	<andrea.gallo@linaro.org>,
-        "dhdang@apm.com" <dhdang@apm.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>
-Subject: RE: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host controller
-Date: Thu, 2 Jun 2016 10:06:27 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F769AAB@lhreml507-mbx>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F767865@lhreml507-mbx>
- <f606faa9-72f3-3219-02a8-69e948338d2e@redhat.com>
-In-Reply-To: <f606faa9-72f3-3219-02a8-69e948338d2e@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36986 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378AbcFOIPh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jun 2016 04:15:37 -0400
+Date: Wed, 15 Jun 2016 10:15:32 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	David Cohen <david.a.cohen@linux.intel.com>
+Subject: Re: [PATCH v2 1/1] x86/platform/intel-mid: Add Power Management Unit
+ driver
+Message-ID: <20160615081532.GB16023@gmail.com>
+References: <1465928985-12113-1-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465928985-12113-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jon
 
-> -----Original Message-----
-> From: Jon Masters [mailto:jcm@redhat.com]
-> Sent: 02 June 2016 08:32
-> To: Gabriele Paoloni; Tomasz Nowicki; helgaas@kernel.org;
-> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
-> rafael@kernel.org; hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com;
-> okaya@codeaurora.org; jchandra@broadcom.com
-> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
-> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
-> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
-> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
-> dhdang@apm.com; jeremy.linton@arm.com
-> Subject: Re: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host
-> controller
->=20
-> On 06/01/2016 03:36 AM, Gabriele Paoloni wrote:
->=20
-> > If you agree I think Jon can tell who's the best person to
-> > push the quirk RFC (as my understanding is that this mechanism
-> > is currently used by some platforms deployed on the market...)
->=20
-> Let me ping Linaro folks to see who has that (quirks) ball. We can
-> certainly share the older OEM matching quirks Mark Salter did for
-> earlier RHEL(SA) internal versions as a seed for that[0] activity.
+* Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-Tomasz has posted the RFC so we'll start to look at that
+> Add Power Management Unit driver to handle power states of South Complex
+> devices on Intel Tangier. In the future it might be expanded to cover North
+> Complex devices as well.
+> 
+> With this driver the power state of the host controllers such as SPI, I2C,
+> UART, eMMC, and DMA would be managed.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+> In v2:
+> - rename *pmu* to *pwr*
+> - fix indentation to be consistent for definitions
+> - add comments to explain what driver does
+> - refactor quirks in intel_mid_pci.c
+> 
+>  arch/x86/include/asm/intel-mid.h     |   8 +
+>  arch/x86/pci/intel_mid_pci.c         |  40 +++-
+>  arch/x86/platform/intel-mid/Makefile |   2 +-
+>  arch/x86/platform/intel-mid/pwr.c    | 416 +++++++++++++++++++++++++++++++++++
+>  drivers/pci/Makefile                 |   3 +
+>  drivers/pci/pci-mid.c                |  77 +++++++
+>  6 files changed, 540 insertions(+), 6 deletions(-)
+>  create mode 100644 arch/x86/platform/intel-mid/pwr.c
+>  create mode 100644 drivers/pci/pci-mid.c
 
->=20
-> BUT...I don't think we should block this thread on the quirks. They're
-> separate (but important). I see Arnd's reply as well, but nobody else
-> has yet chimed in to this thread (and I am about to prod all of the
-> vendors to reply to this thread and ACK). Can I ask whether we can't
-> just stage v8 as-is for -next at this point? Can Arnd's (or other)
-> suggestions be handled as followup patches post-merge please? Bjorn?
+I've applied this to tip:x86/platform. I changed references to 'PMU' to 'PWRMU' - 
+let me know if you'd like to use some other abbreviation.
 
-I will ask HiSilicon folks to test it so we can add Tested-by on this
+Please send the clean-up patch on top of this. (Feel free to squash the one I sent 
+into yours.)
 
-Thanks
+Thanks,
 
-Gab
-
->=20
-> Jon.
->=20
-> [0] RHEL(SA) has had three different PCIe enabled ACPI stacks
-> maintained
-> independently so far since we need PCIe to boot most of the hundreds of
-> v8 systems we have internal to Red Hat - which all have PCI.
->=20
-> --
-> Computer Architect | Sent from my Fedora powered laptop
+	Ingo
