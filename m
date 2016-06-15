@@ -1,250 +1,330 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:35383 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753314AbcFOIw5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jun 2016 04:52:57 -0400
+Date: Wed, 15 Jun 2016 09:52:12 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
+	al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V6 4/7] irqchip/gicv3-its: Refator ITS DT init code to
+ prepare for ACPI
+Message-ID: <20160615095212.260d16c3@arm.com>
+In-Reply-To: <1465828873-23498-5-git-send-email-tn@semihalf.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+	<1465828873-23498-5-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <20160608210322.GA4248@localhost>
-References: <20160604000642.28162-1-yinghai@kernel.org> <20160604000642.28162-2-yinghai@kernel.org>
- <20160608210322.GA4248@localhost>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Wed, 8 Jun 2016 15:35:16 -0700
-Message-ID: <CAE9FiQXPmG6UYYGHG52_i8vaBJ5yPm6Z4Zfx_BhQxVhyWC5fnw@mail.gmail.com>
-Subject: Re: [PATCH v12 01/15] PCI: Let pci_mmap_page_range() take extra
- resource pointer
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, linux-cris-kernel@axis.com,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, linux-am33-list@redhat.com,
-	linux-parisc@vger.kernel.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-sh@vger.kernel.org,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, linux-xtensa@linux-xtensa.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 8, 2016 at 2:03 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> Microblaze does look up the resource in pci_mmap_page_range(), but it
-> never actually uses it.  It *looks* like it uses it, but that code is
-> actually dead and I think we should apply the first patch below.
+On Mon, 13 Jun 2016 16:41:10 +0200
+Tomasz Nowicki <tn@semihalf.com> wrote:
 
-Good one.
+s/refator/refactor/ in the subject line.
 
->
-> That leaves powerpc as the only arch that would use this extra
-> resource pointer.  It uses it in __pci_mmap_set_pgprot() to help
-> decide whether to make a normal uncacheable mapping or a write-
-> combining one.  There's nothing here that's specific to the powerpc
-> architecture, and I don't think we should add this parameter just to
-> cater to powerpc.
->
-> There are two cases where __pci_mmap_set_pgprot() on powerpc does
-> something based on the resource:
->
->   1) We're using procfs to mmap I/O port space after we requested
->      write-combining, e.g., we did this:
->
->        ioctl(fd, PCIIOC_MMAP_IS_IO);           # request I/O port space
->        ioctl(fd, PCIIOC_WRITE_COMBINE, 1);     # request write-combining
->        mmap(fd, ...)
->
->      On powerpc, we ignore the write-combining request in this case.
->
->      I think we can handle this case by applying the second patch
->      below to ignore write-combining on I/O space for all arches, not
->      just powerpc.
->
->   2) We're using sysfs to mmap resourceN (not resourceN_wc), and
->      the resource is prefetchable.  On powerpc, we turn *on*
->      write-combining, even though the user didn't ask for it.
->
->      I'm not sure this case is actually safe, because it changes the
->      ordering properties.  If it *is* safe, we could enable write-
->      combining in pci_mmap_resource(), where we already have the
->      resource and it could be done for all arches.
->
->      This case is not strictly necessary, except to avoid a
->      performance regression, because the user could have mapped
->      resourceN_wc to explicitly request write-combining.
->
+> In order to add ACPI support we need to isolate ACPI&DT common code and
+> move DT logic to corresponding functions. To achieve this we are using
+> firmware agnostic handle which can be unpacked to either DT or ACPI node.
+> 
+> No functional changes other than a very minor one:
+> 1. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+> as a bonus we get nice string formatting.
+> 2. Since there is only one of ITS parent domain convert it to static global
+> variable and drop the parameter from its_probe_one. Users can refer to it
+> in more convenient way then.
+> 
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 
-Agreed.
+This doesn't apply anymore since I've merged Shanker's 2-level
+translation patches. Please rebase it on top of my irq/irqchip-4.8
+branch.
 
->
-> commit 4e712b691abc5b579e3e4327f56b0b7988bdd1cb
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Wed Jun 8 14:00:14 2016 -0500
->
->     microblaze/PCI: Remove useless __pci_mmap_set_pgprot()
->
->     The microblaze __pci_mmap_set_pgprot() was apparently copied from powerpc,
->     where it computes either an uncacheable pgprot_t or a write-combining one.
->     But on microblaze, we always use the regular uncacheable pgprot_t.
->
->     Remove the useless code in __pci_mmap_set_pgprot() and inline the
->     pgprot_noncached() at the only caller.
->
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-> index 14cba60..1974567 100644
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -219,33 +219,6 @@ static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
+> ---
+>  drivers/irqchip/irq-gic-v3-its.c   | 79 +++++++++++++++++++++-----------------
+>  drivers/irqchip/irq-gic-v3.c       |  6 +--
+>  include/linux/irqchip/arm-gic-v3.h |  4 +-
+>  3 files changed, 48 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+> index 43d32fc..f033fd8 100644
+> --- a/drivers/irqchip/irq-gic-v3-its.c
+> +++ b/drivers/irqchip/irq-gic-v3-its.c
+> @@ -74,7 +74,7 @@ struct its_node {
+>  	raw_spinlock_t		lock;
+>  	struct list_head	entry;
+>  	void __iomem		*base;
+> -	unsigned long		phys_base;
+> +	phys_addr_t		phys_base;
+>  	struct its_cmd_block	*cmd_base;
+>  	struct its_cmd_block	*cmd_write;
+>  	struct its_baser	tables[GITS_BASER_NR_REGS];
+> @@ -114,6 +114,7 @@ struct its_device {
+>  static LIST_HEAD(its_nodes);
+>  static DEFINE_SPINLOCK(its_lock);
+>  static struct rdists *gic_rdists;
+> +static struct irq_domain *its_parent;
+>  
+>  #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
+>  #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
+> @@ -837,7 +838,7 @@ static void its_free_tables(struct its_node *its)
+>  	}
 >  }
->
->  /*
-> - * Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-> - * device mapping.
-> - */
-> -static pgprot_t __pci_mmap_set_pgprot(struct pci_dev *dev, struct resource *rp,
-> -                                     pgprot_t protection,
-> -                                     enum pci_mmap_state mmap_state,
-> -                                     int write_combine)
-> -{
-> -       pgprot_t prot = protection;
+>  
+> -static int its_alloc_tables(const char *node_name, struct its_node *its)
+> +static int its_alloc_tables(struct its_node *its)
+>  {
+>  	int err;
+>  	int i;
+> @@ -893,8 +894,8 @@ static int its_alloc_tables(const char *node_name, struct its_node *its)
+>  				    order);
+>  			if (order >= MAX_ORDER) {
+>  				order = MAX_ORDER - 1;
+> -				pr_warn("%s: Device Table too large, reduce its page order to %u\n",
+> -					node_name, order);
+> +				pr_warn("ITS@%pa: Device Table too large, reduce its page order to %u\n",
+> +					&its->phys_base, order);
+>  			}
+>  		}
+>  
+> @@ -903,8 +904,8 @@ retry_alloc_baser:
+>  		if (alloc_pages > GITS_BASER_PAGES_MAX) {
+>  			alloc_pages = GITS_BASER_PAGES_MAX;
+>  			order = get_order(GITS_BASER_PAGES_MAX * psz);
+> -			pr_warn("%s: Device Table too large, reduce its page order to %u (%u pages)\n",
+> -				node_name, order, alloc_pages);
+> +			pr_warn("ITS@%pa: Device Table too large, reduce its page order to %u (%u pages)\n",
+> +				&its->phys_base, order, alloc_pages);
+>  		}
+>  
+>  		base = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO, order);
+> @@ -978,8 +979,8 @@ retry_baser:
+>  		}
+>  
+>  		if (val != tmp) {
+> -			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
+> -			       node_name, i,
+> +			pr_err("ITS@%pa: GITS_BASER%d doesn't stick: %lx %lx\n",
+> +			       &its->phys_base, i,
+>  			       (unsigned long) val, (unsigned long) tmp);
+>  			err = -ENXIO;
+>  			goto out_free;
+> @@ -1507,8 +1508,7 @@ static void its_enable_quirks(struct its_node *its)
+>  	gic_enable_quirks(iidr, its_quirks, its);
+>  }
+>  
+> -static int its_init_domain(struct device_node *node, struct its_node *its,
+> -			   struct irq_domain *parent)
+> +static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
+>  {
+>  	struct irq_domain *inner_domain;
+>  	struct msi_domain_info *info;
+> @@ -1517,13 +1517,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+>  	if (!info)
+>  		return -ENOMEM;
+>  
+> -	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
+> +	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
+>  	if (!inner_domain) {
+>  		kfree(info);
+>  		return -ENOMEM;
+>  	}
+>  
+> -	inner_domain->parent = parent;
+> +	inner_domain->parent = its_parent;
+>  	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+>  	info->ops = &its_msi_domain_ops;
+>  	info->data = its;
+> @@ -1532,43 +1532,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+>  	return 0;
+>  }
+>  
+> -static int __init its_probe(struct device_node *node,
+> -			    struct irq_domain *parent)
+> +static int __init its_probe_one(struct resource *res,
+> +				struct fwnode_handle *handle, int numa_node)
+>  {
+> -	struct resource res;
+>  	struct its_node *its;
+>  	void __iomem *its_base;
+>  	u32 val;
+>  	u64 baser, tmp;
+>  	int err;
+>  
+> -	err = of_address_to_resource(node, 0, &res);
+> -	if (err) {
+> -		pr_warn("%s: no regs?\n", node->full_name);
+> -		return -ENXIO;
+> -	}
 > -
-> -       /* Write combine is always 0 on non-memory space mappings. On
-> -        * memory space, if the user didn't pass 1, we check for a
-> -        * "prefetchable" resource. This is a bit hackish, but we use
-> -        * this to workaround the inability of /sysfs to provide a write
-> -        * combine bit
-> -        */
-> -       if (mmap_state != pci_mmap_mem)
-> -               write_combine = 0;
-> -       else if (write_combine == 0) {
-> -               if (rp->flags & IORESOURCE_PREFETCH)
-> -                       write_combine = 1;
-> -       }
-> -
-> -       return pgprot_noncached(prot);
-> -}
-> -
-> -/*
->   * This one is used by /dev/mem and fbdev who have no clue about the
->   * PCI device, it tries to find the PCI device first and calls the
->   * above routine
-> @@ -317,9 +290,7 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
->                 return -EINVAL;
->
->         vma->vm_pgoff = offset >> PAGE_SHIFT;
-> -       vma->vm_page_prot = __pci_mmap_set_pgprot(dev, rp,
-> -                                                 vma->vm_page_prot,
-> -                                                 mmap_state, write_combine);
-> +       vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
->
->         ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
->                                vma->vm_end - vma->vm_start, vma->vm_page_prot);
->
+> -	its_base = ioremap(res.start, resource_size(&res));
+> +	its_base = ioremap(res->start, resource_size(res));
+>  	if (!its_base) {
+> -		pr_warn("%s: unable to map registers\n", node->full_name);
+> +		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+>  		return -ENOMEM;
+>  	}
+>  
+>  	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+>  	if (val != 0x30 && val != 0x40) {
+> -		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
+> +		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+>  		err = -ENODEV;
+>  		goto out_unmap;
+>  	}
+>  
+>  	err = its_force_quiescent(its_base);
+>  	if (err) {
+> -		pr_warn("%s: failed to quiesce, giving up\n",
+> -			node->full_name);
+> +		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+>  		goto out_unmap;
+>  	}
+>  
+> -	pr_info("ITS: %s\n", node->full_name);
+> +	pr_info("ITS@%pa\n", &res->start);
+>  
+>  	its = kzalloc(sizeof(*its), GFP_KERNEL);
+>  	if (!its) {
+> @@ -1580,9 +1572,9 @@ static int __init its_probe(struct device_node *node,
+>  	INIT_LIST_HEAD(&its->entry);
+>  	INIT_LIST_HEAD(&its->its_device_list);
+>  	its->base = its_base;
+> -	its->phys_base = res.start;
+> +	its->phys_base = res->start;
+>  	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+> -	its->numa_node = of_node_to_nid(node);
+> +	its->numa_node = numa_node;
+>  
+>  	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+>  	if (!its->cmd_base) {
+> @@ -1593,7 +1585,7 @@ static int __init its_probe(struct device_node *node,
+>  
+>  	its_enable_quirks(its);
+>  
+> -	err = its_alloc_tables(node->full_name, its);
+> +	err = its_alloc_tables(its);
+>  	if (err)
+>  		goto out_free_cmd;
+>  
+> @@ -1629,7 +1621,7 @@ static int __init its_probe(struct device_node *node,
+>  	writeq_relaxed(0, its->base + GITS_CWRITER);
+>  	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+>  
+> -	err = its_init_domain(node, its, parent);
+> +	err = its_init_domain(handle, its);
+>  	if (err)
+>  		goto out_free_tables;
+>  
+> @@ -1647,7 +1639,7 @@ out_free_its:
+>  	kfree(its);
+>  out_unmap:
+>  	iounmap(its_base);
+> -	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
+> +	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
+>  	return err;
+>  }
+>  
+> @@ -1675,10 +1667,10 @@ static struct of_device_id its_device_id[] = {
+>  	{},
+>  };
+>  
+> -int __init its_init(struct device_node *node, struct rdists *rdists,
+> -	     struct irq_domain *parent_domain)
+> +static int __init its_of_probe(struct device_node *node)
+>  {
+>  	struct device_node *np;
+> +	struct resource res;
+>  
+>  	for (np = of_find_matching_node(node, its_device_id); np;
+>  	     np = of_find_matching_node(np, its_device_id)) {
+> @@ -1688,8 +1680,25 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+>  			continue;
+>  		}
+>  
+> -		its_probe(np, parent_domain);
+> +		if (of_address_to_resource(np, 0, &res)) {
+> +			pr_warn("%s: no regs?\n", np->full_name);
+> +			continue;
+> +		}
+> +
+> +		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
+>  	}
+> +	return 0;
+> +}
+> +
+> +int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+> +		    struct irq_domain *parent_domain)
+> +{
+> +	struct device_node *of_node;
+> +
+> +	its_parent = parent_domain;
+> +	of_node = to_of_node(handle);
+> +	if (of_node)
+> +		its_of_probe(of_node);
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+If you add an "else return -ENODEV;" here...
 
->
->
-> commit 962972ee5e0ba6ceb680cb182bad65f8886586a6
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Wed Jun 8 14:46:54 2016 -0500
->
->     PCI: Ignore write-combining when mapping I/O port space
->
->     PCI exposes files like /proc/bus/pci/00/00.0 in procfs.  These files
->     support operations like this:
->
->       ioctl(fd, PCIIOC_MMAP_IS_IO);           # request I/O port space
->       ioctl(fd, PCIIOC_WRITE_COMBINE, 1);     # request write-combining
->       mmap(fd, ...)
->
->     Many architectures don't allow mmap of I/O port space at all, but I don't
->     think it makes sense to do a write-combining mapping on the ones that do.
->     We could change proc_bus_pci_ioctl() so the user could never enable write-
->     combining for I/O port space, but that would break the following sequence,
->     which is currently legal:
->
->       mmap(fd, ...)                           # default is I/O, non-combining
->       ioctl(fd, PCIIOC_WRITE_COMBINE, 1);     # request write-combining
->       ioctl(fd, PCIIOC_MMAP_IS_MEM);          # request memory space
->       mmap(fd, ...)
->
->     Ignore the write-combining flag when mapping I/O port space.
->
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index 3f155e7..21f8d613 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -247,7 +247,8 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
->
->         ret = pci_mmap_page_range(dev, vma,
->                                   fpriv->mmap_state,
-> -                                 fpriv->write_combine);
-> +                                 (fpriv->mmap_state == pci_mmap_mem) ?
-> +                                       fpriv->write_combine : 0);
->         if (ret < 0)
->                 return ret;
->
+>  
+>  	if (list_empty(&its_nodes)) {
+>  		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+> index 2c5ba0e..019b442 100644
+> --- a/drivers/irqchip/irq-gic-v3.c
+> +++ b/drivers/irqchip/irq-gic-v3.c
+> @@ -911,7 +911,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
+>  				 u64 redist_stride,
+>  				 struct fwnode_handle *handle)
+>  {
+> -	struct device_node *node;
+>  	u32 typer;
+>  	int gic_irqs;
+>  	int err;
+> @@ -952,10 +951,9 @@ static int __init gic_init_bases(void __iomem *dist_base,
+>  
+>  	set_handle_irq(gic_handle_irq);
+>  
+> -	node = to_of_node(handle);
+>  	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
+> -	    node) /* Temp hack to prevent ITS init for ACPI */
+> -		its_init(node, &gic_data.rdists, gic_data.domain);
+> +	    to_of_node(handle)) /* Temp hack to prevent ITS init for ACPI */
+> +		its_init(handle, &gic_data.rdists, gic_data.domain);
 
-ok to me.
+... you nuke this hack in this patch. The sooner the better.
 
-At the same time, can you kill __pci_mmap_set_pgprot() for powerpc.
+>  
+>  	gic_smp_init();
+>  	gic_dist_init();
+> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+> index dc493e0..2136639 100644
+> --- a/include/linux/irqchip/arm-gic-v3.h
+> +++ b/include/linux/irqchip/arm-gic-v3.h
+> @@ -334,9 +334,9 @@ struct rdists {
+>  };
+>  
+>  struct irq_domain;
+> -struct device_node;
+> +struct fwnode_handle;
+>  int its_cpu_init(void);
+> -int its_init(struct device_node *node, struct rdists *rdists,
+> +int its_init(struct fwnode_handle *handle, struct rdists *rdists,
+>  	     struct irq_domain *domain);
+>  
+>  static inline bool gic_enable_sre(void)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0f7a60f..0d0148d 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -356,36 +356,6 @@ static struct resource
-*__pci_mmap_make_offset(struct pci_dev *dev,
- }
+Thanks,
 
- /*
-- * Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-- * device mapping.
-- */
--static pgprot_t __pci_mmap_set_pgprot(struct pci_dev *dev, struct resource *rp,
--                      pgprot_t protection,
--                      enum pci_mmap_state mmap_state,
--                      int write_combine)
--{
--
--    /* Write combine is always 0 on non-memory space mappings. On
--     * memory space, if the user didn't pass 1, we check for a
--     * "prefetchable" resource. This is a bit hackish, but we use
--     * this to workaround the inability of /sysfs to provide a write
--     * combine bit
--     */
--    if (mmap_state != pci_mmap_mem)
--        write_combine = 0;
--    else if (write_combine == 0) {
--        if (rp->flags & IORESOURCE_PREFETCH)
--            write_combine = 1;
--    }
--
--    /* XXX would be nice to have a way to ask for write-through */
--    if (write_combine)
--        return pgprot_noncached_wc(protection);
--    else
--        return pgprot_noncached(protection);
--}
--
--/*
-  * This one is used by /dev/mem and fbdev who have no clue about the
-  * PCI device, it tries to find the PCI device first and calls the
-  * above routine
-@@ -458,9 +428,10 @@ int pci_mmap_page_range(struct pci_dev *dev,
-struct vm_area_struct *vma,
-         return -EINVAL;
-
-     vma->vm_pgoff = offset >> PAGE_SHIFT;
--    vma->vm_page_prot = __pci_mmap_set_pgprot(dev, rp,
--                          vma->vm_page_prot,
--                          mmap_state, write_combine);
-+    if (write_combine)
-+        vma->vm_page_prot = pgprot_noncached_wc(protection);
-+    else
-+        vma->vm_page_prot = pgprot_noncached(protection);
-
-     ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
-                    vma->vm_end - vma->vm_start, vma->vm_page_prot);
+	M.
+-- 
+Jazz is not dead. It just smells funny.
