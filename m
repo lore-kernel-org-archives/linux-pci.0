@@ -1,72 +1,108 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org
-Cc: tglx@linutronix.de,
-	rjw@rjwysocki.net,
-	tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com
-Subject: Re: [PATCH V3 1/3] x86/ioapic: Support hot-removal of IOAPICs present during boot
-Date: Sun, 12 Jun 2016 14:06:09 +0800
-Message-Id: <1465711569-19406-1-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <20160610164304.GJ19309@localhost>
-References: <20160610164304.GJ19309@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:16374 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753154AbcFONJl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jun 2016 09:09:41 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5FD4XZr036661
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jun 2016 09:09:41 -0400
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23jfmpwnct-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jun 2016 09:09:41 -0400
+Received: from localhost
+	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Wed, 15 Jun 2016 10:09:38 -0300
+Subject: Re: [PATCH 06/13] irq: add a helper spread an affinity mask for
+ MSI/MSI-X vectors
+To: Christoph Hellwig <hch@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+ <1465934346-20648-7-git-send-email-hch@lst.de>
+ <57607D0E.1060907@linux.vnet.ibm.com> <20160615101045.GB16425@lst.de>
+Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	axboe@fb.com, tglx@linutronix.de, bart.vanassche@sandisk.com
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Date: Wed, 15 Jun 2016 10:09:33 -0300
+MIME-Version: 1.0
+In-Reply-To: <20160615101045.GB16425@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Message-Id: <5761538D.6060303@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, June 11, 2016 12:43 AM, Bjorn Helgaas wrote:
-> On Wed, Jun 08, 2016 at 05:32:44PM +0800, Rui Wang wrote:
-> > @@ -1779,8 +1780,12 @@ void __init
-> > pci_assign_unassigned_resources(void)
-> >  {
-> >  	struct pci_bus *root_bus;
-> >
-> > -	list_for_each_entry(root_bus, &pci_root_buses, node)
-> > +	list_for_each_entry(root_bus, &pci_root_buses, node) {
-> >  		pci_assign_unassigned_root_bus_resources(root_bus);
-> > +#ifdef CONFIG_X86
-> > +		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
-> > +#endif
-> 
-> This seems like a strange place to call acpi_ioapic_add().  Your object is to call
-> acpi_ioapic_add() during root bus enumeration.
-> 
-> I assume we *can't* call acpi_ioapic_add() from acpi_pci_root_add() at boot
-> time, for some reason you'll explain.  But is there a reason we have to call it
-> from pci_assign_unassigned_resources() (where it requires an ifdef) instead
-> of from pcibios_assign_resources(), which is already x86-specific?
-> 
-> In acpi_pci_root_add(), we have this:
-> 
->   acpi_pci_root_add(...)
->   {
->     ...
->     if (hotadd)
->       acpi_ioapic_add(root);
-> 
-> So the obvious question is why don't we just remove the "if (hotadd)"
-> and call acpi_ioapic_add() always.
-> 
-> I'm sure the reason is some ordering problem, but we need a comment in
-> acpi_pci_root_add() about why the obvious solution doesn't work.
-> 
+Thanks for the responses Bart and Christoph.
 
-Hi Bjorn,
 
-Yes it's an ording issue. acpi_ioapic_add() and also ioapic_insert_resources()
-have to be later than pci initialization in order to deal with IOAPICs mapped
-on a PCI BAR. There's a comment about this inside pcibios_resource_survey()
-above ioapic_insert_resources(). We can also add a comment inside
-acpi_pci_root_add(), though.
+On 06/15/2016 07:10 AM, Christoph Hellwig wrote:
+> On Tue, Jun 14, 2016 at 06:54:22PM -0300, Guilherme G. Piccoli wrote:
+>> On 06/14/2016 04:58 PM, Christoph Hellwig wrote:
+>>> This is lifted from the blk-mq code and adopted to use the affinity mask
+>>> concept just intruced in the irq handling code.
+>>
+>> Very nice patch Christoph, thanks. There's a little typo above, on
+>> "intruced".
+>
+> fixed.
+>
+>> Another little typo above in "assining".
+>
+> fixed a swell.
+>
+>> I take this opportunity to ask you something, since I'm working in a
+>> related code in a specific driver
+>
+> Which driver?  One of the points here is to get this sort of code out
+> of drivers and into common code..
 
-And yes calling acpi_ioapic_add() in pcibios_assign_resources() doesn't require
-ifdef CONFIG_X86. But it'll require a loop to iterate through the root buses,
-and call acpi_ioapic_add() within the loop. pci_assign_unassigned_resources()
-already has that loop. Do you still prefer adding it to
-pcibios_assign_resources() ?
+A network driver, i40e. I'd be glad to implement/see some common code to 
+raise the topology information I need, but I was implementing on i40e 
+more as a test case/toy example heheh...
 
-Regards,
-Rui
+
+>> - sorry in advance if my question is
+>> silly or if I misunderstood your code.
+>>
+>> The function irq_create_affinity_mask() below deals with the case in which
+>> we have nr_vecs < num_online_cpus(); in this case, wouldn't be a good idea
+>> to trying distribute the vecs among cores?
+>>
+>> Example: if we have 128 online cpus, 8 per core (meaning 16 cores) and 64
+>> vecs, I guess would be ideal to distribute 4 vecs _per core_, leaving 4
+>> CPUs in each core without vecs.
+>
+> There have been some reports about the blk-mq IRQ distribution being
+> suboptimal, but no one sent patches so far.  This patch just moves the
+> existing algorithm into the core code to be better bisectable.
+>
+> I think an algorithm that takes cores into account instead of just SMT
+> sibling would be very useful.  So if you have a case where this helps
+> for you an incremental patch (or even one against the current blk-mq
+> code for now) would be appreciated.
+
+...but now I'll focus on the common/general case! Thanks for the 
+suggestion Christoph. I guess would be even better to have a generic 
+function that retrieves an optimal mask, something like 
+topology_get_optimal_mask(n, *cpumask), in which we get the best 
+distribution of n CPUs among all cores and return such a mask - 
+interesting case is when n < num_online_cpus. So, this function could be 
+used inside your irq_create_affinity_mask() and maybe in other places it 
+is needed.
+
+I was planning to use topology_core_id() to retrieve the core of a CPU, 
+if anybody has a better idea, I'd be glad to hear it.
+
+Cheers,
+
+
+Guilherme
+
+
+>
+> _______________________________________________
+> Linux-nvme mailing list
+> Linux-nvme@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-nvme
+>
+
