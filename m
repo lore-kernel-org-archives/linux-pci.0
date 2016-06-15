@@ -1,113 +1,116 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 8 Jun 2016 17:47:39 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Marcin Wojtas <mw@semihalf.com>
-Subject: Re: [PATCH 2/3] PCI: host: new PCI host controller driver for
- Marvell Armada 3700
-Message-ID: <20160608174739.2e66943e@free-electrons.com>
-In-Reply-To: <CAPv3WKcznGD4p-YO3QLLYw+y+7w4ha-d_Nt6FHue7d2_SiyK0w@mail.gmail.com>
-References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1464858585-10963-3-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAPv3WKcznGD4p-YO3QLLYw+y+7w4ha-d_Nt6FHue7d2_SiyK0w@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 15 Jun 2016 14:34:23 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, robert.richter@caviumnetworks.com,
+	shijie.huang@arm.com, Suravee.Suthikulpanit@amd.com,
+	hanjun.guo@linaro.org, al.stone@linaro.org, mw@semihalf.com,
+	graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
+	will.deacon@arm.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	ddaney.cavm@gmail.com, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org,
+	"Abdulhamid, Harb" <harba@codeaurora.org>
+Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
+Message-ID: <20160615133423.GA766@red-moon>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+ <1465828873-23498-2-git-send-email-tn@semihalf.com>
+ <576155FA.9080706@codeaurora.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
- Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
- linux-pci@vger.kernel.org, Hanna Hawa <hannah@marvell.com>,
- Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <576155FA.9080706@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-Thanks for your feedback!
-
-On Wed, 8 Jun 2016 17:15:08 +0200, Marcin Wojtas wrote:
-
-> Have you checked my latest improvements of interrupt handling in this
-> controller? As DEASSERT is polled in advk_pcie_handle_int() I don't
-> think it should be able to trigger root complex interrupt at all.
-> Hence I think it shouldn't be unmasked.
-
-Correct. Makes sense. Though you are suggesting below to no longer poll
-the DEASSERT signal in the interrupt handler, but you're instead saying
-to ignore it entirely.
-
-
-> > +       msi = &pcie->msi;  
+On Wed, Jun 15, 2016 at 09:19:54AM -0400, Sinan Kaya wrote:
+> Hi Tomasz,
 > 
-> Do we consciously resign from CONFIG_MSI dependency? I know it should
-> always be enabled, but just making sure.
-
-Yes, I discussed this with Arnd, and we decided to simply make MSI
-support a hard dependency. You can always disable it by passing
-pci=nomsi on the kernel command line (tested to be working).
-
-
-> Below code will result in spurious interrupt flood (I can provide test
-> details with SATA3.0 card). I know this part of specs very well, but
-> expected EP operation flow should look like this:
-> a. EP interrupt
-> b. INTX_ASSERT signal
-> c. root complex interrupt
-> d. clear INTX_ASSERT bit
-> e. execute EP handler
-> f. INTX_DEASSERT signal
-> g. clear INTX_DEASSERT bit
-> h. exit interrupt
+> > +static acpi_status
+> > +iort_match_node_callback(struct acpi_iort_node *node, void *context)
+> > +{
+> > +	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
+> > +		struct acpi_iort_root_complex *pci_rc;
+> > +		struct pci_bus *bus;
+> > +
+> > +		bus = to_pci_bus(dev);
+> > +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
+> > +
+> > +		/*
+> > +		 * It is assumed that PCI segment numbers maps one-to-one
+> > +		 * with root complexes. Each segment number can represent only
+> > +		 * one root complex.
+> > +		 */
+> > +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
+> > +			return AE_OK;
+> > +
 > 
-> Now between d. and f., in case of any shortest delay we will force
-> executing EP handler numerous of times, which IMO is not desired. All
-> of them for e.g. the SATA3.0 card are registered as spurious
-> interrupts, pretty quickly resulting in "switching to irq poll"
-> failure after 100k of such happenings. Actually I think that after
-> executing generic_handle_irq(virq); we should leave root complex isr
-> asap, the polling for DEASSERT in such case is not resulting in any
-> benefits. In my code I ignored DEASSERT signal existence - it neither
-> triggers interrupt nor we don't poll for it. Under big stress nothing
-> wrong happens. We rely only on interrupts triggered by INTX_ASSERT
-> signal, so we care only for its status.
+> There is problem with the find_dev_node and callback for PCIe here. It assumes
+> a one-to-one relationship between an SMMU and root complex. 
+> 
+> Just checked with Charles offline to see if there is anything in the IORT spec that forces
+> this. And, the answer was no. 
+> 
+> Pasting the IORT requirements for you below.
+> 
+> ?The IORT was intended to be flexible enough to define static RID to SID mappings, which should cover 
+> the following configurations:
+> -	Dedicated SMMU per RC
+> -	Multiple RC?s per SMMU (as you described)
+> -	Multiple SMMU?s per RC (with static RID:SID range per SMMU)
+> 
+> The SMMU instance must be identified by either a device ID *or* a combination of 
+> segment ID *and* Requestor ID. ?
+> 
+> If a root complex has multiple SMMUs, this code is going to return the
+> first SMMU. This needs to be corrected.
 
-Thanks for the detailed explanation. So in practice, the code should be
-just:
+What you say above is correct, but the problem is not here. This
+callback returns either a named component IORT node or a root complex
+IORT node corresponding to a device, the problem you are referring to is
+related to detecting which SMMU a given named component or root
+complex refers too, which is not done here, I will take care of that
+on my SMMU series.
 
-	for (i = 0; i < LEGACY_IRQ_NUM; i++) {
-		int virq;
+When we look for the SMMU a PCI device is connected to, we must first
+retrieve the IORT node of its root complex and walk its list of
+mappings and match through RID range instead of picking the first
+one, as I assumed, wrongly.
 
-		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
-			continue;
+Lorenzo
 
-		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i), PCIE_ISR0_REG);
-		virq = irq_find_mapping(pcie->irq_domain, i);
-		generic_handle_irq(virq);
-	}
-
-and that's it.
-
-Is that what you suggest?
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> > +		break;
+> > +	}
+> > +	}
+> > +
+> > +	return AE_NOT_FOUND;
+> > +}
+> > +
+> 
+> > +
+> > +static struct acpi_iort_node *
+> > +iort_find_dev_node(struct device *dev)
+> > +{
+> > +	struct pci_bus *pbus;
+> > +
+> > +	if (!dev_is_pci(dev))
+> > +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> > +				      iort_match_node_callback, dev);
+> > +
+> > +	/* Find a PCI root bus */
+> > +	pbus = to_pci_dev(dev)->bus;
+> > +	while (!pci_is_root_bus(pbus))
+> > +		pbus = pbus->parent;
+> > +
+> > +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> > +			      iort_match_node_callback, &pbus->dev);
+> > +}
+> > +
+> 
+> -- 
+> Sinan Kaya
+> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+> 
