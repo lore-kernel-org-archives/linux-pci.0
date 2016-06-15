@@ -1,114 +1,97 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v1 01/25] PCI: Add devm_request_pci_bus_resources()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 06 Jun 2016 18:04:52 -0500
-Message-ID: <20160606230452.20936.28937.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
+To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+ <1465828873-23498-2-git-send-email-tn@semihalf.com>
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	andrea.gallo@linaro.org, linux-pci@vger.kernel.org,
+	"Abdulhamid, Harb" <harba@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <576155FA.9080706@codeaurora.org>
+Date: Wed, 15 Jun 2016 09:19:54 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
- rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
- linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
- Michal Simek <michal.simek@xilinx.com>,
- =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1465828873-23498-2-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several host bridge drivers iterate through the list of bridge windows to
-request resources.  Several others don't request the window resources at
-all.
+Hi Tomasz,
 
-Add a devm_request_pci_bus_resources() interface to make it easier for
-drivers to request all the window resources.
+> +static acpi_status
+> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
+> +{
+> +	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
+> +		struct acpi_iort_root_complex *pci_rc;
+> +		struct pci_bus *bus;
+> +
+> +		bus = to_pci_bus(dev);
+> +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
+> +
+> +		/*
+> +		 * It is assumed that PCI segment numbers maps one-to-one
+> +		 * with root complexes. Each segment number can represent only
+> +		 * one root complex.
+> +		 */
+> +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
+> +			return AE_OK;
+> +
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/bus.c   |   29 ++++++++++++++++++++++++++++-
- include/linux/pci.h |    5 ++++-
- 2 files changed, 32 insertions(+), 2 deletions(-)
+There is problem with the find_dev_node and callback for PCIe here. It assumes
+a one-to-one relationship between an SMMU and root complex. 
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index dd7cdbe..78b90c7 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -91,6 +91,34 @@ void pci_bus_remove_resources(struct pci_bus *bus)
- 	}
- }
- 
-+int devm_request_pci_bus_resources(struct device *dev,
-+				   struct list_head *resources)
-+{
-+	struct resource_entry *win;
-+	struct resource *parent, *res;
-+	int err;
-+
-+	resource_list_for_each_entry(win, resources) {
-+		res = win->res;
-+		switch (resource_type(res)) {
-+		case IORESOURCE_IO:
-+			parent = &ioport_resource;
-+			break;
-+		case IORESOURCE_MEM:
-+			parent = &iomem_resource;
-+			break;
-+		default:
-+			continue;
-+		}
-+
-+		err = devm_request_resource(dev, parent, res);
-+		if (err)
-+			return err;
-+	}
-+
-+	return 0;
-+}
-+
- static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
- #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- static struct pci_bus_region pci_64_bit = {0,
-@@ -397,4 +425,3 @@ void pci_bus_put(struct pci_bus *bus)
- 		put_device(&bus->dev);
- }
- EXPORT_SYMBOL(pci_bus_put);
--
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b67e4df..6ac8360 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1143,9 +1143,12 @@ void pci_add_resource(struct list_head *resources, struct resource *res);
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset);
- void pci_free_resource_list(struct list_head *resources);
--void pci_bus_add_resource(struct pci_bus *bus, struct resource *res, unsigned int flags);
-+void pci_bus_add_resource(struct pci_bus *bus, struct resource *res,
-+			  unsigned int flags);
- struct resource *pci_bus_resource_n(const struct pci_bus *bus, int n);
- void pci_bus_remove_resources(struct pci_bus *bus);
-+int devm_request_pci_bus_resources(struct device *dev,
-+				   struct list_head *resources);
- 
- #define pci_bus_for_each_resource(bus, res, i)				\
- 	for (i = 0;							\
+Just checked with Charles offline to see if there is anything in the IORT spec that forces
+this. And, the answer was no. 
 
+Pasting the IORT requirements for you below.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+“The IORT was intended to be flexible enough to define static RID to SID mappings, which should cover 
+the following configurations:
+-	Dedicated SMMU per RC
+-	Multiple RC’s per SMMU (as you described)
+-	Multiple SMMU’s per RC (with static RID:SID range per SMMU)
+
+The SMMU instance must be identified by either a device ID *or* a combination of 
+segment ID *and* Requestor ID. ”
+
+If a root complex has multiple SMMUs, this code is going to return the first SMMU. This needs
+to be corrected.
+
+> +		break;
+> +	}
+> +	}
+> +
+> +	return AE_NOT_FOUND;
+> +}
+> +
+
+> +
+> +static struct acpi_iort_node *
+> +iort_find_dev_node(struct device *dev)
+> +{
+> +	struct pci_bus *pbus;
+> +
+> +	if (!dev_is_pci(dev))
+> +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> +				      iort_match_node_callback, dev);
+> +
+> +	/* Find a PCI root bus */
+> +	pbus = to_pci_dev(dev)->bus;
+> +	while (!pci_is_root_bus(pbus))
+> +		pbus = pbus->parent;
+> +
+> +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> +			      iort_match_node_callback, &pbus->dev);
+> +}
+> +
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
