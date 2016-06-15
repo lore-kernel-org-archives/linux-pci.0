@@ -1,100 +1,28 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:35461 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933184AbcFJPym (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2016 11:54:42 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v2 1/3] dt-bindings: add DT binding for the Aardvark PCIe controller
-Date: Fri, 10 Jun 2016 17:54:14 +0200
-Message-Id: <1465574056-8787-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1465574056-8787-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1465574056-8787-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Russell King <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Thomas Gleixner <tglx@linutronix.de>, Jason Cooper <jason@lakedaemon.net>, Marc Zyngier <marc.zyngier@arm.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Nicolas Pitre <nicolas.pitre@linaro.org>, Rob Herring <robh@kernel.org>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Mark Rutland <mark.rutland@arm.com>, Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jayachandran C <jchandra@broadcom.com>, Geert Uytterhoeven <geert+renesas@glider.be>, Ray Jui <rjui@broadcom.com>, Ley Foon Tan <lftan@altera.com>, Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] arm/arm64/irqchip/pci: fix PCI_MSI dependencies
+Date: Wed, 15 Jun 2016 23:06:26 +0200
+Message-ID: <6064404.Y6hC1iYELB@wuerfel>
+In-Reply-To: <20160615210211.GA17504@localhost>
+References: <8531046.3ceRqUA835@wuerfel> <20160615210211.GA17504@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds the documentation for the Device Tree binding used to
-describe the Aardvark PCIe controller, found on Marvell Armada 3700
-ARM64 SoCs.
+On Wednesday, June 15, 2016 4:02:11 PM CEST Bjorn Helgaas wrote:
+> I applied this to pci/msi, minus the crypto change that looks unrelated:
+> 
+> > @@ -1038,6 +1038,8 @@ source "arch/arm64/Kconfig.debug"
+> >  source "security/Kconfig"
+> >  
+> >  source "crypto/Kconfig"
+> > +if CRYPTO
+> >  source "arch/arm64/crypto/Kconfig"
+> > +endif
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- .../devicetree/bindings/pci/aardvark-pci.txt       | 56 ++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/aardvark-pci.txt
+Indeed, thanks for catching this!
 
-diff --git a/Documentation/devicetree/bindings/pci/aardvark-pci.txt b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
-new file mode 100644
-index 0000000..683830d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
-@@ -0,0 +1,56 @@
-+Aardvark PCIe controller
-+
-+This PCIe controller is used on the Marvell Armada 3700 ARM64 SoC.
-+
-+The Device Tree node describing an Aardvark PCIe controller must
-+contain the following properties:
-+
-+ - compatible: Should be "marvell,armada-3700-pcie"
-+ - reg: range of registers for the PCIe controller
-+ - interrupts: the interrupt line of the PCIe controller
-+ - #address-cells: set to <3>
-+ - #size-cells: set to <2>
-+ - device_type: set to "pci"
-+ - ranges: ranges for the PCI memory and I/O regions
-+ - #interrupt-cells: set to <1>
-+ - msi-controller: indicates that the PCIe controller can itself
-+   handled MSI interrupts
-+ - msi-parent: pointer to the MSI controller to be used
-+ - interrupt-map-mask and interrupt-map: standard PCI properties to
-+   define the mapping of the PCIe interface to interrupt numbers.
-+ - bus-range: PCI bus numbers covered
-+
-+In addition, the Device Tree describing an Aardvark PCIe controller
-+must include a sub-node that describes the legacy interrupt controller
-+built into the PCIe controller. This sub-node must have the following
-+properties:
-+
-+ - interrupt-controller
-+ - #interrupt-cells: set to <1>
-+
-+Example:
-+
-+	pcie0: pcie@d0070000 {
-+		compatible = "marvell,armada-3700-pcie";
-+		device_type = "pci";
-+		status = "disabled";
-+		reg = <0 0xd0070000 0 0x20000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		bus-range = <0x00 0xff>;
-+		interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
-+		#interrupt-cells = <1>;
-+		msi-controller;
-+		msi-parent = <&pcie0>;
-+		ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
-+			  0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+				<0 0 0 2 &pcie_intc 1>,
-+				<0 0 0 3 &pcie_intc 2>,
-+				<0 0 0 4 &pcie_intc 3>;
-+		pcie_intc: interrupt-controller {
-+			interrupt-controller;
-+			#interrupt-cells = <1>;
-+		};
-+	};
--- 
-2.7.4
-
+	Arnd
