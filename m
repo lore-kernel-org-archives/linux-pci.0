@@ -1,207 +1,156 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48817 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932125AbcFBHan (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jun 2016 03:30:43 -0400
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Subject: [PATCH v2 5/6] ethernet/intel: Use pci_(request|release)_mem_regions
-Date: Thu,  2 Jun 2016 09:30:33 +0200
-Message-Id: <e15aedde3b7d8b301b9ca6197f8d39d4076c9c86.1464795082.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
-References: <cover.1464795082.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
-References: <cover.1464795082.git.jthumshirn@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jcm@redhat.com>
+Return-Path: <jcm@redhat.com>
+Content-Type: text/plain;
+	charset=us-ascii
+From: Jon Masters <jcm@redhat.com>
+MIME-Version: 1.0
+Subject: Re: [Linaro-acpi] [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors against platfrom specific ECAM quirks
+Message-Id: <891827D4-0ECE-4A55-B79D-E5C7C23A0B04@redhat.com>
+Date: Thu, 16 Jun 2016 03:54:46 -0400 (EDT)
+References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com> <1465822923-33599-2-git-send-email-liudongdong3@huawei.com> <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx> <e3174a09-e6f8-126d-d3c5-648d1cfd2b74@redhat.com> <CADaLNDnjEuGvWxCMPb=9fiCeVMgF0RRzT2n1SjNw3o57gRUhcg@mail.gmail.com>
+To: Duc Dang <dhdang@apm.com>
+In-Reply-To: <CADaLNDnjEuGvWxCMPb=9fiCeVMgF0RRzT2n1SjNw3o57gRUhcg@mail.gmail.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "Chenxin (Charles)" <charles.chenxin@huawei.com>,
+        "cov@codeaurora.org" <cov@codeaurora.org>,
+        Wangyijing <wangyijing@huawei.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-hand, use it in the Intel ethernet drivers.
+:) We should be good with a match on XGENE (but be careful with substring ma=
+tching) as long as future platforms change that to eg XGENE3 (which is a pub=
+licly announced future chip). What you want to avoid is a shorter match late=
+r triggering on a future generation.
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: intel-wired-lan@lists.osuosl.org
----
- drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++--------
- drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
- drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++-------
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
- 5 files changed, 14 insertions(+), 31 deletions(-)
+There are a lot of folks eagerly awaiting Moonshot running an upstream kerne=
+l in F25, both for 64 and 32-bit (VMs running 32-bit can replace older build=
+ers). I can picture a wonderful world in which this whole ARM server ecosyst=
+em works properly with folks doing what they should have three years ago and=
+ development happening on upstream kernels with ACPI. Then things become inc=
+redibly dull just like x86 - do the dev against upstream, pull into an enter=
+prise distro after it is tested out in a Fedora cycle...and no random nonsen=
+se patches. Next thing we know there will be media reports covering silicon t=
+hat won't end with a rant about how they couldn't get the right firmware and=
+ hacked up Ubuntu kernel booting.
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index 9b4ec13..ecd8d15 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -7284,8 +7284,7 @@ err_flashmap:
- err_ioremap:
- 	free_netdev(netdev);
- err_alloc_etherdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -7352,8 +7351,7 @@ static void e1000_remove(struct pci_dev *pdev)
- 	if ((adapter->hw.flash_address) &&
- 	    (adapter->hw.mac.type < e1000_pch_spt))
- 		iounmap(adapter->hw.flash_address);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	free_netdev(netdev);
- 
-diff --git a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-index 4eb7a6f..ad28e87 100644
---- a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-+++ b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-@@ -1940,10 +1940,7 @@ static int fm10k_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto err_dma;
- 	}
- 
--	err = pci_request_selected_regions(pdev,
--					   pci_select_bars(pdev,
--							   IORESOURCE_MEM),
--					   fm10k_driver_name);
-+	err = pci_request_mem_regions(pdev, fm10k_driver_name);
- 	if (err) {
- 		dev_err(&pdev->dev,
- 			"pci_request_selected_regions failed: %d\n", err);
-@@ -2034,8 +2031,7 @@ err_sw_init:
- err_ioremap:
- 	free_netdev(netdev);
- err_alloc_netdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -2086,8 +2082,7 @@ static void fm10k_remove(struct pci_dev *pdev)
- 
- 	free_netdev(netdev);
- 
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	pci_disable_pcie_error_reporting(pdev);
- 
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
-index 3449129..37592b1 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_main.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
-@@ -10779,8 +10779,7 @@ static int i40e_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 
- 	/* set up pci connections */
--	err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
--					   IORESOURCE_MEM), i40e_driver_name);
-+	err = pci_request_mem_regions(pdev, i40e_driver_name);
- 	if (err) {
- 		dev_info(&pdev->dev,
- 			 "pci_request_selected_regions failed %d\n", err);
-@@ -11277,8 +11276,7 @@ err_ioremap:
- 	kfree(pf);
- err_pf_alloc:
- 	pci_disable_pcie_error_reporting(pdev);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -11387,8 +11385,7 @@ static void i40e_remove(struct pci_dev *pdev)
- 
- 	iounmap(hw->hw_addr);
- 	kfree(pf);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	pci_disable_pcie_error_reporting(pdev);
- 	pci_disable_device(pdev);
-diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 55a1405c..466087f 100644
---- a/drivers/net/ethernet/intel/igb/igb_main.c
-+++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -2288,9 +2288,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		}
- 	}
- 
--	err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
--					   IORESOURCE_MEM),
--					   igb_driver_name);
-+	err = pci_request_mem_regions(pdev, igb_driver_name);
- 	if (err)
- 		goto err_pci_reg;
- 
-@@ -2707,8 +2705,7 @@ err_sw_init:
- err_ioremap:
- 	free_netdev(netdev);
- err_alloc_etherdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	pci_disable_device(pdev);
-@@ -2873,8 +2870,7 @@ static void igb_remove(struct pci_dev *pdev)
- 	pci_iounmap(pdev, adapter->io_addr);
- 	if (hw->flash_address)
- 		iounmap(hw->flash_address);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	kfree(adapter->shadow_vfta);
- 	free_netdev(netdev);
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index 7df3fe2..1357dd2 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -9084,8 +9084,7 @@ static int ixgbe_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		pci_using_dac = 0;
- 	}
- 
--	err = pci_request_selected_regions(pdev, pci_select_bars(pdev,
--					   IORESOURCE_MEM), ixgbe_driver_name);
-+	err = pci_request_mem_regions(pdev, ixgbe_driver_name);
- 	if (err) {
- 		dev_err(&pdev->dev,
- 			"pci_request_selected_regions failed 0x%x\n", err);
-@@ -9460,8 +9459,7 @@ err_ioremap:
- 	disable_dev = !test_and_set_bit(__IXGBE_DISABLED, &adapter->state);
- 	free_netdev(netdev);
- err_alloc_etherdev:
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
- 	if (!adapter || disable_dev)
-@@ -9527,8 +9525,7 @@ static void ixgbe_remove(struct pci_dev *pdev)
- 
- #endif
- 	iounmap(adapter->io_addr);
--	pci_release_selected_regions(pdev, pci_select_bars(pdev,
--				     IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	e_dev_info("complete\n");
- 
--- 
-1.8.5.6
+Best, and goodnight :)
 
+Jon.
+
+--=20
+Computer Architect | Sent from my 64-bit #ARM Powered phone
+
+> On Jun 16, 2016, at 03:46, Duc Dang <dhdang@apm.com> wrote:
+>=20
+>> On Wed, Jun 15, 2016 at 11:31 PM, Jon Masters <jcm@redhat.com> wrote:
+>>> On 06/13/2016 09:54 AM, Gabriele Paoloni wrote:
+>>> Hi Tomasz, Jon
+>>=20
+>> Hi Gab,
+>>=20
+>> Sorry for the lag in following up.
+>>=20
+>> <snip>
+>>=20
+>>> As you can see here Liudongdong has replaced oem_revision with
+>>> oem_table_id.
+>>>=20
+>>> Now it seems that there are some platforms that have already shipped
+>>> using a matching based on the oem_revision (right Jon?)
+>>=20
+>> Actually, it turns out (Cov is correct) that we can just match on OEM
+>> Table ID. The revision should not generally be needed and the vendors
+>> will just need to make sure that they change OEM Table ID in future
+>> silicon. An example from two shipping platforms:
+>>=20
+>> 1). AppliedMicro Mustang:
+>>=20
+>> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
+>> Configuration table]
+>> [004h 0004   4]                 Table Length : 0000003C
+>> [008h 0008   1]                     Revision : 01
+>> [009h 0009   1]                     Checksum : 4A
+>> [00Ah 0010   6]                       Oem ID : "APM   "
+>> [010h 0016   8]                 Oem Table ID : "XGENE   "
+>> [018h 0024   4]                 Oem Revision : 00000002
+>> [01Ch 0028   4]              Asl Compiler ID : "INTL"
+>> [020h 0032   4]        Asl Compiler Revision : 20140724
+>>=20
+>> 2). HP(E[0]) Moonshot:
+>>=20
+>> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
+>> Configuration table]
+>> [004h 0004   4]                 Table Length : 0000003C
+>> [008h 0008   1]                     Revision : 01
+>> [009h 0009   1]                     Checksum : 48
+>> [00Ah 0010   6]                       Oem ID : "APM   "
+>> [010h 0016   8]                 Oem Table ID : "XGENE   "
+>> [018h 0024   4]                 Oem Revision : 00000001
+>> [01Ch 0028   4]              Asl Compiler ID : "HP  "
+>> [020h 0032   4]        Asl Compiler Revision : 00000001
+>>=20
+>> I have pinged the semiconductor (Applied) and insisted upon a written
+>> plan (which I have now) for handling the first affect generation(s) and
+>> future chip roadmap stuff, along with how they plan to upstream this
+>> immediately as part of this thread. I have also done similar with each
+>> of the other vendors (this is something ARM or Linaro should be doing).
+>> But I particularly care about X-Gene because I want it to be loved as
+>> shipping silicon in production systems (Moonshot) that are sitting and
+>> waiting in the Fedora Phoenix datacenter in large quantity to come
+>> online if only an upstream kernel would actually boot on them :)
+>=20
+> Thanks for the MCFG information on Moonshot system, Jon.
+>=20
+> I will make sure the posted quirk for X-Gene takes care for HPE
+> Moonshot system as well.
+>=20
+> Regards,
+> Duc Dang.
+>=20
+>>=20
+>>> However I guess that if in FW they have defined oem_table_id properly
+>>> they should be able to use this mechanism without needing to a FW update=
+.
+>>=20
+>> Correct.
+>>=20
+>>> Can these vendors confirm this?
+>>=20
+>> I've checked all current shipping silicon and prototypes.
+>>=20
+>>> Tomasz do you think this can work for Cavium Thunder?
+>>=20
+>> Will let the vendors followup directly as well.
+>>=20
+>> Jon.
+>>=20
+>> [0] Fortunately that name change doesn't factor when using semiconductor
+>> matching...hopefully none of the non-complaint IP companies in gen1
+>> stuff get bought and change their table names. In the unlikely event
+>> that that does happen, I will preemptively beat them up and ensure that
+>> something crazy doesn't happen with table contents.
+>>=20
+>> --
+>> Computer Architect | Sent from my Fedora powered laptop
