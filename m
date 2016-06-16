@@ -1,75 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:53915 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754080AbcFAO4s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Jun 2016 10:56:48 -0400
-Message-ID: <1464793005.2960.3.camel@intel.com>
-Subject: Re: [PATCH 5/5] ethernet: Use pci_(request|release)_mem_regions
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: Johannes Thumshirn <jthumshirn@suse.de>,
-	Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jay Cliburn <jcliburn@gmail.com>,
-	Chris Snook <chris.snook@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Date: Wed, 01 Jun 2016 07:56:45 -0700
-In-Reply-To: <20160601085112.ve6k7bzspapjsswf@c203.arch.suse.de>
-References: <cover.1464694724.git.jthumshirn@suse.de>
-	 <3f24b687c31dea31a03cd3a529de790e942dd5bb.1464694724.git.jthumshirn@suse.de>
-	 <20160601075956.GD11923@infradead.org>
-	 <20160601085112.ve6k7bzspapjsswf@c203.arch.suse.de>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-NZJAPV9V/Hi0vA+scgWM"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Po Liu <po.liu@nxp.com>
+To: Shawn Guo <shawnguo@kernel.org>
+Subject: RE: [PATCH v3 1/2] nxp/dts: add pcie aer interrupt-name property in
+ the dts
+Date: Thu, 16 Jun 2016 10:50:23 +0000
+Message-ID: <VI1PR0401MB1709B98EC43F035158CF022E92560@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+ <1465892645-32381-1-git-send-email-po.liu@nxp.com>
+ <20160616003627.GJ20243@tiger>
+In-Reply-To: <20160616003627.GJ20243@tiger>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>, Bjorn
+ Helgaas <bhelgaas@google.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Shawn,
 
---=-NZJAPV9V/Hi0vA+scgWM
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+>  -----Original Message-----
+>  From: Shawn Guo [mailto:shawnguo@kernel.org]
+>  Sent: Thursday, June 16, 2016 8:36 AM
+>  To: Po Liu
+>  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+>  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Roy Zang; Arnd
+>  Bergmann; Marc Zyngier; Stuart Yoder; Yang-Leo Li; Minghuan Lian; Murali
+>  Karicheri; Bjorn Helgaas; Mingkai Hu
+>  Subject: Re: [PATCH v3 1/2] nxp/dts: add pcie aer interrupt-name
+>  property in the dts
+>  
+>  On Tue, Jun 14, 2016 at 04:24:04PM +0800, Po Liu wrote:
+>  > NXP some platforms aer interrupt was not MSI/MSI-X/INTx but using
+>  > interrupt line independently. This patch add a "aer"
+>  > interrupt-names for aer interrupt.
+>  >
+>  > Signed-off-by: Po Liu <po.liu@nxp.com>
+>  > ---
+>  > changes for v3:
+>  > 	- None;
+>  >
+>  >  .../devicetree/bindings/pci/layerscape-pci.txt         |  4 ++--
+>  
+>  The bindings shouldn't be part of dts patch but the driver patch who is
+>  actually using it.
+>  
+>  Shawn
 
-On Wed, 2016-06-01 at 10:51 +0200, Johannes Thumshirn wrote:
-> On Wed, Jun 01, 2016 at 12:59:56AM -0700, Christoph Hellwig wrote:
-> > On Tue, May 31, 2016 at 02:05:13PM +0200, Johannes Thumshirn wrote:
-> > > Now that we do have pci_request_mem_regions() and
-> pci_release_mem_regions() at
-> > > hand, use it in the ethernet drivers.
-> >=C2=A0
-> > This should probably be one patch per driver.
->=20
-> I though if I do one patch per subsystem it'll be less a hassle for the
-> individual maintainers, but if the netdev people want it as split up,
-> I'll be
-> doing it of cause.
+Ok, I'll move the doc part to the driver patch.
 
-Since almost all the changes are to Intel wired LAN drivers, if you just
-split off the atheros change into a separate patch, I would be happy. =C2=
-=A0Then
-you could keep just one patch to change all the Intel drivers.
---=-NZJAPV9V/Hi0vA+scgWM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJXTveuAAoJEOVv75VaS+3Ow7sQAIB9BzAWQr2V0t9BgRQz9GHS
-lOn0GIIgn1ToZgxR4jx7CGap0ZGpLpPw1MV/75lQjyCgzyXr+ba6ureDu5C9RWTn
-jQnAT37PY1Udua//spi/nOUgA1/nGzAnI+nMBu3QvfIUvfNI9p4cviXSf+QKoZ79
-MkQpOT5WyQRZrsFDkgu2HAozVFD8aHRkFXeL5x7GCLb9VNY54+poYuWuvEkX/XAX
-Dyua2lNUteUYVm6cS4pFVvUq+ebc+W1t2CsXCFGK7nLMrH6LnQkb8vbew47R3awA
-bPKNmp6KDGZYyBZSfimmGnh2XF1UUqL4QBXvQ0UtJhq4Re9lLjFLhaII9X7ZZbIk
-/9QgwkHlsWIP/eY2H8dmWLuRVX2XvECu6w4YoUR7ZjqNskIptllI26MybY9BNhqF
-aZJiBDlOzm+BTauij5yIBMaiPn2vEhlL37eop3XN0W5YtYjzDVevRMcErzK7qYGg
-9kFG6UfMHgzfVa/I0CjCe35K1kJsnVtOZPVu9o+GZwZZ2VdhLmsRr5W5wkcIxjsY
-2znPkO0zDQC/JebOJ6lbVWr1BcH9FAjl6fTTz/Y7RoJY5wkHwUH5ip1fqsCw9xG0
-GfMLgSmlSdVy2d6nK15pYBlnTLR7pjVDI72IkxyaVv4JdOWPZ0grQCrI2axOKpji
-axgsQbF3m34yjSSApdSW
-=LJ3C
------END PGP SIGNATURE-----
-
---=-NZJAPV9V/Hi0vA+scgWM--
-
+Po Liu
+>From NXP
+>  
+>  >  arch/arm/boot/dts/ls1021a.dtsi                         |  6 ++++--
+>  >  arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi         | 18
+>  +++++++++---------
+>  >  arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi         | 16 ++++++++-
+>  -------
+>  >  4 files changed, 23 insertions(+), 21 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
