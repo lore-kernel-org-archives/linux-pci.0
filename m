@@ -1,279 +1,159 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Thu, 2 Jun 2016 10:48:20 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
-	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
-Subject: Re: [PATCH V8 1/9] PCI: ecam: move ecam.h to linux/include/pci-ecam.h
-Message-ID: <20160602094820.GC13962@red-moon>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-2-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f42.google.com ([209.85.213.42]:35345 "EHLO
+	mail-vk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753900AbcFPPb1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2016 11:31:27 -0400
+Received: by mail-vk0-f42.google.com with SMTP id j2so78256137vkg.2
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jun 2016 08:31:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464621262-26770-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <20160610083210.17f4fdd6@arm.com>
+References: <1465373117-823-1-git-send-email-shawn.lin@rock-chips.com> <20160610083210.17f4fdd6@arm.com>
+From: Doug Anderson <dianders@chromium.org>
+Date: Thu, 16 Jun 2016 08:31:25 -0700
+Message-ID: <CAD=FV=Vw_+HJc+onc6h+b3Fv5faRc0+=W+e3sJv2OLQJeysQLQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 05:14:14PM +0200, Tomasz Nowicki wrote:
-> From: Jayachandran C <jchandra@broadcom.com>
-> 
-> This header will be used from arch/arm64 for ACPI PCI implementation
-> so it needs to be moved out of drivers/pci.
-> 
-> Update users of the header file to use the new name. No functional
-> changes.
-> 
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> ---
->  drivers/pci/ecam.c                  |  3 +-
->  drivers/pci/ecam.h                  | 67 -------------------------------------
->  drivers/pci/host/pci-host-common.c  |  3 +-
->  drivers/pci/host/pci-host-generic.c |  3 +-
->  drivers/pci/host/pci-thunder-ecam.c |  3 +-
->  drivers/pci/host/pci-thunder-pem.c  |  3 +-
->  include/linux/pci-ecam.h            | 67 +++++++++++++++++++++++++++++++++++++
->  7 files changed, 72 insertions(+), 77 deletions(-)
->  delete mode 100644 drivers/pci/ecam.h
->  create mode 100644 include/linux/pci-ecam.h
+Marc,
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On Fri, Jun 10, 2016 at 12:32 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On Wed, 8 Jun 2016 16:05:17 +0800
+> Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>
+>> This patch adds a binding that describes the Rockchip PCIe controller
+>> found on Rockchip SoCs PCIe interface.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> ---
+>>
+>> Changes in v2:
+>> - fix lots clk/reset stuff suggested by Heiko
+>> - remove msi-parent and add msi-map suggested by Marc
+>
+> I noticed this ^^^^ ...
+>
+>> - drop phy related stuff
+>> - some others minor fixes
+>>
+>>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 86 ++++++++++++++++++++++
+>>  1 file changed, 86 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> new file mode 100644
+>> index 0000000..eb92e29
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> @@ -0,0 +1,86 @@
+>> +* Rockchip AXI PCIe Root Port Bridge DT description
+>> +
+>> +Required properties:
+>> +- #address-cells: Address representation for root ports, set to <3>
+>> +- #size-cells: Size representation for root ports, set to <2>
+>> +- #interrupt-cells: specifies the number of cells needed to encode an
+>> +             interrupt source. The value must be 1.
+>> +- compatible: Should contain "rockchip,rk3399-pcie"
+>> +- reg: Two register ranges as listed in the reg-names property
+>> +- reg-names: Must include the following names
+>> +     - "axi-base"
+>> +     - "apb-base"
+>> +- clocks: Must contain an entry for each entry in clock-names.
+>> +             See ../clocks/clock-bindings.txt for details.
+>> +- clock-names: Must include the following entries:
+>> +     - "aclk"
+>> +     - "aclk-perf"
+>> +     - "hclk"
+>> +     - "pm"
+>> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+>> +- phy-names:  MUST be "pcie-phy".
+>> +- interrupts: Three interrupt entries must be specified.
+>> +- interrupt-names: Must include the following names
+>> +     - "sys"
+>> +     - "legacy"
+>> +     - "client"
+>> +- resets: Must contain five entries for each entry in reset-names.
+>> +        See ../reset/reset.txt for details.
+>> +- reset-names: Must include the following names
+>> +     - "core"
+>> +     - "mgmt"
+>> +     - "mgmt-sticky"
+>> +     - "pipe"
+>> +- pinctrl-names : The pin control state names
+>> +- pinctrl-0: The "default" pinctrl state
+>> +- interrupt-map-mask and interrupt-map: standard PCI properties
+>> +- interrupt-controller: identifies the node as an interrupt controller
+>> +
+>> +Optional Property:
+>> +- ep-gpios: contain the entry for pre-reset gpio
+>> +- num-lanes: number of lanes to use
+>> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie. If this
+>> +  is specified we'll defer probe until we can find this regulator.
+>> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie. If this
+>> +  is specified we'll defer probe until we can find this regulator.
+>> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie. If this
+>> +  is specified we'll defer probe until we can find this regulator.
+>> +
+>> +Example:
+>> +
+>> +pcie0: pcie@f8000000 {
+>> +     compatible = "rockchip,rk3399-pcie";
+>> +     #address-cells = <3>;
+>> +     #size-cells = <2>;
+>> +     clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
+>> +              <&cru PCLK_PCIE>;
+>> +     clock-names = "aclk", "aclk-perf",
+>> +                   "hclk";
+>> +     bus-range = <0x0 0x1>;
+>> +     interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+>> +                  <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+>> +     interrupt-names: "sys", "legacy", "client";
+>> +     assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+>> +     assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+>> +     assigned-clock-rates = <100000000>;
+>> +     ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
+>> +     ranges = < 0x82000000 0 0xfa000000 0x0 0xfa000000 0 0x600000
+>> +                0x81000000 0 0xfa600000 0x0 0xfa600000 0 0x100000 >;
+>> +     num-lanes = <4>;
+>> +     reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
+>> +     reg-name = "axi-base", "apb-base";
+>> +     resets = <&cru SRST_PCIEPHY>, <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
+>> +              <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
+>> +     reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
+>> +     phys = <&pcie_phy>;
+>> +     phy-names = "pcie-phy";
+>> +     pinctrl-names = "default";
+>> +     pinctrl-0 = <&pcie_clkreq>;
+>> +     #interrupt-cells = <1>;
+>> +     interrupt-controller;
+>> +     interrupt-map-mask = <0 0 0 7>;
+>> +     interrupt-map = <0 0 0 1 &pcie0 1>,
+>> +                     <0 0 0 2 &pcie0 2>,
+>> +                     <0 0 0 3 &pcie0 3>,
+>> +                     <0 0 0 4 &pcie0 4>;
+>> +};
+>
+>
+> And yet I don't see anything related to msi-map in the binding or in
+> the example. As Doug mentioned issues with MSIs being delivered, I
+> wonder if the two are related...
 
-> 
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> index f9832ad..820e26b 100644
-> --- a/drivers/pci/ecam.c
-> +++ b/drivers/pci/ecam.c
-> @@ -19,10 +19,9 @@
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-ecam.h>
->  #include <linux/slab.h>
->  
-> -#include "ecam.h"
-> -
->  /*
->   * On 64-bit systems, we do a single ioremap for the whole config space
->   * since we have enough virtual address range available.  On 32-bit, we
-> diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
-> deleted file mode 100644
-> index 9878beb..0000000
-> --- a/drivers/pci/ecam.h
-> +++ /dev/null
-> @@ -1,67 +0,0 @@
-> -/*
-> - * Copyright 2016 Broadcom
-> - *
-> - * This program is free software; you can redistribute it and/or modify
-> - * it under the terms of the GNU General Public License, version 2, as
-> - * published by the Free Software Foundation (the "GPL").
-> - *
-> - * This program is distributed in the hope that it will be useful, but
-> - * WITHOUT ANY WARRANTY; without even the implied warranty of
-> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> - * General Public License version 2 (GPLv2) for more details.
-> - *
-> - * You should have received a copy of the GNU General Public License
-> - * version 2 (GPLv2) along with this source code.
-> - */
-> -#ifndef DRIVERS_PCI_ECAM_H
-> -#define DRIVERS_PCI_ECAM_H
-> -
-> -#include <linux/kernel.h>
-> -#include <linux/platform_device.h>
-> -
-> -/*
-> - * struct to hold pci ops and bus shift of the config window
-> - * for a PCI controller.
-> - */
-> -struct pci_config_window;
-> -struct pci_ecam_ops {
-> -	unsigned int			bus_shift;
-> -	struct pci_ops			pci_ops;
-> -	int				(*init)(struct device *,
-> -						struct pci_config_window *);
-> -};
-> -
-> -/*
-> - * struct to hold the mappings of a config space window. This
-> - * is expected to be used as sysdata for PCI controllers that
-> - * use ECAM.
-> - */
-> -struct pci_config_window {
-> -	struct resource			res;
-> -	struct resource			busr;
-> -	void				*priv;
-> -	struct pci_ecam_ops		*ops;
-> -	union {
-> -		void __iomem		*win;	/* 64-bit single mapping */
-> -		void __iomem		**winp; /* 32-bit per-bus mapping */
-> -	};
-> -};
-> -
-> -/* create and free pci_config_window */
-> -struct pci_config_window *pci_ecam_create(struct device *dev,
-> -		struct resource *cfgres, struct resource *busr,
-> -		struct pci_ecam_ops *ops);
-> -void pci_ecam_free(struct pci_config_window *cfg);
-> -
-> -/* map_bus when ->sysdata is an instance of pci_config_window */
-> -void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
-> -			       int where);
-> -/* default ECAM ops */
-> -extern struct pci_ecam_ops pci_generic_ecam_ops;
-> -
-> -#ifdef CONFIG_PCI_HOST_GENERIC
-> -/* for DT-based PCI controllers that support ECAM */
-> -int pci_host_common_probe(struct platform_device *pdev,
-> -			  struct pci_ecam_ops *ops);
-> -#endif
-> -#endif
-> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-> index 8cba7ab..c18b9e3 100644
-> --- a/drivers/pci/host/pci-host-common.c
-> +++ b/drivers/pci/host/pci-host-common.c
-> @@ -20,10 +20,9 @@
->  #include <linux/module.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/pci-ecam.h>
->  #include <linux/platform_device.h>
->  
-> -#include "../ecam.h"
-> -
->  static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
->  		       struct list_head *resources, struct resource **bus_range)
->  {
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 6eaceab..f0ca6de 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -23,10 +23,9 @@
->  #include <linux/module.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/pci-ecam.h>
->  #include <linux/platform_device.h>
->  
-> -#include "../ecam.h"
-> -
->  static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
->  	.bus_shift	= 16,
->  	.pci_ops	= {
-> diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-> index 540d030..a9fc1c9 100644
-> --- a/drivers/pci/host/pci-thunder-ecam.c
-> +++ b/drivers/pci/host/pci-thunder-ecam.c
-> @@ -11,10 +11,9 @@
->  #include <linux/ioport.h>
->  #include <linux/of_pci.h>
->  #include <linux/of.h>
-> +#include <linux/pci-ecam.h>
->  #include <linux/platform_device.h>
->  
-> -#include "../ecam.h"
-> -
->  static void set_val(u32 v, int where, int size, u32 *val)
->  {
->  	int shift = (where & 3) * 8;
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index 9b8ab94..5020d3d 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -18,10 +18,9 @@
->  #include <linux/module.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/pci-ecam.h>
->  #include <linux/platform_device.h>
->  
-> -#include "../ecam.h"
-> -
->  #define PEM_CFG_WR 0x28
->  #define PEM_CFG_RD 0x30
->  
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> new file mode 100644
-> index 0000000..9878beb
-> --- /dev/null
-> +++ b/include/linux/pci-ecam.h
-> @@ -0,0 +1,67 @@
-> +/*
-> + * Copyright 2016 Broadcom
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +#ifndef DRIVERS_PCI_ECAM_H
-> +#define DRIVERS_PCI_ECAM_H
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/platform_device.h>
-> +
-> +/*
-> + * struct to hold pci ops and bus shift of the config window
-> + * for a PCI controller.
-> + */
-> +struct pci_config_window;
-> +struct pci_ecam_ops {
-> +	unsigned int			bus_shift;
-> +	struct pci_ops			pci_ops;
-> +	int				(*init)(struct device *,
-> +						struct pci_config_window *);
-> +};
-> +
-> +/*
-> + * struct to hold the mappings of a config space window. This
-> + * is expected to be used as sysdata for PCI controllers that
-> + * use ECAM.
-> + */
-> +struct pci_config_window {
-> +	struct resource			res;
-> +	struct resource			busr;
-> +	void				*priv;
-> +	struct pci_ecam_ops		*ops;
-> +	union {
-> +		void __iomem		*win;	/* 64-bit single mapping */
-> +		void __iomem		**winp; /* 32-bit per-bus mapping */
-> +	};
-> +};
-> +
-> +/* create and free pci_config_window */
-> +struct pci_config_window *pci_ecam_create(struct device *dev,
-> +		struct resource *cfgres, struct resource *busr,
-> +		struct pci_ecam_ops *ops);
-> +void pci_ecam_free(struct pci_config_window *cfg);
-> +
-> +/* map_bus when ->sysdata is an instance of pci_config_window */
-> +void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
-> +			       int where);
-> +/* default ECAM ops */
-> +extern struct pci_ecam_ops pci_generic_ecam_ops;
-> +
-> +#ifdef CONFIG_PCI_HOST_GENERIC
-> +/* for DT-based PCI controllers that support ECAM */
-> +int pci_host_common_probe(struct platform_device *pdev,
-> +			  struct pci_ecam_ops *ops);
-> +#endif
-> +#endif
-> -- 
-> 1.9.1
-> 
+With Shawn's latest patches and following his latest example dts
+snippet (which includes the msi-map), things worked much better.  :)
+
+Thank you for your help!
+
+-Doug
