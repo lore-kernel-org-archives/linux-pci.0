@@ -1,73 +1,122 @@
-Return-Path: <arnd@arndb.de>
-Return-Path: <arnd@arndb.de>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, Wenrui Li <wenrui.li@rock-chips.com>, Doug Anderson <dianders@chromium.org>, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>, Hannes Reinecke <hare@suse.de>, Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 1/3] pci: introduce read_bridge/write_bridge pci ops
-Date: Wed, 01 Jun 2016 22:37:28 +0200
-Message-ID: <4967020.J4dsRYGugq@wuerfel>
-In-Reply-To: <20160601190430.GA19546@localhost>
-References: <1464784332-3775650-1-git-send-email-arnd@arndb.de> <4890460.9IGW89muCc@wuerfel> <20160601190430.GA19546@localhost>
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <e3174a09-e6f8-126d-d3c5-648d1cfd2b74@redhat.com>
+References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
+ <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx> <e3174a09-e6f8-126d-d3c5-648d1cfd2b74@redhat.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 16 Jun 2016 00:45:21 -0700
+Message-ID: <CADaLNDnjEuGvWxCMPb=9fiCeVMgF0RRzT2n1SjNw3o57gRUhcg@mail.gmail.com>
+Subject: Re: [Linaro-acpi] [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space
+ accessors against platfrom specific ECAM quirks
+To: Jon Masters <jcm@redhat.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>, "helgaas@kernel.org" <helgaas@kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>, "will.deacon@arm.com" <will.deacon@arm.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "rafael@kernel.org" <rafael@kernel.org>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>, "okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jchandra@broadcom.com" <jchandra@broadcom.com>, "tn@semihalf.com" <tn@semihalf.com>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>, "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+	"Chenxin (Charles)" <charles.chenxin@huawei.com>, "cov@codeaurora.org" <cov@codeaurora.org>,
+	Wangyijing <wangyijing@huawei.com>, "mw@semihalf.com" <mw@semihalf.com>,
+	"andrea.gallo@linaro.org" <andrea.gallo@linaro.org>, Linuxarm <linuxarm@huawei.com>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, June 1, 2016 2:04:30 PM CEST Bjorn Helgaas wrote:
-> On Wed, Jun 01, 2016 at 05:41:53PM +0200, Arnd Bergmann wrote:
-> > On Wednesday, June 1, 2016 10:09:29 AM CEST Bjorn Helgaas wrote:
-> > > Hi Arnd,
-> > > 
-> > > On Wed, Jun 01, 2016 at 02:31:22PM +0200, Arnd Bergmann wrote:
-> > > > A lot of PCI host bridges require different methods for initiating
-> > > > type 0 and type 1 config space accesses, leading to duplication of
-> > > > code.
-> > > > 
-> > > > This adds support for the two different kinds at the pci_ops
-> > > > level, with the newly added map_bridge/read_bridge/write_bridge
-> > > > operations for type 1 accesses.
-> > > > 
-> > > > When these are not set, we fall back to the regular map_bus/read/write
-> > > > operations, so all existing drivers keep working, and bridges that
-> > > > have identical operations continue to only require one set.
-> > > 
-> > > This adds new config accessor functions to struct pci_ops and makes
-> > > the callers responsible for figuring out which one to use.  The
-> > > benefit is to reduce code duplication in some host bridge drivers
-> > > (DesignWare and MVEBU so far).
-> > > 
-> > > From a design perspective, I'm not comfortable with moving this burden
-> > > from the host bridge drivers to the callers of the config accessors.
-> > ...
-> 
-> > Maybe we can simply change them to use the normal API and come up with
-> > a way to make the pci_ops harder to misuse? Would it make you feel better
-> > if we also renamed .read/.write into .read_type0/.write_type0 or something
-> > like that?
-> 
-> I'm trying to get a better feel for the tradeoff here.  It seems like
-> an API complication vs. code duplication.
-> 
-> I don't really think the callers should have to figure out which
-> accessor to use.  How much of a benefit do we really gain by
-> complicating the callers?  We've managed for quite a few years with
-> the current scheme, and it seems like only a couple new ARM platforms
-> would benefit.
+On Wed, Jun 15, 2016 at 11:31 PM, Jon Masters <jcm@redhat.com> wrote:
+> On 06/13/2016 09:54 AM, Gabriele Paoloni wrote:
+>> Hi Tomasz, Jon
+>
+> Hi Gab,
+>
+> Sorry for the lag in following up.
+>
+> <snip>
+>
+>> As you can see here Liudongdong has replaced oem_revision with
+>> oem_table_id.
+>>
+>> Now it seems that there are some platforms that have already shipped
+>> using a matching based on the oem_revision (right Jon?)
+>
+> Actually, it turns out (Cov is correct) that we can just match on OEM
+> Table ID. The revision should not generally be needed and the vendors
+> will just need to make sure that they change OEM Table ID in future
+> silicon. An example from two shipping platforms:
+>
+> 1). AppliedMicro Mustang:
+>
+> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
+> Configuration table]
+> [004h 0004   4]                 Table Length : 0000003C
+> [008h 0008   1]                     Revision : 01
+> [009h 0009   1]                     Checksum : 4A
+> [00Ah 0010   6]                       Oem ID : "APM   "
+> [010h 0016   8]                 Oem Table ID : "XGENE   "
+> [018h 0024   4]                 Oem Revision : 00000002
+> [01Ch 0028   4]              Asl Compiler ID : "INTL"
+> [020h 0032   4]        Asl Compiler Revision : 20140724
+>
+> 2). HP(E[0]) Moonshot:
+>
+> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
+> Configuration table]
+> [004h 0004   4]                 Table Length : 0000003C
+> [008h 0008   1]                     Revision : 01
+> [009h 0009   1]                     Checksum : 48
+> [00Ah 0010   6]                       Oem ID : "APM   "
+> [010h 0016   8]                 Oem Table ID : "XGENE   "
+> [018h 0024   4]                 Oem Revision : 00000001
+> [01Ch 0028   4]              Asl Compiler ID : "HP  "
+> [020h 0032   4]        Asl Compiler Revision : 00000001
+>
+> I have pinged the semiconductor (Applied) and insisted upon a written
+> plan (which I have now) for handling the first affect generation(s) and
+> future chip roadmap stuff, along with how they plan to upstream this
+> immediately as part of this thread. I have also done similar with each
+> of the other vendors (this is something ARM or Linaro should be doing).
+> But I particularly care about X-Gene because I want it to be loved as
+> shipping silicon in production systems (Moonshot) that are sitting and
+> waiting in the Fedora Phoenix datacenter in large quantity to come
+> online if only an upstream kernel would actually boot on them :)
 
-I just did a count of the implementations of pci_ops: I found 107
-instances of 'struct pci_ops', and 67 of them treat type0 and type1
-access differently in some form.
+Thanks for the MCFG information on Moonshot system, Jon.
 
-I'd estimate that about half of them, or roughly a third of the total
-instances would benefit from my change, if we were to do them again.
-Clearly there is no need to change the existing code here when it works,
-unless the benefit is very clear and the code is actively maintained.
+I will make sure the posted quirk for X-Gene takes care for HPE
+Moonshot system as well.
 
-In some cases, the difference is only that the root bus has a limited
-set of devices that are allowed to be accessed, so there would
-likely be no benefit of this, compared to e.g. yet another callback
-that checks the validity.
-Some other instances have type0 registers at a different memory location
-from type1, some use different layout inside of that space, and some
-are completely different.
+Regards,
+Duc Dang.
 
-	Arnd
+>
+>> However I guess that if in FW they have defined oem_table_id properly
+>> they should be able to use this mechanism without needing to a FW update.
+>
+> Correct.
+>
+>> Can these vendors confirm this?
+>
+> I've checked all current shipping silicon and prototypes.
+>
+>> Tomasz do you think this can work for Cavium Thunder?
+>
+> Will let the vendors followup directly as well.
+>
+> Jon.
+>
+> [0] Fortunately that name change doesn't factor when using semiconductor
+> matching...hopefully none of the non-complaint IP companies in gen1
+> stuff get bought and change their table names. In the unlikely event
+> that that does happen, I will preemptively beat them up and ensure that
+> something crazy doesn't happen with table contents.
+>
+> --
+> Computer Architect | Sent from my Fedora powered laptop
