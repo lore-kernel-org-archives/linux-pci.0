@@ -1,67 +1,28 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
-	eric.auger@redhat.com
-Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com, Sinan Kaya <okaya@codeaurora.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V2 3/4] ACPI,PCI,IRQ: separate ISA penalty calculation
-Date: Wed, 29 Jun 2016 04:27:37 -0400
-Message-Id: <1467188859-28188-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 16 Jun 2016 17:20:06 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	Christoph Hellwig <hch@lst.de>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"axboe@fb.com" <axboe@fb.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
+Message-ID: <20160616152006.GA13615@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de> <1465934346-20648-3-git-send-email-hch@lst.de> <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com> <20160615102311.GA16619@lst.de> <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com> <20160615151415.GA1919@localhost.localdomain> <7f0b16bd-b39f-99e6-c1c1-6a508bf9bbbf@sandisk.com> <20160615160316.GB1919@localhost.localdomain> <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
-the penalty values are calculated on the fly rather than boot time.
+On Wed, Jun 15, 2016 at 09:36:54PM +0200, Bart Van Assche wrote:
+> Do you agree that - ignoring other interrupt assignments - that the latter 
+> interrupt assignment scheme would result in higher throughput and lower 
+> interrupt processing latency?
 
-This works fine for PCI interrupts but not so well for the ISA interrupts.
-Whether an ISA interrupt is in use or not information is not available
-inside the pci_link.c file. This information gets sent externally via
-acpi_penalize_isa_irq function. If active is true, then the IRQ is in use
-by ISA. Otherwise, IRQ is in use by PCI.
-
-Since the current code relies on PCI Link object for determination of
-penalties, we are factoring in the PCI penalty twice after
-acpi_penalize_isa_irq function is called.
-
-This change is limiting the newly added functionality to just PCI
-interrupts so that old behavior is still maintained.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_link.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 714ba4d..8c08971 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -496,9 +496,6 @@ static int acpi_irq_get_penalty(int irq)
- {
- 	int penalty = 0;
- 
--	if (irq < ACPI_MAX_ISA_IRQS)
--		penalty += acpi_isa_irq_penalty[irq];
--
- 	/*
- 	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
- 	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
-@@ -513,6 +510,9 @@ static int acpi_irq_get_penalty(int irq)
- 			penalty += PIRQ_PENALTY_PCI_USING;
- 	}
- 
-+	if (irq < ACPI_MAX_ISA_IRQS)
-+		return penalty + acpi_isa_irq_penalty[irq];
-+
- 	penalty += acpi_irq_pci_sharing_penalty(irq);
- 	return penalty;
- }
--- 
-1.8.2.1
-
+Probably.  Once we've got it in the core IRQ code we can tweak the
+algorithm to be optimal.
