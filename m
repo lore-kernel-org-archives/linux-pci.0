@@ -1,55 +1,35 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host controller
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "rafael@kernel.org" <rafael@kernel.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "jchandra@broadcom.com" <jchandra@broadcom.com>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F767865@lhreml507-mbx>
-Cc: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
- "mw@semihalf.com" <mw@semihalf.com>,
- "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
- "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
- Wangyijing <wangyijing@huawei.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "msalter@redhat.com" <msalter@redhat.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- "jcm@redhat.com" <jcm@redhat.com>,
- "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
- "dhdang@apm.com" <dhdang@apm.com>,
- "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
- "liudongdong (C)" <liudongdong3@huawei.com>,
- "cov@codeaurora.org" <cov@codeaurora.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <574FF3BE.4010903@semihalf.com>
-Date: Thu, 2 Jun 2016 10:52:14 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:55604 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754501AbcFPPWo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jun 2016 11:22:44 -0400
+Date: Thu, 16 Jun 2016 17:22:37 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de, axboe@fb.com,
+	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: automatic interrupt affinity for MSI/MSI-X capable devices V2
+Message-ID: <20160616152237.GB13615@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de> <b8cdfc80-fa77-b7cc-69b8-fb6037114087@sandisk.com>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F767865@lhreml507-mbx>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b8cdfc80-fa77-b7cc-69b8-fb6037114087@sandisk.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriele,
+On Thu, Jun 16, 2016 at 11:45:55AM +0200, Bart Van Assche wrote:
+> Is my interpretation correct that for an adapter that supports two 
+> interrupts and on a system with eight CPU cores and no hyperthreading this 
+> patch series will assign interrupt vector 0 to CPU 0 and interrupt vector 1 
+> to CPU 1?
 
-On 01.06.2016 09:36, Gabriele Paoloni wrote:
-> I think maybe it is worth to post this quirk mechanism as RFC on
-> top of this v8 patchset, so that we can start to review it and
-> make some progress on the quirks.
+Yes - same as the existing blk-mq queue distribution.
 
-I've just posted my RFC patches, please see:
-https://patchwork.ozlabs.org/patch/629121/
+> Are you aware that drivers like ib_srp assume that interrupts 
+> have been spread evenly, that means assigning vector 0 to CPU 0 and vector 
+> 1 to CPU 4?
 
-We can start review from there so that this series is not blocked.
-
-Thanks,
-Tomasz
+which will make them run into a conflict with the current blk-mq
+assignment.  That's exactly the point why we're trying to move things
+to a core location so that everyone can use the same mapping.
