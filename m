@@ -1,92 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v13 00/16] PCI: Fixup for 64bit resource with sparc
-Date: Fri, 17 Jun 2016 19:24:45 -0700
-Message-Id: <20160618022501.15648-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.140]:40223 "EHLO
+	regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136AbcFPIBY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2016 04:01:24 -0400
+Subject: Re: [PATCH v3 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+To: Arnd Bergmann <arnd@arndb.de>, Shawn Lin <shawn.lin@rock-chips.com>
+References: <1466041821-1649-1-git-send-email-shawn.lin@rock-chips.com>
+ <5811436.gqkV56Lax5@wuerfel>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+From: Wenrui Li <wenrui.li@rock-chips.com>
+Message-ID: <da207bdc-738f-f2b1-7026-e368355936e9@rock-chips.com>
+Date: Thu, 16 Jun 2016 16:01:12 +0800
+MIME-Version: 1.0
+In-Reply-To: <5811436.gqkV56Lax5@wuerfel>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
 
-After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
-to 64-bit resources), we have several reports on resource allocation
-failure, and we try to fix the problem with resource clip, and find
-more problems.
 
-One is from sparc that have problem with clip as we don't parse
-mem64 for it.
+在 2016/6/16 15:00, Arnd Bergmann 写道:
+> On Thursday, June 16, 2016 9:50:21 AM CEST Shawn Lin wrote:
+>
+>> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
+>> +	phys = <&pcie_phy>;
+>> +	phy-names = "pcie-phy";
+>> +	pinctrl-names = "default";
+>> +	pinctrl-0 = <&pcie_clkreq>;
+>> +	#interrupt-cells = <1>;
+>> +	interrupt-controller;
+>> +	interrupt-map-mask = <0 0 0 7>;
+>> +	interrupt-map = <0 0 0 1 &pcie0 1>,
+>> +			<0 0 0 2 &pcie0 2>,
+>> +			<0 0 0 3 &pcie0 3>,
+>> +			<0 0 0 4 &pcie0 4>;
+>> +};
+>>
+>
+> One thing that came up in the review of the new Marvell PCIe driver is that it's
+> most likely invalid for a device node to have both "interrupt-controller"
+> and "interrupt-map" properties. I originally thought this was a nice way to
+> handle embedded irqchips within the PCIe host, but it only really works
+> by coincidence with the current kernel, and only as long as the hwirq number
+> of the irqchip matches the integer representation of the irq line in the root
+> bridge (which it does in the example above).
+>
+> For that driver we concluded that it would be less of a hack to have the
+> irqchip as a child node of the PCIe host after all (just not with
+> device_type="pci" of course), and that makes the translation work as
+> expected.
+>
+> 	Arnd
+>
 
-This patchset try to fix the problem for sparc.
+Original driver have an irqchip as child node. But Marc suggested don't 
+need an intermediate node here.
+Now the conclusion is to retain the child node?
 
-patch 1-3: try to fix the pci mmap for proc path for sparc, that will
-make fix for sparc 64bit resource offset handling much simple.
+>
+>
 
-patch 4-11: parse MEM64 for sparc and other system with OF.
-So device 64bit resource could find their parent resource.
-
-patch 12-15: MMIO64 handling enhancement
-        treat non-pref mmio64 if parent bridges are all pcie.
-
-patch 16: restore old pref allocation logic if hostbridge does not support mmio64.
-
-Khalid Aziz tested on some sparc platforms that have different offset to
-mem space start or support 64bit mmio.
-
--v13: update patchset with pci/resource that have pci_resource_to_user
-      changes. date 2016-06-17
-
-Hope we can get them into v4.8.
-
-Thanks
-
-Yinghai
-
-Yinghai Lu (16):
-  PCI: Let pci_mmap_page_range() take resource address
-  PCI: Remove __pci_mmap_make_offset()
-  PCI: Check resource alignment for /sys pci_mmap_resource path
-  sparc/PCI: Use correct offset for bus address to resource
-  PCI: Add pci_find_bus_resource()
-  sparc/PCI: Reserve legacy mmio after PCI mmio
-  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  sparc/PCI: Keep resource idx order with bridge register number
-  powerpc/PCI: Keep resource idx order with bridge register number
-  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-  PCI: Check pref compatible bit for mem64 resource of PCIe device
-  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-  PCI: Add has_mem64 for struct host_bridge
-  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-
- arch/microblaze/pci/pci-common.c  |  74 ++-------------------
- arch/powerpc/kernel/pci-common.c  |  74 ++-------------------
- arch/powerpc/kernel/pci_of_scan.c |  12 +++-
- arch/sparc/kernel/of_device_32.c  |   5 +-
- arch/sparc/kernel/of_device_64.c  |   5 +-
- arch/sparc/kernel/pci.c           | 132 ++++----------------------------------
- arch/sparc/kernel/pci_common.c    |  91 +++++++++++++++-----------
- arch/sparc/kernel/pci_impl.h      |   5 ++
- arch/xtensa/kernel/pci.c          |  75 +++-------------------
- drivers/of/address.c              |   4 +-
- drivers/pci/bus.c                 |   4 +-
- drivers/pci/pci-sysfs.c           |  33 +++++++---
- drivers/pci/pci.c                 |  31 +++++----
- drivers/pci/pci.h                 |   4 +-
- drivers/pci/probe.c               |  40 ++++++++++++
- drivers/pci/proc.c                |  60 ++++++++++++++---
- drivers/pci/setup-bus.c           |  65 ++++++++++++++++---
- drivers/pci/setup-res.c           |  13 +++-
- include/linux/pci.h               |   4 ++
- 19 files changed, 325 insertions(+), 406 deletions(-)
-
--- 
-2.8.3
