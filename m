@@ -1,305 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:34702 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932282AbcF3Pha (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 11:37:30 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
-	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
-Date: Thu, 30 Jun 2016 17:19:30 +0200
-Message-Id: <20160630151931.29216-1-thierry.reding@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:45668 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751103AbcFQXqt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jun 2016 19:46:49 -0400
+Date: Fri, 17 Jun 2016 18:46:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stefan Roese <sr@denx.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	Jisheng Zhang <jszhang@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?iso-8859-1?Q?Gr=E9gory?= Clement
+	<gregory.clement@free-electrons.com>, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] PCI: mvebu: Don't try to add an MBus window that already
+ exists
+Message-ID: <20160617234645.GD21200@localhost>
+References: <20160602125247.17566-1-sr@denx.de>
+ <20160602151818.0989ee50@free-electrons.com>
+ <57511C4E.5040501@denx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57511C4E.5040501@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Fri, Jun 03, 2016 at 07:57:34AM +0200, Stefan Roese wrote:
+> Hi Thomas,
+> 
+> On 02.06.2016 15:18, Thomas Petazzoni wrote:
+> >On Thu,  2 Jun 2016 14:52:47 +0200, Stefan Roese wrote:
+> >>Add a check to mvebu_pcie_add_windows() to detect, if an MBus window is
+> >>already configured. If this is the case (base address, size, target and
+> >>attribute are identical), then this window is not created. This fixes
+> >>a problem I'm currently seeing on a custom Armada XP based board, which
+> >>generates this error upon PCI rescanning (in this case via sysfs):
+> >>
+> >>$ echo 1 > /sys/bus/pci/rescan
+> >>mvebu_mbus: cannot add window '4:e8', conflicts with another window
+> >>mvebu-pcie soc:pcie-controller: Could not create MBus window at [mem 0x9e000000-0x9e0fffff]: -22
+> >
+> >Thanks for the patch. I am not familiar with what happens during a PCI
+> >rescan, but shouldn't the MBus windows be deleted and then re-added?
+> 
+> It does not happen in this rescan case.
+> 
+> >The pci-mvebu driver deletes the MBus windows for a given PCI device
+> >when invalid memory base/limits are set in the emulated PCI bridge.
+> >Shouldn't this happen over a rescan?
+> 
+> I'm not sure what *should* happen upon rescan. But testing shows, that
+> no MBus window is removed upon rescan. I just tested what happens,
+> if the PCI devices are "removed" via sysfs. And this also does not
+> delete any of the MBus windows.
+> 
+> >If it doesn't, then the other question is whether the check you're
+> >adding should be done in the PCI driver or in the MBus driver.
+> >
+> >In commit b566e782be32145664d96ada3e389f17d32742e5, we already relaxed
+> >the checks done by the MBus driver, and since this commit we allow
+> >different windows to have the same target/attribute.
+> >
+> >Should the MBus driver also allow re-creating a	window that
+> >already exists, if all its properties are the same?
+> 
+> This sounds like a good idea to me. To move this detection / decision
+> one layer up. So that it will work for other drivers using this
+> MBus interface as well.
 
-This patch makes the existing pci_host_bridge structure a proper device
-that is usable by PCI host drivers in a more standard way. In addition
-to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
-and pci_create_root_bus interfaces, this unfortunately means having to
-add yet another interface doing basically the same thing, and add some
-extra code in the initial step.
+I don't know how you want to solve it, but it definitely should be
+safe to write the bridge window registers multiple times, either with
+the same values, a new invalid base/limit pair, or a new valid
+base/limit pair.
 
-However, this time it's more likely to be extensible enough that we
-won't have to do another one again in the future, and we should be
-able to reduce code much more as a result.
+A complete emulation should handle all those, including disposing of
+an old valid window and replacing it with a new, different, valid
+window.
 
-The main idea is to pull the allocation of 'struct pci_host_bridge' out
-of the registration, and let individual host drivers and architecture
-code fill the members before calling the registration function.
+And of course, it should handle individual 16-bit writes for the
+base/limit of the 32-bit windows.
 
-There are a number of things we can do based on this:
-
-* Use a single memory allocation for the driver-specific structure
-  and the generic PCI host bridge
-* consolidate the contents of driver specific structures by moving
-  them into pci_host_bridge
-* Add a consistent interface for removing a PCI host bridge again
-  when unloading a host driver module
-* Replace the architecture specific __weak pcibios_* functions with
-  callbacks in a pci_host_bridge device
-* Move common boilerplate code from host drivers into the generic
-  function, based on contents of the structure
-* Extend pci_host_bridge with additional members when needed without
-  having to add arguments to pci_scan_*.
-* Move members of struct pci_bus into pci_host_bridge to avoid
-  having lots of identical copies.
-
-As mentioned in a previous email, one open question is whether we want
-to export a function for allocating a pci_host_bridge device in
-combination with the per-device structure or let the driver itself
-call kzalloc.
-
-Changes in v2 (Thierry Reding):
-- add a pci_host_bridge_init() helper that drivers can use to perform
-  all the necessary steps to initialize the bridge
-- rename pci_register_host() to pci_host_bridge_register() to reflect
-  the naming used by other functions
-- plug memory leak on registration failure
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/probe.c | 111 ++++++++++++++++++++++++++++++++--------------------
- include/linux/pci.h |   8 +++-
- 2 files changed, 75 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 77f0bbb05c3f..ba40514acd32 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -521,19 +521,6 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
--{
--	struct pci_host_bridge *bridge;
--
--	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
--	if (!bridge)
--		return NULL;
--
--	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
--	return bridge;
--}
--
- static const unsigned char pcix_bus_speed[] = {
- 	PCI_SPEED_UNKNOWN,		/* 0 */
- 	PCI_SPEED_66MHz_PCIX,		/* 1 */
-@@ -2117,53 +2104,56 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
- }
- 
--struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+void pci_host_bridge_init(struct pci_host_bridge *bridge)
-+{
-+	INIT_LIST_HEAD(&bridge->windows);
-+}
-+EXPORT_SYMBOL_GPL(pci_host_bridge_init);
-+
-+int pci_host_bridge_register(struct pci_host_bridge *bridge)
- {
- 	int error;
--	struct pci_host_bridge *bridge;
- 	struct pci_bus *b, *b2;
- 	struct resource_entry *window, *n;
-+	LIST_HEAD(resources);
- 	struct resource *res;
- 	resource_size_t offset;
- 	char bus_addr[64];
- 	char *fmt;
-+	struct device *parent = bridge->dev.parent;
- 
- 	b = pci_alloc_bus(NULL);
- 	if (!b)
--		return NULL;
-+		return -ENOMEM;
-+	bridge->bus = b;
- 
--	b->sysdata = sysdata;
--	b->ops = ops;
--	b->number = b->busn_res.start = bus;
-+	/* temporarily move resources off the list */
-+	list_splice_init(&bridge->windows, &resources);
-+	b->sysdata = bridge->sysdata;
-+	b->msi = bridge->msi;
-+	b->ops = bridge->ops;
-+	b->number = b->busn_res.start = bridge->busnr;
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
- 	b->domain_nr = pci_bus_find_domain_nr(b, parent);
- #endif
--	b2 = pci_find_bus(pci_domain_nr(b), bus);
-+	b2 = pci_find_bus(pci_domain_nr(b), bridge->busnr);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
-+		error = -EEXIST;
- 		goto err_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
--		goto err_out;
--
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_host_bridge_dev;
--	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b),
-+		     bridge->busnr);
- 	error = pcibios_root_bridge_prepare(bridge);
--	if (error) {
--		kfree(bridge);
-+	if (error)
- 		goto err_out;
--	}
- 
- 	error = device_register(&bridge->dev);
--	if (error) {
-+	if (error)
- 		put_device(&bridge->dev);
--		goto err_out;
--	}
-+
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-@@ -2174,7 +2164,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
--	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-+	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bridge->busnr);
- 	error = device_register(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
-@@ -2190,12 +2180,12 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		printk(KERN_INFO "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 
- 	/* Add initial resources to the bus */
--	resource_list_for_each_entry_safe(window, n, resources) {
-+	resource_list_for_each_entry_safe(window, n, &resources) {
- 		list_move_tail(&window->node, &bridge->windows);
- 		res = window->res;
- 		offset = window->offset;
- 		if (res->flags & IORESOURCE_BUS)
--			pci_bus_insert_busn_res(b, bus, res->end);
-+			pci_bus_insert_busn_res(b, bridge->busnr, res->end);
- 		else
- 			pci_bus_add_resource(b, res, 0);
- 		if (offset) {
-@@ -2215,16 +2205,16 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
- 
--	return b;
-+	return 0;
- 
- class_dev_reg_err:
- 	put_device(&bridge->dev);
- 	device_unregister(&bridge->dev);
- err_out:
- 	kfree(b);
--	return NULL;
-+	return error;
- }
--EXPORT_SYMBOL_GPL(pci_create_root_bus);
-+EXPORT_SYMBOL_GPL(pci_host_bridge_register);
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
-@@ -2289,6 +2279,43 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 			res, ret ? "can not be" : "is");
- }
- 
-+static struct pci_bus *pci_create_root_bus_msi(struct device *parent,
-+		int bus, struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources, struct msi_controller *msi)
-+{
-+	struct pci_host_bridge *bridge;
-+	int ret;
-+
-+	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-+	if (!bridge)
-+		return NULL;
-+
-+	pci_host_bridge_init(bridge);
-+	bridge->dev.parent = parent;
-+	bridge->dev.release = pci_release_host_bridge_dev;
-+	bridge->busnr = bus;
-+	bridge->ops = ops;
-+	bridge->sysdata = sysdata;
-+	bridge->msi = msi;
-+	list_splice_init(resources, &bridge->windows);
-+
-+	ret = pci_host_bridge_register(bridge);
-+	if (ret) {
-+		kfree(bridge);
-+		return NULL;
-+	}
-+
-+	return bridge->bus;
-+}
-+
-+struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+{
-+	return pci_create_root_bus_msi(parent, bus, ops, sysdata, resources,
-+				       NULL);
-+}
-+EXPORT_SYMBOL_GPL(pci_create_root_bus);
-+
- struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata,
- 		struct list_head *resources, struct msi_controller *msi)
-@@ -2304,12 +2331,10 @@ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
- 			break;
- 		}
- 
--	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
-+	b = pci_create_root_bus_msi(parent, bus, ops, sysdata, resources, msi);
- 	if (!b)
- 		return NULL;
- 
--	b->msi = msi;
--
- 	if (!found) {
- 		dev_info(&b->dev,
- 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8badb664be00..5bf04e20c1cd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -405,10 +405,14 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
- 
- struct pci_host_bridge {
- 	struct device dev;
--	struct pci_bus *bus;		/* root bus */
-+	struct pci_ops *ops;
-+	void *sysdata;
-+	int busnr;
-+	struct pci_bus *bus;		/* points to root */
- 	struct list_head windows;	/* resource_entry */
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
-+	struct msi_controller *msi;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
-@@ -817,6 +821,8 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
- 				    struct list_head *resources);
-+void pci_host_bridge_init(struct pci_host_bridge *bridge);
-+int pci_host_bridge_register(struct pci_host_bridge *bridge);
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
--- 
-2.8.3
-
+Bjorn
