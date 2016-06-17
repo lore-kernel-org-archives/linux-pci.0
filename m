@@ -1,190 +1,142 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 1/2] nxp/dts: add pcie aer interrupt-name property in the
- dts
-Date: Tue, 14 Jun 2016 14:12:26 +0800
-Message-ID: <1465884747-1517-1-git-send-email-po.liu@nxp.com>
-In-Reply-To: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 1/4] PCI: Unify pci_resource_to_user() declarations
+To: Michal Simek <monstr@monstr.eu>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: sparclinux@vger.kernel.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Fri, 17 Jun 2016 15:11:55 -0500
+Message-ID: <20160617201155.11714.51900.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160617195835.11714.18657.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160617195835.11714.18657.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- Marc Zyngier <marc.zyngier@arm.com>, Po Liu <po.liu@nxp.com>,
- Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Minghuan Lian <minghuan.lian@nxp.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
- Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-NXP some platforms aer interrupt was not MSI/MSI-X/INTx
-but using interrupt line independently. This patch add a "aer"
-interrupt-names for aer interrupt.
+Replace the pci_resource_to_user() declarations in each arch that defines
+HAVE_ARCH_PCI_RESOURCE_TO_USER with a single one in linux/pci.h.
 
-Signed-off-by: Po Liu <po.liu@nxp.com>
+Change the MIPS static inline implementation to a non-inline version so the
+static inline doesn't conflict with the new non-static linux/pci.h
+declaration.
+
+No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-Changes for V2:
-	- None.
+ arch/microblaze/include/asm/pci.h |    3 ---
+ arch/mips/include/asm/pci.h       |   10 ----------
+ arch/mips/pci/pci.c               |   10 ++++++++++
+ arch/powerpc/include/asm/pci.h    |    3 ---
+ arch/sparc/include/asm/pci_64.h   |    3 ---
+ include/linux/pci.h               |    6 +++++-
+ 6 files changed, 15 insertions(+), 20 deletions(-)
 
- .../devicetree/bindings/pci/layerscape-pci.txt         |  4 ++--
- arch/arm/boot/dts/ls1021a.dtsi                         |  6 ++++--
- arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi         | 18 +++++++++---------
- arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi         | 16 ++++++++--------
- 4 files changed, 23 insertions(+), 21 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index ef683b2..d27973a 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -19,7 +19,7 @@ Required properties:
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
- - interrupt-names: Must include the following entries:
--  "intr": The interrupt that is asserted for controller interrupts
-+  "aer" : The interrupt that is asserted for aer interrupts
- - fsl,pcie-scfg: Must include two entries.
-   The first entry must be a link to the SCFG device node
-   The second entry must be '0' or '1' based on physical PCIe controller index.
-@@ -33,7 +33,7 @@ Example:
- 		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
- 		reg-names = "regs", "config";
- 		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
--		interrupt-names = "intr";
-+		interrupt-names = "aer";
- 		fsl,pcie-scfg = <&scfg 0>;
- 		#address-cells = <3>;
- 		#size-cells = <2>;
-diff --git a/arch/arm/boot/dts/ls1021a.dtsi b/arch/arm/boot/dts/ls1021a.dtsi
-index 5ae8e92..b638697 100644
---- a/arch/arm/boot/dts/ls1021a.dtsi
-+++ b/arch/arm/boot/dts/ls1021a.dtsi
-@@ -633,7 +633,8 @@
- 			reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
- 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			interrupts = <GIC_SPI 183 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			fsl,pcie-scfg = <&scfg 0>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-@@ -656,7 +657,8 @@
- 			reg = <0x00 0x03500000 0x0 0x00010000   /* controller registers */
- 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupts = <GIC_SPI 184 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			fsl,pcie-scfg = <&scfg 1>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-index de0323b..4beb760 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-@@ -473,9 +473,9 @@
- 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
- 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 118 0x4>, /* controller interrupt */
--				     <0 117 0x4>; /* PME interrupt */
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 117 0x4>, /* PME interrupt */
-+					 <0 118 0x4>; /* aer interrupt */
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -497,9 +497,9 @@
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
- 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 128 0x4>,
--				     <0 127 0x4>;
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 127 0x4>,
-+					 <0 128 0x4>;
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -521,9 +521,9 @@
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
- 			       0x50 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 162 0x4>,
--				     <0 161 0x4>;
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 161 0x4>,
-+					 <0 162 0x4>;
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-index 3187c82..6edf24b 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-@@ -559,8 +559,8 @@
- 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
- 			       0x10 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 108 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 108 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -583,8 +583,8 @@
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
- 			       0x12 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 113 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 113 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -607,8 +607,8 @@
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
- 			       0x14 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 118 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 118 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -631,8 +631,8 @@
- 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
- 			       0x16 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 123 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 123 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--- 
-2.1.0.27.g96db324
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index fc3ecb5..2a120bb 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -82,9 +82,6 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
+ 					 pgprot_t prot);
+ 
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+-extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
+-				 const struct resource *rsrc,
+-				 resource_size_t *start, resource_size_t *end);
+ 
+ extern void pcibios_setup_bus_devices(struct pci_bus *bus);
+ extern void pcibios_setup_bus_self(struct pci_bus *bus);
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 86b239d..9b63cd4 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -80,16 +80,6 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+ 
+-static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
+-		const struct resource *rsrc, resource_size_t *start,
+-		resource_size_t *end)
+-{
+-	phys_addr_t size = resource_size(rsrc);
+-
+-	*start = fixup_bigphys_addr(rsrc->start, size);
+-	*end = rsrc->start + size;
+-}
+-
+ /*
+  * Dynamic DMA mapping stuff.
+  * MIPS has everything mapped statically.
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index f1b11f0..5717384 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -319,6 +319,16 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+ EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
+ 
++void pci_resource_to_user(const struct pci_dev *dev, int bar,
++			  const struct resource *rsrc, resource_size_t *start,
++			  resource_size_t *end)
++{
++	phys_addr_t size = resource_size(rsrc);
++
++	*start = fixup_bigphys_addr(rsrc->start, size);
++	*end = rsrc->start + size;
++}
++
+ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index a6f3ac0..e9bd6cf 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -136,9 +136,6 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
+ 					 pgprot_t prot);
+ 
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+-extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
+-				 const struct resource *rsrc,
+-				 resource_size_t *start, resource_size_t *end);
+ 
+ extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
+ extern void pcibios_setup_bus_devices(struct pci_bus *bus);
+diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+index 022d160..2303635 100644
+--- a/arch/sparc/include/asm/pci_64.h
++++ b/arch/sparc/include/asm/pci_64.h
+@@ -55,9 +55,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ }
+ 
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+-void pci_resource_to_user(const struct pci_dev *dev, int bar,
+-			  const struct resource *rsrc,
+-			  resource_size_t *start, resource_size_t *end);
+ #endif /* __KERNEL__ */
+ 
+ #endif /* __SPARC64_PCI_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..9c201d4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1554,7 +1554,11 @@ static inline const char *pci_name(const struct pci_dev *pdev)
+ /* Some archs don't want to expose struct resource to userland as-is
+  * in sysfs and /proc
+  */
+-#ifndef HAVE_ARCH_PCI_RESOURCE_TO_USER
++#ifdef HAVE_ARCH_PCI_RESOURCE_TO_USER
++void pci_resource_to_user(const struct pci_dev *dev, int bar,
++			  const struct resource *rsrc,
++			  resource_size_t *start, resource_size_t *end);
++#else
+ static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 		const struct resource *rsrc, resource_size_t *start,
+ 		resource_size_t *end)
