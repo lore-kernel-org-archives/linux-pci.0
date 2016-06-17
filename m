@@ -1,40 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
-Subject: Re: [PATCH] Introducing kernel option to force all PCI memory
- resources to be page aligned. Fixes issues with uio based drivers.
-Date: Mon, 6 Jun 2016 14:59:47 +0000
-Message-ID: <a2e2c02820fd495e845a9cf9340a30e3@FE-MBX1012.de.bosch.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 17 Jun 2016 15:15:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	linux-arm-kernel@lists.infradead.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>
+Subject: Re: [RFC PATCH v2 03/15] arm64: mm: change IOMMU notifier action to
+ attach DMA ops
+Message-ID: <20160617141536.GA24840@red-moon>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1465306270-27076-4-git-send-email-lorenzo.pieralisi@arm.com>
+ <5763C27A.9030306@arm.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5763C27A.9030306@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg,
+Hi Robin,
 
-thanks for the response.
-> > Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned
-> > PCI memory resources are not page aligned.
-> > By using the kernel option "pci=resource_alignment" it is possible to
-> > force single PCI boards to use page alignment for their memory resources.
-> > However, this is fairly cumbersome if multiple of these cards are in use.
-> > This patch adds another kernel option "pci=resources_page_aligned"
-> > that allows to set the default alignment of PCI memory resources to be
-> > page aligned.
-> > Overwriting of this default alignment via "pci=resource_alignment" is
-> > still possible.
+On Fri, Jun 17, 2016 at 10:27:22AM +0100, Robin Murphy wrote:
+> Hi Lorenzo,
 > 
-> This seems like a very large hammer for a very specific problem with a card
-> that seems to be not-in-spec (I can't find anywhere that requires resources to
-> be "page" aligned in the PCI spec).  Why not fix the firmware in these cards?
-The issue is not the firmware. The issue is that the Linux uio driver (here: uio_cif)
-does not work as uio_mmap() -> uio_mmap_physical() does not do a mmap 
-on physical memory that is not page aligned...
+> I think this patch makes sense even independent of the rest of the
+> series, one nit inline notwithstanding.
 
-Regards
+Thanks. Yes I added it to this series since it is not strictly
+necessary (ie it does not fix anything) in the mainline, but
+it *is* necessary for this whole series to function when we
+boot through ACPI.
 
-Mathias
+I will send it out in a separate patch and fold changes you
+request below, it would be good to have some coverage for
+it before merging it.
+
+Thank you !
+Lorenzo
+
+> Marek; I'm curious as to whether this could make the workaround in
+> 722ec35f7 obsolete as well, or are all the drivers also bound
+> super-early in the setup you had there?
+> 
+> On 07/06/16 14:30, Lorenzo Pieralisi wrote:
+> >Current bus notifier in ARM64 (__iommu_attach_notifier)
+> >attempts to attach dma_ops to a device on BUS_NOTIFY_ADD_DEVICE
+> >action notification.
+> >
+> >This causes issues on ACPI based systems, where PCI devices
+> >can be added before the IOMMUs the devices are attached to
+> >had a chance to be probed, causing failures on attempts to
+> >attach dma_ops in that the domain for the respective IOMMU
+> >may not be set-up yet by the time the bus notifier is run.
+> >
+> >Devices dma_ops do not require to be set-up till the matching
+> >device drivers are probed. This means that instead of running
+> >the notifier attaching dma_ops to devices (__iommu_attach_notifier)
+> >on BUS_NOTIFY_ADD_DEVICE action, it can be run just before the
+> >device driver is bound to the device in question (on action
+> >BUS_NOTIFY_BIND_DRIVER) so that it is certain that its IOMMU
+> >group and domain are set-up accordingly at the time the
+> >notifier is triggered.
+> >
+> >This patch changes the notifier action upon which dma_ops
+> >are attached to devices and defer it to driver binding time,
+> >so that IOMMU devices have a chance to be probed and to register
+> >their bus notifiers before the dma_ops attach sequence for a
+> >device is actually carried out.
+> >
+> >Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >Cc: Will Deacon <will.deacon@arm.com>
+> >Cc: Catalin Marinas <catalin.marinas@arm.com>
+> >Cc: Robin Murphy <robin.murphy@arm.com>
+> >---
+> >  arch/arm64/mm/dma-mapping.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> >diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+> >index c566ec8..79b0882 100644
+> >--- a/arch/arm64/mm/dma-mapping.c
+> >+++ b/arch/arm64/mm/dma-mapping.c
+> >@@ -848,7 +848,7 @@ static int __iommu_attach_notifier(struct notifier_block *nb,
+> >  {
+> >  	struct iommu_dma_notifier_data *master, *tmp;
+> >
+> >-	if (action != BUS_NOTIFY_ADD_DEVICE)
+> >+	if (action != BUS_NOTIFY_BIND_DRIVER)
+> 
+> With this, you can also get rid of the priority setting and big fat
+> explanatory comment in register_iommu_dma_ops_notifier().
+> 
+> Robin.
+> 
+> >  		return 0;
+> >
+> >  	mutex_lock(&iommu_dma_notifier_lock);
+> >
+> 
