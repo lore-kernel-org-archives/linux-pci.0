@@ -1,117 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:60793 "EHLO mga03.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:52042 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750716AbcFAMWP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Jun 2016 08:22:15 -0400
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-CC: Lukas Wunner <lukas@wunner.de>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Jamet, Michael" <michael.jamet@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Svahn, Kai" <kai.svahn@intel.com>,
-	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM) networking
-Date: Wed, 1 Jun 2016 12:22:07 +0000
-Message-ID: <E607265CB020454880711A6F96C05A037CABE1C2@hasmsx107.ger.corp.intel.com>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
- <20160524105506.GB5396@wunner.de>
- <E607265CB020454880711A6F96C05A0377FBD337@hasmsx107.ger.corp.intel.com>
- <CAMxnaaUz8nhqVc8ubaOVhSjkcwMUUYZjn5NvJ=mTkGk_SvD8Qg@mail.gmail.com>
-In-Reply-To: <CAMxnaaUz8nhqVc8ubaOVhSjkcwMUUYZjn5NvJ=mTkGk_SvD8Qg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1161150AbcFQL1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jun 2016 07:27:22 -0400
+Date: Fri, 17 Jun 2016 13:27:16 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v3 2/6] NVMe: Use pci_(request|release)_mem_regions
+Message-ID: <20160617112716.74e4hgy5bhkkgmi6@c203.arch.suse.de>
+References: <cover.1465200424.git.jthumshirn@suse.de>
+ <5c9932602e6d43ef8ad77856c686765f9e63aa9c.1465200424.git.jthumshirn@suse.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <5c9932602e6d43ef8ad77856c686765f9e63aa9c.1465200424.git.jthumshirn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbmRyZWFzIE5vZXZlciBbbWFp
-bHRvOmFuZHJlYXMubm9ldmVyQGdtYWlsLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBNYXkgMjUs
-IDIwMTYgMDI6MjUNCj4gVG86IExldnksIEFtaXIgKEplcikgPGFtaXIuamVyLmxldnlAaW50ZWwu
-Y29tPg0KPiBDYzogTHVrYXMgV3VubmVyIDxsdWthc0B3dW5uZXIuZGU+OyBncmVna2hAbGludXhm
-b3VuZGF0aW9uLm9yZzsNCj4gYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgtcGNpQHZnZXIua2Vy
-bmVsLm9yZzsgSmFtZXQsIE1pY2hhZWwNCj4gPG1pY2hhZWwuamFtZXRAaW50ZWwuY29tPjsgQWxs
-b3VuLCBEYW4gPGRhbi5hbGxvdW5AaW50ZWwuY29tPjsNCj4gV2VzdGVyYmVyZywgTWlrYSA8bWlr
-YS53ZXN0ZXJiZXJnQGludGVsLmNvbT47IFN2YWhuLCBLYWkNCj4gPGthaS5zdmFobkBpbnRlbC5j
-b20+OyBTaGV2Y2hlbmtvLCBBbmRyaXkNCj4gPGFuZHJpeS5zaGV2Y2hlbmtvQGludGVsLmNvbT47
-IFdpbmtsZXIsIFRvbWFzDQo+IDx0b21hcy53aW5rbGVyQGludGVsLmNvbT4NCj4gU3ViamVjdDog
-UmU6IFtQQVRDSCAwLzZdIHRodW5kZXJib2x0OiBJbnRyb2R1Y2luZyBUaHVuZGVyYm9sdChUTSkN
-Cj4gbmV0d29ya2luZw0KPiANCj4gT24gVHVlLCBNYXkgMjQsIDIwMTYgYXQgMzo1OCBQTSwgTGV2
-eSwgQW1pciAoSmVyKSA8YW1pci5qZXIubGV2eUBpbnRlbC5jb20+DQo+IHdyb3RlOg0KPiA+PiAt
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBMdWthcyBXdW5uZXIgW21haWx0
-bzpsdWthc0B3dW5uZXIuZGVdDQo+ID4+IFNlbnQ6IFR1ZXNkYXksIE1heSAyNCwgMjAxNiAxMzo1
-NQ0KPiA+PiBUbzogTGV2eSwgQW1pciAoSmVyKSA8YW1pci5qZXIubGV2eUBpbnRlbC5jb20+DQo+
-ID4+IENjOiBhbmRyZWFzLm5vZXZlckBnbWFpbC5jb207IGdyZWdraEBsaW51eGZvdW5kYXRpb24u
-b3JnOw0KPiA+PiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
-OyBKYW1ldCwgTWljaGFlbA0KPiA+PiA8bWljaGFlbC5qYW1ldEBpbnRlbC5jb20+OyBBbGxvdW4s
-IERhbiA8ZGFuLmFsbG91bkBpbnRlbC5jb20+Ow0KPiA+PiBXZXN0ZXJiZXJnLCBNaWthIDxtaWth
-Lndlc3RlcmJlcmdAaW50ZWwuY29tPjsgU3ZhaG4sIEthaQ0KPiA+PiA8a2FpLnN2YWhuQGludGVs
-LmNvbT47IFNoZXZjaGVua28sIEFuZHJpeQ0KPiA+PiA8YW5kcml5LnNoZXZjaGVua29AaW50ZWwu
-Y29tPjsgV2lua2xlciwgVG9tYXMNCj4gPj4gPHRvbWFzLndpbmtsZXJAaW50ZWwuY29tPg0KPiA+
-PiBTdWJqZWN0OiBSZTogW1BBVENIIDAvNl0gdGh1bmRlcmJvbHQ6IEludHJvZHVjaW5nIFRodW5k
-ZXJib2x0KFRNKQ0KPiA+PiBuZXR3b3JraW5nDQo+ID4+DQo+ID4+IEhpIEFtaXIsDQo+ID4+DQo+
-ID4+IE9uIE1vbiwgTWF5IDIzLCAyMDE2IGF0IDExOjQ4OjUwQU0gKzAzMDAsIEFtaXIgTGV2eSB3
-cm90ZToNCj4gPj4gPiBUaHVuZGVyYm9sdChUTSkgbmV0d29ya2luZywgaW50cm9kdWNlZCBpbiB0
-aGVzZSBwYXRjaGVzLCBwcm92aWRlcw0KPiA+PiA+IHRoZSBjYXBhYmlsaXR5IG9mIGNvbm5lY3Rp
-bmcgaG9zdHMgdG9nZXRoZXIgYnkgZW11bGF0aW5nIGFuIEV0aGVybmV0DQo+IGFkYXB0ZXIuDQo+
-ID4+DQo+ID4+IFRoYW5rIHlvdSBmb3IgdGhpcyBjb250cmlidXRpb24uIEkgdGhpbmsgaXQgbWF5
-IHRha2Ugc29tZSB0aW1lIHRvDQo+ID4+IHJldmlldyBldmVyeXRoaW5nLCBmb3Igbm93IGp1c3Qg
-c29tZSBnZW5lcmFsIG9ic2VydmF0aW9uczoNCj4gPj4NCj4gPj4gLSBVcCB1bnRpbCBub3cgdGhp
-cyBkcml2ZXIgd2FzIE1hYy1vbmx5LiBJSVVDIHRoZSBmdW5jdGlvbmFsaXR5IHlvdSdyZQ0KPiA+
-PiAgIGFkZGluZyB3aWxsIGFsc28gYmUgdXNlZCBvbiBub24tTWFjcy4gVGhhdCdzIGFuIGltcG9y
-dGFudCBjaGFuZ2UgdGhhdA0KPiA+PiAgIHNob3VsZCBwcm9iYWJseSBiZSBtYWRlIG1vcmUgZXhw
-bGljaXQgaW4gdGhlIGNvbW1pdCBtZXNzYWdlcy4gRGlkIHlvdQ0KPiA+PiAgIHRlc3QgeW91ciBw
-YXRjaGVzIG9uIGEgTWFjIHRvIHNlZSB0aGF0IG5vdGhpbmcgcmVncmVzc2VzPw0KPiA+DQo+ID4g
-WWVzLCB3ZSBkaWQgc29tZSB0ZXN0cyBvbiBNYWNCb29rIFBybyB3aXRoIEZhbGNvbiBSaWRnZS4N
-Cj4gPiBOb3RlIHRoYXQgKGFzIHdyaXR0ZW4gaW4gdGhlIGNvdmVyIGxldHRlciksIHRoZSBmdW5j
-dGlvbmFsaXR5IHRoYXQgd2UgYXJlDQo+IGFkZGluZyBpcyBiYXNlZCBvbiBJQ00gKEludGVsIENv
-bm5lY3Rpb24gTWFuYWdlciwgZmlybXdhcmUpLg0KPiA+IFRoZXNlIHBhdGNoZXMgd2lsbCBrZWVw
-IHRoZSBjdXJyZW50IGZ1bmN0aW9uYWxpdHkgb24gTWFjIGFuZCB3aWxsIGFkZCB0aGUNCj4gbmV0
-d29ya2luZyBmdW5jdGlvbmFsaXR5IG9uIG5vbi1NYWNzLg0KPiANCj4gSGkgQW1pciwNCj4gDQo+
-IEZpcnN0IG9mIGFsbCB0aGFua3MgZm9yIGNvbnRyaWJ1dGluZyB0aGlzLiBJdCBpcyBjZXJ0YWlu
-bHkgZ29vZCB0byBzZWUgSW50ZWwgaGVscCBvdXQNCj4gd2l0aCB0aGUgZHJpdmVyLg0KDQpIaSBB
-bmRyZWFzLA0KVGhhbmsgeW91IGZvciB0aGUgY29tbWVudHMuDQoNCj4gDQo+IEkgb25seSBkaWQg
-YSBjdXJzb3J5IHJlYWQsIGJ1dCBhbHJlYWR5IGhhdmUgYSBmZXcgcXVlc3Rpb25zIGNvbmNlcm5p
-bmcgdGhlDQo+IElDTSBhbmQgaXRzIHJlbGF0aW9uIHRvIHRoZSByZXN0IG9mIHRoZSBkcml2ZXI6
-DQo+IC0gSXMgdGhlIElDTSBvbmx5IHJlc3BvbnNpYmxlIGZvciBuZXR3b3JraW5nIG9yIGRvZXMg
-aXQgYWxzbyBoYW5kbGUgcGNpDQo+IHR1bm5lbHMsIERQLCAuLi4/DQoNCklDTSBpcyByZXNwb25z
-aWJsZSBmb3IgUENJIHR1bm5lbHMgYW5kIERQIGFzIHdlbGwuDQoNCj4gLSBZb3VyIGNvZGUgb25s
-eSBzdXBwb3J0cyBUQjIsMy4gQWZhaWsgQXBwbGUgc3VwcG9ydHMgSVAgb3ZlciBUQiBhbHNvIG9u
-IFRCIDEuDQo+IFdoYXQgYXJlIHRoZSBvYnN0YWNsZXMgdG8gc3VwcG9ydCBmaXJzdCBnZW5lcmF0
-aW9uIGNoaXBzPw0KDQpJbnRlbCBkZWNpZGVkIHRvIHN1cHBvcnQgVGh1bmRlcmJvbHQgTmV0d29y
-a2luZyBmcm9tIGdlbmVyYXRpb24gMi4NCg0KPiAtIFJlbGF0ZWQgdG8gdGhlIGFib3ZlOiBpZiBz
-b21lIG9mIHRoZSByZWdpc3RlcnMgYXJlIGF2YWlsYWJsZSBvbmx5IGZvciBzb21lDQo+IGNoaXBz
-IHRoZW4gcGxlYXNlIGRvY3VtZW50IHRoaXMgaW4gbmhpX3JlZ3MuaCAoYW5kIG90aGVyIHBsYWNl
-cykuDQo+IC0gSXMgaXQgcG9zc2libGUgdG8gdXNlIHRoZSBJQ00gb24gQXBwbGUgaGFyZHdhcmU/
-DQoNCldlIGRvbid0IGtub3cgaWYgQXBwbGUgc3VwcG9ydHMgaXQgb3IgcGxhbnMgdG8gc3VwcG9y
-dCBpdC4NCg0KPiANCj4gWW91ciBwYXRjaCBlc3NlbnRpYWxseSBzcGxpdHMgdGhlIGRyaXZlciBp
-bnRvIHR3by4gWW91IGFkZCBhbiBpZiBzdGF0ZW1lbnQgdG8NCj4gbmhpX3Byb2JlIHdoaWNoIGVp
-dGhlciBydW5zIHlvdXIgY29kZSBvciB0aGUgb2xkIG9uZS4NCj4gVGhpcyBpcyBqdXN0IHNpbGx5
-ICh5b3UgbWlnaHQgYXMgd2VsbCBhZGQgYSBzZXBhcmF0ZSBkcml2ZXIpLiBBdCBsZWFzdCBwYXJ0
-cyBvZiB0aGUNCj4gZnVuY3Rpb25hbGl0eSBhcmUgYWxyZWFkeSBpbXBsZW1lbnRlZC4gRm9yIGV4
-YW1wbGUgcGF0Y2gNCj4gMiBoYXMgbGFyZ2Ugb3ZlcmxhcCB3aXRoIHdoYXQgaXMgY3VycmVudGx5
-IGhhbmRsZWQgYnkgbmhpLmMvY3RsLmMNCj4gKHJlYWRpbmcvd3JpdGluZyB0aGUgcmluZyBidWZm
-ZXIgYW5kIGhhbmRsaW5nIGNvbW11bmljYXRpb24gd2l0aCB0aGUgUERGKS4gSQ0KPiB1bmRlcnN0
-YW5kIHRoYXQgdGhlIGludGVyZmFjZSBwcm92aWRlZCBieSByaW5nX3J4L3JpbmdfdHggaXMgbm90
-IGEgZ29vZA0KPiBtYXRjaCBmb3IgaGlnaCBzcGVlZCBuZXR3b3JraW5nIGludHJvZHVjZWQgaW4g
-dGhlIGxhdGVyIHBhdGNoZXMuIEJ1dCB0aGVuDQo+IHlvdSBzaG91bGQgcmVmYWN0b3IgaXQgdG8g
-cHJvdmlkZSB3aGF0IHlvdSBuZWVkIGluc3RlYWQgb2YgcmVpbXBsZW1lbnRpbmcNCj4gYWxsIHRo
-ZSBmdW5jdGlvbmFsaXR5Lg0KDQpXZSBoYWQgYSBsb3Qgb2YgZGlzY3Vzc2lvbnMgYXJvdW5kIHRo
-ZSBkcml2ZXIgc2VwYXJhdGlvbiB0b3BpYyBhbmQgd2UgYWxzbyBjb25zdWx0ZWQgc29tZSBMaW51
-eCBjb250cmlidXRvcnMgaW4gSW50ZWwgYW5kIGdvdCB0byB0aGUgY29uY2x1c2lvbiB0aGF0IG9u
-ZSBkcml2ZXIgd2lsbCBiZSBiZXR0ZXIuDQpJZiB5b3UgcmVjb21tZW5kIHRvIGRvIGl0IGluIHNl
-cGFyYXRlIGRyaXZlciwgSSdsbCBzZW5kIG5ldyBwYXRjaGVzLg0KRG8geW91IGhhdmUgcHJlZmVy
-ZW5jZSBob3cgdGhlIHNlcGFyYXRpb24gc2hvdWxkIGJlPw0KSSB0aG91Z2h0IGFib3V0IGRlZmlu
-aW5nIGljbV9uaGkuYyBhcyBhIG1vZHVsZV9pbml0IGFuZCBpbiBjb250cmFzdCB0byB0aGUgb3Jp
-Z2luYWwgZHJpdmVyLCBpZiBkbWlfbWF0Y2goQXBwbGUpIHJldHVybiBlcnJvci4NCg0KPiANCj4g
-TGFzdGx5LCB3aHkgZG8geW91IG5lZWQgYSB1c2VyIG1vZGUgY29tcG9uZW50PyBXaGF0IGRvZXMg
-aXQgZG8/DQoNClRoZSBnZW5lcmFsIGNvbmNlcHQgd2FzIHRvIGtlZXAgYXMgbWluaW11bSBhcyBw
-b3NzaWJsZSBpbiBrZXJuZWwgYW5kIG1vdmUgc29tZSBvZiB0aGUgbG9naWMgdG8gdXNlciBzcGFj
-ZS4NClRoaXMgd2lsbCBnaXZlIHVzIHRoZSBvcHRpb24gdG8gaGF2ZSBtaW5pbWFsIGNoYW5nZXMg
-aW4ga2VybmVsIG1vZHVsZSBpbiB0aGUgZnV0dXJlLCBhbmQgdG8gcmVsZWFzZSBmZWF0dXJlcyBp
-biBhIHRpbWVseSBtYW5uZXIuDQpBbHNvIGl0IGlzIGEgcHJlcGFyYXRpb24gdG8gc29tZSBvZiB0
-aGUgZmVhdHVyZXMgdGhhdCB3aWxsIHJlcXVpcmUgdXNlciBpbnRlcmFjdGlvbi4NCg0KPiANCj4g
-QW5kcmVhcw0K
+On Tue, Jun 07, 2016 at 09:44:02AM +0200, Johannes Thumshirn wrote:
+> Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+> hand, use it in the NVMe driver.
+> 
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Keith Busch <keith.busch@intel.com>
+> Cc: Jens Axboe <axboe@fb.com>
+> Cc: linux-nvme@lists.infradead.org
+
+Bjorn, 
+
+Jens merged a band aid here which conflicts with the patch. Shall I send you
+this patch re-based or the entire series?
+
+Thanks,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
