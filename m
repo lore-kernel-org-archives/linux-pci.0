@@ -1,75 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52004 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754047AbcFPUIX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Jun 2016 16:08:23 -0400
-Date: Thu, 16 Jun 2016 15:08:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ashutosh Dixit <ashutosh.dixit@intel.com>
-Cc: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
-	"Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-	Doug Ledford <dledford@redhat.com>,
-	"Hefty, Sean" <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: hfi1 use of PCI internals
-Message-ID: <20160616200817.GA17778@localhost>
-References: <20160616162052.GA2144@localhost>
- <tnm1toa71hsw1.fsf@phwtpriv05.ph.intel.com>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Fri, 17 Jun 2016 23:32:09 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 4/4] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160617213209.GA1927@wunner.de>
+References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1461919919-120102-5-git-send-email-mika.westerberg@linux.intel.com>
+ <20160617204824.GB10416@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <tnm1toa71hsw1.fsf@phwtpriv05.ph.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160617204824.GB10416@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 16, 2016 at 02:48:30PM -0400, Ashutosh Dixit wrote:
-> On Thu, Jun 16 2016 at 12:20:52 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > I noticed drivers/infiniband/hw/hfi1 got moved from staging to
-> > drivers/ for v4.7.  It does a bunch of grubbing around in PCIe ASPM
-> > configuration, e.g., see drivers/infiniband/hw/hfi1/aspm.h.
-> >
-> > I know there have been lots of ASPM issues, both hardware problems and
-> > Linux kernel problems, but it is *supposed* to be manageable by the
-> > core, without special driver support.  What's the justification for
-> > having to do this in the hfi1 driver?
+On Fri, Jun 17, 2016 at 03:48:24PM -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 29, 2016 at 11:51:59AM +0300, Mika Westerberg wrote:
+[snip]
+> > +
+> > +	/*
+> > +	 * Prevent runtime PM if the port is advertising support for PCIe
+> > +	 * hotplug. Otherwise the BIOS hotplug SMI code might not be able
+> > +	 * to enumerate devices behind this port properly (the port is
+> > +	 * powered down preventing all config space accesses to the
+> > +	 * subordinate devices). We can't be sure for native PCIe hotplug
+> > +	 * either so prevent that as well.
 > 
-> The description for commit affa48de84 "staging/rdma/hfi1: Add support
-> for enabling/disabling PCIe ASPM" anticipates this question and
-> describes why this was done in the hfi1 driver:
+> Can we wordsmith this comment a bit?  I'm not sure what "BIOS hotplug
+> SMI code" even is or why it is relevant.  And it seems x86-centric so
+> may not apply to other arches.
+
+The comment pertains to:
+https://bugzilla.kernel.org/show_bug.cgi?id=53811
+
+It was discussed on April 12/13:
+https://patchwork.kernel.org/patch/8782801/
+
+Executive summary:
+On non-Macs, Thunderbolt is driven by the firmware in System Management
+Mode, on hotplug the CPU receives a Sytem Management Interrupt (SMI) and
+jumps to SMM code. This doesn't work reliably if the hotplug port has
+been transitioned to D3hot, the SMM code tries to access config space
+of hotplugged devices (not possible if port is in D3hot) and is apparently
+too dumb to check if the port is in D3hot and wake it up.
+
+On Macs, Thunderbolt is not driven by the firmware except immediately on
+boot: It is initially set up by an EFI driver, but once ExitBootServices
+has been called, the OS is responsible. Therefore on Macs the hotplug
+ports may be suspended to D3hot just fine. This is done by patch
+[08/13] of my series "Runtime PM for Thunderbolt on Macs".
+
 > 
->     Finally, the kernel ASPM API is not used in this patch. This is
->     because this patch does several non-standard things as SW
->     workarounds for HW issues. As mentioned above, it enables ASPM even
->     when advertised actual latencies are greater than acceptable
->     latencies. Also, whereas the kernel API only allows drivers to
->     disable ASPM from driver probe, this patch enables/disables ASPM
->     directly from interrupt context. Due to these reasons the kernel
->     ASPM API was not used.
+> > +	 */
+> > +	if (!dev->is_hotplug_bridge) {
+> 
+> Your changelog mentions ACPI hotplug (I assume this means acpiphp).
+> Would it be sufficient to prevent runtime PM when we're using acpiphp?
+> That would be more selective and would avoid penalizing non-ACPI
+> platforms and newer systems that use native pciehp.
+> 
+> PCIe r3.0, sec 6.7.3.4 says a port should generate a wakeup event
+> using PME on hotplug events that occur when the port is in D1, D2, or
+> D3hot (it doesn't mention D3cold).  Is that relevant here?  Is there a
+> way to control which D-states we use based on which ones can assert
+> PME?
 
-That's a good start, but leads to more questions.  For example, it
-doesn't answer the obvious question of why the driver needs to
-enable/disable ASPM from interrupt context.
+This was discussed between April 18 and April 21, please refer to
+the above-linked patchwork entry.
 
-Disabling ASPM should only require writing the device's Link Control
-register.  The PCI core could probably provide an interface to do that
-in interrupt context.
+I had done some tests and the result was:
+"A hotplug port may go to D3hot and will still generate interrupts on
+hotplug, but all its parent ports are *not* allowed to go to D3hot
+because otherwise the hotplug interrupts will no longer come through.
+The algorithm in pci_bridge_d3_update() and pci_dev_check_d3cold()
+needs to be amended to take that into account. Hm, it's nontrivial
+I guess, allowing bridge_d3 = true for the lowest hotplug bridge in a
+hierarchy but not for anything above?"
 
-Enabling ASPM is not latency-critical and could probably be done from
-a work queue outside interrupt context, although conceptually there
-shouldn't be much required here either, and possibly the PCI core
-interface could be improved.
+Mika's reply was:
+"If we need to do things like that, it will get pretty complex and we
+still cannot be sure whether hotplug works. I think it is safer to go
+back to what I already had and disable runtime PM from such ports."
 
-It's possible the latency problem could be handled by some sort of
-quirk that overrides the acceptable latency.
+Best regards,
 
-It's hard enough to get ASPM support in the PCI core correct without
-having to worry about drivers doing their own thing behind the back of
-the core.
-
-As far as I can tell, none of these PCI questions were raised on
-linux-pci, so we never even had a chance to have a conversation about
-them.
-
-Bjorn
+Lukas
