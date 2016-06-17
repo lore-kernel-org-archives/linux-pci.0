@@ -1,58 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 17 Jun 2016 18:04:39 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45392 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751095AbcFQXgQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jun 2016 19:36:16 -0400
+Date: Fri, 17 Jun 2016 18:36:12 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ashutosh Dixit <ashutosh.dixit@intel.com>
-Cc: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
-	"Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-	Doug Ledford <dledford@redhat.com>,
-	"Hefty, Sean" <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: hfi1 use of PCI internals
-Message-ID: <20160617230439.GB21200@localhost>
-References: <20160616162052.GA2144@localhost>
- <tnm1toa71hsw1.fsf@phwtpriv05.ph.intel.com>
- <20160616200817.GA17778@localhost>
- <tnm1t4m8rh3ns.fsf@phwtpriv05.ph.intel.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Stefan Roese <sr@denx.de>, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	Jisheng Zhang <jszhang@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?iso-8859-1?Q?Gr=E9gory?= Clement
+	<gregory.clement@free-electrons.com>, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] PCI: mvebu: Don't try to add an MBus window that already
+ exists
+Message-ID: <20160617233612.GC21200@localhost>
+References: <20160602125247.17566-1-sr@denx.de>
+ <20160602151818.0989ee50@free-electrons.com>
+ <57511C4E.5040501@denx.de>
+ <20160603093042.26e325d1@free-electrons.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <tnm1t4m8rh3ns.fsf@phwtpriv05.ph.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160603093042.26e325d1@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 17, 2016 at 06:05:43PM -0400, Ashutosh Dixit wrote:
-> On Thu, Jun 16 2016 at 04:08:17 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > That's a good start, but leads to more questions.  For example, it
-> > doesn't answer the obvious question of why the driver needs to
-> > enable/disable ASPM from interrupt context.
+On Fri, Jun 03, 2016 at 09:30:42AM +0200, Thomas Petazzoni wrote:
+> Hello,
 > 
-> For power saving reasons we keep ASPM L1 enabled, but implement a
-> heuristic to "quickly" disable ASPM L1 when we notice PCIe traffic (as
-> measured by the interrupt rate) starting up. If interrupt activity
-> ceases ASPM L1 is re-enabled.
+> On Fri, 3 Jun 2016 07:57:34 +0200, Stefan Roese wrote:
 > 
-> > Disabling ASPM should only require writing the device's Link Control
-> > register.  The PCI core could probably provide an interface to do that
-> > in interrupt context.
-> >
-> > Enabling ASPM is not latency-critical and could probably be done from
-> > a work queue outside interrupt context, although conceptually there
-> > shouldn't be much required here either, and possibly the PCI core
-> > interface could be improved.
+> > > The pci-mvebu driver deletes the MBus windows for a given PCI device
+> > > when invalid memory base/limits are set in the emulated PCI bridge.
+> > > Shouldn't this happen over a rescan?  
+> > 
+> > I'm not sure what *should* happen upon rescan. But testing shows, that
+> > no MBus window is removed upon rescan. I just tested what happens,
+> > if the PCI devices are "removed" via sysfs. And this also does not
+> > delete any of the MBus windows.
 > 
-> That is true, to keep latencies low we need to disable ASPM from
-> interrupt context, but re-enabling ASPM is not latency critical.
+> Then maybe that's a question for the PCI folks. Is it normal that when
+> a PCI device gets removed, the configuration of the PCI bridge does not
+> get adjusted accordingly?
 
-For endpoint devices, it should be theoretically possible to
-enable/disable ASPM very quickly, by touching only that device.  We
-don't do that today because pcie/aspm.c does all sorts of buffoonery
-and path walking.  I think that could be simplified, assuming we think
-this sort of intensive ASPM-management is desirable.
+I'm not sure I completely understand the question.
 
-> > It's possible the latency problem could be handled by some sort of
-> > quirk that overrides the acceptable latency.
-> 
-> Correct, this is another issue that needs to be resolved.
+When a PCI device is removed, I don't think we touch any upstream
+devices.  The device is gone; there's no reason to change any bridge
+windows leading to it.
+
+When we rescan, we should try to assign resources to BARs of any new
+devices we find.  Theoretically that could involve configuring windows
+of upstream bridges, but I don't think we actually do that, because
+we'd have to be careful not to break any active devices, and I don't
+think we're smart enough for that.
+
+Bjorn
