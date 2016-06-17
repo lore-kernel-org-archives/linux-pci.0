@@ -1,43 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:57762 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932719AbcFQTwl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jun 2016 15:52:41 -0400
+Date: Fri, 17 Jun 2016 14:52:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	linux-xtensa@linux-xtensa.org
+Subject: Re: [PATCH v12.update2 02/15] PCI: Let pci_mmap_page_range() take
+ resource address
+Message-ID: <20160617195237.GA10416@localhost>
+References: <20160609222552.6938-1-yinghai@kernel.org>
+ <20160617021555.GA21125@localhost>
+ <CAE9FiQVMxuo16MArLXjT8oaSGMce1G=evaWqeOaW-WeT_ju6Mw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CADxRZqzd3uDAAGsU0Tsg7vzxEvdtCv+QQDp8UM=6nVNk2VqO=A@mail.gmail.com>
-References: <alpine.LRH.2.20.1606022203030.24438@math.ut.ee>
- <CADxRZqwuOnz8Cyedjiamyxz1nE80HxmoFANPmtZy-svr8wKfvg@mail.gmail.com>
- <alpine.LRH.2.20.1606131548260.25241@math.ut.ee> <CADxRZqzd3uDAAGsU0Tsg7vzxEvdtCv+QQDp8UM=6nVNk2VqO=A@mail.gmail.com>
-From: Anatoly Pugachev <matorola@gmail.com>
-Date: Wed, 15 Jun 2016 01:38:50 +0300
-Message-ID: <CADxRZqw4jG3kPz6wG5Yx5DoZV0h+Xak5j682c7stq0fNOiopZQ@mail.gmail.com>
-Subject: Re: 4.6-rc*: Kernel unaligned access at pci_bus_read_config_dword+0x64/0x80
-To: Meelis Roos <mroos@linux.ee>
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVMxuo16MArLXjT8oaSGMce1G=evaWqeOaW-WeT_ju6Mw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 14, 2016 at 4:02 PM, Anatoly Pugachev <matorola@gmail.com> wrote:
-> On Mon, Jun 13, 2016 at 3:49 PM, Meelis Roos <mroos@linux.ee> wrote:
->>> > Between 4.5.0 and 4.6.0-rc3, my Spar Enterprise T5120 has started
->>> > showing the following messages during bootup:
->> [...]
->>>
->>> got the same messages on my t5120 with kernel 4.6.1 :
->> [...]
->>> but 4.7.0-rc2+ (from git), does not have it, probably fixed.
->>
->> Nope, I still get them on 4.7-rc3:
->>
->> [ 4742.646120] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
->> [ 4742.646197] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
->> [ 4742.646265] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
->> [ 4742.646333] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
->> [ 4742.646401] Kernel unaligned access at TPC[6a5724] pci_bus_read_config_dword+0x64/0x80
->
->
-> Still don't see it with current git (4.7.0-rc3+) kernel on my T5120.
-> Probably difference with kernel config file. Can you please share your
-> kernel config file, so I can try it on my t5120 ?
+On Fri, Jun 17, 2016 at 12:25:49PM -0700, Yinghai Lu wrote:
+> On Thu, Jun 16, 2016 at 7:15 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Thu, Jun 09, 2016 at 03:25:52PM -0700, Yinghai Lu wrote:
+> >> In 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files"), try
+> >> to check exposed value with resource start/end in proc mmap path.
+> >>
+> >> |        start = vma->vm_pgoff;
+> >> |        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+> >> |        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+> >> |                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+> >> |        if (start >= pci_start && start < pci_start + size &&
+> >> |                        start + nr <= pci_start + size)
+> >>
+> >> That breaks sparc that exposed value is BAR value, and need to be offseted
+> >> to resource address.
+> >
+> > I'm not quite sure what you're saying here.  Are you saying that sparc
+> > is currently broken, and this patch fixes it?  If so, what exactly is
+> > broken?  Can you give a small example of an mmap that is currently
+> > broken?
+> >
+> >> Original pci_mmap_page_range() is taking PCI BAR value aka usr_address.
+> >>
+> >> Bjorn found out that it would be much simple to pass resource address
+> >> directly and avoid extra those __pci_mmap_make_offset.
+> >>
+> >> In this patch:
+> >> 1. in proc path: proc_bus_pci_mmap, try convert back to resource
+> >>    before calling pci_mmap_page_range
+> >> 2. in sysfs path: pci_mmap_resource will just offset with resource start.
+> >> 3. all pci_mmap_page_range will have vma->vm_pgoff with in resource
+> >>    range instead of BAR value.
+> >> 4. remove __pci_mmap_make_offset, as the checking is done
+> >>    in pci_mmap_fits().
+> >
+> > This is a pretty big patch.  It would help a lot to split it up.
+> 
+> Looks like they are tight together after change api. vm_pgoff meaning changes.
+> 
+> I could split item 4 to another patch, but compiler could complain or
+> even refuse to
+> go on if static functions are defined but not used.
 
-Got config, compared and it was indeed different kernel config files.
-Tracked down it , that enabling CONFIG_PCIEPORTBUS=y makes this
-messages appear on my t5120 as well.
+Yeah, I was afraid they might be too tightly coupled to split up.
+Still, every little bit helps.
+
+> > I think the comment about "re-enabling the 2 lines below" is pointless
+> > because doing that would break applications, which I don't think we'll
+> > do.
+> >
+> > I propose the microblaze, powerpc, and sparc patches below, which
+> > remove simplify pci_resource_to_user() and clean up this comment.
+> 
+> Agreed. Actually I have the change for sparc/PCI in patch 3
+>    sparc/PCI: Use correct offset for bus address to resource
+> according to previous review.
+
+Sure enough, I see it there now.  I think it's easier to review when
+split out, so I'll keep it separate, since it's not actually dependent
+on the rest of the changes in "sparc/PCI: Use correct offset for bus
+address to resource".
+
+> Will drop related change in sparc/PCI: Use correct offset for bus
+> address to resource
+> 
+> and respin the whole patchset today.
+
+I added your acks and pushed the result to pci/resource.  I'll also
+post these formally on the list so they're easier to find.
+
+Bjorn
