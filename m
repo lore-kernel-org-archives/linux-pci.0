@@ -1,83 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	Jay Cliburn <jcliburn@gmail.com>,
-	Chris Snook <chris.snook@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org
-Subject: [PATCH v3 6/6] alx: Use pci_(request|release)_mem_regions
-Date: Tue,  7 Jun 2016 09:44:06 +0200
-Message-Id: <996820d5a84063fa20d3d7d7cc1760f18eedf694.1465200425.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
-References: <cover.1465200424.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:58427 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933659AbcFQKcR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jun 2016 06:32:17 -0400
+In-Reply-To: <1463726502-14679-18-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: aik@ozlabs.ru, linux-pci@vger.kernel.org,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>, alistair@popple.id.au
+Subject: Re: [v10,17/18] powerpc/powernv: Functions to get/set PCI slot state
+Message-Id: <3rWGlZ2Qs5z9t0v@ozlabs.org>
+Date: Fri, 17 Jun 2016 20:32:10 +1000 (AEST)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-hand, use it in the ethernet drivers.
+On Fri, 2016-20-05 at 06:41:41 UTC, Gavin Shan wrote:
+> diff --git a/arch/powerpc/include/asm/opal-api.h b/arch/powerpc/include/asm/opal-api.h
+> index 9bb8ddf..2417c86 100644
+> --- a/arch/powerpc/include/asm/opal-api.h
+> +++ b/arch/powerpc/include/asm/opal-api.h
+> @@ -344,6 +348,18 @@ enum OpalPciResetState {
+>  	OPAL_ASSERT_RESET   = 1
+>  };
+>  
+> +enum OpalPciSlotPresentenceState {
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jay Cliburn <jcliburn@gmail.com>
-Cc: Chris Snook <chris.snook@gmail.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: intel-wired-lan@lists.osuosl.org
----
- drivers/net/ethernet/atheros/alx/main.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+In skiboot this is called "OpalPciSlotPresence".
 
-diff --git a/drivers/net/ethernet/atheros/alx/main.c b/drivers/net/ethernet/atheros/alx/main.c
-index 55b118e..d2363de 100644
---- a/drivers/net/ethernet/atheros/alx/main.c
-+++ b/drivers/net/ethernet/atheros/alx/main.c
-@@ -1238,7 +1238,7 @@ static int alx_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	struct alx_priv *alx;
- 	struct alx_hw *hw;
- 	bool phy_configured;
--	int bars, err;
-+	int err;
- 
- 	err = pci_enable_device_mem(pdev);
- 	if (err)
-@@ -1258,11 +1258,10 @@ static int alx_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		}
- 	}
- 
--	bars = pci_select_bars(pdev, IORESOURCE_MEM);
--	err = pci_request_selected_regions(pdev, bars, alx_drv_name);
-+	err = pci_request_mem_regions(pdev, alx_drv_name);
- 	if (err) {
- 		dev_err(&pdev->dev,
--			"pci_request_selected_regions failed(bars:%d)\n", bars);
-+			"pci_request_mem_regions failed\n");
- 		goto out_pci_disable;
- 	}
- 
-@@ -1388,7 +1387,7 @@ out_unmap:
- out_free_netdev:
- 	free_netdev(netdev);
- out_pci_release:
--	pci_release_selected_regions(pdev, bars);
-+	pci_release_mem_regions(pdev);
- out_pci_disable:
- 	pci_disable_device(pdev);
- 	return err;
-@@ -1407,8 +1406,7 @@ static void alx_remove(struct pci_dev *pdev)
- 
- 	unregister_netdev(alx->dev);
- 	iounmap(hw->hw_addr);
--	pci_release_selected_regions(pdev,
--				     pci_select_bars(pdev, IORESOURCE_MEM));
-+	pci_release_mem_regions(pdev);
- 
- 	pci_disable_pcie_error_reporting(pdev);
- 	pci_disable_device(pdev);
--- 
-1.8.5.6
+I've renamed it.
+
+> +	OPAL_PCI_SLOT_EMPTY	= 0,
+> +	OPAL_PCI_SLOT_PRESENT	= 1
+> +};
+> +
+> +enum OpalPciSlotPowerState {
+
+In skiboot this is called "OpalPciSlotPower".
+
+I've renamed it.
+
+> +	OPAL_PCI_SLOT_POWER_OFF	= 0,
+> +	OPAL_PCI_SLOT_POWER_ON	= 1,
+> +	OPAL_PCI_SLOT_OFFLINE	= 2,
+> +	OPAL_PCI_SLOT_ONLINE	= 3
+> +};
+> +
+>  enum OpalSlotLedType {
+>  	OPAL_SLOT_LED_TYPE_ID = 0,	/* IDENTIFY LED */
+>  	OPAL_SLOT_LED_TYPE_FAULT = 1,	/* FAULT LED */
+> @@ -378,6 +394,7 @@ enum opal_msg_type {
+>  	OPAL_MSG_DPO		= 5,
+>  	OPAL_MSG_PRD		= 6,
+>  	OPAL_MSG_OCC		= 7,
+> +	OPAL_MSG_PCI_HOTPLUG	= 8,
+
+I don't see this in skiboot?
+
+It also doesn't seem to be used, so I've dropped it.
+
+>  	OPAL_MSG_TYPE_MAX,
+>  };
+>  
+
+cheers
