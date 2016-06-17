@@ -1,56 +1,96 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V8 8/9] arm64, pci, acpi: Provide ACPI-specific
- prerequisites for PCI bus enumeration.
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-9-git-send-email-tn@semihalf.com>
- <20160602094555.GB13962@red-moon>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
- catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
- okaya@codeaurora.org, jchandra@broadcom.com,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com,
- Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
- cov@codeaurora.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <575001B8.9020107@semihalf.com>
-Date: Thu, 2 Jun 2016 11:51:52 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0059.outbound.protection.outlook.com ([104.47.2.59]:27876
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754906AbcFQDbB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jun 2016 23:31:01 -0400
+From: Po Liu <po.liu@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Minghuan Lian <minghuan.lian@nxp.com>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: RE: [PATCH v2 2/2] pci/aer: interrupt fixup in the quirk
+Date: Fri, 17 Jun 2016 03:30:56 +0000
+Message-ID: <VI1PR0401MB1709A9CA2424515B867940E392570@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+ <1465884747-1517-1-git-send-email-po.liu@nxp.com>
+ <1465884747-1517-2-git-send-email-po.liu@nxp.com>
+ <20160616135420.GA31343@localhost>
+In-Reply-To: <20160616135420.GA31343@localhost>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20160602094555.GB13962@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.06.2016 11:45, Lorenzo Pieralisi wrote:
-> On Mon, May 30, 2016 at 05:14:21PM +0200, Tomasz Nowicki wrote:
->> ACPI requires to run acpi_pci_{add|remove}_bus while new PCI bus is created.
->> This allows to do some ACPI-specific additional configuration, like
->> PCI hotplug slot enumeration. In order to fulfill these requirements,
->> we implement arch-specific pcibios_{add|remove}_bus calls
->> and call acpi_pci_{add|remove}_bus from there.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> ---
->>   arch/arm64/kernel/pci.c | 12 ++++++++++++
->>   1 file changed, 12 insertions(+)
->
-> Is there a reason why this has to be a standalone patch ?
-
-No there is no good reason behind this I will squash it with 9.
-
->
-> It is pretty much useless without patch 9 or I have stared at
-> this series for too long.
-
-Yes, it is useless w/o patch 9.
-
->
-> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->
-
-Thanks,
-Tomasz
+DQoNCj4gIC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ICBGcm9tOiBCam9ybiBIZWxnYWFz
+IFttYWlsdG86aGVsZ2Fhc0BrZXJuZWwub3JnXQ0KPiAgU2VudDogVGh1cnNkYXksIEp1bmUgMTYs
+IDIwMTYgOTo1NCBQTQ0KPiAgVG86IFBvIExpdQ0KPiAgQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5l
+bC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gIGxpbnV4LWtl
+cm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBCam9ybiBI
+ZWxnYWFzOw0KPiAgU2hhd24gR3VvOyBNYXJjIFp5bmdpZXI7IFJvYiBIZXJyaW5nOyBSb3kgWmFu
+ZzsgTWluZ2thaSBIdTsgU3R1YXJ0IFlvZGVyOw0KPiAgWWFuZy1MZW8gTGk7IEFybmQgQmVyZ21h
+bm47IE1pbmdodWFuIExpYW47IE11cmFsaSBLYXJpY2hlcmkNCj4gIFN1YmplY3Q6IFJlOiBbUEFU
+Q0ggdjIgMi8yXSBwY2kvYWVyOiBpbnRlcnJ1cHQgZml4dXAgaW4gdGhlIHF1aXJrDQo+ICANCj4g
+IE9uIFR1ZSwgSnVuIDE0LCAyMDE2IGF0IDAyOjEyOjI3UE0gKzA4MDAsIFBvIExpdSB3cm90ZToN
+Cj4gID4gT24gc29tZSBwbGF0Zm9ybXMsIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBvcnQgTVNJL01T
+SS1YL0lOVHggaW4gUkMgbW9kZS4NCj4gID4gV2hlbiBjaGlwIHN1cHBvcnQgdGhlIGFlciBpbnRl
+cnJ1cHQgd2l0aCBub25lIE1TSS9NU0ktWC9JTlR4IG1vZGUsDQo+ICA+IG1heWJlIHRoZXJlIGlz
+IGludGVycnVwdCBsaW5lIGZvciBhZXIgcG1lIGV0Yy4gU2VhcmNoIHRoZSBpbnRlcnJ1cHQNCj4g
+ID4gbnVtYmVyIGluIHRoZSBmZHQgZmlsZS4gVGhlbiBmaXh1cCB0aGUgZGV2LT5pcnEgd2l0aCBp
+dC4NCj4gID4NCj4gID4gU2lnbmVkLW9mZi1ieTogUG8gTGl1IDxwby5saXVAbnhwLmNvbT4NCj4g
+ID4gLS0tDQo+ICA+IGNoYW5nZXMgZm9yIFYyOg0KPiAgPiAJLSBNb3ZlIHRvIHRoZSBxdWlyayBm
+aWxlDQo+ICA+DQo+ICA+ICBkcml2ZXJzL3BjaS9xdWlya3MuYyB8IDIzICsrKysrKysrKysrKysr
+KysrKysrKysrDQo+ICA+ICAxIGZpbGUgY2hhbmdlZCwgMjMgaW5zZXJ0aW9ucygrKQ0KPiAgPg0K
+PiAgPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcXVpcmtzLmMgYi9kcml2ZXJzL3BjaS9xdWly
+a3MuYyBpbmRleA0KPiAgPiBlZTcyZWJlLi45MDlkNDc5IDEwMDY0NA0KPiAgPiAtLS0gYS9kcml2
+ZXJzL3BjaS9xdWlya3MuYw0KPiAgPiArKysgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiAgDQo+
+ICBJcyB0aGVyZSBhbnkgcG9zc2liaWxpdHkgb2YgdGhpcyBwYXJ0IGJlaW5nIHVzZWQgb24gZGlm
+ZmVyZW50IGFyY2hlcywgb3INCj4gIHdpbGwgaXQgb25seSBldmVyIGJlIG9uIGFybTY0IChvciB3
+aGF0ZXZlciBpdCBpcyk/ICBJZiB0aGUgbGF0dGVyLCBpdA0KPiAgY291bGQgZ28gc29tZXdoZXJl
+IGxpa2UgYXJjaC9hcm02NC9rZXJuZWwvcXVpcmtzLmMgKHdoaWNoIGRvZXNuJ3QgZXhpc3QNCj4g
+IHlldCkuDQoNCk5YUCBMYXllcnNjYXBlMSBpcyBiYXNlIG9uIHRoZSBhcm0gMzJiaXQgZGVzaWdu
+LiBBbHNvIG5lZWQgdGhlIGZpeHVwLg0KDQo+ICANCj4gID4gQEAgLTI1LDYgKzI1LDcgQEANCj4g
+ID4gICNpbmNsdWRlIDxsaW51eC9zY2hlZC5oPg0KPiAgPiAgI2luY2x1ZGUgPGxpbnV4L2t0aW1l
+Lmg+DQo+ICA+ICAjaW5jbHVkZSA8bGludXgvbW0uaD4NCj4gID4gKyNpbmNsdWRlIDxsaW51eC9v
+Zl9pcnEuaD4NCj4gID4gICNpbmNsdWRlIDxhc20vZG1hLmg+CS8qIGlzYV9kbWFfYnJpZGdlX2J1
+Z2d5ICovDQo+ICA+ICAjaW5jbHVkZSAicGNpLmgiDQo+ICA+DQo+ICA+IEBAIC00NDE5LDMgKzQ0
+MjAsMjUgQEAgc3RhdGljIHZvaWQgcXVpcmtfaW50ZWxfcWF0X3ZmX2NhcChzdHJ1Y3QNCj4gIHBj
+aV9kZXYgKnBkZXYpDQo+ICA+ICAJfQ0KPiAgPiAgfQ0KPiAgPiAgREVDTEFSRV9QQ0lfRklYVVBf
+RUFSTFkoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg0NDMsDQo+ICA+IHF1aXJrX2ludGVsX3FhdF92
+Zl9jYXApOw0KPiAgPiArDQo+ICA+ICsvKiBJZiByb290IHBvcnQgZG9lc24ndCBzdXBwb3J0IE1T
+SS9NU0ktWC9JTlR4IGluIFJDIG1vZGUsDQo+ICA+ICsgKiBidXQgdXNlIHN0YW5kYWxvbmUgaXJx
+LiBSZWFkIHRoZSBkZXZpY2UgdHJlZSBmb3IgdGhlIGFlcg0KPiAgPiArICogaW50ZXJydXB0IG51
+bWJlci4NCj4gID4gKyAqLw0KPiAgPiArc3RhdGljIHZvaWQgcXVpcmtfYWVyX2ludGVycnVwdChz
+dHJ1Y3QgcGNpX2RldiAqZGV2KSB7DQo+ICA+ICsJaW50IHJldDsNCj4gID4gKwlzdHJ1Y3QgZGV2
+aWNlX25vZGUgKm5wID0gTlVMTDsNCj4gID4gKw0KPiAgPiArCWlmIChkZXYtPmJ1cy0+ZGV2Lm9m
+X25vZGUpDQo+ICA+ICsJCW5wID0gZGV2LT5idXMtPmRldi5vZl9ub2RlOw0KPiAgPiArDQo+ICA+
+ICsJaWYgKElTX0VOQUJMRUQoQ09ORklHX09GX0lSUSkgJiYgbnApIHsNCj4gID4gKwkJcmV0ID0g
+b2ZfaXJxX2dldF9ieW5hbWUobnAsICJhZXIiKTsNCj4gID4gKwkJaWYgKHJldCA+IDApIHsNCj4g
+ID4gKwkJCWRldi0+bm9fbXNpID0gMTsNCj4gID4gKwkJCWRldi0+aXJxID0gcmV0Ow0KPiAgPiAr
+CQl9DQo+ICA+ICsJfQ0KPiAgDQo+ICBXaGF0IGRvZXMgdGhpcyBtZWFuIGZvciB0aGUgb3RoZXIg
+UENJZSBzZXJ2aWNlcywgZS5nLiwgUE1FPyAgSSBndWVzcw0KPiAgdGhpcyBtYWtlcyB0aGUgZXhp
+c3RpbmcgQUVSIGNvZGUgd29yayB1bmNoYW5nZWQuICBCdXQgSSB0aG91Z2h0IFBNRSBoYWQNCj4g
+IGEgc2ltaWxhciBzaXR1YXRpb24gYW5kIHdhcyBjb25uZWN0ZWQgdXAgdG8gYSBkaWZmZXJlbnQg
+aW50ZXJydXB0IHRoYW4NCj4gIEFFUiB3YXMuDQoNClllcywgUE1FIGlzIHNpbWlsYXIsIEhQIGlz
+IG5vdCBzdXBwb3J0LiBJIHRoaW5rIGJldHRlciB0byBkaXNhYmxlIHRoZSBQTUUgc2VydmljZSBp
+cnEgaW4gdGhlIHF1aXJrLg0KQnV0IHNlZW1zIGl0IGlzIG5vIHVzZSBiZWNhdXNlIHF1aXJrIGZp
+eHVwIGlzIG9ubHkgcnVubmluZyBpbiBpbml0IHBoYXNlIHRpbWUoZXhjZXB0IHN1c3BlbmQsIHJl
+c3VtZSkuDQoNCj4gIA0KPiAgPiArfQ0KPiAgPiArREVDTEFSRV9QQ0lfRklYVVBfRklOQUwoUENJ
+X1ZFTkRPUl9JRF9GUkVFU0NBTEUsIFBDSV9BTllfSUQsDQo+ICA+ICtxdWlya19hZXJfaW50ZXJy
+dXB0KTsNCj4gID4gLS0NCj4gID4gMi4xLjAuMjcuZzk2ZGIzMjQNCj4gID4NCj4gID4gLS0NCj4g
+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2Ny
+aWJlIGxpbnV4LXBjaSINCj4gID4gaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9t
+b0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8NCj4gID4gaW5mbyBhdCAgaHR0cDovL3Zn
+ZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
