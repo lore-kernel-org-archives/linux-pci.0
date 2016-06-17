@@ -1,44 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53786 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757621AbcFAIEe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Jun 2016 04:04:34 -0400
-Date: Wed, 1 Jun 2016 10:04:31 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	James Smart <james.smart@avagotech.com>,
-	Dick Kennedy <dick.kennedy@avagotech.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 3/5] scsi: Use pci_(request|release)_mem_regions
-Message-ID: <20160601080431.3sgbeapns2sh6zmh@c203.arch.suse.de>
-References: <cover.1464694724.git.jthumshirn@suse.de>
- <1123377cf09b08091957c7d1f58be1601dbfb50c.1464694724.git.jthumshirn@suse.de>
- <20160601075929.GC11923@infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 17 Jun 2016 18:04:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ashutosh Dixit <ashutosh.dixit@intel.com>
+Cc: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
+	"Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+	Doug Ledford <dledford@redhat.com>,
+	"Hefty, Sean" <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: hfi1 use of PCI internals
+Message-ID: <20160617230439.GB21200@localhost>
+References: <20160616162052.GA2144@localhost>
+ <tnm1toa71hsw1.fsf@phwtpriv05.ph.intel.com>
+ <20160616200817.GA17778@localhost>
+ <tnm1t4m8rh3ns.fsf@phwtpriv05.ph.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160601075929.GC11923@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <tnm1t4m8rh3ns.fsf@phwtpriv05.ph.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 01, 2016 at 12:59:29AM -0700, Christoph Hellwig wrote:
-> On Tue, May 31, 2016 at 02:05:11PM +0200, Johannes Thumshirn wrote:
-> > Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-> > hand, use it in the lpfc driver.
+On Fri, Jun 17, 2016 at 06:05:43PM -0400, Ashutosh Dixit wrote:
+> On Thu, Jun 16 2016 at 04:08:17 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > That's a good start, but leads to more questions.  For example, it
+> > doesn't answer the obvious question of why the driver needs to
+> > enable/disable ASPM from interrupt context.
 > 
-> This should read lpfc instead of scsi in the subject line.
+> For power saving reasons we keep ASPM L1 enabled, but implement a
+> heuristic to "quickly" disable ASPM L1 when we notice PCIe traffic (as
+> measured by the interrupt rate) starting up. If interrupt activity
+> ceases ASPM L1 is re-enabled.
 > 
-> Also the request side of the patch seems to be missing.
+> > Disabling ASPM should only require writing the device's Link Control
+> > register.  The PCI core could probably provide an interface to do that
+> > in interrupt context.
+> >
+> > Enabling ASPM is not latency-critical and could probably be done from
+> > a work queue outside interrupt context, although conceptually there
+> > shouldn't be much required here either, and possibly the PCI core
+> > interface could be improved.
+> 
+> That is true, to keep latencies low we need to disable ASPM from
+> interrupt context, but re-enabling ASPM is not latency critical.
 
-You're right. I'll be checking why the coccinelle spatch didn't catch it up.
+For endpoint devices, it should be theoretically possible to
+enable/disable ASPM very quickly, by touching only that device.  We
+don't do that today because pcie/aspm.c does all sorts of buffoonery
+and path walking.  I think that could be simplified, assuming we think
+this sort of intensive ASPM-management is desirable.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+> > It's possible the latency problem could be handled by some sort of
+> > quirk that overrides the acceptable latency.
+> 
+> Correct, this is another issue that needs to be resolved.
