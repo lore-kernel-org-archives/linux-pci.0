@@ -1,163 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42273 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751508AbcGAGx3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 02:53:29 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u616rNVj100463
-	for <linux-pci@vger.kernel.org>; Fri, 1 Jul 2016 02:53:24 -0400
-Received: from e23smtp02.au.ibm.com (e23smtp02.au.ibm.com [202.81.31.144])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23wbbbd5hr-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 01 Jul 2016 02:53:24 -0400
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Fri, 1 Jul 2016 16:53:19 +1000
-Subject: Re: [PATCH v3 4/7] PCI: Add a new option for resource_alignment to
- reassign alignment
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1467283993-3185-5-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160701022503.GA6739@gwshan>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Fri, 1 Jul 2016 14:53:16 +0800
+Received: from mail.kernel.org ([198.145.29.136]:43208 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751087AbcFQXA4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jun 2016 19:00:56 -0400
+Date: Fri, 17 Jun 2016 18:00:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH 2/2] vmd: use untracked irq handler
+Message-ID: <20160617230052.GA21200@localhost>
+References: <1466200821-29159-1-git-send-email-keith.busch@intel.com>
+ <1466200821-29159-2-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160701022503.GA6739@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <83859fc2-1c49-0f13-e91d-f0f5e3da7c5e@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466200821-29159-2-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
+On Fri, Jun 17, 2016 at 04:00:21PM -0600, Keith Busch wrote:
+> There is no way to know which device in a VMD tiggered an interrupt
 
-On 2016/7/1 10:25, Gavin Shan wrote:
+s/tiggered/triggered/
 
-> On Thu, Jun 30, 2016 at 06:53:10PM +0800, Yongji Xie wrote:
->> When using resource_alignment kernel parameter, the current
->> implement reassigns the alignment by changing resources' size
->> which can potentially break some drivers. For example, the driver
->> uses the size to locate some register whose length is related
->> to the size.
->>
->> This patch adds a new option "noresize" for the parameter to
->> solve this problem.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->> ---
->> Documentation/kernel-parameters.txt |    5 ++++-
->> drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
->> 2 files changed, 29 insertions(+), 11 deletions(-)
->>
->> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->> index 82b42c9..c4802f5 100644
->> --- a/Documentation/kernel-parameters.txt
->> +++ b/Documentation/kernel-parameters.txt
->> @@ -2997,13 +2997,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->> 				window. The default value is 64 megabytes.
->> 		resource_alignment=
->> 				Format:
->> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
->> +				[<order of align>@][<domain>:]<bus>:<slot>.<func>
->> +				[:noresize][; ...]
->> 				Specifies alignment and device to reassign
->> 				aligned memory resources.
->> 				If <order of align> is not specified,
->> 				PAGE_SIZE is used as alignment.
->> 				PCI-PCI bridge can be specified, if resource
->> 				windows need to be expanded.
->> +				noresize: Don't change the resources' sizes when
->> +				reassigning alignment.
->> 		ecrc=		Enable/disable PCIe ECRC (transaction layer
->> 				end-to-end CRC checking).
->> 				bios: Use BIOS/firmware settings. This is the
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 6241cfc..1d80a94 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4748,11 +4748,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
->> /**
->>   * pci_specified_resource_alignment - get resource alignment specified by user.
->>   * @dev: the PCI device to get
->> + * @resize: whether or not to change resources' size when reassigning alignment
->>   *
->>   * RETURNS: Resource alignment if it is specified.
->>   *          Zero if it is not specified.
->>   */
->> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->> +		bool *resize)
->> {
->> 	int seg, bus, slot, func, align_order, count;
->> 	resource_size_t align = 0;
->> @@ -4787,6 +4789,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->> 			}
->> 		}
->> 		p += count;
->> +		if (!strncmp(p, ":noresize", 9)) {
->> +			*resize = false;
->> +			p += 9;
->> +		} else
->> +			*resize = true;
->> 		if (seg == pci_domain_nr(dev->bus) &&
->> 			bus == dev->bus->number &&
->> 			slot == PCI_SLOT(dev->devfn) &&
->> @@ -4819,6 +4826,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->> {
->> 	int i;
->> 	struct resource *r;
->> +	bool resize = true;
->> 	resource_size_t align, size;
->>
->> 	/* We should never try to reassign VF's alignment */
->> @@ -4826,7 +4834,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->> 		return;
->>
->> 	/* check if specified PCI is target device to reassign */
->> -	align = pci_specified_resource_alignment(dev);
->> +	align = pci_specified_resource_alignment(dev, &resize);
->> 	if (!align)
->> 		return;
->>
->> @@ -4848,15 +4856,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->> 			continue;
->> 		}
->> 		size = resource_size(r);
->> -		if (size < align) {
->> -			size = align;
->> -			dev_info(&dev->dev,
->> -				"Rounding up size of resource #%d to %#llx.\n",
->> -				i, (unsigned long long)size);
->> +		if (resize) {
->> +			if (size < align) {
->> +				size = align;
->> +				dev_info(&dev->dev,
->> +					"Rounding up size of resource #%d to %#llx.\n",
->> +					i, (unsigned long long)size);
->> +			}
->> +			r->flags |= IORESOURCE_UNSET;
->> +			r->end = size - 1;
->> +			r->start = 0;
->> +		} else {
->> +			r->flags &= ~IORESOURCE_SIZEALIGN;
->> +			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-> 			f->flags |= (IORESOURCE_STARTALIGN | IORESOURCE_UNSET);
->
-> Yongji, one quick question - when IORESOURCE_UNSET is cleared? If it's not
-> cleared, is there any unexpected side effects? Thanks.
+> without invoking every registered driver's actions. This uses the
+> untracked irq handler so that a less used device does not trigger
+> spurious interrupt.
+> 
+> We have been previously recommending users enable "noirqdebug", but do
+> not want to force a system setting just to keep this domain functional.
 
-PCI core will clear this flag in pci_assign_resource() when the BAR
-has been assigned properly. If it's not cleared, the driver will fail in
-binding the device because pci_enable_resources() will check this flag.
+I applaud that goal.
 
-Thanks,
-Yongji
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
+Since this depends on the previous patch and I'm not qualified to review
+that one, I'll ack this and somebody else can merge both or none:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  arch/x86/pci/vmd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index 7792aba..613cac7 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -195,7 +195,7 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
+>  	vmdirq->virq = virq;
+>  
+>  	irq_domain_set_info(domain, virq, vmdirq->irq->vmd_vector, info->chip,
+> -			    vmdirq, handle_simple_irq, vmd, NULL);
+> +			    vmdirq, handle_untracked_irq, vmd, NULL);
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.7.2
+> 
