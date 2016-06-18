@@ -1,53 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 18 Jun 2016 23:49:08 -0700 (PDT)
-Message-Id: <20160618.234908.1671877676732375612.davem@davemloft.net>
-To: matorola@gmail.com
-Cc: mroos@linux.ee, sparclinux@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 4.6-rc*: Kernel unaligned access at
- pci_bus_read_config_dword+0x64/0x80
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20160618.210421.1400395696678491125.davem@davemloft.net>
-References: <CADxRZqw4jG3kPz6wG5Yx5DoZV0h+Xak5j682c7stq0fNOiopZQ@mail.gmail.com>
-	<CADxRZqw6Q-jLCnZzzq=akP5vqd3Y8RCF34pWQGNSuL2VscrbJg@mail.gmail.com>
-	<20160618.210421.1400395696678491125.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:26004 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753594AbcFRCZm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2016 22:25:42 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v13 15/16] PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
+Date: Fri, 17 Jun 2016 19:25:00 -0700
+Message-Id: <20160618022501.15648-16-yinghai@kernel.org>
+In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
+References: <20160618022501.15648-1-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Sat, 18 Jun 2016 21:04:21 -0700 (PDT)
+If host bridge does not have mmio64 above 4G, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-> From: Anatoly Pugachev <matorola@gmail.com>
-> Date: Thu, 16 Jun 2016 13:02:07 +0300
-> 
->> bisected to git commit 63e3027
-> 
-> That's a merge commit that adds 100 different commits, and this happened
-> way back in March.
-> 
-> Please find the exact dword access in:
-> 
-> 	drivers/pci/pcie/portdrv_{core,pci,bus}.c
-> 
-> that triggers this unaligned access so we can debug this further.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ drivers/pci/setup-bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Meanwhile I figured it out, this should fix the bug:
-
-diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
-index dfbab61..1fa3a32 100644
---- a/drivers/pci/vc.c
-+++ b/drivers/pci/vc.c
-@@ -221,9 +221,9 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 		else
- 			pci_write_config_word(dev, pos + PCI_VC_PORT_CTRL,
- 					      *(u16 *)buf);
--		buf += 2;
-+		buf += 4;
- 	}
--	len += 2;
-+	len += 4;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ffb1941..9404032 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -741,7 +741,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
+ {
+ 	if (pci_is_root_bus(bus))
+-		return true;
++		return to_pci_host_bridge(bus->bridge)->has_mem64;
  
- 	/*
- 	 * If we have any Low Priority VCs and a VC Arbitration Table Offset
+ 	if (bus->self) {
+ 		int i;
+-- 
+2.8.3
+
