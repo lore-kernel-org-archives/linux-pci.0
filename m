@@ -1,325 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38331 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932459AbcFNT7q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:46 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 11/13] blk-mq: allow the driver to pass in an affinity mask
-Date: Tue, 14 Jun 2016 21:59:04 +0200
-Message-Id: <1465934346-20648-12-git-send-email-hch@lst.de>
-In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v13 00/16] PCI: Fixup for 64bit resource with sparc
+Date: Fri, 17 Jun 2016 19:24:45 -0700
+Message-Id: <20160618022501.15648-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow drivers to pass in the affinity mask from the generic interrupt
-layer, and spread queues based on that.  If the driver doesn't pass in
-a mask we will create it using the genirq helper.  As this helper was
-modelled after the blk-mq algorithm there should be no change in
-behavior.
+Hi Bjorn,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/Makefile         |   2 +-
- block/blk-mq-cpumap.c  | 120 -------------------------------------------------
- block/blk-mq.c         |  72 ++++++++++++++++++++++++++---
- block/blk-mq.h         |   8 ----
- include/linux/blk-mq.h |   1 +
- 5 files changed, 69 insertions(+), 134 deletions(-)
- delete mode 100644 block/blk-mq-cpumap.c
+After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
+to 64-bit resources), we have several reports on resource allocation
+failure, and we try to fix the problem with resource clip, and find
+more problems.
 
-diff --git a/block/Makefile b/block/Makefile
-index 9eda232..aeb318d 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -6,7 +6,7 @@ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-tag.o blk-sysfs.o \
- 			blk-flush.o blk-settings.o blk-ioc.o blk-map.o \
- 			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
- 			blk-lib.o blk-mq.o blk-mq-tag.o \
--			blk-mq-sysfs.o blk-mq-cpu.o blk-mq-cpumap.o ioctl.o \
-+			blk-mq-sysfs.o blk-mq-cpu.o ioctl.o \
- 			genhd.o scsi_ioctl.o partition-generic.o ioprio.o \
- 			badblocks.o partitions/
- 
-diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-deleted file mode 100644
-index d0634bc..0000000
---- a/block/blk-mq-cpumap.c
-+++ /dev/null
-@@ -1,120 +0,0 @@
--/*
-- * CPU <-> hardware queue mapping helpers
-- *
-- * Copyright (C) 2013-2014 Jens Axboe
-- */
--#include <linux/kernel.h>
--#include <linux/threads.h>
--#include <linux/module.h>
--#include <linux/mm.h>
--#include <linux/smp.h>
--#include <linux/cpu.h>
--
--#include <linux/blk-mq.h>
--#include "blk.h"
--#include "blk-mq.h"
--
--static int cpu_to_queue_index(unsigned int nr_cpus, unsigned int nr_queues,
--			      const int cpu)
--{
--	return cpu * nr_queues / nr_cpus;
--}
--
--static int get_first_sibling(unsigned int cpu)
--{
--	unsigned int ret;
--
--	ret = cpumask_first(topology_sibling_cpumask(cpu));
--	if (ret < nr_cpu_ids)
--		return ret;
--
--	return cpu;
--}
--
--int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues,
--			    const struct cpumask *online_mask)
--{
--	unsigned int i, nr_cpus, nr_uniq_cpus, queue, first_sibling;
--	cpumask_var_t cpus;
--
--	if (!alloc_cpumask_var(&cpus, GFP_ATOMIC))
--		return 1;
--
--	cpumask_clear(cpus);
--	nr_cpus = nr_uniq_cpus = 0;
--	for_each_cpu(i, online_mask) {
--		nr_cpus++;
--		first_sibling = get_first_sibling(i);
--		if (!cpumask_test_cpu(first_sibling, cpus))
--			nr_uniq_cpus++;
--		cpumask_set_cpu(i, cpus);
--	}
--
--	queue = 0;
--	for_each_possible_cpu(i) {
--		if (!cpumask_test_cpu(i, online_mask)) {
--			map[i] = 0;
--			continue;
--		}
--
--		/*
--		 * Easy case - we have equal or more hardware queues. Or
--		 * there are no thread siblings to take into account. Do
--		 * 1:1 if enough, or sequential mapping if less.
--		 */
--		if (nr_queues >= nr_cpus || nr_cpus == nr_uniq_cpus) {
--			map[i] = cpu_to_queue_index(nr_cpus, nr_queues, queue);
--			queue++;
--			continue;
--		}
--
--		/*
--		 * Less then nr_cpus queues, and we have some number of
--		 * threads per cores. Map sibling threads to the same
--		 * queue.
--		 */
--		first_sibling = get_first_sibling(i);
--		if (first_sibling == i) {
--			map[i] = cpu_to_queue_index(nr_uniq_cpus, nr_queues,
--							queue);
--			queue++;
--		} else
--			map[i] = map[first_sibling];
--	}
--
--	free_cpumask_var(cpus);
--	return 0;
--}
--
--unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set)
--{
--	unsigned int *map;
--
--	/* If cpus are offline, map them to first hctx */
--	map = kzalloc_node(sizeof(*map) * nr_cpu_ids, GFP_KERNEL,
--				set->numa_node);
--	if (!map)
--		return NULL;
--
--	if (!blk_mq_update_queue_map(map, set->nr_hw_queues, cpu_online_mask))
--		return map;
--
--	kfree(map);
--	return NULL;
--}
--
--/*
-- * We have no quick way of doing reverse lookups. This is only used at
-- * queue init time, so runtime isn't important.
-- */
--int blk_mq_hw_queue_to_node(unsigned int *mq_map, unsigned int index)
--{
--	int i;
--
--	for_each_possible_cpu(i) {
--		if (index == mq_map[i])
--			return local_memory_node(cpu_to_node(i));
--	}
--
--	return NUMA_NO_NODE;
--}
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 622cb22..6027a49 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -22,6 +22,7 @@
- #include <linux/sched/sysctl.h>
- #include <linux/delay.h>
- #include <linux/crash_dump.h>
-+#include <linux/interrupt.h>
- 
- #include <trace/events/block.h>
- 
-@@ -1954,6 +1955,22 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
- }
- EXPORT_SYMBOL(blk_mq_init_queue);
- 
-+/*
-+ * We have no quick way of doing reverse lookups. This is only used at
-+ * queue init time, so runtime isn't important.
-+ */
-+static int blk_mq_hw_queue_to_node(unsigned int *mq_map, unsigned int index)
-+{
-+	int i;
-+
-+	for_each_possible_cpu(i) {
-+		if (index == mq_map[i])
-+			return local_memory_node(cpu_to_node(i));
-+	}
-+
-+	return NUMA_NO_NODE;
-+}
-+
- static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,
- 						struct request_queue *q)
- {
-@@ -2253,6 +2270,30 @@ struct cpumask *blk_mq_tags_cpumask(struct blk_mq_tags *tags)
- }
- EXPORT_SYMBOL_GPL(blk_mq_tags_cpumask);
- 
-+static int blk_mq_create_mq_map(struct blk_mq_tag_set *set,
-+		const struct cpumask *affinity_mask)
-+{
-+	int queue = -1, cpu = 0;
-+
-+	set->mq_map = kzalloc_node(sizeof(*set->mq_map) * nr_cpu_ids,
-+			GFP_KERNEL, set->numa_node);
-+	if (!set->mq_map)
-+		return -ENOMEM;
-+
-+	if (!affinity_mask)
-+		return 0;	/* map all cpus to queue 0 */
-+
-+	/* If cpus are offline, map them to first hctx */
-+	for_each_online_cpu(cpu) {
-+		if (cpumask_test_cpu(cpu, affinity_mask))
-+			queue++;
-+		if (queue > 0)
-+			set->mq_map[cpu] = queue;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Alloc a tag set to be associated with one or more request queues.
-  * May fail with EINVAL for various error conditions. May adjust the
-@@ -2261,6 +2302,8 @@ EXPORT_SYMBOL_GPL(blk_mq_tags_cpumask);
-  */
- int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
- {
-+	int ret;
-+
- 	BUILD_BUG_ON(BLK_MQ_MAX_DEPTH > 1 << BLK_MQ_UNIQUE_TAG_BITS);
- 
- 	if (!set->nr_hw_queues)
-@@ -2299,11 +2342,30 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
- 	if (!set->tags)
- 		return -ENOMEM;
- 
--	set->mq_map = blk_mq_make_queue_map(set);
--	if (!set->mq_map)
--		goto out_free_tags;
-+	/*
-+	 * Use the passed in affinity mask if the driver provided one.
-+	 */
-+	if (set->affinity_mask) {
-+		ret = blk_mq_create_mq_map(set, set->affinity_mask);
-+		if (!set->mq_map)
-+			goto out_free_tags;
-+	} else {
-+		struct cpumask *affinity_mask;
- 
--	if (blk_mq_alloc_rq_maps(set))
-+		ret = irq_create_affinity_mask(&affinity_mask,
-+					       &set->nr_hw_queues);
-+		if (ret)
-+			goto out_free_tags;
-+
-+		ret = blk_mq_create_mq_map(set, affinity_mask);
-+		kfree(affinity_mask);
-+
-+		if (!set->mq_map)
-+			goto out_free_tags;
-+	}
-+
-+	ret = blk_mq_alloc_rq_maps(set);
-+	if (ret)
- 		goto out_free_mq_map;
- 
- 	mutex_init(&set->tag_list_lock);
-@@ -2317,7 +2379,7 @@ out_free_mq_map:
- out_free_tags:
- 	kfree(set->tags);
- 	set->tags = NULL;
--	return -ENOMEM;
-+	return ret;
- }
- EXPORT_SYMBOL(blk_mq_alloc_tag_set);
- 
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 9087b11..fe7e21f 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -45,14 +45,6 @@ void blk_mq_enable_hotplug(void);
- void blk_mq_disable_hotplug(void);
- 
- /*
-- * CPU -> queue mappings
-- */
--extern unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set);
--extern int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues,
--				   const struct cpumask *online_mask);
--extern int blk_mq_hw_queue_to_node(unsigned int *map, unsigned int);
--
--/*
-  * sysfs helpers
-  */
- extern int blk_mq_sysfs_register(struct request_queue *q);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 0a3b138..404cc86 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -75,6 +75,7 @@ struct blk_mq_tag_set {
- 	unsigned int		timeout;
- 	unsigned int		flags;		/* BLK_MQ_F_* */
- 	void			*driver_data;
-+	struct cpumask		*affinity_mask;
- 
- 	struct blk_mq_tags	**tags;
- 
+One is from sparc that have problem with clip as we don't parse
+mem64 for it.
+
+This patchset try to fix the problem for sparc.
+
+patch 1-3: try to fix the pci mmap for proc path for sparc, that will
+make fix for sparc 64bit resource offset handling much simple.
+
+patch 4-11: parse MEM64 for sparc and other system with OF.
+So device 64bit resource could find their parent resource.
+
+patch 12-15: MMIO64 handling enhancement
+        treat non-pref mmio64 if parent bridges are all pcie.
+
+patch 16: restore old pref allocation logic if hostbridge does not support mmio64.
+
+Khalid Aziz tested on some sparc platforms that have different offset to
+mem space start or support 64bit mmio.
+
+-v13: update patchset with pci/resource that have pci_resource_to_user
+      changes. date 2016-06-17
+
+Hope we can get them into v4.8.
+
+Thanks
+
+Yinghai
+
+Yinghai Lu (16):
+  PCI: Let pci_mmap_page_range() take resource address
+  PCI: Remove __pci_mmap_make_offset()
+  PCI: Check resource alignment for /sys pci_mmap_resource path
+  sparc/PCI: Use correct offset for bus address to resource
+  PCI: Add pci_find_bus_resource()
+  sparc/PCI: Reserve legacy mmio after PCI mmio
+  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  sparc/PCI: Keep resource idx order with bridge register number
+  powerpc/PCI: Keep resource idx order with bridge register number
+  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+  PCI: Check pref compatible bit for mem64 resource of PCIe device
+  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+  PCI: Add has_mem64 for struct host_bridge
+  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
+  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+
+ arch/microblaze/pci/pci-common.c  |  74 ++-------------------
+ arch/powerpc/kernel/pci-common.c  |  74 ++-------------------
+ arch/powerpc/kernel/pci_of_scan.c |  12 +++-
+ arch/sparc/kernel/of_device_32.c  |   5 +-
+ arch/sparc/kernel/of_device_64.c  |   5 +-
+ arch/sparc/kernel/pci.c           | 132 ++++----------------------------------
+ arch/sparc/kernel/pci_common.c    |  91 +++++++++++++++-----------
+ arch/sparc/kernel/pci_impl.h      |   5 ++
+ arch/xtensa/kernel/pci.c          |  75 +++-------------------
+ drivers/of/address.c              |   4 +-
+ drivers/pci/bus.c                 |   4 +-
+ drivers/pci/pci-sysfs.c           |  33 +++++++---
+ drivers/pci/pci.c                 |  31 +++++----
+ drivers/pci/pci.h                 |   4 +-
+ drivers/pci/probe.c               |  40 ++++++++++++
+ drivers/pci/proc.c                |  60 ++++++++++++++---
+ drivers/pci/setup-bus.c           |  65 ++++++++++++++++---
+ drivers/pci/setup-res.c           |  13 +++-
+ include/linux/pci.h               |   4 ++
+ 19 files changed, 325 insertions(+), 406 deletions(-)
+
 -- 
-2.1.4
-
+2.8.3
