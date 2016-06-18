@@ -1,102 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:54482 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbcFUSq6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2016 14:46:58 -0400
-From: Stephen Warren <swarren@wwwdotorg.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Stephen Warren <swarren@nvidia.com>
-Subject: [PATCH] pci: tegra: correctly program PADS_REFCLK registers
-Date: Tue, 21 Jun 2016 12:46:40 -0600
-Message-Id: <20160621184640.19885-1-swarren@wwwdotorg.org>
+Received: from mail.kernel.org ([198.145.29.136]:56570 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751676AbcFRSA7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 18 Jun 2016 14:00:59 -0400
+Subject: [PATCH] PCI: Document connection between pci_power_t and hardware
+ PM capability
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>
+Date: Sat, 18 Jun 2016 13:00:56 -0500
+Message-ID: <20160618180056.7267.67911.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Warren <swarren@nvidia.com>
+The dev.pme_support field, pci_pm_init(), and pci_pme_capable() depend on
+the fact that the pci_power_t values (PCI_D0, PCI_D1, etc.) match the
+definition of the PME_Support field of the Power Management Capabilities
+register in the Power Management capability (see PCI Bus Power Management
+spec r1.2, sec 3.2.3).
 
-The value that should be programmed into the PADS_REFCLK register varies
-per SoC. Fix the Tegra PCIe driver to program the correct values. Future
-SoCs will require different values in cfg0/1, so the two values are stored
-separately in the per-SoC data structures.
+Add a note to this effect at the pci_power_t typedef.
 
-For reference, the values are all documented in NV bug 1771116 comment 20.
-Rhe ASIC team has validated all these values, except for the Tegra20 value
-which is simply left unchanged in this patch.
-
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-tegra.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
+ include/linux/pci.h |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index c388468c202a..74887fedc3d4 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -228,15 +228,6 @@
- #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
- #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8597b42..85cede3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -101,6 +101,10 @@ enum {
+ 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
+ };
  
--/* Default value provided by HW engineering is 0xfa5c */
--#define PADS_REFCLK_CFG_VALUE \
--	( \
--		(0x17 << PADS_REFCLK_CFG_TERM_SHIFT)   | \
--		(0    << PADS_REFCLK_CFG_E_TERM_SHIFT) | \
--		(0xa  << PADS_REFCLK_CFG_PREDI_SHIFT)  | \
--		(0xf  << PADS_REFCLK_CFG_DRVI_SHIFT)     \
--	)
--
- struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -252,6 +243,8 @@ struct tegra_pcie_soc_data {
- 	unsigned int msi_base_shift;
- 	u32 pads_pll_ctl;
- 	u32 tx_ref_sel;
-+	u32 pads_refclk_cfg0;
-+	u32 pads_refclk_cfg1;
- 	bool has_pex_clkreq_en;
- 	bool has_pex_bias_ctrl;
- 	bool has_intr_prsnt_sense;
-@@ -839,10 +832,9 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- 	pads_writel(pcie, value, soc->pads_pll_ctl);
++/*
++ * pci_power_t values must match the bits in the PME_Support field of the
++ * Power Management Capabilities register in the Power Management capability.
++ */
+ typedef int __bitwise pci_power_t;
  
- 	/* Configure the reference clock driver */
--	value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
--	pads_writel(pcie, value, PADS_REFCLK_CFG0);
-+	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
- 	if (soc->num_ports > 2)
--		pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
-+		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
- 
- 	/* wait for the PLL to lock */
- 	err = tegra_pcie_pll_wait(pcie, 500);
-@@ -2078,6 +2070,7 @@ static const struct tegra_pcie_soc_data tegra20_pcie_data = {
- 	.msi_base_shift = 0,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
-+	.pads_refclk_cfg0 = 0xfa5cfa5c,
- 	.has_pex_clkreq_en = false,
- 	.has_pex_bias_ctrl = false,
- 	.has_intr_prsnt_sense = false,
-@@ -2090,6 +2083,8 @@ static const struct tegra_pcie_soc_data tegra30_pcie_data = {
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-+	.pads_refclk_cfg0 = 0xfa5cfa5c,
-+	.pads_refclk_cfg1 = 0xfa5cfa5c,
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
-@@ -2102,6 +2097,7 @@ static const struct tegra_pcie_soc_data tegra124_pcie_data = {
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
-+	.pads_refclk_cfg0 = 0x44ac44ac,
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
--- 
-2.9.0
+ #define PCI_D0		((pci_power_t __force) 0)
 
