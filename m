@@ -1,57 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38122 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932276AbcFNT7k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:40 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 09/13] blk-mq: don't redistribute hardware queues on a CPU hotplug event
-Date: Tue, 14 Jun 2016 21:59:02 +0200
-Message-Id: <1465934346-20648-10-git-send-email-hch@lst.de>
-In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
+Received: from mail.kernel.org ([198.145.29.136]:57242 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751458AbcFRSPu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 18 Jun 2016 14:15:50 -0400
+Date: Sat, 18 Jun 2016 13:15:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Yong, Jonathan" <jonathan.yong@intel.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH v5] PCI: PTM preliminary implementation
+Message-ID: <20160618181546.GC20504@localhost>
+References: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com>
+ <1462956446-27361-2-git-send-email-jonathan.yong@intel.com>
+ <20160613185648.GA6901@localhost>
+ <575F5EAC.2030904@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <575F5EAC.2030904@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently blk-mq will totally remap hardware context when a CPU hotplug
-even happened, which causes major havoc for drivers, as they are never
-told about this remapping.  E.g. any carefully sorted out CPU affinity
-will just be completely messed up.
+On Tue, Jun 14, 2016 at 09:32:28AM +0800, Yong, Jonathan wrote:
+> On 06/14/2016 02:56, Bjorn Helgaas wrote:
+> >I'm also a little confused about how Root Complex Integrated Endpoints
+> >are supposed to use PTM, since they don't have an upstream bridge.
+> >Maybe it has to do with an RCRB (Root Complex Register Block, spec
+> >r3.1, sec 7.2.3)?  I don't think Linux really has any support for that
+> >(yet).
+> 
+> The spec (7.32.3 PTM Control Register) says:
+> 
+> For Root Complex Integrated Endpoints, system software must set this
+> field to the value reported in the Local Clock Granularity field by
+> the associated PTM Time Source.
+> 
+> I'm not familiar with RC integrated endpoints either. I'm guessing
+> whatever device 0, function 0 on the "bus"? Just copy the
+> granularity value over?
 
-The rebuild also doesn't really help for the common case of cpu
-hotplug, which is soft onlining / offlining of cpus - in this case we
-should just leave the queue and irq mapping as is.  If it actually
-worked it would have helped in the case of physical cpu hotplug,
-although for that we'd need a way to actually notify the driver.
-Note that drivers may already be able to accommodate such a topology
-change on their own, e.g. using the reset_controller sysfs file in NVMe
-will cause the driver to get things right for this case.
+I don't know what the answer is, but I don't think device 0, function
+0 is it.  There's no reason to expect that to be related to an
+integrated endpoint.
 
-With the rebuild removed we will simplify retain the queue mapping for
-a soft offlined CPU that will work when it comes back online, and will
-map any newly onlined CPU to queue NULL until the driver initiates
-a rebuild of the queue map.
+I suspect it has to do with the RCRB, but I haven't had a chance to
+work through that yet.  For now, I just made it use zero (unknown)
+for the effective granularity of integrated endpoints.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-mq.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index bc7166d..f972d32 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2114,8 +2114,6 @@ static void blk_mq_queue_reinit(struct request_queue *q,
- 
- 	blk_mq_sysfs_unregister(q);
- 
--	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues, online_mask);
--
- 	/*
- 	 * redo blk_mq_init_cpu_queues and blk_mq_init_hw_queues. FIXME: maybe
- 	 * we should change hctx numa_node according to new topology (this
--- 
-2.1.4
-
+Bjorn
