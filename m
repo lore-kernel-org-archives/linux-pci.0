@@ -1,74 +1,263 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37466 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751129AbcFQVJ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jun 2016 17:09:29 -0400
-Date: Fri, 17 Jun 2016 16:09:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
- system sleep
-Message-ID: <20160617210924.GA12254@localhost>
-References: <cover.1463134231.git.lukas@wunner.de>
- <20ccb6cc38f872c3d56b44cc2b9776a4a39c7dc5.1463134232.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20ccb6cc38f872c3d56b44cc2b9776a4a39c7dc5.1463134232.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v13 12/16] PCI: Check pref compatible bit for mem64 resource of PCIe device
+Date: Fri, 17 Jun 2016 19:24:57 -0700
+Message-Id: <20160618022501.15648-13-yinghai@kernel.org>
+In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
+References: <20160618022501.15648-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> There are devices wich are not power-managed by the platform, yet can be
+We still get "no compatible bridge window" warning on sparc T5-8
+after we add support for 64bit resource parsing for root bus.
 
-s/wich/which/
+ PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+ PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
+ PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
+ pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
 
-> runtime suspended to D3cold with some other mechanism.  When putting the
-> system to sleep, we currently handle such devices improperly by trying
-> to transition them from D3cold to D3hot (the default power state defined
-> at the beginning of pci_target_state()).  Avoid that.
-> 
-> An example for devices affected by this are Thunderbolt controllers
-> built into Macs which can be put into D3cold with nonstandard ACPI
-> methods.
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+All the bridges 64-bit resource have pref bit, but the device resource does not
+have pref set, then we can not find parent for the device resource,
+as we can not put non-pref mmio under pref mmio.
 
-This needs an ack from Rafael.
+According to pcie spec errta
+https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
+page 13, in some case it is ok to mark some as pref.
 
-Naive question: why is the default target_state PCI_D3hot?
+Mark if the entire path from the host to the adapter is over PCI Express.
+Set pref compatible bit for claim/sizing/assign for 64bit mem resource
+on that pcie device.
 
-> ---
->  drivers/pci/pci.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 791dfe7..6af9911 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
->  			      && !(dev->pme_support & (1 << target_state)))
->  				target_state--;
->  		}
-> +	} else if (dev->current_state == PCI_D3cold) {
-> +		target_state = PCI_D3cold;
->  	}
+-v2: set pref for mmio 64 when whole path is PCI Express, according to David Miller.
+-v3: don't set pref directly, change to UNDER_PREF, and set PREF before
+     sizing and assign resource, and cleart PREF afterwards. requested by BenH.
+-v4: use on_all_pcie_path device flag instead.
+-v6: update after pci_find_bus_resource() change
 
-This only covers the case of !device_may_wakeup().  So I guess
-device_may_wakeup() is false for these Thunderbolt controllers.  Is
-there a reason you don't want to do this check for devices that may
-wakeup?
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Tested-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: sparclinux@vger.kernel.org
+---
+ arch/sparc/kernel/pci_common.c |  2 +-
+ drivers/pci/pci.c              |  8 +++++---
+ drivers/pci/pci.h              |  2 ++
+ drivers/pci/probe.c            | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/setup-bus.c        | 23 +++++++++++++++++++----
+ drivers/pci/setup-res.c        |  4 ++++
+ include/linux/pci.h            |  3 ++-
+ 7 files changed, 66 insertions(+), 9 deletions(-)
 
-Sorry, more naive questions.  I don't know anything about power
-management, and it all looks like black magic to me.
-
->  	return target_state;
-> -- 
-> 2.8.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 1ebc7ff..6f206a1 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -343,7 +343,7 @@ static void pci_register_region(struct pci_bus *bus, const char *name,
+ 	region.start = rstart;
+ 	region.end = rstart + size - 1UL;
+ 	pcibios_bus_to_resource(bus, res, &region);
+-	bus_res = pci_find_bus_resource(bus, res);
++	bus_res = pci_find_bus_resource(bus, res, res->flags);
+ 	if (!bus_res) {
+ 		kfree(res);
+ 		return;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 81c6cf9..f4ad1e0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -415,7 +415,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
+ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+ 
+ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
+-					struct resource *res)
++					struct resource *res, int flags)
+ {
+ 	struct resource *r;
+ 	int i;
+@@ -430,7 +430,7 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
+ 			 * not, the allocator made a mistake.
+ 			 */
+ 			if (r->flags & IORESOURCE_PREFETCH &&
+-			    !(res->flags & IORESOURCE_PREFETCH))
++			    !(flags & IORESOURCE_PREFETCH))
+ 				return NULL;
+ 
+ 			/*
+@@ -458,7 +458,9 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res)
+ {
+-	return pci_find_bus_resource(dev->bus, res);
++	int flags = pci_resource_pref_compatible(dev, res);
++
++	return pci_find_bus_resource(dev->bus, res, flags);
+ }
+ EXPORT_SYMBOL(pci_find_parent_resource);
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 7d339c3..4508a1f 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -336,4 +336,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8e3ef72..5d11dec 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1732,6 +1732,36 @@ static void pci_dma_configure(struct pci_dev *dev)
+ 	pci_put_host_bridge_device(bridge);
+ }
+ 
++static bool pci_up_path_over_pcie(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self && !pci_is_pcie(bus->self))
++		return false;
++
++	return pci_up_path_over_pcie(bus->parent);
++}
++
++/*
++ * According to
++ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
++ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
++ * on some cases.
++ * Let's mark if entire path from the host to the adapter is over PCI
++ * Express. later will use that compute pref compaitable bit.
++ */
++static void pci_set_on_all_pcie_path(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	if (!pci_up_path_over_pcie(dev->bus))
++		return;
++
++	dev->on_all_pcie_path = 1;
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1762,6 +1792,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	/* Initialize various capabilities */
+ 	pci_init_capabilities(dev);
+ 
++	/* After pcie_cap is assigned */
++	pci_set_on_all_pcie_path(dev);
++
+ 	/*
+ 	 * Add the device to our list of discovered devices
+ 	 * and the bus list for fixup functions, etc.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..b3b1565 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -738,6 +738,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res)
++{
++	if (res->flags & IORESOURCE_PREFETCH)
++		return res->flags;
++
++	if ((res->flags & IORESOURCE_MEM) &&
++	    (res->flags & IORESOURCE_MEM_64) &&
++	    dev->on_all_pcie_path)
++		return res->flags | IORESOURCE_PREFETCH;
++
++	return res->flags;
++}
++
+ /* Check whether the bridge supports optional I/O and
+    prefetchable memory ranges. If not, the respective
+    base/limit registers must be read-only and read as 0. */
+@@ -1035,11 +1049,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+ 			resource_size_t r_size;
++			int flags = pci_resource_pref_compatible(dev, r);
+ 
+-			if (r->parent || (r->flags & IORESOURCE_PCI_FIXED) ||
+-			    ((r->flags & mask) != type &&
+-			     (r->flags & mask) != type2 &&
+-			     (r->flags & mask) != type3))
++			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
++			    ((flags & mask) != type &&
++			     (flags & mask) != type2 &&
++			     (flags & mask) != type3))
+ 				continue;
+ 			r_size = resource_size(r);
+ #ifdef CONFIG_PCI_IOV
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 66c4d8f..f741fed 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -257,15 +257,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 				resource_size_t size, resource_size_t min_align)
+ {
++	struct resource *res = dev->resource + resno;
++	int old_flags = res->flags;
+ 	struct pci_bus *bus;
+ 	int ret;
+ 
++	res->flags = pci_resource_pref_compatible(dev, res);
+ 	bus = dev->bus;
+ 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
+ 		if (!bus->parent || !bus->self->transparent)
+ 			break;
+ 		bus = bus->parent;
+ 	}
++	res->flags = old_flags;
+ 
+ 	return ret;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8214b24..3f158c4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -303,6 +303,7 @@ struct pci_dev {
+ 						   powered on/off by the
+ 						   corresponding bridge */
+ 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
++	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
+@@ -806,7 +807,7 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region);
+ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
+-					struct resource *res);
++					struct resource *res, int flags);
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-- 
+2.8.3
