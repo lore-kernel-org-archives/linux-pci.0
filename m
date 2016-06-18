@@ -1,62 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33428 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754010AbcFTSf3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jun 2016 14:35:29 -0400
-Date: Mon, 20 Jun 2016 13:34:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Miller <davem@davemloft.net>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Fix unaligned accesses in VC code.
-Message-ID: <20160620183428.GA31564@localhost>
-References: <20160618.235225.1591502152749272620.davem@davemloft.net>
+Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160618.235225.1591502152749272620.davem@davemloft.net>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <20160617195237.GA10416@localhost>
+References: <20160609222552.6938-1-yinghai@kernel.org> <20160617021555.GA21125@localhost>
+ <CAE9FiQVMxuo16MArLXjT8oaSGMce1G=evaWqeOaW-WeT_ju6Mw@mail.gmail.com> <20160617195237.GA10416@localhost>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 17 Jun 2016 19:27:36 -0700
+Message-ID: <CAE9FiQVF5eZzXHqe=VLW954LOSdZmD5eMT5w6nTwd-KpX1LX0w@mail.gmail.com>
+Subject: Re: [PATCH v12.update2 02/15] PCI: Let pci_mmap_page_range() take
+ resource address
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, linux-xtensa@linux-xtensa.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 18, 2016 at 11:52:25PM -0700, David Miller wrote:
-> 
-> The save/restore buffers for VC state is first composed of a 2-byte
-> control register, then a bunch of 4-byte words.
-> 
-> This causes unaligned accesses which trap on platform such as sparc.
-> 
-> This is easy to fix by simply moving the buffer pointer forward by 4
-> bytes instead of 2 after dealing with the control register.  The
-> length adjustment needs to be changed likewise as well.
-> 
-> Reported-by: Meelis Roos <mroos@linux.ee>
-> Reported-by: Anatoly Pugachev <matorola@gmail.com>
-> Signed-off-by: David S. Miller <davem@davemloft.net>
+On Fri, Jun 17, 2016 at 12:52 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>
+>> and respin the whole patchset today.
+>
+> I added your acks and pushed the result to pci/resource.  I'll also
+> post these formally on the list so they're easier to find.
 
-Applied to for-linus for v4.7, thanks.
+Please review patchset v13 that is against your new pci/resource branch.
 
-I'm pretty sure this problem was introduced by 5f8fc43217a0 ("PCI:
-Include pci/pcie/Kconfig directly from pci/Kconfig"), which appeared
-in v4.6.  This effectively made PCIe services, including VC, available
-on sparc. 
+Thanks
 
-I added a stable tag for v4.6.
-
-> diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
-> index dfbab61..1fa3a32 100644
-> --- a/drivers/pci/vc.c
-> +++ b/drivers/pci/vc.c
-> @@ -221,9 +221,9 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
->  		else
->  			pci_write_config_word(dev, pos + PCI_VC_PORT_CTRL,
->  					      *(u16 *)buf);
-> -		buf += 2;
-> +		buf += 4;
->  	}
-> -	len += 2;
-> +	len += 4;
->  
->  	/*
->  	 * If we have any Low Priority VCs and a VC Arbitration Table Offset
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yinghai
