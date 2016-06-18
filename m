@@ -1,85 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29594 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480AbcF2Ih1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jun 2016 04:37:27 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v2 2/8] thunderbolt: Updating device IDs
-Date: Wed, 29 Jun 2016 11:35:30 +0300
-Message-Id: <1467189336-29556-3-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
-References: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v13 08/16] sparc/PCI: Keep resource idx order with bridge register number
+Date: Fri, 17 Jun 2016 19:24:53 -0700
+Message-Id: <20160618022501.15648-9-yinghai@kernel.org>
+In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
+References: <20160618022501.15648-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding the new Thunderbolt(TM) device IDs to the list.
+On one system found strange "no compatible bridge window" warning
+even we already had pref_compat support that add extra pref bit for device
+resource.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+PCI: Claiming 0000:00:01.0: Resource 14: 0002000100000000..000200010fffffff [10220c]
+PCI: Claiming 0000:01:00.0: Resource 1: 0002000100000000..000200010000ffff [100214]
+pci 0000:01:00.0: can't claim BAR 1 [mem 0x2000100000000-0x200010000ffff 64bit]: no compatible bridge window
+
+It turns out that pci_resource_compatible()/pci_up_path_over_pref_mem64()
+just check resource with bridge pref mmio register idx 15, and we have put
+resource to use mmio register idx 14 during of_scan_pci_bridge()
+as the bridge does not have mmio resource.
+
+We already fix pci_up_path_over_pref_mem64() to check all bus resources.
+
+And at the same time, this patch make resource to have consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even when non-pref mmio is missing, or out of ordering in firmware reporting.
+
+Just hold i = 1 for non pref mmio, and i = 2 for pref mmio.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: sparclinux@vger.kernel.org
 ---
- include/linux/pci_ids.h | 44 ++++++++++++++++++++++++++------------------
- 1 file changed, 26 insertions(+), 18 deletions(-)
+ arch/sparc/kernel/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c58752f..2d4cc50 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2604,24 +2604,32 @@
- #define PCI_DEVICE_ID_INTEL_82441	0x1237
- #define PCI_DEVICE_ID_INTEL_82380FB	0x124b
- #define PCI_DEVICE_ID_INTEL_82439	0x1250
--#define PCI_DEVICE_ID_INTEL_LIGHT_RIDGE             0x1513 /* Tbt 1 Gen 1 */
--#define PCI_DEVICE_ID_INTEL_EAGLE_RIDGE             0x151a
--#define PCI_DEVICE_ID_INTEL_LIGHT_PEAK              0x151b
--#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C         0x1547 /* Tbt 1 Gen 2 */
--#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C         0x1548
--#define PCI_DEVICE_ID_INTEL_PORT_RIDGE              0x1549
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI    0x1566 /* Tbt 1 Gen 3 */
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE 0x1567
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI    0x1568
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE 0x1569
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI     0x156a /* Thunderbolt 2 */
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE  0x156b
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI     0x156c
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE  0x156d
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI     0x1575 /* Thunderbolt 3 */
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
-+#define PCI_DEVICE_ID_INTEL_LIGHT_RIDGE              0x1513 /* Tbt 1 Gen 1 */
-+#define PCI_DEVICE_ID_INTEL_EAGLE_RIDGE              0x151a
-+#define PCI_DEVICE_ID_INTEL_LIGHT_PEAK               0x151b
-+#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C          0x1547 /* Tbt 1 Gen 2 */
-+#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C          0x1548
-+#define PCI_DEVICE_ID_INTEL_PORT_RIDGE               0x1549
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI     0x1566 /* Tbt 1 Gen 3 */
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE  0x1567
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI     0x1568
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE  0x1569
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI      0x156a /* Thunderbolt 2 */
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE   0x156b
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI      0x156c
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE   0x156d
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI      0x1575 /* Thunderbolt 3 */
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE   0x1576
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI      0x1577
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE   0x1578
-+#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_NHI         0x157d /* Tbt 2 Low Pwr */
-+#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_BRIDGE      0x157e
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_NHI      0x15bf /* Tbt 3 Low Pwr */
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_BRIDGE   0x15c0
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI    0x15d2 /* Thunderbolt 3 */
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_BRIDGE 0x15d3
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI    0x15d9
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_BRIDGE 0x15da
- #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
- #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
- #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 654cf21..c6a3971 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -481,7 +481,7 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 		pci_read_bridge_bases(bus);
+ 		goto after_ranges;
+ 	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		u64 start;
+ 
+@@ -513,6 +513,12 @@ static void of_scan_pci_bridge(struct pci_pbm_info *pbm,
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
 -- 
-2.7.4
-
+2.8.3
