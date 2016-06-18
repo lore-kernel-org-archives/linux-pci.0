@@ -1,92 +1,312 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:3317 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751996AbcGACed (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 22:34:33 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u612XwVL089200
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 22:34:33 -0400
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23v09re0a4-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 22:34:33 -0400
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 Jul 2016 12:34:28 +1000
-Date: Fri, 1 Jul 2016 12:34:23 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: Re: [PATCH v3 5/7] PCI: Do not use IORESOURCE_STARTALIGN to identify
- bridge resources
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1467283993-3185-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1467283993-3185-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <20160701023423.GB6739@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+	sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.org
+Subject: [PATCH v13 01/16] PCI: Let pci_mmap_page_range() take resource address
+Date: Fri, 17 Jun 2016 19:24:46 -0700
+Message-Id: <20160618022501.15648-2-yinghai@kernel.org>
+In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
+References: <20160618022501.15648-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 30, 2016 at 06:53:11PM +0800, Yongji Xie wrote:
->Now we use the IORESOURCE_STARTALIGN to identify bridge resources
->in __assign_resources_sorted(). That's quite fragile. We may also
->set flag IORESOURCE_STARTALIGN for SR-IOV resources in some cases,
->for example, using the option "noresize" of parameter
->"pci=resource_alignment".
->
->In this patch, we try to use a more robust way to identify
->bridge resources.
->
->Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+In 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files"), try
+to check exposed value with resource start/end in proc mmap path.
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+|        start = vma->vm_pgoff;
+|        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+|        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+|                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+|        if (start >= pci_start && start < pci_start + size &&
+|                        start + nr <= pci_start + size)
 
-Yongji, I think this doesn't have to be part of this series, meaning
-it can be sent or merged separately.
+That breaks sparc that exposed value is BAR value, and need to be offseted
+to resource address.
 
->---
-> drivers/pci/setup-bus.c |    9 ++++++---
-> 1 file changed, 6 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->index 55641a3..216ddbc 100644
->--- a/drivers/pci/setup-bus.c
->+++ b/drivers/pci/setup-bus.c
->@@ -390,6 +390,7 @@ static void __assign_resources_sorted(struct list_head *head,
-> 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
-> 	unsigned long fail_type;
-> 	resource_size_t add_align, align;
->+	int index;
->
-> 	/* Check if optional add_size is there */
-> 	if (!realloc_head || list_empty(realloc_head))
->@@ -410,11 +411,13 @@ static void __assign_resources_sorted(struct list_head *head,
->
-> 		/*
-> 		 * There are two kinds of additional resources in the list:
->-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
->-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
->+		 * 1. bridge resource
->+		 * 2. SR-IOV resource
-> 		 * Here just fix the additional alignment for bridge
-> 		 */
->-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
->+		index = dev_res->res - dev_res->dev->resource;
->+		if (index < PCI_BRIDGE_RESOURCES ||
->+			index > PCI_BRIDGE_RESOURCE_END)
-> 			continue;
->
-> 		add_align = get_res_add_align(realloc_head, dev_res->res);
+Original pci_mmap_page_range() is taking PCI BAR value aka usr_address.
 
-Thanks,
-Gavin
+Bjorn found out that it would be much simple to pass resource address
+directly and avoid extra those __pci_mmap_make_offset.
 
+In this patch:
+1. in proc path: proc_bus_pci_mmap, try convert back to resource
+   before calling pci_mmap_page_range
+2. in sysfs path: pci_mmap_resource will just offset with resource start.
+3. all pci_mmap_page_range will have vma->vm_pgoff with in resource
+   range instead of BAR value.
+4. skip calling __pci_mmap_make_offset, as the checking is done
+   in pci_mmap_fits().
+
+-v2: add pci_user_to_resource and remove __pci_mmap_make_offset
+-v3: pass resource pointer with pci_mmap_page_range()
+-v4: put __pci_mmap_make_offset() removing to following patch
+     seperate /sys io access alignment checking to another patch
+     updated after Bjorn's pci_resource_to_user() changes.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: sparclinux@vger.kernel.org
+Cc: linux-xtensa@linux-xtensa.org
+---
+ arch/microblaze/pci/pci-common.c | 11 +++++---
+ arch/powerpc/kernel/pci-common.c | 11 +++++---
+ arch/sparc/kernel/pci.c          |  4 ---
+ arch/xtensa/kernel/pci.c         | 13 +++++++--
+ drivers/pci/pci-sysfs.c          | 23 +++++++++------
+ drivers/pci/pci.h                |  2 +-
+ drivers/pci/proc.c               | 60 ++++++++++++++++++++++++++++++++++------
+ 7 files changed, 91 insertions(+), 33 deletions(-)
+
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 81556b8..9e3bc05 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -282,12 +282,15 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ {
+ 	resource_size_t offset =
+ 		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
+-	struct resource *rp;
+ 	int ret;
+ 
+-	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
+-	if (rp == NULL)
+-		return -EINVAL;
++	if (mmap_state == pci_mmap_io) {
++		struct pci_controller *hose = pci_bus_to_host(dev->bus);
++
++		/* hose should never be NULL */
++		offset += hose->io_base_phys -
++			 ((unsigned long)hose->io_base_virt - _IO_BASE);
++	}
+ 
+ 	vma->vm_pgoff = offset >> PAGE_SHIFT;
+ 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 6de6e0e..53ba098 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -420,12 +420,15 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ {
+ 	resource_size_t offset =
+ 		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
+-	struct resource *rp;
+ 	int ret;
+ 
+-	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
+-	if (rp == NULL)
+-		return -EINVAL;
++	if (mmap_state == pci_mmap_io) {
++		struct pci_controller *hose = pci_bus_to_host(dev->bus);
++
++		/* hose should never be NULL */
++		offset += hose->io_base_phys -
++			  ((unsigned long)hose->io_base_virt - _IO_BASE);
++	}
+ 
+ 	vma->vm_pgoff = offset >> PAGE_SHIFT;
+ 	if (write_combine)
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 9c1878f..5f2d78e 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -868,10 +868,6 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ {
+ 	int ret;
+ 
+-	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
+-	if (ret < 0)
+-		return ret;
+-
+ 	__pci_mmap_set_pgprot(dev, vma, mmap_state);
+ 
+ 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index b848cc3..4c5f1fa 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -366,11 +366,18 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state,
+ 			int write_combine)
+ {
++	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
+ 	int ret;
+ 
+-	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
+-	if (ret < 0)
+-		return ret;
++	if (mmap_state == pci_mmap_io) {
++		struct pci_controller *pci_ctrl =
++					 (struct pci_controller *)dev->sysdata;
++
++		/* pci_ctrl should never be NULL */
++		offset += pci_ctrl->io_space.start - pci_ctrl->io_space.base;
++	}
++
++	vma->vm_pgoff = offset >> PAGE_SHIFT;
+ 
+ 	__pci_mmap_set_pgprot(dev, vma, mmap_state, write_combine);
+ 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d319a9c..82b98dd 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -967,12 +967,23 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ #ifdef HAVE_PCI_MMAP
+ 
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
++		  enum pci_mmap_state mmap_type,
+ 		  enum pci_mmap_api mmap_api)
+ {
+ 	unsigned long nr, start, size, pci_start;
++	int flags;
+ 
+ 	if (pci_resource_len(pdev, resno) == 0)
+ 		return 0;
++
++	if (mmap_type == pci_mmap_mem)
++		flags = IORESOURCE_MEM;
++	else
++		flags = IORESOURCE_IO;
++
++	if (!(pci_resource_flags(pdev, resno) & flags))
++		return 0;
++
+ 	nr = vma_pages(vma);
+ 	start = vma->vm_pgoff;
+ 	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+@@ -999,7 +1010,6 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	struct resource *res = attr->private;
+ 	enum pci_mmap_state mmap_type;
+-	resource_size_t start, end;
+ 	int i;
+ 
+ 	for (i = 0; i < PCI_ROM_RESOURCE; i++)
+@@ -1011,7 +1021,8 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+-	if (!pci_mmap_fits(pdev, i, vma, PCI_MMAP_SYSFS)) {
++	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
++	if (!pci_mmap_fits(pdev, i, vma, mmap_type, PCI_MMAP_SYSFS)) {
+ 		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
+ 			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
+ 			pci_name(pdev), i,
+@@ -1020,13 +1031,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 		return -EINVAL;
+ 	}
+ 
+-	/* pci_mmap_page_range() expects the same kind of entry as coming
+-	 * from /proc/bus/pci/ which is a "user visible" value. If this is
+-	 * different from the resource itself, arch will do necessary fixup.
+-	 */
+-	pci_resource_to_user(pdev, i, res, &start, &end);
+-	vma->vm_pgoff += start >> PAGE_SHIFT;
+-	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
++	vma->vm_pgoff += res->start >> PAGE_SHIFT;
+ 	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
+ }
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index a814bbb..7d339c3 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -30,7 +30,7 @@ enum pci_mmap_api {
+ 	PCI_MMAP_PROCFS	/* mmap on /proc/bus/pci/<BDF> */
+ };
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+-		  enum pci_mmap_api mmap_api);
++		  enum pci_mmap_state mmap_type, enum pci_mmap_api mmap_api);
+ #endif
+ int pci_probe_reset_function(struct pci_dev *dev);
+ 
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 2408abe..fadab8a 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -227,24 +227,68 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
+ }
+ 
+ #ifdef HAVE_PCI_MMAP
++
++static int pci_user_to_resource(struct pci_dev *dev, resource_size_t *offset,
++				int flags)
++{
++	int i;
++
++	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
++		resource_size_t start, end;
++		struct resource *res = &dev->resource[i];
++
++		if (!(res->flags & flags))
++			continue;
++
++		if (pci_resource_len(dev, i) == 0)
++			continue;
++
++		/*
++		 * here *offset is PAGE_SIZE aligned from caller.
++		 * need align start/end for io port resource that is
++		 * usually not PAGE_SIZE aligned.
++		 * that means we let it go if they falls in same page.
++		 */
++		pci_resource_to_user(dev, i, res, &start, &end);
++		if ((start & PAGE_MASK) <= *offset &&
++		     *offset <= (end & PAGE_MASK)) {
++			*offset = res->start + (*offset - start);
++			return i;
++		}
++	}
++
++	return -ENODEV;
++}
++
+ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+ 	struct pci_dev *dev = PDE_DATA(file_inode(file));
+ 	struct pci_filp_private *fpriv = file->private_data;
+-	int i, ret, write_combine;
++	resource_size_t offset;
++	int i, ret, flags, write_combine;
+ 
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+ 
+-	/* Make sure the caller is mapping a real resource for this device */
+-	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
+-		if (pci_mmap_fits(dev, i, vma,  PCI_MMAP_PROCFS))
+-			break;
+-	}
+-
+-	if (i >= PCI_ROM_RESOURCE)
++	offset = vma->vm_pgoff << PAGE_SHIFT;
++	if (fpriv->mmap_state == pci_mmap_mem)
++		flags = IORESOURCE_MEM;
++	else
++		flags = IORESOURCE_IO;
++	i = pci_user_to_resource(dev, &offset, flags);
++	if (i < 0)
+ 		return -ENODEV;
+ 
++	vma->vm_pgoff = offset >> PAGE_SHIFT;
++	if (!pci_mmap_fits(dev, i, vma, fpriv->mmap_state, PCI_MMAP_PROCFS)) {
++		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
++			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
++			pci_name(dev), i,
++			(u64)pci_resource_start(dev, i),
++			(u64)pci_resource_len(dev, i));
++		return -EINVAL;
++	}
++
+ 	if (fpriv->mmap_state == pci_mmap_mem)
+ 		write_combine = fpriv->write_combine;
+ 	else
+-- 
+2.8.3
