@@ -1,41 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0082.outbound.protection.outlook.com ([157.56.110.82]:30216
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751323AbcFPJJA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Jun 2016 05:09:00 -0400
-Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Christoph Hellwig <hch@lst.de>, <axboe@fb.com>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
- <1465934346-20648-3-git-send-email-hch@lst.de>
-CC: <linux-block@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-nvme@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Message-ID: <d368370a-1601-e127-4f61-458e6839fa28@sandisk.com>
-Date: Thu, 16 Jun 2016 11:08:48 +0200
-MIME-Version: 1.0
-In-Reply-To: <1465934346-20648-3-git-send-email-hch@lst.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from [193.47.165.129] ([193.47.165.129]:45508 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751786AbcFSM0C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Jun 2016 08:26:02 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [PATCH v2 0/2] VFIO SRIOV support
+Date: Sun, 19 Jun 2016 15:16:55 +0300
+Message-Id: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/14/2016 09:58 PM, Christoph Hellwig wrote:
-> diff --git a/include/linux/irq.h b/include/linux/irq.h
-> index 4d758a7..49d66d1 100644
-> --- a/include/linux/irq.h
-> +++ b/include/linux/irq.h
-> @@ -197,6 +197,7 @@ struct irq_data {
->   * IRQD_IRQ_INPROGRESS		- In progress state of the interrupt
->   * IRQD_WAKEUP_ARMED		- Wakeup mode armed
->   * IRQD_FORWARDED_TO_VCPU	- The interrupt is forwarded to a VCPU
-> + * IRQD_AFFINITY_MANAGED	- Affinity is managed automatically
->   */
+Changes from V1:
+	1. The VF are no longer assigned to PFs iommu group
+	2. Add a pci_enable_sriov_with_override API to allow
+	enablind sriov without probing the VFs with the
+	default driver
 
-Does "managed automatically" mean managed by software? If so, I think it 
-would help to mention which software manages IRQ affinity if the 
-IRQD_AFFINITY_MANAGED flag has been set.
+Changes from RFC V2:
+        1. pci_disable_sriov() is now called from a workqueue
+        To avoid the situation where a process is blocked
+        in pci_disable_sriov() wating for itself to relase the VFs.
+        2. a mutex was added to synchronize calls to
+        pci_enable_sriov() and pci_disable_sriov()
 
-Thanks,
+Changes from RFC V1:
+        Due to the security concern raised in RFC V1, we add two patches
+        to make sure the VFs belong to the same IOMMU group as
+        the PF and are probed by VFIO.
 
-Bart.
+Today the QEMU hypervisor allows assigning a physical device to a VM,
+facilitating driver development. However, it does not support enabling
+SR-IOV by the VM kernel driver. Our goal is to implement such support,
+allowing developers working on SR-IOV physical function drivers to work
+inside VMs as well.
+
+This patch series implements the kernel side of our solution.  It extends
+the VFIO driver to support the PCIE SRIOV extended capability with
+following features:
+1. The ability to probe SR-IOV BAR sizes.
+2. The ability to enable and disable SR-IOV.
+
+This patch series is going to be used by QEMU to expose SR-IOV capabilities
+to VM. We already have an early prototype based on Knut Omang's patches for
+SR-IOV[1].
+
+Limitations:
+1. Per SR-IOV spec section 3.3.12, PFs are required to support
+4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes.
+Unfourtently the kernel currently initializes the System Page Size register once
+and assumes it doesn't change therefore we cannot allow guests to change this
+register at will. We currently map both the Supported Page sizes and
+System Page Size as virtualized and read only in violation of the spec.
+In practice this is not an issue since both the hypervisor and the
+guest typically select the same System Page Size.
+
+[1] https://github.com/knuto/qemu/tree/sriov_patches_v6
+
+Ilya Lesokhin (2):
+  PCI: Extend PCI IOV API
+  VFIO: Add support for SR-IOV extended capablity
+
+ drivers/pci/iov.c                   |  41 +++++--
+ drivers/vfio/pci/vfio_pci.c         |   1 +
+ drivers/vfio/pci/vfio_pci_config.c  | 210 +++++++++++++++++++++++++++++++++---
+ drivers/vfio/pci/vfio_pci_private.h |   1 +
+ include/linux/pci.h                 |  13 ++-
+ 5 files changed, 240 insertions(+), 26 deletions(-)
+
+-- 
+1.8.3.1
+
