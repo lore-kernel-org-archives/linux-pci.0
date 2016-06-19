@@ -1,75 +1,195 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v13 07/16] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Fri, 17 Jun 2016 19:24:52 -0700
-Message-Id: <20160618022501.15648-8-yinghai@kernel.org>
-In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
-References: <20160618022501.15648-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [193.47.165.129] ([193.47.165.129]:45459 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751676AbcFSMZx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Jun 2016 08:25:53 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [PATCH v2 1/2] PCI: Extend PCI IOV API
+Date: Sun, 19 Jun 2016 15:16:56 +0300
+Message-Id: <1466338617-43027-2-git-send-email-ilyal@mellanox.com>
+In-Reply-To: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource with PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
+1. Add pci_enable_sriov_with_override to allow
+enabling sriov with a driver override
+on the VFs.
 
-so this patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
-flags parsing.
+2. Expose pci_iov_set_numvfs and pci_iov_resource_size
+to make them available for other modules
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
+Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+Signed-off-by: Haggai Eran <haggaie@mellanox.com>
 ---
- arch/sparc/kernel/of_device_32.c | 5 +++--
- arch/sparc/kernel/of_device_64.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/pci/iov.c   | 41 +++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h | 13 ++++++++++++-
+ 2 files changed, 45 insertions(+), 9 deletions(-)
 
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index 185aa96..3e9f273 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2194b44..5ffd926 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -41,7 +41,7 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
+  *
+  * Update iov->offset and iov->stride when NumVFs is written.
+  */
+-static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+ {
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+@@ -49,6 +49,7 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
+ }
++EXPORT_SYMBOL(pci_iov_set_numvfs);
+ 
+ /*
+  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+@@ -112,8 +113,10 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+ }
++EXPORT_SYMBOL(pci_iov_resource_size);
+ 
+-int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
++int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset,
++		       char *driver_override)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -154,14 +157,20 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+ 		rc = request_resource(res, &virtfn->resource[i]);
+ 		BUG_ON(rc);
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index 7bbdc26..defee61 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
 -
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+ 	if (reset)
+ 		__pci_reset_function(virtfn);
+ 
+ 	pci_device_add(virtfn, virtfn->bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
+ 
++	if (driver_override) {
++		virtfn->driver_override = kstrdup(driver_override, GFP_KERNEL);
++		if (!virtfn->driver_override)
++			goto failed1;
++	}
++
+ 	pci_bus_add_device(virtfn);
++
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+ 	if (rc)
+@@ -235,7 +244,8 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+ 	return 0;
+ }
+ 
+-static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
++static int sriov_enable(struct pci_dev *dev, int nr_virtfn,
++			char *driver_override)
+ {
+ 	int rc;
+ 	int i;
+@@ -321,7 +331,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
+ 
+ 	for (i = 0; i < initial; i++) {
+-		rc = pci_iov_add_virtfn(dev, i, 0);
++		rc = pci_iov_add_virtfn(dev, i, 0, driver_override);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -622,20 +632,35 @@ int pci_iov_bus_range(struct pci_bus *bus)
+ }
+ 
+ /**
+- * pci_enable_sriov - enable the SR-IOV capability
++ * pci_enable_sriov_with_override - enable the SR-IOV capability
+  * @dev: the PCI device
+  * @nr_virtfn: number of virtual functions to enable
++ * driver_override: driver override for VFs
+  *
+  * Returns 0 on success, or negative on failure.
+  */
+-int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
++int pci_enable_sriov_with_override(struct pci_dev *dev, int nr_virtfn,
++				   char *driver_override)
+ {
+ 	might_sleep();
+ 
+ 	if (!dev->is_physfn)
+ 		return -ENOSYS;
+ 
+-	return sriov_enable(dev, nr_virtfn);
++	return sriov_enable(dev, nr_virtfn, driver_override);
++}
++EXPORT_SYMBOL_GPL(pci_enable_sriov_with_override);
++
++/**
++ * pci_enable_sriov - enable the SR-IOV capability
++ * @dev: the PCI device
++ * @nr_virtfn: number of virtual functions to enable
++ *
++ * Returns 0 on success, or negative on failure.
++ */
++int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
++{
++	return pci_enable_sriov_with_override(dev, nr_virtfn, NULL);
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_sriov);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..54b3059 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1739,15 +1739,20 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
+ int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
+ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
++int pci_enable_sriov_with_override(struct pci_dev *dev, int nr_virtfn,
++				   char *driver_override);
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+-int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset);
++int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset,
++		       char *driver_override);
+ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
++
++void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn);
+ #else
+ static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+ {
+@@ -1757,6 +1762,11 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+ {
+ 	return -ENOSYS;
+ }
++
++static inline int pci_enable_sriov_with_override(struct pci_dev *dev,
++						 int nr_virtfn,
++						 char *driver_override)
++{ return -ENODEV; }
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+@@ -1775,6 +1785,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
+ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ { return 0; }
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn) { }
+ #endif
+ 
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
 -- 
-2.8.3
+1.8.3.1
+
