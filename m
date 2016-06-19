@@ -1,54 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38507 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932491AbcFNT7u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jun 2016 15:59:50 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 13/13] nvme: remove the post_scan callout
-Date: Tue, 14 Jun 2016 21:59:06 +0200
-Message-Id: <1465934346-20648-14-git-send-email-hch@lst.de>
-In-Reply-To: <1465934346-20648-1-git-send-email-hch@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 18 Jun 2016 23:49:08 -0700 (PDT)
+Message-Id: <20160618.234908.1671877676732375612.davem@davemloft.net>
+To: matorola@gmail.com
+Cc: mroos@linux.ee, sparclinux@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 4.6-rc*: Kernel unaligned access at
+ pci_bus_read_config_dword+0x64/0x80
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20160618.210421.1400395696678491125.davem@davemloft.net>
+References: <CADxRZqw4jG3kPz6wG5Yx5DoZV0h+Xak5j682c7stq0fNOiopZQ@mail.gmail.com>
+	<CADxRZqw6Q-jLCnZzzq=akP5vqd3Y8RCF34pWQGNSuL2VscrbJg@mail.gmail.com>
+	<20160618.210421.1400395696678491125.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No need now that we don't have to reverse engineer the irq affinity.
+From: David Miller <davem@davemloft.net>
+Date: Sat, 18 Jun 2016 21:04:21 -0700 (PDT)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/nvme/host/core.c | 3 ---
- drivers/nvme/host/nvme.h | 1 -
- 2 files changed, 4 deletions(-)
+> From: Anatoly Pugachev <matorola@gmail.com>
+> Date: Thu, 16 Jun 2016 13:02:07 +0300
+> 
+>> bisected to git commit 63e3027
+> 
+> That's a merge commit that adds 100 different commits, and this happened
+> way back in March.
+> 
+> Please find the exact dword access in:
+> 
+> 	drivers/pci/pcie/portdrv_{core,pci,bus}.c
+> 
+> that triggers this unaligned access so we can debug this further.
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 9d7cee4..b100cce 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -1627,9 +1627,6 @@ static void nvme_scan_work(struct work_struct *work)
- 	list_sort(NULL, &ctrl->namespaces, ns_cmp);
- 	mutex_unlock(&ctrl->namespaces_mutex);
- 	kfree(id);
--
--	if (ctrl->ops->post_scan)
--		ctrl->ops->post_scan(ctrl);
- }
+Meanwhile I figured it out, this should fix the bug:
+
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index dfbab61..1fa3a32 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -221,9 +221,9 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 		else
+ 			pci_write_config_word(dev, pos + PCI_VC_PORT_CTRL,
+ 					      *(u16 *)buf);
+-		buf += 2;
++		buf += 4;
+ 	}
+-	len += 2;
++	len += 4;
  
- void nvme_queue_scan(struct nvme_ctrl *ctrl)
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index 282421f..bb343b3 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -150,7 +150,6 @@ struct nvme_ctrl_ops {
- 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
- 	int (*reset_ctrl)(struct nvme_ctrl *ctrl);
- 	void (*free_ctrl)(struct nvme_ctrl *ctrl);
--	void (*post_scan)(struct nvme_ctrl *ctrl);
- 	void (*submit_async_event)(struct nvme_ctrl *ctrl, int aer_idx);
- };
- 
--- 
-2.1.4
-
+ 	/*
+ 	 * If we have any Low Priority VCs and a VC Arbitration Table Offset
