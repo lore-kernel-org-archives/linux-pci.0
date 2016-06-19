@@ -1,109 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
-To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
- tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
- bhelgaas@google.com, lorenzo.pieralisi@arm.com,
- robert.richter@caviumnetworks.com, shijie.huang@arm.com,
- Suravee.Suthikulpanit@amd.com
-References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
- <1466420541-20101-2-git-send-email-tn@semihalf.com>
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <372d3b78-2bc5-94d1-49f6-c9229affa65d@linaro.org>
-Date: Tue, 21 Jun 2016 15:12:57 +0800
+Return-Path: <vkuznets@redhat.com>
+Return-Path: <vkuznets@redhat.com>
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devel@linuxdriverproject.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Jake Oshins <jakeo@microsoft.com>
+Subject: Re: [PATCH 0/2] PCI: hv: fix a couple of issues in hv_pci_onchannelcallback()
+References: <1464617879-19581-1-git-send-email-vkuznets@redhat.com>
+	<20160610235336.GA16462@localhost> <20160617174451.GA1977@localhost>
+Date: Sun, 19 Jun 2016 10:37:33 +0200
+In-Reply-To: <20160617174451.GA1977@localhost> (Bjorn Helgaas's message of
+	"Fri, 17 Jun 2016 12:44:51 -0500")
+Message-ID: <87fus9k20i.fsf@vitty.brq.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1466420541-20101-2-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
- will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
- mw@semihalf.com, andrea.gallo@linaro.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+Bjorn Helgaas <helgaas@kernel.org> writes:
 
-Sorry for jumping out late, just one comment below.
-
-On 2016/6/20 19:02, Tomasz Nowicki wrote:
-> IORT shows representation of IO topology for ARM based systems.
-> It describes how various components are connected together on
-> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+> On Fri, Jun 10, 2016 at 06:53:36PM -0500, Bjorn Helgaas wrote:
+>> On Mon, May 30, 2016 at 04:17:57PM +0200, Vitaly Kuznetsov wrote:
+>> > kmemleak helped me to identify a memory leak in hv_pci_onchannelcallback()
+>> > and while fixing it I stumbled upon an unrelated issue(s) there.
+>> > 
+>> > Vitaly Kuznetsov (2):
+>> >   PCI: hv: don't leak buffer in hv_pci_onchannelcallback()
+>> >   PCI: hv: handle all pending messages in hv_pci_onchannelcallback()
+>> 
+>> I applied both to for-linus for v4.7 with Jake's acks, thanks, Vitaly.
 >
-> Initial support allows to detect IORT table presence and save its
-> root pointer obtained through acpi_get_table(). The pointer validity
-> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
-> is not set while using IORT nodes we would dereference unmapped pointers.
->
-> For the aforementioned reason call iort_table_detect() from acpi_init()
-> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->
-> Add generic helpers which are helpful for scanning and retrieving
-> information from IORT table content. List of the most important helpers:
-> - iort_find_dev_node() finds IORT node for a given device
-> - iort_node_map_rid() maps device RID and returns IORT node which provides
->   final translation
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> ---
->  drivers/acpi/Kconfig  |   3 +
->  drivers/acpi/Makefile |   1 +
->  drivers/acpi/bus.c    |   2 +
->  drivers/acpi/iort.c   | 220 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/iort.h  |  30 +++++++
+> Somehow I must have been thinking these were fixes for things we
+> merged or broke during the v4.7 merge window, but that doesn't look
+> like the case.  So I'm going to merge these for v4.8 instead, on the
+> theory that the v4.7-rc cycles are primarily for stabilization.
 
-[...]
+Right, this is not a 4.7 regression.
 
-> +static acpi_status
-> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
-> +{
-> +	struct device *dev = context;
-> +
-> +	switch (node->type) {
-> +	case ACPI_IORT_NODE_NAMED_COMPONENT: {
-> +		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+Thanks!
 
-ACPI_ALLOCATE_BUFFER is used here, so ...
-
-> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
-> +		struct acpi_iort_named_component *ncomp;
-> +
-> +		if (!adev)
-> +			break;
-> +
-> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
-> +
-> +		if (ACPI_FAILURE(acpi_get_name(adev->handle,
-> +					       ACPI_FULL_PATHNAME, &buffer))) {
-> +			dev_warn(dev, "Can't get device full path name\n");
-> +			break;
-> +		}
-> +
-> +		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
-> +			return AE_OK;
-
-... we need to kfree(buffer.pointer) before we return or break.
-
-With this fixed,
-
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-
-Thanks
-Hanjun
-
-> +
-> +		break;
-> +	}
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+  Vitaly
