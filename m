@@ -1,136 +1,53 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Thu, 2 Jun 2016 10:35:00 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, andrea.gallo@linaro.org, dhdang@apm.com,
-	jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
-Subject: Re: [PATCH V8 9/9] pci, acpi: ARM64 support for ACPI based generic
- PCI host controller
-Message-ID: <20160602093500.GA13962@red-moon>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-10-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:57294 "HELO
+	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751725AbcFTA6m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jun 2016 20:58:42 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: wim@djo.tudelft.nl
+Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	perex@perex.cz, linux-pci@vger.kernel.org,
+	Takashi Iwai <tiwai@suse.com>
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+Date: Mon, 20 Jun 2016 03:02:57 +0200
+Message-ID: <2999417.fp4mqtxYS2@vostro.rjw.lan>
+In-Reply-To: <20160620003530.GA19571@djo.tudelft.nl>
+References: <20160620003530.GA19571@djo.tudelft.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464621262-26770-10-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 05:14:22PM +0200, Tomasz Nowicki wrote:
-> This patch implements pci_acpi_scan_root call so that ARM64 can start
-> using ACPI to setup and enumerate PCI buses.
+You should CC the linux-pci too (done now)
+
+On Monday, June 20, 2016 02:35:30 AM Wim Osterholt wrote:
+> L.S.
+> up to vanilla kernel-4.6.2 sound was working fine.
+> Switching to kernel-4.7.0-rc3 made sound disappear. No /dev/mixer etc.
+> There appears to be a bug in the Intel sound driver and/or ACPI driver.
+> Dmesg shows interesting lines like:
+> [   11.498592] ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 7
+> [   11.498605] PCI: setting IRQ 7 as level-triggered
+> [   11.543903] parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP,TRISTATE,EPP]
+> [   12.757735] genirq: Flags mismatch irq 7. 00000080 (snd_intel8x0m) vs. 00000000 (parport0)
+> [   12.757751] snd_intel8x0m 0000:00:1f.6: unable to grab IRQ 7
+> [   12.757875] snd_intel8x0m: probe of 0000:00:1f.6 failed with error -16
+> [   12.900171] genirq: Flags mismatch irq 7. 00000080 (snd_intel8x0) vs. 00000000 (parport0)
+> [   12.900189] snd_intel8x0 0000:00:1f.5: unable to grab IRQ 7
+> [   12.900389] snd_intel8x0: probe of 0000:00:1f.5 failed with error -16
+> [   12.922554] genirq: Flags mismatch irq 7. 00000080 (ipw2200) vs. 00000000 (parport0)
+> [   12.922559] ipw2200: Error allocating IRQ 7
 > 
-> The implementation of pci_acpi_scan_root() looks up config space regions
-> through MCFG interface. Then ECAM library is doing a new mapping
-> and attach generic ECAM ops which are used for accessing config space.
+> If I boot kernel-4.7.0-rc3 with acpi=off  then sound is back!
 > 
-> On ARM64, ACPI and DT can be enabled together, and in that case
-> we need to use generic domains. In order to do that we implement
-> ARM64 specific way of retrieving domain number from pci_config_window
-> structure.
+> If you need the full dmesg outputs then please get them here:
+> http://webserver.djo.tudelft.nl/dmesg460+ACPI
+> http://webserver.djo.tudelft.nl/dmesg473+ACPI
+> http://webserver.djo.tudelft.nl/dmesg473noACPI
+> (with excuses for the silly hostname which is out of our control)
 > 
-> Since we enable PCI for ACPI we need to implement raw_pci_{read|write}
-> at the same time. ARM64 provides RAW accessors as long as there is
-> correlated valid pci_bus structure, but not before.
+> Regards, Wim.
 > 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> 
+> ----- wim@djo.tudelft.nl -----
 
-[...]
-
-> +/* release_info: free resrouces allocated by init_info */
-
-Nit: s/resrouces/resources
-
-> +static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
-> +{
-> +	struct acpi_pci_generic_root_info *ri;
-> +
-> +	ri = container_of(ci, struct acpi_pci_generic_root_info, common);
-> +	pci_ecam_free(ri->cfg);
-> +	kfree(ri);
-> +}
-> +
-> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
-> +	.release_info = pci_acpi_generic_release_info,
-> +};
-> +
-> +/* Interface called from ACPI code to setup PCI host controller */
->  struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  {
-> -	/* TODO: Should be revisited when implementing PCI on ACPI */
-> -	return NULL;
-> +	int node = acpi_get_node(root->device->handle);
-> +	struct acpi_pci_generic_root_info *ri;
-> +	struct pci_bus *bus, *child;
-> +	int err;
-> +
-> +	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
-> +	if (!ri)
-> +		return NULL;
-> +
-> +	err = pci_acpi_setup_ecam_mapping(root, ri);
-> +	if (err)
-> +		return NULL;
-                ^
-Leaking memory -> kfree(ri)
-
-> +	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
-> +	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
-> +				   ri->cfg);
-> +	if (!bus)
-> +		return NULL;
-
-Ditto.
-
-> +
-> +	pci_bus_size_bridges(bus);
-> +	pci_bus_assign_resources(bus);
-> +
-> +	list_for_each_entry(child, &bus->children, node)
-> +		pcie_bus_configure_settings(child);
-> +
-> +	return bus;
->  }
->  
->  void pcibios_add_bus(struct pci_bus *bus)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 9661c85..f66d188 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1390,7 +1390,12 @@ static inline int pci_domain_nr(struct pci_bus *bus)
->  {
->  	return bus->domain_nr;
->  }
-> +/* Arch specific ACPI hook to set-up domain number */
-> +#ifdef CONFIG_ACPI
-> +int acpi_pci_bus_domain_nr(struct pci_bus *bus);
-
-Technically speaking, this should be introduced in a separate patch;
-given that I know it is a temporary plaster and no other architecture will
-have to implement it I reckon it is fine to leave it here, I will make
-it disappear as fast as I can.
-
-We can argue if it is best to move the ACPI bits into a separate file
-(acpi-pci.c), I am fine with keeping DT/ACPI in one file if that's fine
-with Catalin and Will.
-
-You can send the fix-ups above in the final pull request which I hope
-is nigh.
-
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> +#else
->  static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus) { return -1; }
-> +#endif
->  void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
->  #else
->  static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
