@@ -1,90 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 1/3] PCI: Ignore write combining when mapping I/O port
- space
-To: Yinghai Lu <yinghai@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 09 Jun 2016 13:20:16 -0500
-Message-ID: <20160609182016.13455.78148.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160609181102.13455.33593.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160609181102.13455.33593.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:41661 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752296AbcFTMZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jun 2016 08:25:08 -0400
+Date: Mon, 20 Jun 2016 14:22:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Keith Busch <keith.busch@intel.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"axboe@fb.com" <axboe@fb.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
+Message-ID: <20160620122219.GA29059@lst.de>
+References: <1465934346-20648-3-git-send-email-hch@lst.de> <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com> <20160615102311.GA16619@lst.de> <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com> <20160615151415.GA1919@localhost.localdomain> <7f0b16bd-b39f-99e6-c1c1-6a508bf9bbbf@sandisk.com> <20160615160316.GB1919@localhost.localdomain> <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com> <20160616152006.GA13615@lst.de> <f22e87c1-6875-9a59-94db-42a6f71663b8@sandisk.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f22e87c1-6875-9a59-94db-42a6f71663b8@sandisk.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI exposes files like /proc/bus/pci/00/00.0 in procfs.  These files
-support operations like this:
+On Thu, Jun 16, 2016 at 05:39:07PM +0200, Bart Van Assche wrote:
+> On 06/16/2016 05:20 PM, Christoph Hellwig wrote:
+>> On Wed, Jun 15, 2016 at 09:36:54PM +0200, Bart Van Assche wrote:
+>>> Do you agree that - ignoring other interrupt assignments - that the latter
+>>> interrupt assignment scheme would result in higher throughput and lower
+>>> interrupt processing latency?
+>>
+>> Probably.  Once we've got it in the core IRQ code we can tweak the
+>> algorithm to be optimal.
+>
+> Sorry but I'm afraid that we are embedding policy in the kernel, something 
+> we should not do. I know that there are workloads for which dedicating some 
+> CPU cores to interrupt processing and other CPU cores to running kernel 
+> threads improves throughput, probably because this results in less cache 
+> eviction on the CPU cores that run kernel threads and some degree of 
+> interrupt coalescing on the CPU cores that process interrupts.
 
-  ioctl(fd, PCIIOC_MMAP_IS_IO);           # request I/O port space
-  ioctl(fd, PCIIOC_WRITE_COMBINE, 1);     # request write-combining
-  mmap(fd, ...)
+And you can still easily set this use case up by chosing less queues
+(aka interrupts) than CPUs and assining your workload to the other
+cores.
 
-Write combining is useful on PCI memory space, but I don't think it makes
-sense on PCI I/O port space.
+> My concern 
+> is that I doubt that there is an interrupt assignment scheme that works 
+> optimally for all workloads. Hence my request to preserve the ability to 
+> modify interrupt affinity from user space.
 
-We *could* change proc_bus_pci_ioctl() to make it impossible to set
-mmap_state == pci_mmap_io and write_combine at the same time, but that
-would break the following sequence, which is currently legal:
+I'd say let's do such an interface incrementall based on the use
+case - especially after we get networking over to use common code
+to distribute the interrupts.  If you were doing something like this
+with the current blk-mq code it wouldn't work very well due to the
+fact that you'd have a mismatch between the assigned interrupt and
+the blk-mq queue mapping anyway.
 
-  mmap(fd, ...)                           # default is I/O, non-combining
-  ioctl(fd, PCIIOC_WRITE_COMBINE, 1);     # request write-combining
-  ioctl(fd, PCIIOC_MMAP_IS_MEM);          # request memory space
-  mmap(fd, ...)
-
-Ignore the write-combining flag when mapping I/O port space.
-
-This patch should have no functional effect, based on this analysis of all
-implementations of pci_mmap_page_range():
-
-  - ia64 mips parisc sh unicore32 x86 do not support mapping of I/O port
-    space at all.
-
-  - arm cris microblaze mn10300 sparc xtensa support mapping of I/O port
-    space, but ignore the write_combine argument to pci_mmap_page_range().
-
-  - powerpc supports mapping of I/O port space and uses write_combine, and
-    it disables write combining for I/O port space in
-    __pci_mmap_set_pgprot().
-
-This patch makes it possible to remove __pci_mmap_set_pgprot() from
-powerpc, which simplifies that path.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/proc.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index 3f155e7..2408abe 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -231,7 +231,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- {
- 	struct pci_dev *dev = PDE_DATA(file_inode(file));
- 	struct pci_filp_private *fpriv = file->private_data;
--	int i, ret;
-+	int i, ret, write_combine;
- 
- 	if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
-@@ -245,9 +245,12 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 	if (i >= PCI_ROM_RESOURCE)
- 		return -ENODEV;
- 
-+	if (fpriv->mmap_state == pci_mmap_mem)
-+		write_combine = fpriv->write_combine;
-+	else
-+		write_combine = 0;
- 	ret = pci_mmap_page_range(dev, vma,
--				  fpriv->mmap_state,
--				  fpriv->write_combine);
-+				  fpriv->mmap_state, write_combine);
- 	if (ret < 0)
- 		return ret;
- 
+It might be a good idea to start brainstorming how we'd want to handle
+this change - we'd basically need a per-device notification that the
+interrupt mapping changes so that we can rebuild the queue mapping,
+which is somewhat similar to the lib/cpu_rmap.c code used by a few
+networking drivers.  This would also help with dealing with cpu
+hotplug events that change the cpu mapping.
