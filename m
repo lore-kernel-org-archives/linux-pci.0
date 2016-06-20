@@ -1,80 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34972 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230AbcF2VTk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 17:19:40 -0400
-MIME-Version: 1.0
-In-Reply-To: <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
- <1467188859-28188-2-git-send-email-okaya@codeaurora.org> <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
- <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 29 Jun 2016 23:19:38 +0200
-Message-ID: <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
-Subject: Re: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>,
-	linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] pci: export devm_request_pci_bus_resources to modules
+Date: Mon, 20 Jun 2016 17:45:41 +0200
+Message-Id: <20160620154604.2280100-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 8:47 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 6/29/2016 9:13 AM, Rafael J. Wysocki wrote:
->> On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
->>> resource requirements") omitted the initially assigned POSSIBLE penalty
->>> when the IRQ is active.
->>
->> It would be good to say what can go wrong with that here.
->>
->
-> I can add more description. Here is a first attempt.
->
-> Incorrect calculation of penalty leads to ACPI code assigning the wrong
-> interrupt number to PCI INTx interrupts.
->
-> This would not be as bad as it sounds in theory. You would just cause the
-> interrupts to be shared and observe performance penalty.
->
-> However, some drivers like parallel port driver doesn't like interrupt
-> sharing as in this example and causes all other PCI drivers sharing the interrupt
-> to malfunction.
->
-> The issue has not been caught because the behavior is platform specific
-> and depends on the peripheral drivers sharing the IRQ.
->
-> I can claim that this could be a BIOS bug. if interrupt 7 is not good for PCI,
-> it shouldn't have been listed in the possible PCI interrupts to begin with.
-> Given this is an existing platform, I don't think we have the luxury to request
-> all BIOS to be updated. This bugfix is needed to support existing platforms.
->
->
-> Feel free to request more information if the above description is not clear.
+Host drivers can be loadable modules, so we might run into this
+build error with the new interface:
 
-It is clear enough.  I can add it to the changelog when applying the patch.
+ERROR: devm_request_pci_bus_resources [drivers/pci/host/pcie-iproc.ko] undefined!
 
->
->>> The original code would assign the POSSIBLE value divided by the number
->>> of possible IRQs during initialization.
->>>
->>> Later, if the IRQ is chosen as the active IRQ or if the IRQ is in use
->>> by ISA; additional penalties get added.
+This adds an EXPORT_SYMBOL_GPL() line.
 
-Does "later" here mean "later in that code path" or "in a later patch"?
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/bus.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Rafael
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4c42a1013e3b..32efe8f5d5e9 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -132,6 +132,7 @@ int devm_request_pci_bus_resources(struct device *dev,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
+ 
+ static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+-- 
+2.9.0
