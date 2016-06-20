@@ -1,82 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:37072 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345AbcFNRh4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jun 2016 13:37:56 -0400
-Date: Tue, 14 Jun 2016 10:37:43 -0700
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>
-Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management Unit
- driver
-Message-ID: <20160614173743.GB16566@psi-dev26.jf.intel.com>
-References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <1465919118.30123.73.camel@linux.intel.com>
- <20160614155835.GA29820@gmail.com>
- <1465920434.30123.87.camel@linux.intel.com>
- <20160614172621.GA16566@psi-dev26.jf.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
+ <1465828873-23498-2-git-send-email-tn@semihalf.com>
+ <20160615110427.GD30560@red-moon>
+Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
+	al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5767B8A5.7020706@semihalf.com>
+Date: Mon, 20 Jun 2016 11:34:29 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160614172621.GA16566@psi-dev26.jf.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160615110427.GD30560@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 14, 2016 at 10:26:21AM -0700, David Cohen wrote:
-> Hi,
-> 
-> On Tue, Jun 14, 2016 at 07:07:14PM +0300, Andy Shevchenko wrote:
-> > On Tue, 2016-06-14 at 17:58 +0200, Ingo Molnar wrote:
-> > > * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-> > > 
-> > > > On Tue, 2016-06-14 at 17:29 +0200, Ingo Molnar wrote:
-> > > > 
-> > > > > * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-> > > > > 
-> > > > > > On Tue, 2016-06-14 at 12:43 +0200, Ingo Molnar wrote:
-> > > > > > In the TRM it's called Power Management Unit, though once or
-> > > > > > twice
-> > > > > > in some 
-> > > > > > documents as Power Management Controller. I actually woudn't
-> > > > > > like to
-> > > > > > use PMC 
-> > > > > > abbreviation to not be confused with pmc_atom.c and many other
-> > > > > > variation of 
-> > > > > > existing PMC drivers of other Intel platforms.
-> > > > > > 
-> > > > > > PM* as a prefix might be too short to conflict with Power
-> > > > > > Management
-> > > > > > framework 
-> > > > > > in the kernel. P-Unit (punit*) is existing part in SoC which
-> > > > > > will
-> > > > > > have its own 
-> > > > > > driver in the future, so, can't use it either.
-> > > > > > 
-> > > > > > pwr*, pwrmu*, scpmu* (as of South Complex Power Management Unit)
-> > > > > > —
-> > > > > > one of them?
-> > > > > 
-> > > > > 'pwr' certainly sounds good to me! PWMU perhaps?
-> > > > 
-> > > > Wouldn't be a bit confusing with pwm? I would stay at 'pwr'.
-> > > 
-> > > Yeah, indeed - so pwr it is?
-> > 
-> > Yes. Will rename in this way, re-test and re-send.
-> 
-> I'm curious about that. What pmu prefix would stand for?
+On 06/15/2016 01:04 PM, Lorenzo Pieralisi wrote:
+> On Mon, Jun 13, 2016 at 04:41:07PM +0200, Tomasz Nowicki wrote:
+>> IORT shows representation of IO topology for ARM based systems.
+>> It describes how various components are connected together on
+>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+>>
+>> Initial support allows to:
+>> - register ITS MSI chip along with ITS translation ID and domain token
+>> - deregister ITS MSI chip based on ITS translation ID
+>> - find registered domain token based on ITS translation ID
+>> - map MSI RID for a device
+>> - find domain token for a device
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> ---
+>>   drivers/acpi/Kconfig  |   3 +
+>>   drivers/acpi/Makefile |   1 +
+>>   drivers/acpi/iort.c   | 386 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   include/linux/iort.h  |  38 +++++
+>>   4 files changed, 428 insertions(+)
+>>   create mode 100644 drivers/acpi/iort.c
+>>   create mode 100644 include/linux/iort.h
+>>
+>> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+>> index f98c328..111dd50 100644
+>> --- a/drivers/acpi/Kconfig
+>> +++ b/drivers/acpi/Kconfig
+>> @@ -57,6 +57,9 @@ config ACPI_SYSTEM_POWER_STATES_SUPPORT
+>>   config ACPI_CCA_REQUIRED
+>>   	bool
+>>   
+>> +config IORT_TABLE
+>> +	bool
+>> +
+>>   config ACPI_DEBUGGER
+>>   	bool "AML debugger interface"
+>>   	select ACPI_DEBUG
+>> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+>> index 632e81f..0390f27 100644
+>> --- a/drivers/acpi/Makefile
+>> +++ b/drivers/acpi/Makefile
+>> @@ -83,6 +83,7 @@ obj-$(CONFIG_ACPI_CUSTOM_METHOD)+= custom_method.o
+>>   obj-$(CONFIG_ACPI_BGRT)		+= bgrt.o
+>>   obj-$(CONFIG_ACPI_CPPC_LIB)	+= cppc_acpi.o
+>>   obj-$(CONFIG_ACPI_DEBUGGER_USER) += acpi_dbg.o
+>> +obj-$(CONFIG_IORT_TABLE) 	+= iort.o
+>>   
+>>   # processor has its own "processor." module_param namespace
+>>   processor-y			:= processor_driver.o
+>> diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+>> new file mode 100644
+>> index 0000000..5bccbc8
+>> --- /dev/null
+>> +++ b/drivers/acpi/iort.c
+>> @@ -0,0 +1,386 @@
+>> +/*
+>> + * Copyright (C) 2016, Semihalf
+>> + *	Author: Tomasz Nowicki <tn@semihalf.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify it
+>> + * under the terms and conditions of the GNU General Public License,
+>> + * version 2, as published by the Free Software Foundation.
+>> + *
+>> + * This program is distributed in the hope it will be useful, but WITHOUT
+>> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+>> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+>> + * more details.
+>> + *
+>> + * This file implements early detection/parsing of I/O mapping
+>> + * reported to OS through firmware via I/O Remapping Table (IORT)
+>> + * IORT document number: ARM DEN 0049A
+>> + */
+>> +
+>> +#define pr_fmt(fmt)	"ACPI: IORT: " fmt
+>> +
+>> +#include <linux/export.h>
+>> +#include <linux/iort.h>
+>> +#include <linux/irqdomain.h>
+>> +#include <linux/kernel.h>
+>> +#include <linux/pci.h>
+>> +
+>> +struct iort_its_msi_chip {
+>> +	struct list_head	list;
+>> +	struct fwnode_handle	*fw_node;
+>> +	u32			translation_id;
+>> +};
+>> +
+>> +typedef acpi_status (*iort_find_node_callback)
+>> +	(struct acpi_iort_node *node, void *context);
+>> +
+>> +/* Root pointer to the mapped IORT table */
+>> +static struct acpi_table_header *iort_table;
+> A question to be sorted out:
+>
+> We assume we can rely on the iort_table pointer, obtained through
+> acpi_get_table(), since we assume acpi_glb_permanent_mmap is set (?),
+> correct ?
 
-Nevermind :)
-I'd vote for pwmu, as it would make more sense WRT the hw
-documentation.
+Correct.
 
-Br, David
+>
+> x86 DMAR code seems to rely on that (without even checking
+> acpi_gbl_permanent_mmap) and this has consequences on when
+> we can really start parsing IORT entries through this patch
+> (because if acpi_gbl_permanent_mmap is not set while using
+> IORT nodes we would dereference unmapped pointers).
+>
+> @Rafael: can you confirm that's the right approach ?
 
-> 
-> Br, David
+Thanks,
+Tomasz
