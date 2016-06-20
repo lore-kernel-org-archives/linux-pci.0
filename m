@@ -1,85 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:34891 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbcFJF3F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2016 01:29:05 -0400
-Received: by mail-pf0-f174.google.com with SMTP id c2so20116679pfa.2
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jun 2016 22:29:04 -0700 (PDT)
-Subject: Re: [PATCH v10 09/18] powerpc/powernv: Extend PCI bridge resources
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1463726502-14679-10-git-send-email-gwshan@linux.vnet.ibm.com>
- <9bd72b5a-c4c5-9ab7-7c82-cb4d7e8d51fd@ozlabs.ru>
- <20160610043349.GA17817@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, alistair@popple.id.au
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <fb22a56a-92fe-b12b-2f79-dc77e26fcc09@ozlabs.ru>
-Date: Fri, 10 Jun 2016 15:28:59 +1000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 20 Jun 2016 18:22:40 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tyler Baker <tyler.baker@linaro.org>
+Subject: Re: [PATCH v1 15/25] PCI: generic: Free resource list close to where
+ it's allocated
+Message-ID: <20160620172240.GA30625@red-moon>
+References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160606230636.20936.29083.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <CANMBJr41muA9mTNAa6MtWuMmeNLQxT4NjLe45=ExdFiH8vwzyw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160610043349.GA17817@gwshan>
-Content-Type: text/plain; charset=koi8-r
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CANMBJr41muA9mTNAa6MtWuMmeNLQxT4NjLe45=ExdFiH8vwzyw@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Thierry Reding <thierry.reding@gmail.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, Kevin's boot bot <khilman@kernel.org>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+ Jason Cooper <jason@lakedaemon.net>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, Simon Horman <horms@verge.net.au>,
+ linux-tegra@vger.kernel.org, Alex Benn??e <alex.bennee@linaro.org>,
+ S??ren Brinkmann <soren.brinkmann@xilinx.com>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Scott Branden <sbranden@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-renesas-soc@vger.kernel.org, Ley Foon Tan <lftan@altera.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/06/16 14:33, Gavin Shan wrote:
-> On Wed, Jun 08, 2016 at 01:47:16PM +1000, Alexey Kardashevskiy wrote:
->> On 20/05/16 16:41, Gavin Shan wrote:
->>> The PCI slots are associated with root port or downstream ports
->>> of the PCIe switch connected to root port. When adapter is hot
->>> added to the PCI slot, it usually requests more IO or memory
->>> resource from the directly connected parent bridge (port) and
->>> update the bridge's windows accordingly. The resource windows
->>> of upstream bridges can't be updated automatically. It possibly
->>> leads to unbalanced resource across the bridges: The window of
->>> downstream bridge is overruning that of upstream bridge. The
->>> IO or MMIO path won't work.
->>>
->>> This resolves the above issue by extending bridge windows of
->>> root port and upstream port of the PCIe switch connected to
->>> the root port to PHB's windows.
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>
->>
->> This breaks Garrison machine (g86l):
->>
->> EEH: Frozen PE#f9 on PHB#5 detected
->> EEH: PE location: Backplane PLX, PHB location: N/A
->> EEH: This PCI device has failed 1 times in the last hour
->> EEH: Notify device drivers to shutdown
->> EEH: Collect temporary log
->>
+On Mon, Jun 20, 2016 at 09:56:45AM -0700, Tyler Baker wrote:
+> Hi Bjorn,
 > 
-> Thanks for reporting the issue. I don't think the issue was caused by
-> the code in this patch.
-
-
-If you say so :) I am just saying that the code in this patch did trigger
-the bug, I bisected the series to this patch to find this out.
-
-
-> Actually, it's likely caused by hardware defect
-> - we can't set 2GB (0x80000000 - 0xffffffff) to RC's memory window.
-> Otherwise, it *seems* the window is disabled. I tried updating the
-> window with (0x80000000 - 0xffefffff) or (0x80000000 - 0xffdffff), no
-> EEH error was seen. I already got 0x00001000 on read despite whatever
-> I wrote to 0x20 reg.
+> On 6 June 2016 at 16:06, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > Previously we allocated the PCI resource list in
+> > gen_pci_parse_request_of_pci_ranges(), but if we had an error, we freed it
+> > on error in gen_pci_init().
+> >
+> > Reorder gen_pci_init() so we can take care of error path cleanup in
+> > gen_pci_parse_request_of_pci_ranges() instead.
+> >
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> The hardware is broken. In order to fix this, I intend to include a
-> bitmap for every PHB device node in skiboot. Kernel uses this to apply
-> fixup accordingly. One bit is reserved on Garrison platform to avoid
-> this issue. The fix can be a patch inserted before this patch in next
-> revision
+> The kernelci.org bot has reported[0] new qemu-aarch64
+> (arm64-defconfig) boot failures[1][2] in next-20160620. I've
+> bisected[3] this boot failure down to this patch, and confirmed
+> reverting it on top of next-20160620 resolves the boot issue.
+> 
+> I have not investigated further, but you can easily reproduce[4] the
+> boot failure on an x86 host running qemu-system-aarch64 (I'm running
+> qemu-system 2.6).
 
-This sounds better as preserves bisectability. Thanks.
+That's most likely because pci_ecam_create() requires the bus_range
+resource (its busr parameter) to be initialized when it is called
+and that's not the case after this patch is applied if I read it
+correctly.
 
+It is probably a NULL pointer dereference in pci_ecam_create().
 
-> or as a followup patch after this series of patches.
+Thanks,
+Lorenzo
 
+> 
+> Cheers,
+> 
+> Tyler
+> 
+> [0] https://kernelci.org/boot/all/job/next/kernel/next-20160620/
+> [1] https://storage.kernelci.org/next/next-20160620/arm64-defconfig/lab-cambridge/boot-apm-mustang-kvm-guest.txt
+> [2] https://storage.kernelci.org/next/next-20160620/arm64-defconfig/lab-tbaker/boot-qemu-aarch64,legacy.txt
+> [3] http://hastebin.com/segiruribu.vbs
+> [4] http://hastebin.com/dafuzicuyi.avrasm
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-
-
-
--- 
-Alexey
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
