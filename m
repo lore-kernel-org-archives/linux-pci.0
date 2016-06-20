@@ -1,99 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39367 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932815AbcFTRjh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jun 2016 13:39:37 -0400
-Date: Mon, 20 Jun 2016 11:37:28 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ilya Lesokhin <ilyal@mellanox.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, noaos@mellanox.com, haggaie@mellanox.com,
-	ogerlitz@mellanox.com, liranl@mellanox.com
-Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
-Message-ID: <20160620113728.74ed79f3@ul30vt.home>
-In-Reply-To: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
-References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Keith Busch <keith.busch@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 3/3] vmd: Separate MSI and MSI-x vector sharing
+Date: Mon, 20 Jun 2016 09:39:53 -0600
+Message-Id: <1466437193-17043-4-git-send-email-jonathan.derrick@intel.com>
+In-Reply-To: <1466437193-17043-1-git-send-email-jonathan.derrick@intel.com>
+References: <1466437193-17043-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 19 Jun 2016 15:16:55 +0300
-Ilya Lesokhin <ilyal@mellanox.com> wrote:
+From: Keith Busch <keith.busch@intel.com>
 
-> Changes from V1:
-> 	1. The VF are no longer assigned to PFs iommu group
-> 	2. Add a pci_enable_sriov_with_override API to allow
-> 	enablind sriov without probing the VFs with the
-> 	default driver
+Child devices in a VMD domain that want to use MSI are slowing down
+MSI-x using devices sharing the same vectors. This moves all MSI usage
+to a single VMD vector, and MSI-x devices can share the rest.
 
-So without the iommu grouping, but with the driver override, VFs are
-created and bound to vfio-pci, and we just hope for the best from
-there, right?  Is that reasonable?  That means that a user can be
-granted access to a PF, which they can use to create VFs, which
-automatically get bound to vfio-pci, but from there anything can
-happen.  The user doesn't automatically get access to them.  Nothing
-prevents the devices from being unbound from vfio-pci and bound to a
-host driver, though it does require some admin intervention.  Nothing
-prevents a user created VF from being granted to another user.
-Shutdown seems dodgy as well, where does vfio-pci guarantee that a user
-created VF is shutdown when the PF is released?  It seems vfio-pci
-needs to gain some management of VFs, not just as a passthrough from
-the user.  The whole idea still seems fragile and questionably a valid
-thing we should do, to me.  Thanks,
+Acked-by: Jon Derrick <jonathan.derrick@intel.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ arch/x86/pci/vmd.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-Alex
-
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+index a651eb0..e88b417 100644
+--- a/arch/x86/pci/vmd.c
++++ b/arch/x86/pci/vmd.c
+@@ -169,11 +169,14 @@ static irq_hw_number_t vmd_get_hwirq(struct msi_domain_info *info,
+  * XXX: We can be even smarter selecting the best IRQ once we solve the
+  * affinity problem.
+  */
+-static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd)
++static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
+ {
+-	int i, best = 0;
++	int i, best = 1;
+ 	unsigned long flags;
  
-> Changes from RFC V2:
->         1. pci_disable_sriov() is now called from a workqueue
->         To avoid the situation where a process is blocked
->         in pci_disable_sriov() wating for itself to relase the VFs.
->         2. a mutex was added to synchronize calls to
->         pci_enable_sriov() and pci_disable_sriov()
-> 
-> Changes from RFC V1:
->         Due to the security concern raised in RFC V1, we add two patches
->         to make sure the VFs belong to the same IOMMU group as
->         the PF and are probed by VFIO.
-> 
-> Today the QEMU hypervisor allows assigning a physical device to a VM,
-> facilitating driver development. However, it does not support enabling
-> SR-IOV by the VM kernel driver. Our goal is to implement such support,
-> allowing developers working on SR-IOV physical function drivers to work
-> inside VMs as well.
-> 
-> This patch series implements the kernel side of our solution.  It extends
-> the VFIO driver to support the PCIE SRIOV extended capability with
-> following features:
-> 1. The ability to probe SR-IOV BAR sizes.
-> 2. The ability to enable and disable SR-IOV.
-> 
-> This patch series is going to be used by QEMU to expose SR-IOV capabilities
-> to VM. We already have an early prototype based on Knut Omang's patches for
-> SR-IOV[1].
-> 
-> Limitations:
-> 1. Per SR-IOV spec section 3.3.12, PFs are required to support
-> 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes.
-> Unfourtently the kernel currently initializes the System Page Size register once
-> and assumes it doesn't change therefore we cannot allow guests to change this
-> register at will. We currently map both the Supported Page sizes and
-> System Page Size as virtualized and read only in violation of the spec.
-> In practice this is not an issue since both the hypervisor and the
-> guest typically select the same System Page Size.
-> 
-> [1] https://github.com/knuto/qemu/tree/sriov_patches_v6
-> 
-> Ilya Lesokhin (2):
->   PCI: Extend PCI IOV API
->   VFIO: Add support for SR-IOV extended capablity
-> 
->  drivers/pci/iov.c                   |  41 +++++--
->  drivers/vfio/pci/vfio_pci.c         |   1 +
->  drivers/vfio/pci/vfio_pci_config.c  | 210 +++++++++++++++++++++++++++++++++---
->  drivers/vfio/pci/vfio_pci_private.h |   1 +
->  include/linux/pci.h                 |  13 ++-
->  5 files changed, 240 insertions(+), 26 deletions(-)
-> 
-
++	if (!desc->msi_attrib.is_msix || vmd->msix_count == 1)
++		return &vmd->irqs[0];
++
+ 	raw_spin_lock_irqsave(&list_lock, flags);
+ 	for (i = 1; i < vmd->msix_count; i++)
+ 		if (vmd->irqs[i].count < vmd->irqs[best].count)
+@@ -188,14 +191,15 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
+ 			unsigned int virq, irq_hw_number_t hwirq,
+ 			msi_alloc_info_t *arg)
+ {
+-	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(arg->desc)->bus);
++	struct msi_desc *desc = arg->desc;
++	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
+ 	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
+ 
+ 	if (!vmdirq)
+ 		return -ENOMEM;
+ 
+ 	INIT_LIST_HEAD(&vmdirq->node);
+-	vmdirq->irq = vmd_next_irq(vmd);
++	vmdirq->irq = vmd_next_irq(vmd, desc);
+ 	vmdirq->virq = virq;
+ 
+ 	irq_domain_set_info(domain, virq, vmdirq->irq->vmd_vector, info->chip,
+-- 
+1.8.3.1
