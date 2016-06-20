@@ -1,96 +1,271 @@
-Return-Path: <arnd@arndb.de>
-Return-Path: <arnd@arndb.de>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, Wenrui Li <wenrui.li@rock-chips.com>, Doug Anderson <dianders@chromium.org>, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>, Hannes Reinecke <hare@suse.de>, Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 1/3] pci: introduce read_bridge/write_bridge pci ops
-Date: Thu, 02 Jun 2016 17:44:51 +0200
-Message-ID: <4288331.jNpl6KXlNO@wuerfel>
-In-Reply-To: <20160602140001.GB8262@localhost>
-References: <1464784332-3775650-1-git-send-email-arnd@arndb.de> <4967020.J4dsRYGugq@wuerfel> <20160602140001.GB8262@localhost>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+ rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+ robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+ Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Subject: [PATCH V7 5/8] irqchip/gicv3-its: Refactor ITS DT init code to
+ prepare for ACPI
+Date: Mon, 20 Jun 2016 13:02:18 +0200
+Message-Id: <1466420541-20101-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
+ linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
+ Tomasz Nowicki <tn@semihalf.com>, mw@semihalf.com, andrea.gallo@linaro.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 2, 2016 9:00:01 AM CEST Bjorn Helgaas wrote:
-> On Wed, Jun 01, 2016 at 10:37:28PM +0200, Arnd Bergmann wrote:
-> > On Wednesday, June 1, 2016 2:04:30 PM CEST Bjorn Helgaas wrote:
-> > > On Wed, Jun 01, 2016 at 05:41:53PM +0200, Arnd Bergmann wrote:
-> > > > On Wednesday, June 1, 2016 10:09:29 AM CEST Bjorn Helgaas wrote:
-> > > > > Hi Arnd,
-> > > > > 
-> > > > > On Wed, Jun 01, 2016 at 02:31:22PM +0200, Arnd Bergmann wrote:
-> > > > > > A lot of PCI host bridges require different methods for initiating
-> > > > > > type 0 and type 1 config space accesses, leading to duplication of
-> > > > > > code.
-> > > > > > 
-> > > > > > This adds support for the two different kinds at the pci_ops
-> > > > > > level, with the newly added map_bridge/read_bridge/write_bridge
-> > > > > > operations for type 1 accesses.
-> > > > > > 
-> > > > > > When these are not set, we fall back to the regular map_bus/read/write
-> > > > > > operations, so all existing drivers keep working, and bridges that
-> > > > > > have identical operations continue to only require one set.
-> > > > > 
-> > > > > This adds new config accessor functions to struct pci_ops and makes
-> > > > > the callers responsible for figuring out which one to use.  The
-> > > > > benefit is to reduce code duplication in some host bridge drivers
-> > > > > (DesignWare and MVEBU so far).
-> > > > > 
-> > > > > From a design perspective, I'm not comfortable with moving this burden
-> > > > > from the host bridge drivers to the callers of the config accessors.
-> > > > ...
-> > > 
-> > > > Maybe we can simply change them to use the normal API and come up with
-> > > > a way to make the pci_ops harder to misuse? Would it make you feel better
-> > > > if we also renamed .read/.write into .read_type0/.write_type0 or something
-> > > > like that?
-> > > 
-> > > I'm trying to get a better feel for the tradeoff here.  It seems like
-> > > an API complication vs. code duplication.
-> > > 
-> > > I don't really think the callers should have to figure out which
-> > > accessor to use.  How much of a benefit do we really gain by
-> > > complicating the callers?  We've managed for quite a few years with
-> > > the current scheme, and it seems like only a couple new ARM platforms
-> > > would benefit.
-> > 
-> > I just did a count of the implementations of pci_ops: I found 107
-> > instances of 'struct pci_ops', and 67 of them treat type0 and type1
-> > access differently in some form.
-> > 
-> > I'd estimate that about half of them, or roughly a third of the total
-> > instances would benefit from my change, if we were to do them again.
-> > Clearly there is no need to change the existing code here when it works,
-> > unless the benefit is very clear and the code is actively maintained.
-> > 
-> > In some cases, the difference is only that the root bus has a limited
-> > set of devices that are allowed to be accessed, so there would
-> > likely be no benefit of this, compared to e.g. yet another callback
-> > that checks the validity.
-> > Some other instances have type0 registers at a different memory location
-> > from type1, some use different layout inside of that space, and some
-> > are completely different.
-> 
-> The type0/type1 distinction still seems out of place to me at the call
-> site.  Is there any other reason a caller would care about the
-> difference between type0 and type1?
+In order to add ACPI support we need to isolate ACPI&DT common code and
+move DT logic to corresponding functions. To achieve this we are using
+firmware agnostic handle which can be unpacked to either DT or ACPI node.
 
-Another idea based on my RFC patches to make pci_host_bridge the primary
-structure for probing PCI: we could split out the old 'bus::pci_ops' with
-the traditional read/write interface from a new structure that becomes
-pci_host_bridge::pci_host_bridge_ops, and also contains the other callbacks
-that we recently added to pci_ops, alongside type0/type1 accessors.
+No functional changes other than a very minor one:
+1. Terminate its_init call with -ENODEV for non-DT case which allows
+to remove hack from its-gic-v3.c.
+2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+as a bonus we get nice string formatting.
+3. Since there is only one of ITS parent domain convert it to static global
+variable and drop the parameter from its_probe_one. Users can refer to it
+in more convenient way then.
 
-We could then have a set of default pci_ops that call
-pci_host_bridge_ops->type0_read/type0_write/type1_read/type1_write,
-and those in turn get a pci_host_bridge as an argument along with the
-bus, device, function and register numbers instead of bus pointer
-and devfn/where.
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c   | 65 ++++++++++++++++++++++----------------
+ drivers/irqchip/irq-gic-v3.c       |  7 ++--
+ include/linux/irqchip/arm-gic-v3.h |  4 +--
+ 3 files changed, 42 insertions(+), 34 deletions(-)
 
-This way all existing code can keep working, but we can convert host
-drivers (if desired) to provide only pci_host_bridge_ops and no
-pci_ops, while making it easier to define those with a more modern
-interface.
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index bd43de1..1e0888d 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -75,7 +75,7 @@ struct its_node {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	entry;
+ 	void __iomem		*base;
+-	unsigned long		phys_base;
++	phys_addr_t		phys_base;
+ 	struct its_cmd_block	*cmd_base;
+ 	struct its_cmd_block	*cmd_write;
+ 	struct its_baser	tables[GITS_BASER_NR_REGS];
+@@ -115,6 +115,7 @@ struct its_device {
+ static LIST_HEAD(its_nodes);
+ static DEFINE_SPINLOCK(its_lock);
+ static struct rdists *gic_rdists;
++static struct irq_domain *its_parent;
+ 
+ #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
+ #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
+@@ -1609,8 +1610,7 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
+ }
+ 
+-static int its_init_domain(struct device_node *node, struct its_node *its,
+-			   struct irq_domain *parent)
++static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
+ {
+ 	struct irq_domain *inner_domain;
+ 	struct msi_domain_info *info;
+@@ -1619,13 +1619,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	if (!info)
+ 		return -ENOMEM;
+ 
+-	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
+ 	if (!inner_domain) {
+ 		kfree(info);
+ 		return -ENOMEM;
+ 	}
+ 
+-	inner_domain->parent = parent;
++	inner_domain->parent = its_parent;
+ 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 	info->ops = &its_msi_domain_ops;
+ 	info->data = its;
+@@ -1634,43 +1634,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	return 0;
+ }
+ 
+-static int __init its_probe(struct device_node *node,
+-			    struct irq_domain *parent)
++static int __init its_probe_one(struct resource *res,
++				struct fwnode_handle *handle, int numa_node)
+ {
+-	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+ 
+-	err = of_address_to_resource(node, 0, &res);
+-	if (err) {
+-		pr_warn("%s: no regs?\n", node->full_name);
+-		return -ENXIO;
+-	}
+-
+-	its_base = ioremap(res.start, resource_size(&res));
++	its_base = ioremap(res->start, resource_size(res));
+ 	if (!its_base) {
+-		pr_warn("%s: unable to map registers\n", node->full_name);
++		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+ 		return -ENOMEM;
+ 	}
+ 
+ 	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+ 	if (val != 0x30 && val != 0x40) {
+-		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
++		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+ 		err = -ENODEV;
+ 		goto out_unmap;
+ 	}
+ 
+ 	err = its_force_quiescent(its_base);
+ 	if (err) {
+-		pr_warn("%s: failed to quiesce, giving up\n",
+-			node->full_name);
++		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+ 		goto out_unmap;
+ 	}
+ 
+-	pr_info("ITS: %s\n", node->full_name);
++	pr_info("ITS@%pa\n", &res->start);
+ 
+ 	its = kzalloc(sizeof(*its), GFP_KERNEL);
+ 	if (!its) {
+@@ -1682,9 +1674,9 @@ static int __init its_probe(struct device_node *node,
+ 	INIT_LIST_HEAD(&its->entry);
+ 	INIT_LIST_HEAD(&its->its_device_list);
+ 	its->base = its_base;
+-	its->phys_base = res.start;
++	its->phys_base = res->start;
+ 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+-	its->numa_node = of_node_to_nid(node);
++	its->numa_node = numa_node;
+ 
+ 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+ 	if (!its->cmd_base) {
+@@ -1731,7 +1723,7 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	err = its_init_domain(node, its, parent);
++	err = its_init_domain(handle, its);
+ 	if (err)
+ 		goto out_free_tables;
+ 
+@@ -1749,7 +1741,7 @@ out_free_its:
+ 	kfree(its);
+ out_unmap:
+ 	iounmap(its_base);
+-	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
++	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
+ 	return err;
+ }
+ 
+@@ -1777,10 +1769,10 @@ static struct of_device_id its_device_id[] = {
+ 	{},
+ };
+ 
+-int __init its_init(struct device_node *node, struct rdists *rdists,
+-	     struct irq_domain *parent_domain)
++static int __init its_of_probe(struct device_node *node)
+ {
+ 	struct device_node *np;
++	struct resource res;
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
+@@ -1790,8 +1782,27 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 			continue;
+ 		}
+ 
+-		its_probe(np, parent_domain);
++		if (of_address_to_resource(np, 0, &res)) {
++			pr_warn("%s: no regs?\n", np->full_name);
++			continue;
++		}
++
++		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
+ 	}
++	return 0;
++}
++
++int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
++		    struct irq_domain *parent_domain)
++{
++	struct device_node *of_node;
++
++	its_parent = parent_domain;
++	of_node = to_of_node(handle);
++	if (of_node)
++		its_of_probe(of_node);
++	else
++		return -ENODEV;
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index 2c5ba0e..2a8b2e1 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -911,7 +911,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 				 u64 redist_stride,
+ 				 struct fwnode_handle *handle)
+ {
+-	struct device_node *node;
+ 	u32 typer;
+ 	int gic_irqs;
+ 	int err;
+@@ -952,10 +951,8 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 
+ 	set_handle_irq(gic_handle_irq);
+ 
+-	node = to_of_node(handle);
+-	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
+-	    node) /* Temp hack to prevent ITS init for ACPI */
+-		its_init(node, &gic_data.rdists, gic_data.domain);
++	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis())
++		its_init(handle, &gic_data.rdists, gic_data.domain);
+ 
+ 	gic_smp_init();
+ 	gic_dist_init();
+diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+index 107eed4..a1ea4e2 100644
+--- a/include/linux/irqchip/arm-gic-v3.h
++++ b/include/linux/irqchip/arm-gic-v3.h
+@@ -338,9 +338,9 @@ struct rdists {
+ };
+ 
+ struct irq_domain;
+-struct device_node;
++struct fwnode_handle;
+ int its_cpu_init(void);
+-int its_init(struct device_node *node, struct rdists *rdists,
++int its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	     struct irq_domain *domain);
+ 
+ static inline bool gic_enable_sre(void)
+-- 
+1.9.1
 
-	Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
