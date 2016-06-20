@@ -1,95 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:55854 "EHLO
-	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758AbcFLBfL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jun 2016 21:35:11 -0400
-Subject: Re: [PATCH v2 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-To: Doug Anderson <dianders@chromium.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-References: <1465373117-823-1-git-send-email-shawn.lin@rock-chips.com>
- <CAD=FV=XiRgjAU2STck4mcWAERqZDvNSsCUytHDnWD+SHL2sRrQ@mail.gmail.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <bdbc3e8e-b06a-4adf-bf61-56cc19ca67d9@rock-chips.com>
-Date: Sun, 12 Jun 2016 09:34:56 +0800
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 20 Jun 2016 16:25:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: wim@djo.tudelft.nl, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, perex@perex.cz,
+	linux-pci@vger.kernel.org, Takashi Iwai <tiwai@suse.com>,
+	Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+Message-ID: <20160620212507.GA24086@localhost>
+References: <20160620003530.GA19571@djo.tudelft.nl>
+ <2999417.fp4mqtxYS2@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAD=FV=XiRgjAU2STck4mcWAERqZDvNSsCUytHDnWD+SHL2sRrQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2999417.fp4mqtxYS2@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-在 2016/6/10 12:01, Doug Anderson 写道:
-> Shawn,
->
-> On Wed, Jun 8, 2016 at 1:05 AM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
->> +pcie0: pcie@f8000000 {
->> +       compatible = "rockchip,rk3399-pcie";
->> +       #address-cells = <3>;
->> +       #size-cells = <2>;
->> +       clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
->> +                <&cru PCLK_PCIE>;
->> +       clock-names = "aclk", "aclk-perf",
->> +                     "hclk";
->
-> Code also requires a "pm" clock.
->
->> +       bus-range = <0x0 0x1>;
->> +       interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
->> +                    <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
->> +       interrupt-names: "sys", "legacy", "client";
->
-> Shouldn't be ":", should be "=".
->
->
->> +       assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
->> +       assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
->> +       assigned-clock-rates = <100000000>;
->> +       ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
->> +       ranges = < 0x82000000 0 0xfa000000 0x0 0xfa000000 0 0x600000
->> +                  0x81000000 0 0xfa600000 0x0 0xfa600000 0 0x100000 >;
->
-> nit: I don't thin it's common to have spaces before/after the ">" and "<".
-> nit: Be consistent about 0 vs. 0x0 in ranges.
->
->
->> +       num-lanes = <4>;
->> +       reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
->> +       reg-name = "axi-base", "apb-base";
->
-> Should be "reg-names" (with an "s")
->
->
->> +       resets = <&cru SRST_PCIEPHY>, <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
->> +                <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
->> +       reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
->
-> You have 5 resets but 4 reset names.  That doesn't seem right.  Code
-> shows you only getting 4, so presumably you need to remove the
-> SRST_PCIEPHY one.
+[+cc Sinan]
 
-Thanks for catching these above as I forgot to rework the this sample.
+On Mon, Jun 20, 2016 at 03:02:57AM +0200, Rafael J. Wysocki wrote:
+> You should CC the linux-pci too (done now)
+> 
+> On Monday, June 20, 2016 02:35:30 AM Wim Osterholt wrote:
+> > L.S.
+> > up to vanilla kernel-4.6.2 sound was working fine.
+> > Switching to kernel-4.7.0-rc3 made sound disappear. No /dev/mixer etc.
+> > There appears to be a bug in the Intel sound driver and/or ACPI driver.
+> > Dmesg shows interesting lines like:
+> > [   11.498592] ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 7
+> > [   11.498605] PCI: setting IRQ 7 as level-triggered
+> > [   11.543903] parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP,TRISTATE,EPP]
+> > [   12.757735] genirq: Flags mismatch irq 7. 00000080 (snd_intel8x0m) vs. 00000000 (parport0)
+> > [   12.757751] snd_intel8x0m 0000:00:1f.6: unable to grab IRQ 7
+> > [   12.757875] snd_intel8x0m: probe of 0000:00:1f.6 failed with error -16
+> > [   12.900171] genirq: Flags mismatch irq 7. 00000080 (snd_intel8x0) vs. 00000000 (parport0)
+> > [   12.900189] snd_intel8x0 0000:00:1f.5: unable to grab IRQ 7
+> > [   12.900389] snd_intel8x0: probe of 0000:00:1f.5 failed with error -16
+> > [   12.922554] genirq: Flags mismatch irq 7. 00000080 (ipw2200) vs. 00000000 (parport0)
+> > [   12.922559] ipw2200: Error allocating IRQ 7
+> > 
+> > If I boot kernel-4.7.0-rc3 with acpi=off  then sound is back!
+> > 
+> > If you need the full dmesg outputs then please get them here:
+> > http://webserver.djo.tudelft.nl/dmesg460+ACPI
+> > http://webserver.djo.tudelft.nl/dmesg473+ACPI
+> > http://webserver.djo.tudelft.nl/dmesg473noACPI
+> > (with excuses for the silly hostname which is out of our control)
 
->
->
-> -Doug
->
-> _______________________________________________
-> Linux-rockchip mailing list
-> Linux-rockchip@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-rockchip
->
+I think snd_intel8x0 (00:1f.5) is connected to LNKB, and in v4.6 LNKB
+was set to IRQ 5, while in v4.7 LNKB is connected to IRQ7.  It looks
+like IRQ7 is already in use by parport, which doesn't want to share
+it.
 
+This might be related to Sinan's changes to pci_link.c, which
+were merged for 4.7:
 
--- 
-Best Regards
-Shawn Lin
+  9e5ed6d1fb87 ACPI,PCI,IRQ: remove SCI penalize function
+  1fcb6a813c4f ACPI,PCI,IRQ: remove redundant code in acpi_irq_penalty_init()
+  5c5087a55390 ACPI,PCI,IRQ: reduce static IRQ array size to 16
+  103544d86976 ACPI,PCI,IRQ: reduce resource requirements
 
+I don't think we intended to change any behavior with those patches,
+but maybe we did.  Could you confirm/deny that those patches are
+related?  If they're not, bisection might be the quickest way to
+find the problem.
+
+Bjorn
