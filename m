@@ -1,62 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v13 10/16] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Fri, 17 Jun 2016 19:24:55 -0700
-Message-Id: <20160618022501.15648-11-yinghai@kernel.org>
-In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
-References: <20160618022501.15648-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36154 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752101AbcFTTFf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jun 2016 15:05:35 -0400
+Date: Mon, 20 Jun 2016 14:05:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH] PCI: Document connection between pci_power_t and
+ hardware PM capability
+Message-ID: <20160620190445.GA15674@localhost>
+References: <20160618180056.7267.67911.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <1466336986.30123.164.camel@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466336986.30123.164.camel@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
+On Sun, Jun 19, 2016 at 02:49:46PM +0300, Andy Shevchenko wrote:
+> On Sat, 2016-06-18 at 13:00 -0500, Bjorn Helgaas wrote:
+> > The dev.pme_support field, pci_pm_init(), and pci_pme_capable() depend
+> > on
+> > the fact that the pci_power_t values (PCI_D0, PCI_D1, etc.) match the
+> > definition of the PME_Support field of the Power Management
+> > Capabilities
+> > register in the Power Management capability (see PCI Bus Power
+> > Management
+> > spec r1.2, sec 3.2.3).
+> 
+> Nice to know! Thanks.
+> 
+> If it matters:
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-This patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
-flags parsing.
+Definitely!  I updated based on Lukas' comment and added your and Mika's
+Reviewed-by:
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Anton Blanchard <anton@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+commit 224abb67e6eb5ac062de9239163136d5ec3155c8
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Jun 17 15:23:52 2016 -0500
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 719f225..476b8ac5 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
+    PCI: Document connection between pci_power_t and hardware PM capability
+    
+    The dev.pme_support field, pci_pm_init(), pci_pme_capable(), and
+    pci_raw_set_power_state() depend on the fact that the pci_power_t values
+    (PCI_D0, PCI_D1, etc.) match the definition of the Capabilities PME_Support
+    and the Control/Status PowerState fields in the Power Management capability
+    (see PCI Bus Power Management spec r1.2, sec 3.2.3).
+    
+    Add a note to this effect at the pci_power_t typedef.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+    Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8597b42..0a1a9e3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -101,6 +101,10 @@ enum {
+ 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
+ };
  
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
--- 
-2.8.3
++/*
++ * pci_power_t values must match the bits in the Capabilities PME_Support
++ * and Control/Status PowerState fields in the Power Management capability.
++ */
+ typedef int __bitwise pci_power_t;
+ 
+ #define PCI_D0		((pci_power_t __force) 0)
