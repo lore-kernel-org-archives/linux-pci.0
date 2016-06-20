@@ -1,151 +1,281 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59094 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751839AbcF3Kx1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 06:53:27 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5UAnQrX109066
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:26 -0400
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23uwnnf08q-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:26 -0400
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 30 Jun 2016 20:53:23 +1000
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v3 4/7] PCI: Add a new option for resource_alignment to reassign alignment
-Date: Thu, 30 Jun 2016 18:53:10 +0800
-In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1467283993-3185-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+ rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+ robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+ Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Subject: [PATCH V7 2/8] ACPI: Add new IORT functions to support MSI domain
+ handling
+Date: Mon, 20 Jun 2016 13:02:15 +0200
+Message-Id: <1466420541-20101-3-git-send-email-tn@semihalf.com>
+In-Reply-To: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
+ linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
+ Tomasz Nowicki <tn@semihalf.com>, mw@semihalf.com, andrea.gallo@linaro.org,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using resource_alignment kernel parameter, the current
-implement reassigns the alignment by changing resources' size
-which can potentially break some drivers. For example, the driver
-uses the size to locate some register whose length is related
-to the size.
+For ITS, MSI functionality consists on building domain stack and
+during that process we need to reference to domain stack components
+e.g. before we create new DOMAIN_BUS_PCI_MSI domain we need to specify
+its DOMAIN_BUS_NEXUS parent domain. In order to manage that process
+properly, maintain list which elements contain domain token
+(unique for MSI domain stack) and ITS ID: iort_register_domain_token()
+and iort_deregister_domain_token(). Then retrieve domain token
+any time later with ITS ID being key off: iort_find_domain_token().
+With domain token and domain type we are able to find corresponding
+IRQ domain.
 
-This patch adds a new option "noresize" for the parameter to
-solve this problem.
+Since IORT is prepared to describe MSI domain on a per-device basis,
+use existing IORT helpers and implement two calls:
+1. iort_msi_map_rid() to map MSI RID for a device
+2. iort_get_device_domain() to find domain token for a device
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- Documentation/kernel-parameters.txt |    5 ++++-
- drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
- 2 files changed, 29 insertions(+), 11 deletions(-)
+ drivers/acpi/iort.c  | 169 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iort.h |  11 ++++
+ 2 files changed, 180 insertions(+)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 82b42c9..c4802f5 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2997,13 +2997,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				window. The default value is 64 megabytes.
- 		resource_alignment=
- 				Format:
--				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-+				[<order of align>@][<domain>:]<bus>:<slot>.<func>
-+				[:noresize][; ...]
- 				Specifies alignment and device to reassign
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
-+				noresize: Don't change the resources' sizes when
-+				reassigning alignment.
- 		ecrc=		Enable/disable PCIe ECRC (transaction layer
- 				end-to-end CRC checking).
- 				bios: Use BIOS/firmware settings. This is the
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6241cfc..1d80a94 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4748,11 +4748,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
- /**
-  * pci_specified_resource_alignment - get resource alignment specified by user.
-  * @dev: the PCI device to get
-+ * @resize: whether or not to change resources' size when reassigning alignment
-  *
-  * RETURNS: Resource alignment if it is specified.
-  *          Zero if it is not specified.
-  */
--static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+		bool *resize)
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index e342bac..496dcf6 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -22,12 +22,91 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ 
++struct iort_its_msi_chip {
++	struct list_head	list;
++	struct fwnode_handle	*fw_node;
++	u32			translation_id;
++};
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+ /* Root pointer to the mapped IORT table */
+ static struct acpi_table_header *iort_table;
+ 
++static LIST_HEAD(iort_msi_chip_list);
++static DEFINE_SPINLOCK(iort_msi_chip_lock);
++
++/**
++ * iort_register_domain_token() - register domain token and related ITS ID
++ * to the list from where we can get it back later on.
++ * @trans_id: ITS ID.
++ * @fw_node: Domain token.
++ *
++ * Returns: 0 on success, -ENOMEM if no memory when allocating list element
++ */
++int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
++{
++	struct iort_its_msi_chip *its_msi_chip;
++
++	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
++	if (!its_msi_chip)
++		return -ENOMEM;
++
++	its_msi_chip->fw_node = fw_node;
++	its_msi_chip->translation_id = trans_id;
++
++	spin_lock(&iort_msi_chip_lock);
++	list_add(&its_msi_chip->list, &iort_msi_chip_list);
++	spin_unlock(&iort_msi_chip_lock);
++
++	return 0;
++}
++
++/**
++ * iort_deregister_domain_token() - Deregister domain token based on ITS ID
++ * @trans_id: ITS ID.
++ *
++ * Returns: none.
++ */
++void iort_deregister_domain_token(int trans_id)
++{
++	struct iort_its_msi_chip *its_msi_chip, *t;
++
++	spin_lock(&iort_msi_chip_lock);
++	list_for_each_entry_safe(its_msi_chip, t, &iort_msi_chip_list, list) {
++		if (its_msi_chip->translation_id == trans_id) {
++			list_del(&its_msi_chip->list);
++			kfree(its_msi_chip);
++			break;
++		}
++	}
++	spin_unlock(&iort_msi_chip_lock);
++}
++
++/**
++ * iort_find_domain_token() - Find domain token based on given ITS ID
++ * @trans_id: ITS ID.
++ *
++ * Returns: domain token when find on the list, NULL otherwise
++ */
++struct fwnode_handle *iort_find_domain_token(int trans_id)
++{
++	struct fwnode_handle *fw_node = NULL;
++	struct iort_its_msi_chip *its_msi_chip;
++
++	spin_lock(&iort_msi_chip_lock);
++	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
++		if (its_msi_chip->translation_id == trans_id) {
++			fw_node = its_msi_chip->fw_node;
++			break;
++		}
++	}
++	spin_unlock(&iort_msi_chip_lock);
++
++	return fw_node;
++}
++
+ static struct acpi_iort_node *
+ iort_scan_node(enum acpi_iort_node_type type,
+ 	       iort_find_node_callback callback, void *context)
+@@ -205,6 +284,96 @@ iort_find_dev_node(struct device *dev)
+ 			      iort_match_node_callback, &pbus->dev);
+ }
+ 
++/**
++ * iort_msi_map_rid() - Map a MSI requester ID for a device
++ * @dev: The device for which the mapping is to be done.
++ * @req_id: The device requester ID.
++ *
++ * Returns: mapped MSI RID on success, input requester ID otherwise
++ */
++u32 iort_msi_map_rid(struct device *dev, u32 req_id)
++{
++	struct acpi_iort_node *node;
++	u32 dev_id;
++
++	if (!iort_table)
++		return req_id;
++
++	node = iort_find_dev_node(dev);
++	if (!node) {
++		dev_err(dev, "can't find related IORT node\n");
++		return req_id;
++	}
++
++	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
++	return dev_id;
++}
++
++/**
++ * iort_dev_find_its_id() - Find the ITS identifier for a device
++ * @dev: The device.
++ * @idx: Index of the ITS identifier list.
++ * @its_id: ITS identifier.
++ *
++ * Returns: 0 on success, appropriate error value otherwise
++ */
++static int
++iort_dev_find_its_id(struct device *dev, u32 req_id, unsigned int idx,
++		     int *its_id)
++{
++	struct acpi_iort_its_group *its;
++	struct acpi_iort_node *node;
++
++	node = iort_find_dev_node(dev);
++	if (!node) {
++		dev_err(dev, "can't find related IORT node\n");
++		return -ENXIO;
++	}
++
++	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
++	if (!node) {
++		dev_err(dev, "can't find related ITS node\n");
++		return -ENXIO;
++	}
++
++	/* Move to ITS specific data */
++	its = (struct acpi_iort_its_group *)node->node_data;
++	if (idx > its->its_count) {
++		dev_err(dev, "requested ITS ID index [%d] is greater than available [%d]\n",
++			idx, its->its_count);
++		return -ENXIO;
++	}
++
++	*its_id = its->identifiers[idx];
++	return 0;
++}
++
++/**
++ * iort_get_device_domain() - Find MSI domain related to a device
++ * @dev: The device.
++ * @req_id: Requester ID for the device.
++ *
++ * Returns: the MSI domain for this device, NULL otherwise
++ */
++struct irq_domain *
++iort_get_device_domain(struct device *dev, u32 req_id)
++{
++	static struct fwnode_handle *handle;
++	int its_id;
++
++	if (!iort_table)
++		return NULL;
++
++	if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
++		return NULL;
++
++	handle = iort_find_domain_token(its_id);
++	if (!handle)
++		return NULL;
++
++	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
++}
++
+ void __init iort_table_detect(void)
  {
- 	int seg, bus, slot, func, align_order, count;
- 	resource_size_t align = 0;
-@@ -4787,6 +4789,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 			}
- 		}
- 		p += count;
-+		if (!strncmp(p, ":noresize", 9)) {
-+			*resize = false;
-+			p += 9;
-+		} else
-+			*resize = true;
- 		if (seg == pci_domain_nr(dev->bus) &&
- 			bus == dev->bus->number &&
- 			slot == PCI_SLOT(dev->devfn) &&
-@@ -4819,6 +4826,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- {
- 	int i;
- 	struct resource *r;
-+	bool resize = true;
- 	resource_size_t align, size;
+ 	acpi_status status;
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index cde6809..d7daba1 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -20,11 +20,22 @@
+ #define __IORT_H__
  
- 	/* We should never try to reassign VF's alignment */
-@@ -4826,7 +4834,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		return;
+ #include <linux/acpi.h>
++#include <linux/fwnode.h>
++#include <linux/irqdomain.h>
  
- 	/* check if specified PCI is target device to reassign */
--	align = pci_specified_resource_alignment(dev);
-+	align = pci_specified_resource_alignment(dev, &resize);
- 	if (!align)
- 		return;
++int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
++void iort_deregister_domain_token(int trans_id);
++struct fwnode_handle *iort_find_domain_token(int trans_id);
+ #ifdef CONFIG_IORT_TABLE
+ void iort_table_detect(void);
++u32 iort_msi_map_rid(struct device *dev, u32 req_id);
++struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
+ #else
+ static inline void iort_table_detect(void) { }
++static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
++{ return req_id; }
++static inline struct irq_domain *
++iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
+ #endif
  
-@@ -4848,15 +4856,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 			continue;
- 		}
- 		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
-+		if (resize) {
-+			if (size < align) {
-+				size = align;
-+				dev_info(&dev->dev,
-+					"Rounding up size of resource #%d to %#llx.\n",
-+					i, (unsigned long long)size);
-+			}
-+			r->flags |= IORESOURCE_UNSET;
-+			r->end = size - 1;
-+			r->start = 0;
-+		} else {
-+			r->flags &= ~IORESOURCE_SIZEALIGN;
-+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-+			r->start = max(align, size);
-+			r->end = r->start + size - 1;
- 		}
--		r->flags |= IORESOURCE_UNSET;
--		r->end = size - 1;
--		r->start = 0;
- 	}
- 	/* Need to disable bridge's resource window,
- 	 * to enable the kernel to reassign new resource
+ #endif /* __IORT_H__ */
 -- 
-1.7.9.5
+1.9.1
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
