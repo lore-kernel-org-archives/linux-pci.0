@@ -1,99 +1,38 @@
-Return-Path: <cov@codeaurora.org>
-Return-Path: <cov@codeaurora.org>
-Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
-To: Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>
-References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
- <1467100442-28078-4-git-send-email-tn@semihalf.com>
- <577275EA.7010002@codeaurora.org>
- <CADaLNDkhPZuG7UJ4SK_j5v_nXbd782Q17LAcXduG0uEObaFF=g@mail.gmail.com>
- <5773A773.8040700@semihalf.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
- Will Deacon <will.deacon@arm.com>, Catalin Marinas
- <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
- Hanjun Guo <hanjun.guo@linaro.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Sinan Kaya <okaya@codeaurora.org>, Jayachandran C <jchandra@broadcom.com>,
- Robert Richter <robert.richter@caviumnetworks.com>,
- Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
- David Daney <ddaney@caviumnetworks.com>, Yijing Wang
- <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>,
- linux-pci@vger.kernel.org, linux-arm <linux-arm-kernel@lists.infradead.org>,
- linux-acpi@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>,
- Andrea Gallo <andrea.gallo@linaro.org>, jeremy.linton@arm.com,
- Dongdong Liu <liudongdong3@huawei.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jeffrey Hugo <jhugo@codeaurora.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>
-From: Christopher Covington <cov@codeaurora.org>
-Message-ID: <5773CE49.1050802@codeaurora.org>
-Date: Wed, 29 Jun 2016 09:34:01 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 21 Jun 2016 16:31:20 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Keith Busch <keith.busch@intel.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"axboe@fb.com" <axboe@fb.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
+Message-ID: <20160621143120.GA4104@lst.de>
+References: <20160615102311.GA16619@lst.de> <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com> <20160615151415.GA1919@localhost.localdomain> <7f0b16bd-b39f-99e6-c1c1-6a508bf9bbbf@sandisk.com> <20160615160316.GB1919@localhost.localdomain> <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com> <20160616152006.GA13615@lst.de> <f22e87c1-6875-9a59-94db-42a6f71663b8@sandisk.com> <20160620122219.GA29059@lst.de> <066e6b9d-34a8-5917-4ad8-cb466d3389c3@sandisk.com>
 MIME-Version: 1.0
-In-Reply-To: <5773A773.8040700@semihalf.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <066e6b9d-34a8-5917-4ad8-cb466d3389c3@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+On Mon, Jun 20, 2016 at 03:21:47PM +0200, Bart Van Assche wrote:
+> A notification mechanism that reports interrupt mapping changes will 
+> definitely help. What would also help is an API that allows drivers to 
+> query the MSI-X IRQ of an adapter that is nearest given a cpumask, e.g. 
+> hctx->cpumask.
 
-On 06/29/2016 06:48 AM, Tomasz Nowicki wrote:
-> On 28.06.2016 18:12, Duc Dang wrote:
->> On Tue, Jun 28, 2016 at 6:04 AM, Christopher Covington
->> <cov@codeaurora.org> wrote:
->>> Hi Tomasz,
+This is still the wrong way around - we need to build the blk-mq queue
+mappings based on the interrupts, not the other way around.
 
->>> Ard's comments on v3 included:
->>>
->>> "... exact OEM table/rev id matches ..."
->>> "... substring match ... out of the question ..."
+> Another function can then map that IRQ into an index in the 
+> range 0..n-1 where n is the number of MSI-X interrupts for that adapter. 
+> Every blk-mq/scsi-mq driver will need this functionality to decide which 
+> IRQ to associate with a block layer hctx.
 
-Digging through the archives I see Jon Master commented earlier to "be
-careful with substring match".
-
->> I think having OEM Table ID as "PLAT " and then "PLAT2 " (the the 
->> next version of the SoC) is common. So yes, matching full string is
->> better as we can use "PLAT2 " in MCFG table and not worry about the
->> "PLAT" sub-string match causes the quirk to be applied
->> unintentionally.
-
-> Note that platforms already shipped where OEM string has no padding will
-
-I'm confused by this statement. OEMID is defined as 6 bytes long and OEM
-Table ID as 8 bytes long in the ACPI specification. As far as I can
-tell, if your string isn't exactly that long, padding up to that length
-is required.
-
-> have change the firmware or add 0 padding to our quirk array IDs.
-
-The fixed 6 or 8 character string compare, as used v2 of this patchset,
-will be compatible with existing firmware as best I can tell. Adding
-padding to the quirk array IDs is exactly what I'm suggesting, although
-all the strings I've seen are space padded rather than null padded.
-
-Matches:
-{"APM   ", "XGENE   ", 1}
-{"CAVIUM", "THUNDERX", 1}
-{"HISI  ", "HISI-D02", 1}
-{"HISI  ", "HISI-D03", 1}
-{"QCOM  ", "QDF2432 ", 1}
-
-Given the above tuples, won't accidentally match:
-(guessing at possible future ids)
-{"APM   ", "XGENEi  ", 1}
-{"CAVIUM", "THUNDERX", i} i != 1
-{"CAVIUM", "THUNDERi", 1}
-{"CAVIUM", "THUNDRXi", 1}
-{"HISI  ", "HISI-D0i", 1} i != 2 && i != 3
-{"QCOM  ", "QDF24ij ", 1} i != 3 && j != 2
-
-References for APM, HiSilicon IDs:
-https://lists.linaro.org/pipermail/linaro-acpi/2016-June/007108.html
-https://lists.linaro.org/pipermail/linaro-acpi/2016-June/007043.html
-
-Thanks,
-Cov
-
--- 
-Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+This is something that should be done in commmon code and is done in
+common code in this series - the driver passes a cpumask to blk-mq,
+and blk-mq creates a queue for every cpu that is set in the cpumask.
