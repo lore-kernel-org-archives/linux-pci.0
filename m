@@ -1,47 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:38056 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752973AbcFBJsp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 05:48:45 -0400
-Received: by mail-wm0-f53.google.com with SMTP id a20so59955426wma.1
-        for <linux-pci@vger.kernel.org>; Thu, 02 Jun 2016 02:48:44 -0700 (PDT)
-Date: Thu, 2 Jun 2016 10:48:42 +0100
-From: Matt Fleming <matt@codeblueprint.co.uk>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
-	Chris Milsted <cmilsted@redhat.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Andi Kleen <ak@linux.intel.com>, Michael Buesch <m@bues.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Konstantin Simanov <k.simanov@stlk.ru>,
-	Bryan Paradis <bryan.paradis@gmail.com>,
-	Andrew Worsley <amworsley@gmail.com>,
-	Chris Bainbridge <chris.bainbridge@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, zajec5@gmail.com
-Subject: Re: [PATCH] x86: Add early quirk to reset Apple AirPort card
-Message-ID: <20160602094842.GF2658@codeblueprint.co.uk>
-References: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 21 Jun 2016 09:58:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>, bhelgaas@google.com,
+	niklass@axis.com, jespern@axis.com,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Miller <davem@davemloft.net>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	mchehab@osg.samsung.com, linux@roeck-us.net, jslaby@suse.cz,
+	robh@kernel.org, marc.zyngier@arm.com, rjui@broadcom.com,
+	Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>, geert+renesas@glider.be,
+	lftan@altera.com, bharat.kumar.gogada@xilinx.com, hauke@hauke-m.de,
+	thomas.petazzoni@free-electrons.com, simon.horman@netronome.com,
+	phil.edworthy@renesas.com, svarbanov@mm-sol.com, dhdang@apm.com,
+	wangzhou1@hisilicon.com, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@axis.com
+Subject: Re: [PATCH v2 2/2] pci: host: new driver for Axis ARTPEC-6 PCIe
+ controller
+Message-ID: <20160621145819.GA31917@localhost>
+References: <1462794543-30317-1-git-send-email-niklass@axis.com>
+ <CAP=VYLo00R4iv+9_=x2BjjurEfArJzY46Zc=doEtav=BwNhPzg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAP=VYLo00R4iv+9_=x2BjjurEfArJzY46Zc=doEtav=BwNhPzg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 29 May, at 01:35:28AM, Lukas Wunner wrote:
-> The EFI firmware on Macs contains a full-fledged network stack for
-> downloading OS X images from osrecovery.apple.com. Unfortunately
-> on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
-> wireless card on every boot and leaves it enabled even after
-> ExitBootServices has been called. The card continues to assert its IRQ
-> line, causing spurious interrupts if the IRQ is shared. It also corrupts
-> memory by DMAing received packets, allowing for remote code execution
-> over the air. This only stops when a driver is loaded for the wireless
-> card, which may be never if the driver is not installed or blacklisted.
+On Mon, Jun 20, 2016 at 03:50:07PM -0400, Paul Gortmaker wrote:
+> On Mon, May 9, 2016 at 7:49 AM, Niklas Cassel <niklas.cassel@axis.com> wrote:
+> > From: Niklas Cassel <niklas.cassel@axis.com>
+> >
+> > The Axis ARTPEC-6 SoC integrates a PCIe controller from Synopsys.
+> > This commit adds a new driver that provides the small glue
+> > needed to use the existing Designware driver to make it work on
+> > the Axis ARTPEC-6 SoC.
+> >
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> 
+> [...]
+> 
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -244,4 +244,10 @@ config PCIE_ARMADA_8K
+> >           Designware hardware and therefore the driver re-uses the
+> >           Designware core functions to implement the driver.
+> >
+> > +config PCIE_ARTPEC6
+> > +       bool "Axis ARTPEC-6 PCIe controller"
+> 
+> Bjorn,
+> 
+> Can we please start requiring new PCI/PCI-e drivers to either:
+> 
+>   (a)  be merged and tested as tristate, or
+> 
+>   (b)  remain bool, but not gratuitously use module macros
 
-[... Snip a very thorough changelog ...]
+That requires somebody to enforce it, which I suppose would end up
+being me, and that's not really practical unless you help out by
+watching for them.  I know that's not really practical for you either.
 
-This patch looks fine to me from an EFI perspective.
+I hoped that we could convert them to be modular, but that hasn't
+started happening, so I think we need to fall back to your original
+proposal of making them bool and removing the modular junk.
+Eventually people who feel the pain of building in all the drivers
+might step up and make them modular.
 
-Acked-by: Matt Fleming <matt@codeblueprint.co.uk>
+Do you want to update your series that removed the gratuitous module
+code?  I'll be on vacation June 25-July 17, but maybe we can still
+squeeze it in this cycle.
+
+Bjorn
