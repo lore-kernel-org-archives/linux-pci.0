@@ -1,37 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2.asahi-net.or.jp ([202.224.39.198]:57129 "EHLO
-	mail2.asahi-net.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbcF1Ggl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2016 02:36:41 -0400
-From: Yoshinori Sato <ysato@users.sourceforge.jp>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>
-Subject: [PATCH v3 16/19] pci: PCI_HOST_GENERIC enable for SH
-Date: Tue, 28 Jun 2016 15:36:32 +0900
-Message-Id: <1467095795-5082-17-git-send-email-ysato@users.sourceforge.jp>
-In-Reply-To: <1467095795-5082-1-git-send-email-ysato@users.sourceforge.jp>
-References: <1467095795-5082-1-git-send-email-ysato@users.sourceforge.jp>
+Received: from ozlabs.org ([103.22.144.67]:34768 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751710AbcFUMek (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Jun 2016 08:34:40 -0400
+In-Reply-To: <1463726502-14679-2-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: aik@ozlabs.ru, linux-pci@vger.kernel.org,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>, alistair@popple.id.au
+Subject: Re: [v10,01/18] PCI: Add pcibios_setup_bridge()
+Message-Id: <3rYn6W4S0bz9sf9@ozlabs.org>
+Date: Tue, 21 Jun 2016 22:27:15 +1000 (AEST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
----
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, 2016-20-05 at 06:41:25 UTC, Gavin Shan wrote:
+> Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
+> which is called for once after PCI probing and resource assignment
+> are completed, to allocate platform required resources for PCI devices:
+> PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
+> Obviously, it's not hotplug friendly.
+> 
+> This adds weak function pcibios_setup_bridge(), which is called by
+> pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
+> to assign above platform required resources to newly plugged PCI devices
+> during PCI hotplug in subsequent patches.
+> 
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index df60505..83184eb 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -83,7 +83,7 @@ config PCI_HOST_COMMON
- 
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
--	depends on (ARM || ARM64) && OF
-+	depends on (ARM || ARM64 || SUPERH) && OF
- 	select PCI_HOST_COMMON
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
--- 
-2.7.0
+Entire series applied to powerpc next, thanks.
 
+https://git.kernel.org/powerpc/c/d366d28cd1325f11d582ec6d4a
+
+cheers
