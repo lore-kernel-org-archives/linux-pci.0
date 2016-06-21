@@ -1,121 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Rui Wang <rui.y.wang@intel.com>
-To: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-	bhelgaas@google.com
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, rui.y.wang@intel.com
-Subject: [PATCH V2 1/3] x86/ioapic: Support hot-removal of IOAPICs present during boot
-Date: Wed,  8 Jun 2016 14:59:51 +0800
-Message-Id: <1465369193-4816-2-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1465369193-4816-1-git-send-email-rui.y.wang@intel.com>
-References: <1465369193-4816-1-git-send-email-rui.y.wang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Subject: Re: [RESEND PATCH v2 1/4] PCI: Ignore resource_alignment if
+ PCI_PROBE_ONLY was set\\
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1464846411-16895-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1464846411-16895-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160621014346.GA30307@localhost>
+ <6b457696-5cb6-66ba-911a-fec42bb3e0d3@linux.vnet.ibm.com>
+Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com, corbet@lwn.net,
+        aik@ozlabs.ru, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+        bhelgaas@google.com, alex.williamson@redhat.com, paulus@samba.org,
+        warrier@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Tue, 21 Jun 2016 16:38:26 +0800
+MIME-Version: 1.0
+In-Reply-To: <6b457696-5cb6-66ba-911a-fec42bb3e0d3@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <5162fcfc-5ba2-eb63-b706-dfb495cad7d1@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-IOAPICs present during system boot aren't added to ioapic_list,
-thus are unable to be hot-removed. Fix it by calling
-acpi_ioapic_add() during root bus enumeration.
+On 2016/6/21 10:16, Yongji Xie wrote:
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/internal.h | 2 --
- drivers/acpi/ioapic.c   | 7 ++++---
- drivers/acpi/pci_root.c | 2 +-
- drivers/pci/setup-bus.c | 5 ++++-
- include/linux/acpi.h    | 3 +++
- 5 files changed, 12 insertions(+), 7 deletions(-)
+> On 2016/6/21 9:43, Bjorn Helgaas wrote:
+>
+>> On Thu, Jun 02, 2016 at 01:46:48PM +0800, Yongji Xie wrote:
+>>> The resource_alignment will releases memory resources allocated
+>>> by firmware so that kernel can reassign new resources later on.
+>>> But this will cause the problem that no resources can be
+>>> allocated by kernel if PCI_PROBE_ONLY was set, e.g. on pSeries
+>>> platform because PCI_PROBE_ONLY force kernel to use firmware
+>>> setup and not to reassign any resources.
+>>>
+>>> To solve this problem, this patch ignores resource_alignment
+>>> if PCI_PROBE_ONLY was set.
+>>>
+>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>> ---
+>>>   drivers/pci/pci.c |    6 ++++++
+>>>   1 file changed, 6 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index c8b4dbd..a259394 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -4761,6 +4761,12 @@ static resource_size_t 
+>>> pci_specified_resource_alignment(struct pci_dev *dev)
+>>>       spin_lock(&resource_alignment_lock);
+>>>       p = resource_alignment_param;
+>>>       while (*p) {
+>>> +        if (pci_has_flag(PCI_PROBE_ONLY)) {
+>>> +            printk(KERN_ERR "PCI: Ignore resource_alignment 
+>>> parameter: %s with PCI_PROBE_ONLY set\n",
+>>> +                    p);
+>>> +            *p = 0;
+>>> +            break;
+>> Wouldn't it be simpler to make pci_set_resource_alignment_param() fail
+>> if PCI_PROBE_ONLY is set?
+>
+> I add the check here because I want to print some logs so that users
+> could know the reason why resource_alignment doesn't work when
+> they add this parameter.
+>
+> Thanks,
+> Yongji
+>
 
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 9bb0773..bb567a7 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -40,10 +40,8 @@ int acpi_sysfs_init(void);
- void acpi_container_init(void);
- void acpi_memory_hotplug_init(void);
- #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
--int acpi_ioapic_add(struct acpi_pci_root *root);
- int acpi_ioapic_remove(struct acpi_pci_root *root);
- #else
--static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
- static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
- #endif
- #ifdef CONFIG_ACPI_DOCK
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index ccdc8db..0f272e2 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -189,16 +189,17 @@ exit:
- 	return AE_OK;
- }
- 
--int acpi_ioapic_add(struct acpi_pci_root *root)
-+int acpi_ioapic_add(acpi_handle root_handle)
- {
- 	acpi_status status, retval = AE_OK;
- 
--	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root_handle,
- 				     UINT_MAX, handle_ioapic_add, NULL,
--				     root->device->handle, (void **)&retval);
-+				     root_handle, (void **)&retval);
- 
- 	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
- }
-+EXPORT_SYMBOL_GPL(acpi_ioapic_add);
- 
- int acpi_ioapic_remove(struct acpi_pci_root *root)
- {
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..53f5965 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -614,7 +614,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (hotadd) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
--		acpi_ioapic_add(root);
-+		acpi_ioapic_add(root->device->handle);
- 	}
- 
- 	pci_lock_rescan_remove();
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 55641a3..e32c356 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -25,6 +25,7 @@
- #include <linux/ioport.h>
- #include <linux/cache.h>
- #include <linux/slab.h>
-+#include <linux/acpi.h>
- #include "pci.h"
- 
- unsigned int pci_flags;
-@@ -1779,8 +1780,10 @@ void __init pci_assign_unassigned_resources(void)
- {
- 	struct pci_bus *root_bus;
- 
--	list_for_each_entry(root_bus, &pci_root_buses, node)
-+	list_for_each_entry(root_bus, &pci_root_buses, node) {
- 		pci_assign_unassigned_root_bus_resources(root_bus);
-+		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
-+	}
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 288fac5..3ed22df 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -262,6 +262,9 @@ int acpi_unmap_cpu(int cpu);
- 
- #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
- int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
-+int acpi_ioapic_add(acpi_handle root);
-+#else
-+static inline int acpi_ioapic_add(acpi_handle root) { return 0; }
- #endif
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
--- 
-1.8.3.1
+Sorry, please ignore the previous reply. I didn't add this check in
+pci_set_resource_alignment_param() because PCI_PROBE_ONLY
+may be set after we parse "resource_alignment".
 
+And it seems that printk_once() may be better here so that
+we don't need to set *p = 0.
+
+Thanks,
+Yongji
+
+>>> +        }
+>>>           count = 0;
+>>>           if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+>>>                               p[count] == '@') {
+>>> -- 
+>>> 1.7.9.5
+>>>
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>> _______________________________________________
+>> Linuxppc-dev mailing list
+>> Linuxppc-dev@lists.ozlabs.org
+>> https://lists.ozlabs.org/listinfo/linuxppc-dev
+>
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
