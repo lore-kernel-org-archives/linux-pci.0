@@ -1,79 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51274 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819AbcF2Ih2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jun 2016 04:37:28 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v2 4/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
-Date: Wed, 29 Jun 2016 11:35:32 +0300
-Message-Id: <1467189336-29556-5-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
-References: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 4/8] irqchip/gicv3-its: Cleanup for ITS domain
+ initialization
+To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+ tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+ bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+ robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+ Suravee.Suthikulpanit@amd.com
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+ <1466420541-20101-5-git-send-email-tn@semihalf.com>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <7718646e-4f4c-eee9-30fd-02578679e3d6@linaro.org>
+Date: Tue, 21 Jun 2016 15:44:09 +0800
+MIME-Version: 1.0
+In-Reply-To: <1466420541-20101-5-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
+ linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
+ mw@semihalf.com, andrea.gallo@linaro.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updating the Kconfig Thunderbolt(TM) description.
+On 2016/6/20 19:02, Tomasz Nowicki wrote:
+> There is no point to initialize ITS without having msi-controller
+> property in corresponding DT node. However, its_probe is checking
+> msi-controller presence at the end, so we can save our time and do that
+> check prior to its_probe call. Also, for the code clarity purpose,
+> we put domain initialization to separate function.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/irqchip/irq-gic-v3-its.c | 57 ++++++++++++++++++++++++----------------
+>  1 file changed, 34 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+> index 7ceaba8..bd43de1 100644
+> --- a/drivers/irqchip/irq-gic-v3-its.c
+> +++ b/drivers/irqchip/irq-gic-v3-its.c
+> @@ -1609,13 +1609,37 @@ static void its_enable_quirks(struct its_node *its)
+>  	gic_enable_quirks(iidr, its_quirks, its);
+>  }
+>
+> +static int its_init_domain(struct device_node *node, struct its_node *its,
+> +			   struct irq_domain *parent)
+> +{
+> +	struct irq_domain *inner_domain;
+> +	struct msi_domain_info *info;
+> +
+> +	info = kzalloc(sizeof(*info), GFP_KERNEL);
+> +	if (!info)
+> +		return -ENOMEM;
+> +
+> +	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
+> +	if (!inner_domain) {
+> +		kfree(info);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	inner_domain->parent = parent;
+> +	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+> +	info->ops = &its_msi_domain_ops;
+> +	info->data = its;
+> +	inner_domain->host_data = info;
+> +
+> +	return 0;
+> +}
+> +
+>  static int __init its_probe(struct device_node *node,
+>  			    struct irq_domain *parent)
+>  {
+>  	struct resource res;
+>  	struct its_node *its;
+>  	void __iomem *its_base;
+> -	struct irq_domain *inner_domain;
+>  	u32 val;
+>  	u64 baser, tmp;
+>  	int err;
+> @@ -1707,28 +1731,9 @@ static int __init its_probe(struct device_node *node,
+>  	writeq_relaxed(0, its->base + GITS_CWRITER);
+>  	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+>
+> -	if (of_property_read_bool(node, "msi-controller")) {
+> -		struct msi_domain_info *info;
+> -
+> -		info = kzalloc(sizeof(*info), GFP_KERNEL);
+> -		if (!info) {
+> -			err = -ENOMEM;
+> -			goto out_free_tables;
+> -		}
+> -
+> -		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
+> -		if (!inner_domain) {
+> -			err = -ENOMEM;
+> -			kfree(info);
+> -			goto out_free_tables;
+> -		}
+> -
+> -		inner_domain->parent = parent;
+> -		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+> -		info->ops = &its_msi_domain_ops;
+> -		info->data = its;
+> -		inner_domain->host_data = info;
+> -	}
+> +	err = its_init_domain(node, its, parent);
+> +	if (err)
+> +		goto out_free_tables;
+>
+>  	spin_lock(&its_lock);
+>  	list_add(&its->entry, &its_nodes);
+> @@ -1779,6 +1784,12 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+>
+>  	for (np = of_find_matching_node(node, its_device_id); np;
+>  	     np = of_find_matching_node(np, its_device_id)) {
+> +		if (!of_property_read_bool(np, "msi-controller")) {
+> +			pr_warn("%s: no msi-controller property, ITS ignored\n",
+> +				np->full_name);
+> +			continue;
+> +		}
+> +
+>  		its_probe(np, parent_domain);
+>  	}
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  2 +-
- 2 files changed, 22 insertions(+), 5 deletions(-)
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..d34b0f5 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,30 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt(TM) support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt(TM) Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt(TM) Networking"
-+	help
-+	  This driver is required if you want Thunderbolt(TM) Networking on
-+	  non-Apple hardware.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..7a85bd1 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
--- 
-2.7.4
+Thanks
+Hanjun
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
