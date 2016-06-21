@@ -1,67 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13031 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750824AbcFAVKc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2016 17:10:32 -0400
-From: "Derrick, Jonathan" <jonathan.derrick@intel.com>
-To: "Derrick, Jonathan" <jonathan.derrick@intel.com>,
-	"Busch, Keith" <keith.busch@intel.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: [PATCHv2] x86/vmd: Initialize list item in irq disable
-Date: Wed, 1 Jun 2016 21:10:30 +0000
-Message-ID: <8D943B239464E04C9184454D8B3F5CFF0AD53672@ORSMSX101.amr.corp.intel.com>
-References: <1463505738-30666-1-git-send-email-keith.busch@intel.com>
- <20160517185101.GA1975@localhost.localdomain>
-In-Reply-To: <20160517185101.GA1975@localhost.localdomain>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V7 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
+To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+ <1466420541-20101-7-git-send-email-tn@semihalf.com>
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <bebbe715-19df-be34-40d9-6845f38b9c2f@linaro.org>
+Date: Tue, 21 Jun 2016 16:03:54 +0800
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1466420541-20101-7-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-Any plans to get this set in?
-
-Thanks,
-J
-
------Original Message-----
-From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Jon Derrick
-Sent: Tuesday, May 17, 2016 12:51 PM
-To: Busch, Keith <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCHv2] x86/vmd: Initialize list item in irq disable
-
-Acked-by Jon Derrick: <jonathan.derrick@intel.com>
-
-On Tue, May 17, 2016 at 11:22:18AM -0600, Keith Busch wrote:
-> Multiple calls to disable an IRQ would have caused the driver to 
-> dereference a poisoned list item. This re-initializes the list to 
-> allow multiple requests to disable the irq.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+On 2016/6/20 19:02, Tomasz Nowicki wrote:
+> ITS is prepared for being initialized different than DT,
+> therefore we can initialize it in ACPI way. We collect register base
+> address from MADT table and pass mandatory info to firmware-agnostic
+> ITS init call.
+>
+> Use here IORT lib to register ITS domain which then can be found and
+> used on to build another PCI MSI domain in hierarchical stack domain.
+>
+> NOTE: Waiting for proper ITS and NUMA node relation description in IORT
+> table, we pass around NUMA_NO_NODE to the its_probe_one init call.
+> This means that Cavium ThunderX erratum 23144 (pass1.1 only)
+> is not supported for ACPI boot method yet.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
 > ---
-> v1 -> v2:
->   Used the patch with the correct macro
-> 
->  arch/x86/pci/vmd.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c index 
-> b1662bf..3519a15 100644
-> --- a/arch/x86/pci/vmd.c
-> +++ b/arch/x86/pci/vmd.c
-> @@ -135,6 +135,7 @@ static void vmd_irq_disable(struct irq_data *data)
->  
->  	raw_spin_lock(&list_lock);
->  	list_del_rcu(&vmdirq->node);
-> +	INIT_LIST_HEAD_RCU(&vmdirq->node);
->  	raw_spin_unlock(&list_lock);
+>  drivers/irqchip/Kconfig          |  1 +
+>  drivers/irqchip/irq-gic-v3-its.c | 59 +++++++++++++++++++++++++++++++++++++++-
+>  2 files changed, 59 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+> index 5495a5b..fd4b8b8 100644
+> --- a/drivers/irqchip/Kconfig
+> +++ b/drivers/irqchip/Kconfig
+> @@ -38,6 +38,7 @@ config ARM_GIC_V3
+>  config ARM_GIC_V3_ITS
+>  	bool
+>  	select PCI_MSI_IRQ_DOMAIN
+> +	select IORT_TABLE if ACPI
+>
+>  config ARM_NVIC
+>  	bool
+> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+> index 1e0888d..c5c8616 100644
+> --- a/drivers/irqchip/irq-gic-v3-its.c
+> +++ b/drivers/irqchip/irq-gic-v3-its.c
+> @@ -15,10 +15,13 @@
+>   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+>   */
+>
+> +#include <linux/acpi.h>
+>  #include <linux/bitmap.h>
+>  #include <linux/cpu.h>
+>  #include <linux/delay.h>
+>  #include <linux/interrupt.h>
+> +#include <linux/irqdomain.h>
+> +#include <linux/iort.h>
+>  #include <linux/log2.h>
+>  #include <linux/mm.h>
+>  #include <linux/msi.h>
+> @@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
+>  		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
+>  		fwspec.param[1] = hwirq;
+>  		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
+> +	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
+> +		fwspec.fwnode = domain->parent->fwnode;
+> +		fwspec.param_count = 2;
+> +		fwspec.param[0] = hwirq;
+> +		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
+>  	} else {
+>  		return -EINVAL;
+>  	}
+> @@ -1792,6 +1800,55 @@ static int __init its_of_probe(struct device_node *node)
+>  	return 0;
 >  }
->  
-> --
-> 2.7.2
-> 
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> +#ifdef CONFIG_ACPI
+> +
+> +#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
+> +
+> +static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
+> +					  const unsigned long end)
+> +{
+> +	struct acpi_madt_generic_translator *its_entry;
+> +	struct fwnode_handle *dom_handle;
+> +	struct resource res;
+> +	int err;
+> +
+> +	its_entry = (struct acpi_madt_generic_translator *)header;
+> +	res.start = its_entry->base_address;
+> +	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
+> +
+> +	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
+> +	if (!dom_handle) {
+> +		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
+> +		       &res.start);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
+> +	if (err) {
+> +		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
+> +		       &res.start, its_entry->translation_id);
+> +		goto dom_err;
+> +	}
+> +
+> +	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
+> +	if (!err)
+> +		return 0;
+> +
+> +	iort_deregister_domain_token(its_entry->translation_id);
+> +dom_err:
+> +	irq_domain_free_fwnode(dom_handle);
+> +	return err;
+> +}
+> +
+> +static void __init its_acpi_probe(void)
+> +{
+> +	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
+> +			      gic_acpi_parse_madt_its, 0);
+> +}
+> +#else
+> +static void __init its_acpi_probe(void) { }
+> +#endif
+> +
+>  int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+>  		    struct irq_domain *parent_domain)
+>  {
+> @@ -1802,7 +1859,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+>  	if (of_node)
+>  		its_of_probe(of_node);
+>  	else
+> -		return -ENODEV;
+> +		its_acpi_probe();
+>
+>  	if (list_empty(&its_nodes)) {
+>  		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+>
+
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+
+Thanks
+Hanjun
