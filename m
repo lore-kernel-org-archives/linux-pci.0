@@ -1,116 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38601 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:38450 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751475AbcFGNLK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jun 2016 09:11:10 -0400
-Date: Tue, 7 Jun 2016 08:11:05 -0500
+	id S1752835AbcFUCAK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jun 2016 22:00:10 -0400
+Date: Mon, 20 Jun 2016 20:50:45 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
-	linux-renesas-soc@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
-	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>
-Subject: Re: [PATCH v1 00/25] PCI: Request host bridge window resources
-Message-ID: <20160607131105.GA2543@localhost>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <3416214.BpvATlfaN7@wuerfel>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: Re: [RESEND PATCH v2 2/4] PCI: Do not Use IORESOURCE_STARTALIGN to
+ identify bridge resources
+Message-ID: <20160621015045.GB30307@localhost>
+References: <1464846411-16895-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1464846411-16895-3-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3416214.BpvATlfaN7@wuerfel>
+In-Reply-To: <1464846411-16895-3-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 07, 2016 at 10:21:36AM +0200, Arnd Bergmann wrote:
-> On Monday, June 6, 2016 6:04:44 PM CEST Bjorn Helgaas wrote:
-> > Several host bridge drivers (designware and all derivatives, iproc,
-> > xgene, xilinx, and xilinx-nwl) don't request the MMIO and I/O port
-> > windows they forward downstream to the PCI bus.
-> > 
-> > That means the PCI core can't request resources for PCI bridge
-> > windows and PCI BARs.
-> > 
-> > Several other drivers (altera, generic, mvebu, rcar, tegra) do request
-> > the windows, but use some duplicated code to do it.
-> > 
-> > This adds a new devm_request_pci_bus_resources() interface and changes
-> > these drivers to use it.  It also fixes several error paths where we failed
-> > to free the resource list allocated by of_pci_get_host_bridge_resources().
-> > 
-> > Tegra guys, please take a look at "PCI: tegra: Remove top-level resource
-> > from hierarchy" in particular.  Removing the top-level resource definitely
-> > makes /proc/iomem look uglier (although it will look more like that of
-> > other drivers).  A short-term fix could be to include device information in
-> > the resource name.  I think a better long-term fix would be to make the DT
-> > or platform device core request all the resources from the DT.
-> > 
-> > Comments welcome.  I expect we'll trip over something here, so I marked
-> > this "v1" and I don't plan to put it into -next for a while.
-> > 
-> > This is on my pci/host-request-windows branch, which you can pull or view
-> > at https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-request-windows
+On Thu, Jun 02, 2016 at 01:46:49PM +0800, Yongji Xie wrote:
+> Now we use the IORESOURCE_STARTALIGN to identify bridge resources
+> in __assign_resources_sorted(). That's quite fragile. We can't
+> make sure that the PCI devices' resources will not use
+> IORESOURCE_STARTALIGN any more.
+
+Can you explain this a little more?  I don't quite understand the
+problem.  Maybe you can give an example of the problem?
+
+> In this patch, we try to use a more robust way to identify
+> bridge resources.
 > 
-> This looks very nice. There is one related aspect that I have been
-> grumbling about for a while, but I don't know what the driver is
-> actually supposed to do there:
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/setup-bus.c |    9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 > 
-> For the IORESOURCE_IO resources, some drivers request the MMIO address
-> that the window is mapped into, some drivers request the PIO range, and
-> some of them request both. I also believe the resource that gets put
-> into the bridge resources list is not always the same one (or maybe
-> that got fixed by now).
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 55641a3..216ddbc 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -390,6 +390,7 @@ static void __assign_resources_sorted(struct list_head *head,
+>  	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+>  	unsigned long fail_type;
+>  	resource_size_t add_align, align;
+> +	int index;
+>  
+>  	/* Check if optional add_size is there */
+>  	if (!realloc_head || list_empty(realloc_head))
+> @@ -410,11 +411,13 @@ static void __assign_resources_sorted(struct list_head *head,
+>  
+>  		/*
+>  		 * There are two kinds of additional resources in the list:
+> -		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+> -		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+> +		 * 1. bridge resource
+> +		 * 2. SR-IOV resource
+>  		 * Here just fix the additional alignment for bridge
+>  		 */
+> -		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+> +		index = dev_res->res - dev_res->dev->resource;
+> +		if (index < PCI_BRIDGE_RESOURCES ||
+> +			index > PCI_BRIDGE_RESOURCE_END)
+
+I think the code looks OK; at least, it seems to match the comment.
+I'd just like to understand the problem a little better.
+
+>  			continue;
+>  
+>  		add_align = get_res_add_align(realloc_head, dev_res->res);
+> -- 
+> 1.7.9.5
 > 
-> What do you think is the correct behavior here, should the driver only
-> request the PIO range with parent=ioport_resource, or should it also
-> request the MMIO window for the I/O ports with parent=iomem_resource?
-> In the latter case, any idea how that can be generalized?
-
-I think it should request both because I think iomem_resource should
-contain everything in the memory map.  This would be required if we ever
-did any significant reassignment of top-level devices, e.g., ACPI devices.
-For example, on ia64, we do this:
-
-  /proc/ioports:
-  00000000-00003fff : PCI Bus 0000:00
-  00004000-00009fff : PCI Bus 0000:80
-  0000a000-0000bfff : PCI Bus 0000:a0
-  0000c000-0000ffff : PCI Bus 0000:c0
-
-  /proc/iomem:
-  80000000-9fffffff : PCI Bus 0000:00
-  a0000000-cfffffff : PCI Bus 0000:80
-  d0000000-dfffffff : PCI Bus 0000:a0
-  e0000000-fdffffff : PCI Bus 0000:c0
-  80004000000-80103fffffe : PCI Bus 0000:00
-  c0004000000-c0103fffffe : PCI Bus 0000:80
-  d0004000000-d0103fffffe : PCI Bus 0000:a0
-  e0004000000-e0103fffffe : PCI Bus 0000:c0
-  3fffffc000000-3fffffcffffff : PCI Bus 0000:00 I/O Ports 00000000-00003fff
-  3fffffd000000-3fffffe7fffff : PCI Bus 0000:80 I/O Ports 00004000-00009fff
-  3fffffe800000-3fffffeffffff : PCI Bus 0000:a0 I/O Ports 0000a000-0000bfff
-  3ffffff000000-3ffffffffffff : PCI Bus 0000:c0 I/O Ports 0000c000-0000ffff
-
-> Another aspect is that we already have the
-> gen_pci_parse_request_of_pci_ranges() function that does the same as your
-> new devm_request_pci_bus_resources() and then a few other things. I
-> have been wondering whether we could move that function into common
-> code convert drivers to use that wherever possible, but I guess we can
-> always do that as a follow-up after this series.
-
-Oh, I didn't notice that; thanks for pointing it out.  That should be
-consolidated somehow.  It also checks to be sure there is a
-non-prefetchable memory resource.  A few other drivers also do that, but
-most don't.  I suppose that will mostly catch DT errors.
-
-Bjorn
