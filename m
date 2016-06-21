@@ -1,125 +1,71 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v1 02/25] PCI: designware: Free bridge resource list on failure
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 06 Jun 2016 18:05:01 -0500
-Message-ID: <20160606230501.20936.71818.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43194 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751578AbcFUPrm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Jun 2016 11:47:42 -0400
+Date: Tue, 21 Jun 2016 09:45:37 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ilya Lesokhin <ilyal@mellanox.com>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Noa Osherovich" <noaos@mellanox.com>,
+	Haggai Eran <haggaie@mellanox.com>,
+	"Or Gerlitz" <ogerlitz@mellanox.com>,
+	Liran Liss <liranl@mellanox.com>
+Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
+Message-ID: <20160621094537.4416cbce@t450s.home>
+In-Reply-To: <VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+	<20160620113728.74ed79f3@ul30vt.home>
+	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
- rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
- linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
- Michal Simek <michal.simek@xilinx.com>,
- =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-of_pci_get_host_bridge_resources() allocates a list of resources for host
-bridge windows.  If we fail after allocating that list, free it before we
-return error.
+On Tue, 21 Jun 2016 07:19:14 +0000
+Ilya Lesokhin <ilyal@mellanox.com> wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware.c |   24 +++++++++++++++++-------
- 1 file changed, 17 insertions(+), 7 deletions(-)
+> Why is the need for admin privileges not enough to make it safe?
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index aafd766..9ade767 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -493,7 +493,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 					resource_size(pp->cfg));
- 		if (!pp->dbi_base) {
- 			dev_err(pp->dev, "error with ioremap\n");
--			return -ENOMEM;
-+			ret = -ENOMEM;
-+			goto error;
- 		}
- 	}
- 
-@@ -504,7 +505,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 						pp->cfg0_size);
- 		if (!pp->va_cfg0_base) {
- 			dev_err(pp->dev, "error with ioremap in function\n");
--			return -ENOMEM;
-+			ret = -ENOMEM;
-+			goto error;
- 		}
- 	}
- 
-@@ -513,7 +515,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 						pp->cfg1_size);
- 		if (!pp->va_cfg1_base) {
- 			dev_err(pp->dev, "error with ioremap\n");
--			return -ENOMEM;
-+			ret = -ENOMEM;
-+			goto error;
- 		}
- 	}
- 
-@@ -528,7 +531,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 						&dw_pcie_msi_chip);
- 			if (!pp->irq_domain) {
- 				dev_err(pp->dev, "irq domain init failed\n");
--				return -ENXIO;
-+				ret = -ENXIO;
-+				goto error;
- 			}
- 
- 			for (i = 0; i < MAX_MSI_IRQS; i++)
-@@ -536,7 +540,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		} else {
- 			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
- 			if (ret < 0)
--				return ret;
-+				goto error;
- 		}
- 	}
- 
-@@ -552,8 +556,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	} else
- 		bus = pci_scan_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
- 					pp, &res);
--	if (!bus)
--		return -ENOMEM;
-+	if (!bus) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
- 
- 	if (pp->ops->scan_bus)
- 		pp->ops->scan_bus(pp);
-@@ -571,6 +577,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	pci_bus_add_devices(bus);
- 	return 0;
-+
-+error:
-+	pci_free_resource_list(&res);
-+	return ret;
- }
- 
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+Seems like an opportunity for a phishing attempt, an exploited VM
+generates VFs and hopes that they get assigned to other VMs or put to
+other uses.  It simply allows one VM to create resources that are
+really not tied to that VM and can easily be mis-used in other ways,
+potentially even with the assumption that it's secure.
 
+> What's the difference between the following?
+> 	1. A PF is assigned to one user and the admin assigns one of it VFs to a different user.
+> 	2. The admin assign the main network interface of the machine to a VM and bring down all the connectivity of the host.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+In case 1. does the admin realize what they've done?  How?  Maybe they
+just start filing bugs when they shutdown the PF assigned VM or even
+just reboot it and the VF assigned VM no longer has connectivity.  A  
+typical user might just think "hey cool, now I can assign PFs and VFs"
+w/o considering the implications of that.  There are aspects of
+the host that we need to trust, allowing another VM to hold some
+of that trust is not such an obvious thing.  Clearly in case 2. the
+admin is going to pretty quickly figure out that they've done something
+terribly wrong.
+ 
+> Indeed we don't address clean up, but we didn't see any adverse effect from the VFs remaining probed by the VFIO driver after the VM is shutdown.
+
+Yet that's clearly not the state the PF was in when assigned and those
+VFs have no cleanup mechanism.  This is a big problem.
+
+> Would you be willing to accept this feature under some kconfig option or if it was allowed only for Privileged processes?
+> I would hate to throw this feature away just because we can't address every corner case.
+
+I'm not willing to accept half baked features and letting them bitrot
+under a config option that doesn't get regular use doesn't help.  If
+this is really that useful to you then make it safe and predictable.  I
+don't have answers to all the issues this generates, it might require
+extensions to driver APIs or new mechanisms for vfio to associate device
+ownership.  There might be valid use cases for a user owned PF sourcing
+VFs owned by other users, but obviously to me it sounds like a rats
+nest of security issues and "because we can" and "useful development
+tool" are not resounding motives for me to sign up trying to support
+it.  Thanks,
+
+Alex
