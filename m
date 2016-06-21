@@ -1,158 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 10 Jun 2016 11:43:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rui Wang <rui.y.wang@intel.com>
-Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-	bhelgaas@google.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 1/3] x86/ioapic: Support hot-removal of IOAPICs
- present during boot
-Message-ID: <20160610164304.GJ19309@localhost>
-References: <1465369193-4816-2-git-send-email-rui.y.wang@intel.com>
- <1465378364-5982-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Will Deacon <will.deacon@arm.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+Subject: [PATCH] pci: Add support for unbinding the generic PCI host
+ controller
+Message-ID: <57698276.6050606@siemens.com>
+Date: Tue, 21 Jun 2016 20:07:50 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465378364-5982-1-git-send-email-rui.y.wang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-15
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 08, 2016 at 05:32:44PM +0800, Rui Wang wrote:
-> v3: Previous versions break mips. This version fixes it.
-> 
-> IOAPICs present during system boot aren't added to ioapic_list,
-> thus are unable to be hot-removed. Fix it by calling
-> acpi_ioapic_add() during root bus enumeration.
-> 
-> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
-> ---
->  drivers/acpi/internal.h | 2 --
->  drivers/acpi/ioapic.c   | 7 ++++---
->  drivers/acpi/pci_root.c | 2 +-
->  drivers/pci/setup-bus.c | 7 ++++++-
->  include/linux/acpi.h    | 3 +++
->  5 files changed, 14 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-> index 9bb0773..bb567a7 100644
-> --- a/drivers/acpi/internal.h
-> +++ b/drivers/acpi/internal.h
-> @@ -40,10 +40,8 @@ int acpi_sysfs_init(void);
->  void acpi_container_init(void);
->  void acpi_memory_hotplug_init(void);
->  #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
-> -int acpi_ioapic_add(struct acpi_pci_root *root);
->  int acpi_ioapic_remove(struct acpi_pci_root *root);
->  #else
-> -static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
->  static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
->  #endif
->  #ifdef CONFIG_ACPI_DOCK
-> diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-> index ccdc8db..0f272e2 100644
-> --- a/drivers/acpi/ioapic.c
-> +++ b/drivers/acpi/ioapic.c
-> @@ -189,16 +189,17 @@ exit:
->  	return AE_OK;
->  }
->  
-> -int acpi_ioapic_add(struct acpi_pci_root *root)
-> +int acpi_ioapic_add(acpi_handle root_handle)
->  {
->  	acpi_status status, retval = AE_OK;
->  
-> -	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
-> +	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root_handle,
->  				     UINT_MAX, handle_ioapic_add, NULL,
-> -				     root->device->handle, (void **)&retval);
-> +				     root_handle, (void **)&retval);
->  
->  	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
->  }
-> +EXPORT_SYMBOL_GPL(acpi_ioapic_add);
->  
->  int acpi_ioapic_remove(struct acpi_pci_root *root)
->  {
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index ae3fe4e..53f5965 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -614,7 +614,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	if (hotadd) {
->  		pcibios_resource_survey_bus(root->bus);
->  		pci_assign_unassigned_root_bus_resources(root->bus);
-> -		acpi_ioapic_add(root);
-> +		acpi_ioapic_add(root->device->handle);
->  	}
->  
->  	pci_lock_rescan_remove();
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 55641a3..0658921 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -25,6 +25,7 @@
->  #include <linux/ioport.h>
->  #include <linux/cache.h>
->  #include <linux/slab.h>
-> +#include <linux/acpi.h>
->  #include "pci.h"
->  
->  unsigned int pci_flags;
-> @@ -1779,8 +1780,12 @@ void __init pci_assign_unassigned_resources(void)
->  {
->  	struct pci_bus *root_bus;
->  
-> -	list_for_each_entry(root_bus, &pci_root_buses, node)
-> +	list_for_each_entry(root_bus, &pci_root_buses, node) {
->  		pci_assign_unassigned_root_bus_resources(root_bus);
-> +#ifdef CONFIG_X86
-> +		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
-> +#endif
+Particularly useful when working in virtual environments where the
+controller may come and go, but possibly not only there.
 
-This seems like a strange place to call acpi_ioapic_add().  Your
-object is to call acpi_ioapic_add() during root bus enumeration.
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ drivers/pci/ecam.h                  |  1 +
+ drivers/pci/host/pci-host-common.c  | 13 +++++++++++++
+ drivers/pci/host/pci-host-generic.c |  1 +
+ 3 files changed, 15 insertions(+)
 
-I assume we *can't* call acpi_ioapic_add() from acpi_pci_root_add() at
-boot time, for some reason you'll explain.  But is there a reason we
-have to call it from pci_assign_unassigned_resources() (where it
-requires an ifdef) instead of from pcibios_assign_resources(), which
-is already x86-specific?
-
-In acpi_pci_root_add(), we have this:
-
-  acpi_pci_root_add(...)
-  {
-    ...
-    if (hotadd)
-      acpi_ioapic_add(root);
-
-So the obvious question is why don't we just remove the "if (hotadd)"
-and call acpi_ioapic_add() always.
-
-I'm sure the reason is some ordering problem, but we need a comment in
-acpi_pci_root_add() about why the obvious solution doesn't work.
-
-> +	}
->  }
->  
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 288fac5..3ed22df 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -262,6 +262,9 @@ int acpi_unmap_cpu(int cpu);
->  
->  #ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
->  int acpi_get_ioapic_id(acpi_handle handle, u32 gsi_base, u64 *phys_addr);
-> +int acpi_ioapic_add(acpi_handle root);
-> +#else
-> +static inline int acpi_ioapic_add(acpi_handle root) { return 0; }
->  #endif
->  
->  int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
+index 9878beb..5a5f607 100644
+--- a/drivers/pci/ecam.h
++++ b/drivers/pci/ecam.h
+@@ -63,5 +63,6 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
+ /* for DT-based PCI controllers that support ECAM */
+ int pci_host_common_probe(struct platform_device *pdev,
+ 			  struct pci_ecam_ops *ops);
++int pci_host_common_remove(struct platform_device *pdev);
+ #endif
+ #endif
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 8cba7ab..c0ff4b1 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -164,6 +164,19 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	}
+ 
+ 	pci_bus_add_devices(bus);
++	platform_set_drvdata(pdev, bus);
++	return 0;
++}
++
++int pci_host_common_remove(struct platform_device *pdev)
++{
++	struct pci_bus *bus = platform_get_drvdata(pdev);
++
++	pci_lock_rescan_remove();
++	pci_stop_root_bus(bus);
++	pci_remove_root_bus(bus);
++	pci_unlock_rescan_remove();
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 6eaceab..0a2e75b 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -65,6 +65,7 @@ static struct platform_driver gen_pci_driver = {
+ 		.of_match_table = gen_pci_of_match,
+ 	},
+ 	.probe = gen_pci_probe,
++	.remove = pci_host_common_remove,
+ };
+ module_platform_driver(gen_pci_driver);
+ 
+-- 
+2.1.4
