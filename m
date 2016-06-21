@@ -1,60 +1,75 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35434 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751941AbcFUWaN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Jun 2016 18:30:13 -0400
+Date: Tue, 21 Jun 2016 17:28:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme@lists.infradead.org,
+	James Smart <james.smart@avagotech.com>,
+	Dick Kennedy <dick.kennedy@avagotech.com>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Frank Haverkamp <haver@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jay Cliburn <jcliburn@gmail.com>,
+	Chris Snook <chris.snook@gmail.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org
+Subject: Re: [PATCH v3 0/6] Introduce pci_(request|release)_(mem|io)_regions
+Message-ID: <20160621222830.GF7603@localhost>
+References: <cover.1465200424.git.jthumshirn@suse.de>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <20160618121752.GA22721@localhost>
-References: <20160618022501.15648-1-yinghai@kernel.org> <20160618022501.15648-2-yinghai@kernel.org>
- <20160618121752.GA22721@localhost>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 21 Jun 2016 21:32:49 -0700
-Message-ID: <CAE9FiQXKVLWZaiD0CgSGEMN6c4g6GeCNGS=NE=gC-CEAymo1eQ@mail.gmail.com>
-Subject: Re: [PATCH v13 01/16] PCI: Let pci_mmap_page_range() take resource address
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, linux-xtensa@linux-xtensa.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1465200424.git.jthumshirn@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 18, 2016 at 5:17 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Jun 17, 2016 at 07:24:46PM -0700, Yinghai Lu wrote:
->> In 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files"), try
->> to check exposed value with resource start/end in proc mmap path.
->>
->> |        start = vma->vm_pgoff;
->> |        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
->> |        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
->> |                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
->> |        if (start >= pci_start && start < pci_start + size &&
->> |                        start + nr <= pci_start + size)
->>
->> That breaks sparc that exposed value is BAR value, and need to be offseted
->> to resource address.
->
-> I asked this same question of the v12 patch, but I don't think you
-> answered it:
->
-> I'm not quite sure what you're saying here.  Are you saying that sparc
-> is currently broken, and this patch fixes it?  If so, what exactly is
-> broken?  Can you give a small example of an mmap that is currently
-> broken?
+On Tue, Jun 07, 2016 at 09:44:00AM +0200, Johannes Thumshirn wrote:
+> The first patch in this series introduces the following 4 helper functions to
+> the PCI core:
+> 
+> * pci_request_mem_regions()
+> * pci_request_io_regions()
+> * pci_release_mem_regions()
+> * pci_release_io_regions()
+> 
+> which encapsulate the request and release of a PCI device's memory or I/O
+> bars.
+> 
+> The subsequent patches convert the drivers, which use the
+> pci_request_selected_regions(pdev, 
+> 	pci_select_bars(pdev, IORESOURCE_MEM), name); 
+> and similar pattern to use the new interface.
+> 
+> This was suggested by Christoph Hellwig in
+> http://lists.infradead.org/pipermail/linux-nvme/2016-May/004570.html and
+> tested on kernel v4.6 with NVMe.
 
-Yes, for sparc that path (proc mmap) is broken, but only according to
-code checking.
+I applied all six of these to pci/resources for v4.8, thanks, Johannes.
 
-The reason for the problem is not discovered is that seem all users
-(other than x86) are not
-use proc_mmap ?
-
-vma->vm_pgoff is that code segment is User/BAR value >> PAGE_SHIFT.
-pci_start is resource->start >> PAGE_SHIFT.
-
-For sparc, resource start is different from BAR start aka pci bus address.
-pci bus address add offset to be the resource start.
-
-Thanks
-
-Yinghai
+> Johannes Thumshirn (6):
+>   PCI: Add helpers to request/release memory and I/O regions
+>   NVMe: Use pci_(request|release)_mem_regions
+>   lpfc: Use pci_(request|release)_mem_regions
+>   GenWQE: Use pci_(request|release)_mem_regions
+>   ethernet/intel: Use pci_(request|release)_mem_regions
+>   alx: Use pci_(request|release)_mem_regions
+> 
+>  drivers/misc/genwqe/card_base.c               | 13 +++++--------
+>  drivers/net/ethernet/atheros/alx/main.c       | 12 +++++-------
+>  drivers/net/ethernet/intel/e1000e/netdev.c    |  6 ++----
+>  drivers/net/ethernet/intel/fm10k/fm10k_pci.c  | 11 +++--------
+>  drivers/net/ethernet/intel/i40e/i40e_main.c   |  9 +++------
+>  drivers/net/ethernet/intel/igb/igb_main.c     | 10 +++-------
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |  9 +++------
+>  drivers/nvme/host/pci.c                       | 10 +++-------
+>  drivers/scsi/lpfc/lpfc_init.c                 | 15 ++++----------
+>  include/linux/pci.h                           | 28 +++++++++++++++++++++++++++
