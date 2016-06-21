@@ -1,96 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from goliath.siemens.de ([192.35.17.28]:58454 "EHLO
-	goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155AbcFWRcF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jun 2016 13:32:05 -0400
-Subject: Re: [PATCH] pci: Add support for unbinding the generic PCI host
- controller
-To: Will Deacon <will.deacon@arm.com>
-References: <57698276.6050606@siemens.com> <20160622060638.GY29165@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Message-ID: <576C1CF6.7020804@siemens.com>
-Date: Thu, 23 Jun 2016 19:31:34 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH 2/2] PCI: rcar: Drop gen2 dummy I/O port region
+To: Simon Horman <horms@verge.net.au>, Russell King <linux@armlinux.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 Jun 2016 12:01:50 -0500
+Message-ID: <20160621170150.7997.4821.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160621165646.7997.44001.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160621165646.7997.44001.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20160622060638.GY29165@arm.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ Valentine Barshak <valentine.barshak@cogentembedded.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-06-22 08:06, Will Deacon wrote:
-> Hi Jan,
-> 
-> On Tue, Jun 21, 2016 at 08:07:50PM +0200, Jan Kiszka wrote:
->> Particularly useful when working in virtual environments where the
->> controller may come and go, but possibly not only there.
->>
->> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
->> ---
->>  drivers/pci/ecam.h                  |  1 +
->>  drivers/pci/host/pci-host-common.c  | 13 +++++++++++++
->>  drivers/pci/host/pci-host-generic.c |  1 +
->>  3 files changed, 15 insertions(+)
->>
->> diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
->> index 9878beb..5a5f607 100644
->> --- a/drivers/pci/ecam.h
->> +++ b/drivers/pci/ecam.h
->> @@ -63,5 +63,6 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
->>  /* for DT-based PCI controllers that support ECAM */
->>  int pci_host_common_probe(struct platform_device *pdev,
->>  			  struct pci_ecam_ops *ops);
->> +int pci_host_common_remove(struct platform_device *pdev);
->>  #endif
->>  #endif
->> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
->> index 8cba7ab..c0ff4b1 100644
->> --- a/drivers/pci/host/pci-host-common.c
->> +++ b/drivers/pci/host/pci-host-common.c
->> @@ -164,6 +164,19 @@ int pci_host_common_probe(struct platform_device *pdev,
->>  	}
->>  
->>  	pci_bus_add_devices(bus);
->> +	platform_set_drvdata(pdev, bus);
->> +	return 0;
->> +}
->> +
->> +int pci_host_common_remove(struct platform_device *pdev)
->> +{
->> +	struct pci_bus *bus = platform_get_drvdata(pdev);
->> +
->> +	pci_lock_rescan_remove();
->> +	pci_stop_root_bus(bus);
->> +	pci_remove_root_bus(bus);
->> +	pci_unlock_rescan_remove();
-> 
-> A couple of comments/questions about this:
-> 
->   - The probe path seems to have some stateful operations outside of PCI
->     resources. For example, kzalloc'ing the bus_range resource in
->     of_pci_get_host_bridge_resources. Do we need to clean these up
->     explicitly?
-> 
->   - Similarly, we don't seem to tear-down the config space mappings and
->     data structures for that, so we leak VA space afaict.
-> 
+Previously we added a dummy I/O port region even though the R-Car
+controller doesn't support PCI port I/O.  This resulted in bogus root bus
+resources like this:
 
-Good points. But to my understanding, everything is released
-automatically on pci_remove_root_bus because all the resources are
-registered with the bus which takes care of them during destruction. And
-if I trace the release, I find this e.g.
+  pci_bus 0000:00: root bus resource [io  0xee080000-0xee0810ff]
+  pci_bus 0000:00: root bus resource [mem 0xee080000-0xee0810ff]
 
-...
-devres_release_all() {
-  _raw_spin_lock_irqsave();
-  release_nodes() {
-    _raw_spin_unlock_irqrestore();
-    devm_action_release() {
-      gen_pci_unmap_cfg() {
+Drop the unused dummy I/O port region and set struct hw_pci.io_optional so
+the ARM PCI code doesn't add a default one for us.
 
-Jan
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-rcar-gen2.c |   11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
--- 
-Siemens AG, Corporate Technology, CT RDA ITP SES-DE
-Corporate Competence Center Embedded Linux
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index 9980a4b..ddf7765 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -97,7 +97,6 @@
+ struct rcar_pci_priv {
+ 	struct device *dev;
+ 	void __iomem *reg;
+-	struct resource io_res;
+ 	struct resource mem_res;
+ 	struct resource *cfg_res;
+ 	unsigned busnr;
+@@ -273,7 +272,6 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ 		rcar_pci_setup_errirq(priv);
+ 
+ 	/* Add PCI resources */
+-	pci_add_resource(&sys->resources, &priv->io_res);
+ 	pci_add_resource(&sys->resources, &priv->mem_res);
+ 
+ 	/* Setup bus number based on platform device id / of bus-range */
+@@ -371,14 +369,6 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	priv->mem_res = *mem_res;
+-	/*
+-	 * The controller does not support/use port I/O,
+-	 * so setup a dummy port I/O region here.
+-	 */
+-	priv->io_res.start = priv->mem_res.start;
+-	priv->io_res.end = priv->mem_res.end;
+-	priv->io_res.flags = IORESOURCE_IO;
+-
+ 	priv->cfg_res = cfg_res;
+ 
+ 	priv->irq = platform_get_irq(pdev, 0);
+@@ -421,6 +411,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 	hw_private[0] = priv;
+ 	memset(&hw, 0, sizeof(hw));
+ 	hw.nr_controllers = ARRAY_SIZE(hw_private);
++	hw.io_optional = 1;
+ 	hw.private_data = hw_private;
+ 	hw.map_irq = rcar_pci_map_irq;
+ 	hw.ops = &rcar_pci_ops;
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
