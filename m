@@ -1,65 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51808 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:38280 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932242AbcFFXHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jun 2016 19:07:10 -0400
-Subject: [PATCH v1 19/25] PCI: rcar Gen2: Request host bridge window
- resources
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Rob Herring <robh@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
-	linux-renesas-soc@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
-	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
-	linux-arm-kernel@lists.infradead.org
-Date: Mon, 06 Jun 2016 18:07:06 -0500
-Message-ID: <20160606230706.20936.13086.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	id S1751857AbcFUB6A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jun 2016 21:58:00 -0400
+Date: Mon, 20 Jun 2016 20:57:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: Re: [RESEND PATCH v2 3/4] PCI: Add a new option for
+ resource_alignment to reassign alignment
+Message-ID: <20160621015753.GC30307@localhost>
+References: <1464846411-16895-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1464846411-16895-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1464846411-16895-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Request host bridge window resources so they appear in ioport_resource and
-iomem_resource and are reflected in /proc/ioports and /proc/iomem.
+On Thu, Jun 02, 2016 at 01:46:50PM +0800, Yongji Xie wrote:
+> When using resource_alignment kernel parameter, the current
+> implement reassigns the alignment by changing resources' size
+> which can potentially break some drivers. For example, the driver
+> uses the size to locate some register whose length is related
+> to the size.
+> 
+> This patch adds a new option "noresize" for the parameter to
+> solve this problem.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-rcar-gen2.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Why do we ever want to change the resource's size?  I understand that
+you want to change the resource's *alignment*, and that part makes
+sense.  But why change the *size*?  Changing the resource size doesn't
+change the hardware BAR size; it just means the struct resource will
+describe a region larger than what the BAR actually claims.  That
+unnecessarily wastes space after the BAR.
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 9980a4b..617a6b2 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -194,6 +194,7 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
- 	struct rcar_pci_priv *priv = sys->private_data;
- 	void __iomem *reg = priv->reg;
- 	u32 val;
-+	int ret;
- 
- 	pm_runtime_enable(priv->dev);
- 	pm_runtime_get_sync(priv->dev);
-@@ -275,6 +276,9 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
- 	/* Add PCI resources */
- 	pci_add_resource(&sys->resources, &priv->io_res);
- 	pci_add_resource(&sys->resources, &priv->mem_res);
-+	ret = devm_request_pci_bus_resources(priv->dev, &sys->resources);
-+	if (ret < 0)
-+		return ret;
- 
- 	/* Setup bus number based on platform device id / of bus-range */
- 	sys->busnr = priv->busnr;
+This was a problem with the code even before your patch; I'm
+suggesting that if you have a way to change the alignment without
+changing the resource size, maybe we should do that all the time.
+Then you wouldn't need to add the "noresize" option.
 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  Documentation/kernel-parameters.txt |    5 ++++-
+>  drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
+>  2 files changed, 29 insertions(+), 11 deletions(-)
+> 
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 82b42c9..c4802f5 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2997,13 +2997,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  				window. The default value is 64 megabytes.
+>  		resource_alignment=
+>  				Format:
+> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+> +				[<order of align>@][<domain>:]<bus>:<slot>.<func>
+> +				[:noresize][; ...]
+>  				Specifies alignment and device to reassign
+>  				aligned memory resources.
+>  				If <order of align> is not specified,
+>  				PAGE_SIZE is used as alignment.
+>  				PCI-PCI bridge can be specified, if resource
+>  				windows need to be expanded.
+> +				noresize: Don't change the resources' sizes when
+> +				reassigning alignment.
+>  		ecrc=		Enable/disable PCIe ECRC (transaction layer
+>  				end-to-end CRC checking).
+>  				bios: Use BIOS/firmware settings. This is the
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index a259394..3ee13e5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4748,11 +4748,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+>  /**
+>   * pci_specified_resource_alignment - get resource alignment specified by user.
+>   * @dev: the PCI device to get
+> + * @resize: whether or not to change resources' size when reassigning alignment
+>   *
+>   * RETURNS: Resource alignment if it is specified.
+>   *          Zero if it is not specified.
+>   */
+> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+> +		bool *resize)
+>  {
+>  	int seg, bus, slot, func, align_order, count;
+>  	resource_size_t align = 0;
+> @@ -4786,6 +4788,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>  			}
+>  		}
+>  		p += count;
+> +		if (!strncmp(p, ":noresize", 9)) {
+> +			*resize = false;
+> +			p += 9;
+> +		} else
+> +			*resize = true;
+>  		if (seg == pci_domain_nr(dev->bus) &&
+>  			bus == dev->bus->number &&
+>  			slot == PCI_SLOT(dev->devfn) &&
+> @@ -4818,11 +4825,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  {
+>  	int i;
+>  	struct resource *r;
+> +	bool resize = true;
+>  	resource_size_t align, size;
+>  	u16 command;
+>  
+>  	/* check if specified PCI is target device to reassign */
+> -	align = pci_specified_resource_alignment(dev);
+> +	align = pci_specified_resource_alignment(dev, &resize);
+>  	if (!align)
+>  		return;
+>  
+> @@ -4844,15 +4852,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  		if (!(r->flags & IORESOURCE_MEM))
+>  			continue;
+>  		size = resource_size(r);
+> -		if (size < align) {
+> -			size = align;
+> -			dev_info(&dev->dev,
+> -				"Rounding up size of resource #%d to %#llx.\n",
+> -				i, (unsigned long long)size);
+> +		if (resize) {
+> +			if (size < align) {
+> +				size = align;
+> +				dev_info(&dev->dev,
+> +					"Rounding up size of resource #%d to %#llx.\n",
+> +					i, (unsigned long long)size);
+> +			}
+> +			r->flags |= IORESOURCE_UNSET;
+> +			r->end = size - 1;
+> +			r->start = 0;
+> +		} else {
+> +			r->flags &= ~IORESOURCE_SIZEALIGN;
+> +			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
+> +			r->start = max(align, size);
+> +			r->end = r->start + size - 1;
+>  		}
+> -		r->flags |= IORESOURCE_UNSET;
+> -		r->end = size - 1;
+> -		r->start = 0;
+>  	}
+>  	/* Need to disable bridge's resource window,
+>  	 * to enable the kernel to reassign new resource
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
