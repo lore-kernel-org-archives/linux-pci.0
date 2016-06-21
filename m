@@ -1,84 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:38804 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750917AbcFIMN2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jun 2016 08:13:28 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [PATCH 2/4] IOMMU: Force the VFs of an untrusted PF device to be in the PFs IOMMU group
-Date: Thu,  9 Jun 2016 15:09:30 +0300
-Message-Id: <1465474173-53960-3-git-send-email-ilyal@mellanox.com>
-In-Reply-To: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
-References: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V7 3/8] PCI/MSI: Setup MSI domain on a per-device basis
+ using IORT ACPI table
+To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+ <1466420541-20101-4-git-send-email-tn@semihalf.com>
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <9d449ab6-e4b3-1638-558c-59cef4baa108@linaro.org>
+Date: Tue, 21 Jun 2016 15:33:32 +0800
+MIME-Version: 1.0
+In-Reply-To: <1466420541-20101-4-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a new PCI_DEV_FLAGS_UNTRUSTED to indicate that a PCI device
-is probed by a driver that gives untrusted entities access to that device.
-Make iommu_group_get_for_pci_dev check the new flag when an IOMMU
-group is selected for a virtual function.
-Mark VFIO devices with the new flag.
+On 2016/6/20 19:02, Tomasz Nowicki wrote:
+> It is possible to provide information about which MSI controller to
+> use on a per-device basis for DT. This patch supply this with ACPI support.
+>
+> Currently, IORT is the only one ACPI table which can provide such mapping.
+> In order to plug IORT into MSI infrastructure we are adding ACPI
+> equivalents for finding PCI device domain and its RID translation
+> (pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/msi.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a080f44..1d45e81 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/smp.h>
+>  #include <linux/errno.h>
+>  #include <linux/io.h>
+> +#include <linux/iort.h>
+>  #include <linux/slab.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/of_irq.h>
+> @@ -1364,8 +1365,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+>
+>  	of_node = irq_domain_get_of_node(domain);
+> -	if (of_node)
+> -		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
+> +	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
+> +			iort_msi_map_rid(&pdev->dev, rid);
+>
+>  	return rid;
+>  }
+> @@ -1381,9 +1382,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>   */
+>  struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+>  {
+> +	struct irq_domain *dom;
+>  	u32 rid = 0;
+>
+>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+> -	return of_msi_map_get_device_domain(&pdev->dev, rid);
+> +	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
+> +	if (!dom)
+> +		dom = iort_get_device_domain(&pdev->dev, rid);
+> +	return dom;
+>  }
+>  #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
 
-Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
----
- drivers/iommu/iommu.c       | 4 ++++
- drivers/vfio/pci/vfio_pci.c | 3 +++
- include/linux/pci.h         | 3 +++
- 3 files changed, 10 insertions(+)
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 3000051..9bb914c 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -749,6 +749,10 @@ struct iommu_group *pci_device_group(struct device *dev)
- 	struct pci_bus *bus;
- 	struct iommu_group *group = NULL;
- 	u64 devfns[4] = { 0 };
-+	
-+	if (pdev->is_virtfn && 
-+	   (pdev->physfn->dev_flags & PCI_DEV_FLAGS_UNTRUSTED))
-+		return iommu_group_get(&pdev->physfn->dev);
- 
- 	if (WARN_ON(!dev_is_pci(dev)))
- 		return ERR_PTR(-EINVAL);
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 188b1ff..72d048e 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1180,6 +1180,8 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		pci_set_power_state(pdev, PCI_D3hot);
- 	}
- 
-+	pdev->dev_flags |= PCI_DEV_FLAGS_UNTRUSTED;
-+
- 	return ret;
- }
- 
-@@ -1187,6 +1189,7 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- {
- 	struct vfio_pci_device *vdev;
- 
-+	pdev->dev_flags &= ~PCI_DEV_FLAGS_UNTRUSTED;
- 	vdev = vfio_del_group_dev(&pdev->dev);
- 	if (!vdev)
- 		return;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b67e4df..bef9115 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -174,6 +174,9 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
- 	/* Get VPD from function 0 VPD */
- 	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-+	/* Untrusted software controls this device
-+	 * The VFs of this device should be put in the device's IOMMUs group*/
-+	PCI_DEV_FLAGS_UNTRUSTED = (__force pci_dev_flags_t) (1 << 9),
- };
- 
- enum pci_irq_reroute_variant {
--- 
-1.8.3.1
-
+Thanks
+Hanjun
