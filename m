@@ -1,99 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:41366 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751562AbcFPJ66 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2016 05:58:58 -0400
-Date: Thu, 16 Jun 2016 11:58:55 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-Message-ID: <20160616115855.3d3961ae@free-electrons.com>
-In-Reply-To: <5324957.LqZqpRHMK9@wuerfel>
-References: <1466041821-1649-1-git-send-email-shawn.lin@rock-chips.com>
-	<5811436.gqkV56Lax5@wuerfel>
-	<da207bdc-738f-f2b1-7026-e368355936e9@rock-chips.com>
-	<5324957.LqZqpRHMK9@wuerfel>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 21 Jun 2016 17:27:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v3 2/6] NVMe: Use pci_(request|release)_mem_regions
+Message-ID: <20160621222718.GE7603@localhost>
+References: <cover.1465200424.git.jthumshirn@suse.de>
+ <5c9932602e6d43ef8ad77856c686765f9e63aa9c.1465200424.git.jthumshirn@suse.de>
+ <20160617112716.74e4hgy5bhkkgmi6@c203.arch.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160617112716.74e4hgy5bhkkgmi6@c203.arch.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Thu, 16 Jun 2016 11:22:02 +0200, Arnd Bergmann wrote:
-
-> > >> +    reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-> > >> +    phys = <&pcie_phy>;
-> > >> +    phy-names = "pcie-phy";
-> > >> +    pinctrl-names = "default";
-> > >> +    pinctrl-0 = <&pcie_clkreq>;
-> > >> +    #interrupt-cells = <1>;
-> > >> +    interrupt-controller;
-> > >> +    interrupt-map-mask = <0 0 0 7>;
-> > >> +    interrupt-map = <0 0 0 1 &pcie0 1>,
-> > >> +                    <0 0 0 2 &pcie0 2>,
-> > >> +                    <0 0 0 3 &pcie0 3>,
-> > >> +                    <0 0 0 4 &pcie0 4>;
-> > >> +};
-> > >>  
-> > >
-> > > One thing that came up in the review of the new Marvell PCIe driver is that it's
-> > > most likely invalid for a device node to have both "interrupt-controller"
-> > > and "interrupt-map" properties. I originally thought this was a nice way to
-> > > handle embedded irqchips within the PCIe host, but it only really works
-> > > by coincidence with the current kernel, and only as long as the hwirq number
-> > > of the irqchip matches the integer representation of the irq line in the root
-> > > bridge (which it does in the example above).
-> > >
-> > > For that driver we concluded that it would be less of a hack to have the
-> > > irqchip as a child node of the PCIe host after all (just not with
-> > > device_type="pci" of course), and that makes the translation work as
-> > > expected.
-> > >
-> > >       Arnd
-> > >  
+On Fri, Jun 17, 2016 at 01:27:16PM +0200, Johannes Thumshirn wrote:
+> On Tue, Jun 07, 2016 at 09:44:02AM +0200, Johannes Thumshirn wrote:
+> > Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
+> > hand, use it in the NVMe driver.
 > > 
-> > Original driver have an irqchip as child node. But Marc suggested don't 
-> > need an intermediate node here.
-> > Now the conclusion is to retain the child node?  
+> > Suggested-by: Christoph Hellwig <hch@infradead.org>
+> > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Keith Busch <keith.busch@intel.com>
+> > Cc: Jens Axboe <axboe@fb.com>
+> > Cc: linux-nvme@lists.infradead.org
 > 
-> That is at least my view of the situation, sorry for the mixed messages
-> you have been getting. Marc, Rob, do you agree with my finding?
+> Bjorn, 
 > 
-> If we want to allow having both interrupt-map and interrupt-controller
-> in the same node, we need to rewrite both the irq parsing function and
-> have extend the DT binding for the interrupt-map to explain what we
-> actually expect to happen in that case. At the moment, we walk up the
-> tree until we find either an interrupt-map or an interrupt-controller
-> property, and use that to map the interrupt number. If we find an
-> interrupt-controller, we ignore the interrupt-map.
+> Jens merged a band aid here which conflicts with the patch. Shall I send you
+> this patch re-based or the entire series?
 
-I can confirm what Arnd said. If you have the following interrupt-map
-property:
+I see the conflict with the patch below.  I don't know how Jens
+manages his tree, but the conflict should be pretty trivial to
+resolve, so I won't worry about it too much.
 
- +    interrupt-map = <0 0 0 1 &pcie0 0>,
- +                    <0 0 0 2 &pcie0 1>,
- +                    <0 0 0 3 &pcie0 2>,
- +                    <0 0 0 4 &pcie0 3>;
 
-Then the hwirq you get in the ->map() function are [ 1 ; 4 ] instead of
-the expected [ 0 ; 3 ]. I.e the translation to the interrupt number in
-the "target" interrupt controller does not happen.
+commit edb50a5403d2
+Author: Johannes Thumshirn <jthumshirn@suse.de>
+Date:   Tue May 10 15:14:28 2016 +0200
 
-Now, the question is whether this is a bug *or* whether having
-interrupt-map pointing to its own node is not a valid situation.
+    NVMe: Only release requested regions
+    
+    The NVMe driver only requests the PCIe device's memory regions but releases
+    all possible regions (including eventual I/O regions). This leads to a stale
+    warning entry in dmesg about freeing non existent resources.
+    
+    Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+    Signed-off-by: Jens Axboe <axboe@fb.com>
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 78dca31..befac5b 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1679,9 +1679,14 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+ 
+ static void nvme_dev_unmap(struct nvme_dev *dev)
+ {
++       struct pci_dev *pdev = to_pci_dev(dev->dev);
++       int bars;
++
+        if (dev->bar)
+                iounmap(dev->bar);
+-       pci_release_regions(to_pci_dev(dev->dev));
++
++       bars = pci_select_bars(pdev, IORESOURCE_MEM);
++       pci_release_selected_regions(pdev, bars);
+ }
+ 
+ static void nvme_pci_disable(struct nvme_dev *dev)
+@@ -1924,7 +1929,7 @@ static int nvme_dev_map(struct nvme_dev *dev)
+ 
+        return 0;
+   release:
+-       pci_release_regions(pdev);
++       pci_release_selected_regions(pdev, bars);
+        return -ENODEV;
+ }
+ 
