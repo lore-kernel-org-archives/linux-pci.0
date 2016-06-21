@@ -1,223 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH v2 08/15] drivers: acpi: iort: add support for ARM SMMU platform devices creation
-Date: Tue,  7 Jun 2016 14:31:03 +0100
-Message-Id: <1465306270-27076-9-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:32966 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751525AbcFUWFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Jun 2016 18:05:14 -0400
+Date: Tue, 21 Jun 2016 17:04:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
+Subject: Re: [PATCH] Extending kernel option pci=resource_alignment to be
+ able to specify PCI device/vendor IDs
+Message-ID: <20160621220457.GD7603@localhost>
+References: <22400b8828ad44ddbccb876cc5ca3b11@FE-MBX1012.de.bosch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <22400b8828ad44ddbccb876cc5ca3b11@FE-MBX1012.de.bosch.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In ARM ACPI systems, IOMMU components are specified through static
-IORT table entries. In order to create platform devices for the
-corresponding ARM SMMU components, IORT kernel code should be made
-able to parse IORT table entries and create platform devices
-dynamically.
+On Tue, Jun 07, 2016 at 02:24:17PM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
+> Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned 
+> PCI memory resources are not page aligned.
+> By using the kernel option "pci=resource_alignment" it is possible to force
+> single PCI boards to use page alignment for their memory resources.
+> However, this is fairly cumbersome if multiple of these boards are in use as 
+> the specification of the cards has to be done via PCI bus/slot/function number
+> which might change e.g. by adding another board.
+> This patch extends the kernel option "pci=resource_alignment" to allow to
+> specify the relevant boards via PCI device/vendor (and subdevice/subvendor) ids.
+> The specification of the devices via device/vendor is indicated by a leading
+> string "pci:" as argument to "pci=resource_alignment".
+> The format of the specification is
+>   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+> 
+> Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
+> 
+> ---
+>  Documentation/kernel-parameters.txt |    2 +
+>  drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
+>  2 files changed, 49 insertions(+), 19 deletions(-)
+> 
+> Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
+> ===================================================================
+> --- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
+> +++ linux-4.7-rc1/Documentation/kernel-parameters.txt
+> @@ -2998,6 +2998,8 @@ bytes respectively. Such letter suffixes
+>  		resource_alignment=
+>  				Format:
+>  				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+> +				[<order of align>@]pci:<vendor>:<device>\
+> +						[:<subvendor>:<subdevice>][; ...] 
 
-This patch adds the generic IORT infrastructure required to create
-platform devices for ARM SMMUs.
+Can you include a little example here so we know whether to use
+"pci:8086:1234" or "pci:0x8086:0x1234"?
 
-ARM SMMU versions have different resources requirement therefore this
-patch also introduces an IORT specific structure (ie iort_iommu_config)
-that contains hooks (to be defined by specific ARM SMMU drivers) to be
-used to define the platform devices names, init the IOMMUs, count their
-resources and finally initialize them.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/iort.c  | 125 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iort.h |  15 +++++++
- 2 files changed, 140 insertions(+)
-
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 875edde..2ef08d9 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -25,6 +25,7 @@
- #include <linux/kernel.h>
- #include <linux/list.h>
- #include <linux/pci.h>
-+#include <linux/platform_device.h>
- #include <linux/slab.h>
- 
- struct iort_its_msi_chip {
-@@ -436,6 +437,128 @@ iort_pci_get_domain(struct pci_dev *pdev, u32 req_id)
- 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
- }
- 
-+static int __init
-+add_smmu_platform_device(const struct iort_iommu_config *iort_cfg,
-+			 struct acpi_iort_node *node)
-+{
-+	struct platform_device *pdev;
-+	struct resource *r;
-+	enum dev_dma_attr attr;
-+	int ret, count;
-+
-+	pdev = platform_device_alloc(iort_cfg->name, PLATFORM_DEVID_AUTO);
-+	if (!pdev)
-+		return PTR_ERR(pdev);
-+
-+	count = iort_cfg->iommu_count_resources(node);
-+
-+	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
-+	if (!r) {
-+		ret = -ENOMEM;
-+		goto dev_put;
-+	}
-+
-+	iort_cfg->iommu_init_resources(r, node);
-+
-+	ret = platform_device_add_resources(pdev, r, count);
-+	/*
-+	 * Resources are duplicated in platform_device_add_resources,
-+	 * free their allocated memory
-+	 */
-+	kfree(r);
-+
-+	if (ret)
-+		goto dev_put;
-+
-+	/*
-+	 * Add a copy of IORT node pointer to platform_data to
-+	 * be used to retrieve IORT data information.
-+	 */
-+	ret = platform_device_add_data(pdev, &node, sizeof(node));
-+	if (ret)
-+		goto dev_put;
-+
-+	pdev->dev.dma_mask = kmalloc(sizeof(*pdev->dev.dma_mask), GFP_KERNEL);
-+	if (!pdev->dev.dma_mask) {
-+		ret = -ENOMEM;
-+		goto dev_put;
-+	}
-+
-+	/*
-+	 * Set default dma mask value for the table walker,
-+	 * to be overridden on probing with correct value.
-+	 */
-+	*pdev->dev.dma_mask = DMA_BIT_MASK(32);
-+	pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
-+
-+	attr = iort_cfg->iommu_is_coherent(node) ?
-+			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
-+
-+	/* Configure DMA for the page table walker */
-+	arch_setup_dma_ops(&pdev->dev, 0, 0, NULL,
-+					 attr == DEV_DMA_COHERENT);
-+
-+	ret = platform_device_add(pdev);
-+	if (ret)
-+		goto dma_deconfigure;
-+
-+	ret = iort_cfg->iommu_init(node);
-+	if (ret)
-+		goto dma_deconfigure;
-+
-+	return 0;
-+
-+dma_deconfigure:
-+	arch_teardown_dma_ops(&pdev->dev);
-+	kfree(pdev->dev.dma_mask);
-+
-+dev_put:
-+	platform_device_put(pdev);
-+
-+	return ret;
-+}
-+
-+static int __init iort_smmu_init(void)
-+{
-+	struct acpi_iort_node *iort_node, *iort_end;
-+	struct acpi_table_iort *iort;
-+	int i, ret;
-+
-+	/*
-+	 * iort_table and iort both point to the start of IORT table, but
-+	 * have different struct types
-+	 */
-+	iort = (struct acpi_table_iort *)iort_table;
-+
-+	/* Get the first IORT node */
-+	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
-+				 iort->node_offset);
-+	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-+				iort_table->length);
-+
-+	for (i = 0; i < iort->node_count; i++) {
-+		const struct iort_iommu_config *ops;
-+
-+		if (iort_node >= iort_end) {
-+			pr_err("iort node pointer overflows, bad table\n");
-+			return -EINVAL;
-+		}
-+
-+		ops = iort_get_iommu_config(iort_node);
-+		if (!ops)
-+			goto next;
-+
-+		ret = add_smmu_platform_device(ops, iort_node);
-+		if (ret)
-+			return ret;
-+next:
-+		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
-+					 iort_node->length);
-+	}
-+
-+	return 0;
-+}
-+
- static int __init iort_table_detect(void)
- {
- 	acpi_status status;
-@@ -450,6 +573,8 @@ static int __init iort_table_detect(void)
- 		return -EINVAL;
- 	}
- 
-+	iort_smmu_init();
-+
- 	return 0;
- }
- arch_initcall(iort_table_detect);
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index 5ebe7e5..ced3054 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -43,4 +43,19 @@ int iort_smmu_set_ops(struct acpi_iort_node *node,
- 					 u32 streamid,
- 					 struct acpi_iort_node *node));
- 
-+struct iort_iommu_config {
-+	const char *name;
-+	int (*iommu_init)(struct acpi_iort_node *node);
-+	bool (*iommu_is_coherent)(struct acpi_iort_node *node);
-+	int (*iommu_count_resources)(struct acpi_iort_node *node);
-+	void (*iommu_init_resources)(struct resource *res,
-+				     struct acpi_iort_node *node);
-+};
-+
-+static inline const struct iort_iommu_config *
-+iort_get_iommu_config(struct acpi_iort_node *node)
-+{
-+	return NULL;
-+}
-+
- #endif /* __IORT_H__ */
--- 
-2.6.4
-
+Bjorn
