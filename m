@@ -1,45 +1,46 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-Date: Wed, 22 Jun 2016 13:09:46 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <thomas.petazzoni@free-electrons.com>
+Return-Path: <thomas.petazzoni@free-electrons.com>
+Date: Wed, 22 Jun 2016 19:33:30 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/4] PCI / DPC: Few improvements
-Message-ID: <20160622100946.GC1739@lahna.fi.intel.com>
-References: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
- <20160621185719.GB7603@localhost>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org, Bjorn Helgaas
+ <bhelgaas@google.com>, linux-pci@vger.kernel.org, Nadav Haklai
+ <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Hanna Hawa
+ <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper
+ <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth
+ <sebastian.hesselbarth@gmail.com>, Gregory Clement
+ <gregory.clement@free-electrons.com>, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 2/3] PCI: host: new PCI host controller driver for
+ Aardvark
+Message-ID: <20160622193330.490d1bce@free-electrons.com>
+In-Reply-To: <20160622161607.GD25485@localhost>
+References: <1465574056-8787-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201606111501.h2bC6u5a%fengguang.wu@intel.com>
+	<20160622161607.GD25485@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160621185719.GB7603@localhost>
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 21, 2016 at 01:57:20PM -0500, Bjorn Helgaas wrote:
-> On Mon, Jun 06, 2016 at 04:06:04PM +0300, Mika Westerberg wrote:
-> > Hi,
-> > 
-> > This series includes few improvements for the PCIe DPC driver. First we
-> > introduce module_pci_port_service() which allows reducing of boilerblate
-> > code used in the DPC driver. In addition we convert the driver to use
-> > managed resource functions (devm) to get rid of even more boilerblate.
-> > 
-> > I do not have hardware supporting DPC so these are only compile tested.
-> > 
-> > Mika Westerberg (4):
-> >   PCI / PCIe: Introduce module_pci_port_service()
-> >   PCI / DPC: Convert to use module_pcie_port_service()
-> >   PCI / DPC: Convert the driver to use devm_* functions
-> >   PCI / DPC: Fix whitespace in struct dpc_dev
-> > 
-> >  drivers/pci/pcie/pcie-dpc.c | 30 +++++++-----------------------
-> >  include/linux/pcieport_if.h | 13 +++++++++++++
-> >  2 files changed, 20 insertions(+), 23 deletions(-)
-> 
-> I applied the last two, with Keith's acks, to pci/dpc for v4.8.
-> 
-> I didn't apply the first two because I don't think these port drivers
-> should be modules.  I think DPC and thunderbolt are the only candidates
-> right now, and I think it's a stretch to think about either one as a
-> module.
+Hello,
 
-Understood. Thanks.
+On Wed, 22 Jun 2016 11:16:07 -0500, Bjorn Helgaas wrote:
+
+> > All errors (new ones prefixed by >>):
+> >   
+> > >> drivers/of/Kconfig:4:error: recursive dependency detected!  
+> 
+> Was there a resolution to this?
+
+Yes, Arnd sent a patch which I believe addresses this:
+
+	[PATCH] arm/arm64/irqchip/pci: fix PCI_MSI dependencies
+
+I'll verify locally that it indeed solves the problem.
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
