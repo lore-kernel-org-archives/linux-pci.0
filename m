@@ -1,82 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51763 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932242AbcFFXHC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jun 2016 19:07:02 -0400
-Subject: [PATCH v1 18/25] PCI: mvebu: Request host bridge window resources
- with core function
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Rob Herring <robh@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
-	linux-renesas-soc@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
-	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
-	linux-arm-kernel@lists.infradead.org
-Date: Mon, 06 Jun 2016 18:06:58 -0500
-Message-ID: <20160606230658.20936.52000.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35025 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751516AbcFVCpj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2016 22:45:39 -0400
+Received: by mail-pa0-f47.google.com with SMTP id hl6so11993120pac.2
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jun 2016 19:45:17 -0700 (PDT)
+Subject: Re: [RFC PATCH v2 00/15] ACPI IORT ARM SMMU v3 support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <b00f33ad-be24-21a9-b03b-611756bbc8e9@linaro.org>
+ <20160621142704.GA31593@red-moon>
+Cc: iommu@lists.linux-foundation.org,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linuxarm@huawei.com
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <e9d5d68a-3e1d-4517-7f67-b7941e74eddd@linaro.org>
+Date: Wed, 22 Jun 2016 10:45:05 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20160621142704.GA31593@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use devm_request_pci_bus_resources() to request host bridge window
-resources instead of doing it by hand in the driver.
+On 2016/6/21 22:27, Lorenzo Pieralisi wrote:
+> Hi Hanjun,
+>
+> On Tue, Jun 21, 2016 at 06:37:17PM +0800, Hanjun Guo wrote:
+>> Hi Lorenzo,
+>>
+>> On 2016/6/7 21:30, Lorenzo Pieralisi wrote:
+>>> This RFC patch series is v2 of a previous posting:
+>>>
+>>> https://lkml.org/lkml/2016/4/14/702
+>>>
+>>> v1 -> v2:
+>>> 	- Rebased on top of dependencies series [1][2][3](v4.7-rc1)
+>>> 	- Removed IOMMU fwnode generalization
+>>> 	- Implemented ARM SMMU v3 ACPI probing instead of ARM SMMU v2
+>>> 	  owing to patch series dependencies [1]
+>>> 	- Moved platform device creation logic to IORT code to
+>>> 	  generalize its usage for ARM SMMU v1-v2-v3 components
+>>> 	- Removed reliance on ACPI early device probing
+>>> 	- Created IORT specific iommu_xlate() translation hook leaving
+>>> 	  OF code unchanged according to v1 reviews
+>>>
+>>> The ACPI IORT table provides information that allows instantiating
+>>> ARM SMMU devices and carrying out id mappings between components on
+>>> ARM based systems (devices, IOMMUs, interrupt controllers).
+>>>
+>>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>>>
+>>> Building on basic IORT support, available through [2]:
+>>>
+>>> this patchset enables ARM SMMU v3 support on ACPI systems.
+>>
+>> I'm trying to test your patches on D03 (SMMUv3 based) but ...
+>
+> What do you mean by "I am trying.." :), have you actually tested
+> this series ?
 
-No functional change intended.
+I was rebasing this series on top of Tomasz's latest ITS patchset,
+and found that patch 1~2,5 are not needed, and also have conflicts
+(expected), so I think it's better to wait for the updated version
+from you :)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-mvebu.c |   17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+>
+>> [...]
+>>> [1] R.Murphy "Generic DT bindings for PCI and ARM SMMU v3"
+>>>    http://marc.info/?l=linux-arm-kernel&m=146497432413816&w=2
+>>
+>> ...This patch set is still in discussion and seems not work
+>> for non-PCI devices.
+>
+> Can you be more specific please ? Yes, both series are work
+> in progress.
+>
+>>> [2] T.Nowicki "Introduce ACPI world to ITS irqchip" v5
+>>>    http://marc.info/?l=linux-acpi&m=146469369703684&w=2
+>>
+>> Tomasz sent out the v7 and included patches in your series.
+>>
+>> I think a updated version before the test makes sense, what
+>> do you think? Let me know your thoughts.
+>
+> I am working with Robin so that the xlate() mechanism works
+> properly and seamlessly for both DT and ACPI, given the
+> dependencies I think it makes more sense to wait for Tomasz
+> and Robin patches to get merged or at least stabilize before
+> doing anything else, I am curently working on a v3.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 6b451df..2287a4e 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -839,25 +839,22 @@ static struct pci_ops mvebu_pcie_ops = {
- static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- {
- 	struct mvebu_pcie *pcie = sys_to_pcie(sys);
--	int i;
-+	int err, i;
- 
- 	pcie->mem.name = "PCI MEM";
- 	pcie->realio.name = "PCI I/O";
- 
--	if (request_resource(&iomem_resource, &pcie->mem))
--		return 0;
--
--	if (resource_size(&pcie->realio) != 0) {
--		if (request_resource(&ioport_resource, &pcie->realio)) {
--			release_resource(&pcie->mem);
--			return 0;
--		}
-+	if (resource_size(&pcie->realio) != 0)
- 		pci_add_resource_offset(&sys->resources, &pcie->realio,
- 					sys->io_offset);
--	}
-+
- 	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
- 	pci_add_resource(&sys->resources, &pcie->busn);
- 
-+	err = devm_request_pci_bus_resources(&pcie->pdev->dev, &sys->resources);
-+	if (err)
-+		return 0;
-+
- 	for (i = 0; i < pcie->nports; i++) {
- 		struct mvebu_pcie_port *port = &pcie->ports[i];
- 
+OK.
 
+Thanks
+Hanjun
