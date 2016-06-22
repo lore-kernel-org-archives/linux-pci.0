@@ -1,97 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V6 1/7] ACPI: I/O Remapping Table (IORT) initial support
-To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
-	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
-	bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
-	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
-References: <1465828873-23498-1-git-send-email-tn@semihalf.com>
- <1465828873-23498-2-git-send-email-tn@semihalf.com>
-Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
-	Catalin.Marinas@arm.com, will.deacon@arm.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
-	andrea.gallo@linaro.org, linux-pci@vger.kernel.org,
-	"Abdulhamid, Harb" <harba@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <576155FA.9080706@codeaurora.org>
-Date: Wed, 15 Jun 2016 09:19:54 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+ rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+ robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+ Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+References: <1466420541-20101-2-git-send-email-tn@semihalf.com>
+ <1466598909-27504-1-git-send-email-tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <576A873C.3050107@semihalf.com>
+Date: Wed, 22 Jun 2016 14:40:28 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465828873-23498-2-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1466598909-27504-1-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: al.stone@linaro.org, graeme.gregory@linaro.org, Catalin.Marinas@arm.com,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org, okaya@codeaurora.org,
+ linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com, linux-pci@vger.kernel.org,
+ mw@semihalf.com, andrea.gallo@linaro.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+On 22.06.2016 14:35, Tomasz Nowicki wrote:
+> IORT shows representation of IO topology for ARM based systems.
+> It describes how various components are connected together on
+> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>
+> Initial support allows to detect IORT table presence and save its
+> root pointer obtained through acpi_get_table(). The pointer validity
+> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+> is not set while using IORT nodes we would dereference unmapped pointers.
+>
+> For the aforementioned reason call iort_table_detect() from acpi_init()
+> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+>
+> Add generic helpers which are helpful for scanning and retrieving
+> information from IORT table content. List of the most important helpers:
+> - iort_find_dev_node() finds IORT node for a given device
+> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>    final translation
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 
-> +static acpi_status
-> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
-> +{
-> +	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
-> +		struct acpi_iort_root_complex *pci_rc;
-> +		struct pci_bus *bus;
-> +
-> +		bus = to_pci_bus(dev);
-> +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
-> +
-> +		/*
-> +		 * It is assumed that PCI segment numbers maps one-to-one
-> +		 * with root complexes. Each segment number can represent only
-> +		 * one root complex.
-> +		 */
-> +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
-> +			return AE_OK;
-> +
+The updated patch incorporates fixes and addresses Lorenzo's comments.
+The whole series is here:
+https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v7.1)
 
-There is problem with the find_dev_node and callback for PCIe here. It assumes
-a one-to-one relationship between an SMMU and root complex. 
+Thanks,
+Tomasz
 
-Just checked with Charles offline to see if there is anything in the IORT spec that forces
-this. And, the answer was no. 
-
-Pasting the IORT requirements for you below.
-
-“The IORT was intended to be flexible enough to define static RID to SID mappings, which should cover 
-the following configurations:
--	Dedicated SMMU per RC
--	Multiple RC’s per SMMU (as you described)
--	Multiple SMMU’s per RC (with static RID:SID range per SMMU)
-
-The SMMU instance must be identified by either a device ID *or* a combination of 
-segment ID *and* Requestor ID. ”
-
-If a root complex has multiple SMMUs, this code is going to return the first SMMU. This needs
-to be corrected.
-
-> +		break;
-> +	}
-> +	}
-> +
-> +	return AE_NOT_FOUND;
-> +}
-> +
-
-> +
-> +static struct acpi_iort_node *
-> +iort_find_dev_node(struct device *dev)
-> +{
-> +	struct pci_bus *pbus;
-> +
-> +	if (!dev_is_pci(dev))
-> +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-> +				      iort_match_node_callback, dev);
-> +
-> +	/* Find a PCI root bus */
-> +	pbus = to_pci_dev(dev)->bus;
-> +	while (!pci_is_root_bus(pbus))
-> +		pbus = pbus->parent;
-> +
-> +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-> +			      iort_match_node_callback, &pbus->dev);
-> +}
-> +
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
