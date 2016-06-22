@@ -1,207 +1,358 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:35932 "EHLO
-	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749AbcF1DdL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jun 2016 23:33:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <41720b10-3713-9dd6-bf8f-4d32b6283c8c@huawei.com>
-References: <BEF013ED77979042B16A827A9AC75AF820FA4C5E@SZXEMI502-MBS.china.huawei.com>
- <CAHM4w1=g7nQ81tipzJa_3nVo-3_4ZMpRkKRrOFX9wyc+ZoThMw@mail.gmail.com> <41720b10-3713-9dd6-bf8f-4d32b6283c8c@huawei.com>
-From: Pratyush Anand <pratyush.anand@gmail.com>
-Date: Tue, 28 Jun 2016 09:03:09 +0530
-Message-ID: <CAHM4w1=NaqguAFB-sf4k=+zSOsowGEh0VrLBtmO6JV8bwatuqQ@mail.gmail.com>
-Subject: Re: [PATCH] Decouple CFG and IO in Designware PCIe Driver
-To: "dongbo (E)" <dongbo4@huawei.com>
-Cc: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linuxarm <linuxarm@huawei.com>,
-	Zhanweitao <zhanweitao@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
+Date: Wed, 22 Jun 2016 14:35:09 +0200
+Message-Id: <1466598909-27504-1-git-send-email-tn@semihalf.com>
+In-Reply-To: <1466420541-20101-2-git-send-email-tn@semihalf.com>
+References: <1466420541-20101-2-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 27, 2016 at 6:38 PM, dongbo (E) <dongbo4@huawei.com> wrote:
-> Hi, all.
->
-> How about exchanging the assignments of `MEMORYs' and `CFGs/IOs'?
-> In other words, assign MEMEORYs to iatu0, CFGs and IOs to iatu1.
->
-> Once the iatu0 is initialized to MEMORY accesses, its BASE_ADDR,
-> LIMIT and TYPE is fixed. MEMORYs match with iatu0 at first, so
-> they will never being treated as IOs or CFGs by mistake.
+IORT shows representation of IO topology for ARM based systems.
+It describes how various components are connected together on
+parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
 
-This should be acceptable, so you can send it as a formal patch.
+Initial support allows to detect IORT table presence and save its
+root pointer obtained through acpi_get_table(). The pointer validity
+depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+is not set while using IORT nodes we would dereference unmapped pointers.
 
-However, other corner point for failure is still there. Suppose,
-another thread tries to write on IO space when iatu1 was programmed
-for CFG.
+For the aforementioned reason call iort_table_detect() from acpi_init()
+which guarantees acpi_gbl_permanent_mmap to be set at that point.
 
-~Pratyush
+Add generic helpers which are helpful for scanning and retrieving
+information from IORT table content. List of the most important helpers:
+- iort_find_dev_node() finds IORT node for a given device
+- iort_node_map_rid() maps device RID and returns IORT node which provides
+  final translation
 
->
-> The number of viewpoints used remains two, it would be OK for
-> platforms only have 2 viewpoints.
->
-> Here is the patch:
->
-> Signed-off-by: Dong Bo <dongbo4@huawei.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index aafd766..1bd88d9 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -599,11 +599,11 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->                 va_cfg_base = pp->va_cfg1_base;
->         }
->
-> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
->                                   type, cpu_addr,
->                                   busdev, cfg_size);
->         ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
-> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
->                                   PCIE_ATU_TYPE_IO, pp->io_base,
->                                   pp->io_bus_addr, pp->io_size);
->
-> @@ -636,11 +636,11 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->                 va_cfg_base = pp->va_cfg1_base;
->         }
->
-> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
->                                   type, cpu_addr,
->                                   busdev, cfg_size);
->         ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
-> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
-> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
->                                   PCIE_ATU_TYPE_IO, pp->io_base,
->                                   pp->io_bus_addr, pp->io_size);
->
-> @@ -779,7 +779,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->          * we should not program the ATU here.
->          */
->         if (!pp->ops->rd_other_conf)
-> -               dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-> +               dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->                                           PCIE_ATU_TYPE_MEM, pp->mem_base,
->                                           pp->mem_bus_addr, pp->mem_size);
->
-> --
-> 1.9.1
->
-> On 2016/6/27 12:37, Pratyush Anand wrote:
->> On Wed, Jun 22, 2016 at 1:54 PM, dongbo (E) <dongbo4@huawei.com> wrote:
->>> From: Dong Bo <dongbo4@huawei.com>
->>>
->>> In designware PCIe driver, the iatu0 is used for both CFG and IO accesses.
->>> When PCIe sends CFGs to peripherals (e.g. lspci),
->>> iatu0 frequently switches between CFG and IO alternatively.
->>>
->>> If the LIMIT of MEMORY is a value between CFGs BASE_ADDR and IOs LIMIT,
->>> this probably results in a MEMORY beging matched to be an IO by mistake.
->>>
->>> Considering the following configurations:
->>> MEMORY          ->      BASE_ADDR: 0xb4100000, LIMIT: 0xb4100FFF, TYPE=mem
->>> CFG             ->      BASE_ADDR: 0xb4000000, LIMIT: 0xb4000FFF, TYPE=cfg
->>> IO              ->      BASE_ADDR: 0xFFFFFFFF, LIMIT: 0xFFFFFFFE, TYPE=io
->>> Suppose PCIe has just completed a CFG access, to switch back to IO, it set the BASE_ADDR to 0xFFFFFFFF, LIMIT 0xFFFFFFFE and TYPE to io.
->>> When another CFG access come,
->>> PCIe first set BASE_ADDR to 0xb4000000 to switch to CFG.
->>> At this moment, a MEMORY access shows up, due to `0xb4000000 <= MEMORY BASE_ADDR <= MEMORY LIMIE <= 0xFFFFFFF, it matches with iatu0.
->>> And it is treated as an IO access by mistake, then sent to perpheral.
->>>
->>
->> Hummm...This portion of driver has always been buggy.
->>
->>> This patch fixes the problem by decoupling CFG and IO, reassigning iatu2 to IO.
->>
->> But, we can not just assign IOs to iatu2.
->> IIRC then, there are atleast two platforms which have only 2
->> viewports, therefore they can not program iatu2.
->>
->> Jingoo,Bjorn: IMHO, we should modify this portion of code, since more
->> number of platforms has 4+ viewports. Probably, we can take following
->> approach:
->>
->> (1) Pass number of viewports through DT. If we have *atleast*  3
->> viewports then assign separate viewports to memory and IO,  and share
->> one with CFG0 and CFG1.
->> (2) If we can have *atleast*  4 then, we may have separate for CFG0
->> and CFG1 as well.
->>
->> (3) If we have *only* 2 then,  either we let them work as they work
->> today with bug, or may be we restrict them from using IO transactions.
->> So assign one to memory and share other for CFG0 and CFG1.
->>
->> Please let me know your opnion.
->>
->> ~Pratyush
->>
->>>
->>> Signed-off-by: Dong Bo <dongbo4@huawei.com>
->>> ---
->>>  drivers/pci/host/pcie-designware.c | 14 +++++++-------
->>>  1 file changed, 7 insertions(+), 7 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->>> index aafd766..1a40305 100644
->>> --- a/drivers/pci/host/pcie-designware.c
->>> +++ b/drivers/pci/host/pcie-designware.c
->>> @@ -51,6 +51,7 @@
->>>  #define PCIE_ATU_VIEWPORT              0x900
->>>  #define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
->>>  #define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
->>> +#define PCIE_ATU_REGION_INDEX2         (0x2 << 0)
->>>  #define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
->>>  #define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
->>>  #define PCIE_ATU_CR1                   0x904
->>> @@ -603,9 +604,6 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->>>                                   type, cpu_addr,
->>>                                   busdev, cfg_size);
->>>         ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
->>> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->>> -                                 PCIE_ATU_TYPE_IO, pp->io_base,
->>> -                                 pp->io_bus_addr, pp->io_size);
->>>
->>>         return ret;
->>>  }
->>> @@ -640,9 +638,6 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->>>                                   type, cpu_addr,
->>>                                   busdev, cfg_size);
->>>         ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
->>> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->>> -                                 PCIE_ATU_TYPE_IO, pp->io_base,
->>> -                                 pp->io_bus_addr, pp->io_size);
->>>
->>>         return ret;
->>>  }
->>> @@ -778,10 +773,15 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>>          * uses its own address translation component rather than ATU, so
->>>          * we should not program the ATU here.
->>>          */
->>> -       if (!pp->ops->rd_other_conf)
->>> +       if (!pp->ops->rd_other_conf) {
->>>                 dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
->>>                                           PCIE_ATU_TYPE_MEM, pp->mem_base,
->>>                                           pp->mem_bus_addr, pp->mem_size);
->>> +               dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX2,
->>> +                                       PCIE_ATU_TYPE_IO, pp->io_base,
->>> +                                       pp->io_bus_addr, pp->io_size);
->>> +
->>> +       }
->>>
->>>         dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
->>>
->>> --
->>> 1.9.1
->>>
->>
->> .
->>
->
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/Kconfig  |   3 +
+ drivers/acpi/Makefile |   1 +
+ drivers/acpi/bus.c    |   2 +
+ drivers/acpi/iort.c   | 217 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iort.h  |  30 +++++++
+ 5 files changed, 253 insertions(+)
+ create mode 100644 drivers/acpi/iort.c
+ create mode 100644 include/linux/iort.h
+
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index b7e2e77..848471f 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -57,6 +57,9 @@ config ACPI_SYSTEM_POWER_STATES_SUPPORT
+ config ACPI_CCA_REQUIRED
+ 	bool
+ 
++config IORT_TABLE
++	bool
++
+ config ACPI_DEBUGGER
+ 	bool "AML debugger interface"
+ 	select ACPI_DEBUG
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index 251ce85..c7c9b29 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -82,6 +82,7 @@ obj-$(CONFIG_ACPI_CUSTOM_METHOD)+= custom_method.o
+ obj-$(CONFIG_ACPI_BGRT)		+= bgrt.o
+ obj-$(CONFIG_ACPI_CPPC_LIB)	+= cppc_acpi.o
+ obj-$(CONFIG_ACPI_DEBUGGER_USER) += acpi_dbg.o
++obj-$(CONFIG_IORT_TABLE) 	+= iort.o
+ 
+ # processor has its own "processor." module_param namespace
+ processor-y			:= processor_driver.o
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index 31e8da6..176c17d 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -33,6 +33,7 @@
+ #ifdef CONFIG_X86
+ #include <asm/mpspec.h>
+ #endif
++#include <linux/iort.h>
+ #include <linux/pci.h>
+ #include <acpi/apei.h>
+ #include <linux/dmi.h>
+@@ -1118,6 +1119,7 @@ static int __init acpi_init(void)
+ 	}
+ 
+ 	pci_mmcfg_late_init();
++	iort_table_detect();
+ 	acpi_scan_init();
+ 	acpi_ec_init();
+ 	acpi_debugfs_init();
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+new file mode 100644
+index 0000000..fcfa008f
+--- /dev/null
++++ b/drivers/acpi/iort.c
+@@ -0,0 +1,217 @@
++/*
++ * Copyright (C) 2016, Semihalf
++ *	Author: Tomasz Nowicki <tn@semihalf.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * This file implements early detection/parsing of I/O mapping
++ * reported to OS through firmware via I/O Remapping Table (IORT)
++ * IORT document number: ARM DEN 0049A
++ */
++
++#define pr_fmt(fmt)	"ACPI: IORT: " fmt
++
++#include <linux/iort.h>
++#include <linux/kernel.h>
++#include <linux/pci.h>
++
++typedef acpi_status (*iort_find_node_callback)
++	(struct acpi_iort_node *node, void *context);
++
++/* Root pointer to the mapped IORT table */
++static struct acpi_table_header *iort_table;
++
++static struct acpi_iort_node *
++iort_scan_node(enum acpi_iort_node_type type,
++	       iort_find_node_callback callback, void *context)
++{
++	struct acpi_iort_node *iort_node, *iort_end;
++	struct acpi_table_iort *iort;
++	int i;
++
++	/* Get the first IORT node */
++	iort = (struct acpi_table_iort *)iort_table;
++	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
++				 iort->node_offset);
++	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++				iort_table->length);
++
++	for (i = 0; i < iort->node_count; i++) {
++		if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
++			       "IORT node pointer overflows, bad table!\n"))
++			return NULL;
++
++		if (iort_node->type == type) {
++			if (ACPI_SUCCESS(callback(iort_node, context)))
++				return iort_node;
++		}
++
++		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
++					 iort_node->length);
++	}
++
++	return NULL;
++}
++
++static acpi_status
++iort_match_node_callback(struct acpi_iort_node *node, void *context)
++{
++	struct device *dev = context;
++
++	switch (node->type) {
++	case ACPI_IORT_NODE_NAMED_COMPONENT: {
++		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
++		struct acpi_iort_named_component *ncomp;
++
++		if (!adev)
++			break;
++
++		ncomp = (struct acpi_iort_named_component *)node->node_data;
++
++		if (ACPI_FAILURE(acpi_get_name(adev->handle,
++					       ACPI_FULL_PATHNAME, &buffer))) {
++			dev_warn(dev, "Can't get device full path name\n");
++		} else {
++			int match;
++
++			match = !strcmp(ncomp->device_name, buffer.pointer);
++			kfree(buffer.pointer);
++
++			if (match)
++				return AE_OK;
++		}
++
++		break;
++	}
++	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
++		struct acpi_iort_root_complex *pci_rc;
++		struct pci_bus *bus;
++
++		bus = to_pci_bus(dev);
++		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
++
++		/*
++		 * It is assumed that PCI segment numbers maps one-to-one
++		 * with root complexes. Each segment number can represent only
++		 * one root complex.
++		 */
++		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
++			return AE_OK;
++
++		break;
++	}
++	}
++
++	return AE_NOT_FOUND;
++}
++
++static int
++iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in, u32 *rid_out)
++{
++	/* Single mapping does not care for input id */
++	if (map->flags & ACPI_IORT_ID_SINGLE_MAPPING) {
++		if (type == ACPI_IORT_NODE_NAMED_COMPONENT ||
++		    type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
++			*rid_out = map->output_base;
++			return 0;
++		}
++
++		pr_warn(FW_BUG "[map %p] SINGLE MAPPING flag not allowed for node type %d, skipping ID map\n",
++			map, type);
++		return -ENXIO;
++	}
++
++	if (rid_in < map->input_base ||
++	    (rid_in > map->input_base + map->id_count))
++		return -ENXIO;
++
++	*rid_out = map->output_base + (rid_in - map->input_base);
++	return 0;
++}
++
++static struct acpi_iort_node *
++iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
++		  u32 *rid_out, u8 type)
++{
++	u32 rid = rid_in;
++
++	/* Parse the ID mapping tree to find specified node type */
++	while (node) {
++		struct acpi_iort_id_mapping *map;
++		int i;
++
++		if (node->type == type) {
++			if (rid_out)
++				*rid_out = rid;
++			return node;
++		}
++
++		if (!node->mapping_offset || !node->mapping_count)
++			goto fail_map;
++
++		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
++				  node->mapping_offset);
++
++		/* Firmware bug! */
++		if (!map->output_reference) {
++			pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
++			       node, node->type);
++			goto fail_map;
++		}
++
++		/* Do the RID translation */
++		for (i = 0; i < node->mapping_count; i++, map++) {
++			if(!iort_id_map(map, node->type, rid, &rid))
++				break;
++		}
++
++		if (i == node->mapping_count)
++			goto fail_map;
++
++		node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++				    map->output_reference);
++	}
++
++fail_map:
++	/* Map input RID to output RID unchanged on mapping failure*/
++	if (rid_out)
++		*rid_out = rid_in;
++	return NULL;
++}
++
++static struct acpi_iort_node *
++iort_find_dev_node(struct device *dev)
++{
++	struct pci_bus *pbus;
++
++	if (!dev_is_pci(dev))
++		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
++				      iort_match_node_callback, dev);
++
++	/* Find a PCI root bus */
++	pbus = to_pci_dev(dev)->bus;
++	while (!pci_is_root_bus(pbus))
++		pbus = pbus->parent;
++
++	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
++			      iort_match_node_callback, &pbus->dev);
++}
++
++void __init iort_table_detect(void)
++{
++	acpi_status status;
++
++	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
++	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
++		const char *msg = acpi_format_exception(status);
++		pr_err("Failed to get table, %s\n", msg);
++	}
++}
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+new file mode 100644
+index 0000000..cde6809
+--- /dev/null
++++ b/include/linux/iort.h
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (C) 2016, Semihalf
++ *	Author: Tomasz Nowicki <tn@semihalf.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
++ * Place - Suite 330, Boston, MA 02111-1307 USA.
++ */
++
++#ifndef __IORT_H__
++#define __IORT_H__
++
++#include <linux/acpi.h>
++
++#ifdef CONFIG_IORT_TABLE
++void iort_table_detect(void);
++#else
++static inline void iort_table_detect(void) { }
++#endif
++
++#endif /* __IORT_H__ */
+-- 
+1.9.1
+
