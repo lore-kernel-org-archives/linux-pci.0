@@ -1,87 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40099 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752511AbcFIWVp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jun 2016 18:21:45 -0400
-Date: Thu, 9 Jun 2016 16:21:39 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ilya Lesokhin <ilyal@mellanox.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, noaos@mellanox.com, haggaie@mellanox.com,
-	ogerlitz@mellanox.com, liranl@mellanox.com
-Subject: Re: [PATCH 1/4] VFIO: Probe new devices in a live VFIO group with
- the VFIO driver
-Message-ID: <20160609162139.13eb22b4@ul30vt.home>
-In-Reply-To: <1465474173-53960-2-git-send-email-ilyal@mellanox.com>
-References: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
-	<1465474173-53960-2-git-send-email-ilyal@mellanox.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Wed, 22 Jun 2016 13:09:46 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/4] PCI / DPC: Few improvements
+Message-ID: <20160622100946.GC1739@lahna.fi.intel.com>
+References: <1465218368-36494-1-git-send-email-mika.westerberg@linux.intel.com>
+ <20160621185719.GB7603@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160621185719.GB7603@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu,  9 Jun 2016 15:09:29 +0300
-Ilya Lesokhin <ilyal@mellanox.com> wrote:
-
-> When a new device is added to a live VFIO group,
-> use driver_override to force the device to be probed by
-> the VFIO driver.
+On Tue, Jun 21, 2016 at 01:57:20PM -0500, Bjorn Helgaas wrote:
+> On Mon, Jun 06, 2016 at 04:06:04PM +0300, Mika Westerberg wrote:
+> > Hi,
+> > 
+> > This series includes few improvements for the PCIe DPC driver. First we
+> > introduce module_pci_port_service() which allows reducing of boilerblate
+> > code used in the DPC driver. In addition we convert the driver to use
+> > managed resource functions (devm) to get rid of even more boilerblate.
+> > 
+> > I do not have hardware supporting DPC so these are only compile tested.
+> > 
+> > Mika Westerberg (4):
+> >   PCI / PCIe: Introduce module_pci_port_service()
+> >   PCI / DPC: Convert to use module_pcie_port_service()
+> >   PCI / DPC: Convert the driver to use devm_* functions
+> >   PCI / DPC: Fix whitespace in struct dpc_dev
+> > 
+> >  drivers/pci/pcie/pcie-dpc.c | 30 +++++++-----------------------
+> >  include/linux/pcieport_if.h | 13 +++++++++++++
+> >  2 files changed, 20 insertions(+), 23 deletions(-)
 > 
-> Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
-> ---
->  drivers/vfio/vfio.c | 18 ++++++++++++++----
->  1 file changed, 14 insertions(+), 4 deletions(-)
+> I applied the last two, with Keith's acks, to pci/dpc for v4.8.
 > 
-> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-> index 6fd6fa5..32bc1b4 100644
-> --- a/drivers/vfio/vfio.c
-> +++ b/drivers/vfio/vfio.c
-> @@ -646,6 +646,7 @@ static int vfio_dev_viable(struct device *dev, void *data)
->  static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
->  {
->  	struct vfio_device *device;
-> +	struct pci_dev *pdev;
->  
->  	/* Do we already know about it?  We shouldn't */
->  	device = vfio_group_get_device(group, dev);
-> @@ -658,10 +659,19 @@ static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
->  	if (!atomic_read(&group->container_users))
->  		return 0;
->  
-> -	/* TODO Prevent device auto probing */
-> -	WARN(1, "Device %s added to live group %d!\n", dev_name(dev),
-> -	     iommu_group_id(group->iommu_group));
-> -
-> +	if (dev_is_pci(dev)) {
+> I didn't apply the first two because I don't think these port drivers
+> should be modules.  I think DPC and thunderbolt are the only candidates
+> right now, and I think it's a stretch to think about either one as a
+> module.
 
-declare pdev here.
-
-> +		/* a device that shares a group with another VFIO
-> +		 * device should also be probed by VFIO
-> +		 */
-
-Use existing comment style:
-
-/*
- * comment
- */
-
-> +		pdev = to_pci_dev(dev);
-> +		if (pdev->driver_override)
-> +			kfree(pdev->driver_override);
-> +		pdev->driver_override = kstrdup("vfio-pci", GFP_KERNEL);
-
-kstrdup can fail.  Probably want to issue a dev_info message about
-capturing the device as well.  Thanks,
-
-Alex
-
-> +	} else {
-> +		/* TODO Prevent device auto probing */
-> +		WARN(1, "Device %s added to live group %d!\n", dev_name(dev),
-> +		     iommu_group_id(group->iommu_group));
-> +	}
->  	return 0;
->  }
->  
-
+Understood. Thanks.
