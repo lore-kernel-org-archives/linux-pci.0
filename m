@@ -1,121 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33934 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:39536 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422967AbcFMNpc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jun 2016 09:45:32 -0400
-Date: Mon, 13 Jun 2016 08:45:28 -0500
+	id S1752112AbcFVXH7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jun 2016 19:07:59 -0400
+Date: Wed, 22 Jun 2016 18:07:46 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Yong, Jonathan" <jonathan.yong@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	intel-wired-lan@lists.osuosl.org
-Subject: Re: [PATCH v5] PCI: PTM preliminary implementation
-Message-ID: <20160613134528.GB12221@localhost>
-References: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com>
- <1462956446-27361-2-git-send-email-jonathan.yong@intel.com>
- <20160612221847.GM16462@localhost>
- <575E2184.6090701@intel.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>
+Subject: Re: [PATCH v3 4/4] ARM/PCI: remove arch specific
+ pcibios_enable_device()
+Message-ID: <20160622230746.GI25485@localhost>
+References: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1465383890-13538-5-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <575E2184.6090701@intel.com>
+In-Reply-To: <1465383890-13538-5-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jeff, intel-wired-lan: questions about how PTM might be used]
+[+cc Guan]
 
-On Mon, Jun 13, 2016 at 10:59:16AM +0800, Yong, Jonathan wrote:
-> On 06/13/2016 06:18, Bjorn Helgaas wrote:
-> >
-> >I'm still trying to understand what PTM should look like from the
-> >driver's perspective.  I know the PCIe spec doesn't define any way to
-> >initiate PTM dialogs or read the results.  But I don't know what the
-> >intended usage model is and how the device, driver, and PCI core
-> >pieces should fit together.
-> >
-> >- Do we expect endpoints to notice that PTM is enabled and
-> >automatically start using it, without the driver doing anything?
-> >Would driver changes be needed, e.g., to tell the device to add
-> >timestamps to network packet DMAs?
+On Wed, Jun 08, 2016 at 12:04:50PM +0100, Lorenzo Pieralisi wrote:
+> The arm pcibios_enable_device() implementation exists solely
+> to prevent enabling PCI resources on PCI_PROBE_ONLY systems, since
+> on those systems the PCI resources are currently not claimed (ie
+> inserted in the PCI resource tree - which means their parent
+> pointer is not correctly set-up) therefore they can not be enabled
+> since this would trigger PCI set-ups failures.
 > 
-> As far as I understand, it is a flag to tell the device that it may
-> begin using PTM to synchronize the on-board clock with PTM. From the
-> text in the specification (6.22.3.1 PTM Requester Role):
+> After removing the pci=firmware command line option in:
 > 
-> PTM Requesters are permitted to request PTM Master Time only when
-> PTM is enabled. The mechanism for directing a PTM Requester to issue
-> such a request is implementation specific.
-> 
-> If any, there won't be a generic way to trigger a PTM conversation.
-> 
-> >- Should there be a pci_enable_ptm() interface for a driver to
-> >enable PTM for its device?  If PTM isn't useful without driver
-> >changes, e.g., to tell the device to add timestamps, we probably
-> >should have such an interface so we don't enable PTM when it won't be
-> >useful.
+> commit 903589ca7165 ("ARM: 8554/1: kernel: pci: remove pci=firmware
+> command line parameter handling")
 
-Is there a Windows driver interface for enabling PTM?  I googled
-for such a thing, but didn't find anything.
+903589ca7165 removed "pci=firmware" from ARM and from
+Documentation/kernel-parameters.txt (where it was documented as
+ARM-specific).
 
-> >- If the PCI core instead enables PTM automatically whenever
-> >possible (as in the current patch), what performance impact do we
-> >expect?  I know you probably can't measure it yet, but can we at
-> >least calculate the worst-case bandwidth usage, based on the message
-> >size and frequency?  I previously assumed it would be small, but I
-> >hate to give up *any* performance unless there is some benefit.
+I think unicore32 copied that code from arm, so unicore32 is one of
+the few remaining arches that can set PCI_PROBE_ONLY.  I suspect this
+was just copied from arm and may not be necessary on unicore32.
+
+Guan, can you confirm that PCI_PROBE_ONLY is necessary on unicore32,
+or that it can be removed?
+
+> (that was used to set the PCI_PROBE_ONLY flag through the command line)
+> and by introducing resources claiming in the PCI host controllers
+> set-ups that have PCI_PROBE_ONLY as a probe option, there is no need for
+> arch specific pcibios_enable_device() implementations anymore in that
+> the kernel can rely on the generic pcibios_enable_device()
+> implementation without resorting to arch specific code to work around
+> the missing resources claiming enumeration step.
 > 
-> If the driver is already utilizing timestamps from the device, it
-> would be more precise and compensated for link delays. According to
-> the Implementation Note part in the specs, it says it can be used to
-> approximate the round trip message transit time and from there,
-> measure the link delay times, assuming upstream/downstream delays
-> are symmetrical.
+> On !PCI_PROBE_ONLY PCI bus set-ups, resources are always assigned
+> either in pcibios initialization code or PCI host controllers drivers;
+> since the PCI resource assignment API takes care of inserting the
+> assigned resources in the resource tree, the resources parent pointers
+> are correctly set-up, which means that this patch leaves behaviour
+> unchanged for all arm PCI set-ups that do not set the PCI_PROBE_ONLY
+> flag.
 > 
-> >- The PTM benefit is mostly for endpoints, and not so much for root
-> >ports or switches themselves.  If the PCI core enabled PTM
-> >automatically only on non-endpoints, would there be any overhead?
+> Remove the pcibios_enable_device() function from the arm arch back-end
+> so that the kernel now uses its generic implementation.
 > 
-> If it has any local clocks (noted with a requester bit, I have not
-> seen such a switch), it may start sending synchronization requests,
-> but from the specs...
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Acked-by: Will Deacon <will.deacon@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> ---
+>  arch/arm/kernel/bios32.c | 12 ------------
+>  1 file changed, 12 deletions(-)
 > 
-> >Here's my line of thought: If an endpoint never issued a PTM
-> >request, obviously there would never be a PTM dialog on the link
-> >between the last switch and the endpoint.  What about on links
-> >farther upstream? Would the switch ever issue a PTM request itself,
-> >without having received a request from the endpoint?  If not, the PCI
-> >core could enable PTM on all non-endpoint devices, and there should
-> >be no performance effect at all.  This would be nice because a driver
-> >call to enable PTM would only need to touch the endpoint; it wouldn't
-> >need to touch any upstream devices.
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 05e61a2..488545f 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -590,18 +590,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  	return start;
+>  }
+>  
+> -/**
+> - * pcibios_enable_device - Enable I/O and memory.
+> - * @dev: PCI device to be enabled
+> - */
+> -int pcibios_enable_device(struct pci_dev *dev, int mask)
+> -{
+> -	if (pci_has_flag(PCI_PROBE_ONLY))
+> -		return 0;
+> -
+> -	return pci_enable_resources(dev, mask);
+> -}
+> -
+>  int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+>  			enum pci_mmap_state mmap_state, int write_combine)
+>  {
+> -- 
+> 2.6.4
 > 
-> From the wording (6.22.2 PTM Link Protocol):
 > 
-> The Upstream Port, on behalf of the PTM Requester, initiates the PTM
-> dialog by transmitting a PTM Request message.
-> The Downstream Port, on behalf of the PTM Responder, has knowledge
-> of or access (directly or indirectly) to the PTM Master Time.
-> 
-> My naive interpretation tells me switches will only act on behalf of
-> requester/responder, never for itself.
-
-That would be my expectation as well.
-
-My own guess is that the driver should be involved somehow.  The clock
-granularity exposed in the PTM control register seems like it's
-intended for the driver, since it apparently doesn't affect the
-hardware at all.  So maybe we should:
-
-  - Enable PTM on all responder devices, i.e., everything except
-    endpoints, automatically.  This on the assumption that this would
-    not affect performance at all.
-
-  - Provide a driver interface like this:
-
-      int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
-
-    to enable PTM on an endpoint.  If successful, it returns the
-    effective clock granularity.  This only has to touch the endpoint
-    itself, not any upstream devices, since the upstream path would be
-    already enabled.
-
-Bjorn
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
