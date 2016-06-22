@@ -1,51 +1,57 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 22 Jun 2016 09:53:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
+	bhelgaas@google.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V3 1/3] x86/ioapic: Support hot-removal of IOAPICs
+ present during boot
+Message-ID: <20160622145354.GA25485@localhost>
+References: <20160616170958.GA7250@localhost>
+ <1466579612-20417-1-git-send-email-rui.y.wang@intel.com>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <CAE9FiQWw0pUB=1iDrX_1qyMFAUGQidSaV7CPc0aNb2CzPB-fZw@mail.gmail.com>
-References: <20160604000642.28162-1-yinghai@kernel.org> <20160604000642.28162-2-yinghai@kernel.org>
- <20160608210322.GA4248@localhost> <CAE9FiQXPmG6UYYGHG52_i8vaBJ5yPm6Z4Zfx_BhQxVhyWC5fnw@mail.gmail.com>
- <CAE9FiQWw0pUB=1iDrX_1qyMFAUGQidSaV7CPc0aNb2CzPB-fZw@mail.gmail.com>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Thu, 9 Jun 2016 15:36:35 -0700
-Message-ID: <CAE9FiQUNZ9xShfCHFvKobOJQ4zBfOrq_s=uYQAcR+YguigNjrQ@mail.gmail.com>
-Subject: Re: [PATCH v12 01/15] PCI: Let pci_mmap_page_range() take extra
- resource pointer
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, linux-cris-kernel@axis.com,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, linux-am33-list@redhat.com,
-	linux-parisc@vger.kernel.org, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-sh@vger.kernel.org,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, linux-xtensa@linux-xtensa.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466579612-20417-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 8, 2016 at 5:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Jun 8, 2016 at 3:35 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->
->> At the same time, can you kill __pci_mmap_set_pgprot() for powerpc.
->
-> Can you please put your two patches and this attached one into to pci/next?
->
-> Then I could send updated PCI: Let pci_mmap_page_range() take resource address.
+On Wed, Jun 22, 2016 at 03:13:32PM +0800, Rui Wang wrote:
+> On Friday, June 17, 2016 1:10 AM, Bjorn Helgaas wrote:
+> > ioapic_insert_resources() is x86-specific, but I'm not sure why; it seems
+> > like it does things that should be applicable to ia64 as well.
+> > 
+> > acpi_ioapic_add() is not x86-specific, and it is called from
+> > acpi_pci_root_add() for the hot-add case.  You're adding an x86-xpecific call
+> > in pci_assign_unassigned_resources().  Why should the hot-add case be for
+> > all arches, but the boot-time case only for x86?
+> 
+> Hi Bjorn,
+> 
+> It turns out that IOAPIC hotplug has not been pursued on ia64. There were
+> demos showing CPU sockets online/offline on ia64 but the CPUs had no IIO,
+> thus no IOAPIC hotplug.
 
-Thanks for putting those patches in pci/resource branch.
+That doesn't mean we need to write code that's gratuitously x86-specific.
 
-I just re post updated for second patch.
+> So to answer the first question:
+> ioapic_insert_resources() is x86-specific because it's inserting what has
+> been setup in io_apic_init_mappings() which, through mpc_ioapic_addr(), is
+> capable of handling both the static case (acpi_parse_ioapic(), etc.) and the
+> hotplug case (acpi_ioapic_add()). But on ia64, there's only the static
+> case through acpi_parse_iosapic(), no need for the hotplug case yet.
 
-[v12.update2,02/15] PCI: Let pci_mmap_page_range() take resource address
-http://patchwork.ozlabs.org/patch/633399/
+ioapic_insert_resources() inserts IOAPIC resources on x86.  Where are
+IOSAPIC resources inserted on ia64?
 
-And the [v12 01/15] is not needed anymore.
+> To answer the second question:
+> acpi_ioapic_add() is in effect x86-specific, because it's an empty function
+> when CONFIG_ACPI_HOTPLUG_IOAPIC isn't defined. And CONFIG_ACPI_HOTPLUG_IOAPIC
+> depends on CONFIG_X86_IO_APIC (see drivers/acpi/Kconfig). This was introduced
+> in c183619b6 (x86/irq, ACPI: Implement ACPI driver to support IOAPIC hotplug).
+> That commit shows the dependency.
+> 
+> I'll send a newer version with comments explaining these.
 
-patch3 to patch15 should still can be applied to pci/resource without problem.
-
-Thanks
-
-Yinghai
+I'd rather have code that is not x86-specific than comments explaining why
+the code is x86-specific.
