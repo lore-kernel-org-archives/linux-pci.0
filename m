@@ -1,75 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 16 Jun 2016 12:09:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rui Wang <rui.y.wang@intel.com>
-Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-	bhelgaas@google.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 1/3] x86/ioapic: Support hot-removal of IOAPICs
- present during boot
-Message-ID: <20160616170958.GA7250@localhost>
-References: <20160610164304.GJ19309@localhost>
- <1465711569-19406-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51727 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751543AbcFVL6D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jun 2016 07:58:03 -0400
+Date: Wed, 22 Jun 2016 13:56:36 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>,
+	Christoph Hellwig <hch@lst.de>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"axboe@fb.com" <axboe@fb.com>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
+Message-ID: <20160622115636.GA30337@dhcp-27-118.brq.redhat.com>
+References: <20160615102311.GA16619@lst.de>
+ <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com>
+ <20160615151415.GA1919@localhost.localdomain>
+ <7f0b16bd-b39f-99e6-c1c1-6a508bf9bbbf@sandisk.com>
+ <20160615160316.GB1919@localhost.localdomain>
+ <86aa652b-48d0-a7bb-683e-bf43939aa811@sandisk.com>
+ <20160615200655.GB7637@localhost.localdomain>
+ <20160615201213.GC7637@localhost.localdomain>
+ <7a61fe73-2808-70b4-e3b2-b6a924559d9d@sandisk.com>
+ <20160616151950.GA11840@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465711569-19406-1-git-send-email-rui.y.wang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160616151950.GA11840@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 12, 2016 at 02:06:09PM +0800, Rui Wang wrote:
-> On Saturday, June 11, 2016 12:43 AM, Bjorn Helgaas wrote:
-> > On Wed, Jun 08, 2016 at 05:32:44PM +0800, Rui Wang wrote:
-> > > @@ -1779,8 +1780,12 @@ void __init
-> > > pci_assign_unassigned_resources(void)
-> > >  {
-> > >  	struct pci_bus *root_bus;
-> > >
-> > > -	list_for_each_entry(root_bus, &pci_root_buses, node)
-> > > +	list_for_each_entry(root_bus, &pci_root_buses, node) {
-> > >  		pci_assign_unassigned_root_bus_resources(root_bus);
-> > > +#ifdef CONFIG_X86
-> > > +		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
-> > > +#endif
-> > 
-> > This seems like a strange place to call acpi_ioapic_add().  Your object is to call
-> > acpi_ioapic_add() during root bus enumeration.
-> > 
-> > I assume we *can't* call acpi_ioapic_add() from acpi_pci_root_add() at boot
-> > time, for some reason you'll explain.  But is there a reason we have to call it
-> > from pci_assign_unassigned_resources() (where it requires an ifdef) instead
-> > of from pcibios_assign_resources(), which is already x86-specific?
-> > 
-> > In acpi_pci_root_add(), we have this:
-> > 
-> >   acpi_pci_root_add(...)
-> >   {
-> >     ...
-> >     if (hotadd)
-> >       acpi_ioapic_add(root);
-> > 
-> > So the obvious question is why don't we just remove the "if (hotadd)"
-> > and call acpi_ioapic_add() always.
-> > 
-> > I'm sure the reason is some ordering problem, but we need a comment in
-> > acpi_pci_root_add() about why the obvious solution doesn't work.
+On Thu, Jun 16, 2016 at 11:19:51AM -0400, Keith Busch wrote:
+> On Wed, Jun 15, 2016 at 10:50:53PM +0200, Bart Van Assche wrote:
+> > Does it matter on x86 systems whether or not these interrupt vectors are
+> > also associated with a CPU with a higher CPU number? Although multiple bits
+> > can be set in /proc/irq/<n>/smp_affinity only the first bit counts on x86
+> > platforms. In default_cpu_mask_to_apicid_and() it is easy to see that only
+> > the first bit that has been set in that mask counts on x86 systems.
 > 
-> Yes it's an ording issue. acpi_ioapic_add() and also ioapic_insert_resources()
-> have to be later than pci initialization in order to deal with IOAPICs mapped
-> on a PCI BAR. There's a comment about this inside pcibios_resource_survey()
-> above ioapic_insert_resources(). We can also add a comment inside
-> acpi_pci_root_add(), though.
->
-> And yes calling acpi_ioapic_add() in pcibios_assign_resources() doesn't require
-> ifdef CONFIG_X86. But it'll require a loop to iterate through the root buses,
-> and call acpi_ioapic_add() within the loop. pci_assign_unassigned_resources()
-> already has that loop. Do you still prefer adding it to
-> pcibios_assign_resources() ?
+> Wow, thanks for the information. I didn't know the apic wasn't using
+> the full cpu mask, so this changes how I need to look at this, and will
+> experiment with such a configuration.
 
-ioapic_insert_resources() is x86-specific, but I'm not sure why; it
-seems like it does things that should be applicable to ia64 as well.
-
-acpi_ioapic_add() is not x86-specific, and it is called from
-acpi_pci_root_add() for the hot-add case.  You're adding an
-x86-xpecific call in pci_assign_unassigned_resources().  Why should
-the hot-add case be for all arches, but the boot-time case only for
-x86?
+I have vague memories of this, but you probably need to check PPC as well.
+Its interrupt distribution is not straightforward as well, AFAIR.
