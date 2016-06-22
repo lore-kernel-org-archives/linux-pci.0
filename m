@@ -1,55 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49544 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040AbcFJX6U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jun 2016 19:58:20 -0400
-Date: Fri, 10 Jun 2016 18:58:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Aaron Sierra <asierra@xes-inc.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Steven Graham <sgraham@xes-inc.com>
-Subject: Re: [PATCH] PCI: Add function 1 DMA alias quirk for 88SE9182
-Message-ID: <20160610235814.GB16462@localhost>
-References: <1302254871.144378.1463521541328.JavaMail.zimbra@xes-inc.com>
- <1362465642.29195.1463580259749.JavaMail.zimbra@xes-inc.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, tglx@linutronix.de,
+	jason@lakedaemon.net, rjw@rjwysocki.net, bhelgaas@google.com,
+	lorenzo.pieralisi@arm.com, robert.richter@caviumnetworks.com,
+	shijie.huang@arm.com, Suravee.Suthikulpanit@amd.com
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+ <1466420541-20101-2-git-send-email-tn@semihalf.com>
+ <372d3b78-2bc5-94d1-49f6-c9229affa65d@linaro.org> <576A6D7F.6010407@arm.com>
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <576A711D.5080206@semihalf.com>
+Date: Wed, 22 Jun 2016 13:06:05 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1362465642.29195.1463580259749.JavaMail.zimbra@xes-inc.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <576A6D7F.6010407@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 18, 2016 at 09:04:19AM -0500, Aaron Sierra wrote:
-> We found this quirk reported in the same thread as other Marvell
-> devices, but no patch resulted:
-> 
->   https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78
-> 
-> Signed-off-by: Steven Graham <sgraham@xes-inc.com>
-> Signed-off-by: Aaron Sierra <asierra@xes-inc.com>
+On 22.06.2016 12:50, Marc Zyngier wrote:
+> On 21/06/16 08:12, Hanjun Guo wrote:
+>> Hi Tomasz,
+>>
+>> Sorry for jumping out late, just one comment below.
+>>
+>> On 2016/6/20 19:02, Tomasz Nowicki wrote:
+>>> IORT shows representation of IO topology for ARM based systems.
+>>> It describes how various components are connected together on
+>>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+>>>
+>>> Initial support allows to detect IORT table presence and save its
+>>> root pointer obtained through acpi_get_table(). The pointer validity
+>>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+>>> is not set while using IORT nodes we would dereference unmapped pointers.
+>>>
+>>> For the aforementioned reason call iort_table_detect() from acpi_init()
+>>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+>>>
+>>> Add generic helpers which are helpful for scanning and retrieving
+>>> information from IORT table content. List of the most important helpers:
+>>> - iort_find_dev_node() finds IORT node for a given device
+>>> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>>>    final translation
+>>>
+>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>>> ---
+>>>   drivers/acpi/Kconfig  |   3 +
+>>>   drivers/acpi/Makefile |   1 +
+>>>   drivers/acpi/bus.c    |   2 +
+>>>   drivers/acpi/iort.c   | 220 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>   include/linux/iort.h  |  30 +++++++
+>>
+>> [...]
+>>
+>>> +static acpi_status
+>>> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
+>>> +{
+>>> +	struct device *dev = context;
+>>> +
+>>> +	switch (node->type) {
+>>> +	case ACPI_IORT_NODE_NAMED_COMPONENT: {
+>>> +		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+>>
+>> ACPI_ALLOCATE_BUFFER is used here, so ...
+>>
+>>> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
+>>> +		struct acpi_iort_named_component *ncomp;
+>>> +
+>>> +		if (!adev)
+>>> +			break;
+>>> +
+>>> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
+>>> +
+>>> +		if (ACPI_FAILURE(acpi_get_name(adev->handle,
+>>> +					       ACPI_FULL_PATHNAME, &buffer))) {
+>>> +			dev_warn(dev, "Can't get device full path name\n");
+>>> +			break;
+>>> +		}
+>>> +
+>>> +		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
+>>> +			return AE_OK;
+>>
+>> ... we need to kfree(buffer.pointer) before we return or break.
+>
+> For the record, I've queued this patch on top:
+>
+> diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+> index 496dcf6..3b9e55b 100644
+> --- a/drivers/acpi/iort.c
+> +++ b/drivers/acpi/iort.c
+> @@ -158,11 +158,15 @@ iort_match_node_callback(struct acpi_iort_node *node, void *context)
+>   		if (ACPI_FAILURE(acpi_get_name(adev->handle,
+>   					       ACPI_FULL_PATHNAME, &buffer))) {
+>   			dev_warn(dev, "Can't get device full path name\n");
+> -			break;
+> -		}
+> +		} else {
+> +			int match;
+>
+> -		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
+> -			return AE_OK;
+> +			match = !strcmp(ncomp->device_name, buffer.pointer);
+> +			acpi_os_free(&buffer);
+> +
+> +			if (match)
+> +				return AE_OK;
+> +		}
+>
+>   		break;
+>   	}
+>
+>
+> assuming that Rafael is OK with the general approach, of course.
+>
 
-Applied to pci/virtualization for v4.8, thanks, Steven and Aaron.
+Thanks Marc. As Lorenzo pointed out, we need another fix for 
+iort_node_map_rid(). Do you want me to refresh the whole series or this 
+patch only?
 
-> ---
->  drivers/pci/quirks.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 8e67802..90ac106 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3651,6 +3651,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9172,
->  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c59 */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x917a,
->  			 quirk_dma_func1_alias);
-> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c78 */
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9182,
-> +			 quirk_dma_func1_alias);
->  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c46 */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0,
->  			 quirk_dma_func1_alias);
-> -- 
-> 1.9.1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomasz
