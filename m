@@ -1,61 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20818 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751265AbcFDAHU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jun 2016 20:07:20 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: [PATCH v12 10/15] OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-Date: Fri,  3 Jun 2016 17:06:37 -0700
-Message-Id: <20160604000642.28162-11-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
+To: Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>, tglx@linutronix.de,
+	jason@lakedaemon.net, rjw@rjwysocki.net, bhelgaas@google.com,
+	lorenzo.pieralisi@arm.com, robert.richter@caviumnetworks.com,
+	shijie.huang@arm.com, Suravee.Suthikulpanit@amd.com
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+ <1466420541-20101-2-git-send-email-tn@semihalf.com>
+ <372d3b78-2bc5-94d1-49f6-c9229affa65d@linaro.org>
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <576A6D7F.6010407@arm.com>
+Date: Wed, 22 Jun 2016 11:50:39 +0100
+MIME-Version: 1.0
+In-Reply-To: <372d3b78-2bc5-94d1-49f6-c9229affa65d@linaro.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
+On 21/06/16 08:12, Hanjun Guo wrote:
+> Hi Tomasz,
+> 
+> Sorry for jumping out late, just one comment below.
+> 
+> On 2016/6/20 19:02, Tomasz Nowicki wrote:
+>> IORT shows representation of IO topology for ARM based systems.
+>> It describes how various components are connected together on
+>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+>>
+>> Initial support allows to detect IORT table presence and save its
+>> root pointer obtained through acpi_get_table(). The pointer validity
+>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+>> is not set while using IORT nodes we would dereference unmapped pointers.
+>>
+>> For the aforementioned reason call iort_table_detect() from acpi_init()
+>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+>>
+>> Add generic helpers which are helpful for scanning and retrieving
+>> information from IORT table content. List of the most important helpers:
+>> - iort_find_dev_node() finds IORT node for a given device
+>> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>>   final translation
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> ---
+>>  drivers/acpi/Kconfig  |   3 +
+>>  drivers/acpi/Makefile |   1 +
+>>  drivers/acpi/bus.c    |   2 +
+>>  drivers/acpi/iort.c   | 220 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/iort.h  |  30 +++++++
+> 
+> [...]
+> 
+>> +static acpi_status
+>> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
+>> +{
+>> +	struct device *dev = context;
+>> +
+>> +	switch (node->type) {
+>> +	case ACPI_IORT_NODE_NAMED_COMPONENT: {
+>> +		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+> 
+> ACPI_ALLOCATE_BUFFER is used here, so ...
+> 
+>> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
+>> +		struct acpi_iort_named_component *ncomp;
+>> +
+>> +		if (!adev)
+>> +			break;
+>> +
+>> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
+>> +
+>> +		if (ACPI_FAILURE(acpi_get_name(adev->handle,
+>> +					       ACPI_FULL_PATHNAME, &buffer))) {
+>> +			dev_warn(dev, "Can't get device full path name\n");
+>> +			break;
+>> +		}
+>> +
+>> +		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
+>> +			return AE_OK;
+> 
+> ... we need to kfree(buffer.pointer) before we return or break.
 
-This patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
-flags parsing.
+For the record, I've queued this patch on top:
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/of/address.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 0a553c0..fa10b99 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -129,9 +129,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
- 		flags |= IORESOURCE_IO;
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 496dcf6..3b9e55b 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -158,11 +158,15 @@ iort_match_node_callback(struct acpi_iort_node *node, void *context)
+ 		if (ACPI_FAILURE(acpi_get_name(adev->handle,
+ 					       ACPI_FULL_PATHNAME, &buffer))) {
+ 			dev_warn(dev, "Can't get device full path name\n");
+-			break;
+-		}
++		} else {
++			int match;
+ 
+-		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
+-			return AE_OK;
++			match = !strcmp(ncomp->device_name, buffer.pointer);
++			acpi_os_free(&buffer);
++
++			if (match)
++				return AE_OK;
++		}
+ 
  		break;
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
--- 
-2.8.3
 
+
+assuming that Rafael is OK with the general approach, of course.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
