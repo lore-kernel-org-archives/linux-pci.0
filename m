@@ -1,67 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ni.piap.pl ([195.187.100.4]:35673 "EHLO ni.piap.pl"
+Received: from mail.kernel.org ([198.145.29.136]:47630 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750710AbcFJKKV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jun 2016 06:10:21 -0400
-From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack overflow"
-References: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<11128570.JeBAgI5zQr@wuerfel> <m37fdydikf.fsf@t19.piap.pl>
-	<7440319.e8dDgNlZLB@wuerfel>
-Date: Fri, 10 Jun 2016 12:10:14 +0200
-In-Reply-To: <7440319.e8dDgNlZLB@wuerfel> (Arnd Bergmann's message of "Thu, 09
-	Jun 2016 16:42:03 +0200")
-Message-ID: <m3oa79bbi1.fsf@t19.piap.pl>
+	id S1750957AbcFVPWr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jun 2016 11:22:47 -0400
+Date: Wed, 22 Jun 2016 10:22:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	linux-xtensa@linux-xtensa.org
+Subject: Re: [PATCH v13 01/16] PCI: Let pci_mmap_page_range() take resource
+ address
+Message-ID: <20160622152243.GC25485@localhost>
+References: <20160618022501.15648-1-yinghai@kernel.org>
+ <20160618022501.15648-2-yinghai@kernel.org>
+ <20160618121752.GA22721@localhost>
+ <CAE9FiQXKVLWZaiD0CgSGEMN6c4g6GeCNGS=NE=gC-CEAymo1eQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXKVLWZaiD0CgSGEMN6c4g6GeCNGS=NE=gC-CEAymo1eQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+On Tue, Jun 21, 2016 at 09:32:49PM -0700, Yinghai Lu wrote:
+> On Sat, Jun 18, 2016 at 5:17 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Fri, Jun 17, 2016 at 07:24:46PM -0700, Yinghai Lu wrote:
+> >> In 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files"), try
+> >> to check exposed value with resource start/end in proc mmap path.
+> >>
+> >> |        start = vma->vm_pgoff;
+> >> |        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+> >> |        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+> >> |                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+> >> |        if (start >= pci_start && start < pci_start + size &&
+> >> |                        start + nr <= pci_start + size)
+> >>
+> >> That breaks sparc that exposed value is BAR value, and need to be offseted
+> >> to resource address.
+> >
+> > I asked this same question of the v12 patch, but I don't think you
+> > answered it:
+> >
+> > I'm not quite sure what you're saying here.  Are you saying that sparc
+> > is currently broken, and this patch fixes it?  If so, what exactly is
+> > broken?  Can you give a small example of an mmap that is currently
+> > broken?
+> 
+> Yes, for sparc that path (proc mmap) is broken, but only according to
+> code checking.
+> 
+> The reason for the problem is not discovered is that seem all users
+> (other than x86) are not
+> use proc_mmap ?
+> 
+> vma->vm_pgoff is that code segment is User/BAR value >> PAGE_SHIFT.
+> pci_start is resource->start >> PAGE_SHIFT.
+> 
+> For sparc, resource start is different from BAR start aka pci bus address.
+> pci bus address add offset to be the resource start.
 
-> Before that, we were always setting both mrrs and mps. As we don't know
-> who uses PCIE_BUS_PEER2PEER, maybe another option would be to add yet
-> another pcie_bus_config value for this particular quirk?
+If sparc is broken, let's make this a tiny sparc-only patch that fixes
+only the breakage -- no cleanup or restructuring.  Then we can do the
+more extensive work in a separate patch.
 
-It would be a safe approach.
-Or, maybe another non-pcie_bus_config thing, I don't know (so
-the pcie_bus_config is left for the user).
+The example mmap() I keep asking for would be very helpful to me in
+understanding the problem.  It would probably also help folks who
+maintain user programs that use mmap.  They need to figure out whether
+they have code that worked most places but has always been broken on
+sparc, or code that depended on the previous sparc behavior and will
+be broken by this change, or what.
 
-> I started the DT conversion a long time ago (see the DT parsing in
-> arch/arm/mach-cns3xxx/core.c) but I never had any hardware to test
-> on, and it was at a time when we didn't even have DT support in all
-> the subsystems.
->
-> I'd definitely help you get the rest of the DT support in place if
-> you can test it. This is now the only SMP platform and one of
-> the last users of GIC and l2x0 that does not use DT, so I'd love
-> to see that converted just so we can remove the legacy probing from
-> those drivers.
-
-Ok. Is there a DT skeleton file somewhere, so I can try to boot the
-board (without Laguna extras) in DT mode?
-At first, I only need CPU + RAM + console serial port.
-
-> Converting what we have in mainline should be fairly straightforward,
-> but there is more code in 
-> target/linux/cns3xxx/files/arch/arm/mach-cns3xxx/laguna.c that requires
-> more work, in particular we need to come up with a way to handle
-> the laguna_net_data and laguna_info structures, which have some of
-> the same data that is normall in DT.
-
-I assume adding this to U-Boot should be acceptable (for Gateworks,
-too). They are already doing this to their i.MX6 line Ventana.
-
-> Also, the gpio driver doesn't
-> have a trivial conversion to DT and requires some work to define
-> a binding and implement that.
-
-GPIO is a bit less important ATM, since the boards can boot without it.
--- 
-Krzysztof Halasa
-
-Industrial Research Institute for Automation and Measurements PIAP
-Al. Jerozolimskie 202, 02-486 Warsaw, Poland
+Bjorn
