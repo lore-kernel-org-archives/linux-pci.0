@@ -1,175 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:35779 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbcFWBfb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jun 2016 21:35:31 -0400
-Received: by mail-pa0-f50.google.com with SMTP id hl6so21948112pac.2
-        for <linux-pci@vger.kernel.org>; Wed, 22 Jun 2016 18:35:31 -0700 (PDT)
-Date: Wed, 22 Jun 2016 18:35:27 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	linux-kernel@vger.kernel.org,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH v3 2/2] PCI: Rockchip: Add Rockchip PCIe controller
- support
-Message-ID: <20160623013527.GA46876@google.com>
-References: <1466041835-1695-1-git-send-email-shawn.lin@rock-chips.com>
- <20160623002919.GA21157@google.com>
- <dcdc3402-22d9-473a-d9ae-b9bd994c24a6@rock-chips.com>
+Received: from foss.arm.com ([217.140.101.70]:47118 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752510AbcFVMEN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jun 2016 08:04:13 -0400
+Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
+To: Tomasz Nowicki <tn@semihalf.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, tglx@linutronix.de,
+	jason@lakedaemon.net, rjw@rjwysocki.net, bhelgaas@google.com,
+	lorenzo.pieralisi@arm.com, robert.richter@caviumnetworks.com,
+	shijie.huang@arm.com, Suravee.Suthikulpanit@amd.com
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+ <1466420541-20101-2-git-send-email-tn@semihalf.com>
+ <372d3b78-2bc5-94d1-49f6-c9229affa65d@linaro.org> <576A6D7F.6010407@arm.com>
+ <576A711D.5080206@semihalf.com>
+Cc: al.stone@linaro.org, mw@semihalf.com, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org, andrea.gallo@linaro.org,
+	linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <576A7E98.4060502@arm.com>
+Date: Wed, 22 Jun 2016 13:03:36 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <dcdc3402-22d9-473a-d9ae-b9bd994c24a6@rock-chips.com>
+In-Reply-To: <576A711D.5080206@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Thu, Jun 23, 2016 at 09:09:46AM +0800, Shawn Lin wrote:
-> 在 2016/6/23 8:29, Brian Norris 写道:
-> >On Thu, Jun 16, 2016 at 09:50:35AM +0800, Shawn Lin wrote:
-
-[...]
-
-> >>+	/* 500ms timeout value should be enough for gen1/2 taining */
-> >>+	timeout = jiffies + msecs_to_jiffies(500);
-> >>+
-> >>+	err = -ETIMEDOUT;
-> >>+	while (time_before(jiffies, timeout)) {
-> >>+		status = pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
-> >>+		if (((status >> PCIE_CLIENT_LINK_STATUS_SHIFT) &
-> >>+		      PCIE_CLIENT_LINK_STATUS_MASK) ==
-> >>+		      PCIE_CLIENT_LINK_STATUS_UP) {
-> >>+			dev_dbg(port->dev, "pcie link training gen1 pass!\n");
-> >>+			err = 0;
-> >>+			break;
-> >>+		}
-> >>+		msleep(20);
-> >>+	}
-> >
-> >Technically, the above timeout loop is not quite correct. Possible error
-> >case: we can fail with a timeout after 500 ms if the training completes
-> >between the 480-500 ms time window. This can happen because you're
-> >doing:
-> >
-> >(1) read register: if complete, then terminate successfully
-> >(2) delay
-> >(3) check for timeout: if time is up, return error
-> >
-> >You actually need:
-> >
-> >(1) read register: if complete, then terminate successfully
-> >(2) delay
-> >(3) check for timeout: if time is up, repeat (1), and then report error
-> >
-> >You can examine the logic for readx_poll_timeout() in
-> >include/linux/iopoll.h to see an example of a proper timeout loop. You
-> >could even try to use one of the helpers there, except that your
-> >pcie_read() takes 2 args.
+On 22/06/16 12:06, Tomasz Nowicki wrote:
+> On 22.06.2016 12:50, Marc Zyngier wrote:
+>> On 21/06/16 08:12, Hanjun Guo wrote:
+>>> Hi Tomasz,
+>>>
+>>> Sorry for jumping out late, just one comment below.
+>>>
+>>> On 2016/6/20 19:02, Tomasz Nowicki wrote:
+>>>> IORT shows representation of IO topology for ARM based systems.
+>>>> It describes how various components are connected together on
+>>>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+>>>>
+>>>> Initial support allows to detect IORT table presence and save its
+>>>> root pointer obtained through acpi_get_table(). The pointer validity
+>>>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+>>>> is not set while using IORT nodes we would dereference unmapped pointers.
+>>>>
+>>>> For the aforementioned reason call iort_table_detect() from acpi_init()
+>>>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+>>>>
+>>>> Add generic helpers which are helpful for scanning and retrieving
+>>>> information from IORT table content. List of the most important helpers:
+>>>> - iort_find_dev_node() finds IORT node for a given device
+>>>> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>>>>    final translation
+>>>>
+>>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>>>> ---
+>>>>   drivers/acpi/Kconfig  |   3 +
+>>>>   drivers/acpi/Makefile |   1 +
+>>>>   drivers/acpi/bus.c    |   2 +
+>>>>   drivers/acpi/iort.c   | 220 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>>   include/linux/iort.h  |  30 +++++++
+>>>
+>>> [...]
+>>>
+>>>> +static acpi_status
+>>>> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
+>>>> +{
+>>>> +	struct device *dev = context;
+>>>> +
+>>>> +	switch (node->type) {
+>>>> +	case ACPI_IORT_NODE_NAMED_COMPONENT: {
+>>>> +		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+>>>
+>>> ACPI_ALLOCATE_BUFFER is used here, so ...
+>>>
+>>>> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
+>>>> +		struct acpi_iort_named_component *ncomp;
+>>>> +
+>>>> +		if (!adev)
+>>>> +			break;
+>>>> +
+>>>> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
+>>>> +
+>>>> +		if (ACPI_FAILURE(acpi_get_name(adev->handle,
+>>>> +					       ACPI_FULL_PATHNAME, &buffer))) {
+>>>> +			dev_warn(dev, "Can't get device full path name\n");
+>>>> +			break;
+>>>> +		}
+>>>> +
+>>>> +		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
+>>>> +			return AE_OK;
+>>>
+>>> ... we need to kfree(buffer.pointer) before we return or break.
+>>
+>> For the record, I've queued this patch on top:
+>>
+>> diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+>> index 496dcf6..3b9e55b 100644
+>> --- a/drivers/acpi/iort.c
+>> +++ b/drivers/acpi/iort.c
+>> @@ -158,11 +158,15 @@ iort_match_node_callback(struct acpi_iort_node *node, void *context)
+>>   		if (ACPI_FAILURE(acpi_get_name(adev->handle,
+>>   					       ACPI_FULL_PATHNAME, &buffer))) {
+>>   			dev_warn(dev, "Can't get device full path name\n");
+>> -			break;
+>> -		}
+>> +		} else {
+>> +			int match;
+>>
+>> -		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
+>> -			return AE_OK;
+>> +			match = !strcmp(ncomp->device_name, buffer.pointer);
+>> +			acpi_os_free(&buffer);
+>> +
+>> +			if (match)
+>> +				return AE_OK;
+>> +		}
+>>
+>>   		break;
+>>   	}
+>>
+>>
+>> assuming that Rafael is OK with the general approach, of course.
+>>
 > 
-> I see, thanks.
-> 
-> >
-> >>+	if (err) {
-> >>+		dev_err(port->dev, "pcie link training gen1 timeout!\n");
-> >>+		return err;
-> >>+	}
-> >>+
-> >>+	/*
-> >>+	 * Enable retrain for gen2. This should be configured only after
-> >>+	 * gen1 finished.
-> >>+	 */
-> >>+	status = pcie_read(port,
-> >>+			   PCIR_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
-> >>+	status |= PCIE_CORE_LCSR_RETAIN_LINK;
-> >>+	pcie_write(port, status,
-> >>+		   PCIR_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
-> >
-> >I'm not really an expert on this, but how are you actually "retraining
-> >for gen2"? Is that just the behavior of the core, that it retries at the
-> >higher rate on the 2nd training attempt? I'm just confused, since you
-> >set PCIE_CLIENT_GEN_SEL_2 above, so you've already allowed either gen1
-> >or gen2 negotiation AFAICT, and so seemingly you might already have
-> >negotiated at gen2.
-> 
-> 
-> Not really. I allow the core to enable gen2, but it needs a extra
-> setting of retrain after finishing gen1. It's not so strange as it
-> depends on the vendor's design. So I have to say it fits the
-> designer's expectation.
+> Thanks Marc. As Lorenzo pointed out, we need another fix for 
+> iort_node_map_rid(). Do you want me to refresh the whole series or this 
+> patch only?
 
-OK.
+If the changes are localized enough, just this patch.
 
-> >>+	err = -ETIMEDOUT;
-> >>+
-> >>+	while (time_before(jiffies, timeout)) {
-> >
-> >You never reset 'timeout' when starting this loop. So you only have a
-> >cumulative 500 ms to do both the gen1 and gen2 loops. Is that
-> >intentional? (I feel like this comment was made on an earlier revision
-> >of this driver, though I haven't read everything thoroughly.)
-> 
-> yes, I don't have any docs to let me know how long should I wait for
-> gen1/2 to be finished. Maybe someday it will be augmented to a larger
-> value if finding a device actually need a longer time. But the only
-> thing I can say is that it's from my test for many pcie devices
-> currently.
-> 
-> 
-> Do you agree?
+Thanks,
 
-I'm not suggesting increasing the timeout, exactly; I'm suggesting that
-you should set some minimum timeout for each training loop, instead of
-reusing the same deadline. i.e., something like this before the second
-loop:
-
-	/* Reset the deadline for gen2 */
-	timeout = jiffies + msecs_to_jiffies(500);
-
-As it stands, if the first loop takes 490 ms, that leaves you only 10 ms
-for the second loop. And I think it'd be confusing if we ever see the
-first loop take a "long" time, and then we time out on the second --
-we'd be blaming the gen2 training for gen1's slowness.
-
-> >>+		status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
-> >>+		if (((status >> PCIE_CORE_PL_CONF_SPEED_SHIFT) &
-> >>+		      PCIE_CORE_PL_CONF_SPEED_MASK) ==
-> >>+		      PCIE_CORE_PL_CONF_SPEED_50G) {
-> >>+			dev_dbg(port->dev, "pcie link training gen2 pass!\n");
-> >>+			err = 0;
-> >>+			break;
-> >>+		}
-> >>+		msleep(20);
-> >>+	}
-> >
-> >Similar problem with your timeout loop, as mentioned above. Although I
-> >confused about what you do in the error case here...
-> >
-> >>+	if (err)
-> >>+		dev_dbg(port->dev, "pcie link training gen2 timeout, force to gen1!\n");
-> >
-> >... how are you forcing gen1? I don't see any code that indicates this.
-> >Should you at least be checking that there aren't some kind of training
-> >errors, and that we settled back on gen1/2.5G?
-> 
-> yes, when failing gen2,  my pcie controller will fallback to gen1
-> automatically.
-
-OK. Well maybe the text should say something like "falling back" instead
-of "force"?
-
-> if we pass the gen1 then fail to train gen2, a dbg msg here is enough
-> here to let we know that we should check the HW signal. Of course we
-> should make sure that this device supports gen2.
-
-OK.
-
-[...]
-
-Brian
+	M.
+-- 
+Jazz is not dead. It just smells funny...
