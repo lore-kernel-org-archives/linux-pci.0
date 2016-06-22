@@ -1,195 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <yhlu.kernel@gmail.com>
+MIME-Version: 1.0
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <20160618121752.GA22721@localhost>
+References: <20160618022501.15648-1-yinghai@kernel.org> <20160618022501.15648-2-yinghai@kernel.org>
+ <20160618121752.GA22721@localhost>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v12 03/15] sparc/PCI: Use correct offset for bus address to resource
-Date: Fri,  3 Jun 2016 17:06:30 -0700
-Message-Id: <20160604000642.28162-4-yinghai@kernel.org>
-In-Reply-To: <20160604000642.28162-1-yinghai@kernel.org>
-References: <20160604000642.28162-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Tue, 21 Jun 2016 21:32:49 -0700
+Message-ID: <CAE9FiQXKVLWZaiD0CgSGEMN6c4g6GeCNGS=NE=gC-CEAymo1eQ@mail.gmail.com>
+Subject: Re: [PATCH v13 01/16] PCI: Let pci_mmap_page_range() take resource address
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, linux-xtensa@linux-xtensa.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-After we added 64bit mmio parsing, we got some "no compatible bridge window"
-warning on anther new model that support 64bit resource.
+On Sat, Jun 18, 2016 at 5:17 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Jun 17, 2016 at 07:24:46PM -0700, Yinghai Lu wrote:
+>> In 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files"), try
+>> to check exposed value with resource start/end in proc mmap path.
+>>
+>> |        start = vma->vm_pgoff;
+>> |        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+>> |        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+>> |                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+>> |        if (start >= pci_start && start < pci_start + size &&
+>> |                        start + nr <= pci_start + size)
+>>
+>> That breaks sparc that exposed value is BAR value, and need to be offseted
+>> to resource address.
+>
+> I asked this same question of the v12 patch, but I don't think you
+> answered it:
+>
+> I'm not quite sure what you're saying here.  Are you saying that sparc
+> is currently broken, and this patch fixes it?  If so, what exactly is
+> broken?  Can you give a small example of an mmap that is currently
+> broken?
 
-It turns out that we can not use mem_space.start as 64bit mem space
-offset, aka there is mem_space.start != offset.
+Yes, for sparc that path (proc mmap) is broken, but only according to
+code checking.
 
-Use child_phys_addr to calculate exact offset and record offset in
-pbm.
+The reason for the problem is not discovered is that seem all users
+(other than x86) are not
+use proc_mmap ?
 
-After patch we get correct offset.
+vma->vm_pgoff is that code segment is User/BAR value >> PAGE_SHIFT.
+pci_start is resource->start >> PAGE_SHIFT.
 
-/pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
-/pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
-/pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
-...
-pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
+For sparc, resource start is different from BAR start aka pci bus address.
+pci bus address add offset to be the resource start.
 
--v3: put back mem64_offset, as we found T4 has mem_offset != mem64_offset
-     check overlapping between mem64_space and mem_space.
--v7: after new pci_mmap_page_range patches.
+Thanks
 
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: sparclinux@vger.kernel.org
----
- arch/sparc/kernel/pci.c        | 18 +++++++-----------
- arch/sparc/kernel/pci_common.c | 32 ++++++++++++++++++++++++--------
- arch/sparc/kernel/pci_impl.h   |  4 ++++
- 3 files changed, 35 insertions(+), 19 deletions(-)
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 4dbdad4..4245dc4 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -663,12 +663,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
- 	pci_add_resource_offset(&resources, &pbm->io_space,
--				pbm->io_space.start);
-+				pbm->io_offset);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
--				pbm->mem_space.start);
-+				pbm->mem_offset);
- 	if (pbm->mem64_space.flags)
- 		pci_add_resource_offset(&resources, &pbm->mem64_space,
--					pbm->mem_space.start);
-+					pbm->mem64_offset);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-@@ -870,16 +870,12 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
- 			  const struct resource *rp, resource_size_t *start,
- 			  resource_size_t *end)
- {
--	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
--	unsigned long offset;
-+	struct pci_bus_region region;
- 
--	if (rp->flags & IORESOURCE_IO)
--		offset = pbm->io_space.start;
--	else
--		offset = pbm->mem_space.start;
-+	pcibios_resource_to_bus(pdev->bus, &region, (struct resource *)rp);
- 
--	*start = rp->start - offset;
--	*end = rp->end - offset;
-+	*start = region.start;
-+	*end = region.end;
- }
- 
- void pcibios_set_master(struct pci_dev *dev)
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 33524c1..76998f8 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -410,13 +410,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
--		unsigned long a, size;
-+		unsigned long a, size, region_a;
- 		u32 parent_phys_hi, parent_phys_lo;
-+		u32 child_phys_mid, child_phys_lo;
- 		u32 size_hi, size_lo;
- 		int type;
- 
- 		parent_phys_hi = pr->parent_phys_hi;
- 		parent_phys_lo = pr->parent_phys_lo;
-+		child_phys_mid = pr->child_phys_mid;
-+		child_phys_lo = pr->child_phys_lo;
- 		if (tlb_type == hypervisor)
- 			parent_phys_hi &= 0x0fffffff;
- 
-@@ -426,6 +429,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		type = (pr->child_phys_hi >> 24) & 0x3;
- 		a = (((unsigned long)parent_phys_hi << 32UL) |
- 		     ((unsigned long)parent_phys_lo  <<  0UL));
-+		region_a = (((unsigned long)child_phys_mid << 32UL) |
-+		     ((unsigned long)child_phys_lo  <<  0UL));
- 		size = (((unsigned long)size_hi << 32UL) |
- 			((unsigned long)size_lo  <<  0UL));
- 
-@@ -440,6 +445,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->io_space.start = a;
- 			pbm->io_space.end = a + size - 1UL;
- 			pbm->io_space.flags = IORESOURCE_IO;
-+			pbm->io_offset = a - region_a;
- 			saw_io = 1;
- 			break;
- 
-@@ -448,6 +454,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem_space.start = a;
- 			pbm->mem_space.end = a + size - 1UL;
- 			pbm->mem_space.flags = IORESOURCE_MEM;
-+			pbm->mem_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -456,6 +463,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem64_space.start = a;
- 			pbm->mem64_space.end = a + size - 1UL;
- 			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			pbm->mem64_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -471,14 +479,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
- 	}
- 
--	printk("%s: PCI IO[%llx] MEM[%llx]",
--	       pbm->name,
--	       pbm->io_space.start,
--	       pbm->mem_space.start);
-+	if (pbm->io_space.flags)
-+		printk("%s: PCI IO %pR offset %llx\n",
-+		       pbm->name, &pbm->io_space, pbm->io_offset);
-+	if (pbm->mem_space.flags)
-+		printk("%s: PCI MEM %pR offset %llx\n",
-+		       pbm->name, &pbm->mem_space, pbm->mem_offset);
-+	if (pbm->mem64_space.flags && pbm->mem_space.flags) {
-+		if (pbm->mem64_space.start <= pbm->mem_space.end)
-+			pbm->mem64_space.start = pbm->mem_space.end + 1;
-+		if (pbm->mem64_space.start > pbm->mem64_space.end)
-+			pbm->mem64_space.flags = 0;
-+	}
-+
- 	if (pbm->mem64_space.flags)
--		printk(" MEM64[%llx]",
--		       pbm->mem64_space.start);
--	printk("\n");
-+		printk("%s: PCI MEM64 %pR offset %llx\n",
-+		       pbm->name, &pbm->mem64_space, pbm->mem64_offset);
- 
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
- 	pbm->mem64_space.name = pbm->name;
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 37222ca..2853af7 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -99,6 +99,10 @@ struct pci_pbm_info {
- 	struct resource			mem_space;
- 	struct resource			mem64_space;
- 	struct resource			busn;
-+	/* offset */
-+	resource_size_t			io_offset;
-+	resource_size_t			mem_offset;
-+	resource_size_t			mem64_offset;
- 
- 	/* Base of PCI Config space, can be per-PBM or shared. */
- 	unsigned long			config_space;
--- 
-2.8.3
+Yinghai
