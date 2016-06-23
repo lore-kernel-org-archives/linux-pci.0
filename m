@@ -1,68 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 20 Jun 2016 16:25:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: wim@djo.tudelft.nl, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, perex@perex.cz,
-	linux-pci@vger.kernel.org, Takashi Iwai <tiwai@suse.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
-Message-ID: <20160620212507.GA24086@localhost>
-References: <20160620003530.GA19571@djo.tudelft.nl>
- <2999417.fp4mqtxYS2@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51736 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751155AbcFWWQv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jun 2016 18:16:51 -0400
+Subject: [PATCH] PCI: PCI_PROBE_ONLY clean-up
+To: Ralf Baechle <ralf@linux-mips.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-mips@linux-mips.org,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Ganesan Ramalingam <ganesanr@broadcom.com>,
+	David Daney <david.daney@cavium.com>,
+	linux-pci@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Andy Isaacson <adi@hexapodia.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 23 Jun 2016 17:16:47 -0500
+Message-ID: <20160623221441.3154.31310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2999417.fp4mqtxYS2@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Sinan]
+Hi Ralf, et al,
 
-On Mon, Jun 20, 2016 at 03:02:57AM +0200, Rafael J. Wysocki wrote:
-> You should CC the linux-pci too (done now)
-> 
-> On Monday, June 20, 2016 02:35:30 AM Wim Osterholt wrote:
-> > L.S.
-> > up to vanilla kernel-4.6.2 sound was working fine.
-> > Switching to kernel-4.7.0-rc3 made sound disappear. No /dev/mixer etc.
-> > There appears to be a bug in the Intel sound driver and/or ACPI driver.
-> > Dmesg shows interesting lines like:
-> > [   11.498592] ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 7
-> > [   11.498605] PCI: setting IRQ 7 as level-triggered
-> > [   11.543903] parport0: PC-style at 0x378 (0x778), irq 7 [PCSPP,TRISTATE,EPP]
-> > [   12.757735] genirq: Flags mismatch irq 7. 00000080 (snd_intel8x0m) vs. 00000000 (parport0)
-> > [   12.757751] snd_intel8x0m 0000:00:1f.6: unable to grab IRQ 7
-> > [   12.757875] snd_intel8x0m: probe of 0000:00:1f.6 failed with error -16
-> > [   12.900171] genirq: Flags mismatch irq 7. 00000080 (snd_intel8x0) vs. 00000000 (parport0)
-> > [   12.900189] snd_intel8x0 0000:00:1f.5: unable to grab IRQ 7
-> > [   12.900389] snd_intel8x0: probe of 0000:00:1f.5 failed with error -16
-> > [   12.922554] genirq: Flags mismatch irq 7. 00000080 (ipw2200) vs. 00000000 (parport0)
-> > [   12.922559] ipw2200: Error allocating IRQ 7
-> > 
-> > If I boot kernel-4.7.0-rc3 with acpi=off  then sound is back!
-> > 
-> > If you need the full dmesg outputs then please get them here:
-> > http://webserver.djo.tudelft.nl/dmesg460+ACPI
-> > http://webserver.djo.tudelft.nl/dmesg473+ACPI
-> > http://webserver.djo.tudelft.nl/dmesg473noACPI
-> > (with excuses for the silly hostname which is out of our control)
+Lorenzo is doing some nice cleanup of the PCI_PROBE_ONLY case.  Previous
+situation:
 
-I think snd_intel8x0 (00:1f.5) is connected to LNKB, and in v4.6 LNKB
-was set to IRQ 5, while in v4.7 LNKB is connected to IRQ7.  It looks
-like IRQ7 is already in use by parport, which doesn't want to share
-it.
+  - PCI_PROBE_ONLY: all PCI BARs and windows are immutable, and we don't
+    put those resources in the iomem_resource tree, and they don't show up
+    in /proc/iomem.
 
-This might be related to Sinan's changes to pci_link.c, which
-were merged for 4.7:
+  - !PCI_PROBE_ONLY: we use whatever existing BAR settings may have been
+    done by firmware, we change them if we find conflicts, and we insert
+    them all in the iomem_resource tree.
 
-  9e5ed6d1fb87 ACPI,PCI,IRQ: remove SCI penalize function
-  1fcb6a813c4f ACPI,PCI,IRQ: remove redundant code in acpi_irq_penalty_init()
-  5c5087a55390 ACPI,PCI,IRQ: reduce static IRQ array size to 16
-  103544d86976 ACPI,PCI,IRQ: reduce resource requirements
+Lorenzo is changing the PCI_PROBE_ONLY case so the BARs and windows remain
+immutable, but we insert the resources into the iomem_resource tree.
 
-I don't think we intended to change any behavior with those patches,
-but maybe we did.  Could you confirm/deny that those patches are
-related?  If they're not, bisection might be the quickest way to
-find the problem.
+The ideal thing would be to remove the use of PCI_PROBE_ONLY completely,
+and allow Linux to program BARs as necessary.  If the firmware *has*
+programmed the BARs, we don't change them unless we find something broken,
+so in most cases PCI_PROBE_ONLY is unnecessary.
 
-Bjorn
+There are several MIPS platforms (bcm1480, ip27, sb1250, virtio_guest, xlp,
+xlr) that set PCI_PROBE_ONLY for reasons I don't know.  These were added
+by:
+
+  bcm1480
+    Andrew Isaacson <adi@broadcom.com>
+    dc41f94f7709 ("Support for the BCM1480 on-chip PCI-X bridge.")
+
+  ip27
+    Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+    96173a6c4ebc ("[MIPS] IP27: misc fixes")
+
+  virtio
+    David Daney <david.daney@cavium.com>
+    ae6e7e635c2c ("MIPS: paravirt: Add pci controller for virtio")
+
+  xlp
+    Ganesan Ramalingam <ganesanr@netlogicmicro.com>
+    9bac624b0fe0 ("MIPS: Netlogic: XLP PCIe controller support.")
+
+  xlr
+    Jayachandran C <jayachandranc@netlogicmicro.com>
+    9b130f8004e5 ("MIPS: XLR, XLS: Add PCI support.")
+
+I suspect some of these uses are copied and not actually necessary.  If we
+need to keep them, that's fine, but I would like to at least insert the
+resources into the tree, as with the following patch.
+
+Any thoughts on this would be appreciated.
+
+The whole series as I propose to merge it is on my pci/resource branch
+at [2].
+
+[1] http://lkml.kernel.org/r/1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com
+[2] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+
+---
+
+Bjorn Helgaas (1):
+      MIPS/PCI: Claim bus resources on PCI_PROBE_ONLY set-ups
+
+
+ arch/mips/pci/pci.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
