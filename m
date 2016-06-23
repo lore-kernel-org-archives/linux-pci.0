@@ -1,85 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58270 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926AbcF2SrP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 14:47:15 -0400
-Subject: Re: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
- <1467188859-28188-2-git-send-email-okaya@codeaurora.org>
- <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>,
-	linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com,
+Received: from foss.arm.com ([217.140.101.70]:53011 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751445AbcFWLcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jun 2016 07:32:18 -0400
+Subject: Re: [RFC PATCH v2 03/15] arm64: mm: change IOMMU notifier action to
+ attach DMA ops
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1465306270-27076-4-git-send-email-lorenzo.pieralisi@arm.com>
+ <5763C27A.9030306@arm.com> <20160617141536.GA24840@red-moon>
+Cc: Jon Masters <jcm@redhat.com>, Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
-Date: Wed, 29 Jun 2016 14:47:02 -0400
+	linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	iommu@lists.linux-foundation.org,
+	Hanjun Guo <hanjun.guo@linaro.org>, linux-pci@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>,
+	linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <576BC8BC.6090400@arm.com>
+Date: Thu, 23 Jun 2016 12:32:12 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160617141536.GA24840@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2016 9:13 AM, Rafael J. Wysocki wrote:
-> On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
->> resource requirements") omitted the initially assigned POSSIBLE penalty
->> when the IRQ is active.
-> 
-> It would be good to say what can go wrong with that here.
-> 
+Hi Lorenzo,
 
-I can add more description. Here is a first attempt.
+On 17/06/16 15:15, Lorenzo Pieralisi wrote:
+>> I think this patch makes sense even independent of the rest of the
+>> series, one nit inline notwithstanding.
+>
+> Thanks. Yes I added it to this series since it is not strictly
+> necessary (ie it does not fix anything) in the mainline, but
+> it *is* necessary for this whole series to function when we
+> boot through ACPI.
+>
+> I will send it out in a separate patch and fold changes you
+> request below, it would be good to have some coverage for
+> it before merging it.
 
-Incorrect calculation of penalty leads to ACPI code assigning the wrong
-interrupt number to PCI INTx interrupts.
+Having considered it a bit more, triggering on BIND_DRIVER also means 
+the silly "process the whole list every time" behaviour should go away. 
+There's little point in trying to configure a device's ops before we 
+know they're actually needed, and once a driver has bound it's too late 
+to change anything anyway. What do you think of squashing in something 
+like the below?
 
-This would not be as bad as it sounds in theory. You would just cause the
-interrupts to be shared and observe performance penalty.
+Robin.
 
-However, some drivers like parallel port driver doesn't like interrupt
-sharing as in this example and causes all other PCI drivers sharing the interrupt
-to malfunction.
+----->8-----
+diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+index 7d3fa9ae8a11..02484dc3f369 100644
+--- a/arch/arm64/mm/dma-mapping.c
++++ b/arch/arm64/mm/dma-mapping.c
+@@ -854,10 +854,11 @@ static int __iommu_attach_notifier(struct 
+notifier_block *nb,
 
-The issue has not been caught because the behavior is platform specific
-and depends on the peripheral drivers sharing the IRQ. 
+  	mutex_lock(&iommu_dma_notifier_lock);
+  	list_for_each_entry_safe(master, tmp, &iommu_dma_masters, list) {
+-		if (do_iommu_attach(master->dev, master->ops,
+-				master->dma_base, master->size)) {
++		if (data == master->dev && do_iommu_attach(master->dev,
++				master->ops, master->dma_base, master->size)) {
+  			list_del(&master->list);
+  			kfree(master);
++			break;
+  		}
+  	}
+  	mutex_unlock(&iommu_dma_notifier_lock);
 
-I can claim that this could be a BIOS bug. if interrupt 7 is not good for PCI,
-it shouldn't have been listed in the possible PCI interrupts to begin with. 
-Given this is an existing platform, I don't think we have the luxury to request
-all BIOS to be updated. This bugfix is needed to support existing platforms.
-
-
-Feel free to request more information if the above description is not clear.
-
-
->> The original code would assign the POSSIBLE value divided by the number
->> of possible IRQs during initialization.
->>
->> Later, if the IRQ is chosen as the active IRQ or if the IRQ is in use
->> by ISA; additional penalties get added.
-> 
-> Thanks,
-> Rafael
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
