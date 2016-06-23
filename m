@@ -1,261 +1,176 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 7 Jun 2016 20:56:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH V8 7/9] acpi: Add generic MCFG table handling
-Message-ID: <20160608015631.GE4759@localhost>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
- <1464621262-26770-8-git-send-email-tn@semihalf.com>
+Return-Path: <alex.williamson@redhat.com>
+Return-Path: <alex.williamson@redhat.com>
+Date: Thu, 23 Jun 2016 11:05:07 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, wim@djo.tudelft.nl,
+        "Rafael J.
+ Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
+        Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+Message-ID: <20160623110507.65da62d8@t450s.home>
+In-Reply-To: <20160623162158.GA17987@localhost>
+References: <2999417.fp4mqtxYS2@vostro.rjw.lan>
+	<20160620212507.GA24086@localhost>
+	<57686D67.8010201@codeaurora.org>
+	<20160621124715.GB3528@djo.tudelft.nl>
+	<576943BA.1000001@codeaurora.org>
+	<20160621221347.GA28603@djo.tudelft.nl>
+	<72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
+	<20160623141234.GA14662@djo.tudelft.nl>
+	<576BF86E.8060302@codeaurora.org>
+	<576C042B.20507@codeaurora.org>
+	<20160623162158.GA17987@localhost>
 MIME-Version: 1.0
-In-Reply-To: <1464621262-26770-8-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
- okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org,
- Lorenzo.Pieralisi@arm.com, linaro-acpi@lists.linaro.org,
- ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
- robert.richter@caviumnetworks.com, liudongdong3@huawei.com,
- catalin.marinas@arm.com, Liviu.Dudau@arm.com, arnd@arndb.de, jcm@redhat.com,
- msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com,
- linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com, dhdang@apm.com,
- linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org,
- Suravee.Suthikulpanit@amd.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 05:14:20PM +0200, Tomasz Nowicki wrote:
-> In order to handle PCI config space regions properly in ACPI, new MCFG
-> interface is defined which does sanity checks on MCFG table and keeps its
-> root pointer. The user is able to lookup MCFG regions based on
-> host bridge root structure and domain:bus_start:bus_end touple.
-> Use pci_mmcfg_late_init old prototype to avoid another function name.
+On Thu, 23 Jun 2016 11:21:58 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
+
+> [+cc Alex, FYI]
 > 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> ---
->  drivers/acpi/Kconfig     |  3 ++
->  drivers/acpi/Makefile    |  1 +
->  drivers/acpi/pci_mcfg.c  | 94 ++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci-acpi.h |  2 ++
->  include/linux/pci.h      |  2 +-
->  5 files changed, 101 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/acpi/pci_mcfg.c
+> This thread is about a regression that we'll want to fix before v4.7
+> releases.  It looks like it's related to these changes which were
+> merged via the ACPI tree:
 > 
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index b7e2e77..f98c328 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -217,6 +217,9 @@ config ACPI_PROCESSOR_IDLE
->  	bool
->  	select CPU_IDLE
->  
-> +config ACPI_MCFG
-> +	bool
-> +
->  config ACPI_CPPC_LIB
->  	bool
->  	depends on ACPI_PROCESSOR
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index 251ce85..632e81f 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -40,6 +40,7 @@ acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
->  acpi-y				+= ec.o
->  acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
->  acpi-y				+= pci_root.o pci_link.o pci_irq.o
-> +obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
->  acpi-y				+= acpi_lpss.o acpi_apd.o
->  acpi-y				+= acpi_platform.o
->  acpi-y				+= acpi_pnp.o
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> new file mode 100644
-> index 0000000..1847f74
-> --- /dev/null
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -0,0 +1,94 @@
-> +/*
-> + * Copyright (C) 2016 Broadcom
-> + *	Author: Jayachandran C <jchandra@broadcom.com>
-> + * Copyright (C) 2016 Semihalf
-> + * 	Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +
-> +#define pr_fmt(fmt) "ACPI: " fmt
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci-acpi.h>
-> +
-> +/* Root pointer to the mapped MCFG table */
-> +static struct acpi_table_mcfg *mcfg_table;
-> +static int mcfg_entries;
-> +
-> +int pci_mcfg_lookup(struct acpi_pci_root *root)
-
-I think this would be better if we passed in the domain and a pointer
-to the bus range resource and returned the ECAM base address.  I don't
-think we need to be connected to struct acpi_pci_root.
-
-> +{
-> +	struct acpi_mcfg_allocation *mptr, *entry = NULL;
-> +	struct resource *bus_res = &root->secondary;
-> +	int i;
-> +
-> +	if (mcfg_table) {
-> +		mptr = (struct acpi_mcfg_allocation *) &mcfg_table[1];
-> +		for (i = 0; i < mcfg_entries && !entry; i++, mptr++)
-> +			if (mptr->pci_segment == root->segment &&
-> +			    mptr->start_bus_number == bus_res->start)
-> +				entry = mptr;
-> +	}
-> +
-> +	/* not found, use _CBA if available, else error */
-> +	if (!entry) {
-> +		if (root->mcfg_addr)
-> +			return root->mcfg_addr;
-> +		pr_err("%04x:%pR MCFG lookup failed\n", root->segment, bus_res);
-> +		return -ENOENT;
-> +	} else if (root->mcfg_addr && entry->address != root->mcfg_addr) {
-> +		pr_warn("%04x:%pR CBA %pa != MCFG %lx, using CBA\n",
-> +			root->segment, bus_res, &root->mcfg_addr,
-> +			(unsigned long)entry->address);
-> +		return 0;
-> +	}
-
-I keep looking at this code, trying to find where we "use _CBA", but I
-can't find it.  Oh, I see, acpi_pci_root_add() calls
-acpi_pci_root_get_mcfg_addr() (which evaluates _CBA), and sets
-root->mcfg_addr to the result.
-
-"root->mcfg_addr" is sort of an unfortunate name because "MCFG" is the
-ACPI table name, we've used "ECAM" for the memory-mapped config space,
-and this address can come from either the MCFG table or the _CBA
-method.
-
-In the case where we have both _CBA and an MCFG entry, I think we
-should prefer _CBA, and I'm not sure it's even worth warning about it.
-So I think you could simplify this function if you made
-pci_acpi_setup_ecam_mapping() look like this:
-
-  ... pci_acpi_setup_ecam_mapping(...)
-  {
-    ...
-    if (!root->mcfg_addr)
-      root->mcfg_addr = pci_mcfg_lookup(root);
-
-    if (!root->mcfg_addr) {
-      dev_err(..., "no ECAM region found\n");
-      return -EINVAL;
-    }
-
-> +
-> +	/* found matching entry, bus range check */
-> +	if (entry->end_bus_number != bus_res->end) {
-> +		resource_size_t bus_end = min_t(resource_size_t,
-> +					entry->end_bus_number, bus_res->end);
-> +		pr_warn("%04x:%pR bus end mismatch, using %02lx\n",
-> +			root->segment, bus_res, (unsigned long)bus_end);
-> +		bus_res->end = bus_end;
-> +	}
-> +
-> +	if (!root->mcfg_addr)
-> +		root->mcfg_addr = entry->address;
-
-Please move the assignment to the caller (I think Lorenzo pointed this
-out already).
-
-> +	return 0;
-> +}
-> +
-> +static __init int pci_mcfg_parse(struct acpi_table_header *header)
-> +{
-> +	if (header->length < sizeof(struct acpi_table_mcfg))
-> +		return -EINVAL;
-> +
-> +	mcfg_entries = (header->length - sizeof(struct acpi_table_mcfg)) /
-> +					sizeof(struct acpi_mcfg_allocation);
-> +	if (mcfg_entries == 0) {
-> +		pr_err("MCFG has no entries\n");
-
-Include an address here?  I'm not really sure either of the messages
-here is necessary.  Users (callers of pci_mcfg_lookup()) will notice
-if we can't find any ECAM space and will probably complain there,
-where the message can include more information, e.g., the affected
-device.
-
-> +		return -EINVAL;
-> +	}
-> +
-> +	mcfg_table = (struct acpi_table_mcfg *)header;
-> +	pr_info("MCFG table detected, %d entries\n", mcfg_entries);
-> +	return 0;
-> +}
-> +
-> +/* Interface called by ACPI - parse and save MCFG table */
-
-I think we save a *pointer* to the MCFG table, not the table itself.
-
-And acpi_table_parse() calls early_acpi_os_unmap_memory() immediately
-after it calls pci_mcfg_parse(), so I'm doubtful that the pointer
-remains valid.
-
-> +void __init pci_mmcfg_late_init(void)
-> +{
-> +	int err = acpi_table_parse(ACPI_SIG_MCFG, pci_mcfg_parse);
-> +	if (err)
-> +		pr_err("Failed to parse MCFG (%d)\n", err);
-> +}
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index 89ab057..e0e6dfc 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -24,6 +24,8 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
->  }
->  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
->  
-> +extern int pci_mcfg_lookup(struct acpi_pci_root *root);
-> +
->  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
->  {
->  	struct pci_bus *pbus = pdev->bus;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index bba4053..9661c85 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1724,7 +1724,7 @@ void pcibios_free_irq(struct pci_dev *dev);
->  extern struct dev_pm_ops pcibios_pm_ops;
->  #endif
->  
-> -#ifdef CONFIG_PCI_MMCONFIG
-> +#if defined(CONFIG_PCI_MMCONFIG) || defined(CONFIG_ACPI_MCFG)
->  void __init pci_mmcfg_early_init(void);
->  void __init pci_mmcfg_late_init(void);
->  #else
-> -- 
-> 1.9.1
+>   9e5ed6d1fb87 ACPI,PCI,IRQ: remove SCI penalize function
+>   1fcb6a813c4f ACPI,PCI,IRQ: remove redundant code in acpi_irq_penalty_init()
+>   5c5087a55390 ACPI,PCI,IRQ: reduce static IRQ array size to 16
+>   103544d86976 ACPI,PCI,IRQ: reduce resource requirements
 > 
+> If that turns out to be the case, it probably makes sense to merge the fix
+> via the ACPI tree as well.  But in the unlikely event the fix turns out to
+> be in PCI, Alex will probably have to merge it because I'll be on vacation.
+> So I'm adding Alex to the CC: list in case that happens.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks, I'm watching it now.  I'll also encourage anyone posting other
+fixes that they feel are relevant to v4.7 while Bjorn is away to please
+proactively poke me.  Bjorn is pretty strict about only accepting
+regression fixes after the merge window and I intend to do the same.
+Thanks,
+
+Alex
+ 
+> On Thu, Jun 23, 2016 at 11:45:47AM -0400, Sinan Kaya wrote:
+> > On 6/23/2016 10:55 AM, Sinan Kaya wrote:  
+> > > On 6/23/2016 10:12 AM, Wim Osterholt wrote:  
+> > >> On Wed, Jun 22, 2016 at 11:54:39PM -0400, okaya@codeaurora.org wrote:  
+> > >>> On 2016-06-21 18:13, Wim Osterholt wrote:  
+> > >>>>>
+> > >>>>> 	pr_info("%s:%d irq = %d penalty = %d\n", __func__, __LINE__, irq,
+> > >>>>> 		penalty);
+> > >>>>>  
+> > >>>>
+> > >>>> This produced some 60 lines extra....  
+> > >>>
+> > >>> Thanks, let's go back to 4.6 and add a very similar printf to every 
+> > >>> single place where the array is modified and also right before the 
+> > >>> enabled message.
+> > >>>  
+> > >>
+> > >> I don't get this right.
+> > >> Assuming that you're still talking about the same file, I find a few
+> > >> instances of 'enabled', most of them in if-statements and one where it might
+> > >> be set, so it looks. However, that's already in a printk statement.
+> > >> I don't know about arrays and even less where these are set. Even worse, I
+> > >> don't know what to put in a 'similar' line if you don't mean 'exactly the
+> > >> same'.
+> > >> So please state file and line numbers and the line to be inserted.
+> > >>  
+> > > 
+> > > Sure, let me get a patch for you. I was hoping to do it yesterday. 
+> > > I ran out of time. I typed the message from my phone. 
+> > >   
+> > 
+> > Here it is
+> > 
+> > 
+> > 
+> > -- 
+> > Sinan Kaya
+> > Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> > Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project  
+> 
+> > diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> > index ededa90..228b61f 100644
+> > --- a/drivers/acpi/pci_link.c
+> > +++ b/drivers/acpi/pci_link.c
+> > @@ -487,15 +487,18 @@ int __init acpi_irq_penalty_init(void)
+> >  			    link->irq.possible_count;
+> >  
+> >  			for (i = 0; i < link->irq.possible_count; i++) {
+> > -				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ)
+> > +				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ) {
+> >  					acpi_irq_penalty[link->irq.
+> >  							 possible[i]] +=
+> >  					    penalty;
+> > +					pr_info("%s:%d acpi_irq_penalty[%d] = 0x%x\n", __func__, __LINE__, link->irq.possible[i], acpi_irq_penalty[link->irq.possible[i]]);
+> > +				}
+> >  			}
+> >  
+> >  		} else if (link->irq.active) {
+> >  			acpi_irq_penalty[link->irq.active] +=
+> >  			    PIRQ_PENALTY_PCI_POSSIBLE;
+> > +			pr_info("%s:%d acpi_irq_penalty[%d] = 0x%x\n", __func__, __LINE__, link->irq.active, acpi_irq_penalty[link->irq.active]);
+> >  		}
+> >  	}
+> >  
+> > @@ -548,8 +551,11 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+> >  		 */
+> >  		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
+> >  			if (acpi_irq_penalty[irq] >
+> > -			    acpi_irq_penalty[link->irq.possible[i]])
+> > +			    acpi_irq_penalty[link->irq.possible[i]]) {
+> > +				    pr_info("%s:%d acpi_irq_penalty[irq=%d](0x%x) vs. acpi_irq_penalty[%d](0x%x)\n",
+> > +					    __func__, __LINE__, irq, acpi_irq_penalty[irq], link->irq.possible[i], acpi_irq_penalty[link->irq.possible[i]]);
+> >  				irq = link->irq.possible[i];
+> > +			    }
+> >  		}
+> >  	}
+> >  	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
+> > @@ -569,6 +575,7 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+> >  		return -ENODEV;
+> >  	} else {
+> >  		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
+> > +		pr_info("%s:%d acpi_irq_penalty[%d] = 0x%x\n", __func__, __LINE__, link->irq.active, acpi_irq_penalty[link->irq.active]);
+> >  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+> >  		       acpi_device_name(link->device),
+> >  		       acpi_device_bid(link->device), link->irq.active);
+> > @@ -804,6 +811,8 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+> >  		else
+> >  			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
+> >  
+> > +		pr_info("%s:%d acpi_irq_penalty[%d] = 0x%x\n", __func__, __LINE__, irq, acpi_irq_penalty[irq]);
+> > +
+> >  		if (retval != 2)	/* no next number */
+> >  			break;
+> >  	}
+> > @@ -824,11 +833,16 @@ void acpi_penalize_isa_irq(int irq, int active)
+> >  			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+> >  		else
+> >  			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+> > +
+> > +		pr_info("%s:%d acpi_irq_penalty[%d] = 0x%x\n", __func__, __LINE__, irq, acpi_irq_penalty[irq]);
+> >  	}
+> >  }
+> >  
+> >  bool acpi_isa_irq_available(int irq)
+> >  {
+> > +	if (irq >= 0 && (irq < ARRAY_SIZE(acpi_irq_penalty)))
+> > +		pr_info("%s:%d acpi_irq_penalty[%d] = 0x%x\n", __func__, __LINE__, irq, acpi_irq_penalty[irq]);
+> > +
+> >  	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
+> >  			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
+> >  }
+> > @@ -846,6 +860,8 @@ void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+> >  			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
+> >  		else
+> >  			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+> > +
+> > +		pr_info("%s:%d acpi_irq_penalty[%d] = 0x%x\n", __func__, __LINE__, irq, acpi_irq_penalty[irq]);
+> >  	}
+> >  }
+> >    
+> 
