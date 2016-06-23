@@ -1,59 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33211 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbcF2Vku (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 17:40:50 -0400
+Received: from mail.kernel.org ([198.145.29.136]:51790 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750950AbcFWWQ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jun 2016 18:16:59 -0400
+Subject: [PATCH] MIPS/PCI: Claim bus resources on PCI_PROBE_ONLY set-ups
+To: Ralf Baechle <ralf@linux-mips.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-mips@linux-mips.org,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Ganesan Ramalingam <ganesanr@broadcom.com>,
+	David Daney <david.daney@cavium.com>,
+	linux-pci@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Andy Isaacson <adi@hexapodia.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 23 Jun 2016 17:16:55 -0500
+Message-ID: <20160623221655.3154.89258.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160623221441.3154.31310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160623221441.3154.31310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <96388f6b-f8b1-5720-4725-3f0ec0f5d1c3@codeaurora.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
- <1467188859-28188-5-git-send-email-okaya@codeaurora.org> <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
- <d22fd8f7-7028-b4b7-6677-6903685034aa@codeaurora.org> <CAJZ5v0h1o5C8t+QJuFo93uZt0XuPNwtXFs5XSBkhm-fARWqi2g@mail.gmail.com>
- <96388f6b-f8b1-5720-4725-3f0ec0f5d1c3@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 29 Jun 2016 23:40:35 +0200
-Message-ID: <CAJZ5v0i67f+zsg_Ui693C3szFskOE3vQ1JsKYZpUkvc=vzXqcQ@mail.gmail.com>
-Subject: Re: [PATCH V2 4/4] ACPI,PCI,IRQ: correct operator precedence
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>,
-	linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 11:19 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 6/29/2016 5:14 PM, Rafael J. Wysocki wrote:
->> On Wed, Jun 29, 2016 at 8:29 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>> On 6/29/2016 9:16 AM, Rafael J. Wysocki wrote:
->>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->>>> Well, this is a rather obvious one, so I'm wondering why it is the
->>>> last one in the series?
->>>>
->>>
->>> The first three are more relevant to each other. It makes easy to
->>> correlate the changes.
->>
->> But this one doesn't seem to depend on them and it could be applied
->> without them, right?
->>
->
-> Sure. It has no dependency.
+We claim PCI BAR and bridge window resources in pci_bus_assign_resources(),
+but when PCI_PROBE_ONLY is set, we treat those resources as immutable and
+don't call pci_bus_assign_resources(), so the resources aren't put in the
+resource tree.
 
-OK
+When the resources aren't in the tree, they don't show up in /proc/iomem,
+we can't detect conflicts, and we need special cases elsewhere for
+PCI_PROBE_ONLY or resources without a parent pointer.
 
-I've queued up this one.
+Claim all PCI BAR and window resources in the PCI_PROBE_ONLY case.
 
-Thanks,
-Rafael
+If a PCI_PROBE_ONLY platform assigns conflicting resources, Linux can't fix
+the conflicts.  Previously we didn't notice the conflicts, but now we will,
+which may expose new failures.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/mips/pci/pci.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 5717384..b4c02f2 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -112,7 +112,14 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ 		need_domain_info = 1;
+ 	}
+ 
+-	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++	/*
++	 * We insert PCI resources into the iomem_resource and
++	 * ioport_resource trees in either pci_bus_claim_resources()
++	 * or pci_bus_assign_resources().
++	 */
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_claim_resources(bus);
++	} else {
+ 		pci_bus_size_bridges(bus);
+ 		pci_bus_assign_resources(bus);
+ 	}
+
