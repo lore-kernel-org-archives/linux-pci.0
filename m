@@ -1,43 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 6 Jun 2016 08:26:45 -0700
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
-Subject: Re: [PATCH] Introducing kernel option to force all PCI memory
- resources to be page aligned. Fixes issues with uio based drivers.
-Message-ID: <20160606152645.GA7605@kroah.com>
-References: <a2e2c02820fd495e845a9cf9340a30e3@FE-MBX1012.de.bosch.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <62140.117.114.135.40.1466678343.squirrel@mprc.pku.edu.cn>
+In-Reply-To: <20160622230746.GI25485@localhost>
+References: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1465383890-13538-5-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160622230746.GI25485@localhost>
+Date: Thu, 23 Jun 2016 18:39:03 +0800 (CST)
+Subject: Re: [PATCH v3 4/4] ARM/PCI: remove arch specific
+ pcibios_enable_device()
+From: "Xuetao Guan" <gxt@mprc.pku.edu.cn>
+To: "Bjorn Helgaas" <helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a2e2c02820fd495e845a9cf9340a30e3@FE-MBX1012.de.bosch.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Reply-To: gxt@mprc.pku.edu.cn
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Russell King <linux@arm.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
+ David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
+ Yinghai Lu <yinghai@kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 06, 2016 at 02:59:47PM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
-> Hi Greg,
-> 
-> thanks for the response.
-> > > Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned
-> > > PCI memory resources are not page aligned.
-> > > By using the kernel option "pci=resource_alignment" it is possible to
-> > > force single PCI boards to use page alignment for their memory resources.
-> > > However, this is fairly cumbersome if multiple of these cards are in use.
-> > > This patch adds another kernel option "pci=resources_page_aligned"
-> > > that allows to set the default alignment of PCI memory resources to be
-> > > page aligned.
-> > > Overwriting of this default alignment via "pci=resource_alignment" is
-> > > still possible.
-> > 
-> > This seems like a very large hammer for a very specific problem with a card
-> > that seems to be not-in-spec (I can't find anywhere that requires resources to
-> > be "page" aligned in the PCI spec).  Why not fix the firmware in these cards?
-> The issue is not the firmware. The issue is that the Linux uio driver (here: uio_cif)
-> does not work as uio_mmap() -> uio_mmap_physical() does not do a mmap 
-> on physical memory that is not page aligned...
+> [+cc Guan]
+>
+> On Wed, Jun 08, 2016 at 12:04:50PM +0100, Lorenzo Pieralisi wrote:
+>> The arm pcibios_enable_device() implementation exists solely
+>> to prevent enabling PCI resources on PCI_PROBE_ONLY systems, since
+>> on those systems the PCI resources are currently not claimed (ie
+>> inserted in the PCI resource tree - which means their parent
+>> pointer is not correctly set-up) therefore they can not be enabled
+>> since this would trigger PCI set-ups failures.
+>>
+>> After removing the pci=firmware command line option in:
+>>
+>> commit 903589ca7165 ("ARM: 8554/1: kernel: pci: remove pci=firmware
+>> command line parameter handling")
+>
+> 903589ca7165 removed "pci=firmware" from ARM and from
+> Documentation/kernel-parameters.txt (where it was documented as
+> ARM-specific).
+>
+> I think unicore32 copied that code from arm, so unicore32 is one of
+> the few remaining arches that can set PCI_PROBE_ONLY.  I suspect this
+> was just copied from arm and may not be necessary on unicore32.
+>
+> Guan, can you confirm that PCI_PROBE_ONLY is necessary on unicore32,
+> or that it can be removed?
+>
 
-Then why not fix the uio_cif driver?
+Yes, this code was copied from arm, and it's not necessary.
+It can be removed safely.
 
-greg k-h
+Guan Xuetao
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
