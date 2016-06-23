@@ -1,52 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:55247 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751196AbcFIMgY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jun 2016 08:36:24 -0400
-Date: Thu, 9 Jun 2016 14:36:21 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Hanna Hawa <hannah@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Marcin Wojtas <mw@semihalf.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH 2/3] PCI: host: new PCI host controller driver for
- Marvell Armada 3700
-Message-ID: <20160609143621.5291dda5@free-electrons.com>
-In-Reply-To: <11140978.npsCNQs782@wuerfel>
-References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<3112077.0RPfokLCAs@wuerfel>
-	<20160609111921.11975627@free-electrons.com>
-	<11140978.npsCNQs782@wuerfel>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: <bhelgaas@google.com>
+CC: <rjw@rjwysocki.net>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: release pci_host_bridge resource after remove root bus
+Date: Thu, 23 Jun 2016 19:42:18 +0800
+Message-ID: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+pci_host_bridge holds the top resources(IO port/Mem/bus),
+now we release pci_host_bridge resources in
+acpi_pci_root_release_info() which would be called when
+pci_host_bridge device refcount reach 0. In some cases,
+pci_host_bridge refcount cannot reach 0 after we remove
+pci root bus in pci_remove_root_bus(). Then if we want to
+hot add pci root bus, we cannot use pci_host_bridge
+resources because of conflicts with old resources which are
+still in system. I think this is not reasonable.
 
-On Thu, 09 Jun 2016 14:19:07 +0200, Arnd Bergmann wrote:
+1. For pci devices, we would release their resources in
+   pci_destroy_dev() regardless of pci device refcount.
+2. When we try to remove pci root bus, there is no devices
+   need to use the pci_host_bridge resources again, release
+   pci_host_bridge resources is safe.
+3. In some cases, users woule make mistake, for example,
+   user get a pci device(increase refcount), but forget to
+   put this device, then if we do hotplug pci root bus,
+   it would make all pci devices cannot work after hot add.
 
-> > There is a GIC-500, but Marcin told me that attempts to use MSI with it
-> > have not been successful so far. There will be investigation on this
-> > topic in the future, but for the moment, we'd like to have the MSI
-> > functionality built into the PCIe driver supported. We can migrate
-> > later to GIC-500 powered MSIs once working.  
-> 
-> I think you should still add the msi-parent or msi-map properties then,
-> just have them point at the PCI host node instead of the GIC-500,
-> and evaluate that to get the built-in controller.
+I found this issue in the following case:
+1. I have a raid pci device in my system;
+2. I mount a disk which connect to this raid.
+3. hot remove the pci root bus.
+4. hot add the pci root bus.
+5. found the resource conflicts for the children pci devices under this root bus.
 
-Sure, I'll have a look at doing that.
+pci_root_bus increase a refcount at pci_host_bridge.
+pci_root_bus decrease a refcount at pci_host_bridge in
+  release_pcibus_dev() when pci_root_bus device refcount reach 0.
 
-Thomas
+pci_dev increase a refcount at pci_bus in pci_alloc_dev().
+pci_dev decrease a refcount at pci_bus in pci_release_dev()
+when pci_dev refcount reach 0.
+
+If any pci device refcount cannot reach 0, then its pci_bus
+refcount cannot reach 0 too, the result is pci_host_bridge
+refcount cannot reach 0.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/acpi/pci_root.c   |   11 -----------
+ drivers/pci/host-bridge.c |   15 +++++++++++++++
+ drivers/pci/pci.h         |    2 +-
+ drivers/pci/remove.c      |    1 +
+ 4 files changed, 17 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d144168..c5142d0 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -839,17 +839,6 @@ static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
+ 
+ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+ {
+-	struct resource *res;
+-	struct resource_entry *entry;
+-
+-	resource_list_for_each_entry(entry, &bridge->windows) {
+-		res = entry->res;
+-		if (res->flags & IORESOURCE_IO)
+-			pci_unmap_iospace(res);
+-		if (res->parent &&
+-		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+-			release_resource(res);
+-	}
+ 	__acpi_pci_root_release_info(bridge->release_data);
+ }
+ 
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5f4a2e0..3594967 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -8,6 +8,21 @@
+ 
+ #include "pci.h"
+ 
++void release_host_bridge_resources(struct pci_host_bridge *bridge)
++{
++	struct resource *res;
++	struct resource_entry *entry;
++
++	resource_list_for_each_entry(entry, &bridge->windows) {
++		res = entry->res;
++		if (res->flags & IORESOURCE_IO)
++			pci_unmap_iospace(res);
++		if (res->parent &&
++		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			release_resource(res);
++	}
++}
++
+ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+ 	while (bus->parent)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 9730c47..46725d9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -11,7 +11,7 @@ extern const unsigned char pcie_link_speed[];
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+ 
+ /* Functions internal to the PCI core code */
+-
++void release_host_bridge_resources(struct pci_host_bridge *bridge);
+ int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+ void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
+ #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index d1ef7ac..a42b396 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -161,6 +161,7 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	pci_remove_bus(bus);
+ 	host_bridge->bus = NULL;
+ 
++	release_host_bridge_resources(host_bridge);
+ 	/* remove the host bridge */
+ 	device_unregister(&host_bridge->dev);
+ }
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.7.1
+
