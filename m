@@ -1,94 +1,61 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 8 Jun 2016 07:47:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Yu <yu.c.chen@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arch <linux-arch@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
-Message-ID: <20160608124742.GA16764@localhost>
-References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
- <20160530213305.GA21322@localhost>
- <574D03F9.6050201@intel.com>
- <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
- <574D3AAA.6090503@intel.com>
- <20160531131658.GA23837@localhost>
- <57579F9F.6010200@intel.com>
+Return-Path: <jcm@redhat.com>
+Return-Path: <jcm@redhat.com>
+Content-Type: text/plain;
+	charset=us-ascii
+From: Jon Masters <jcm@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <57579F9F.6010200@intel.com>
-Sender: linux-arch-owner@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Add PCI device flag PCI_DEV_FLAGS_DMA_ALIAS_ROOT
+Message-Id: <E235EFDF-81B0-4A93-8F2D-49065B202581@redhat.com>
+Date: Thu, 23 Jun 2016 09:19:29 -0400 (EDT)
+References: <linux-pci@vger.kernel.org> <1462700001-30086-1-git-send-email-jchandra@broadcom.com> <5730621B.2050503@arm.com> <CAKc_7PVAV6uAbEFLWHyh1hngLa1PdJxPzk7bPoppexU1oAJHnw@mail.gmail.com> <573340F9.6050507@arm.com> <037404e2-3168-8f99-0bdb-bb929776108e@redhat.com> <576BD031.7090105@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+In-Reply-To: <576BD031.7090105@arm.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        iommu@lists.linux-foundation.org, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-pci@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 08, 2016 at 12:31:27PM +0800, Chen Yu wrote:
-> Hi Bjorn,
-> 
-> On 2016年05月31日 21:16, Bjorn Helgaas wrote:
-> >On Tue, May 31, 2016 at 03:18:02PM +0800, Chen Yu wrote:
-> >>On 2016年05月31日 15:00, Yinghai Lu wrote:
-> >>>On Mon, May 30, 2016 at 8:24 PM, Chen Yu <yu.c.chen@intel.com> wrote:
-> >>>
-> >>>>and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
-> >>>>resource window and then update related base/limit registers:
-> >>>>
-> >>>>[    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to [bus
-> >>>>02] add_size 1000
-> >>>>[    0.865343] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff
-> >>>>64bit pref] to [bus 02] add_size 200000 add_align 100000
-> >>>>[    0.865344] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff]
-> >>>>to [bus 02] add_size 200000 add_align 100000
-> >>>>
-> >>>That is for hotplug bridge, then we could use following instead.
-> >>>
-> >>>diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >>>index ee72ebe..d3ec833 100644
-> >>>--- a/drivers/pci/quirks.c
-> >>>+++ b/drivers/pci/quirks.c
-> >>>@@ -2775,6 +2775,13 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
-> >>>
-> >>>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
-> >>>
-> >>>+static void quirk_hotplug_bridge_skip(struct pci_dev *dev)
-> >>>+{
-> >>>+       dev->is_hotplug_bridge = 0;
-> >>>+}
-> >>>+
-> >>>+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10,
-> >>>quirk_hotplug_bridge_skip);
-> >>>+
-> >>>  /*
-> >>>   * This is a quirk for the Ricoh MMC controller found as a part of
-> >>>   * some mulifunction chips.
-> >>Good idea, but in this way we might not have io window allocated for
-> >>it?I'm not sure
-> >>if this would break wifi,etc, I'll suggest reporters to have a try.
-> >Let's figure out the root cause before trying more random fixes.  I
-> >have the same objection to the patch above.  No doubt there are many
-> >ways we could "fix" this, but unless we know the root cause, we're
-> >likely to make a change that's not a complete fix or will cause other
-> >issues in the future.
-> >
-> I just let the reporter  paste their lspci in Mac OS, it looks that
-> Mac OS also
-> does not allocate any resource for this broken pci bridge, and other pci
-> devices have almost the same resource region as it is in linux, so I think
-> this is an evidence that Apple does not want to use this firmware for now,
-> maybe reserved for future use, declaim resource for this pci bridge might
-> cause unpredictable result, how about adding a dmi+pci quirk for this
-> special platform?
+Quick reply (sorry about top post): I am just getting online so I might disc=
+over that this callback is shared by both - in which case, cool - but if not=
+, we need an interim ACPI solution.
 
-This is not a root cause.  We still have no idea why the problem
-occurs.  I do not think a quirk is a good idea until we know what the
-problem is and exactly how a quirk would fix it.
+Aside: Current RHEL Server for ARM (RHELSA) explicitly disables SMMUv3 suppo=
+rt because (I warned the folks involved more than a year ago), we will only s=
+upport ACPI/IORT, and as you can imagine, many people would like us to enabl=
+e support for device passthrough and robustness, not to mention 32-bit devic=
+es (32-bit DMA mask). Nonetheless, that will only happen when the upstream k=
+ernel has IORT and quirks in place.
 
-> lspci result from Mac OS, there's no resource behind this bridge:
-> https://bugzilla.kernel.org/attachment.cgi?id=219321
-> 
-> 
-> thanks,
-> Yu
+--=20
+Computer Architect | Sent from my 64-bit #ARM Powered phone
+
+> On Jun 23, 2016, at 08:04, Robin Murphy <robin.murphy@arm.com> wrote:
+>=20
+>> On 23/06/16 06:01, Jon Masters wrote:
+>>> On 05/11/2016 10:26 AM, Robin Murphy wrote:
+>>> (I have no actual objection to this patch, though, and at this point
+>>> I'm just chucking ideas about).
+>>=20
+>> Can I ask what the next steps are here? We're looking for upstream
+>> direction to guide some internal activities and could really do with
+>> understanding how you'd like to solve this one longer term as well as
+>> what interim solution could be acceptable until we get there.
+>=20
+> Well, for now I'm planning to leave the explicit "terminate the alias walk=
+ from the callback function" behaviour in the DT-parsing code[1], since ther=
+e doesn't seem any good reason not to. As Bjorn says, though, it probably is=
+ generally useful for the PCI code to have its own knowledge of exactly wher=
+e DMA can escape the PCI hierarchy - I now wonder if we could actually just d=
+o that from the DT/IORT code; if firmware says a particular bridge/etc. has a=
+ relationship with an ITS or SMMU, then presumably it's reasonable to infer t=
+hat DMA can come out of it, thus we could inform the PCI code there and then=
+ without it having to quirk things on its own?
+>=20
+> Robin.
+>=20
+> [1]:http://article.gmane.org/gmane.linux.kernel.iommu/13932
+>=20
+>>=20
+>> Jon.
+>=20
