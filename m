@@ -1,78 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 17 Jun 2016 17:59:01 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, karol herbst <karolherbst@gmail.com>,
-	linux-kernel@vger.kernel.org, Pekka Paalanen <ppaalanen@gmail.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Ben Skeggs <bskeggs@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>, koriakin@0x04.net,
-	linuxppc-dev@ozlabs.org
-Subject: Re: [PATCH] tracing: Expose CPU physical addresses (resource
- values) for PCI devices
-Message-ID: <20160617175901.7bd90d14@gandalf.local.home>
-In-Reply-To: <20160511190657.5898.4248.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160511190657.5898.4248.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <wim@djo.tudelft.nl>
+Return-Path: <wim@djo.tudelft.nl>
+Date: Thu, 23 Jun 2016 16:12:35 +0200
+From: Wim Osterholt <wim@djo.tudelft.nl>
+To: okaya@codeaurora.org
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+  "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+  linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
+  Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org,
+  Wim Osterholt <wim@djo.tudelft.nl>
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+Message-ID: <20160623141234.GA14662@djo.tudelft.nl>
+Reply-To: wim@djo.tudelft.nl
+References: <20160620003530.GA19571@djo.tudelft.nl>
+ <2999417.fp4mqtxYS2@vostro.rjw.lan>
+ <20160620212507.GA24086@localhost>
+ <57686D67.8010201@codeaurora.org>
+ <20160621124715.GB3528@djo.tudelft.nl>
+ <576943BA.1000001@codeaurora.org>
+ <20160621221347.GA28603@djo.tudelft.nl>
+ <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Sorry for the late reply, this patch got pushed down in my INBOX.
-
-Could I get someone from PPC to review this patch, just to be safe?
-
-Thanks!
-
--- Steve
-
-
-
-On Wed, 11 May 2016 14:06:57 -0500
-Bjorn Helgaas <bhelgaas@google.com> wrote:
-
-> Previously, mmio_print_pcidev() put "user" addresses in the trace buffer.
-> On most architectures, these are the same as CPU physical addresses, but on
-> microblaze, mips, powerpc, and sparc, they may be something else, typically
-> a raw BAR value (a bus address as opposed to a CPU address).
+On Wed, Jun 22, 2016 at 11:54:39PM -0400, okaya@codeaurora.org wrote:
+> On 2016-06-21 18:13, Wim Osterholt wrote:
+> >> 
+> >> 	pr_info("%s:%d irq = %d penalty = %d\n", __func__, __LINE__, irq,
+> >> 		penalty);
+> >> 
+> > 
+> > This produced some 60 lines extra....
 > 
-> Always expose the CPU physical address to avoid this arch-dependent
-> behavior.
+> Thanks, let's go back to 4.6 and add a very similar printf to every 
+> single place where the array is modified and also right before the 
+> enabled message.
 > 
-> This change should have no user-visible effect because this file currently
-> depends on CONFIG_HAVE_MMIOTRACE_SUPPORT, which is only defined for x86,
-> and pci_resource_to_user() is a no-op on x86.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  kernel/trace/trace_mmiotrace.c |   10 +++-------
->  1 file changed, 3 insertions(+), 7 deletions(-)
-> 
-> diff --git a/kernel/trace/trace_mmiotrace.c b/kernel/trace/trace_mmiotrace.c
-> index 68f376c..cd7480d 100644
-> --- a/kernel/trace/trace_mmiotrace.c
-> +++ b/kernel/trace/trace_mmiotrace.c
-> @@ -68,19 +68,15 @@ static void mmio_print_pcidev(struct trace_seq *s, const struct pci_dev *dev)
->  	trace_seq_printf(s, "PCIDEV %02x%02x %04x%04x %x",
->  			 dev->bus->number, dev->devfn,
->  			 dev->vendor, dev->device, dev->irq);
-> -	/*
-> -	 * XXX: is pci_resource_to_user() appropriate, since we are
-> -	 * supposed to interpret the __ioremap() phys_addr argument based on
-> -	 * these printed values?
-> -	 */
->  	for (i = 0; i < 7; i++) {
-> -		pci_resource_to_user(dev, i, &dev->resource[i], &start, &end);
-> +		start = dev->resource[i].start;
->  		trace_seq_printf(s, " %llx",
->  			(unsigned long long)(start |
->  			(dev->resource[i].flags & PCI_REGION_FLAG_MASK)));
->  	}
->  	for (i = 0; i < 7; i++) {
-> -		pci_resource_to_user(dev, i, &dev->resource[i], &start, &end);
-> +		start = dev->resource[i].start;
-> +		end = dev->resource[i].end;
->  		trace_seq_printf(s, " %llx",
->  			dev->resource[i].start < dev->resource[i].end ?
->  			(unsigned long long)(end - start) + 1 : 0);
+
+I don't get this right.
+Assuming that you're still talking about the same file, I find a few
+instances of 'enabled', most of them in if-statements and one where it might
+be set, so it looks. However, that's already in a printk statement.
+I don't know about arrays and even less where these are set. Even worse, I
+don't know what to put in a 'similar' line if you don't mean 'exactly the
+same'.
+So please state file and line numbers and the line to be inserted.
+
+
+
+Groeten, Wim.
+
+
+----- wim@djo.tudelft.nl -----
