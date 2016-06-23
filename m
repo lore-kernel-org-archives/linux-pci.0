@@ -1,43 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35192 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbcF3NOk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 09:14:40 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] PCI: tegra: Use pci_remap_iospace()
-Date: Thu, 30 Jun 2016 15:14:29 +0200
-Message-Id: <20160630131430.32096-2-thierry.reding@gmail.com>
-In-Reply-To: <20160630131430.32096-1-thierry.reding@gmail.com>
-References: <20160630131430.32096-1-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <>
+Return-Path: <>
+From: 
+To: helgaas@kernel.org
+Cc: tglx@linutronix.de,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: Re: [PATCH V4 1/3] x86/ioapic: Support hot-removal of IOAPICs present during boot
+Date: Thu, 23 Jun 2016 13:11:41 +0800
+Message-Id: <1466658701-23894-1-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <20160622151455.GB25485@localhost>
+References: <20160622151455.GB25485@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+From: Rui Wang <rui.y.wang@intel.com>
 
-Use the pci_remap_iospace() function provided by the PCI core, rather
-than the 32-bit ARM-specific pci_ioremap_io().
+On Wed, June 22, 2016 11:15 PM Bjorn Helgaas wrote:
+> [...]
+> > @@ -1779,8 +1780,12 @@ void __init
+> > pci_assign_unassigned_resources(void)
+> >  {
+> >  	struct pci_bus *root_bus;
+> >
+> > -	list_for_each_entry(root_bus, &pci_root_buses, node)
+> > +	list_for_each_entry(root_bus, &pci_root_buses, node) {
+> >  		pci_assign_unassigned_root_bus_resources(root_bus);
+> > +#ifdef CONFIG_X86
+> > +		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
+> > +#endif
+> 
+> Doesn't this do the right thing even if you omit the #ifdefs, since you
+> define a stub function below?
+> 
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No. Without the '#ifdef CONFIG_X86' it breaks MIPS arch. The stub function is
+within 'ifdef CONFIG_ACPI'. On archs without ACPI it doesn't compile due to
+'undefined reference to acpi_ioapic_add'.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 9595518f541d..f04b062e8c67 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -645,7 +645,7 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- 				sys->mem_offset);
- 	pci_add_resource(&sys->resources, &pcie->busn);
- 
--	pci_ioremap_io(pcie->pio.start, pcie->io.start);
-+	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 
- 	return 1;
- }
--- 
-2.8.3
-
+Thanks
+Rui
