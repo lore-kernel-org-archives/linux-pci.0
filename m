@@ -1,40 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 20 Jun 2016 09:56:21 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	karol herbst <karolherbst@gmail.com>,
-	linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	Pekka Paalanen <ppaalanen@gmail.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Ben Skeggs <bskeggs@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>, koriakin@0x04.net
-Subject: Re: [PATCH] tracing: Expose CPU physical addresses (resource
- values) for PCI devices
-Message-ID: <20160620095621.6f188668@gandalf.local.home>
-In-Reply-To: <1466202203.24271.76.camel@au1.ibm.com>
-References: <20160511190657.5898.4248.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20160617175901.7bd90d14@gandalf.local.home>
-	<1466202203.24271.76.camel@au1.ibm.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+To: wim@djo.tudelft.nl
+References: <20160620003530.GA19571@djo.tudelft.nl>
+ <2999417.fp4mqtxYS2@vostro.rjw.lan> <20160620212507.GA24086@localhost>
+ <57686D67.8010201@codeaurora.org> <20160621124715.GB3528@djo.tudelft.nl>
+ <576943BA.1000001@codeaurora.org> <20160621221347.GA28603@djo.tudelft.nl>
+ <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
+ <20160623141234.GA14662@djo.tudelft.nl>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
+ <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+ linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
+ Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <576BF86E.8060302@codeaurora.org>
+Date: Thu, 23 Jun 2016 10:55:42 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160623141234.GA14662@djo.tudelft.nl>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 18 Jun 2016 08:23:23 +1000
-Benjamin Herrenschmidt <benh@au1.ibm.com> wrote:
-
-> On Fri, 2016-06-17 at 17:59 -0400, Steven Rostedt wrote:
-> > Sorry for the late reply, this patch got pushed down in my INBOX.
-> > 
-> > Could I get someone from PPC to review this patch, just to be safe?  
+On 6/23/2016 10:12 AM, Wim Osterholt wrote:
+> On Wed, Jun 22, 2016 at 11:54:39PM -0400, okaya@codeaurora.org wrote:
+>> On 2016-06-21 18:13, Wim Osterholt wrote:
+>>>>
+>>>> 	pr_info("%s:%d irq = %d penalty = %d\n", __func__, __LINE__, irq,
+>>>> 		penalty);
+>>>>
+>>>
+>>> This produced some 60 lines extra....
+>>
+>> Thanks, let's go back to 4.6 and add a very similar printf to every 
+>> single place where the array is modified and also right before the 
+>> enabled message.
+>>
 > 
-> The patch makes sense, I can try getting somebody onto porting
-> mmiotrace one of these days.
+> I don't get this right.
+> Assuming that you're still talking about the same file, I find a few
+> instances of 'enabled', most of them in if-statements and one where it might
+> be set, so it looks. However, that's already in a printk statement.
+> I don't know about arrays and even less where these are set. Even worse, I
+> don't know what to put in a 'similar' line if you don't mean 'exactly the
+> same'.
+> So please state file and line numbers and the line to be inserted.
 > 
 
-OK, thanks!
+Sure, let me get a patch for you. I was hoping to do it yesterday. 
+I ran out of time. I typed the message from my phone. 
 
-I'll pull this into my for-next repo then.
+> 
+> 
+> Groeten, Wim.
+> 
+> 
+> ----- wim@djo.tudelft.nl -----
+> 
 
--- Steve
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
