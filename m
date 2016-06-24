@@ -1,121 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39948 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752184AbcFBDsd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Jun 2016 23:48:33 -0400
-Date: Wed, 1 Jun 2016 22:48:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Po Liu <po.liu@nxp.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, Roy Zang <roy.zang@nxp.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@nxp.com>,
-	Yang-Leo Li <leoyang.li@nxp.com>,
-	Minghuan Lian <minghuan.lian@nxp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Mingkai Hu <mingkai.hu@nxp.com>, Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 2/2] aer: add support aer interrupt with none
- MSI/MSI-X/INTx mode
-Message-ID: <20160602034828.GA10240@localhost>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org
+Cc: tglx@linutronix.de,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: Re: [PATCH V3 1/3] x86/ioapic: Support hot-removal of IOAPICs present during boot
+Date: Fri, 24 Jun 2016 23:18:56 +0800
+Message-Id: <1466781536-29902-1-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <20160622145354.GA25485@localhost>
+References: <20160622145354.GA25485@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rob]
-
-Hi Po,
-
-On Thu, May 26, 2016 at 02:00:06PM +0800, Po Liu wrote:
-> On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
-> When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
-> maybe there is interrupt line for aer pme etc. Search the interrupt
-> number in the fdt file.
-
-My understanding is that AER interrupt signaling can be done via INTx,
-MSI, or MSI-X (PCIe spec r3.0, sec 6.2.4.1.2).  Apparently your device
-doesn't support MSI or MSI-X.  Are you saying it doesn't support INTx
-either?  How is the interrupt you're requesting here different from
-INTx?
-
-My guess is that your device *does* support INTx, and we should use
-that.  ACPI has the generic _PRT that describes INTx routing.  There
-must be something similar for DT, but I don't know what it is.  It
-seems like this should be described using that DT mechanism (whatever
-it is), and we shouldn't need special-case code in the portdrv code.
-
-> Signed-off-by: Po Liu <po.liu@nxp.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c | 31 ++++++++++++++++++++++++++++---
->  1 file changed, 28 insertions(+), 3 deletions(-)
+On Wed, June 22, 2016 10:54 PM Bjorn Helgaas wrote:
+> On Wed, Jun 22, 2016 at 03:13:32PM +0800, Rui Wang wrote:
+> > On Friday, June 17, 2016 1:10 AM, Bjorn Helgaas wrote:
+> > > ioapic_insert_resources() is x86-specific, but I'm not sure why; it
+> > > seems like it does things that should be applicable to ia64 as well.
+> > >
+> > > acpi_ioapic_add() is not x86-specific, and it is called from
+> > > acpi_pci_root_add() for the hot-add case.  You're adding an
+> > > x86-xpecific call in pci_assign_unassigned_resources().  Why should
+> > > the hot-add case be for all arches, but the boot-time case only for x86?
+> >
+> > Hi Bjorn,
+> >
+> > It turns out that IOAPIC hotplug has not been pursued on ia64. There
+> > were demos showing CPU sockets online/offline on ia64 but the CPUs had
+> > no IIO, thus no IOAPIC hotplug.
 > 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 32d4d0a..64833e5 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -15,6 +15,7 @@
->  #include <linux/slab.h>
->  #include <linux/pcieport_if.h>
->  #include <linux/aer.h>
-> +#include <linux/of_irq.h>
->  
->  #include "../pci.h"
->  #include "portdrv.h"
-> @@ -199,6 +200,28 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
->  static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->  {
->  	int i, irq = -1;
-> +	int ret;
-> +	struct device_node *np = NULL;
-> +
-> +	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-> +		irqs[i] = 0;
-> +
-> +	if (dev->bus->dev.of_node)
-> +		np = dev->bus->dev.of_node;
-> +
-> +	/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
-> +	 * request irq for aer
-> +	 */
-> +	if (IS_ENABLED(CONFIG_OF_IRQ) && np &&
-> +			(mask & PCIE_PORT_SERVICE_PME)) {
-> +		ret = of_irq_get_byname(np, "aer");
-> +		if (ret > 0) {
-> +			irqs[PCIE_PORT_SERVICE_AER_SHIFT] = ret;
-> +			if (dev->irq)
-> +				irq = dev->irq;
-> +			goto no_msi;
-> +		}
-> +	}
->  
->  	/*
->  	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
-> @@ -224,11 +247,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->  		irq = dev->irq;
->  
->   no_msi:
-> -	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-> -		irqs[i] = irq;
-> +	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
-> +		if (!irqs[i])
-> +			irqs[i] = irq;
-> +	}
->  	irqs[PCIE_PORT_SERVICE_VC_SHIFT] = -1;
->  
-> -	if (irq < 0)
-> +	if (irq < 0 && irqs[PCIE_PORT_SERVICE_AER_SHIFT] < 0)
->  		return -ENODEV;
->  	return 0;
->  }
-> -- 
-> 2.1.0.27.g96db324
+> That doesn't mean we need to write code that's gratuitously x86-specific.
 > 
+> > So to answer the first question:
+> > ioapic_insert_resources() is x86-specific because it's inserting what
+> > has been setup in io_apic_init_mappings() which, through
+> > mpc_ioapic_addr(), is capable of handling both the static case
+> > (acpi_parse_ioapic(), etc.) and the hotplug case (acpi_ioapic_add()).
+> > But on ia64, there's only the static case through acpi_parse_iosapic(), no
+> need for the hotplug case yet.
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ioapic_insert_resources() inserts IOAPIC resources on x86.  Where are
+> IOSAPIC resources inserted on ia64?
+> 
+I'm not sure. Its physical address from MADT is parsed in acpi_parse_iosapic()
+and ioremap()'d in iosapic_init(). Only the virtual address is recorded.
+The physical address doesn't seem to be recorded and inserted explicitly. But
+it could be in a "_CRS" and gets inserted implicitly. The iosapic on ia64 uses
+its own data structures very different from the ioapic on x86. I think it's
+hard to unify them using a common set of functions, without rewriting the whole
+framework.
+
+Thanks
+Rui
