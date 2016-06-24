@@ -1,71 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme@lists.infradead.org
-Subject: [PATCH v2 2/6] NVMe: Use pci_(request|release)_mem_regions
-Date: Thu,  2 Jun 2016 09:30:30 +0200
-Message-Id: <9cdb60ecb1d5124311a05c6b75d16f48526593f0.1464795082.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
-References: <cover.1464795082.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
-References: <cover.1464795082.git.jthumshirn@suse.de>
+Date: Fri, 24 Jun 2016 07:12:39 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] pci: Add support for unbinding the generic PCI host
+ controller
+Message-ID: <20160624061238.GD29165@arm.com>
+References: <57698276.6050606@siemens.com>
+ <20160622060638.GY29165@arm.com>
+ <576C1CF6.7020804@siemens.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <576C1CF6.7020804@siemens.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-hand, use it in the NVMe driver.
+On Thu, Jun 23, 2016 at 07:31:34PM +0200, Jan Kiszka wrote:
+> On 2016-06-22 08:06, Will Deacon wrote:
+> > On Tue, Jun 21, 2016 at 08:07:50PM +0200, Jan Kiszka wrote:
+> >> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+> >> index 8cba7ab..c0ff4b1 100644
+> >> --- a/drivers/pci/host/pci-host-common.c
+> >> +++ b/drivers/pci/host/pci-host-common.c
+> >> @@ -164,6 +164,19 @@ int pci_host_common_probe(struct platform_device *pdev,
+> >>  	}
+> >>  
+> >>  	pci_bus_add_devices(bus);
+> >> +	platform_set_drvdata(pdev, bus);
+> >> +	return 0;
+> >> +}
+> >> +
+> >> +int pci_host_common_remove(struct platform_device *pdev)
+> >> +{
+> >> +	struct pci_bus *bus = platform_get_drvdata(pdev);
+> >> +
+> >> +	pci_lock_rescan_remove();
+> >> +	pci_stop_root_bus(bus);
+> >> +	pci_remove_root_bus(bus);
+> >> +	pci_unlock_rescan_remove();
+> > 
+> > A couple of comments/questions about this:
+> > 
+> >   - The probe path seems to have some stateful operations outside of PCI
+> >     resources. For example, kzalloc'ing the bus_range resource in
+> >     of_pci_get_host_bridge_resources. Do we need to clean these up
+> >     explicitly?
+> > 
+> >   - Similarly, we don't seem to tear-down the config space mappings and
+> >     data structures for that, so we leak VA space afaict.
+> > 
+> 
+> Good points. But to my understanding, everything is released
+> automatically on pci_remove_root_bus because all the resources are
+> registered with the bus which takes care of them during destruction. And
+> if I trace the release, I find this e.g.
+> 
+> ...
+> devres_release_all() {
+>   _raw_spin_lock_irqsave();
+>   release_nodes() {
+>     _raw_spin_unlock_irqrestore();
+>     devm_action_release() {
+>       gen_pci_unmap_cfg() {
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: linux-nvme@lists.infradead.org
----
- drivers/nvme/host/pci.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+Ah, thanks for investigating that -- I completely missed the explicit
+devm_ callback. That resolves my concern about the config space mappings,
+but I still don't understand what happens to the resources allocated
+in of_pci_get_host_bridge_resources. It looks like they should actually
+be freed within that function, since pci_add_resource{_offset} copy the
+resources into their own resource_entries anyway.
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 4fd733f..e7d17ae 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -1756,7 +1756,7 @@ static void nvme_dev_unmap(struct nvme_dev *dev)
- {
- 	if (dev->bar)
- 		iounmap(dev->bar);
--	pci_release_regions(to_pci_dev(dev->dev));
-+	pci_release_mem_regions(to_pci_dev(dev->dev));
- }
- 
- static void nvme_pci_disable(struct nvme_dev *dev)
-@@ -1979,13 +1979,9 @@ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
- 
- static int nvme_dev_map(struct nvme_dev *dev)
- {
--	int bars;
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
- 
--	bars = pci_select_bars(pdev, IORESOURCE_MEM);
--	if (!bars)
--		return -ENODEV;
--	if (pci_request_selected_regions(pdev, bars, "nvme"))
-+	if (pci_request_mem_regions(pdev, "nvme"))
- 		return -ENODEV;
- 
- 	dev->bar = ioremap(pci_resource_start(pdev, 0), 8192);
-@@ -1994,7 +1990,7 @@ static int nvme_dev_map(struct nvme_dev *dev)
- 
-        return 0;
-   release:
--       pci_release_regions(pdev);
-+       pci_release_mem_regions(pdev);
-        return -ENODEV;
- }
- 
--- 
-1.8.5.6
+Am I missing something?
+
+Will
