@@ -1,24 +1,73 @@
-Return-Path: <hch@lst.de>
-Return-Path: <hch@lst.de>
-Date: Mon, 13 Jun 2016 17:15:39 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, Christoph Hellwig <hch@lst.de>,
-	pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
-	routines
-Message-ID: <20160613151539.GA6540@lst.de>
-References: <20160511085049.GA20279@lst.de> <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com> <20160512073552.GA4027@lst.de> <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com> <20160512110318.GA9192@lst.de> <20160512121155.GB8681@agordeev.lab.eng.brq.redhat.com> <20160512121933.GA11084@lst.de> <20160512142902.GA14166@lst.de> <20160513082947.GB14671@agordeev.lab.eng.brq.redhat.com> <20160611011449.GJ16462@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:57275 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751089AbcFXGu0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Jun 2016 02:50:26 -0400
+Date: Fri, 24 Jun 2016 07:50:28 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] pci: Add support for unbinding the generic PCI host
+ controller
+Message-ID: <20160624065028.GG29165@arm.com>
+References: <57698276.6050606@siemens.com>
+ <20160622060638.GY29165@arm.com>
+ <576C1CF6.7020804@siemens.com>
+ <20160624061238.GD29165@arm.com>
+ <576CD58C.5020900@siemens.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160611011449.GJ16462@localhost>
+In-Reply-To: <576CD58C.5020900@siemens.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 10, 2016 at 08:14:50PM -0500, Bjorn Helgaas wrote:
-> Hi Christoph,
+On Fri, Jun 24, 2016 at 08:39:08AM +0200, Jan Kiszka wrote:
+> On 2016-06-24 08:12, Will Deacon wrote:
+> > On Thu, Jun 23, 2016 at 07:31:34PM +0200, Jan Kiszka wrote:
+> >> On 2016-06-22 08:06, Will Deacon wrote:
+> >>>   - The probe path seems to have some stateful operations outside of PCI
+> >>>     resources. For example, kzalloc'ing the bus_range resource in
+> >>>     of_pci_get_host_bridge_resources. Do we need to clean these up
+> >>>     explicitly?
+> >>>
+> >>>   - Similarly, we don't seem to tear-down the config space mappings and
+> >>>     data structures for that, so we leak VA space afaict.
+> >>>
+> >>
+> >> Good points. But to my understanding, everything is released
+> >> automatically on pci_remove_root_bus because all the resources are
+> >> registered with the bus which takes care of them during destruction. And
+> >> if I trace the release, I find this e.g.
+> >>
+> >> ...
+> >> devres_release_all() {
+> >>   _raw_spin_lock_irqsave();
+> >>   release_nodes() {
+> >>     _raw_spin_unlock_irqrestore();
+> >>     devm_action_release() {
+> >>       gen_pci_unmap_cfg() {
+> > 
+> > Ah, thanks for investigating that -- I completely missed the explicit
+> > devm_ callback. That resolves my concern about the config space mappings,
+> > but I still don't understand what happens to the resources allocated
+> > in of_pci_get_host_bridge_resources. It looks like they should actually
+> > be freed within that function, since pci_add_resource{_offset} copy the
+> > resources into their own resource_entries anyway.
+> > 
+> > Am I missing something?
 > 
-> Where are we at with this?  Did I miss a newer version?
+> Tracing kmalloc and kfree in addition, it seems you are right. But then
+> we already have leaks in the code in case the setup fails somewhere in
+> the middle, no? gen_pci_init only releases the resource list on errors,
+> but not bus_range. And pci_host_common_probe does non of both if
+> pci_scan_root_bus fails. Anything else?
 
-I've been respinning the whole MSI-X spreading series after a discussion
-with Thomas.  I'll be able to post it soon.
+Yeah, it's a right old mess. of_pci_get_host_bridge_resources even cleans
+up after itself, but gen_pci_init can fail in other ways and then doesn't
+clean up properly.
+
+I wonder why of_pci_get_host_bridge_resources can't just use devm_kzalloc.
+
+Will
