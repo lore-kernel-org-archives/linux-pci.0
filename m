@@ -1,62 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v1 03/25] PCI: designware: Request host bridge window resources
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 06 Jun 2016 18:05:08 -0500
-Message-ID: <20160606230508.20936.81845.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
- rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
- linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
- Michal Simek <michal.simek@xilinx.com>,
- =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Sat, 25 Jun 2016 04:51:03 -0400
+From: okaya@codeaurora.org
+To: wim@djo.tudelft.nl
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
+ <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+ linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
+ Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org, Alex
+ Williamson <alex.williamson@redhat.com>
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+In-Reply-To: <20160625013920.GA26737@djo.tudelft.nl>
+References: <57686D67.8010201@codeaurora.org>
+ <20160621124715.GB3528@djo.tudelft.nl> <576943BA.1000001@codeaurora.org>
+ <20160621221347.GA28603@djo.tudelft.nl>
+ <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
+ <20160623141234.GA14662@djo.tudelft.nl> <576BF86E.8060302@codeaurora.org>
+ <576C042B.20507@codeaurora.org> <20160623232533.GA14984@djo.tudelft.nl>
+ <f85fb7c7-53aa-3a1e-0635-bb245d08e804@codeaurora.org>
+ <20160625013920.GA26737@djo.tudelft.nl>
+Message-ID: <3bf1261bc7a931cb5e1e93ea0d66b265@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Request host bridge window resources so they appear in ioport_resource and
-iomem_resource and are reflected in /proc/ioports and /proc/iomem.
+On 2016-06-24 21:39, Wim Osterholt wrote:
+> On Fri, Jun 24, 2016 at 02:09:15AM -0400, Sinan Kaya wrote:
+>> 
+>> Can you give it a try?
+> 
+> Whell, I tried to no avail.
+> 
+> Wether it is on 4.6 or 4.7, with or without your previous patch,
+> I keep getting rejected hunks.
+> For example, here the line to be deleted is nowhere to be found:
+> 
+>> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+>> index 714ba4d..c2f22c9 100644
+>> --- a/drivers/acpi/pci_link.c
+>> +++ b/drivers/acpi/pci_link.c
+>> @@ -497,7 +497,7 @@ static int acpi_irq_get_penalty(int irq)
+>>  	int penalty = 0;
+>> 
+>>  	if (irq < ACPI_MAX_ISA_IRQS)
+>> -		penalty += acpi_isa_irq_penalty[irq];
+>> +		return acpi_isa_irq_penalty[irq];
+>> 
+>>  	/*
+>>  	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+> 
+> 
+> Regards, Wim.
+> 
+> 
+> ----- wim@djo.tudelft.nl -----
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Please apply the patches on top of clean 4.7-rc4 tree and apply them in 
+order with
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 9ade767..8304aeb 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -452,6 +452,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		return ret;
- 
-+	ret = devm_request_pci_bus_resources(&pdev->dev, &res);
-+	if (ret)
-+		goto error;
-+
- 	/* Get the I/O and memory ranges from DT */
- 	resource_list_for_each_entry(win, &res) {
- 		switch (resource_type(win->res)) {
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+git am 0001...
+git am 0002...
