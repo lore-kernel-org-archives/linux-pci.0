@@ -1,119 +1,132 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 25 Jun 2016 22:22:49 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 08/13] pci: spread interrupt vectors in
+ pci_alloc_irq_vectors
+Message-ID: <20160625202249.GB29251@dhcp-27-118.brq.redhat.com>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+ <1465934346-20648-9-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 13 Jun 2016 11:12:51 -0400
-From: okaya@codeaurora.org
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "liudongdong (C)" <liudongdong3@huawei.com>, helgaas@kernel.org,
- arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
- rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
- jchandra@broadcom.com, tn@semihalf.com, robert.richter@caviumnetworks.com,
- mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, Wangyijing
- <wangyijing@huawei.com>, Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- dhdang@apm.com, jeremy.linton@arm.com, cov@codeaurora.org, "Chenxin
- (Charles)" <charles.chenxin@huawei.com>, Linuxarm <linuxarm@huawei.com>
-Subject: RE: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space accessors
- against platfrom specific ECAM quirks
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F782E15@lhreml507-mbx>
-References: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
- <1465822923-33599-2-git-send-email-liudongdong3@huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F782C86@lhreml507-mbx>
- <575EBD13.8080808@codeaurora.org>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F782E15@lhreml507-mbx>
-Message-ID: <b7202ebbb30f2c715427fbb387129e9c@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465934346-20648-9-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-06-13 10:29, Gabriele Paoloni wrote:
-> Hi Sinan
+On Tue, Jun 14, 2016 at 09:59:01PM +0200, Christoph Hellwig wrote:
+> Set the affinity_mask before allocating vectors.
 > 
->> -----Original Message-----
->> From: Sinan Kaya [mailto:okaya@codeaurora.org]
->> Sent: 13 June 2016 15:03
->> To: Gabriele Paoloni; liudongdong (C); helgaas@kernel.org;
->> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
->> rafael@kernel.org; hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com;
->> jchandra@broadcom.com; tn@semihalf.com
->> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
->> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
->> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
->> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
->> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
->> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
->> dhdang@apm.com; jeremy.linton@arm.com; cov@codeaurora.org; Chenxin
->> (Charles); Linuxarm
->> Subject: Re: [RFC PATCH V2 1/2] ACPI/PCI: Match PCI config space
->> accessors against platfrom specific ECAM quirks
->> 
->> On 6/13/2016 9:54 AM, Gabriele Paoloni wrote:
->> > As you can see here Liudongdong has replaced oem_revision with
->> > oem_table_id.
->> >
->> > Now it seems that there are some platforms that have already shipped
->> > using a matching based on the oem_revision (right Jon?)
->> >
->> > However I guess that if in FW they have defined oem_table_id properly
->> > they should be able to use this mechanism without needing to a FW
->> update.
->> >
->> > Can these vendors confirm this?
->> >
->> > Tomasz do you think this can work for Cavium Thunder?
->> >
->> > Thanks
->> >
->> > Gab
->> 
->> Why not have all three of them?
->> 
->> The initial approach was OEM id and revision id.
->> 
->> Jeff Hugo indicated that addition (not removing any other fields) of
->> table id
->> would make more sense.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/msi.c   | 26 ++++++++++++++++++++++++--
+>  include/linux/pci.h |  1 +
+>  2 files changed, 25 insertions(+), 2 deletions(-)
 > 
-> Mmm from last email of Jeff Hugo on "[RFC PATCH 1/3] pci, acpi: Match
-> PCI config space accessors against platfrom specific ECAM quirks."
-> 
-> I quote:
-> 
->  "Using the OEM revision
->  field does not seem to be appropriate since these are different
->  platforms and the revision field appears to be for the purpose of
->  tracking differences within a single platform.  Therefore, Cov is
->  proposing using the OEM table id as a mechanism to distinguish
->  platform A (needs quirk applied) vs platform B (no quirks) from the
->  same OEM."
-> 
-> So it looks to me that he pointed out that using the OEM revision field
-> is wrong...and this is why I have asked if replacing it with the table
-> id can work for other vendors....
-> 
-> Thanks
-> 
-> Gab
-> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a33adec..50d694c 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -568,6 +568,7 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
+>  	entry->msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
+>  	entry->msi_attrib.multiple	= ilog2(__roundup_pow_of_two(nvec));
+>  	entry->nvec_used		= nvec;
+> +	entry->affinity			= dev->irq_affinity;
+>  
+>  	if (control & PCI_MSI_FLAGS_64BIT)
+>  		entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+> @@ -679,10 +680,18 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+>  static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+>  			      struct msix_entry *entries, int nvec)
+>  {
+> +	const struct cpumask *mask = NULL;
+>  	struct msi_desc *entry;
+> -	int i;
+> +	int cpu = -1, i;
+>  
+>  	for (i = 0; i < nvec; i++) {
+> +		if (dev->irq_affinity) {
+> +			cpu = cpumask_next(cpu, dev->irq_affinity);
+> +			if (cpu >= nr_cpu_ids)
+> +				cpu = cpumask_first(dev->irq_affinity);
+> +			mask = cpumask_of(cpu);
+> +		}
+> +
+>  		entry = alloc_msi_entry(&dev->dev);
+>  		if (!entry) {
+>  			if (!i)
+> @@ -699,6 +708,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+>  		entry->msi_attrib.default_irq	= dev->irq;
+>  		entry->mask_base		= base;
+>  		entry->nvec_used		= 1;
+> +		entry->affinity			= mask;
+>  
+>  		list_add_tail(&entry->list, dev_to_msi_list(&dev->dev));
+>  	}
+> @@ -1176,12 +1186,20 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+>  {
+>  	unsigned int vecs, i;
+>  	u32 *irqs;
+> +	int ret;
+>  
+>  	max_vecs = min(max_vecs, pci_nr_irq_vectors(dev));
+>  
+> +	ret = irq_create_affinity_mask(&dev->irq_affinity, &max_vecs);
 
-I had an internal discussion with jeff and cov before posting on the 
-maillist.
+	dev->irq_affinity = irq_create_affinity_mask(&max_vecs); ?
 
-I think there is missing info in the email.
 
-Usage of oem id + table id + revision is ok.
+> +	if (ret)
+> +		return ret;
+> +	if (max_vecs < min_vecs)
+> +		return -ENOSPC;
 
-Usage of oem id + revision is not ok as one oem can build multiple chips 
-with the same oem id and revision id but different table id. Otherwise, 
-we can run out of revisions very quickly.
+irq_create_affinity_mask() should be called after MSI-X/MSI is enabled,
+because we do not know number of vectors before the range functions
+returned that number.
 
+Since affinity masks is a function of number of vectors and CPU topology
+the resulting masks might turn out suboptimal in general case (and
+this code supposed to be general, right?).
+
+I.e irq_create_affinity_mask() could decide "per-first-sibling" spreading
+given number of available vectors, but only a subset of MSI vectors
+were actually allocated. For that subset "per-core" affinity mask could
+have been initialized, but we will still go with "per-first-sibling".
+
+> +	ret = -ENOMEM;
+>  	irqs = kcalloc(max_vecs, sizeof(u32), GFP_KERNEL);
+>  	if (!irqs)
+> -		return -ENOMEM;
+> +		goto out_free_affinity;
+>  
+>  	if (!(flags & PCI_IRQ_NOMSIX)) {
+>  		vecs = pci_enable_msix_range_wrapper(dev, irqs, min_vecs,
+> @@ -1208,6 +1226,10 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+>  done:
+>  	dev->irqs = irqs;
+>  	return vecs;
+> +out_free_affinity:
+> +	kfree(dev->irq_affinity);
+> +	dev->irq_affinity = NULL;
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(pci_alloc_irq_vectors);
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 84a20fc..f474611 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -321,6 +321,7 @@ struct pci_dev {
+>  	 */
+>  	unsigned int	irq;
+>  	unsigned int	*irqs;
+> +	struct cpumask	*irq_affinity;
+>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+>  
+>  	bool match_driver;		/* Skip attaching driver */
+> -- 
+> 2.1.4
 > 
->> 
->> --
->> Sinan Kaya
->> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center,
->> Inc.
->> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
->> Linux Foundation Collaborative Project
