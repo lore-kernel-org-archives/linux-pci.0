@@ -1,74 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
-To: Christoph Hellwig <hch@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
- <1465934346-20648-3-git-send-email-hch@lst.de>
- <0412b942-ea0d-d4eb-c724-8243d12ff6f3@sandisk.com>
- <20160615102311.GA16619@lst.de>
-CC: "tglx@linutronix.de" <tglx@linutronix.de>,
-	"axboe@fb.com" <axboe@fb.com>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Message-ID: <67ef7a1c-56e1-db2c-b038-f9784fc1f52f@sandisk.com>
-Date: Wed, 15 Jun 2016 12:42:53 +0200
+Return-Path: <wim@djo.tudelft.nl>
+Return-Path: <wim@djo.tudelft.nl>
+Date: Mon, 27 Jun 2016 08:27:24 +0200
+From: Wim Osterholt <wim@djo.tudelft.nl>
+To: okaya@codeaurora.org
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+  "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+  linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
+  Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org,
+  Alex Williamson <alex.williamson@redhat.com>,
+  Wim Osterholt <wim@djo.tudelft.nl>
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+Message-ID: <20160627062724.GA6713@djo.tudelft.nl>
+Reply-To: wim@djo.tudelft.nl
+References: <576943BA.1000001@codeaurora.org>
+ <20160621221347.GA28603@djo.tudelft.nl>
+ <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
+ <20160623141234.GA14662@djo.tudelft.nl>
+ <576BF86E.8060302@codeaurora.org>
+ <576C042B.20507@codeaurora.org>
+ <20160623232533.GA14984@djo.tudelft.nl>
+ <f85fb7c7-53aa-3a1e-0635-bb245d08e804@codeaurora.org>
+ <20160625013920.GA26737@djo.tudelft.nl>
+ <3bf1261bc7a931cb5e1e93ea0d66b265@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20160615102311.GA16619@lst.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3bf1261bc7a931cb5e1e93ea0d66b265@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/15/2016 12:23 PM, Christoph Hellwig wrote:
-> Hi Bart,
->
-> On Wed, Jun 15, 2016 at 10:44:37AM +0200, Bart Van Assche wrote:
->> However, is excluding these interrupts from irqbalanced really the
->> way to go?
->
-> What positive effect will irqbalanced have on explcititly spread
-> interrupts?
->
->> Suppose e.g. that a system is equipped with two RDMA adapters,
->> that these adapters are used by a blk-mq enabled block initiator driver and
->> that each adapter supports eight MSI-X vectors. Should the interrupts of
->> the two RDMA adapters be assigned to different CPU cores? If so, which
->> software layer should realize this? The kernel or user space?
->
-> RDMA should eventually use the interrupt spreading implemented in this
-> series, as should networking (RDMA actually is on my near term todo list).
->
-> RDMA block protocols will then pick up the queue information from the
-> HCA driver.  I've not actually implemented this yet, but my current idea
-> is:
->
->  - the HCA drivers are switch to use pci_alloc_irq_vectors to spread
->    their interrupt vectors around the system
->  - the HCA drivers will expose the irq_affinity affinity array
->    in struct ib_device (we'll need to consider what do about the
->    odd completion vectors instead of irq terminology in the RDMA stack,
->    but that's not a show stopper)
->  - multiqueue aware block drivers will then feed the irq_affinity
->    cpumask from the hca driver to blk-mq.  We'll also need to ensure
->    the number of protocol queues aligns nicely to the number of hardware
->    queues.  My current thinking is that they should be the same or
->    a fraction of the hardware completion queues, but this might need
->    some careful benchmarking.
+On Sat, Jun 25, 2016 at 04:51:03AM -0400, okaya@codeaurora.org wrote:
+> On 2016-06-24 21:39, Wim Osterholt wrote:
+> 
+> Please apply the patches on top of clean 4.7-rc4 tree and apply them in 
+> order with
+> 
+> git am 0001...
+> git am 0002...
 
-Hello Christoph,
+It doesn't work that way.
+Beginners problems with git.
+Tried all kinds of things, including a new git clone to no avail.
+Took a long time to discover that in the above example these were the names
+of the 'attachments'.
+It didn't work. Error 'could not find out the kind of patch' or some such.
+Took much longer to find out that in that mail and in the saved attachments
+there were lines beginning with '>From' that were the culprit.
 
-Today irqbalanced is responsible for deciding how to assign interrupts 
-from different adapters to CPU cores. Does the above mean that for 
-adapters that support multiple MSI-X interrupts the kernel will have 
-full responsibility for assigning interrupt vectors to CPU cores?
+Still not found out how to make patch work without errors.
+Anyway, by doing it with more manual intervention om a stock kernel-4.7-rc4
+on my (very slow) Inspiron 4100 it seems to work like before. Hooray.
+However, an earlier try on my Inspiron 510m did not work.
+I'll do a clean retry later today, just to make sure.
 
-If two identical adapters are present in a system, will these generate 
-the same irq_affinity mask? Do you agree that interrupt vectors from 
-different adapters should be assigned to different CPU cores if enough 
-CPU cores are available? If so, which software layer will assign 
-interrupt vectors from different adapters to different CPU cores?
+regards, Wim.
 
-Thanks,
 
-Bart.
+----- wim@djo.tudelft.nl -----
