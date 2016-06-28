@@ -1,55 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <arnd@arndb.de>, <will.deacon@arm.com>,
-	<catalin.marinas@arm.com>, <rafael@kernel.org>,
-	<hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>,
-	<okaya@codeaurora.org>, <jchandra@broadcom.com>, <tn@semihalf.com>
-CC: <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
-	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
-	<wangyijing@huawei.com>, <Suravee.Suthikulpanit@amd.com>,
-	<msalter@redhat.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linaro-acpi@lists.linaro.org>, <jcm@redhat.com>,
-	<andrea.gallo@linaro.org>, <dhdang@apm.com>,
-	<jeremy.linton@arm.com>, <liudongdong3@huawei.com>,
-	<cov@codeaurora.org>, <gabriele.paoloni@huawei.com>,
-	<charles.chenxin@huawei.com>, <linuxarm@huawei.com>
-Subject: [RFC PATCH V2 0/2] ECAM quirks handling for ARM64 platforms
-Date: Mon, 13 Jun 2016 21:02:01 +0800
-Message-ID: <1465822923-33599-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <cov@codeaurora.org>
+Return-Path: <cov@codeaurora.org>
+Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
+To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org, arnd@arndb.de,
+ will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+ hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+ jchandra@broadcom.com
+References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
+ <1467100442-28078-4-git-send-email-tn@semihalf.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ gabriele.paoloni@huawei.com, jhugo@codeaurora.org,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>
+From: Christopher Covington <cov@codeaurora.org>
+Message-ID: <577275EA.7010002@codeaurora.org>
+Date: Tue, 28 Jun 2016 09:04:42 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1467100442-28078-4-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-This series bases on pending ACPI PCI support for ARM64:
-https://lkml.org/lkml/2016/6/10/706
+Hi Tomasz,
 
-Quirk handling relies on an idea of matching MCFG OEM ID and OEM TABLE ID
-(the ones from standard header of MCFG table). Linker section is used
-so that quirks can be registered using special macro (see patches) and
-kept self contained.
+On 06/28/2016 03:54 AM, Tomasz Nowicki wrote:
 
-v1 -> v2
-- use oem_id and oem_table_id to replace oem_id and oem_revision to make 
-  a difference between different platforms.
-- change pci_cfg_fixup __mcfg_fixup_##system##dom##bus to
-  __mcfg_fixup_##oem_id##oem_table_id##dom##bus. With oem_id and oem_table_id
-  is to ensure that the object is unique.
+> diff --git a/drivers/pci/host/mcfg-quirks.c b/drivers/pci/host/mcfg-quirks.c
+> new file mode 100644
+> index 0000000..fb2b184
+> --- /dev/null
+> +++ b/drivers/pci/host/mcfg-quirks.c
+> @@ -0,0 +1,88 @@
 
-Tomasz Nowicki (2):
-  ACPI/PCI: Match PCI config space accessors against platfrom specific
-    ECAM quirks
-  ARM64/PCI: Start using quirks handling for ACPI based PCI host
-    controller
+> +static bool pci_mcfg_fixup_match(struct pci_cfg_fixup *f,
+> +				 struct acpi_table_header *mcfg_header)
+> +{
+> +	int olen = min_t(u8, strlen(f->oem_id), ACPI_OEM_ID_SIZE);
+> +	int tlen = min_t(u8, strlen(f->oem_table_id), ACPI_OEM_TABLE_ID_SIZE);
+> +
+> +	return (!strncmp(f->oem_id, mcfg_header->oem_id, olen) &&
+> +		!strncmp(f->oem_table_id, mcfg_header->oem_table_id, tlen) &&
+> +		f->oem_revision == mcfg_header->oem_revision);
+> +}
 
- arch/arm64/kernel/pci.c           |  7 ++++---
- drivers/acpi/pci_mcfg.c           | 41 ++++++++++++++++++++++++++++++++++++---
- include/asm-generic/vmlinux.lds.h |  7 +++++++
- include/linux/pci-acpi.h          | 20 +++++++++++++++++++
- 4 files changed, 69 insertions(+), 6 deletions(-)
+Ard's comments on v3 included:
+
+"... exact OEM table/rev id matches ..."
+"... substring match ... out of the question ..."
+
+I originally advocated the substring match approach because
+space-padding the input strings was unfamiliar. But given that some
+vendors have a "PLAT    " then "PLAT2   " naming scheme, where the
+former needs quirks and the latter (hopefully) doesn't, I agree with Ard
+and think space-padded inputs is the better way to go. Sorry for the
+lack of foresight.
+
+(I'm happy to rip it out, test, and communicate the delta however you'd
+prefer--just let me know.)
+
+Regards,
+Cov
 
 -- 
-1.9.1
-
+Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
