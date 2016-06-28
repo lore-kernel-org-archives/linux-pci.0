@@ -1,111 +1,147 @@
-Return-Path: <jhugo@codeaurora.org>
-Return-Path: <jhugo@codeaurora.org>
-Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
-To: Tomasz Nowicki <tn@semihalf.com>,
- Christopher Covington <cov@codeaurora.org>, Duc Dang <dhdang@apm.com>
-References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
- <1467100442-28078-4-git-send-email-tn@semihalf.com>
- <577275EA.7010002@codeaurora.org>
- <CADaLNDkhPZuG7UJ4SK_j5v_nXbd782Q17LAcXduG0uEObaFF=g@mail.gmail.com>
- <5773A773.8040700@semihalf.com> <5773CE49.1050802@codeaurora.org>
- <5773D284.8060404@semihalf.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Yijing Wang <wangyijing@huawei.com>, Andrea Gallo <andrea.gallo@linaro.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, linaro-acpi@lists.linaro.org,
- David Daney <ddaney@caviumnetworks.com>, linux-acpi@vger.kernel.org,
- Robert Richter <robert.richter@caviumnetworks.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Dongdong Liu <liudongdong3@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Liviu Dudau
- <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
- Jon Masters <jcm@redhat.com>, Mark Salter <msalter@redhat.com>,
- Marcin Wojtas <mw@semihalf.com>,
- linux-arm <linux-arm-kernel@lists.infradead.org>,
- Jayachandran C <jchandra@broadcom.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- jeremy.linton@arm.com, Hanjun Guo <hanjun.guo@linaro.org>
-From: Jeffrey Hugo <jhugo@codeaurora.org>
-Message-ID: <a083360c-9b75-30f9-fe3c-ba968928fd92@codeaurora.org>
-Date: Wed, 29 Jun 2016 09:38:50 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35449 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752373AbcF1NuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2016 09:50:06 -0400
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'dongbo \(E\)'" <dongbo4@huawei.com>, <bhelgaas@google.com>
+Cc: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	"'Linuxarm'" <linuxarm@huawei.com>,
+	"'Zhanweitao'" <zhanweitao@hisilicon.com>,
+	"'Jingoo Han'" <jingoohan1@gmail.com>
+References: <BEF013ED77979042B16A827A9AC75AF820FA4C5E@SZXEMI502-MBS.china.huawei.com> <CAHM4w1=g7nQ81tipzJa_3nVo-3_4ZMpRkKRrOFX9wyc+ZoThMw@mail.gmail.com>
+In-Reply-To: <CAHM4w1=g7nQ81tipzJa_3nVo-3_4ZMpRkKRrOFX9wyc+ZoThMw@mail.gmail.com>
+Subject: Re: [PATCH] Decouple CFG and IO in Designware PCIe Driver
+Date: Tue, 28 Jun 2016 22:50:01 +0900
+Message-ID: <002801d1d143$fa837bf0$ef8a73d0$@com>
 MIME-Version: 1.0
-In-Reply-To: <5773D284.8060404@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain;
+	charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2016 7:52 AM, Tomasz Nowicki wrote:
-> On 29.06.2016 15:34, Christopher Covington wrote:
->> I'm confused by this statement. OEMID is defined as 6 bytes long and OEM
->> Table ID as 8 bytes long in the ACPI specification. As far as I can
->> tell, if your string isn't exactly that long, padding up to that length
->> is required.
->
-> Well, I cannot find that requirement in ACPI spec. but I might missed
-> something.
+On Monday, June 27, 2016 1:38 PM, Pratyush Anand wrote:
+> 
+> On Wed, Jun 22, 2016 at 1:54 PM, dongbo (E) <dongbo4@huawei.com> wrote:
+> > From: Dong Bo <dongbo4@huawei.com>
+> >
+> > In designware PCIe driver, the iatu0 is used for both CFG and IO accesses.
+> > When PCIe sends CFGs to peripherals (e.g. lspci),
+> > iatu0 frequently switches between CFG and IO alternatively.
+> >
+> > If the LIMIT of MEMORY is a value between CFGs BASE_ADDR and IOs LIMIT,
+> > this probably results in a MEMORY beging matched to be an IO by mistake.
+> >
+> > Considering the following configurations:
+> > MEMORY          ->      BASE_ADDR: 0xb4100000, LIMIT: 0xb4100FFF, TYPE=mem
+> > CFG             ->      BASE_ADDR: 0xb4000000, LIMIT: 0xb4000FFF, TYPE=cfg
+> > IO              ->      BASE_ADDR: 0xFFFFFFFF, LIMIT: 0xFFFFFFFE, TYPE=io
+> > Suppose PCIe has just completed a CFG access, to switch back to IO, it set the BASE_ADDR to
+> 0xFFFFFFFF, LIMIT 0xFFFFFFFE and TYPE to io.
+> > When another CFG access come,
+> > PCIe first set BASE_ADDR to 0xb4000000 to switch to CFG.
+> > At this moment, a MEMORY access shows up, due to `0xb4000000 <= MEMORY BASE_ADDR <= MEMORY LIMIE <=
+> 0xFFFFFFF, it matches with iatu0.
+> > And it is treated as an IO access by mistake, then sent to perpheral.
+> >
+> 
+> Hummm...This portion of driver has always been buggy.
+> 
+> > This patch fixes the problem by decoupling CFG and IO, reassigning iatu2 to IO.
+> 
+> But, we can not just assign IOs to iatu2.
+> IIRC then, there are atleast two platforms which have only 2
+> viewports, therefore they can not program iatu2.
+> 
+> Jingoo,Bjorn: IMHO, we should modify this portion of code, since more
+> number of platforms has 4+ viewports. Probably, we can take following
+> approach:
+> 
+> (1) Pass number of viewports through DT. If we have *atleast*  3
+> viewports then assign separate viewports to memory and IO,  and share
+> one with CFG0 and CFG1.
+> (2) If we can have *atleast*  4 then, we may have separate for CFG0
+> and CFG1 as well.
+> 
+> (3) If we have *only* 2 then,  either we let them work as they work
+> today with bug, or may be we restrict them from using IO transactions.
+> So assign one to memory and share other for CFG0 and CFG1.
+> 
+> Please let me know your opnion.
 
-Have a look at table 5-29 in Section 5.2.6 which starts on page 114 of 
-ACPI 6.1
+I agree with your opinion.
+The number of viewports should be passed through DT, because this number
+is designated by hardware configuration at the level of design.
 
->
-> I dumped my x86 machine ACPI tables and here is an example of MCFG:
->
-> $ cat mcfg.dsl
-> /*
->  * Intel ACPI Component Architecture
->  * AML/ASL+ Disassembler version 20160108-64
->  * Copyright (c) 2000 - 2016 Intel Corporation
->  *
->  * Disassembly of mcfg.dat, Wed Jun 29 15:48:16 2016
->  *
->  * ACPI Data Table [MCFG]
->  *
->  * Format: [HexOffset DecimalOffset ByteLength]  FieldName : FieldValue
->  */
->
-> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
-> Configuration table]
-> [004h 0004   4]                 Table Length : 0000003C
-> [008h 0008   1]                     Revision : 01
-> [009h 0009   1]                     Checksum : A9
-> [00Ah 0010   6]                       Oem ID : "ALASKA"
-> [010h 0016   8]                 Oem Table ID : "A M I"
-> [018h 0024   4]                 Oem Revision : 01072009
-> [01Ch 0028   4]              Asl Compiler ID : "MSFT"
-> [020h 0032   4]        Asl Compiler Revision : 00000097
->
-> [024h 0036   8]                     Reserved : 0000000000000000
->
-> [02Ch 0044   8]                 Base Address : 00000000F8000000
-> [034h 0052   2]         Segment Group Number : 0000
-> [036h 0054   1]             Start Bus Number : 00
-> [037h 0055   1]               End Bus Number : 3F
-> [038h 0056   4]                     Reserved : 00000000
->
-> Raw Table Data: Length 60 (0x3C)
->
-> 00000000  4d 43 46 47 3c 00 00 00  01 a9 41 4c 41 53 4b 41
-> |MCFG<.....ALASKA|
-> 00000010  41 20 4d 20 49 00 00 00  09 20 07 01 4d 53 46 54  |A M I....
-> ..MSFT|
-> 00000020  97 00 00 00 00 00 00 00  00 00 00 00 00 00 00 f8
-> |................|
-> 00000030  00 00 00 00 00 00 00 3f  00 00 00 00              |.......?....|
->
-> So in this example I have OEM table ID "A M I" 6 character long and 0
-> padding.
->
-> Tomasz
->
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Anyway, I think that most SoCs using Designware PCIe would support more than 3
+view points. So, the current code should be modified in order to support more
+view points.
 
+Thank you.
 
--- 
-Jeffrey Hugo
-Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+Best regards,
+Jingoo Han
+
+> 
+> ~Pratyush
+> 
+> >
+> > Signed-off-by: Dong Bo <dongbo4@huawei.com>
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 14 +++++++-------
+> >  1 file changed, 7 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index aafd766..1a40305 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -51,6 +51,7 @@
+> >  #define PCIE_ATU_VIEWPORT              0x900
+> >  #define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
+> >  #define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
+> > +#define PCIE_ATU_REGION_INDEX2         (0x2 << 0)
+> >  #define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
+> >  #define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
+> >  #define PCIE_ATU_CR1                   0x904
+> > @@ -603,9 +604,6 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+> >                                   type, cpu_addr,
+> >                                   busdev, cfg_size);
+> >         ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
+> > -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> > -                                 PCIE_ATU_TYPE_IO, pp->io_base,
+> > -                                 pp->io_bus_addr, pp->io_size);
+> >
+> >         return ret;
+> >  }
+> > @@ -640,9 +638,6 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+> >                                   type, cpu_addr,
+> >                                   busdev, cfg_size);
+> >         ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
+> > -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> > -                                 PCIE_ATU_TYPE_IO, pp->io_base,
+> > -                                 pp->io_bus_addr, pp->io_size);
+> >
+> >         return ret;
+> >  }
+> > @@ -778,10 +773,15 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> >          * uses its own address translation component rather than ATU, so
+> >          * we should not program the ATU here.
+> >          */
+> > -       if (!pp->ops->rd_other_conf)
+> > +       if (!pp->ops->rd_other_conf) {
+> >                 dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> >                                           PCIE_ATU_TYPE_MEM, pp->mem_base,
+> >                                           pp->mem_bus_addr, pp->mem_size);
+> > +               dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX2,
+> > +                                       PCIE_ATU_TYPE_IO, pp->io_base,
+> > +                                       pp->io_bus_addr, pp->io_size);
+> > +
+> > +       }
+> >
+> >         dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> >
+> > --
+> > 1.9.1
+> >
+
