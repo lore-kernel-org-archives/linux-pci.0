@@ -1,42 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:56008 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752096AbcFNRi2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jun 2016 13:38:28 -0400
-Date: Tue, 14 Jun 2016 10:38:26 -0700
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>
-Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management Unit
- driver
-Message-ID: <20160614173826.GC16566@psi-dev26.jf.intel.com>
-References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <1465919118.30123.73.camel@linux.intel.com>
- <20160614155835.GA29820@gmail.com>
- <1465920434.30123.87.camel@linux.intel.com>
- <20160614172621.GA16566@psi-dev26.jf.intel.com>
- <1465925834.30123.90.camel@linux.intel.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30935 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751980AbcF1IQD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2016 04:16:03 -0400
+Subject: [PATCH] Exchange the Assignments of `MEMORYs' and `CFGs/IOs' in
+ Designware PCIe Driver
+References: <1467100302-221983-1-git-send-email-zhaonenglong@hisilicon.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+From: "dongbo (E)" <dongbo4@huawei.com>
+CC: Linuxarm <linuxarm@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zhanweitao <zhanweitao@hisilicon.com>
+Message-ID: <c72d2b44-a5d2-bd8f-16a7-2a80ae2b71eb@huawei.com>
+Date: Tue, 28 Jun 2016 16:12:29 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465925834.30123.90.camel@linux.intel.com>
+In-Reply-To: <1467100302-221983-1-git-send-email-zhaonenglong@hisilicon.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 14, 2016 at 08:37:14PM +0300, Andy Shevchenko wrote:
-> On Tue, 2016-06-14 at 10:26 -0700, David Cohen wrote:
-> 
-> > > Yes. Will rename in this way, re-test and re-send.
-> > 
-> > I'm curious about that. What pmu prefix would stand for?
-> 
-> It's indeed widely used as Performance Monitoring Unit
+From: Dong Bo <dongbo4@huawei.com>
 
-Thanks :)
+In designware PCIe driver, the iatu0 is used for both CFG and IO accesses.
+When sending CFGs to peripherals (e.g. lspci), iatu0 frequently switches
+between CFG and IO alternatively.
+
+A MEMORY probably be sent as an IOs by mistake. Considering the following
+configurations:
+MEMORY          ->      BASE_ADDR: 0xb4100000, LIMIT: 0xb4100FFF, TYPE=mem
+CFG             ->      BASE_ADDR: 0xb4000000, LIMIT: 0xb4000FFF, TYPE=cfg
+IO              ->      BASE_ADDR: 0xFFFFFFFF, LIMIT: 0xFFFFFFFE, TYPE=io
+
+Suppose PCIe has just completed a CFG access, to switch back to IO, it set
+the BASE_ADDR to 0xFFFFFFFF, LIMIT 0xFFFFFFFE and TYPE to io. When another
+CFG comes, the BASE_ADDR is set to 0xb4000000 to switch to CFG. At this
+moment, a MEMORY access shows up, since it matches with iatu0
+(due to 0xb4000000 <= MEMORY BASE_ADDR <= MEMORY LIMIE <= 0xFFFFFFF), it
+is treated as an IO access by mistake, then sent to perpheral.
+
+This patch fixes the problem by exchanging the assignments of `MEMORYs'
+and `CFGs/IOs', which assigning MEMEORYs to iatu0, CFGs and IOs to iatu1.
+
+Signed-off-by: Dong Bo <dongbo4@huawei.com>
+---
+ drivers/pci/host/pcie-designware.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index aafd766..1bd88d9 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -599,11 +599,11 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		va_cfg_base = pp->va_cfg1_base;
+ 	}
+ -	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+ 	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
+-	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+ 				  PCIE_ATU_TYPE_IO, pp->io_base,
+ 				  pp->io_bus_addr, pp->io_size);
+ @@ -636,11 +636,11 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		va_cfg_base = pp->va_cfg1_base;
+ 	}
+ -	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+ 	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
+-	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
++	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+ 				  PCIE_ATU_TYPE_IO, pp->io_base,
+ 				  pp->io_bus_addr, pp->io_size);
+ @@ -779,7 +779,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	 * we should not program the ATU here.
+ 	 */
+ 	if (!pp->ops->rd_other_conf)
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
++		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+ 					  pp->mem_bus_addr, pp->mem_size);
+ -- 1.9.1
+
+
+.
+
 
