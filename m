@@ -1,90 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v1 10/25] PCI: xilinx-nwl: Free bridge resource list on failure
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 06 Jun 2016 18:05:59 -0500
-Message-ID: <20160606230559.20936.29055.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33511 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752325AbcF1VFV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2016 17:05:21 -0400
+Date: Tue, 28 Jun 2016 16:05:13 -0500
+From: Rob Herring <robh@kernel.org>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-sh@vger.kernel.or, linux-kernel@vger.kernel.org,
+	27@sa76r4.localdomain, Jun@sa76r4.localdomain,
+	2016@sa76r4.localdomain, +0900@sa76r4.localdomain
+Subject: Re: [PATCH v3 11/19] sh: Add PCI host bridge driver for SH7751
+Message-ID: <20160628210513.GA8810@rob-hp-laptop>
+References: <1467095795-5082-1-git-send-email-ysato@users.sourceforge.jp>
+ <1467095795-5082-12-git-send-email-ysato@users.sourceforge.jp>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
- rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
- linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
- Michal Simek <michal.simek@xilinx.com>,
- =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1467095795-5082-12-git-send-email-ysato@users.sourceforge.jp>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-of_pci_get_host_bridge_resources() allocates a list of resources for host
-bridge windows.  If we fail after allocating that list, free it before we
-return error.
+On Tue, Jun 28, 2016 at 03:36:27PM +0900, Yoshinori Sato wrote:
+> This is an alternative SH7751 PCI driver.
+> Existing driver (arch/sh/drivers/pci/pci-sh7751) uses SH specific interface.
+> But this driver uses common PCI interface. It is more modern and generic.
+> 
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+> ---
+>  .../devicetree/bindings/pci/sh7751-pci.txt         |  51 ++++
+>  arch/sh/boards/Kconfig                             |   1 +
+>  arch/sh/drivers/Makefile                           |   2 +
+>  arch/sh/include/asm/io.h                           |   6 +
+>  drivers/pci/host/Kconfig                           |   7 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pci-sh7751.c                      | 326 +++++++++++++++++++++
+>  7 files changed, 394 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/sh7751-pci.txt
+>  create mode 100644 drivers/pci/host/pci-sh7751.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/sh7751-pci.txt b/Documentation/devicetree/bindings/pci/sh7751-pci.txt
+> new file mode 100644
+> index 0000000..c3ec71a
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/sh7751-pci.txt
+> @@ -0,0 +1,51 @@
+> +* Renesas SH7751 PCI host interfaces
+> +
+> +Required properties:
+> +  - compatible: "renesas,sh7751-pci" is required.
+> +    And board specific compatible if fixup required.
+> +
+> +  - reg: base address and length of the PCI controller registers.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Need to define how many reg entries and the order.
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 3479d30..506da7b 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -832,20 +832,22 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	err = nwl_pcie_init_irq_domain(pcie);
- 	if (err) {
- 		dev_err(pcie->dev, "Failed creating IRQ Domain\n");
--		return err;
-+		goto error;
- 	}
- 
- 	bus = pci_create_root_bus(&pdev->dev, pcie->root_busno,
- 				  &nwl_pcie_ops, pcie, &res);
--	if (!bus)
--		return -ENOMEM;
-+	if (!bus) {
-+		err = -ENOMEM;
-+		goto error;
-+	}
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		err = nwl_pcie_enable_msi(pcie, bus);
- 		if (err < 0) {
- 			dev_err(&pdev->dev,
- 				"failed to enable MSI support: %d\n", err);
--			return err;
-+			goto error;
- 		}
- 	}
- 	pci_scan_child_bus(bus);
-@@ -855,6 +857,10 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	pci_bus_add_devices(bus);
- 	platform_set_drvdata(pdev, pcie);
- 	return 0;
-+
-+error:
-+	pci_free_resource_list(&res);
-+	return err;
- }
- 
- static int nwl_pcie_remove(struct platform_device *pdev)
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +  - #address-cells: set to <2>
+> +  - #size-cells: set to <1>
+> +  - bus-range: PCI bus numbers covered
+> +  - device_type: set to "pci"
+> +  - ranges: ranges for the PCI memory and I/O regions.
+> +  - interrupt-map-mask and interrupt-map: standard PCI properties
+> +	to define the mapping of the PCI interface to interrupt
+> +	numbers.
+> +
+> +Example:
+> +	pci: pci-controller@fe200000 {
+> +		compatible = "renesas,sh7751-pci", "iodata,landisk";
+> +		device_type = "pci";
+> +		bus-range = <0 0>;
+> +		#address-cells = <2>;
+> +		#size-cells = <1>;
+> +		ranges = <0x02000000 0x00000000 0xfd000000 0xfd000000 0x00000000 0x01000000>,
+> +		         <0x01000000 0x00000000 0xfe240000 0x00000000 0x00000000 0x00040000>;
+> +		reg = <0xfe200000 0x0400>,
+> +		      <0x0c000000 0x04000000>,
+> +		      <0xff800000 0x0030>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0x1800 0 7>;
+> +		interrupt-map = <0x0000 0 1 &cpldintc evt2irq(0x2a0) 0
+> +		                 0x0000 0 2 &cpldintc evt2irq(0x2c0) 0
+> +		                 0x0000 0 3 &cpldintc evt2irq(0x2e0) 0
+> +		                 0x0000 0 4 &cpldintc evt2irq(0x300) 0
+> +
+> +		                 0x0800 0 1 &cpldintc evt2irq(0x2c0) 0
+> +		                 0x0800 0 2 &cpldintc evt2irq(0x2e0) 0
+> +		                 0x0800 0 3 &cpldintc evt2irq(0x300) 0
+> +		                 0x0800 0 4 &cpldintc evt2irq(0x2a0) 0
+> +
+> +		                 0x1000 0 1 &cpldintc evt2irq(0x2e0) 0
+> +		                 0x1000 0 2 &cpldintc evt2irq(0x300) 0
+> +		                 0x1000 0 3 &cpldintc evt2irq(0x2a0) 0
+> +		                 0x1000 0 4 &cpldintc evt2irq(0x2c0) 0
+> +
+> +		                 0x1800 0 1 &cpldintc evt2irq(0x300) 0
+> +		                 0x1800 0 2 &cpldintc evt2irq(0x2a0) 0
+> +		                 0x1800 0 3 &cpldintc evt2irq(0x2c0) 0
+> +		                 0x1800 0 4 &cpldintc evt2irq(0x2e0) 0>;
+> +	};
+> +};
