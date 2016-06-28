@@ -1,119 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:36642 "EHLO
-	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbcFHAIL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2016 20:08:11 -0400
-Received: by mail-yw0-f196.google.com with SMTP id l126so24887974ywe.3
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jun 2016 17:08:10 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: l.stach@pengutronix.de, hongxing.zhu@nxp.com,
-	chf.fritz@googlemail.com, shawnguo@kernel.org,
-	linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH] PCI: imx6: Add support for MX6SX LDO PCIE domain regulator
-Date: Tue,  7 Jun 2016 21:07:52 -0300
-Message-Id: <1465344472-15703-1-git-send-email-festevam@gmail.com>
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:35932 "EHLO
+	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751749AbcF1DdL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jun 2016 23:33:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <41720b10-3713-9dd6-bf8f-4d32b6283c8c@huawei.com>
+References: <BEF013ED77979042B16A827A9AC75AF820FA4C5E@SZXEMI502-MBS.china.huawei.com>
+ <CAHM4w1=g7nQ81tipzJa_3nVo-3_4ZMpRkKRrOFX9wyc+ZoThMw@mail.gmail.com> <41720b10-3713-9dd6-bf8f-4d32b6283c8c@huawei.com>
+From: Pratyush Anand <pratyush.anand@gmail.com>
+Date: Tue, 28 Jun 2016 09:03:09 +0530
+Message-ID: <CAHM4w1=NaqguAFB-sf4k=+zSOsowGEh0VrLBtmO6JV8bwatuqQ@mail.gmail.com>
+Subject: Re: [PATCH] Decouple CFG and IO in Designware PCIe Driver
+To: "dongbo (E)" <dongbo4@huawei.com>
+Cc: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linuxarm <linuxarm@huawei.com>,
+	Zhanweitao <zhanweitao@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+On Mon, Jun 27, 2016 at 6:38 PM, dongbo (E) <dongbo4@huawei.com> wrote:
+> Hi, all.
+>
+> How about exchanging the assignments of `MEMORYs' and `CFGs/IOs'?
+> In other words, assign MEMEORYs to iatu0, CFGs and IOs to iatu1.
+>
+> Once the iatu0 is initialized to MEMORY accesses, its BASE_ADDR,
+> LIMIT and TYPE is fixed. MEMORYs match with iatu0 at first, so
+> they will never being treated as IOs or CFGs by mistake.
 
-MX6SX has an internal LDO regulator for the PCIE domain, which needs
-to be turned on for PCIE functionality.
+This should be acceptable, so you can send it as a formal patch.
 
-Add support for it.
+However, other corner point for failure is still there. Suppose,
+another thread tries to write on IO space when iatu1 was programmed
+for CFG.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  2 ++
- drivers/pci/host/pci-imx6.c                        | 29 +++++++++++++++++++++-
- 2 files changed, 30 insertions(+), 1 deletion(-)
+~Pratyush
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index f3d26f47..cfb0e86 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -33,6 +33,8 @@ Optional properties:
- Additional required properties for imx6sx-pcie:
- - clock names: Must include the following additional entry:
- 	- "pcie_inbound_axi"
-+- pcie-phy-supply: Must point to the internal PCIE power domain regulator:
-+		   <&reg_pcie>;
- 
- Example:
- 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index b741a36..ad9cc8b 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -27,6 +27,7 @@
- #include <linux/signal.h>
- #include <linux/types.h>
- #include <linux/interrupt.h>
-+#include <linux/regulator/consumer.h>
- 
- #include "pcie-designware.h"
- 
-@@ -55,6 +56,7 @@ struct imx6_pcie {
- 	u32			tx_swing_full;
- 	u32			tx_swing_low;
- 	int			link_gen;
-+	struct regulator	*phy_regulator;
- };
- 
- /* PCIe Root Complex registers (memory-mapped) */
-@@ -96,6 +98,8 @@ struct imx6_pcie {
- #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
- #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
- 
-+#define MX6SX_PCIE_LDO				1100000
-+
- static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
- {
- 	u32 val;
-@@ -407,11 +411,26 @@ err_pcie_phy:
- static void imx6_pcie_init_phy(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-+	int ret;
-+
-+	if (imx6_pcie->variant == IMX6SX) {
-+		ret = regulator_set_voltage(imx6_pcie->phy_regulator,
-+					    MX6SX_PCIE_LDO, MX6SX_PCIE_LDO);
-+		if (ret) {
-+			dev_err(pp->dev, "failed to set pcie phy voltage.\n");
-+			return ret;
-+		}
-+
-+		ret = regulator_enable(imx6_pcie->phy_regulator);
-+		if (ret) {
-+			dev_err(pp->dev, "failed to enable pcie regulator.\n");
-+			return;
-+		}
- 
--	if (imx6_pcie->variant == IMX6SX)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
-+	}
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-@@ -680,6 +699,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 				"pcie_incbound_axi clock missing or invalid\n");
- 			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
- 		}
-+
-+		imx6_pcie->phy_regulator = devm_regulator_get(pp->dev,
-+							      "pcie-phy");
-+		if (IS_ERR(imx6_pcie->phy_regulator)) {
-+			dev_err(&pdev->dev,
-+				"failed to get pcie-phy regulator\n");
-+			return PTR_ERR(imx6_pcie->phy_regulator);
-+		}
- 	}
- 
- 	/* Grab GPR config register range */
--- 
-1.9.1
-
+>
+> The number of viewpoints used remains two, it would be OK for
+> platforms only have 2 viewpoints.
+>
+> Here is the patch:
+>
+> Signed-off-by: Dong Bo <dongbo4@huawei.com>
+> ---
+>  drivers/pci/host/pcie-designware.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index aafd766..1bd88d9 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -599,11 +599,11 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>                 va_cfg_base = pp->va_cfg1_base;
+>         }
+>
+> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+>                                   type, cpu_addr,
+>                                   busdev, cfg_size);
+>         ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
+> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+>                                   PCIE_ATU_TYPE_IO, pp->io_base,
+>                                   pp->io_bus_addr, pp->io_size);
+>
+> @@ -636,11 +636,11 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>                 va_cfg_base = pp->va_cfg1_base;
+>         }
+>
+> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+>                                   type, cpu_addr,
+>                                   busdev, cfg_size);
+>         ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
+> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+> +       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+>                                   PCIE_ATU_TYPE_IO, pp->io_base,
+>                                   pp->io_bus_addr, pp->io_size);
+>
+> @@ -779,7 +779,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>          * we should not program the ATU here.
+>          */
+>         if (!pp->ops->rd_other_conf)
+> -               dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> +               dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+>                                           PCIE_ATU_TYPE_MEM, pp->mem_base,
+>                                           pp->mem_bus_addr, pp->mem_size);
+>
+> --
+> 1.9.1
+>
+> On 2016/6/27 12:37, Pratyush Anand wrote:
+>> On Wed, Jun 22, 2016 at 1:54 PM, dongbo (E) <dongbo4@huawei.com> wrote:
+>>> From: Dong Bo <dongbo4@huawei.com>
+>>>
+>>> In designware PCIe driver, the iatu0 is used for both CFG and IO accesses.
+>>> When PCIe sends CFGs to peripherals (e.g. lspci),
+>>> iatu0 frequently switches between CFG and IO alternatively.
+>>>
+>>> If the LIMIT of MEMORY is a value between CFGs BASE_ADDR and IOs LIMIT,
+>>> this probably results in a MEMORY beging matched to be an IO by mistake.
+>>>
+>>> Considering the following configurations:
+>>> MEMORY          ->      BASE_ADDR: 0xb4100000, LIMIT: 0xb4100FFF, TYPE=mem
+>>> CFG             ->      BASE_ADDR: 0xb4000000, LIMIT: 0xb4000FFF, TYPE=cfg
+>>> IO              ->      BASE_ADDR: 0xFFFFFFFF, LIMIT: 0xFFFFFFFE, TYPE=io
+>>> Suppose PCIe has just completed a CFG access, to switch back to IO, it set the BASE_ADDR to 0xFFFFFFFF, LIMIT 0xFFFFFFFE and TYPE to io.
+>>> When another CFG access come,
+>>> PCIe first set BASE_ADDR to 0xb4000000 to switch to CFG.
+>>> At this moment, a MEMORY access shows up, due to `0xb4000000 <= MEMORY BASE_ADDR <= MEMORY LIMIE <= 0xFFFFFFF, it matches with iatu0.
+>>> And it is treated as an IO access by mistake, then sent to perpheral.
+>>>
+>>
+>> Hummm...This portion of driver has always been buggy.
+>>
+>>> This patch fixes the problem by decoupling CFG and IO, reassigning iatu2 to IO.
+>>
+>> But, we can not just assign IOs to iatu2.
+>> IIRC then, there are atleast two platforms which have only 2
+>> viewports, therefore they can not program iatu2.
+>>
+>> Jingoo,Bjorn: IMHO, we should modify this portion of code, since more
+>> number of platforms has 4+ viewports. Probably, we can take following
+>> approach:
+>>
+>> (1) Pass number of viewports through DT. If we have *atleast*  3
+>> viewports then assign separate viewports to memory and IO,  and share
+>> one with CFG0 and CFG1.
+>> (2) If we can have *atleast*  4 then, we may have separate for CFG0
+>> and CFG1 as well.
+>>
+>> (3) If we have *only* 2 then,  either we let them work as they work
+>> today with bug, or may be we restrict them from using IO transactions.
+>> So assign one to memory and share other for CFG0 and CFG1.
+>>
+>> Please let me know your opnion.
+>>
+>> ~Pratyush
+>>
+>>>
+>>> Signed-off-by: Dong Bo <dongbo4@huawei.com>
+>>> ---
+>>>  drivers/pci/host/pcie-designware.c | 14 +++++++-------
+>>>  1 file changed, 7 insertions(+), 7 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>>> index aafd766..1a40305 100644
+>>> --- a/drivers/pci/host/pcie-designware.c
+>>> +++ b/drivers/pci/host/pcie-designware.c
+>>> @@ -51,6 +51,7 @@
+>>>  #define PCIE_ATU_VIEWPORT              0x900
+>>>  #define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
+>>>  #define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
+>>> +#define PCIE_ATU_REGION_INDEX2         (0x2 << 0)
+>>>  #define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
+>>>  #define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
+>>>  #define PCIE_ATU_CR1                   0x904
+>>> @@ -603,9 +604,6 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>>>                                   type, cpu_addr,
+>>>                                   busdev, cfg_size);
+>>>         ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
+>>> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+>>> -                                 PCIE_ATU_TYPE_IO, pp->io_base,
+>>> -                                 pp->io_bus_addr, pp->io_size);
+>>>
+>>>         return ret;
+>>>  }
+>>> @@ -640,9 +638,6 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>>>                                   type, cpu_addr,
+>>>                                   busdev, cfg_size);
+>>>         ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
+>>> -       dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+>>> -                                 PCIE_ATU_TYPE_IO, pp->io_base,
+>>> -                                 pp->io_bus_addr, pp->io_size);
+>>>
+>>>         return ret;
+>>>  }
+>>> @@ -778,10 +773,15 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>>>          * uses its own address translation component rather than ATU, so
+>>>          * we should not program the ATU here.
+>>>          */
+>>> -       if (!pp->ops->rd_other_conf)
+>>> +       if (!pp->ops->rd_other_conf) {
+>>>                 dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+>>>                                           PCIE_ATU_TYPE_MEM, pp->mem_base,
+>>>                                           pp->mem_bus_addr, pp->mem_size);
+>>> +               dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX2,
+>>> +                                       PCIE_ATU_TYPE_IO, pp->io_base,
+>>> +                                       pp->io_bus_addr, pp->io_size);
+>>> +
+>>> +       }
+>>>
+>>>         dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+>>>
+>>> --
+>>> 1.9.1
+>>>
+>>
+>> .
+>>
+>
