@@ -1,61 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38513 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221AbcFNPoF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jun 2016 11:44:05 -0400
-Message-ID: <1465919118.30123.73.camel@linux.intel.com>
-Subject: Re: [PATCH v1 1/1] x86/platform/intel-mid: Add Power Management
- Unit driver
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>
-Date: Tue, 14 Jun 2016 18:45:18 +0300
-In-Reply-To: <20160614152911.GB28601@gmail.com>
-References: <1465849087-54528-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <20160614104355.GC13439@gmail.com>
- <1465912766.30123.55.camel@linux.intel.com>
-	 <20160614152911.GB28601@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH v4 0/5] ECAM quirks handling for ARM64 platforms
+Date: Tue, 28 Jun 2016 09:53:57 +0200
+Message-Id: <1467100442-28078-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-06-14 at 17:29 +0200, Ingo Molnar wrote:
+Quirk handling relies on an idea of matching MCFG OEM ID, TABLE ID and
+revision (the ones from standard header of MCFG table).
 
-> * Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-> 
-> > On Tue, 2016-06-14 at 12:43 +0200, Ingo Molnar wrote:
-> > In the TRM it's called Power Management Unit, though once or twice
-> > in some 
-> > documents as Power Management Controller. I actually woudn't like to
-> > use PMC 
-> > abbreviation to not be confused with pmc_atom.c and many other
-> > variation of 
-> > existing PMC drivers of other Intel platforms.
-> > 
-> > PM* as a prefix might be too short to conflict with Power Management
-> > framework 
-> > in the kernel. P-Unit (punit*) is existing part in SoC which will
-> > have its own 
-> > driver in the future, so, can't use it either.
-> > 
-> > pwr*, pwrmu*, scpmu* (as of South Complex Power Management Unit) —
-> > one of them?
-> 
-> 'pwr' certainly sounds good to me! PWMU perhaps?
+Static array is used to keep quirk entries. Each entry consist of
+metioned MCFG IDs along with custom pci_ops structure and initialization call.
 
-Wouldn't be a bit confusing with pwm? I would stay at 'pwr'.
+As an example, last patch presents quirk handling mechanism usage for
+ThunderX PEM driver.
 
-P.S. I have sent an indentation fix as a separate patch.
+Tomasz Nowicki (5):
+  PCI: Embed pci_ecam_ops in pci_config_window structure
+  PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
+  PCI: Check platform specific ECAM quirks
+  ARM64/PCI: Start using quirks handling for ACPI based PCI host
+    controller
+  PCI: thunder: Add ThunderX PEM MCFG quirk to the list
+
+ arch/arm64/kernel/pci.c            | 42 +----------------
+ drivers/acpi/pci_mcfg.c            | 40 ++++++++++++++++
+ drivers/pci/ecam.c                 |  6 +--
+ drivers/pci/host/Makefile          |  1 +
+ drivers/pci/host/mcfg-quirks.c     | 95 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/host/mcfg-quirks.h     | 24 ++++++++++
+ drivers/pci/host/pci-thunder-pem.c | 96 ++++++++++++++++++++++++++++++++------
+ include/linux/pci-acpi.h           |  5 ++
+ include/linux/pci-ecam.h           |  2 +-
+ 9 files changed, 254 insertions(+), 57 deletions(-)
+ create mode 100644 drivers/pci/host/mcfg-quirks.c
+ create mode 100644 drivers/pci/host/mcfg-quirks.h
 
 -- 
-
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+1.9.1
