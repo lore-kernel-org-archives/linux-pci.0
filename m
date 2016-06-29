@@ -1,60 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v13 09/16] powerpc/PCI: Keep resource idx order with bridge register number
-Date: Fri, 17 Jun 2016 19:24:54 -0700
-Message-Id: <20160618022501.15648-10-yinghai@kernel.org>
-In-Reply-To: <20160618022501.15648-1-yinghai@kernel.org>
-References: <20160618022501.15648-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+ <1467188859-28188-2-git-send-email-okaya@codeaurora.org>
+ <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
+ <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
+ <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <280859fd-07a0-9cea-c9d4-f956241e8986@codeaurora.org>
+Date: Wed, 29 Jun 2016 17:21:27 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ eric.auger@redhat.com, Jon Masters <jcm@redhat.com>,
+ Timur Tabi <timur@codeaurora.org>, Andy Gross <agross@codeaurora.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, tiwai@suse.com, perex@perex.cz,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Christopher Covington <cov@codeaurora.org>,
+ Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
+ linux-arm-msm@vger.kernel.org, Len Brown <lenb@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as sparc version.
+On 6/29/2016 5:19 PM, Rafael J. Wysocki wrote:
+> On Wed, Jun 29, 2016 at 8:47 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> On 6/29/2016 9:13 AM, Rafael J. Wysocki wrote:
+>>> On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>>> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+>>>> resource requirements") omitted the initially assigned POSSIBLE penalty
+>>>> when the IRQ is active.
+>>>
+>>> It would be good to say what can go wrong with that here.
+>>>
+>>
+>> I can add more description. Here is a first attempt.
+>>
+>> Incorrect calculation of penalty leads to ACPI code assigning the wrong
+>> interrupt number to PCI INTx interrupts.
+>>
+>> This would not be as bad as it sounds in theory. You would just cause the
+>> interrupts to be shared and observe performance penalty.
+>>
+>> However, some drivers like parallel port driver doesn't like interrupt
+>> sharing as in this example and causes all other PCI drivers sharing the interrupt
+>> to malfunction.
+>>
+>> The issue has not been caught because the behavior is platform specific
+>> and depends on the peripheral drivers sharing the IRQ.
+>>
+>> I can claim that this could be a BIOS bug. if interrupt 7 is not good for PCI,
+>> it shouldn't have been listed in the possible PCI interrupts to begin with.
+>> Given this is an existing platform, I don't think we have the luxury to request
+>> all BIOS to be updated. This bugfix is needed to support existing platforms.
+>>
+>>
+>> Feel free to request more information if the above description is not clear.
+> 
+> It is clear enough.  I can add it to the changelog when applying the patch.
 
-Make resource with consistent sequence
-like other arch or directly from pci_read_bridge_bases(),
-even when non-pref mmio is missing, or out of ordering in firmware reporting.
+OK
 
-Just hold i = 1 for non pref mmio, and i = 2 for pref mmio.
+> 
+>>
+>>>> The original code would assign the POSSIBLE value divided by the number
+>>>> of possible IRQs during initialization.
+>>>>
+>>>> Later, if the IRQ is chosen as the active IRQ or if the IRQ is in use
+>>>> by ISA; additional penalties get added.
+> 
+> Does "later" here mean "later in that code path" or "in a later patch"?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+"later in that code path"
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 526ac67..719f225 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -252,7 +252,7 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 		bus->resource[i] = res;
- 		++res;
- 	}
--	i = 1;
-+	i = 3;
- 	for (; len >= 32; len -= 32, ranges += 8) {
- 		flags = pci_parse_of_flags(of_read_number(ranges, 1), 1);
- 		size = of_read_number(&ranges[6], 2);
-@@ -265,6 +265,12 @@ void of_scan_pci_bridge(struct pci_dev *dev)
- 				       " for bridge %s\n", node->full_name);
- 				continue;
- 			}
-+		} else if ((flags & IORESOURCE_PREFETCH) &&
-+			   !bus->resource[2]->flags) {
-+			res = bus->resource[2];
-+		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
-+			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
-+			res = bus->resource[1];
- 		} else {
- 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
- 				printk(KERN_ERR "PCI: too many memory ranges"
+> 
+> Thanks,
+> Rafael
+> 
+
+
 -- 
-2.8.3
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
