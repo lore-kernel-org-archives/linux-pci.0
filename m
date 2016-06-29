@@ -1,159 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38280 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751857AbcFUB6A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jun 2016 21:58:00 -0400
-Date: Mon, 20 Jun 2016 20:57:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: Re: [RESEND PATCH v2 3/4] PCI: Add a new option for
- resource_alignment to reassign alignment
-Message-ID: <20160621015753.GC30307@localhost>
-References: <1464846411-16895-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1464846411-16895-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Return-Path: <jhugo@codeaurora.org>
+Return-Path: <jhugo@codeaurora.org>
+Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
+To: Tomasz Nowicki <tn@semihalf.com>,
+ Christopher Covington <cov@codeaurora.org>, Duc Dang <dhdang@apm.com>
+References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
+ <1467100442-28078-4-git-send-email-tn@semihalf.com>
+ <577275EA.7010002@codeaurora.org>
+ <CADaLNDkhPZuG7UJ4SK_j5v_nXbd782Q17LAcXduG0uEObaFF=g@mail.gmail.com>
+ <5773A773.8040700@semihalf.com> <5773CE49.1050802@codeaurora.org>
+ <5773D284.8060404@semihalf.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
+ Yijing Wang <wangyijing@huawei.com>, Andrea Gallo <andrea.gallo@linaro.org>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, linaro-acpi@lists.linaro.org,
+ David Daney <ddaney@caviumnetworks.com>, linux-acpi@vger.kernel.org,
+ Robert Richter <robert.richter@caviumnetworks.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Dongdong Liu <liudongdong3@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Liviu Dudau
+ <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Jon Masters <jcm@redhat.com>, Mark Salter <msalter@redhat.com>,
+ Marcin Wojtas <mw@semihalf.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>,
+ Jayachandran C <jchandra@broadcom.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ jeremy.linton@arm.com, Hanjun Guo <hanjun.guo@linaro.org>
+From: Jeffrey Hugo <jhugo@codeaurora.org>
+Message-ID: <a083360c-9b75-30f9-fe3c-ba968928fd92@codeaurora.org>
+Date: Wed, 29 Jun 2016 09:38:50 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464846411-16895-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5773D284.8060404@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 02, 2016 at 01:46:50PM +0800, Yongji Xie wrote:
-> When using resource_alignment kernel parameter, the current
-> implement reassigns the alignment by changing resources' size
-> which can potentially break some drivers. For example, the driver
-> uses the size to locate some register whose length is related
-> to the size.
-> 
-> This patch adds a new option "noresize" for the parameter to
-> solve this problem.
+On 6/29/2016 7:52 AM, Tomasz Nowicki wrote:
+> On 29.06.2016 15:34, Christopher Covington wrote:
+>> I'm confused by this statement. OEMID is defined as 6 bytes long and OEM
+>> Table ID as 8 bytes long in the ACPI specification. As far as I can
+>> tell, if your string isn't exactly that long, padding up to that length
+>> is required.
+>
+> Well, I cannot find that requirement in ACPI spec. but I might missed
+> something.
 
-Why do we ever want to change the resource's size?  I understand that
-you want to change the resource's *alignment*, and that part makes
-sense.  But why change the *size*?  Changing the resource size doesn't
-change the hardware BAR size; it just means the struct resource will
-describe a region larger than what the BAR actually claims.  That
-unnecessarily wastes space after the BAR.
+Have a look at table 5-29 in Section 5.2.6 which starts on page 114 of 
+ACPI 6.1
 
-This was a problem with the code even before your patch; I'm
-suggesting that if you have a way to change the alignment without
-changing the resource size, maybe we should do that all the time.
-Then you wouldn't need to add the "noresize" option.
+>
+> I dumped my x86 machine ACPI tables and here is an example of MCFG:
+>
+> $ cat mcfg.dsl
+> /*
+>  * Intel ACPI Component Architecture
+>  * AML/ASL+ Disassembler version 20160108-64
+>  * Copyright (c) 2000 - 2016 Intel Corporation
+>  *
+>  * Disassembly of mcfg.dat, Wed Jun 29 15:48:16 2016
+>  *
+>  * ACPI Data Table [MCFG]
+>  *
+>  * Format: [HexOffset DecimalOffset ByteLength]  FieldName : FieldValue
+>  */
+>
+> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
+> Configuration table]
+> [004h 0004   4]                 Table Length : 0000003C
+> [008h 0008   1]                     Revision : 01
+> [009h 0009   1]                     Checksum : A9
+> [00Ah 0010   6]                       Oem ID : "ALASKA"
+> [010h 0016   8]                 Oem Table ID : "A M I"
+> [018h 0024   4]                 Oem Revision : 01072009
+> [01Ch 0028   4]              Asl Compiler ID : "MSFT"
+> [020h 0032   4]        Asl Compiler Revision : 00000097
+>
+> [024h 0036   8]                     Reserved : 0000000000000000
+>
+> [02Ch 0044   8]                 Base Address : 00000000F8000000
+> [034h 0052   2]         Segment Group Number : 0000
+> [036h 0054   1]             Start Bus Number : 00
+> [037h 0055   1]               End Bus Number : 3F
+> [038h 0056   4]                     Reserved : 00000000
+>
+> Raw Table Data: Length 60 (0x3C)
+>
+> 00000000  4d 43 46 47 3c 00 00 00  01 a9 41 4c 41 53 4b 41
+> |MCFG<.....ALASKA|
+> 00000010  41 20 4d 20 49 00 00 00  09 20 07 01 4d 53 46 54  |A M I....
+> ..MSFT|
+> 00000020  97 00 00 00 00 00 00 00  00 00 00 00 00 00 00 f8
+> |................|
+> 00000030  00 00 00 00 00 00 00 3f  00 00 00 00              |.......?....|
+>
+> So in this example I have OEM table ID "A M I" 6 character long and 0
+> padding.
+>
+> Tomasz
+>
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  Documentation/kernel-parameters.txt |    5 ++++-
->  drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
->  2 files changed, 29 insertions(+), 11 deletions(-)
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 82b42c9..c4802f5 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2997,13 +2997,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				window. The default value is 64 megabytes.
->  		resource_alignment=
->  				Format:
-> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-> +				[<order of align>@][<domain>:]<bus>:<slot>.<func>
-> +				[:noresize][; ...]
->  				Specifies alignment and device to reassign
->  				aligned memory resources.
->  				If <order of align> is not specified,
->  				PAGE_SIZE is used as alignment.
->  				PCI-PCI bridge can be specified, if resource
->  				windows need to be expanded.
-> +				noresize: Don't change the resources' sizes when
-> +				reassigning alignment.
->  		ecrc=		Enable/disable PCIe ECRC (transaction layer
->  				end-to-end CRC checking).
->  				bios: Use BIOS/firmware settings. This is the
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a259394..3ee13e5 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4748,11 +4748,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
->  /**
->   * pci_specified_resource_alignment - get resource alignment specified by user.
->   * @dev: the PCI device to get
-> + * @resize: whether or not to change resources' size when reassigning alignment
->   *
->   * RETURNS: Resource alignment if it is specified.
->   *          Zero if it is not specified.
->   */
-> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-> +		bool *resize)
->  {
->  	int seg, bus, slot, func, align_order, count;
->  	resource_size_t align = 0;
-> @@ -4786,6 +4788,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->  			}
->  		}
->  		p += count;
-> +		if (!strncmp(p, ":noresize", 9)) {
-> +			*resize = false;
-> +			p += 9;
-> +		} else
-> +			*resize = true;
->  		if (seg == pci_domain_nr(dev->bus) &&
->  			bus == dev->bus->number &&
->  			slot == PCI_SLOT(dev->devfn) &&
-> @@ -4818,11 +4825,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  {
->  	int i;
->  	struct resource *r;
-> +	bool resize = true;
->  	resource_size_t align, size;
->  	u16 command;
->  
->  	/* check if specified PCI is target device to reassign */
-> -	align = pci_specified_resource_alignment(dev);
-> +	align = pci_specified_resource_alignment(dev, &resize);
->  	if (!align)
->  		return;
->  
-> @@ -4844,15 +4852,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  		if (!(r->flags & IORESOURCE_MEM))
->  			continue;
->  		size = resource_size(r);
-> -		if (size < align) {
-> -			size = align;
-> -			dev_info(&dev->dev,
-> -				"Rounding up size of resource #%d to %#llx.\n",
-> -				i, (unsigned long long)size);
-> +		if (resize) {
-> +			if (size < align) {
-> +				size = align;
-> +				dev_info(&dev->dev,
-> +					"Rounding up size of resource #%d to %#llx.\n",
-> +					i, (unsigned long long)size);
-> +			}
-> +			r->flags |= IORESOURCE_UNSET;
-> +			r->end = size - 1;
-> +			r->start = 0;
-> +		} else {
-> +			r->flags &= ~IORESOURCE_SIZEALIGN;
-> +			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-> +			r->start = max(align, size);
-> +			r->end = r->start + size - 1;
->  		}
-> -		r->flags |= IORESOURCE_UNSET;
-> -		r->end = size - 1;
-> -		r->start = 0;
->  	}
->  	/* Need to disable bridge's resource window,
->  	 * to enable the kernel to reassign new resource
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Jeffrey Hugo
+Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
