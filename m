@@ -1,164 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36233 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbcFHRAd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2016 13:00:33 -0400
-Received: by mail-oi0-f67.google.com with SMTP id d132so2738474oig.3
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jun 2016 10:00:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <E607265CB020454880711A6F96C05A037CABE1C2@hasmsx107.ger.corp.intel.com>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
- <20160524105506.GB5396@wunner.de> <E607265CB020454880711A6F96C05A0377FBD337@hasmsx107.ger.corp.intel.com>
- <CAMxnaaUz8nhqVc8ubaOVhSjkcwMUUYZjn5NvJ=mTkGk_SvD8Qg@mail.gmail.com> <E607265CB020454880711A6F96C05A037CABE1C2@hasmsx107.ger.corp.intel.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Wed, 8 Jun 2016 19:00:13 +0200
-Message-ID: <CAMxnaaUdma9bq0HvdgK603j7HL36rBLwvmviVOaT0O6TZY524Q@mail.gmail.com>
-Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM) networking
-To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Jamet, Michael" <michael.jamet@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Svahn, Kai" <kai.svahn@intel.com>,
-	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40048 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751525AbcF2SOp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 14:14:45 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5TIAcXk032496
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 14:14:44 -0400
+Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23v097xd15-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 14:14:44 -0400
+Received: from localhost
+	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Wed, 29 Jun 2016 15:14:42 -0300
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 926581DC0071
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 14:14:31 -0400 (EDT)
+Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
+	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u5TIEdZs28246422
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 15:14:39 -0300
+Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
+	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u5TIEb6o014387
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jun 2016 15:14:38 -0300
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
+	benh@kernel.crashing.org, imunsie@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, paulus@samba.org, mikey@neuling.org,
+	andrew.donnellan@au1.ibm.com, bhelgaas@google.com,
+	gpiccoli@linux.vnet.ibm.com, frederic.barrat@fr.ibm.com,
+	mrochs@linux.vnet.ibm.com
+Subject: [PATCH v7] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Date: Wed, 29 Jun 2016 15:14:22 -0300
+Message-Id: <1467224062-9173-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 1, 2016 at 2:22 PM, Levy, Amir (Jer)
-<amir.jer.levy@intel.com> wrote:
->> -----Original Message-----
->> From: Andreas Noever [mailto:andreas.noever@gmail.com]
->> Sent: Wednesday, May 25, 2016 02:25
->> To: Levy, Amir (Jer) <amir.jer.levy@intel.com>
->> Cc: Lukas Wunner <lukas@wunner.de>; gregkh@linuxfoundation.org;
->> bhelgaas@google.com; linux-pci@vger.kernel.org; Jamet, Michael
->> <michael.jamet@intel.com>; Alloun, Dan <dan.alloun@intel.com>;
->> Westerberg, Mika <mika.westerberg@intel.com>; Svahn, Kai
->> <kai.svahn@intel.com>; Shevchenko, Andriy
->> <andriy.shevchenko@intel.com>; Winkler, Tomas
->> <tomas.winkler@intel.com>
->> Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM)
->> networking
->>
->> On Tue, May 24, 2016 at 3:58 PM, Levy, Amir (Jer) <amir.jer.levy@intel.com>
->> wrote:
->> >> -----Original Message-----
->> >> From: Lukas Wunner [mailto:lukas@wunner.de]
->> >> Sent: Tuesday, May 24, 2016 13:55
->> >> To: Levy, Amir (Jer) <amir.jer.levy@intel.com>
->> >> Cc: andreas.noever@gmail.com; gregkh@linuxfoundation.org;
->> >> bhelgaas@google.com; linux-pci@vger.kernel.org; Jamet, Michael
->> >> <michael.jamet@intel.com>; Alloun, Dan <dan.alloun@intel.com>;
->> >> Westerberg, Mika <mika.westerberg@intel.com>; Svahn, Kai
->> >> <kai.svahn@intel.com>; Shevchenko, Andriy
->> >> <andriy.shevchenko@intel.com>; Winkler, Tomas
->> >> <tomas.winkler@intel.com>
->> >> Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM)
->> >> networking
->> >>
->> >> Hi Amir,
->> >>
->> >> On Mon, May 23, 2016 at 11:48:50AM +0300, Amir Levy wrote:
->> >> > Thunderbolt(TM) networking, introduced in these patches, provides
->> >> > the capability of connecting hosts together by emulating an Ethernet
->> adapter.
->> >>
->> >> Thank you for this contribution. I think it may take some time to
->> >> review everything, for now just some general observations:
->> >>
->> >> - Up until now this driver was Mac-only. IIUC the functionality you're
->> >>   adding will also be used on non-Macs. That's an important change that
->> >>   should probably be made more explicit in the commit messages. Did you
->> >>   test your patches on a Mac to see that nothing regresses?
->> >
->> > Yes, we did some tests on MacBook Pro with Falcon Ridge.
->> > Note that (as written in the cover letter), the functionality that we are
->> adding is based on ICM (Intel Connection Manager, firmware).
->> > These patches will keep the current functionality on Mac and will add the
->> networking functionality on non-Macs.
->>
->> Hi Amir,
->>
->> First of all thanks for contributing this. It is certainly good to see Intel help out
->> with the driver.
->
-> Hi Andreas,
-> Thank you for the comments.
->
->>
->> I only did a cursory read, but already have a few questions concerning the
->> ICM and its relation to the rest of the driver:
->> - Is the ICM only responsible for networking or does it also handle pci
->> tunnels, DP, ...?
->
-> ICM is responsible for PCI tunnels and DP as well.
->
->> - Your code only supports TB2,3. Afaik Apple supports IP over TB also on TB 1.
->> What are the obstacles to support first generation chips?
->
-> Intel decided to support Thunderbolt Networking from generation 2.
->
->> - Related to the above: if some of the registers are available only for some
->> chips then please document this in nhi_regs.h (and other places).
->> - Is it possible to use the ICM on Apple hardware?
->
-> We don't know if Apple supports it or plans to support it.
->
->>
->> Your patch essentially splits the driver into two. You add an if statement to
->> nhi_probe which either runs your code or the old one.
->> This is just silly (you might as well add a separate driver). At least parts of the
->> functionality are already implemented. For example patch
->> 2 has large overlap with what is currently handled by nhi.c/ctl.c
->> (reading/writing the ring buffer and handling communication with the PDF). I
->> understand that the interface provided by ring_rx/ring_tx is not a good
->> match for high speed networking introduced in the later patches. But then
->> you should refactor it to provide what you need instead of reimplementing
->> all the functionality.
->
-> We had a lot of discussions around the driver separation topic and we also consulted some Linux contributors in Intel and got to the conclusion that one driver will be better.
-> If you recommend to do it in separate driver, I'll send new patches.
-> Do you have preference how the separation should be?
-> I thought about defining icm_nhi.c as a module_init and in contrast to the original driver, if dmi_match(Apple) return error.
-Well I would prefer it to be in a single driver, but without
-duplicated functionality.
+The domain/PHB field of PCI addresses has its value obtained from a
+global variable, incremented each time a new domain (represented by
+struct pci_controller) is added on the system. The domain addition
+process happens during boot or due to PHB hotplug add.
 
-There are two parts to your driver:
- 1) The part that talks to the ICM to setup thunderbolt paths between
-two controllers.
- 2) The network driver.
+As recent kernels are using predictable naming for network interfaces,
+the network stack is more tied to PCI naming. This can be a problem in
+hotplug scenarios, because PCI addresses will change if devices are
+removed and then re-added. This situation seems unusual, but it can
+happen if a user wants to replace a NIC without rebooting the machine,
+for example.
 
-I have no experience with networking and we have analoge to 2) in the
-current driver. So this is fine from my perspective. As far as I can
-tell the network driver just needs to be given a thunderbolt path
-(which rx/tx ring to use on the nhi) and is otherwise self contained.
-This is interesting to me since I would like to try to implement
-networking on Apple hardware.
+This patch changes the way PCI domain values are generated: now, we use
+device-tree properties to assign fixed PHB numbers to PCI addresses
+when available (meaning pSeries and PowerNV cases). We also use a bitmap
+to allow dynamic PHB numbering when device-tree properties are not
+used. This bitmap keeps track of used PHB numbers and if a PHB is
+released (by hotplug operations for example), it allows the reuse of
+this PHB number, avoiding PCI address to change in case of device remove
+and re-add soon after. No functional changes were introduced.
 
-1) communicates with the ICM by writing  SW_TO_FW/FW_TO_SW packages to
-the control channel (or "raw mode", "PDF", ... not sure what the
-correct terminology is). The code to drive the control channel is
-already present in ctl.c (we just use raw config_read/write packages).
-Why can't you reuse all the plumbing code from there (pushing packages
-onto the ring, handling interrupts etc..). I think it should be
-possible to add support for the two new package types to ctl.c and
-then work with them from say thunderbolt_alloc_and_start (instead of
-scanning the root switch just talk to the icm...).
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
+---
+v7:
+    * Removed the goto as per Michael's suggestion;
 
-Btw, what is the sequence of ICM commands needed to establish get a
-network path setup? Is that supposed to be done from userspace?
+    * Changed of_property_read_u32_array() to of_property_read_u32_index(),
+as per Gavin's suggestion. This way, we end up using buid_low as the index
+of PHB in pSeries, which is expected but was not being achieved in v6,
+as per my mistake.
 
->>
->> Lastly, why do you need a user mode component? What does it do?
->
-> The general concept was to keep as minimum as possible in kernel and move some of the logic to user space.
-> This will give us the option to have minimal changes in kernel module in the future, and to release features in a timely manner.
-> Also it is a preparation to some of the features that will require user interaction.
->
->>
->> Andreas
+    * Didn't remove machine check for pSeries on "reg" property lookup.
+It's worthy to keep it, since almost every platform (if not all of them)
+contain the "reg" property on PHB node in device-tree, but only in
+pSeries we're 100% sure it can be used as the PHB unique identifier.
+Since the patch has a dynamic PHB numbering mechanism, the other platforms
+won't have trouble with it.
+
+ arch/powerpc/kernel/pci-common.c | 53 +++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 50 insertions(+), 3 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..c87545b 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -41,11 +41,18 @@
+ #include <asm/ppc-pci.h>
+ #include <asm/eeh.h>
+ 
++/* hose_spinlock protects accesses to the the phb_bitmap. */
+ static DEFINE_SPINLOCK(hose_spinlock);
+ LIST_HEAD(hose_list);
+ 
+-/* XXX kill that some day ... */
+-static int global_phb_number;		/* Global phb counter */
++/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
++#define MAX_PHBS 0x10000
++
++/*
++ * For dynamic PHB numbering: used/free PHBs tracking bitmap.
++ * Accesses to this bitmap should be protected by hose_spinlock.
++ */
++static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
+ 
+ /* ISA Memory physical address */
+ resource_size_t isa_mem_base;
+@@ -64,6 +71,41 @@ struct dma_map_ops *get_pci_dma_ops(void)
+ }
+ EXPORT_SYMBOL(get_pci_dma_ops);
+ 
++/*
++ * This function should run under locking protection, specifically
++ * hose_spinlock.
++ */
++static int get_phb_number(struct device_node *dn)
++{
++	u64 prop;
++	int ret, phb_id = -1;
++
++	/*
++	 * Try fixed PHB numbering first, by checking archs and reading
++	 * the respective device-tree properties. Firstly, try PowerNV by
++	 * reading "ibm,opal-phbid", only present in OPAL environment.
++	 */
++	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
++	if (ret && machine_is(pseries))
++		ret = of_property_read_u32_index(dn, "reg", 1, (u32 *)&prop);
++	if (!ret)
++		phb_id = (int)(prop & (MAX_PHBS - 1));
++
++	/* We need to be sure to not use the same PHB number twice. */
++	if ((phb_id >= 0) && !test_and_set_bit(phb_id, phb_bitmap))
++		return phb_id;
++
++	/*
++	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
++	 * the same PHB number twice, then fallback to dynamic PHB numbering.
++	 */
++	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
++	BUG_ON(phb_id >= MAX_PHBS);
++	set_bit(phb_id, phb_bitmap);
++
++	return phb_id;
++}
++
+ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ {
+ 	struct pci_controller *phb;
+@@ -72,7 +114,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ 	if (phb == NULL)
+ 		return NULL;
+ 	spin_lock(&hose_spinlock);
+-	phb->global_number = global_phb_number++;
++	phb->global_number = get_phb_number(dev);
+ 	list_add_tail(&phb->list_node, &hose_list);
+ 	spin_unlock(&hose_spinlock);
+ 	phb->dn = dev;
+@@ -94,6 +136,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
+ void pcibios_free_controller(struct pci_controller *phb)
+ {
+ 	spin_lock(&hose_spinlock);
++
++	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
++	if (phb->global_number < MAX_PHBS)
++		clear_bit(phb->global_number, phb_bitmap);
++
+ 	list_del(&phb->list_node);
+ 	spin_unlock(&hose_spinlock);
+ 
+-- 
+2.1.0
+
