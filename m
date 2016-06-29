@@ -1,227 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>, <tglx@linutronix.de>,
-	<jason@lakedaemon.net>, <rjw@rjwysocki.net>, <bhelgaas@google.com>,
-	<lorenzo.pieralisi@arm.com>, <robert.richter@caviumnetworks.com>,
-	<shijie.huang@arm.com>, <Suravee.Suthikulpanit@amd.com>,
-	<hanjun.guo@linaro.org>
-References: <1466420541-20101-2-git-send-email-tn@semihalf.com>
- <1466598909-27504-1-git-send-email-tn@semihalf.com>
- <576A91CC.3000101@arm.com> <576A9824.1060400@semihalf.com>
- <576AA603.3080505@arm.com>
-CC: <al.stone@linaro.org>, <mw@semihalf.com>,
-	<graeme.gregory@linaro.org>, <Catalin.Marinas@arm.com>,
-	<will.deacon@arm.com>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <ddaney.cavm@gmail.com>,
-	<okaya@codeaurora.org>, <andrea.gallo@linaro.org>,
-	<linux-pci@vger.kernel.org>
-From: Hanjun Guo <guohanjun@huawei.com>
-Message-ID: <576B3CBD.60309@huawei.com>
-Date: Thu, 23 Jun 2016 09:34:53 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34972 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230AbcF2VTk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 17:19:40 -0400
 MIME-Version: 1.0
-In-Reply-To: <576AA603.3080505@arm.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+ <1467188859-28188-2-git-send-email-okaya@codeaurora.org> <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
+ <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 29 Jun 2016 23:19:38 +0200
+Message-ID: <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
+Subject: Re: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Timur Tabi <timur@codeaurora.org>,
+	Christopher Covington <cov@codeaurora.org>,
+	Jon Masters <jcm@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
+	Andy Gross <agross@codeaurora.org>,
+	linux-arm-msm@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
+	perex@perex.cz, tiwai@suse.com,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/6/22 22:51, Marc Zyngier wrote:
-> On 22/06/16 14:52, Tomasz Nowicki wrote:
->> On 22.06.2016 15:25, Marc Zyngier wrote:
->>> On 22/06/16 13:35, Tomasz Nowicki wrote:
->>>> IORT shows representation of IO topology for ARM based systems.
->>>> It describes how various components are connected together on
->>>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
->>>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>>>
->>>> Initial support allows to detect IORT table presence and save its
->>>> root pointer obtained through acpi_get_table(). The pointer validity
->>>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
->>>> is not set while using IORT nodes we would dereference unmapped pointers.
->>>>
->>>> For the aforementioned reason call iort_table_detect() from acpi_init()
->>>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->>>>
->>>> Add generic helpers which are helpful for scanning and retrieving
->>>> information from IORT table content. List of the most important helpers:
->>>> - iort_find_dev_node() finds IORT node for a given device
->>>> - iort_node_map_rid() maps device RID and returns IORT node which provides
->>>>    final translation
->>>>
->>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->>>> ---
->>>>   drivers/acpi/Kconfig  |   3 +
->>>>   drivers/acpi/Makefile |   1 +
->>>>   drivers/acpi/bus.c    |   2 +
->>>>   drivers/acpi/iort.c   | 217 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>>>   include/linux/iort.h  |  30 +++++++
->>>>   5 files changed, 253 insertions(+)
->>>>   create mode 100644 drivers/acpi/iort.c
->>>>   create mode 100644 include/linux/iort.h
->>>>
->>>> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
->>>> index b7e2e77..848471f 100644
->>>> --- a/drivers/acpi/Kconfig
->>>> +++ b/drivers/acpi/Kconfig
->>>> @@ -57,6 +57,9 @@ config ACPI_SYSTEM_POWER_STATES_SUPPORT
->>>>   config ACPI_CCA_REQUIRED
->>>>   	bool
->>>>
->>>> +config IORT_TABLE
->>>> +	bool
->>>> +
->>>>   config ACPI_DEBUGGER
->>>>   	bool "AML debugger interface"
->>>>   	select ACPI_DEBUG
->>>> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
->>>> index 251ce85..c7c9b29 100644
->>>> --- a/drivers/acpi/Makefile
->>>> +++ b/drivers/acpi/Makefile
->>>> @@ -82,6 +82,7 @@ obj-$(CONFIG_ACPI_CUSTOM_METHOD)+= custom_method.o
->>>>   obj-$(CONFIG_ACPI_BGRT)		+= bgrt.o
->>>>   obj-$(CONFIG_ACPI_CPPC_LIB)	+= cppc_acpi.o
->>>>   obj-$(CONFIG_ACPI_DEBUGGER_USER) += acpi_dbg.o
->>>> +obj-$(CONFIG_IORT_TABLE) 	+= iort.o
->>>>
->>>>   # processor has its own "processor." module_param namespace
->>>>   processor-y			:= processor_driver.o
->>>> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
->>>> index 31e8da6..176c17d 100644
->>>> --- a/drivers/acpi/bus.c
->>>> +++ b/drivers/acpi/bus.c
->>>> @@ -33,6 +33,7 @@
->>>>   #ifdef CONFIG_X86
->>>>   #include <asm/mpspec.h>
->>>>   #endif
->>>> +#include <linux/iort.h>
->>>>   #include <linux/pci.h>
->>>>   #include <acpi/apei.h>
->>>>   #include <linux/dmi.h>
->>>> @@ -1118,6 +1119,7 @@ static int __init acpi_init(void)
->>>>   	}
->>>>
->>>>   	pci_mmcfg_late_init();
->>>> +	iort_table_detect();
->>>>   	acpi_scan_init();
->>>>   	acpi_ec_init();
->>>>   	acpi_debugfs_init();
->>>> diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
->>>> new file mode 100644
->>>> index 0000000..fcfa008f
->>>> --- /dev/null
->>>> +++ b/drivers/acpi/iort.c
->>>> @@ -0,0 +1,217 @@
->>>> +/*
->>>> + * Copyright (C) 2016, Semihalf
->>>> + *	Author: Tomasz Nowicki <tn@semihalf.com>
->>>> + *
->>>> + * This program is free software; you can redistribute it and/or modify it
->>>> + * under the terms and conditions of the GNU General Public License,
->>>> + * version 2, as published by the Free Software Foundation.
->>>> + *
->>>> + * This program is distributed in the hope it will be useful, but WITHOUT
->>>> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
->>>> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
->>>> + * more details.
->>>> + *
->>>> + * This file implements early detection/parsing of I/O mapping
->>>> + * reported to OS through firmware via I/O Remapping Table (IORT)
->>>> + * IORT document number: ARM DEN 0049A
->>>> + */
->>>> +
->>>> +#define pr_fmt(fmt)	"ACPI: IORT: " fmt
->>>> +
->>>> +#include <linux/iort.h>
->>>> +#include <linux/kernel.h>
->>>> +#include <linux/pci.h>
->>>> +
->>>> +typedef acpi_status (*iort_find_node_callback)
->>>> +	(struct acpi_iort_node *node, void *context);
->>>> +
->>>> +/* Root pointer to the mapped IORT table */
->>>> +static struct acpi_table_header *iort_table;
->>>> +
->>>> +static struct acpi_iort_node *
->>>> +iort_scan_node(enum acpi_iort_node_type type,
->>>> +	       iort_find_node_callback callback, void *context)
->>>> +{
->>>> +	struct acpi_iort_node *iort_node, *iort_end;
->>>> +	struct acpi_table_iort *iort;
->>>> +	int i;
->>>> +
->>>> +	/* Get the first IORT node */
->>>> +	iort = (struct acpi_table_iort *)iort_table;
->>>> +	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
->>>> +				 iort->node_offset);
->>>> +	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
->>>> +				iort_table->length);
->>>> +
->>>> +	for (i = 0; i < iort->node_count; i++) {
->>>> +		if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
->>>> +			       "IORT node pointer overflows, bad table!\n"))
->>>> +			return NULL;
->>>> +
->>>> +		if (iort_node->type == type) {
->>>> +			if (ACPI_SUCCESS(callback(iort_node, context)))
->>>> +				return iort_node;
->>>> +		}
->>>> +
->>>> +		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
->>>> +					 iort_node->length);
->>>> +	}
->>>> +
->>>> +	return NULL;
->>>> +}
->>>> +
->>>> +static acpi_status
->>>> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
->>>> +{
->>>> +	struct device *dev = context;
->>>> +
->>>> +	switch (node->type) {
->>>> +	case ACPI_IORT_NODE_NAMED_COMPONENT: {
->>>> +		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
->>>> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
->>>> +		struct acpi_iort_named_component *ncomp;
->>>> +
->>>> +		if (!adev)
->>>> +			break;
->>>> +
->>>> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
->>>> +
->>>> +		if (ACPI_FAILURE(acpi_get_name(adev->handle,
->>>> +					       ACPI_FULL_PATHNAME, &buffer))) {
->>>> +			dev_warn(dev, "Can't get device full path name\n");
->>>> +		} else {
->>>> +			int match;
->>>> +
->>>> +			match = !strcmp(ncomp->device_name, buffer.pointer);
->>>> +			kfree(buffer.pointer);
->>> Why did you change this to a naked kfree? The ACPI code clearly states:
+On Wed, Jun 29, 2016 at 8:47 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 6/29/2016 9:13 AM, Rafael J. Wysocki wrote:
+>> On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+>>> resource requirements") omitted the initially assigned POSSIBLE penalty
+>>> when the IRQ is active.
+>>
+>> It would be good to say what can go wrong with that here.
+>>
+>
+> I can add more description. Here is a first attempt.
+>
+> Incorrect calculation of penalty leads to ACPI code assigning the wrong
+> interrupt number to PCI INTx interrupts.
+>
+> This would not be as bad as it sounds in theory. You would just cause the
+> interrupts to be shared and observe performance penalty.
+>
+> However, some drivers like parallel port driver doesn't like interrupt
+> sharing as in this example and causes all other PCI drivers sharing the interrupt
+> to malfunction.
+>
+> The issue has not been caught because the behavior is platform specific
+> and depends on the peripheral drivers sharing the IRQ.
+>
+> I can claim that this could be a BIOS bug. if interrupt 7 is not good for PCI,
+> it shouldn't have been listed in the possible PCI interrupts to begin with.
+> Given this is an existing platform, I don't think we have the luxury to request
+> all BIOS to be updated. This bugfix is needed to support existing platforms.
+>
+>
+> Feel free to request more information if the above description is not clear.
+
+It is clear enough.  I can add it to the changelog when applying the patch.
+
+>
+>>> The original code would assign the POSSIBLE value divided by the number
+>>> of possible IRQs during initialization.
 >>>
->>> /*
->>>   * Allocate a new buffer. We directectly call acpi_os_allocate here to
->>>   * purposefully bypass the (optionally enabled) internal allocation
->>>   * tracking mechanism since we only want to track internal
->>>   * allocations. Note: The caller should use acpi_os_free to free this
->>>   * buffer created via ACPI_ALLOCATE_BUFFER.
->>>   */
->> Yes we should use symmetric free function to acpi_os_allocate here, 
->> which means acpi_os_free should be used here.
->>
->> My main motivation was to free buffer.pointer instead of &buffer
+>>> Later, if the IRQ is chosen as the active IRQ or if the IRQ is in use
+>>> by ISA; additional penalties get added.
 
-It needs to be free buffer.pointer.
+Does "later" here mean "later in that code path" or "in a later patch"?
 
->>
->> Would you mind to fix that (s/kfree/acpi_os_free) before merging ?
-> Sure.
-
-I tracked Marc's tree on git.kernel.org, it's  acpi_os_free(buffer.pointer) there so
-my worry is gone :)
-
-Thanks
-Hanjun
-
-
+Thanks,
+Rafael
