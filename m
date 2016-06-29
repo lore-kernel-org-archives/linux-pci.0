@@ -1,44 +1,58 @@
-Return-Path: <jonathan.yong@intel.com>
-Return-Path: <jonathan.yong@intel.com>
-Message-ID: <57286935.3090409@intel.com>
-Date: Tue, 03 May 2016 17:02:45 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 4/4] ACPI,PCI,IRQ: correct operator precedence
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+ <1467188859-28188-5-git-send-email-okaya@codeaurora.org>
+ <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
+ <d22fd8f7-7028-b4b7-6677-6903685034aa@codeaurora.org>
+ <CAJZ5v0h1o5C8t+QJuFo93uZt0XuPNwtXFs5XSBkhm-fARWqi2g@mail.gmail.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Timur Tabi <timur@codeaurora.org>,
+	Christopher Covington <cov@codeaurora.org>,
+	Jon Masters <jcm@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
+	Andy Gross <agross@codeaurora.org>,
+	linux-arm-msm@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
+	perex@perex.cz, tiwai@suse.com,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <96388f6b-f8b1-5720-4725-3f0ec0f5d1c3@codeaurora.org>
+Date: Wed, 29 Jun 2016 17:19:13 -0400
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [RFC v4] PCI: PTM Driver
-References: <1461047358-4736-1-git-send-email-jonathan.yong@intel.com> <20160429141750.GB949@localhost>
-In-Reply-To: <20160429141750.GB949@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAJZ5v0h1o5C8t+QJuFo93uZt0XuPNwtXFs5XSBkhm-fARWqi2g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/29/2016 22:17, Bjorn Helgaas wrote:
-> On Tue, Apr 19, 2016 at 06:29:17AM +0000, Yong, Jonathan wrote:
->> Hello LKML,
+On 6/29/2016 5:14 PM, Rafael J. Wysocki wrote:
+> On Wed, Jun 29, 2016 at 8:29 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> On 6/29/2016 9:16 AM, Rafael J. Wysocki wrote:
+>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>> Well, this is a rather obvious one, so I'm wondering why it is the
+>>> last one in the series?
+>>>
 >>
->> This is a preliminary implementation of the PTM[1] support driver. This driver
->> has only been tested against a virtual PCI bus since there are no known
->> endpoints utilizing it yet.
->
-> What sort of testing is this, exactly?  Is this using a software model
-> of devices that support PTM?
->
+>> The first three are more relevant to each other. It makes easy to
+>> correlate the changes.
+> 
+> But this one doesn't seem to depend on them and it could be applied
+> without them, right?
+> 
 
-We wrote another driver to fake the PCI config space with pci_scan_bus, 
-with fake switches and fake devices. Convenient since the driver only 
-deals with the config space.
+Sure. It has no dependency. 
 
-> When will hardware that supports PTM be available to you for testing?
-> When will it be available on the market?
->
 
-I don't have any dates for when consumer endpoints will hit the market. 
-PTM aware FPGA device models might come around Q3/Q4 this year, with 
-exercisers around 2017.
+> Thanks,
+> Rafael
+> 
 
-> I'm trying to figure out whether there's any benefit to merging
-> something before it is useful to anybody.
->
 
-True it won't be useful to anybody until such a device is available. 
-What is the general policy for future hardware standards?
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
