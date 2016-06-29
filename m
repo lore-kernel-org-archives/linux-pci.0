@@ -1,168 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34719 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751713AbcGADgR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 23:36:17 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u612JCfH128809
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 22:25:12 -0400
-Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23w62f1seq-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 22:25:12 -0400
-Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 1 Jul 2016 12:25:08 +1000
-Date: Fri, 1 Jul 2016 12:25:03 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: Re: [PATCH v3 4/7] PCI: Add a new option for resource_alignment to
- reassign alignment
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1467283993-3185-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1467283993-3185-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <20160701022503.GA6739@gwshan>
+Received: from mga11.intel.com ([192.55.52.93]:55440 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751482AbcF2Ih1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jun 2016 04:37:27 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v2 3/8] thunderbolt: Updating the register definitions
+Date: Wed, 29 Jun 2016 11:35:31 +0300
+Message-Id: <1467189336-29556-4-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
+References: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 30, 2016 at 06:53:10PM +0800, Yongji Xie wrote:
->When using resource_alignment kernel parameter, the current
->implement reassigns the alignment by changing resources' size
->which can potentially break some drivers. For example, the driver
->uses the size to locate some register whose length is related
->to the size.
->
->This patch adds a new option "noresize" for the parameter to
->solve this problem.
->
->Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Adding more Thunderbolt(TM) register definitions
+and some helper macros.
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
 
->---
-> Documentation/kernel-parameters.txt |    5 ++++-
-> drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
-> 2 files changed, 29 insertions(+), 11 deletions(-)
->
->diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->index 82b42c9..c4802f5 100644
->--- a/Documentation/kernel-parameters.txt
->+++ b/Documentation/kernel-parameters.txt
->@@ -2997,13 +2997,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> 				window. The default value is 64 megabytes.
-> 		resource_alignment=
-> 				Format:
->-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
->+				[<order of align>@][<domain>:]<bus>:<slot>.<func>
->+				[:noresize][; ...]
-> 				Specifies alignment and device to reassign
-> 				aligned memory resources.
-> 				If <order of align> is not specified,
-> 				PAGE_SIZE is used as alignment.
-> 				PCI-PCI bridge can be specified, if resource
-> 				windows need to be expanded.
->+				noresize: Don't change the resources' sizes when
->+				reassigning alignment.
-> 		ecrc=		Enable/disable PCIe ECRC (transaction layer
-> 				end-to-end CRC checking).
-> 				bios: Use BIOS/firmware settings. This is the
->diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->index 6241cfc..1d80a94 100644
->--- a/drivers/pci/pci.c
->+++ b/drivers/pci/pci.c
->@@ -4748,11 +4748,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
-> /**
->  * pci_specified_resource_alignment - get resource alignment specified by user.
->  * @dev: the PCI device to get
->+ * @resize: whether or not to change resources' size when reassigning alignment
->  *
->  * RETURNS: Resource alignment if it is specified.
->  *          Zero if it is not specified.
->  */
->-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->+		bool *resize)
-> {
-> 	int seg, bus, slot, func, align_order, count;
-> 	resource_size_t align = 0;
->@@ -4787,6 +4789,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> 			}
-> 		}
-> 		p += count;
->+		if (!strncmp(p, ":noresize", 9)) {
->+			*resize = false;
->+			p += 9;
->+		} else
->+			*resize = true;
-> 		if (seg == pci_domain_nr(dev->bus) &&
-> 			bus == dev->bus->number &&
-> 			slot == PCI_SLOT(dev->devfn) &&
->@@ -4819,6 +4826,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> {
-> 	int i;
-> 	struct resource *r;
->+	bool resize = true;
-> 	resource_size_t align, size;
->
-> 	/* We should never try to reassign VF's alignment */
->@@ -4826,7 +4834,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> 		return;
->
-> 	/* check if specified PCI is target device to reassign */
->-	align = pci_specified_resource_alignment(dev);
->+	align = pci_specified_resource_alignment(dev, &resize);
-> 	if (!align)
-> 		return;
->
->@@ -4848,15 +4856,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> 			continue;
-> 		}
-> 		size = resource_size(r);
->-		if (size < align) {
->-			size = align;
->-			dev_info(&dev->dev,
->-				"Rounding up size of resource #%d to %#llx.\n",
->-				i, (unsigned long long)size);
->+		if (resize) {
->+			if (size < align) {
->+				size = align;
->+				dev_info(&dev->dev,
->+					"Rounding up size of resource #%d to %#llx.\n",
->+					i, (unsigned long long)size);
->+			}
->+			r->flags |= IORESOURCE_UNSET;
->+			r->end = size - 1;
->+			r->start = 0;
->+		} else {
->+			r->flags &= ~IORESOURCE_SIZEALIGN;
->+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-
-			f->flags |= (IORESOURCE_STARTALIGN | IORESOURCE_UNSET);
-
-Yongji, one quick question - when IORESOURCE_UNSET is cleared? If it's not
-cleared, is there any unexpected side effects? Thanks.
-
->+			r->start = max(align, size);
->+			r->end = r->start + size - 1;
-> 		}
->-		r->flags |= IORESOURCE_UNSET;
->-		r->end = size - 1;
->-		r->start = 0;
-> 	}
-> 	/* Need to disable bridge's resource window,
-> 	 * to enable the kernel to reassign new resource
-
-Thanks,
-Gavin
+diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+index 75cf069..b8e961f 100644
+--- a/drivers/thunderbolt/nhi_regs.h
++++ b/drivers/thunderbolt/nhi_regs.h
+@@ -9,6 +9,11 @@
+ 
+ #include <linux/types.h>
+ 
++#define NHI_MMIO_BAR 0
++
++#define TBT_RING_MIN_NUM_BUFFERS	2
++#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
++
+ enum ring_flags {
+ 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
+ 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
+@@ -39,6 +44,33 @@ struct ring_desc {
+ 	u32 time; /* write zero */
+ } __packed;
+ 
++/**
++ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
++ * This is same as struct ring_desc, but without the use of bitfields and
++ * with explicit endianity.
++ */
++struct tbt_buf_desc {
++	__le64 phys;
++	__le32 attributes;
++	__le32 time;
++};
++
++#define DESC_ATTR_LEN_SHIFT		0
++#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
++#define DESC_ATTR_EOF_SHIFT		12
++#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
++#define DESC_ATTR_SOF_SHIFT		16
++#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
++#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
++#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
++#define DESC_ATTR_DESC_DONE		BIT(21)
++#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
++#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
++#define DESC_ATTR_INT_EN		BIT(23)
++#define DESC_ATTR_OFFSET_SHIFT		24
++#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
++
++
+ /* NHI registers in bar 0 */
+ 
+ /*
+@@ -60,6 +92,30 @@ struct ring_desc {
+  */
+ #define REG_RX_RING_BASE	0x08000
+ 
++#define REG_RING_STEP			16
++#define REG_RING_PHYS_LO_OFFSET		0
++#define REG_RING_PHYS_HI_OFFSET		4
++#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
++#define REG_RING_CONS_SHIFT		0
++#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
++#define REG_RING_PROD_SHIFT		16
++#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
++#define REG_RING_SIZE_OFFSET		12
++#define REG_RING_SIZE_SHIFT		0
++#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
++#define REG_RING_BUF_SIZE_SHIFT		16
++#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
++
++#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
++			      ((iobase) + (ringbase) + \
++			      ((ringnumber) * REG_RING_STEP) + \
++			      REG_RING_CONS_PROD_OFFSET)
++
++#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
++				       REG_RING_PROD_SHIFT)
++
++#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
++				       REG_RING_CONS_SHIFT)
+ /*
+  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
+  * 00: enum_ring_flags
+@@ -77,6 +133,19 @@ struct ring_desc {
+  * ..: unknown
+  */
+ #define REG_RX_OPTIONS_BASE	0x29800
++#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
++#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
++				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
++#define REG_RX_OPTS_MASK_OFFSET		4
++#define REG_RX_OPTS_MASK_EOF_SHIFT	0
++#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
++#define REG_RX_OPTS_MASK_SOF_SHIFT	16
++#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
++
++#define REG_OPTS_STEP			32
++#define REG_OPTS_E2E_EN			BIT(28)
++#define REG_OPTS_RAW			BIT(30)
++#define REG_OPTS_VALID			BIT(31)
+ 
+ /*
+  * three bitfields: tx, rx, rx overflow
+@@ -86,6 +155,7 @@ struct ring_desc {
+  */
+ #define REG_RING_NOTIFY_BASE	0x37800
+ #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
++#define REG_RING_NOTIFY_STEP	4
+ 
+ /*
+  * two bitfields: rx, tx
+@@ -94,8 +164,47 @@ struct ring_desc {
+  */
+ #define REG_RING_INTERRUPT_BASE	0x38200
+ #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
++#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
++#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
++							    (num_paths))
++#define RING_INT_DISABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_ENABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_DISABLE_TX(base, ring_num) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_ENABLE_TX(base, ring_num) \
++	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
++	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
++			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++
++#define REG_RING_INTERRUPT_STEP	4
++
++#define REG_INT_THROTTLING_RATE	0x38c00
++#define REG_INT_THROTTLING_RATE_STEP	4
++#define NUM_INT_VECTORS			16
++
++#define REG_INT_VEC_ALLOC_BASE	0x38c40
++#define REG_INT_VEC_ALLOC_STEP		4
++#define REG_INT_VEC_ALLOC_FIELD_BITS	4
++#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
++#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
++					 REG_INT_VEC_ALLOC_FIELD_BITS)
+ 
+ /* The last 11 bits contain the number of hops supported by the NHI port. */
+ #define REG_HOP_COUNT		0x39640
++#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
++
++#define REG_HOST_INTERFACE_RST	0x39858
++
++#define REG_DMA_MISC		0x39864
++#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
+ 
+ #endif
+-- 
+2.7.4
 
