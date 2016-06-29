@@ -1,42 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59366 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752718AbcFFOqC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jun 2016 10:46:02 -0400
-Date: Mon, 6 Jun 2016 07:46:00 -0700
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
-Subject: Re: [PATCH] Introducing kernel option to force all PCI memory
- resources to be page aligned. Fixes issues with uio based drivers.
-Message-ID: <20160606144600.GA6126@kroah.com>
-References: <a3411d517fbd4626b2c78e420b387f76@FE-MBX1012.de.bosch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a3411d517fbd4626b2c78e420b387f76@FE-MBX1012.de.bosch.com>
+Received: from mga11.intel.com ([192.55.52.93]:51274 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750819AbcF2Ih2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jun 2016 04:37:28 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v2 4/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
+Date: Wed, 29 Jun 2016 11:35:32 +0300
+Message-Id: <1467189336-29556-5-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
+References: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 06, 2016 at 06:53:28AM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
-> Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned 
-> PCI memory resources are not page aligned.
-> By using the kernel option "pci=resource_alignment" it is possible to force
-> single PCI boards to use page alignment for their memory resources.
-> However, this is fairly cumbersome if multiple of these cards are in use.
-> This patch adds another kernel option "pci=resources_page_aligned"
-> that allows to set the default alignment of PCI memory resources to
-> be page aligned.
-> Overwriting of this default alignment via "pci=resource_alignment" is
-> still possible.
+Updating the Kconfig Thunderbolt(TM) description.
 
-This seems like a very large hammer for a very specific problem with a
-card that seems to be not-in-spec (I can't find anywhere that requires
-resources to be "page" aligned in the PCI spec).  Why not fix the
-firmware in these cards?
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
+ drivers/thunderbolt/Makefile |  2 +-
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-thanks,
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+index c121acc..d34b0f5 100644
+--- a/drivers/thunderbolt/Kconfig
++++ b/drivers/thunderbolt/Kconfig
+@@ -1,13 +1,30 @@
+-menuconfig THUNDERBOLT
+-	tristate "Thunderbolt support for Apple devices"
++config THUNDERBOLT
++	tristate "Thunderbolt(TM) support"
+ 	depends on PCI
+ 	select CRC32
+ 	help
+-	  Cactus Ridge Thunderbolt Controller driver
++	  Thunderbolt(TM) Controller driver
++
++if THUNDERBOLT
++
++config THUNDERBOLT_APPLE
++	tristate "Apple hardware support"
++	help
+ 	  This driver is required if you want to hotplug Thunderbolt devices on
+ 	  Apple hardware.
+ 
+ 	  Device chaining is currently not supported.
+ 
+-	  To compile this driver a module, choose M here. The module will be
++	  To compile this driver as a module, choose M here. The module will be
+ 	  called thunderbolt.
++
++config THUNDERBOLT_ICM
++	tristate "Thunderbolt(TM) Networking"
++	help
++	  This driver is required if you want Thunderbolt(TM) Networking on
++	  non-Apple hardware.
++
++	  To compile this driver as a module, choose M here. The module will be
++	  called thunderbolt_icm.
++
++endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..7a85bd1 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+-obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
+ thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
+-- 
+2.7.4
 
-greg k-h
