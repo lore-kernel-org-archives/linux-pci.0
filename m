@@ -1,76 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:45508 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751786AbcFSM0C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Jun 2016 08:26:02 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [PATCH v2 0/2] VFIO SRIOV support
-Date: Sun, 19 Jun 2016 15:16:55 +0300
-Message-Id: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+Received: from mga11.intel.com ([192.55.52.93]:29594 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751168AbcF2Ih0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jun 2016 04:37:26 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v2 0/8] thunderbolt: Introducing Thunderbolt(TM) networking
+Date: Wed, 29 Jun 2016 11:35:28 +0300
+Message-Id: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes from V1:
-	1. The VF are no longer assigned to PFs iommu group
-	2. Add a pci_enable_sriov_with_override API to allow
-	enablind sriov without probing the VFs with the
-	default driver
+This is version 2 of Thunderbolt(TM) driver for non-Apple hardware.
 
-Changes from RFC V2:
-        1. pci_disable_sriov() is now called from a workqueue
-        To avoid the situation where a process is blocked
-        in pci_disable_sriov() wating for itself to relase the VFs.
-        2. a mutex was added to synchronize calls to
-        pci_enable_sriov() and pci_disable_sriov()
+Changes since v1:
+ - Separation to 2 modules.
+ - Moved ICM specific registers definition to ICM header file.
+ - Added new Thunderbolt device IDs.
+ - Renamed the Thunderbolt networking documentation.
+ - General cleanups
 
-Changes from RFC V1:
-        Due to the security concern raised in RFC V1, we add two patches
-        to make sure the VFs belong to the same IOMMU group as
-        the PF and are probed by VFIO.
+These patches were pushed to GitHub where they can be reviewed more
+comfortably with green/red highlighting:
+	https://github.com/01org/thunderbolt-software-kernel-tree
 
-Today the QEMU hypervisor allows assigning a physical device to a VM,
-facilitating driver development. However, it does not support enabling
-SR-IOV by the VM kernel driver. Our goal is to implement such support,
-allowing developers working on SR-IOV physical function drivers to work
-inside VMs as well.
+Daemon code:
+	https://github.com/01org/thunderbolt-software-daemon
 
-This patch series implements the kernel side of our solution.  It extends
-the VFIO driver to support the PCIE SRIOV extended capability with
-following features:
-1. The ability to probe SR-IOV BAR sizes.
-2. The ability to enable and disable SR-IOV.
+For reference, here's a link to version 1:
+[v1]:	http://www.spinics.net/lists/linux-pci/msg51287.html
 
-This patch series is going to be used by QEMU to expose SR-IOV capabilities
-to VM. We already have an early prototype based on Knut Omang's patches for
-SR-IOV[1].
+Amir Levy (8):
+  thunderbolt: Macro rename
+  thunderbolt: Updating device IDs
+  thunderbolt: Updating the register definitions
+  thunderbolt: Kconfig for Thunderbolt(TM) networking
+  thunderbolt: Communication with the ICM (firmware)
+  thunderbolt: Networking state machine
+  thunderbolt: Networking transmit and receive
+  thunderbolt: Networking doc
 
-Limitations:
-1. Per SR-IOV spec section 3.3.12, PFs are required to support
-4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes.
-Unfourtently the kernel currently initializes the System Page Size register once
-and assumes it doesn't change therefore we cannot allow guests to change this
-register at will. We currently map both the Supported Page sizes and
-System Page Size as virtualized and read only in violation of the spec.
-In practice this is not an issue since both the hypervisor and the
-guest typically select the same System Page Size.
-
-[1] https://github.com/knuto/qemu/tree/sriov_patches_v6
-
-Ilya Lesokhin (2):
-  PCI: Extend PCI IOV API
-  VFIO: Add support for SR-IOV extended capablity
-
- drivers/pci/iov.c                   |  41 +++++--
- drivers/vfio/pci/vfio_pci.c         |   1 +
- drivers/vfio/pci/vfio_pci_config.c  | 210 +++++++++++++++++++++++++++++++++---
- drivers/vfio/pci/vfio_pci_private.h |   1 +
- include/linux/pci.h                 |  13 ++-
- 5 files changed, 240 insertions(+), 26 deletions(-)
+ Documentation/00-INDEX                   |    2 +
+ Documentation/thunderbolt-networking.txt |  135 ++
+ drivers/thunderbolt/Kconfig              |   25 +-
+ drivers/thunderbolt/Makefile             |    4 +-
+ drivers/thunderbolt/icm_nhi.c            | 1631 +++++++++++++++++++++
+ drivers/thunderbolt/icm_nhi.h            |   84 ++
+ drivers/thunderbolt/net.c                | 2277 ++++++++++++++++++++++++++++++
+ drivers/thunderbolt/net.h                |  274 ++++
+ drivers/thunderbolt/nhi_regs.h           |  115 +-
+ include/linux/pci_ids.h                  |   44 +-
+ 10 files changed, 4565 insertions(+), 26 deletions(-)
+ create mode 100644 Documentation/thunderbolt-networking.txt
+ create mode 100644 drivers/thunderbolt/icm_nhi.c
+ create mode 100644 drivers/thunderbolt/icm_nhi.h
+ create mode 100644 drivers/thunderbolt/net.c
+ create mode 100644 drivers/thunderbolt/net.h
 
 -- 
-1.8.3.1
+2.7.4
 
