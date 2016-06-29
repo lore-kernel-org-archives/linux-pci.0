@@ -1,38 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Jake Oshins <jakeo@microsoft.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: hv: fix a couple of issues in hv_pci_onchannelcallback()
-References: <1464617879-19581-1-git-send-email-vkuznets@redhat.com>
-Date: Fri, 10 Jun 2016 14:05:33 +0200
-In-Reply-To: <1464617879-19581-1-git-send-email-vkuznets@redhat.com> (Vitaly
-	Kuznetsov's message of "Mon, 30 May 2016 16:17:57 +0200")
-Message-ID: <87ziqt8d0y.fsf@vitty.brq.redhat.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <280859fd-07a0-9cea-c9d4-f956241e8986@codeaurora.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+ <1467188859-28188-2-git-send-email-okaya@codeaurora.org>
+ <CAJZ5v0j1m4oGJfdOC8uerKc-3ksq6k2e9RdjEnk0sWmsq4RHRQ@mail.gmail.com>
+ <8a40e242-fca4-5681-e480-e29ec05354ac@codeaurora.org>
+ <CAJZ5v0hUpxxEjVxMBW6p6q0MSB5nFxnVL0g5dw4HBAsyK4yisg@mail.gmail.com>
+ <280859fd-07a0-9cea-c9d4-f956241e8986@codeaurora.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 29 Jun 2016 23:26:36 +0200
+Message-ID: <CAJZ5v0jjopsNJnjZxPZALH5LYamKs4eentUy7HLF38bUVfUEwQ@mail.gmail.com>
+Subject: Re: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Jon Masters <jcm@redhat.com>,
+ Timur Tabi <timur@codeaurora.org>, Andy Gross <agross@codeaurora.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, tiwai@suse.com, perex@perex.cz,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Christopher Covington <cov@codeaurora.org>, eric.auger@redhat.com,
+ Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
+ linux-arm-msm@vger.kernel.org, Len Brown <lenb@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Vitaly Kuznetsov <vkuznets@redhat.com> writes:
-
-> kmemleak helped me to identify a memory leak in hv_pci_onchannelcallback()
-> and while fixing it I stumbled upon an unrelated issue(s) there.
+On Wed, Jun 29, 2016 at 11:21 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 6/29/2016 5:19 PM, Rafael J. Wysocki wrote:
+>> On Wed, Jun 29, 2016 at 8:47 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>> On 6/29/2016 9:13 AM, Rafael J. Wysocki wrote:
+>>>> On Wed, Jun 29, 2016 at 10:27 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>>>> The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+>>>>> resource requirements") omitted the initially assigned POSSIBLE penalty
+>>>>> when the IRQ is active.
+>>>>
+>>>> It would be good to say what can go wrong with that here.
+>>>>
+>>>
+>>> I can add more description. Here is a first attempt.
+>>>
+>>> Incorrect calculation of penalty leads to ACPI code assigning the wrong
+>>> interrupt number to PCI INTx interrupts.
+>>>
+>>> This would not be as bad as it sounds in theory. You would just cause the
+>>> interrupts to be shared and observe performance penalty.
+>>>
+>>> However, some drivers like parallel port driver doesn't like interrupt
+>>> sharing as in this example and causes all other PCI drivers sharing the interrupt
+>>> to malfunction.
+>>>
+>>> The issue has not been caught because the behavior is platform specific
+>>> and depends on the peripheral drivers sharing the IRQ.
+>>>
+>>> I can claim that this could be a BIOS bug. if interrupt 7 is not good for PCI,
+>>> it shouldn't have been listed in the possible PCI interrupts to begin with.
+>>> Given this is an existing platform, I don't think we have the luxury to request
+>>> all BIOS to be updated. This bugfix is needed to support existing platforms.
+>>>
+>>>
+>>> Feel free to request more information if the above description is not clear.
+>>
+>> It is clear enough.  I can add it to the changelog when applying the patch.
 >
-> Vitaly Kuznetsov (2):
->   PCI: hv: don't leak buffer in hv_pci_onchannelcallback()
->   PCI: hv: handle all pending messages in hv_pci_onchannelcallback()
->
+> OK
 
-Bjorn,
-
-sorry for the ping but with both patches acked by Jake is there anything
-else required for this series to get merged? It would be nice to have
-these fixes in 4.7 but even knowing that they're queued for 4.8 is OK.
+BTW, care to add Fixes: tags to these patches?
 
 Thanks,
+Rafael
 
--- 
-  Vitaly
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
