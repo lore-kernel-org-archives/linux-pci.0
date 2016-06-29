@@ -1,63 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:13895 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753018AbcFBIRX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jun 2016 04:17:23 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Peter Wu <peter@lekensteyn.nl>,
-	Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v6 4/5] ACPI / hotplug / PCI: Runtime resume bridge before rescan
-Date: Thu,  2 Jun 2016 11:17:14 +0300
-Message-Id: <1464855435-32960-5-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1464855435-32960-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <d22fd8f7-7028-b4b7-6677-6903685034aa@codeaurora.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+ <1467188859-28188-5-git-send-email-okaya@codeaurora.org> <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
+ <d22fd8f7-7028-b4b7-6677-6903685034aa@codeaurora.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 29 Jun 2016 23:14:29 +0200
+Message-ID: <CAJZ5v0h1o5C8t+QJuFo93uZt0XuPNwtXFs5XSBkhm-fARWqi2g@mail.gmail.com>
+Subject: Re: [PATCH V2 4/4] ACPI,PCI,IRQ: correct operator precedence
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Timur Tabi <timur@codeaurora.org>,
+	Christopher Covington <cov@codeaurora.org>,
+	Jon Masters <jcm@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
+	Andy Gross <agross@codeaurora.org>,
+	linux-arm-msm@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
+	perex@perex.cz, tiwai@suse.com,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If a PCI bridge (or PCIe port) that is runtime suspended gets an ACPI
-hotplug event, such as BUS_CHECK we need to make sure it is resumed before
-devices below the bridge are re-scanned. Otherwise the devices behind the
-port are not accessible and will be treated as hot-unplugged.
+On Wed, Jun 29, 2016 at 8:29 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 6/29/2016 9:16 AM, Rafael J. Wysocki wrote:
+>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> Well, this is a rather obvious one, so I'm wondering why it is the
+>> last one in the series?
+>>
+>
+> The first three are more relevant to each other. It makes easy to
+> correlate the changes.
 
-To fix this, resume PCI bridges from runtime suspend while rescanning.
+But this one doesn't seem to depend on them and it could be applied
+without them, right?
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index fa49f9143b80..6a33ddcfa20b 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -675,6 +675,8 @@ static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- 	if (bridge->is_going_away)
- 		return;
- 
-+	pm_runtime_get_sync(&bridge->pci_dev->dev);
-+
- 	list_for_each_entry(slot, &bridge->slots, node) {
- 		struct pci_bus *bus = slot->bus;
- 		struct pci_dev *dev, *tmp;
-@@ -694,6 +696,8 @@ static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- 			disable_slot(slot);
- 		}
- 	}
-+
-+	pm_runtime_put(&bridge->pci_dev->dev);
- }
- 
- /*
--- 
-2.8.1
-
+Thanks,
+Rafael
