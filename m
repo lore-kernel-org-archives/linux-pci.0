@@ -1,45 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0099.outbound.protection.outlook.com ([207.46.100.99]:48652
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932967AbcFHNmL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jun 2016 09:42:11 -0400
-From: Fabio Estevam <fabio.estevam@nxp.com>
-To: <bhelgaas@google.com>
-CC: <l.stach@pengutronix.de>, <hongxing.zhu@nxp.com>,
-	<linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH] PCI: imx6: Add missing required clocks
-Date: Wed, 8 Jun 2016 10:27:41 -0300
-Message-ID: <1465392461-3469-1-git-send-email-fabio.estevam@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+	eric.auger@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+	perex@perex.cz, tiwai@suse.com, Sinan Kaya <okaya@codeaurora.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 3/4] ACPI,PCI,IRQ: separate ISA penalty calculation
+Date: Wed, 29 Jun 2016 04:27:37 -0400
+Message-Id: <1467188859-28188-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI hardware on imx6 requires the following clocks:
-"pcie", "pcie_bus" and "pcie_phy", so add the missing clocks
-in the clock-names property.
+Since commit 103544d86976 ("ACPI,PCI,IRQ: reduce resource requirements")
+the penalty values are calculated on the fly rather than boot time.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+This works fine for PCI interrupts but not so well for the ISA interrupts.
+Whether an ISA interrupt is in use or not information is not available
+inside the pci_link.c file. This information gets sent externally via
+acpi_penalize_isa_irq function. If active is true, then the IRQ is in use
+by ISA. Otherwise, IRQ is in use by PCI.
+
+Since the current code relies on PCI Link object for determination of
+penalties, we are factoring in the PCI penalty twice after
+acpi_penalize_isa_irq function is called.
+
+This change is limiting the newly added functionality to just PCI
+interrupts so that old behavior is still maintained.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/acpi/pci_link.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 83aeb1f..94ab92c 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -10,8 +10,8 @@ Required properties:
-   entry for each entry in the interrupt-names property.
- - interrupt-names: Must include the following entries:
- 	- "msi": The interrupt that is asserted when an MSI is received
--- clock-names: Must include the following additional entries:
--	- "pcie_phy"
-+- clock-names: Must include the following entries:
-+	- "pcie", "pcie_bus" and "pcie_phy".
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 714ba4d..8c08971 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -496,9 +496,6 @@ static int acpi_irq_get_penalty(int irq)
+ {
+ 	int penalty = 0;
  
- Optional properties:
- - fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
+-	if (irq < ACPI_MAX_ISA_IRQS)
+-		penalty += acpi_isa_irq_penalty[irq];
+-
+ 	/*
+ 	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+ 	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
+@@ -513,6 +510,9 @@ static int acpi_irq_get_penalty(int irq)
+ 			penalty += PIRQ_PENALTY_PCI_USING;
+ 	}
+ 
++	if (irq < ACPI_MAX_ISA_IRQS)
++		return penalty + acpi_isa_irq_penalty[irq];
++
+ 	penalty += acpi_irq_pci_sharing_penalty(irq);
+ 	return penalty;
+ }
 -- 
-1.9.1
+1.8.2.1
 
