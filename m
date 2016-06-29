@@ -1,91 +1,114 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [RFC PATCH v2 03/15] arm64: mm: change IOMMU notifier action to
- attach DMA ops
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	iommu@lists.linux-foundation.org,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-References: <1465306270-27076-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1465306270-27076-4-git-send-email-lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org,
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+	eric.auger@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+	perex@perex.cz, tiwai@suse.com, Sinan Kaya <okaya@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will.deacon@arm.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>
-Message-ID: <5763C27A.9030306@arm.com>
-Date: Fri, 17 Jun 2016 10:27:22 +0100
-MIME-Version: 1.0
-In-Reply-To: <1465306270-27076-4-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Len Brown <lenb@kernel.org>,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
+	devel@acpica.org
+Subject: [PATCH V2 2/4] Revert "ACPI,PCI,IRQ: remove redundant code in acpi_irq_penalty_init()"
+Date: Wed, 29 Jun 2016 04:27:36 -0400
+Message-Id: <1467188859-28188-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Trying to make the ISA and PCI init functionality common turned out to be
+a bad idea. ISA path depends on external functionality. Restoring the
+previous behavior and limiting the refactoring to PCI interrupts only.
 
-I think this patch makes sense even independent of the rest of the 
-series, one nit inline notwithstanding.
+This reverts commit 1fcb6a813c4f ("ACPI,PCI,IRQ: remove redundant code in
+acpi_irq_penalty_init()").
 
-Marek; I'm curious as to whether this could make the workaround in 
-722ec35f7 obsolete as well, or are all the drivers also bound 
-super-early in the setup you had there?
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/pci/acpi.c         |  1 +
+ drivers/acpi/pci_link.c     | 36 ++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_drivers.h |  1 +
+ 3 files changed, 38 insertions(+)
 
-On 07/06/16 14:30, Lorenzo Pieralisi wrote:
-> Current bus notifier in ARM64 (__iommu_attach_notifier)
-> attempts to attach dma_ops to a device on BUS_NOTIFY_ADD_DEVICE
-> action notification.
->
-> This causes issues on ACPI based systems, where PCI devices
-> can be added before the IOMMUs the devices are attached to
-> had a chance to be probed, causing failures on attempts to
-> attach dma_ops in that the domain for the respective IOMMU
-> may not be set-up yet by the time the bus notifier is run.
->
-> Devices dma_ops do not require to be set-up till the matching
-> device drivers are probed. This means that instead of running
-> the notifier attaching dma_ops to devices (__iommu_attach_notifier)
-> on BUS_NOTIFY_ADD_DEVICE action, it can be run just before the
-> device driver is bound to the device in question (on action
-> BUS_NOTIFY_BIND_DRIVER) so that it is certain that its IOMMU
-> group and domain are set-up accordingly at the time the
-> notifier is triggered.
->
-> This patch changes the notifier action upon which dma_ops
-> are attached to devices and defer it to driver binding time,
-> so that IOMMU devices have a chance to be probed and to register
-> their bus notifiers before the dma_ops attach sequence for a
-> device is actually carried out.
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> ---
->   arch/arm64/mm/dma-mapping.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-> index c566ec8..79b0882 100644
-> --- a/arch/arm64/mm/dma-mapping.c
-> +++ b/arch/arm64/mm/dma-mapping.c
-> @@ -848,7 +848,7 @@ static int __iommu_attach_notifier(struct notifier_block *nb,
->   {
->   	struct iommu_dma_notifier_data *master, *tmp;
->
-> -	if (action != BUS_NOTIFY_ADD_DEVICE)
-> +	if (action != BUS_NOTIFY_BIND_DRIVER)
-
-With this, you can also get rid of the priority setting and big fat 
-explanatory comment in register_iommu_dma_ops_notifier().
-
-Robin.
-
->   		return 0;
->
->   	mutex_lock(&iommu_dma_notifier_lock);
->
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index b2a4e2a..3cd6983 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -396,6 +396,7 @@ int __init pci_acpi_init(void)
+ 		return -ENODEV;
+ 
+ 	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
++	acpi_irq_penalty_init();
+ 	pcibios_enable_irq = acpi_pci_irq_enable;
+ 	pcibios_disable_irq = acpi_pci_irq_disable;
+ 	x86_init.pci.init_irq = x86_init_noop;
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index f2b69e3..714ba4d 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -517,6 +517,42 @@ static int acpi_irq_get_penalty(int irq)
+ 	return penalty;
+ }
+ 
++int __init acpi_irq_penalty_init(void)
++{
++	struct acpi_pci_link *link;
++	int i;
++
++	/*
++	 * Update penalties to facilitate IRQ balancing.
++	 */
++	list_for_each_entry(link, &acpi_link_list, list) {
++
++		/*
++		 * reflect the possible and active irqs in the penalty table --
++		 * useful for breaking ties.
++		 */
++		if (link->irq.possible_count) {
++			int penalty =
++			    PIRQ_PENALTY_PCI_POSSIBLE /
++			    link->irq.possible_count;
++
++			for (i = 0; i < link->irq.possible_count; i++) {
++				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
++					acpi_isa_irq_penalty[link->irq.
++							 possible[i]] +=
++					    penalty;
++			}
++
++		} else if (link->irq.active &&
++				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
++			acpi_isa_irq_penalty[link->irq.active] +=
++			    PIRQ_PENALTY_PCI_POSSIBLE;
++		}
++	}
++
++	return 0;
++}
++
+ static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
+ 
+ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+index 797ae2e..29c6912 100644
+--- a/include/acpi/acpi_drivers.h
++++ b/include/acpi/acpi_drivers.h
+@@ -78,6 +78,7 @@
+ 
+ /* ACPI PCI Interrupt Link (pci_link.c) */
+ 
++int acpi_irq_penalty_init(void);
+ int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
+ 			       int *polarity, char **name);
+ int acpi_pci_link_free_irq(acpi_handle handle);
+-- 
+1.8.2.1
 
