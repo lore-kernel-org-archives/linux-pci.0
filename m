@@ -1,53 +1,186 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 28 Jun 2016 00:05:45 +0300
-From: okaya@codeaurora.org
-To: wim@djo.tudelft.nl
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
- <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
- Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org, Alex
- Williamson <alex.williamson@redhat.com>
-Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
-In-Reply-To: <20160627130417.GA8184@djo.tudelft.nl>
-References: <72eb7b76d449f906d9b2b1bb15d995bf@codeaurora.org>
- <20160623141234.GA14662@djo.tudelft.nl> <576BF86E.8060302@codeaurora.org>
- <576C042B.20507@codeaurora.org> <20160623232533.GA14984@djo.tudelft.nl>
- <f85fb7c7-53aa-3a1e-0635-bb245d08e804@codeaurora.org>
- <20160625013920.GA26737@djo.tudelft.nl>
- <3bf1261bc7a931cb5e1e93ea0d66b265@codeaurora.org>
- <20160627062724.GA6713@djo.tudelft.nl>
- <9ad14db03ecb39a098d588b25c7b54a0@codeaurora.org>
- <20160627130417.GA8184@djo.tudelft.nl>
-Message-ID: <a8b7406eb12fc43246af4d78fc7e2278@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:29594 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751328AbcF2Ihd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jun 2016 04:37:33 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v2 8/8] thunderbolt: Networking doc
+Date: Wed, 29 Jun 2016 11:35:36 +0300
+Message-Id: <1467189336-29556-9-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
+References: <1467189336-29556-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-06-27 16:04, Wim Osterholt wrote:
-> On Mon, Jun 27, 2016 at 04:22:18AM -0400, okaya@codeaurora.org wrote:
->> > However, an earlier try on my Inspiron 510m did not work.
->> > I'll do a clean retry later today, just to make sure.
->> 
->> 
->> Ok, let me know. I can post a clean patch series. I was trying to get
->> you something to test before posting the official version.
-> 
-> The 510m just finished compiling and now it works fine too.
-> Thanks.
-> 
+Adding Thunderbolt(TM) networking documentation.
 
-Nice, I will post the official version and let you know.
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ Documentation/00-INDEX                   |   2 +
+ Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
+ 2 files changed, 137 insertions(+)
+ create mode 100644 Documentation/thunderbolt-networking.txt
 
-> 
-> 
-> Regards, Wim.
-> 
-> 
-> ----- wim@djo.tudelft.nl -----
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
+index cd077ca..8cf1717 100644
+--- a/Documentation/00-INDEX
++++ b/Documentation/00-INDEX
+@@ -439,6 +439,8 @@ this_cpu_ops.txt
+ 	- List rationale behind and the way to use this_cpu operations.
+ thermal/
+ 	- directory with information on managing thermal issues (CPU/temp)
++thunderbolt-networking.txt
++	- Thunderbolt(TM) Networking driver description.
+ trace/
+ 	- directory with info on tracing technologies within linux
+ unaligned-memory-access.txt
+diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
+new file mode 100644
+index 0000000..b7714cf
+--- /dev/null
++++ b/Documentation/thunderbolt-networking.txt
+@@ -0,0 +1,135 @@
++Intel Thunderbolt(TM) Linux driver
++==================================
++
++Copyright(c) 2013 - 2016 Intel Corporation.
++
++Contact Information:
++Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
++Edited by Michael Jamet <michael.jamet@intel.com>
++
++Overview
++========
++
++Thunderbolt(TM) Networking mode is introduced with this driver.
++This kernel code creates an ethernet device utilized in computer to computer
++communication over a Thunderbolt cable.
++This driver has been added on the top of the existing thunderbolt driver
++for systems with firwmare (FW) based Thunderbolt controllers supporting
++Thunderbolt Networking.
++
++Files
++=====
++
++- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
++		In addition, they create an interface for netlink communication with
++		a user space daemon.
++
++- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
++		networking.
++
++Interface to user space
++=======================
++
++The interface to the user space module is implemented through a Generic Netlink.
++In order to be accessed by the user space module, both kernel and user space
++modules have to register with the same GENL_NAME. In our case, this is
++simply "thunderbolt".
++The registration is done at driver initialization time for all instances of
++the Thunderbolt controllers.
++The communication is then carried through pre-defined Thunderbolt messages.
++Each specific message has a callback function that is called when
++the related message is received.
++
++The messages are defined as follows:
++* NHI_CMD_UNSPEC: Not used.
++* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
++  communication channel.
++* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
++  to close communication channel.
++* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
++  driver version, FW version offset, number of ports in the controller
++  and DMA port.
++* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
++* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
++* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
++  changes or disconnect path.
++* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
++  module to FW to establish path.
++* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
++
++Communication with ICM (Firmware)
++=================================
++
++The communication with ICM is principally achieved through
++a DMA mechanism on Ring 0.
++The driver allocates a shared memory that is physically mapped onto
++the DMA physical space at Ring 0.
++
++Interrupts
++==========
++
++Thunderbolt relies on MSI-X interrupts.
++The MSI-X vector is allocated as follows:
++ICM
++     - Tx: MSI-X vector index 0
++     - Rx: MSI-X vector index 1
++
++Port 0
++     - Tx: MSI-X vector index 2
++     - Rx: MSI-X vector index 3
++
++Port 1
++     - Tx: MSI-X vector index 4
++     - Rx: MSI-X vector index 5
++
++ICM interrupts are used for communication with ICM only.
++Port 0 and Port 1 interrupts are used for Thunderbolt Networking
++communications.
++In case MSI-X is not available, the driver requests to enable MSI only.
++
++Mutexes, semaphores and spinlocks
++=================================
++
++The driver should be able to operate in an environment where hardware
++is asynchronously accessed by multiple entities such as netlink,
++multiple controllers etc.
++
++* send_sem: This semaphore enforces unique sender (one sender at a time)
++  to avoid wrong impairing with responses. FW may process one message
++  at the time.
++* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
++  to avoid continuing to send messages to FW.
++* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
++  avoid continuing to send commands to mailbox.
++* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
++  for the mailbox command.
++  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
++  to get the command response.
++* lock: This spinlock protects from simultaneous changes during
++  disable/enable interrupts.
++* state_lock: This mutex comes to protect changes during net device state
++  changes and net_device operations.
++* controllers_list_rwsem: This read/write sempahore syncs the access to
++  the controllers list when there are multiple controllers in the system.
++
++FW path enablement
++==================
++
++In order to SW to communicate with the FW, the driver needs to send to FW
++the PDF driver ready command and receive response from FW.
++The driver ready command PDF value is 12 and the response is 13.
++Once the exchange is completed, the user space module should be able to send
++messages through the driver to the FW and FW starts to send notifications
++about HW/FW events.
++
++Information
++===========
++
++Mailing list:
++	thunderbolt-software@lists.01.org
++	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
++	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
++
++For additional information about Thunderbolt technology visit:
++	https://01.org/thunderbolt-sw
++	https://thunderbolttechnology.net/
+-- 
+2.7.4
+
