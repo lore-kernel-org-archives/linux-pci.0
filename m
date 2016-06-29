@@ -1,42 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 4/4] ACPI,PCI,IRQ: correct operator precedence
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
- <1467188859-28188-5-git-send-email-okaya@codeaurora.org>
- <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Jon Masters <jcm@redhat.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Gross <agross@codeaurora.org>,
-	linux-arm-msm@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
-	perex@perex.cz, tiwai@suse.com,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <d22fd8f7-7028-b4b7-6677-6903685034aa@codeaurora.org>
-Date: Wed, 29 Jun 2016 14:29:51 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:55900 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445AbcF2Ozx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 10:55:53 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 12/22] sh: Add PCI host bridge driver for SH7751
+Date: Wed, 29 Jun 2016 16:57:50 +0200
+Message-ID: <4273068.i3RgB4Ufiy@wuerfel>
+In-Reply-To: <1467207667-15768-13-git-send-email-ysato@users.sourceforge.jp>
+References: <1467207667-15768-1-git-send-email-ysato@users.sourceforge.jp> <1467207667-15768-13-git-send-email-ysato@users.sourceforge.jp>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2016 9:16 AM, Rafael J. Wysocki wrote:
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> Well, this is a rather obvious one, so I'm wondering why it is the
-> last one in the series?
-> 
+On Wednesday, June 29, 2016 10:40:57 PM CEST Yoshinori Sato wrote:
+> +               interrupt-map = <0x0000 0 1 &cpldintc 0 0>,
+> +                                0x0800 0 1 &cpldintc 1 0>,
+> +                                0x1000 0 1 &cpldintc 2 0>,
+> +                                0x1800 0 1 &cpldintc 3 0>,
+> +                                0x1800 0 2 &cpldintc 0 0>;
 
-The first three are more relevant to each other. It makes easy to
-correlate the changes.
+I just noticed the typo: you have more closing '>' than opening '<'
+here, so this is not valid syntax.
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+> +
+> +static __refdata struct platform_driver sh7751_pci_driver = {
+> +       .driver = {
+> +               .name = "sh7751-pci",
+> +               .of_match_table = sh7751_pci_of_match,
+> +       },
+> +       .probe = sh7751_pci_probe,
+> +};
+> +builtin_platform_driver(sh7751_pci_driver);
+
+I think you need to add '.suppress_bind_attrs = true' to prevent
+the device to be unbound and rebound through sysfs, otherwise
+the __init annotation on the probe function is wrong.
+
+Everything else looks fine to me now.
+
+	Arnd
+
