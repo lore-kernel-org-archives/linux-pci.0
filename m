@@ -1,49 +1,80 @@
-Return-Path: <jcm@redhat.com>
-Return-Path: <jcm@redhat.com>
-Content-Type: text/plain;
-	charset=us-ascii
-From: Jon Masters <jcm@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH V9 00/11] Support for ARM64 ACPI based PCI host controller
-Message-Id: <66887FB8-0D7E-42A0-AC25-A0BB8045D1B9@redhat.com>
-Date: Fri, 10 Jun 2016 19:50:43 -0400 (EDT)
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com> <20160610234107.GC7671@localhost>
-To: Bjorn Helgaas <helgaas@kernel.org>
-In-Reply-To: <20160610234107.GC7671@localhost>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de, will.deacon@arm.com,
-        catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-        Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org, jchandra@broadcom.com,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, wangyijing@huawei.com,
-        Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org, dhdang@apm.com,
-        jeremy.linton@arm.com, liudongdong3@huawei.com, cov@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51254 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbcF2I2E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 04:28:04 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, jcm@redhat.com, alex.williamson@redhat.com,
+	eric.auger@redhat.com
+Cc: linux-pci@vger.kernel.org, agross@codeaurora.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, wim@djo.tudelft.nl,
+	perex@perex.cz, tiwai@suse.com, Sinan Kaya <okaya@codeaurora.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 1/4] ACPI,PCI,IRQ: factor in PCI possible
+Date: Wed, 29 Jun 2016 04:27:35 -0400
+Message-Id: <1467188859-28188-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thank you Bjorn :)
+The change introduced in commit 103544d86976 ("ACPI,PCI,IRQ: reduce
+resource requirements") omitted the initially assigned POSSIBLE penalty
+when the IRQ is active.
 
-Next time we are in the same place (anyone involved in this series), beer is=
- on me.
+The original code would assign the POSSIBLE value divided by the number
+of possible IRQs during initialization.
 
---=20
-Computer Architect | Sent from my 64-bit #ARM Powered phone
+Later, if the IRQ is chosen as the active IRQ or if the IRQ is in use
+by ISA; additional penalties get added.
 
-> On Jun 10, 2016, at 18:41, Bjorn Helgaas <helgaas@kernel.org> wrote:
->=20
->> On Fri, Jun 10, 2016 at 09:55:08PM +0200, Tomasz Nowicki wrote:
->> =46rom the functionality point of view this series may be split into the
->> following logic parts:
->> 1. Export ECAM API and add parent device to pci_config_window
->> 2. Add IO resources handling to PCI core code
->> 3. New MCFG driver
->> 4. Cleanups and support for generic domain assignment based on ACPI
->> 5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64=
-/
->=20
-> This is beautiful!  It really turned out well.
->=20
-> I applied all these to pci/arm64-acpi for v4.8.
->=20
-> Bjorn
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_link.c | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 8fc7323..f2b69e3 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -470,6 +470,7 @@ static int acpi_irq_pci_sharing_penalty(int irq)
+ {
+ 	struct acpi_pci_link *link;
+ 	int penalty = 0;
++	int i;
+ 
+ 	list_for_each_entry(link, &acpi_link_list, list) {
+ 		/*
+@@ -478,18 +479,14 @@ static int acpi_irq_pci_sharing_penalty(int irq)
+ 		 */
+ 		if (link->irq.active && link->irq.active == irq)
+ 			penalty += PIRQ_PENALTY_PCI_USING;
+-		else {
+-			int i;
+-
+-			/*
+-			 * If a link is inactive, penalize the IRQs it
+-			 * might use, but not as severely.
+-			 */
+-			for (i = 0; i < link->irq.possible_count; i++)
+-				if (link->irq.possible[i] == irq)
+-					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
+-						link->irq.possible_count;
+-		}
++
++		/*
++		 * penalize the IRQs PCI might use, but not as severely.
++		 */
++		for (i = 0; i < link->irq.possible_count; i++)
++			if (link->irq.possible[i] == irq)
++				penalty += PIRQ_PENALTY_PCI_POSSIBLE /
++					link->irq.possible_count;
+ 	}
+ 
+ 	return penalty;
+-- 
+1.8.2.1
+
