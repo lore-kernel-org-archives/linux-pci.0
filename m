@@ -1,111 +1,59 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 06/11] PCI: Refactor generic bus domain assignment
-Date: Fri, 10 Jun 2016 21:55:14 +0200
-Message-Id: <1465588519-11334-7-git-send-email-tn@semihalf.com>
-In-Reply-To: <1465588519-11334-1-git-send-email-tn@semihalf.com>
-References: <1465588519-11334-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33211 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830AbcF2Vku (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2016 17:40:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <96388f6b-f8b1-5720-4725-3f0ec0f5d1c3@codeaurora.org>
+References: <1467188859-28188-1-git-send-email-okaya@codeaurora.org>
+ <1467188859-28188-5-git-send-email-okaya@codeaurora.org> <CAJZ5v0j+CJ3qWTdvm6Sk3DqFYVnkuEmaR1EPZM6DDVMC8rsK+g@mail.gmail.com>
+ <d22fd8f7-7028-b4b7-6677-6903685034aa@codeaurora.org> <CAJZ5v0h1o5C8t+QJuFo93uZt0XuPNwtXFs5XSBkhm-fARWqi2g@mail.gmail.com>
+ <96388f6b-f8b1-5720-4725-3f0ec0f5d1c3@codeaurora.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 29 Jun 2016 23:40:35 +0200
+Message-ID: <CAJZ5v0i67f+zsg_Ui693C3szFskOE3vQ1JsKYZpUkvc=vzXqcQ@mail.gmail.com>
+Subject: Re: [PATCH V2 4/4] ACPI,PCI,IRQ: correct operator precedence
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Timur Tabi <timur@codeaurora.org>,
+	Christopher Covington <cov@codeaurora.org>,
+	Jon Masters <jcm@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	eric.auger@redhat.com, Linux PCI <linux-pci@vger.kernel.org>,
+	Andy Gross <agross@codeaurora.org>,
+	linux-arm-msm@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, wim@djo.tudelft.nl,
+	perex@perex.cz, tiwai@suse.com,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change the way PCI bus domain number is assigned and improve function
-name to reflect what function does. No functional changes.
+On Wed, Jun 29, 2016 at 11:19 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 6/29/2016 5:14 PM, Rafael J. Wysocki wrote:
+>> On Wed, Jun 29, 2016 at 8:29 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>> On 6/29/2016 9:16 AM, Rafael J. Wysocki wrote:
+>>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>>> Well, this is a rather obvious one, so I'm wondering why it is the
+>>>> last one in the series?
+>>>>
+>>>
+>>> The first three are more relevant to each other. It makes easy to
+>>> correlate the changes.
+>>
+>> But this one doesn't seem to depend on them and it could be applied
+>> without them, right?
+>>
+>
+> Sure. It has no dependency.
 
-Instead of assigning bus domain number inside of pci_bus_assign_domain_nr()
-simply return domain number and let pci_create_root_bus() do assignment.
-This way pci_create_root_bus() setups bus structure data in the consistent
-way. Since pci_bus_assign_domain_nr() now does not assign but retrieves
-domain number instead, rename it to pci_bus_find_domain_nr().
+OK
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/pci/pci.c   | 4 ++--
- drivers/pci/probe.c | 4 +++-
- include/linux/pci.h | 7 +------
- 3 files changed, 6 insertions(+), 9 deletions(-)
+I've queued up this one.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index eb431b5..b9a7833 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4941,7 +4941,7 @@ int pci_get_new_domain_nr(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
- {
- 	static int use_dt_domains = -1;
- 	int domain = -1;
-@@ -4985,7 +4985,7 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 		domain = -1;
- 	}
- 
--	bus->domain_nr = domain;
-+	return domain;
- }
- #endif
- #endif
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8e3ef72..380d46d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2127,7 +2127,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->sysdata = sysdata;
- 	b->ops = ops;
- 	b->number = b->busn_res.start = bus;
--	pci_bus_assign_domain_nr(b, parent);
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+	b->domain_nr = pci_bus_find_domain_nr(b, parent);
-+#endif
- 	b2 = pci_find_bus(pci_domain_nr(b), bus);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ce03d65..48839e8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1390,12 +1390,7 @@ static inline int pci_domain_nr(struct pci_bus *bus)
- {
- 	return bus->domain_nr;
- }
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
--#else
--static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--					struct device *parent)
--{
--}
-+int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
- #endif
- 
- /* some architectures require additional setup to direct VGA traffic */
--- 
-1.9.1
+Thanks,
+Rafael
