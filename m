@@ -1,76 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:54478 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754000AbcFPJVT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2016 05:21:19 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Wenrui Li <wenrui.li@rock-chips.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v3 1/2] Documentation: bindings: add dt doc for Rockchip PCIe controller
-Date: Thu, 16 Jun 2016 11:22:02 +0200
-Message-ID: <5324957.LqZqpRHMK9@wuerfel>
-In-Reply-To: <da207bdc-738f-f2b1-7026-e368355936e9@rock-chips.com>
-References: <1466041821-1649-1-git-send-email-shawn.lin@rock-chips.com> <5811436.gqkV56Lax5@wuerfel> <da207bdc-738f-f2b1-7026-e368355936e9@rock-chips.com>
+Return-Path: <ard.biesheuvel@linaro.org>
+Return-Path: <ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5773D284.8060404@semihalf.com>
+References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
+ <1467100442-28078-4-git-send-email-tn@semihalf.com> <577275EA.7010002@codeaurora.org>
+ <CADaLNDkhPZuG7UJ4SK_j5v_nXbd782Q17LAcXduG0uEObaFF=g@mail.gmail.com>
+ <5773A773.8040700@semihalf.com> <5773CE49.1050802@codeaurora.org> <5773D284.8060404@semihalf.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 29 Jun 2016 15:57:47 +0200
+Message-ID: <CAKv+Gu8t994-HEJ+Cyiw6a8Bf_Ka=5amOAw44+UgnJZ90WrpnQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Christopher Covington <cov@codeaurora.org>, Duc Dang <dhdang@apm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, Jayachandran C <jchandra@broadcom.com>,
+	Robert Richter <robert.richter@caviumnetworks.com>, Marcin Wojtas <mw@semihalf.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, David Daney <ddaney@caviumnetworks.com>,
+	Yijing Wang <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>,
+	Andrea Gallo <andrea.gallo@linaro.org>, Jeremy Linton <jeremy.linton@arm.com>,
+	Dongdong Liu <liudongdong3@huawei.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jeffrey Hugo <jhugo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 16, 2016 4:01:12 PM CEST Wenrui Li wrote:
-> 在 2016/6/16 15:00, Arnd Bergmann 写道:
-> > On Thursday, June 16, 2016 9:50:21 AM CEST Shawn Lin wrote:
-> >
-> >> +    reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-> >> +    phys = <&pcie_phy>;
-> >> +    phy-names = "pcie-phy";
-> >> +    pinctrl-names = "default";
-> >> +    pinctrl-0 = <&pcie_clkreq>;
-> >> +    #interrupt-cells = <1>;
-> >> +    interrupt-controller;
-> >> +    interrupt-map-mask = <0 0 0 7>;
-> >> +    interrupt-map = <0 0 0 1 &pcie0 1>,
-> >> +                    <0 0 0 2 &pcie0 2>,
-> >> +                    <0 0 0 3 &pcie0 3>,
-> >> +                    <0 0 0 4 &pcie0 4>;
-> >> +};
-> >>
-> >
-> > One thing that came up in the review of the new Marvell PCIe driver is that it's
-> > most likely invalid for a device node to have both "interrupt-controller"
-> > and "interrupt-map" properties. I originally thought this was a nice way to
-> > handle embedded irqchips within the PCIe host, but it only really works
-> > by coincidence with the current kernel, and only as long as the hwirq number
-> > of the irqchip matches the integer representation of the irq line in the root
-> > bridge (which it does in the example above).
-> >
-> > For that driver we concluded that it would be less of a hack to have the
-> > irqchip as a child node of the PCIe host after all (just not with
-> > device_type="pci" of course), and that makes the translation work as
-> > expected.
-> >
-> >       Arnd
-> >
-> 
-> Original driver have an irqchip as child node. But Marc suggested don't 
-> need an intermediate node here.
-> Now the conclusion is to retain the child node?
+On 29 June 2016 at 15:52, Tomasz Nowicki <tn@semihalf.com> wrote:
+> On 29.06.2016 15:34, Christopher Covington wrote:
+>>
+>> I'm confused by this statement. OEMID is defined as 6 bytes long and OEM
+>> Table ID as 8 bytes long in the ACPI specification. As far as I can
+>> tell, if your string isn't exactly that long, padding up to that length
+>> is required.
+>
+>
+> Well, I cannot find that requirement in ACPI spec. but I might missed
+> something.
+>
 
-That is at least my view of the situation, sorry for the mixed messages
-you have been getting. Marc, Rob, do you agree with my finding?
+This has *nothing* to do with the ACPI spec.
 
-If we want to allow having both interrupt-map and interrupt-controller
-in the same node, we need to rewrite both the irq parsing function and
-have extend the DT binding for the interrupt-map to explain what we
-actually expect to happen in that case. At the moment, we walk up the
-tree until we find either an interrupt-map or an interrupt-controller
-property, and use that to map the interrupt number. If we find an
-interrupt-controller, we ignore the interrupt-map.
+There exist a couple of machines that have known quirks. Those
+machines have certain 6 or 8 byte long strings in their MCFG tables
+that we can match against. If any of those fields contains spaces,
+whether you call that padding or not is totally irrelevant. The same
+applies to NUL bytes.
 
-	Arnd
+So for a 6 byte field, our table contains the six characters that we
+know is in the quirky hardware's table.
+The same for an 8 byte field.
+
+That means there is no need for strnlen, strncmp() with variable size
+etc. Each match can be implemented using memcmp() [since the table
+fields are not NUL terminated] with a constant argument for the length
+parameter.
+
+Regards,
+Ard.
+
+
+> I dumped my x86 machine ACPI tables and here is an example of MCFG:
+>
+> $ cat mcfg.dsl
+> /*
+>  * Intel ACPI Component Architecture
+>  * AML/ASL+ Disassembler version 20160108-64
+>  * Copyright (c) 2000 - 2016 Intel Corporation
+>  *
+>  * Disassembly of mcfg.dat, Wed Jun 29 15:48:16 2016
+>  *
+>  * ACPI Data Table [MCFG]
+>  *
+>  * Format: [HexOffset DecimalOffset ByteLength]  FieldName : FieldValue
+>  */
+>
+> [000h 0000   4]                    Signature : "MCFG"    [Memory Mapped
+> Configuration table]
+> [004h 0004   4]                 Table Length : 0000003C
+> [008h 0008   1]                     Revision : 01
+> [009h 0009   1]                     Checksum : A9
+> [00Ah 0010   6]                       Oem ID : "ALASKA"
+> [010h 0016   8]                 Oem Table ID : "A M I"
+> [018h 0024   4]                 Oem Revision : 01072009
+> [01Ch 0028   4]              Asl Compiler ID : "MSFT"
+> [020h 0032   4]        Asl Compiler Revision : 00000097
+>
+> [024h 0036   8]                     Reserved : 0000000000000000
+>
+> [02Ch 0044   8]                 Base Address : 00000000F8000000
+> [034h 0052   2]         Segment Group Number : 0000
+> [036h 0054   1]             Start Bus Number : 00
+> [037h 0055   1]               End Bus Number : 3F
+> [038h 0056   4]                     Reserved : 00000000
+>
+> Raw Table Data: Length 60 (0x3C)
+>
+> 00000000  4d 43 46 47 3c 00 00 00  01 a9 41 4c 41 53 4b 41
+> |MCFG<.....ALASKA|
+> 00000010  41 20 4d 20 49 00 00 00  09 20 07 01 4d 53 46 54  |A M I....
+> ..MSFT|
+> 00000020  97 00 00 00 00 00 00 00  00 00 00 00 00 00 00 f8
+> |................|
+> 00000030  00 00 00 00 00 00 00 3f  00 00 00 00              |.......?....|
+>
+> So in this example I have OEM table ID "A M I" 6 character long and 0
+> padding.
+>
+> Tomasz
+>
