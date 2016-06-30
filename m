@@ -1,79 +1,63 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [RFC PATCH 1/3] pci, acpi: Match PCI config space accessors
- against platfrom specific ECAM quirks.
-To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
-References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
- <4347711.qDrKz2s8lr@wuerfel> <5750218F.9030406@semihalf.com>
- <9294389.sZPDtyjoUs@wuerfel>
-Cc: rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
- okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org,
- Lorenzo.Pieralisi@arm.com, linaro-acpi@lists.linaro.org,
- ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
- robert.richter@caviumnetworks.com, helgaas@kernel.org,
- liudongdong3@huawei.com, catalin.marinas@arm.com, Liviu.Dudau@arm.com,
- jcm@redhat.com, msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com,
- jchandra@broadcom.com, dhdang@apm.com, linux-kernel@vger.kernel.org,
- jeremy.linton@arm.com, hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <57503626.9050208@semihalf.com>
-Date: Thu, 2 Jun 2016 15:35:34 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.73]:64796 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161AbcF3PoC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 11:44:02 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
+Date: Thu, 30 Jun 2016 17:37:35 +0200
+Message-ID: <5307392.exoejlJp9x@wuerfel>
+In-Reply-To: <20160630151931.29216-1-thierry.reding@gmail.com>
+References: <20160630151931.29216-1-thierry.reding@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <9294389.sZPDtyjoUs@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.06.2016 14:32, Arnd Bergmann wrote:
-> On Thursday, June 2, 2016 2:07:43 PM CEST Tomasz Nowicki wrote:
->> On 02.06.2016 13:42, Arnd Bergmann wrote:
->>> On Thursday, June 2, 2016 10:41:01 AM CEST Tomasz Nowicki wrote:
->>>> +struct pci_ecam_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
->>>> +{
->>>> +       int bus_num = root->secondary.start;
->>>> +       int domain = root->segment;
->>>> +       struct pci_cfg_fixup *f;
->>>> +
->>>> +       if (!mcfg_table)
->>>> +               return &pci_generic_ecam_ops;
->>>> +
->>>> +       /*
->>>> +        * Match against platform specific quirks and return corresponding
->>>> +        * CAM ops.
->>>> +        *
->>>> +        * First match against PCI topology <domain:bus> then use OEM ID and
->>>> +        * OEM revision from MCFG table standard header.
->>>> +        */
->>>> +       for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
->>>> +               if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
->>>> +                   (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
->>>> +                   (!strncmp(f->oem_id, mcfg_table->header.oem_id,
->>>> +                             ACPI_OEM_ID_SIZE)) &&
->>>> +                   (f->oem_revision == mcfg_table->header.oem_revision))
->>>> +                       return f->ops;
->>>> +       }
->>>> +       /* No quirks, use ECAM */
->>>> +       return &pci_generic_ecam_ops;
->>>> +}
->>>> +
->>>>    int pci_mcfg_lookup(struct acpi_pci_root *root)
->>>
->>> Can you explain the use of pci_ecam_ops instead of pci_ops here?
->>>
->>
->> I wanted to get associated bus_shift and use it to setup configuration
->> region properly before calling pci_ecam_create. Please see next patch.
->>
->
-> I see. It feels really odd to do it this way though, since having a
-> nonstandard bus_shift essentially means not using anything resembling
-> ECAM to start with.
->
-> I realize that a lot of the host bridges are not ECAM, but because
-> of this, it would be more logical to have their own pci_ops instead
-> of pci_ecam_ops.
+On Thursday, June 30, 2016 5:19:30 PM CEST Thierry Reding wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> This patch makes the existing pci_host_bridge structure a proper device
+> that is usable by PCI host drivers in a more standard way. In addition
+> to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
+> and pci_create_root_bus interfaces, this unfortunately means having to
+> add yet another interface doing basically the same thing, and add some
+> extra code in the initial step.
 
-Well, we have bus_shift there to express bus shift differentiation. So I 
-would say we should change just structure name to prevent misunderstanding.
+Thanks a lot for following up on my patches and getting them to work!
 
-Thanks,
-Tomasz
+> As mentioned in a previous email, one open question is whether we want
+> to export a function for allocating a pci_host_bridge device in
+> combination with the per-device structure or let the driver itself
+> call kzalloc.
+> 
+> Changes in v2 (Thierry Reding):
+> - add a pci_host_bridge_init() helper that drivers can use to perform
+>   all the necessary steps to initialize the bridge
+
+For these two points, the addition of pci_host_bridge_init() to me
+tips the balance in favour of having a separate allocation function
+that also does the initialization, something like
+
+struct struct pci_host_bridge *pci_host_bridge_alloc(size_t priv)
+{
+	struct pci_host_bridge *bridge;
+
+	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
+	if (!bridge)
+		return NULL;
+
+	INIT_LIST_HEAD(&bridge->windows);
+
+	if (priv)
+		bridge->private = &bridge[1];
+
+	return bridge;
+}
+
+	Arnd
