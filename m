@@ -1,75 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:38789 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750759AbcFIMN1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jun 2016 08:13:27 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [PATCH 0/4] VFIO SR-IOV support
-Date: Thu,  9 Jun 2016 15:09:28 +0300
-Message-Id: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38122 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751068AbcF3RZJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jun 2016 13:25:09 -0400
+Date: Thu, 30 Jun 2016 19:28:09 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 07/13] pci: Provide sensible irq vector alloc/free
+ routines
+Message-ID: <20160630172808.GB9247@agordeev.lab.eng.brq.redhat.com>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+ <1465934346-20648-8-git-send-email-hch@lst.de>
+ <20160623111610.GA28861@dhcp-27-118.brq.redhat.com>
+ <20160630165417.GA21787@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160630165417.GA21787@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes from RFC V2:
-        1. pci_disable_sriov() is now called from a workqueue
-        To avoid the situation where a process is blocked
-        in pci_disable_sriov() wating for itself to relase the VFs.
-        2. a mutex was added to synchronize calls to
-        pci_enable_sriov() and pci_disable_sriov()
+On Thu, Jun 30, 2016 at 06:54:17PM +0200, Christoph Hellwig wrote:
+> > > +static unsigned int pci_nr_irq_vectors(struct pci_dev *pdev)
+> > > +{
+> > > +	int nr_entries;
+> > > +
+> > > +	nr_entries = pci_msix_vec_count(pdev);
+> > > +	if (nr_entries <= 0 && pci_msi_supported(pdev, 1))
+> > > +		nr_entries = pci_msi_vec_count(pdev);
+> > > +	if (nr_entries <= 0)
+> > > +		nr_entries = 1;
+> > > +	return nr_entries;
+> > > +}
+> > 
+> > This function is strange, because it:
+> >   (a) does not consider PCI_IRQ_NOMSIX flag;
+> >   (b) only calls pci_msi_supported() for MSI case;
+> >   (c) calls pci_msi_supported() with just one vector;
+> >   (d) might return suboptimal number of vectors (number of MSI-X used 
+> >       later for MSI or vice versa)
+> > 
+> > Overall, I would suggest simply return maximum between MSI-X and MSI
+> > numbers and let the rest of the code (i.e the two range functions)
+> > handle a-d.
+> 
+> Ok, fixed except for (c) - the only thing pci_msi_supported does with
+> nvec is to check for it being less than 1, which we don't care about,
+> and which really shouldn't be in this function to start with.
 
-Changes from RFC V1:
-        Due to the security concern raised in RFC V1, we add two patches
-        to make sure the VFs belong to the same IOMMU group as
-        the PF and are probed by VFIO.
+Yes, but we should not rely on our knowledge of pci_msi_supported()
+internals, aren't we? We need to follow the API which asks nvecs for
+whatever reason. Anyway, if you return maximum of the two it does not
+matter.
 
-Today the QEMU hypervisor allows assigning a physical device to a VM,
-facilitating driver development. However, it does not support enabling
-SR-IOV by the VM kernel driver. Our goal is to implement such support,
-allowing developers working on SR-IOV physical function drivers to work
-inside VMs as well.
+> > > +	struct msix_entry *msix_entries;
+> > > +	int vecs, i;
+> > > +
+> > > +	msix_entries = kcalloc(max_vecs, sizeof(struct msix_entry), GFP_KERNEL);
+> > > +	if (!msix_entries)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	for (i = 0; i < max_vecs; i++)
+> > > +		msix_entries[i].entry = i;
+> > > +
+> > > +	vecs = pci_enable_msix_range(pdev, msix_entries, min_vecs, max_vecs);
+> > > +	if (vecs > 0) {
+> > 
+> > This condition check is unneeded.
+> 
+> Why?  We could get -ENOSPC back.  Oh, because our for loop will
+> terminate immediately.  I can update it, but I think removing it
+> is less readable than keeping it around.
 
-This patch series implements the kernel side of our solution.  It extends
-the VFIO driver to support the PCIE SRIOV extended capability with
-following features:
-1. The ability to probe SR-IOV BAR sizes.
-2. The ability to enable and disable SR-IOV.
+Yes, I think you are right.
 
-This patch series is going to be used by QEMU to expose SR-IOV capabilities
-to VM. We already have an early prototype based on Knut Omang's patches for
-SR-IOV[1].
+> > > +	if (!(flags & PCI_IRQ_NOMSIX)) {
+> > > +		vecs = pci_enable_msix_range_wrapper(dev, irqs, min_vecs,
+> > > +				max_vecs);
+> > > +		if (vecs > 0)
+> > > +			goto done;
+> > > +	}
+> > > +
+> > > +	vecs = pci_enable_msi_range(dev, min_vecs, max_vecs);
+> > > +	if (vecs > 0) {
+> > > +		for (i = 0; i < vecs; i++)
+> > > +			irqs[i] = dev->irq + i;
+> > > +		goto done;
+> > > +	}
+> > > +
+> > > +	if (min_vecs > 1)
+> > > +		return -ENOSPC;
+> > 
+> > irqs is leaked if (min_vecs > 1)
+> > 
+> > You can get rid of this check at all if you reorganize your code i.e.
+> > like this:
+> > 
+> > 	...
+> > 
+> > 	vecs = pci_enable_msi_range(dev, min_vecs, max_vecs);
+> > 	if (vecs < 0)
+> > 		goto legacy;
+> > 
+> > 	for (i = 0; i < vecs; i++)
+> > 		irqs[i] = dev->irq + i;
+> > 
+> > done:
+> > 	...
+> > 
+> > 
+> > legacy:
+> > 	...
+> 
+> I've just moved the if below the kfree.
 
-Limitations:
-1. Per SR-IOV spec section 3.3.12, PFs are required to support
-4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes.
-Unfourtently the kernel currently initializes the System Page Size register once
-and assumes it doesn't change therefore we cannot allow guests to change this
-register at will. We currently map both the Supported Page sizes and
-System Page Size as virtualized and read only in violation of the spec.
-In practice this is not an issue since both the hypervisor and the
-guest typically select the same System Page Size.
+I think I need to look at the updated version :)
 
-[1] https://github.com/knuto/qemu/tree/sriov_patches_v6
+> > > +#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
+> > 
+> > BTW, why PCI_IRQ_NOMSIX only and no PCI_IRQ_NOMSI?
+> 
+> Because there is no need to call this API if your device only supports
+> a single legacy vector anyway.
 
-Ilya Lesokhin (4):
-  VFIO: Probe new devices in a live VFIO group with the VFIO driver
-  IOMMU: Force the VFs of an untrusted PF device to be in the PFs IOMMU
-    group
-  PCI: Expose iov_set_numvfs and iov_resource_size for modules.
-  VFIO: Add support for SR-IOV extended capablity
-
- drivers/iommu/iommu.c               |   4 +
- drivers/pci/iov.c                   |   4 +-
- drivers/vfio/pci/vfio_pci.c         |   4 +
- drivers/vfio/pci/vfio_pci_config.c  | 208 +++++++++++++++++++++++++++++++++---
- drivers/vfio/pci/vfio_pci_private.h |   1 +
- drivers/vfio/vfio.c                 |  18 +++-
- include/linux/pci.h                 |   7 ++
- 7 files changed, 224 insertions(+), 22 deletions(-)
-
--- 
-1.8.3.1
-
+What if a device reports (up to 32) MSIs and MSI-X allocation failed? The
+driver might prefer the legacy single (i.e. due to errata in MSI), but
+there is no flag to ask for it.
