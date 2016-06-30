@@ -1,80 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 17/25] PCI: generic: Simplify host bridge window iteration
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Rob Herring <robh@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
-	linux-renesas-soc@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
-	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
-	linux-arm-kernel@lists.infradead.org
-Date: Mon, 06 Jun 2016 18:06:51 -0500
-Message-ID: <20160606230651.20936.73053.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36072 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbcF3NOi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 09:14:38 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 1/3] PCI: tegra: Make register definitions consistent
+Date: Thu, 30 Jun 2016 15:14:28 +0200
+Message-Id: <20160630131430.32096-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The switch is the only statement in the resource_list_for_each_entry()
-loop, so remove unnecessary "continue" statements in the switch.  Simplify
-checking for the required non-prefetchable memory aperture.
+From: Thierry Reding <treding@nvidia.com>
 
-No functional change intended.
+Most of the register definitions use lowercase hexadecimal values, with
+a few exceptions using uppercase. Convert the latter to be more in line
+with the former.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/host/pci-host-common.c |   17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/pci/host/pci-tegra.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index e7515fd..bb03120 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -46,29 +46,24 @@ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
- 			err = pci_remap_iospace(res, iobase);
--			if (err) {
-+			if (err)
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
--				continue;
--			}
- 			break;
- 		case IORESOURCE_MEM:
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
- 			break;
- 		case IORESOURCE_BUS:
- 			*bus_range = res;
--		default:
--			continue;
-+			break;
- 		}
- 	}
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index c388468c202a..9595518f541d 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -183,26 +183,26 @@
  
--	if (!res_valid) {
--		dev_err(dev, "non-prefetchable memory resource required\n");
--		err = -EINVAL;
--		goto out_release_res;
--	}
-+	if (res_valid)
-+		return 0;
+ #define AFI_PEXBIAS_CTRL_0		0x168
  
--	return 0;
-+	dev_err(dev, "non-prefetchable memory resource required\n");
-+	err = -EINVAL;
+-#define RP_VEND_XP	0x00000F00
++#define RP_VEND_XP	0x00000f00
+ #define  RP_VEND_XP_DL_UP	(1 << 30)
  
- out_release_res:
- 	pci_free_resource_list(resources);
+-#define RP_PRIV_MISC	0x00000FE0
+-#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT (0xE << 0)
+-#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT (0xF << 0)
++#define RP_PRIV_MISC	0x00000fe0
++#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT (0xe << 0)
++#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT (0xf << 0)
+ 
+ #define RP_LINK_CONTROL_STATUS			0x00000090
+ #define  RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE	0x20000000
+ #define  RP_LINK_CONTROL_STATUS_LINKSTAT_MASK	0x3fff0000
+ 
+-#define PADS_CTL_SEL		0x0000009C
++#define PADS_CTL_SEL		0x0000009c
+ 
+-#define PADS_CTL		0x000000A0
++#define PADS_CTL		0x000000a0
+ #define  PADS_CTL_IDDQ_1L	(1 << 0)
+ #define  PADS_CTL_TX_DATA_EN_1L	(1 << 6)
+ #define  PADS_CTL_RX_DATA_EN_1L	(1 << 10)
+ 
+-#define PADS_PLL_CTL_TEGRA20			0x000000B8
+-#define PADS_PLL_CTL_TEGRA30			0x000000B4
++#define PADS_PLL_CTL_TEGRA20			0x000000b8
++#define PADS_PLL_CTL_TEGRA30			0x000000b4
+ #define  PADS_PLL_CTL_RST_B4SM			(1 << 1)
+ #define  PADS_PLL_CTL_LOCKDET			(1 << 8)
+ #define  PADS_PLL_CTL_REFCLK_MASK		(0x3 << 16)
+@@ -214,9 +214,9 @@
+ #define  PADS_PLL_CTL_TXCLKREF_DIV5		(1 << 20)
+ #define  PADS_PLL_CTL_TXCLKREF_BUF_EN		(1 << 22)
+ 
+-#define PADS_REFCLK_CFG0			0x000000C8
+-#define PADS_REFCLK_CFG1			0x000000CC
+-#define PADS_REFCLK_BIAS			0x000000D0
++#define PADS_REFCLK_CFG0			0x000000c8
++#define PADS_REFCLK_CFG1			0x000000cc
++#define PADS_REFCLK_BIAS			0x000000d0
+ 
+ /*
+  * Fields in PADS_REFCLK_CFG*. Those registers form an array of 16-bit
+-- 
+2.8.3
+
