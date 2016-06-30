@@ -1,84 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 1/3] dt-bindings: add DT binding for the Aardvark PCIe
- controller
-Date: Wed, 08 Jun 2016 17:34:08 +0200
-Message-ID: <21977687.7hvSV5l0N0@wuerfel>
-In-Reply-To: <20160608162750.712916ce@free-electrons.com>
-References: <1464858585-10963-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <33469694.MLbpCUJe2G@wuerfel> <20160608162750.712916ce@free-electrons.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
- Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
- linux-pci@vger.kernel.org, Hanna Hawa <hannah@marvell.com>,
- Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Marcin Wojtas <mw@semihalf.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 30 Jun 2016 12:43:57 +0300
+From: okaya@codeaurora.org
+To: wim@djo.tudelft.nl
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
+ <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+ linux-acpi@vger.kernel.org, perex@perex.cz, linux-pci@vger.kernel.org,
+ Takashi Iwai <tiwai@suse.com>, linux-pci-owner@vger.kernel.org, Alex
+ Williamson <alex.williamson@redhat.com>
+Subject: Re: kernel-4.7 bug in Intel sound and/or ACPI
+In-Reply-To: <20160630023041.GA5407@djo.tudelft.nl>
+References: <576C042B.20507@codeaurora.org>
+ <20160623232533.GA14984@djo.tudelft.nl>
+ <f85fb7c7-53aa-3a1e-0635-bb245d08e804@codeaurora.org>
+ <20160625013920.GA26737@djo.tudelft.nl>
+ <3bf1261bc7a931cb5e1e93ea0d66b265@codeaurora.org>
+ <20160627062724.GA6713@djo.tudelft.nl>
+ <9ad14db03ecb39a098d588b25c7b54a0@codeaurora.org>
+ <20160627130417.GA8184@djo.tudelft.nl>
+ <a8b7406eb12fc43246af4d78fc7e2278@codeaurora.org>
+ <8602f0b7-e052-913f-d633-294dff6cd3b2@codeaurora.org>
+ <20160630023041.GA5407@djo.tudelft.nl>
+Message-ID: <f5946f98d202472e9c1b2327e75ffd93@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, June 8, 2016 4:27:50 PM CEST Thomas Petazzoni wrote:
-> Hello,
+On 2016-06-30 05:30, Wim Osterholt wrote:
+> On Wed, Jun 29, 2016 at 04:34:14AM -0400, Sinan Kaya wrote:
+>> >
+>> 
+>> I posted this [PATCH V2 0/4] ACPI,PCI,IRQ: correct ISA penalty 
+>> calculation
+>> 
+>> Can you test this and give me a tested-by?
 > 
-> Thanks for your review!
 > 
-> On Thu, 02 Jun 2016 11:35:38 +0200, Arnd Bergmann wrote:
-> > On Thursday, June 2, 2016 11:09:43 AM CEST Thomas Petazzoni wrote:
-> > > +               ranges = <0x82000000 0 0xe8000000   0 0xe8000000 0 0x1000000 /* Port 0 MEM */
-> > > +                         0x81000000 0 0xe9000000   0 0xe9000000 0 0x10000>; /* Port 0 IO*/
-> > >   
-> > 
-> > Any reason for not having a 64-bit MEM prefetchable area in the example?
-> > Does the host not support that?
+> Kernel-4.7-rc5 plus this patch works like a charm on my Inspiron 4100.
+> Dmesg output is quite similar to the one from kernel-4.6 .
 > 
-> I'll have to admit I am not sure how to find this out from the
-> datasheet. My datasheet says about the PCIe controller:
+> Tested-by: Wim Osterholt. <wim@djo.tudelft.nl>
 > 
-> """
-> 64-bit PCIe address and system address space for outbound transactions
-> """
-> 
-> So I guess this would indicate that a 64-bit MEM area is possible.
-> However, since anyway the area used above is at 0xe8000000 for a length
-> of 0x1000000, what would be the benefit of declaring this range as a
-> 64-bit one ?
-> 
-> Regarding the prefetchable aspect, I couldn't find any reference in the
-> datasheet. However, the original driver code explicitly errors out if
-> there is no non-prefetchable memory area, so I guess prefetchable
-> areas is not supported.
-> 
-> In of_bus_pci_get_flags(), both the 32-bit and 64-bit cases are handled
-> in the same way, so is this distinction actually being used by the
-> kernel?
 
-Each device needs to have at least one non-prefetcheable range, which
-is why some drivers check for that. Non-prefetchable BARs always use
-32-bit addressing, so 64-bit BARs are by definition prefetchable,
-but you can also have prefetchable registers in the first 4GB in some
-cases.
+Thank you.
 
-Some devices require large prefetchable BARs (hundreds of MB, or more),
-so if you have the option, you should enable that in the host, as the
-16MB you have available for non-prefetchable devices is not going to be
-sufficient.
 
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
