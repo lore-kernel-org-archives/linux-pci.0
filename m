@@ -1,61 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:37034 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139AbcFBFvK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2016 01:51:10 -0400
-Received: from localhost
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Wed, 1 Jun 2016 23:51:09 -0600
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [RESEND PATCH v2 0/4] PCI: Add support for enforcing all MMIO BARs not to share PAGE_SIZE
-Date: Thu,  2 Jun 2016 13:46:47 +0800
-Message-Id: <1464846411-16895-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33958 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbcF3NPH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 09:15:07 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 3/3] PCI: tegra: Stop setting pcibios_min_mem
+Date: Thu, 30 Jun 2016 15:14:30 +0200
+Message-Id: <20160630131430.32096-3-thierry.reding@gmail.com>
+In-Reply-To: <20160630131430.32096-1-thierry.reding@gmail.com>
+References: <20160630131430.32096-1-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series aims to add an option for PCI resource allocator to  
-force BARs not to share PAGE_SIZE. This would make sense to VFIO 
-driver. Because current VFIO implementation disallows to mmap 
-sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page 
-with other BARs for security reasons. Thus, we have to handle mmio 
-access to these BARs in QEMU emulation rather than in guest which 
-will cause some performance loss.
+From: Thierry Reding <treding@nvidia.com>
 
-To achieve that, we would like to make use of the existing 
-resource_alignment kernel parameter and force a minimum alignment 
-of PAGE_SIZE. It's flexible. And we can default to enable it on  
-some archs which may easily hit the performance issue because of  
-their 64K page.
+In practice this value will never be used and it hinders portability of
+the driver, so remove it.
 
-In this series, patch 1 fixed a bug of resource_alignment; patch 2,3 
-tried to add a new option for resource_alignment to use 
-IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 4 
-modified resource_alignment to support syntax which can be used to  
-enforce the alignment of all MMIO BARs to be at least PAGE_SIZE.
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Changelog v2:
-- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
-
-Yongji Xie (4):
-  PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
-  PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
-  PCI: Add a new option for resource_alignment to reassign alignment
-  PCI: Add support for enforcing all MMIO BARs to be page aligned
-
- Documentation/kernel-parameters.txt |    7 ++-
- arch/powerpc/include/asm/pci.h      |    2 +
- drivers/pci/pci.c                   |  109 ++++++++++++++++++++++++++++-------
- drivers/pci/setup-bus.c             |    9 ++-
- 4 files changed, 102 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index f04b062e8c67..bbf77a49517d 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -2249,8 +2249,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	if (err < 0)
+ 		return err;
+ 
+-	pcibios_min_mem = 0;
+-
+ 	err = tegra_pcie_get_resources(pcie);
+ 	if (err < 0) {
+ 		dev_err(&pdev->dev, "failed to request resources: %d\n", err);
 -- 
-1.7.9.5
+2.8.3
 
