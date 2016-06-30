@@ -1,105 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0099.outbound.protection.outlook.com ([157.55.234.99]:3957
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753867AbcFPMqp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2016 08:46:45 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Noa Osherovich <noaos@mellanox.com>,
-	Haggai Eran <haggaie@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Liran Liss <liranl@mellanox.com>
-Subject: RE: [PATCH 2/4] IOMMU: Force the VFs of an untrusted PF device to be
- in the PFs IOMMU group
-Date: Thu, 16 Jun 2016 12:46:41 +0000
-Message-ID: <VI1PR0501MB19683B2502B9B5B865B121DBD4560@VI1PR0501MB1968.eurprd05.prod.outlook.com>
-References: <1465474173-53960-1-git-send-email-ilyal@mellanox.com>
-	<1465474173-53960-3-git-send-email-ilyal@mellanox.com>
-	<20160609162120.43082847@ul30vt.home>
-	<VI1PR0501MB1968BCE6073C3DD40C8DA2AED4530@VI1PR0501MB1968.eurprd05.prod.outlook.com>
- <20160613100041.6b6a025e@ul30vt.home>
-In-Reply-To: <20160613100041.6b6a025e@ul30vt.home>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v3 6/7] PCI: Add support for enforcing all MMIO BARs to be page aligned
+Date: Thu, 30 Jun 2016 18:53:12 +0800
+In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1467283993-3185-7-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-You've convinced us that we should use separate groups.
-But If I do that I can't think of a clean way to force the VFs to be probed by VFIO.
+When vfio passthrough a PCI device of which MMIO BARs are
+smaller than PAGE_SIZE, guest will not handle the mmio
+accesses to the BARs which leads to mmio emulations in host.
 
-The ideas I have are:
-	1. Add a driver_override parameter to pci_enable_sriov, sriov_enable  and virtfn_add.
-	2. Register to the bus notifier of the PF's bus before calling pci_enable_sriov and then override the
-	Driver in BUS_NOTIFY_ADD_DEVICE event like I did in the IOMMU group notifier when the group was shared.
+This is because vfio will not allow to passthrough one BAR's
+mmio page which may be shared with other BARs. Otherwise,
+there will be a backdoor that guest can use to access BARs
+of other guest.
 
-Do you have a better idea? or a recommendation as to which of my ideas I should use?
+To solve this issue, this patch modifies resource_alignment
+to support syntax where multiple devices get the same
+alignment. So we can use something like
+"pci=resource_alignment=*:*:*.*:noresize" to enforce the
+alignment of all MMIO BARs to be at least PAGE_SIZE so that
+one BAR's mmio page would not be shared with other BARs.
 
-Thank,
-Ilya
-	
-> -----Original Message-----
-> From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: Monday, June 13, 2016 7:01 PM
-> To: Ilya Lesokhin <ilyal@mellanox.com>
-> Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; bhelgaas@google.com;
-> Noa Osherovich <noaos@mellanox.com>; Haggai Eran
-> <haggaie@mellanox.com>; Or Gerlitz <ogerlitz@mellanox.com>; Liran Liss
-> <liranl@mellanox.com>
-> Subject: Re: [PATCH 2/4] IOMMU: Force the VFs of an untrusted PF device to
-> be in the PFs IOMMU group
-> 
-> On Mon, 13 Jun 2016 07:08:03 +0000
-> Ilya Lesokhin <ilyal@mellanox.com> wrote:
-> 
-> > > -----Original Message-----
-> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > Sent: Friday, June 10, 2016 1:21 AM
-> > > To: Ilya Lesokhin <ilyal@mellanox.com>
-> > > Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org;
-> > > bhelgaas@google.com; Noa Osherovich <noaos@mellanox.com>; Haggai
-> > > Eran <haggaie@mellanox.com>; Or Gerlitz <ogerlitz@mellanox.com>;
-> > > Liran Liss <liranl@mellanox.com>
-> > > Subject: Re: [PATCH 2/4] IOMMU: Force the VFs of an untrusted PF
-> > > device to be in the PFs IOMMU group
-> > ...
-> > > This deserves a comment in the code as well as the commit log, but
-> > > more importantly the side effect of this is that the user can't make
-> > > use of separate IOMMU domains for the PF vs the VF.  I think this
-> > > ends up making the entire solution incompatible with things like
-> > > vIOMMU since we really need to be able to create separate address
-> > > spaces per device to make that work.  What's the point of enabling
-> > > SR-IOV from userspace if we can't do things like assign VFs to
-> > > nested guests or userspace in the guest?  This is an incomplete feature
-> with that restriction.
-> >
-> > I agree that this is a problem and I will mention this limitation in the commit
-> log.
-> > However to address this properly you need nested IOMMU group which
-> don't really exist.
-> > This feature is still useful, at least for us, as you can enable sriov
-> > in a guest and work with probed VFs in the same guest.
-> > Furthermore, if you have a real nested IOMMU you should be able to do
-> > nested device assignment even though the PF and VF's belong to the same
-> group.
-> >
-> > I think we should push this feature with the limitation and hopefully
-> > it will be addressed in the future, agree?
-> 
-> Sorry, I don't agree, nor do I think that nested IOMMU groups are the
-> solution to the problem (or even really understand what nest IOMMU
-> groups are).  It seems we have an issue that an untrusted user is creating
-> devices and we're trying to overload the concept of an IOMMU group to
-> handle that.  An IOMMU group is meant to describe the DMA isolation of a
-> set of devices, so it really has no business being overloaded to enforce
-> ownership like this, nor can we assume that we can support multiple IOMMU
-> contexts within a group regardless of a "real nested IOMMU".  We already
-> see coming a very serious usage restriction that a user cannot create
-> independent IOMMU contexts as a direct result of this hack, which severely
-> limits future usefulness.  I don't know what the solution is here, but I'm
-> pretty sure this is not it.  Thanks,
-> 
-> Alex
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ Documentation/kernel-parameters.txt |    2 ++
+ drivers/pci/pci.c                   |   60 ++++++++++++++++++++++++++++-------
+ 2 files changed, 51 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index c4802f5..cb09503 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -3003,6 +3003,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
++				<domain>, <bus>, <slot> and <func> can be set to
++				"*" which means match all values.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
+ 				noresize: Don't change the resources' sizes when
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1d80a94..2e15ac8 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4759,6 +4759,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 	int seg, bus, slot, func, align_order, count;
+ 	resource_size_t align = 0;
+ 	char *p;
++	bool invalid = false;
+ 
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+@@ -4777,16 +4778,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		} else {
+ 			align_order = -1;
+ 		}
+-		if (sscanf(p, "%x:%x:%x.%x%n",
+-			&seg, &bus, &slot, &func, &count) != 4) {
++		if (p[0] == '*' && p[1] == ':') {
++			seg = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
++				p[count] != ':') {
++			invalid = true;
++			break;
++		}
++		p += count + 1;
++		if (*p == '*') {
++			bus = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
++			invalid = true;
++			break;
++		}
++		p += count;
++		if (*p == '.') {
++			slot = bus;
++			bus = seg;
+ 			seg = 0;
+-			if (sscanf(p, "%x:%x.%x%n",
+-					&bus, &slot, &func, &count) != 3) {
+-				/* Invalid format */
+-				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+-					p);
++			p++;
++		} else if (*p == ':') {
++			p++;
++			if (p[0] == '*' && p[1] == '.') {
++				slot = -1;
++				count = 1;
++			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
++					p[count] != '.') {
++				invalid = true;
+ 				break;
+ 			}
++			p += count + 1;
++		} else {
++			invalid = true;
++			break;
++		}
++		if (*p == '*') {
++			func = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
++			invalid = true;
++			break;
+ 		}
+ 		p += count;
+ 		if (!strncmp(p, ":noresize", 9)) {
+@@ -4794,10 +4828,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 			p += 9;
+ 		} else
+ 			*resize = true;
+-		if (seg == pci_domain_nr(dev->bus) &&
+-			bus == dev->bus->number &&
+-			slot == PCI_SLOT(dev->devfn) &&
+-			func == PCI_FUNC(dev->devfn)) {
++		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
++			(bus == dev->bus->number || bus == -1) &&
++			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
++			(func == PCI_FUNC(dev->devfn) || func == -1)) {
+ 			if (align_order == -1)
+ 				align = PAGE_SIZE;
+ 			else
+@@ -4807,10 +4841,14 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		}
+ 		if (*p != ';' && *p != ',') {
+ 			/* End of param or invalid format */
++			invalid = true;
+ 			break;
+ 		}
+ 		p++;
+ 	}
++	if (invalid)
++		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
++				p);
+ 	spin_unlock(&resource_alignment_lock);
+ 	return align;
+ }
+-- 
+1.7.9.5
