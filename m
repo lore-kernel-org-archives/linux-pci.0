@@ -1,92 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36141 "EHLO foss.arm.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53889 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750921AbcFJHh6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jun 2016 03:37:58 -0400
-Date: Fri, 10 Jun 2016 08:37:51 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Doug Anderson <dianders@chromium.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI: Rockchip: Add Rockchip PCIe controller
- support
-Message-ID: <20160610083751.05a82c80@arm.com>
-In-Reply-To: <CAD=FV=U2fNgkNNLZbSAkt5LjfsSazjZnga=3h0MUi8AFMgjk_w@mail.gmail.com>
-References: <1465373154-882-1-git-send-email-shawn.lin@rock-chips.com>
-	<CAD=FV=U2fNgkNNLZbSAkt5LjfsSazjZnga=3h0MUi8AFMgjk_w@mail.gmail.com>
+	id S932533AbcF3Pne (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jun 2016 11:43:34 -0400
+Date: Thu, 30 Jun 2016 09:35:23 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Stephen Warren <swarren@nvidia.com>
+Subject: Re: [PATCH] pci: tegra: correctly program PADS_REFCLK registers
+Message-ID: <20160630093523.24cd5767@t450s.home>
+In-Reply-To: <20160630132001.GA26758@ulmo.ba.sec>
+References: <20160621184640.19885-1-swarren@wwwdotorg.org>
+	<20160622125749.GJ26943@ulmo.ba.sec>
+	<576AAFFD.4050404@wwwdotorg.org>
+	<20160623084448.GA8608@ulmo.ba.sec>
+	<20160630132001.GA26758@ulmo.ba.sec>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 9 Jun 2016 21:00:08 -0700
-Doug Anderson <dianders@chromium.org> wrote:
+On Thu, 30 Jun 2016 15:20:01 +0200
+Thierry Reding <thierry.reding@gmail.com> wrote:
 
-Hi Doug,
-
-> Shawn,
+> On Thu, Jun 23, 2016 at 10:44:48AM +0200, Thierry Reding wrote:
+> > On Wed, Jun 22, 2016 at 09:34:21AM -0600, Stephen Warren wrote:  
+> > > On 06/22/2016 06:57 AM, Thierry Reding wrote:  
+> > > > On Tue, Jun 21, 2016 at 12:46:40PM -0600, Stephen Warren wrote:  
+> > > > > From: Stephen Warren <swarren@nvidia.com>
+> > > > > 
+> > > > > The value that should be programmed into the PADS_REFCLK register varies
+> > > > > per SoC. Fix the Tegra PCIe driver to program the correct values. Future
+> > > > > SoCs will require different values in cfg0/1, so the two values are stored
+> > > > > separately in the per-SoC data structures.
+> > > > > 
+> > > > > For reference, the values are all documented in NV bug 1771116 comment 20.
+> > > > > Rhe ASIC team has validated all these values, except for the Tegra20 value
+> > > > > which is simply left unchanged in this patch.  
+> > >   
+> > > > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c  
+> > >   
+> > > > > @@ -2078,6 +2070,7 @@ static const struct tegra_pcie_soc_data tegra20_pcie_data = {
+> > > > >   	.msi_base_shift = 0,
+> > > > >   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
+> > > > >   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
+> > > > > +	.pads_refclk_cfg0 = 0xfa5cfa5c,
+> > > > >   	.has_pex_clkreq_en = false,
+> > > > >   	.has_pex_bias_ctrl = false,
+> > > > >   	.has_intr_prsnt_sense = false,
+> > > > > @@ -2090,6 +2083,8 @@ static const struct tegra_pcie_soc_data tegra30_pcie_data = {
+> > > > >   	.msi_base_shift = 8,
+> > > > >   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+> > > > >   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+> > > > > +	.pads_refclk_cfg0 = 0xfa5cfa5c,
+> > > > > +	.pads_refclk_cfg1 = 0xfa5cfa5c,
+> > > > >   	.has_pex_clkreq_en = true,
+> > > > >   	.has_pex_bias_ctrl = true,
+> > > > >   	.has_intr_prsnt_sense = true,
+> > > > > @@ -2102,6 +2097,7 @@ static const struct tegra_pcie_soc_data tegra124_pcie_data = {
+> > > > >   	.msi_base_shift = 8,
+> > > > >   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+> > > > >   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+> > > > > +	.pads_refclk_cfg0 = 0x44ac44ac,
+> > > > >   	.has_pex_clkreq_en = true,
+> > > > >   	.has_pex_bias_ctrl = true,
+> > > > >   	.has_intr_prsnt_sense = true,  
+> > > > 
+> > > > I think it'd be nice to have these decoded into their individual fields,
+> > > > to reduce the magic. We already define the register fields, so it seems
+> > > > sensible to use them.  
+> > > 
+> > > I did consider that. However, the specification from the ASIC team is always
+> > > the raw values. Decoding them into bitfields is only going to make it harder
+> > > to verify whether the correct values are present (since the reader has to
+> > > manually expand the math), and introduce the possibility of errors during
+> > > the expansion process. I think using raw numbers is better in this case.  
+> > 
+> > Alright, fine with me:
+> > 
+> > Acked-by: Thierry Reding <treding@nvidia.com>  
 > 
-> On Wed, Jun 8, 2016 at 1:05 AM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
-> > This patch adds Rockchip PCIe controller support found
-> > on RK3399 Soc platform.
-> >
-> > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> >
-> > ---
-> >
-> > Changes in v2:
-> > - remove phy related stuff and call phy API
-> > - add new head file and define lots of macro to make
-> >   the code more readable
-> > - remove lots msi related code suggested by Marc
-> > - add IO window address translation
-> > - init_port and parse_dt reconstruction suggested by Bharat
-> > - improve wr_own_conf suggested by Arnd
-> > - make pcie as an interrupt controller and fix wrong int handler
-> >   suggested by Marc
-> > - remove PCI_PROBE_ONLY suggested by Lorenzo
-> >
-> >  drivers/pci/host/Kconfig         |   11 +
-> >  drivers/pci/host/Makefile        |    1 +
-> >  drivers/pci/host/pcie-rockchip.c | 1049 ++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/host/pcie-rockchip.h |  209 ++++++++
-> >  4 files changed, 1270 insertions(+)
+> Hi Bjorn,
 > 
-> A few drive-by comments for things I ran into trying to get this
-> working.  I'm no PCI expert.
-> 
-> 
-> > +config PCIE_ROCKCHIP
-> > +       bool "Rockchip PCIe controller"
-> > +       depends on ARM64 && ARCH_ROCKCHIP
-> > +       depends on OF
-> > +       select MFD_SYSCON
-> > +       select PCI_MSI_IRQ_DOMAIN if PCI_MSI
-> 
-> Probably because I don't know what I'm doing, but when I had PCI_MSI
-> configured I had trouble getting interrupts.  Figured I'd mention it
-> even though it's probably user error.
+> I do have a couple of other patches, mostly minor cleanup and prep-work
+> for 64-bit ARM support, that I'd like to get into v4.8. Would you mind
+> if I took Stephen's patches into a branch and send it all out via pull
+> request after it passed testing?
 
-Could you please elaborate on this? Do you see MSIs being
-allocated but not delivered? Or something else?
+Hi Theirry,
 
-The reason I'm asking is that it is very easy to end-up with MSIs
-issues with the GICv3 ITS if there is *anything* between the RC and the
-ITS. Typically, you'd have an SMMU that could potentially remap PCIe
-Requested IDs to Device IDs. Short of describing transformations in the
-msi-map property, you could end-up with no MSI being delivered.
+Bjorn is on holiday and will be back at the beginning of the v4.8 merge
+window, assuming everything sticks to a regular schedule.  I expect
+that anything that consolidates and prioritizes potential v4.8 content
+for easy evaluation on his return would be appreciated.  Thanks,
 
-Please let me know if I can help.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny.
+Alex
