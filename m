@@ -1,109 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Thumshirn <jthumshirn@suse.de>,
-	James Smart <james.smart@avagotech.com>,
-	Dick Kennedy <dick.kennedy@avagotech.com>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v2 3/6] lpfc: Use pci_(request|release)_mem_regions
-Date: Thu,  2 Jun 2016 09:30:31 +0200
-Message-Id: <51b9bf3879e440da6c34094dfd1ee765f94f51c3.1464795082.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
-References: <cover.1464795082.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1464795082.git.jthumshirn@suse.de>
-References: <cover.1464795082.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:18054 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752151AbcF3Kxl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 06:53:41 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5UArWTV068717
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:36 -0400
+Received: from e28smtp06.in.ibm.com (e28smtp06.in.ibm.com [125.16.236.6])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23uwt8pfrs-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:36 -0400
+Received: from localhost
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 30 Jun 2016 16:23:27 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v3 2/7] PCI: Ignore enforced alignment to VF BARs
+Date: Thu, 30 Jun 2016 18:53:08 +0800
+In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1467283993-3185-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we do have pci_request_mem_regions() and pci_release_mem_regions() at
-hand, use it in the lpfc driver.
+VF BARs are read-only zeroes according to SRIOV spec,
+the normal way(writing BARs) of allocating resources wouldn't
+be applied to VFs. The VFs' resources would be allocated
+when we enable SR-IOV capability. So we should not try to
+reassign alignment after we enable VFs. It's meaningless
+and will release the allocated resources which leads to a bug.
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: James Smart <james.smart@avagotech.com>
-Cc: Dick Kennedy <dick.kennedy@avagotech.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/pci/pci.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f57d02c..a8735f7 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4775,20 +4775,17 @@ static int
- lpfc_enable_pci_dev(struct lpfc_hba *phba)
- {
- 	struct pci_dev *pdev;
--	int bars = 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index be8f72c..6ae02de 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4822,6 +4822,10 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	resource_size_t align, size;
+ 	u16 command;
  
- 	/* Obtain PCI device reference */
- 	if (!phba->pcidev)
- 		goto out_error;
- 	else
- 		pdev = phba->pcidev;
--	/* Select PCI BARs */
--	bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 	/* Enable PCI device */
- 	if (pci_enable_device_mem(pdev))
- 		goto out_error;
- 	/* Request PCI resource for the device */
--	if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
-+	if (pci_request_mem_regions(pdev, LPFC_DRIVER_NAME))
- 		goto out_disable_device;
- 	/* Set up device as PCI master and save state for EEH */
- 	pci_set_master(pdev);
-@@ -4805,7 +4802,7 @@ out_disable_device:
- 	pci_disable_device(pdev);
- out_error:
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"1401 Failed to enable pci device, bars:x%x\n", bars);
-+			"1401 Failed to enable pci device\n");
- 	return -ENODEV;
- }
- 
-@@ -4820,17 +4817,14 @@ static void
- lpfc_disable_pci_dev(struct lpfc_hba *phba)
- {
- 	struct pci_dev *pdev;
--	int bars;
- 
- 	/* Obtain PCI device reference */
- 	if (!phba->pcidev)
- 		return;
- 	else
- 		pdev = phba->pcidev;
--	/* Select PCI BARs */
--	bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 	/* Release PCI resource and disable PCI device */
--	pci_release_selected_regions(pdev, bars);
-+	pci_release_mem_regions(pdev);
- 	pci_disable_device(pdev);
- 
- 	return;
-@@ -9705,7 +9699,6 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
- 	struct lpfc_vport **vports;
- 	struct lpfc_hba   *phba = vport->phba;
- 	int i;
--	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 
- 	spin_lock_irq(&phba->hbalock);
- 	vport->load_flag |= FC_UNLOADING;
-@@ -9780,7 +9773,7 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
- 
- 	lpfc_hba_free(phba);
- 
--	pci_release_selected_regions(pdev, bars);
-+	pci_release_mem_regions(pdev);
- 	pci_disable_device(pdev);
- }
- 
++	/* We should never try to reassign VF's alignment */
++	if (dev->is_virtfn)
++		return;
++
+ 	/* check if specified PCI is target device to reassign */
+ 	align = pci_specified_resource_alignment(dev);
+ 	if (!align)
 -- 
-1.8.5.6
+1.7.9.5
+
