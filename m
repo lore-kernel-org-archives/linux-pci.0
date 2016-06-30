@@ -1,100 +1,155 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3 4/4] ARM/PCI: remove arch specific pcibios_enable_device()
-Date: Wed,  8 Jun 2016 12:04:50 +0100
-Message-Id: <1465383890-13538-5-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1465383890-13538-1-git-send-email-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Russell King <linux@arm.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
- David Daney <david.daney@cavium.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:33230 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752410AbcF3QyV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jun 2016 12:54:21 -0400
+Date: Thu, 30 Jun 2016 18:54:17 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de, axboe@fb.com,
+	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 07/13] pci: Provide sensible irq vector alloc/free
+	routines
+Message-ID: <20160630165417.GA21787@lst.de>
+References: <1465934346-20648-1-git-send-email-hch@lst.de> <1465934346-20648-8-git-send-email-hch@lst.de> <20160623111610.GA28861@dhcp-27-118.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160623111610.GA28861@dhcp-27-118.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The arm pcibios_enable_device() implementation exists solely
-to prevent enabling PCI resources on PCI_PROBE_ONLY systems, since
-on those systems the PCI resources are currently not claimed (ie
-inserted in the PCI resource tree - which means their parent
-pointer is not correctly set-up) therefore they can not be enabled
-since this would trigger PCI set-ups failures.
+On Thu, Jun 23, 2016 at 01:16:10PM +0200, Alexander Gordeev wrote:
+> New APIs should be documented in Documentation/PCI/MSI-HOWTO.txt, I guess.
 
-After removing the pci=firmware command line option in:
+Ok, done.
 
-commit 903589ca7165 ("ARM: 8554/1: kernel: pci: remove pci=firmware
-command line parameter handling")
+> > +static unsigned int pci_nr_irq_vectors(struct pci_dev *pdev)
+> > +{
+> > +	int nr_entries;
+> > +
+> > +	nr_entries = pci_msix_vec_count(pdev);
+> > +	if (nr_entries <= 0 && pci_msi_supported(pdev, 1))
+> > +		nr_entries = pci_msi_vec_count(pdev);
+> > +	if (nr_entries <= 0)
+> > +		nr_entries = 1;
+> > +	return nr_entries;
+> > +}
+> 
+> This function is strange, because it:
+>   (a) does not consider PCI_IRQ_NOMSIX flag;
+>   (b) only calls pci_msi_supported() for MSI case;
+>   (c) calls pci_msi_supported() with just one vector;
+>   (d) might return suboptimal number of vectors (number of MSI-X used 
+>       later for MSI or vice versa)
+> 
+> Overall, I would suggest simply return maximum between MSI-X and MSI
+> numbers and let the rest of the code (i.e the two range functions)
+> handle a-d.
 
-(that was used to set the PCI_PROBE_ONLY flag through the command line)
-and by introducing resources claiming in the PCI host controllers
-set-ups that have PCI_PROBE_ONLY as a probe option, there is no need for
-arch specific pcibios_enable_device() implementations anymore in that
-the kernel can rely on the generic pcibios_enable_device()
-implementation without resorting to arch specific code to work around
-the missing resources claiming enumeration step.
+Ok, fixed except for (c) - the only thing pci_msi_supported does with
+nvec is to check for it being less than 1, which we don't care about,
+and which really shouldn't be in this function to start with.
 
-On !PCI_PROBE_ONLY PCI bus set-ups, resources are always assigned
-either in pcibios initialization code or PCI host controllers drivers;
-since the PCI resource assignment API takes care of inserting the
-assigned resources in the resource tree, the resources parent pointers
-are correctly set-up, which means that this patch leaves behaviour
-unchanged for all arm PCI set-ups that do not set the PCI_PROBE_ONLY
-flag.
+> > +	struct msix_entry *msix_entries;
+> > +	int vecs, i;
+> > +
+> > +	msix_entries = kcalloc(max_vecs, sizeof(struct msix_entry), GFP_KERNEL);
+> > +	if (!msix_entries)
+> > +		return -ENOMEM;
+> > +
+> > +	for (i = 0; i < max_vecs; i++)
+> > +		msix_entries[i].entry = i;
+> > +
+> > +	vecs = pci_enable_msix_range(pdev, msix_entries, min_vecs, max_vecs);
+> > +	if (vecs > 0) {
+> 
+> This condition check is unneeded.
 
-Remove the pcibios_enable_device() function from the arm arch back-end
-so that the kernel now uses its generic implementation.
+Why?  We could get -ENOSPC back.  Oh, because our for loop will
+terminate immediately.  I can update it, but I think removing it
+is less readable than keeping it around.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@arm.linux.org.uk>
----
- arch/arm/kernel/bios32.c | 12 ------------
- 1 file changed, 12 deletions(-)
+> > +	if (!(flags & PCI_IRQ_NOMSIX)) {
+> > +		vecs = pci_enable_msix_range_wrapper(dev, irqs, min_vecs,
+> > +				max_vecs);
+> > +		if (vecs > 0)
+> > +			goto done;
+> > +	}
+> > +
+> > +	vecs = pci_enable_msi_range(dev, min_vecs, max_vecs);
+> > +	if (vecs > 0) {
+> > +		for (i = 0; i < vecs; i++)
+> > +			irqs[i] = dev->irq + i;
+> > +		goto done;
+> > +	}
+> > +
+> > +	if (min_vecs > 1)
+> > +		return -ENOSPC;
+> 
+> irqs is leaked if (min_vecs > 1)
+> 
+> You can get rid of this check at all if you reorganize your code i.e.
+> like this:
+> 
+> 	...
+> 
+> 	vecs = pci_enable_msi_range(dev, min_vecs, max_vecs);
+> 	if (vecs < 0)
+> 		goto legacy;
+> 
+> 	for (i = 0; i < vecs; i++)
+> 		irqs[i] = dev->irq + i;
+> 
+> done:
+> 	...
+> 
+> 
+> legacy:
+> 	...
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 05e61a2..488545f 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -590,18 +590,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
- 
--/**
-- * pcibios_enable_device - Enable I/O and memory.
-- * @dev: PCI device to be enabled
-- */
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	if (pci_has_flag(PCI_PROBE_ONLY))
--		return 0;
--
--	return pci_enable_resources(dev, mask);
--}
--
- int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
--- 
-2.6.4
+I've just moved the if below the kfree.
 
+> > +void pci_free_irq_vectors(struct pci_dev *dev)
+> > +{
+> > +	if (dev->msix_enabled)
+> > +		pci_disable_msix(dev);
+> > +	else if (dev->msi_enabled)
+> > +		pci_disable_msi(dev);
+> 
+> The checks are probably redundant or incomplete. Redundant - because
+> pci_disable_msi()/pci_disable_msix() do it anyways:
+> 
+> 	if (!pci_msi_enable || !dev || !dev->msi_enabled)
+> 		return;
+> 
+> Incomplete - because the two other conditions are not checked.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Ok, I've dropped the check.
+
+> 
+> > +	if (dev->irqs != &dev->irq)
+> > +		kfree(dev->irqs);
+> 
+> Unset dev->irqs?
+
+Fine with me, added.
+
+> > +#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
+> 
+> BTW, why PCI_IRQ_NOMSIX only and no PCI_IRQ_NOMSI?
+
+Because there is no need to call this API if your device only supports
+a single legacy vector anyway.
+
+> > +	if (min_vecs > 1)
+> > +		return -ENOSPC;
+> > +	dev->irqs = &dev->irq;
+> > +	return 1;
+> > +}
+> > +static inline void pci_free_irq_vectors(struct pci_dev *dev)
+> > +{
+> 
+> Unset dev->irqs?
+
+Ok.
