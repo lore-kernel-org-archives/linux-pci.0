@@ -1,146 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 22/25] PCI: tegra: Remove top-level resource from
- hierarchy
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Rob Herring <robh@kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, rfi@lists.rocketboards.org,
-	linux-renesas-soc@vger.kernel.org,
-	Simon Horman <horms@verge.net.au>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
-	linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
-	linux-arm-kernel@lists.infradead.org
-Date: Mon, 06 Jun 2016 18:07:28 -0500
-Message-ID: <20160606230728.20936.53648.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:62965 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752151AbcF3Kxq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 06:53:46 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5UArXn2128489
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:45 -0400
+Received: from e28smtp09.in.ibm.com (e28smtp09.in.ibm.com [125.16.236.9])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23uvafhk5v-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 06:53:44 -0400
+Received: from localhost
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 30 Jun 2016 16:23:30 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: [PATCH v3 3/7] PCI: Do not disable memory decoding in pci_reassigndev_resource_alignment()
+Date: Thu, 30 Jun 2016 18:53:09 +0800
+In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1467283993-3185-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-41534e53786d ("PCI: tegra: Implement a proper resource hierarchy") did two
-things:
+We should not disable memory decoding when we reassign alignment
+in pci_reassigndev_resource_alignment(). It's meaningless and
+have some side effect. For example, some fixup functions such as
+quirk_e100_interrupt() read PCI_COMMAND_MEMORY to know whether
+the devices has been initialized by the firmware or not. If we
+disable memory decoding here, these functions will get a wrong
+information that the devices was not initialized by the firmware
+which may cause a wrong fixup. Besides, disabling memory decoding
+may also break some devices that need to have memory decoding
+always-on during probing.
 
-  1) It added a top-level resource that encloses all resources declared in
-     the DT description, including registers and bridge apertures, and
-
-  2) It requested the bridge apertures, which means the PCI core can track
-     the resources used by PCI devices below the bridge.
-
-The latter is necessary, but the former is questionable because there's no
-guarantee that the bridge registers and the apertures are contiguous.  In
-this example:
-
-  # cat /proc/iomem
-  00000000-3fffffff : /pcie-controller@00003000
-    00000000-00000fff : /pcie-controller@00003000/pci@1,0
-    00003000-000037ff : pads
-    00003800-000039ff : afi
-    10000000-1fffffff : cs
-
-the resource tree claims that [mem 0x00003a00-0x0fffffff] is consumed by
-/pcie-controller@00003000, but it's not mentioned in the DT, and it might
-actually be used by other devices.
-
-Remove the top-level resource so we don't claim more than the device
-actually consumes.
-
-This reintroduces the problem that we can't match the resources, e.g.,
-"pads", "afi", "cs", etc., to the DT device.  I think this should be solved
-by having the DT core request all resources of all devices in the DT (it
-does not do that today).  If a driver claims the device, it can request the
-resources it uses.  For example:
-
-  # cat /proc/iomem
-  00000000-00000fff : /pcie-controller@00003000
-    00000000-00000fff : /pcie-controller@00003000/pci@1,0
-  00003000-000037ff : /pcie-controller@00003000
-    00003000-000037ff : pads
-  00003800-000039ff : /pcie-controller@00003000
-    00003800-000039ff : afi
-  10000000-1fffffff : /pcie-controller@00003000
-    10000000-1fffffff : cs
-  ...
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pci-tegra.c |   23 +++--------------------
- 1 file changed, 3 insertions(+), 20 deletions(-)
+ drivers/pci/pci.c |    8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index c388468..920a899 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -274,7 +274,6 @@ struct tegra_pcie {
- 	struct list_head buses;
- 	struct resource *cs;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6ae02de..6241cfc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4820,7 +4820,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	int i;
+ 	struct resource *r;
+ 	resource_size_t align, size;
+-	u16 command;
  
--	struct resource all;
- 	struct resource io;
- 	struct resource pio;
- 	struct resource mem;
-@@ -623,7 +622,7 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- 	sys->mem_offset = pcie->offset.mem;
- 	sys->io_offset = pcie->offset.io;
- 
--	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->io);
-+	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->io);
- 	if (err < 0)
- 		return err;
- 
-@@ -631,11 +630,11 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- 	if (err < 0)
- 		return err;
- 
--	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->mem);
-+	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->mem);
- 	if (err < 0)
- 		return err;
- 
--	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->prefetch);
-+	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->prefetch);
- 	if (err)
- 		return err;
- 
-@@ -1822,12 +1821,6 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 	struct resource res;
- 	int err;
- 
--	memset(&pcie->all, 0, sizeof(pcie->all));
--	pcie->all.flags = IORESOURCE_MEM;
--	pcie->all.name = np->full_name;
--	pcie->all.start = ~0;
--	pcie->all.end = 0;
--
- 	if (of_pci_range_parser_init(&parser, np)) {
- 		dev_err(pcie->dev, "missing \"ranges\" property\n");
- 		return -EINVAL;
-@@ -1880,18 +1873,8 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 			}
- 			break;
- 		}
--
--		if (res.start <= pcie->all.start)
--			pcie->all.start = res.start;
--
--		if (res.end >= pcie->all.end)
--			pcie->all.end = res.end;
+ 	/* We should never try to reassign VF's alignment */
+ 	if (dev->is_virtfn)
+@@ -4838,12 +4837,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
  	}
  
--	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->all);
--	if (err < 0)
--		return err;
+-	dev_info(&dev->dev,
+-		"Disabling memory decoding and releasing memory resources.\n");
+-	pci_read_config_word(dev, PCI_COMMAND, &command);
+-	command &= ~PCI_COMMAND_MEMORY;
+-	pci_write_config_word(dev, PCI_COMMAND, command);
 -
- 	err = of_pci_parse_bus_range(np, &pcie->busn);
- 	if (err < 0) {
- 		dev_err(pcie->dev, "failed to parse ranges property: %d\n",
++	dev_info(&dev->dev, "Releasing memory resources.\n");
+ 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+-- 
+1.7.9.5
+
