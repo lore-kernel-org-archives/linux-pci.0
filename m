@@ -1,39 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33395 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751523AbcF3RfL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Jun 2016 13:35:11 -0400
-Date: Thu, 30 Jun 2016 19:35:08 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de, axboe@fb.com,
-	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 07/13] pci: Provide sensible irq vector alloc/free
-	routines
-Message-ID: <20160630173508.GA23378@lst.de>
-References: <1465934346-20648-1-git-send-email-hch@lst.de> <1465934346-20648-8-git-send-email-hch@lst.de> <20160623111610.GA28861@dhcp-27-118.brq.redhat.com> <20160630165417.GA21787@lst.de> <20160630172808.GB9247@agordeev.lab.eng.brq.redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v3 2/7] PCI: Ignore enforced alignment to VF BARs
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160701003959.GB15147@gwshan>
+Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	linux-doc@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, corbet@lwn.net,
+	linux-kernel@vger.kernel.org, warrier@linux.vnet.ibm.com,
+	alex.williamson@redhat.com, paulus@samba.org, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 1 Jul 2016 13:27:17 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160630172808.GB9247@agordeev.lab.eng.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160701003959.GB15147@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <21112bd7-d343-46b6-1df1-b20cc1c1b24e@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 30, 2016 at 07:28:09PM +0200, Alexander Gordeev wrote:
-> I think I need to look at the updated version :)
+Hi Gavin,
 
-I've astarted processing the comments for the whole series and plan
-to post an update tomorrow.
+On 2016/7/1 8:39, Gavin Shan wrote:
 
-> > > > +#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
-> > > 
-> > > BTW, why PCI_IRQ_NOMSIX only and no PCI_IRQ_NOMSI?
-> > 
-> > Because there is no need to call this API if your device only supports
-> > a single legacy vector anyway.
-> 
-> What if a device reports (up to 32) MSIs and MSI-X allocation failed? The
-> driver might prefer the legacy single (i.e. due to errata in MSI), but
-> there is no flag to ask for it.
+> On Thu, Jun 30, 2016 at 06:53:08PM +0800, Yongji Xie wrote:
+>> VF BARs are read-only zeroes according to SRIOV spec,
+>> the normal way(writing BARs) of allocating resources wouldn't
+>> be applied to VFs. The VFs' resources would be allocated
+>> when we enable SR-IOV capability. So we should not try to
+>> reassign alignment after we enable VFs. It's meaningless
+>> and will release the allocated resources which leads to a bug.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>> drivers/pci/pci.c |    4 ++++
+>> 1 file changed, 4 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index be8f72c..6ae02de 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4822,6 +4822,10 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>> 	resource_size_t align, size;
+>> 	u16 command;
+>>
+>> +	/* We should never try to reassign VF's alignment */
+>> +	if (dev->is_virtfn)
+>> +		return;
+>> +
+> Yongji, I think it's correct to ignore VF's BARs. Another concern is:
+> it's safe to apply alignment to PF's IOV BARs? Lets have an extreme
+> example here: one PF has 16 VFs; each VF has only one 1KB. It means
+> the only PF IOV BAR is 16KB. I don't see how it works after expanding
+> it to 64KB which is the page size. It might be not a problem on PowerNV
+> platform, but potentially a issue on x86?
 
-Ok, I'll add it for now.
+Seems like the alignment would not be applied to IOV BARs because
+pci_reassigndev_resource_alignment() will be called before
+sriov_init().
+
+Thanks,
+Yongji
