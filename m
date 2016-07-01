@@ -1,111 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 2/4] microblaze/PCI: Implement pci_resource_to_user()
- with pcibios_resource_to_bus()
-To: Michal Simek <monstr@monstr.eu>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: sparclinux@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Fri, 17 Jun 2016 15:12:03 -0500
-Message-ID: <20160617201202.11714.26196.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160617195835.11714.18657.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160617195835.11714.18657.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33265 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751505AbcGAAuo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 20:50:44 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u610nFOn039553
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 20:50:43 -0400
+Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23wa3kekjp-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2016 20:50:43 -0400
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 1 Jul 2016 10:50:40 +1000
+Date: Fri, 1 Jul 2016 10:50:36 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Subject: Re: [PATCH v3 3/7] PCI: Do not disable memory decoding in
+ pci_reassigndev_resource_alignment()
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1467283993-3185-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <20160701005036.GA18999@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"User" addresses are shown in /sys/devices/pci.../.../resource and
-/proc/bus/pci/devices and used as mmap offsets for /proc/bus/pci/BB/DD.F
-files.  For I/O port resources on microblaze, these are PCI bus addresses,
-i.e., raw BAR values.
+On Thu, Jun 30, 2016 at 06:53:09PM +0800, Yongji Xie wrote:
+>We should not disable memory decoding when we reassign alignment
+>in pci_reassigndev_resource_alignment(). It's meaningless and
+>have some side effect. For example, some fixup functions such as
+>quirk_e100_interrupt() read PCI_COMMAND_MEMORY to know whether
+>the devices has been initialized by the firmware or not. If we
+>disable memory decoding here, these functions will get a wrong
+>information that the devices was not initialized by the firmware
+>which may cause a wrong fixup. Besides, disabling memory decoding
+>may also break some devices that need to have memory decoding
+>always-on during probing.
+>
 
-Previously pci_resource_to_user() computed the user address by subtracting
-"hose->io_base_virt - _IO_BASE" from the resource start:
+It seems the changelog isn't correct enough if it's talking about
+below check in code:
 
-  pci_resource_to_user()
-    if (IO)
-      offset = (unsigned long)hose->io_base_virt - _IO_BASE;
-    *start = rsrc->start - offset;
+if (!(command & PCI_COMMAND_MEMORY) || !pci_resource_start(dev, 0))
+	return;
 
-We've already told the PCI core about that "hose->io_base_virt - _IO_BASE"
-offset:
+>Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>---
+> drivers/pci/pci.c |    8 +-------
+> 1 file changed, 1 insertion(+), 7 deletions(-)
+>
+>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>index 6ae02de..6241cfc 100644
+>--- a/drivers/pci/pci.c
+>+++ b/drivers/pci/pci.c
+>@@ -4820,7 +4820,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+> 	int i;
+> 	struct resource *r;
+> 	resource_size_t align, size;
+>-	u16 command;
+>
+> 	/* We should never try to reassign VF's alignment */
+> 	if (dev->is_virtfn)
+>@@ -4838,12 +4837,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+> 		return;
+> 	}
+>
+>-	dev_info(&dev->dev,
+>-		"Disabling memory decoding and releasing memory resources.\n");
+>-	pci_read_config_word(dev, PCI_COMMAND, &command);
+>-	command &= ~PCI_COMMAND_MEMORY;
+>-	pci_write_config_word(dev, PCI_COMMAND, command);
+>-
+>+	dev_info(&dev->dev, "Releasing memory resources.\n");
 
-  pcibios_setup_phb_resources()
-    res = &hose->io_resource;
-    pci_add_resource_offset(resources, res, hose->io_base_virt - _IO_BASE);
+Is there a problem you found with PCI_COMMAND removed? If so, could you
+please share more details, thanks.
 
-so pcibios_resource_to_bus() knows how to do that translation.
+> 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+> 		r = &dev->resource[i];
+> 		if (!(r->flags & IORESOURCE_MEM))
 
-No functional change intended.
+Thanks,
+Gavin
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/microblaze/pci/pci-common.c |   42 +++++++++++++-------------------------
- 1 file changed, 14 insertions(+), 28 deletions(-)
-
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 1974567..81556b8 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -444,39 +444,25 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
- 			  const struct resource *rsrc,
- 			  resource_size_t *start, resource_size_t *end)
- {
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	resource_size_t offset = 0;
-+	struct pci_bus_region region;
- 
--	if (hose == NULL)
-+	if (rsrc->flags & IORESOURCE_IO) {
-+		pcibios_resource_to_bus(dev->bus, &region,
-+					(struct resource *) rsrc);
-+		*start = region.start;
-+		*end = region.end;
- 		return;
-+	}
- 
--	if (rsrc->flags & IORESOURCE_IO)
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--
--	/* We pass a fully fixed up address to userland for MMIO instead of
--	 * a BAR value because X is lame and expects to be able to use that
--	 * to pass to /dev/mem !
-+	/* We pass a CPU physical address to userland for MMIO instead of a
-+	 * BAR value because X is lame and expects to be able to use that
-+	 * to pass to /dev/mem!
- 	 *
--	 * That means that we'll have potentially 64 bits values where some
--	 * userland apps only expect 32 (like X itself since it thinks only
--	 * Sparc has 64 bits MMIO) but if we don't do that, we break it on
--	 * 32 bits CHRPs :-(
--	 *
--	 * Hopefully, the sysfs insterface is immune to that gunk. Once X
--	 * has been fixed (and the fix spread enough), we can re-enable the
--	 * 2 lines below and pass down a BAR value to userland. In that case
--	 * we'll also have to re-enable the matching code in
--	 * __pci_mmap_make_offset().
--	 *
--	 * BenH.
-+	 * That means we may have 64-bit values where some apps only expect
-+	 * 32 (like X itself since it thinks only Sparc has 64-bit MMIO).
- 	 */
--#if 0
--	else if (rsrc->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--#endif
--
--	*start = rsrc->start - offset;
--	*end = rsrc->end - offset;
-+	*start = rsrc->start;
-+	*end = rsrc->end;
- }
- 
- /**
