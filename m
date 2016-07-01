@@ -1,40 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:34042 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbcGME65 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 00:58:57 -0400
-Subject: Error handling in drivers/pci/host/pcie-xilinx.c
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Message-ID: <e451321a-42de-9d5f-bf33-bbcb495ebc6f@wanadoo.fr>
-Date: Wed, 13 Jul 2016 06:58:22 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:55256 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751953AbcGAHW3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Jul 2016 03:22:29 -0400
+Date: Fri, 1 Jul 2016 09:25:27 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 06/13] irq: add a helper spread an affinity mask for
+ MSI/MSI-X vectors
+Message-ID: <20160701072527.GA20160@agordeev.lab.eng.brq.redhat.com>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+ <1465934346-20648-7-git-send-email-hch@lst.de>
+ <20160625200518.GA29251@dhcp-27-118.brq.redhat.com>
+ <20160630174854.GA23578@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160630174854.GA23578@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(resent because of broken cc)
+On Thu, Jun 30, 2016 at 07:48:54PM +0200, Christoph Hellwig wrote:
+> On Sat, Jun 25, 2016 at 10:05:19PM +0200, Alexander Gordeev wrote:
+> > > + * and generate an output cpumask suitable for spreading MSI/MSI-X vectors
+> > > + * so that they are distributed as good as possible around the CPUs.  If
+> > > + * more vectors than CPUs are available we'll map one to each CPU,
+> > 
+> > Unless I do not misinterpret a loop from msix_setup_entries() (patch 08/13),
+> > the above is incorrect:
+> 
+> What part do you think is incorrect?
 
+With your explanations below and no immediate intention to fix the
+algorithm it is correct.
 
-Hi,
+> > (*) I guess, in some topology configurations a total number of all
+> > first siblings may be less than the number of vectors.
+> 
+> Yes, in that case we'll assign imcompetely.  I've already heard people
+> complaining about that at LSF/MM, but no one volunteered patches.
+> I only have devices with 1 or enough vectores to test, so I don't
+> really dare to touch the algorithm.  Either way the algorithm
+> change should probably be a different patch than refactoring it and
+> moving it around.
 
-in file 'drivers/pci/host/pcie-xilinx.c', error handling in 
-'xilinx_pcie_init_irq_domain()' seams to be broken.
-
-The pattern used is:
-
-    if (!var) {
-       ...
-       dev_err(...);
-       return PTR_ERR(var);
-    }
-
-so we always return '0', which means success.
-
-Returning PTR_ERR(-EINVAL) or PTR_ERR(-ENODEV) could be, IMHO, better.
-
-Best regards,
-
-CJ
-
-
+I see your approach now. Thanks!
