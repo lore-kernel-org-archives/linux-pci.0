@@ -1,188 +1,230 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:62704 "EHLO mga09.intel.com"
+Received: from foss.arm.com ([217.140.101.70]:39852 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752996AbcG1IQa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jul 2016 04:16:30 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, corbet@lwn.net
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v5 2/8] thunderbolt: Updating the register definitions
-Date: Thu, 28 Jul 2016 11:15:15 +0300
-Message-Id: <1469693721-5641-3-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
-References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+	id S1752000AbcGAQJg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Jul 2016 12:09:36 -0400
+Date: Fri, 1 Jul 2016 17:09:23 +0100
+From: Liviu Dudau <liviu.dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
+Message-ID: <20160701160923.GF8609@e106497-lin.cambridge.arm.com>
+References: <20160630151931.29216-1-thierry.reding@gmail.com>
+ <20160701144648.GC8609@e106497-lin.cambridge.arm.com>
+ <4061641.rLdO1g8OBR@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4061641.rLdO1g8OBR@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding more Thunderbolt(TM) register definitions
-and some helper macros.
+On Fri, Jul 01, 2016 at 05:44:09PM +0200, Arnd Bergmann wrote:
+> On Friday, July 1, 2016 3:46:48 PM CEST Liviu Dudau wrote:
+> > On Thu, Jun 30, 2016 at 05:19:30PM +0200, Thierry Reding wrote:
+> > > From: Arnd Bergmann <arnd@arndb.de>
+> > > 
+> > > This patch makes the existing pci_host_bridge structure a proper device
+> > > that is usable by PCI host drivers in a more standard way. In addition
+> > > to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
+> > > and pci_create_root_bus interfaces, this unfortunately means having to
+> > > add yet another interface doing basically the same thing, and add some
+> > > extra code in the initial step.
+> > > 
+> > > However, this time it's more likely to be extensible enough that we
+> > > won't have to do another one again in the future, and we should be
+> > > able to reduce code much more as a result.
+> > 
+> > I am really disapointed by the direction in which the whole pci_host_bridge
+> > structure and associated functions is going. When I started to get involved
+> > in this mess that is the creation of a root PCI bus I was hoping that we
+> > are moving towards one or few functions that create the root bus by using
+> > the details provided in the host bridge without having so many variants for
+> > the functionality.
+> 
+> That is the plan, we just never made a lot of progress here.
+> 
+> > One reason for this holy mess is the duplication of information. Both root
+> > bus and the pci_host_bridge hold pointers to useful information (msi_controller,
+> > pci_ops) and coherency should be guaranteed when one or the other gets created.
+> > Hence the ridiculous dance being done to find if root bus hasn't already been
+> > created and if not reusing the scrap bus we have created at the top of
+> > pci_create_root_bus() to actually set the data, then create the pci_host_bridge,
+> > oops we need more information, and so on. (apologies for the incoherent style,
+> > I'm trying to duplicate the spirit of the probe.c code :) )
+> 
+> Agreed.
+> 
+> > I think this patchset has the right intention but it is not doing it in
+> > the right way. To me, the right way is to separate the whole allocation
+> > of the pci_host_bridge structure from the scanning or the root bus (keeping the
+> > INIT_LIST_HEAD(&bridge->windows) call inside), not add the sysdata pointer
+> > *at all* to pci_host_bridge, move the information from pci_bus into pci_host_bridge
+> > and make pci_scan_root_bus take a pci_host_bridge pointer once that has been
+> > done.
+> 
+> Again, this is what I'm doing here, unfortunately we cannot remove the
+> sysdata pointer altogether as we still have over a hundred existing PCI
+> host bridge implementations that all use sysdata.
+> 
+> > Think of the code structure as a reflection of how the system is structured: the
+> > PCI-to-host bridge is a structure that holds the information required to connect
+> > the functionality of the host code (msi_controller, host-to-bus resource windows)
+> > to the PCI(e) bus. The root pci_bus should only have PCI(e) bus information if
+> > possible.
+> 
+> Exactly.
+> 
+> > > 
+> > > The main idea is to pull the allocation of 'struct pci_host_bridge' out
+> > > of the registration, and let individual host drivers and architecture
+> > > code fill the members before calling the registration function.
+> > 
+> > That's how we got into the arch/arm mess that we currently have. The host driver
+> > should not drive the instantiation of the pci_host_bridge structure because it
+> > will prevent you from having two drivers running at the same time.
+> 
+> Can you clarify that? I don't see what prevents two drivers from each
+> creating a pci_host_bridge structure and passing it into
+> pci_host_bridge_register().
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 109 insertions(+)
+Maybe I'm exagerating a bit, but I always disliked the pci_common_init() function and
+the way it is creating a pci_host_bridge while relying on hw_pci hooks to get
+things ready. I'm pretty sure there are still issues around the fact that a lot of
+platform drivers have a subsys_initcall() function that calls pci_common_init(). I
+don't want us to go down that path again.
 
-diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
-index 75cf069..b8e961f 100644
---- a/drivers/thunderbolt/nhi_regs.h
-+++ b/drivers/thunderbolt/nhi_regs.h
-@@ -9,6 +9,11 @@
- 
- #include <linux/types.h>
- 
-+#define NHI_MMIO_BAR 0
-+
-+#define TBT_RING_MIN_NUM_BUFFERS	2
-+#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
-+
- enum ring_flags {
- 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
- 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
-@@ -39,6 +44,33 @@ struct ring_desc {
- 	u32 time; /* write zero */
- } __packed;
- 
-+/**
-+ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
-+ * This is same as struct ring_desc, but without the use of bitfields and
-+ * with explicit endianity.
-+ */
-+struct tbt_buf_desc {
-+	__le64 phys;
-+	__le32 attributes;
-+	__le32 time;
-+};
-+
-+#define DESC_ATTR_LEN_SHIFT		0
-+#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
-+#define DESC_ATTR_EOF_SHIFT		12
-+#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
-+#define DESC_ATTR_SOF_SHIFT		16
-+#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
-+#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
-+#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
-+#define DESC_ATTR_DESC_DONE		BIT(21)
-+#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
-+#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
-+#define DESC_ATTR_INT_EN		BIT(23)
-+#define DESC_ATTR_OFFSET_SHIFT		24
-+#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
-+
-+
- /* NHI registers in bar 0 */
- 
- /*
-@@ -60,6 +92,30 @@ struct ring_desc {
-  */
- #define REG_RX_RING_BASE	0x08000
- 
-+#define REG_RING_STEP			16
-+#define REG_RING_PHYS_LO_OFFSET		0
-+#define REG_RING_PHYS_HI_OFFSET		4
-+#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
-+#define REG_RING_CONS_SHIFT		0
-+#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
-+#define REG_RING_PROD_SHIFT		16
-+#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
-+#define REG_RING_SIZE_OFFSET		12
-+#define REG_RING_SIZE_SHIFT		0
-+#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
-+#define REG_RING_BUF_SIZE_SHIFT		16
-+#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
-+
-+#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
-+			      ((iobase) + (ringbase) + \
-+			      ((ringnumber) * REG_RING_STEP) + \
-+			      REG_RING_CONS_PROD_OFFSET)
-+
-+#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
-+				       REG_RING_PROD_SHIFT)
-+
-+#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
-+				       REG_RING_CONS_SHIFT)
- /*
-  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
-  * 00: enum_ring_flags
-@@ -77,6 +133,19 @@ struct ring_desc {
-  * ..: unknown
-  */
- #define REG_RX_OPTIONS_BASE	0x29800
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
-+				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
-+#define REG_RX_OPTS_MASK_OFFSET		4
-+#define REG_RX_OPTS_MASK_EOF_SHIFT	0
-+#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
-+#define REG_RX_OPTS_MASK_SOF_SHIFT	16
-+#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
-+
-+#define REG_OPTS_STEP			32
-+#define REG_OPTS_E2E_EN			BIT(28)
-+#define REG_OPTS_RAW			BIT(30)
-+#define REG_OPTS_VALID			BIT(31)
- 
- /*
-  * three bitfields: tx, rx, rx overflow
-@@ -86,6 +155,7 @@ struct ring_desc {
-  */
- #define REG_RING_NOTIFY_BASE	0x37800
- #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
-+#define REG_RING_NOTIFY_STEP	4
- 
- /*
-  * two bitfields: rx, tx
-@@ -94,8 +164,47 @@ struct ring_desc {
-  */
- #define REG_RING_INTERRUPT_BASE	0x38200
- #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
-+#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
-+#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
-+							    (num_paths))
-+#define RING_INT_DISABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_ENABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_DISABLE_TX(base, ring_num) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_ENABLE_TX(base, ring_num) \
-+	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
-+			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+
-+#define REG_RING_INTERRUPT_STEP	4
-+
-+#define REG_INT_THROTTLING_RATE	0x38c00
-+#define REG_INT_THROTTLING_RATE_STEP	4
-+#define NUM_INT_VECTORS			16
-+
-+#define REG_INT_VEC_ALLOC_BASE	0x38c40
-+#define REG_INT_VEC_ALLOC_STEP		4
-+#define REG_INT_VEC_ALLOC_FIELD_BITS	4
-+#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
-+#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
-+					 REG_INT_VEC_ALLOC_FIELD_BITS)
- 
- /* The last 11 bits contain the number of hops supported by the NHI port. */
- #define REG_HOP_COUNT		0x39640
-+#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
-+
-+#define REG_HOST_INTERFACE_RST	0x39858
-+
-+#define REG_DMA_MISC		0x39864
-+#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
- 
- #endif
+Don't get me wrong, clearly someone needs to create an instance of pci_host_bridge.
+What I want people to accept is that in the PCI(e) architecture there is nothing that
+stops a piece of HW that used to be the bridge between host and underlying bus into
+becoming the bridge between a higher PCI(e) bus and the bus underneath. If the writes
+to the configuration registers happens somehow, the Host Bridge doesn't even know if
+it is talking to the actual host. Can the driver in that case make sure it did not made
+assumptions that were tied to a specific SoC implementation?
+
+> 
+> > > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> > > -{
+> > > -	struct pci_host_bridge *bridge;
+> > > -
+> > > -	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> > > -	if (!bridge)
+> > > -		return NULL;
+> > > -
+> > > -	INIT_LIST_HEAD(&bridge->windows);
+> > > -	bridge->bus = b;
+> > > -	return bridge;
+> > > -}
+> > > -
+> > 
+> > You might have strong arguments for removing this function but they are not properly
+> > explained here and I feel that they should. Specially as ....
+> 
+> In my initial version, it simply became unnecessary because all callers
+> of pci_host_bridge_register() would have to allocate it anyway, and with
+> the pci_bus assignment gone, it didn't do much at all.
+> 
+> > >  static const unsigned char pcix_bus_speed[] = {
+> > >  	PCI_SPEED_UNKNOWN,		/* 0 */
+> > >  	PCI_SPEED_66MHz_PCIX,		/* 1 */
+> > > @@ -2117,53 +2104,56 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+> > >  {
+> > >  }
+> > >  
+> > > -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > > -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> > > +void pci_host_bridge_init(struct pci_host_bridge *bridge)
+> > > +{
+> > > +	INIT_LIST_HEAD(&bridge->windows);
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(pci_host_bridge_init);
+> > 
+> > I have no idea why it is useful to re-initialise the bridge->windows list at any
+> > time other than allocation time.
+> 
+> That's why I suggested doing this in the allocation function now.
+
+Understood. Thanks for the explanations, I did not manage to keep track of all the old
+discussions around PCIe, specially if they were prefixed with ACPI ;)
+
+Best regards,
+Liviu
+
+> 
+> > > +int pci_host_bridge_register(struct pci_host_bridge *bridge)
+> > >  {
+> > >  	int error;
+> > > -	struct pci_host_bridge *bridge;
+> > >  	struct pci_bus *b, *b2;
+> > >  	struct resource_entry *window, *n;
+> > > +	LIST_HEAD(resources);
+> > >  	struct resource *res;
+> > >  	resource_size_t offset;
+> > >  	char bus_addr[64];
+> > >  	char *fmt;
+> > > +	struct device *parent = bridge->dev.parent;
+> > >  
+> > >  	b = pci_alloc_bus(NULL);
+> > >  	if (!b)
+> > > -		return NULL;
+> > > +		return -ENOMEM;
+> > > +	bridge->bus = b;
+> > >  
+> > > -	b->sysdata = sysdata;
+> > > -	b->ops = ops;
+> > > -	b->number = b->busn_res.start = bus;
+> > > +	/* temporarily move resources off the list */
+> > > +	list_splice_init(&bridge->windows, &resources);
+> > 
+> > What are you trying to accomplish here with the moving around of the bridge->windows list
+> > elements? This also leaves the bridge->windows list empty afterwards, is that intended?
+> 
+> I was trying to preserve the existing behavior, this can probably
+> be simplified, but as my initial version was completely untested
+> I decided not to touch it.
+> 
+> Later in the function, the list is filled one entry at a time from
+> the local 'resources' list that we traditionally passed as a function
+> argument before.
+> 
+> Ideally we'd just walk the list instead of doing the
+> split/list_del/list_add dance, and this would be a logical
+> cleanup on top of this patch.
+> 
+> > > @@ -817,6 +821,8 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+> > >  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > >  				    struct pci_ops *ops, void *sysdata,
+> > >  				    struct list_head *resources);
+> > > +void pci_host_bridge_init(struct pci_host_bridge *bridge);
+> > > +int pci_host_bridge_register(struct pci_host_bridge *bridge);
+> > >  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+> > >  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+> > >  void pci_bus_release_busn_res(struct pci_bus *b);
+> > 
+> > There is too much stuff moving around. I know it is needed and the temptation is to get it
+> > done as quickly as possible, but it makes the reviewing and the commenting on this series hard.
+> 
+> This is why I left the list handling you mentioned above unchanged
+> in my original patch instead of rewriting it.
+> 
+> > Can you split the patch into one that adds the new members
+> > into pci_host_bridge, then do the renaming/re-organisation in
+> > another patch?
+> 
+> That should be possible, I guess Thierry can deal with that when respinning
+> the series.
+> 
+> 	Arnd
+> 
+
 -- 
-2.7.4
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
