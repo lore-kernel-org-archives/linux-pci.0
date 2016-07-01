@@ -1,80 +1,158 @@
-Return-Path: <ibmirkin@gmail.com>
-Return-Path: <ibmirkin@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57766995.9070302@arm.com>
+Date: Fri, 1 Jul 2016 14:01:09 +0100
 MIME-Version: 1.0
-Sender: ibmirkin@gmail.com
-In-Reply-To: <20160715163622.GC2632@al>
-References: <20160715131218.2416-1-peter@lekensteyn.nl> <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
- <20160715163622.GC2632@al>
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Date: Fri, 15 Jul 2016 12:41:49 -0400
-Message-ID: <CAKb7Uvg+E_92DF6p_3O0XtzG66qTdDM7Fa=TaesNs2Y6bzTQSA@mail.gmail.com>
-Subject: Re: [Nouveau] [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Dave Airlie <airlied@redhat.com>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 15, 2016 at 12:36 PM, Peter Wu <peter@lekensteyn.nl> wrote:
-> On Fri, Jul 15, 2016 at 12:10:23PM -0400, Ilia Mirkin wrote:
->> On Fri, Jul 15, 2016 at 9:12 AM, Peter Wu <peter@lekensteyn.nl> wrote:
->> > Hi,
->> >
->> > Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
->> > due to unchecked function) and a more important fix to fix hanging Optimus
->> > machines when runtime PM is enabled (with pm/pci patches).
->> >
->> > These are the final patches targeting v4.8. Changes compared to v2[1]:
->> > collected R-b from Hans and Mika and fixed a minor comment style issue.
->> >
->> > I recommend it to be merged before the pci/pm patches[2], otherwise there is a
->> > window where newer Nvidia Optimus laptops might fail to runtime resume and/or
->> > lock up.  Once the pci/pm branch is merged I will propose another patch to
->> > improve reliability[3].
->> >
->> > Known issue with patch 4: when a Nvidia HDMI audio function is present, the
->> > bridge will not suspend and hence the Nvidia card will still be powered. Fixing
->>
->> That's basically all optimus gpu's, right? Anything GT21x+ has a HDMI
->> audio subfunction, and prior to that, the nvidia gpu tended to be the
->> only gpu, or hard-muxed.
->>
->> If that's the case, that's pretty much a non-starter, IMO.
->
-> For some reason the audio function tends to disappear/hide, so maybe it
-> is not as problematic as it appears (see
-> https://bugs.freedesktop.org/show_bug.cgi?id=75985). For my laptop I
+On 01/07/16 02:24, Shawn Lin wrote:
+> This patch adds a binding that describes the Rockchip PCIe controller
+> found on Rockchip SoCs PCIe interface.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+> 
+> Changes in v4:
+> - fix example of adding intermediate interrupt controller for pcie
+>   legacy interrrupt
+> 
+> Changes in v3:
+> - fix example dts code suggested by Rob and Marc
+> - remove driver's behaviour of regulator
+> 
+> Changes in v2:
+> - fix lots clk/reset stuff suggested by Heiko
+> - remove msi-parent and add msi-map suggested by Marc
+> - drop phy related stuff
+> - some others minor fixes
+> 
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 91 ++++++++++++++++++++++
+>  1 file changed, 91 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> new file mode 100644
+> index 0000000..8092fc5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -0,0 +1,91 @@
+> +* Rockchip AXI PCIe Root Port Bridge DT description
+> +
+> +Required properties:
+> +- #address-cells: Address representation for root ports, set to <3>
+> +- #size-cells: Size representation for root ports, set to <2>
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +		interrupt source. The value must be 1.
+> +- compatible: Should contain "rockchip,rk3399-pcie"
+> +- reg: Two register ranges as listed in the reg-names property
+> +- reg-names: Must include the following names
+> +	- "axi-base"
+> +	- "apb-base"
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +		See ../clocks/clock-bindings.txt for details.
+> +- clock-names: Must include the following entries:
+> +	- "aclk"
+> +	- "aclk-perf"
+> +	- "hclk"
+> +	- "pm"
+> +- msi-map: Maps a Requester ID to an MSI controller and associated.
+> +		See ./pci-msi.txt
+> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+> +- phy-names:  MUST be "pcie-phy".
+> +- interrupts: Three interrupt entries must be specified.
+> +- interrupt-names: Must include the following names
+> +	- "sys"
+> +	- "legacy"
+> +	- "client"
+> +- resets: Must contain five entries for each entry in reset-names.
+> +	   See ../reset/reset.txt for details.
+> +- reset-names: Must include the following names
+> +	- "core"
+> +	- "mgmt"
+> +	- "mgmt-sticky"
+> +	- "pipe"
+> +- pinctrl-names : The pin control state names
+> +- pinctrl-0: The "default" pinctrl state
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +- interrupt-controller: identifies the node as an interrupt controller
+> +
+> +Optional Property:
+> +- ep-gpios: contain the entry for pre-reset gpio
+> +- num-lanes: number of lanes to use
+> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
+> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
+> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
+> +
+> +Example:
+> +
+> +pcie0: pcie@f8000000 {
+> +	compatible = "rockchip,rk3399-pcie";
+> +	#address-cells = <3>;
+> +	#size-cells = <2>;
+> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
+> +		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
+> +	clock-names = "aclk", "aclk-perf",
+> +		      "hclk", "pm";
+> +	bus-range = <0x0 0x1>;
+> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+> +	interrupt-names = "sys", "legacy", "client";
+> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+> +	assigned-clock-rates = <100000000>;
+> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
+> +	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
+> +		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
+> +	num-lanes = <4>;
+> +	msi-map = <0x0 &its 0x0 0x1000>;
+> +	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
+> +	reg-names = "axi-base", "apb-base";
+> +	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
+> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
+> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
+> +	phys = <&pcie_phy>;
+> +	phy-names = "pcie-phy";
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pcie_clkreq>;
+> +	#interrupt-cells = <1>;
+> +	interrupt-controller;
 
-I'm aware of that bug. I believe this is an exceedingly rare scenario
-or it would have been reported a lot more.
+So the pcie node itself is an interrupt controller...
 
-> also had to runtime suspend/resume before lspci -H1 shows the device,
-> loading with runpm=0 didn't return my HDMI audio device.
+> +	interrupt-map-mask = <0 0 0 7>;
+> +	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
+> +			<0 0 0 2 &pcie0_intc 2>,
+> +			<0 0 0 3 &pcie0_intc 3>,
+> +			<0 0 0 4 &pcie0_intc 4>;
+> +	pcie0_intc: interrupt-controller {
+> +		interrupt-controller;
+> +		#address-cells = <0>;
+> +		#interrupt-cells = <1>;
+> +	};
 
-Hm ok. Do you have the same laptop as the reporter of that bug?
+But there's also another here. I just don't understand how it works.
 
->
-> The powered on issue will also only appear on devices produced in 2013
-> and newer that happen to have this ACPI _PR3 ACPI method (which is quite
-> common for new machines supporting Windows 8 though).
->
-> For these newer laptops, after the pci/pm merge and after a patch like
-> http://www.spinics.net/lists/linux-pci/msg52601.html, the user can
-> revert to the old DSM method by booting with pcie_port_pm=off which will
-> retain the current behavior.
->
-> The advantage of this patch is that it fixes memory corruption on some
-> devices. The risk is that the card stays on because the audio subsystem
-> needs some more work.  FWIW, I was working on some patches that properly
-> suspended in presence of the HDA controller, but somehow the audio
-> device was not properly resumed resulting in "no AFG or MFG node found"
-> and "snd_hda_intel 0000:01:00.1: no codecs initialized".
+> +};
+> 
 
-Does this restriction (runpm being broken in presence of the audio
-subfunction) only affect devices with _PR3? If so, that's a lot more
-palatable - I bet Windows 8+ is in an era when the display-less thing
-became more popular, and thus less likely to affect a ton of people.
+Thanks,
 
-  -ilia
+	M.
+-- 
+Jazz is not dead. It just smells funny...
