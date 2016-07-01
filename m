@@ -1,74 +1,148 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <20160606230636.20936.29083.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160606230636.20936.29083.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-From: Tyler Baker <tyler.baker@linaro.org>
-Date: Mon, 20 Jun 2016 09:56:45 -0700
-Message-ID: <CANMBJr41muA9mTNAa6MtWuMmeNLQxT4NjLe45=ExdFiH8vwzyw@mail.gmail.com>
-Subject: Re: [PATCH v1 15/25] PCI: generic: Free resource list close to where
- it's allocated
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:41413 "EHLO
+	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbcGAB1I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2016 21:27:08 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Kevin's boot bot <khilman@kernel.org>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Michal Simek <michal.simek@xilinx.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
- Jason Cooper <jason@lakedaemon.net>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, Simon Horman <horms@verge.net.au>,
- linux-tegra@vger.kernel.org,
- =?UTF-8?B?QWxleCBCZW5uw6ll?= <alex.bennee@linaro.org>,
- =?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Scott Branden <sbranden@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- linux-renesas-soc@vger.kernel.org, Ley Foon Tan <lftan@altera.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v4 1/2] Documentation: bindings: add dt doc for Rockchip PCIe controller
+Date: Fri,  1 Jul 2016 09:24:49 +0800
+Message-Id: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+This patch adds a binding that describes the Rockchip PCIe controller
+found on Rockchip SoCs PCIe interface.
 
-On 6 June 2016 at 16:06, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Previously we allocated the PCI resource list in
-> gen_pci_parse_request_of_pci_ranges(), but if we had an error, we freed it
-> on error in gen_pci_init().
->
-> Reorder gen_pci_init() so we can take care of error path cleanup in
-> gen_pci_parse_request_of_pci_ranges() instead.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-The kernelci.org bot has reported[0] new qemu-aarch64
-(arm64-defconfig) boot failures[1][2] in next-20160620. I've
-bisected[3] this boot failure down to this patch, and confirmed
-reverting it on top of next-20160620 resolves the boot issue.
+---
 
-I have not investigated further, but you can easily reproduce[4] the
-boot failure on an x86 host running qemu-system-aarch64 (I'm running
-qemu-system 2.6).
+Changes in v4:
+- fix example of adding intermediate interrupt controller for pcie
+  legacy interrrupt
 
-Cheers,
+Changes in v3:
+- fix example dts code suggested by Rob and Marc
+- remove driver's behaviour of regulator
 
-Tyler
+Changes in v2:
+- fix lots clk/reset stuff suggested by Heiko
+- remove msi-parent and add msi-map suggested by Marc
+- drop phy related stuff
+- some others minor fixes
 
-[0] https://kernelci.org/boot/all/job/next/kernel/next-20160620/
-[1] https://storage.kernelci.org/next/next-20160620/arm64-defconfig/lab-cambridge/boot-apm-mustang-kvm-guest.txt
-[2] https://storage.kernelci.org/next/next-20160620/arm64-defconfig/lab-tbaker/boot-qemu-aarch64,legacy.txt
-[3] http://hastebin.com/segiruribu.vbs
-[4] http://hastebin.com/dafuzicuyi.avrasm
+ .../devicetree/bindings/pci/rockchip-pcie.txt      | 91 ++++++++++++++++++++++
+ 1 file changed, 91 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+new file mode 100644
+index 0000000..8092fc5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -0,0 +1,91 @@
++* Rockchip AXI PCIe Root Port Bridge DT description
++
++Required properties:
++- #address-cells: Address representation for root ports, set to <3>
++- #size-cells: Size representation for root ports, set to <2>
++- #interrupt-cells: specifies the number of cells needed to encode an
++		interrupt source. The value must be 1.
++- compatible: Should contain "rockchip,rk3399-pcie"
++- reg: Two register ranges as listed in the reg-names property
++- reg-names: Must include the following names
++	- "axi-base"
++	- "apb-base"
++- clocks: Must contain an entry for each entry in clock-names.
++		See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++	- "aclk"
++	- "aclk-perf"
++	- "hclk"
++	- "pm"
++- msi-map: Maps a Requester ID to an MSI controller and associated.
++		See ./pci-msi.txt
++- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
++- phy-names:  MUST be "pcie-phy".
++- interrupts: Three interrupt entries must be specified.
++- interrupt-names: Must include the following names
++	- "sys"
++	- "legacy"
++	- "client"
++- resets: Must contain five entries for each entry in reset-names.
++	   See ../reset/reset.txt for details.
++- reset-names: Must include the following names
++	- "core"
++	- "mgmt"
++	- "mgmt-sticky"
++	- "pipe"
++- pinctrl-names : The pin control state names
++- pinctrl-0: The "default" pinctrl state
++- interrupt-map-mask and interrupt-map: standard PCI properties
++- interrupt-controller: identifies the node as an interrupt controller
++
++Optional Property:
++- ep-gpios: contain the entry for pre-reset gpio
++- num-lanes: number of lanes to use
++- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
++- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
++- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
++
++Example:
++
++pcie0: pcie@f8000000 {
++	compatible = "rockchip,rk3399-pcie";
++	#address-cells = <3>;
++	#size-cells = <2>;
++	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
++		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
++	clock-names = "aclk", "aclk-perf",
++		      "hclk", "pm";
++	bus-range = <0x0 0x1>;
++	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
++		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
++	interrupt-names = "sys", "legacy", "client";
++	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
++	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
++	assigned-clock-rates = <100000000>;
++	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
++	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
++		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
++	num-lanes = <4>;
++	msi-map = <0x0 &its 0x0 0x1000>;
++	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
++	reg-names = "axi-base", "apb-base";
++	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
++		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
++	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
++	phys = <&pcie_phy>;
++	phy-names = "pcie-phy";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_clkreq>;
++	#interrupt-cells = <1>;
++	interrupt-controller;
++	interrupt-map-mask = <0 0 0 7>;
++	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
++			<0 0 0 2 &pcie0_intc 2>,
++			<0 0 0 3 &pcie0_intc 3>,
++			<0 0 0 4 &pcie0_intc 4>;
++	pcie0_intc: interrupt-controller {
++		interrupt-controller;
++		#address-cells = <0>;
++		#interrupt-cells = <1>;
++	};
++};
+-- 
+2.3.7
+
+
