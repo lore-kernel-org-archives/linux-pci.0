@@ -1,124 +1,194 @@
-Return-Path: <gregkh@linuxfoundation.org>
-Return-Path: <gregkh@linuxfoundation.org>
-Date: Fri, 8 Jul 2016 22:23:59 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
-Message-ID: <20160709052359.GC6330@kroah.com>
-References: <cover.1463134231.git.lukas@wunner.de>
- <CAMxnaaU_3z6BSmSnYfi4ee=aTKm3aPyUaXds=G29wdp8O0m5Cw@mail.gmail.com>
- <20160614163703.GA31488@localhost>
- <CAMxnaaUQC0kyoBK1ri_AYEi=Dc_aiuiMp=kx1mFaZpsw9-D-eA@mail.gmail.com>
- <20160614202228.GA8449@localhost>
- <CAMxnaaUij=0QvT2frky2KCtrf4KuA-GQrpCYUa6Bs1EdRK+WFg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.75]:56024 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146AbcGAPl2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 11:41:28 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <liviu.dudau@arm.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
+Date: Fri, 01 Jul 2016 17:44:09 +0200
+Message-ID: <4061641.rLdO1g8OBR@wuerfel>
+In-Reply-To: <20160701144648.GC8609@e106497-lin.cambridge.arm.com>
+References: <20160630151931.29216-1-thierry.reding@gmail.com> <20160701144648.GC8609@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMxnaaUij=0QvT2frky2KCtrf4KuA-GQrpCYUa6Bs1EdRK+WFg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 07, 2016 at 07:39:12PM +0200, Andreas Noever wrote:
-> On Tue, Jun 14, 2016 at 10:22 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Jun 14, 2016 at 09:14:27PM +0200, Andreas Noever wrote:
-> >> On Tue, Jun 14, 2016 at 6:37 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> > [+cc linux-kernel]
-> >> >
-> >> > On Sat, May 21, 2016 at 11:48:42AM +0200, Andreas Noever wrote:
-> >> >>
-> >> >> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-> >> >>
-> >> >> Tested on MacBookPro10,1
-> >> >>
-> >> >> On Fri, May 13, 2016 at 1:15 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> >> >> > This series powers Thunderbolt controllers on Macs down when nothing is
-> >> >> > plugged in, saving 1.7 W on machines with a Light Ridge controller and
-> >> >> > reportedly 4 W on Cactus Ridge 4C and Falcon Ridge 4C.
-> >> >> >
-> >> >> > Briefly, a custom ACPI method provided by Apple is used to cut power to
-> >> >> > the controller.  A GPE is enabled while the controller is powered down
-> >> >> > which side-band signals a plug event, whereupon power is reinstated using
-> >> >> > the ACPI method.  Note that even though this mechanism is ACPI-based,
-> >> >> > it does not use _PSx methods and is thus entirely nonstandard.
-> >> >
-> >> > I think the current arrangement was that Andreas would ack Thunderbolt
-> >> > patches and I would merge them via the PCI tree.  That makes some sense
-> >> > because Thunderbolt and PCIe are related, but the more I think about
-> >> > it, the less I'm happy with it.
-> >> >
-> >> > This series is a good example.  I'm sure it's good work and
-> >> > worthwhile.  But I can't really say anything about the content of it
-> >> > because most of it is Thunderbolt-specific and there's no public spec.
-> >> > It seems like this is basically a collection of reverse-engineered
-> >> > quirks that happen to work with the current state of Linux PM on
-> >> > certain Macs.  We don't know what might change on future Macs.  We
-> >> > don't know what might break when we make changes to Linux PM.
-> >> >
-> >> > I can't test this series, nor do I want to.  I can't test most of the
-> >> > patches I merge, but I can at least read the spec and see whether the
-> >> > patches make sense.  What I would *like* is to have public Thunderbolt
-> >> > specs and a kernel developer's guide so we know what to expect from
-> >> > the hardware and the firmware and we can write code that should work
-> >> > not just on current Macs, but also on non-Macs and future Macs.
-> >> >
-> >> > I don't think the current situation is really maintainable, and I'm
-> >> > not comfortable merging code that I can't maintain.
-> >> Most of the code is contained within the thunderbolt driver. I think
-> >> there is quite some precedence for reverse engineered drivers without
-> >> specs being part of the kernel. My understanding was that, since I am
-> >> listed in MAINTAINERS, I am responsible for the driver. Now our
-> >> changes often need improvements to the pci core, which is why I think
-> >> merging through your tree is a good idea (without transferring
-> >> responsibility). The changes to the drivers/pci should be supported by
-> >> the PCI-spec and make sense without knowing about thunderbolt (but it
-> >> might be the case that thunderbolt is the only user of these
-> >> features).
-> >>
-> >> Specifically for this series we want to:
-> >>  - whitelist thunderbolt bridges for PM. Detecting those bridges is
-> >> non-standard but I think this is acceptable, since this
-> >> blacklist/whitelist is basically a quirk.
-> >>  - Load our portdrv on tb bridges. PCI just sees another portdriver
-> >> and all the reverse engineered magic lives inside the driver.
-> >>  - Forward more PM callbacks to portdrivers (not tb specific)
-> >>  - hotplug D3cold fixes: resume around board_added/remove_board,
-> >> ignore interrupts in d3cold (not tb specific and probably a general
-> >> bugfix)
-> >>  - Make pci not fail if bridges have been put into D3cold by some
-> >> external mechanism.
-> >>
-> >> So maybe you could review the pci changes as a solution to the problem
-> >> "we want to load a custom portdriver which can put bridges into d3cold
-> >> in a device specific way". We certainly to not expect you to take
-> >> responsibility for the thunderbolt driver.
-> >
-> > That's a fine solution as far as I'm personally concerned.  I think
-> > it's poor for Linux overall, because I think it's fragile, and it's
-> > disappointing that a technology as important as Thunderbolt is so
-> > poorly supported by the promulgators.  But if you're willing to work
-> > in that environment, that's great.
-> >
-> > You maintain the thunderbolt code and merge changes, and I'll review
-> > the pieces that touch drivers/pci.  I do have a couple comments on
-> > those pieces, but I don't think they'll be major.
-> >
-> > I just want to get out of the business of merging drivers/thunderbolt
-> > code that I can't maintain.
+On Friday, July 1, 2016 3:46:48 PM CEST Liviu Dudau wrote:
+> On Thu, Jun 30, 2016 at 05:19:30PM +0200, Thierry Reding wrote:
+> > From: Arnd Bergmann <arnd@arndb.de>
+> > 
+> > This patch makes the existing pci_host_bridge structure a proper device
+> > that is usable by PCI host drivers in a more standard way. In addition
+> > to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
+> > and pci_create_root_bus interfaces, this unfortunately means having to
+> > add yet another interface doing basically the same thing, and add some
+> > extra code in the initial step.
+> > 
+> > However, this time it's more likely to be extensible enough that we
+> > won't have to do another one again in the future, and we should be
+> > able to reduce code much more as a result.
 > 
-> [+ Greg]
+> I am really disapointed by the direction in which the whole pci_host_bridge
+> structure and associated functions is going. When I started to get involved
+> in this mess that is the creation of a root PCI bus I was hoping that we
+> are moving towards one or few functions that create the root bus by using
+> the details provided in the host bridge without having so many variants for
+> the functionality.
+
+That is the plan, we just never made a lot of progress here.
+
+> One reason for this holy mess is the duplication of information. Both root
+> bus and the pci_host_bridge hold pointers to useful information (msi_controller,
+> pci_ops) and coherency should be guaranteed when one or the other gets created.
+> Hence the ridiculous dance being done to find if root bus hasn't already been
+> created and if not reusing the scrap bus we have created at the top of
+> pci_create_root_bus() to actually set the data, then create the pci_host_bridge,
+> oops we need more information, and so on. (apologies for the incoherent style,
+> I'm trying to duplicate the spirit of the probe.c code :) )
+
+Agreed.
+
+> I think this patchset has the right intention but it is not doing it in
+> the right way. To me, the right way is to separate the whole allocation
+> of the pci_host_bridge structure from the scanning or the root bus (keeping the
+> INIT_LIST_HEAD(&bridge->windows) call inside), not add the sysdata pointer
+> *at all* to pci_host_bridge, move the information from pci_bus into pci_host_bridge
+> and make pci_scan_root_bus take a pci_host_bridge pointer once that has been
+> done.
+
+Again, this is what I'm doing here, unfortunately we cannot remove the
+sysdata pointer altogether as we still have over a hundred existing PCI
+host bridge implementations that all use sysdata.
+
+> Think of the code structure as a reflection of how the system is structured: the
+> PCI-to-host bridge is a structure that holds the information required to connect
+> the functionality of the host code (msi_controller, host-to-bus resource windows)
+> to the PCI(e) bus. The root pci_bus should only have PCI(e) bus information if
+> possible.
+
+Exactly.
+
+> > 
+> > The main idea is to pull the allocation of 'struct pci_host_bridge' out
+> > of the registration, and let individual host drivers and architecture
+> > code fill the members before calling the registration function.
 > 
-> Hi Greg,
+> That's how we got into the arch/arm mess that we currently have. The host driver
+> should not drive the instantiation of the pci_host_bridge structure because it
+> will prevent you from having two drivers running at the same time.
+
+Can you clarify that? I don't see what prevents two drivers from each
+creating a pci_host_bridge structure and passing it into
+pci_host_bridge_register().
+
+> > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> > -{
+> > -	struct pci_host_bridge *bridge;
+> > -
+> > -	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> > -	if (!bridge)
+> > -		return NULL;
+> > -
+> > -	INIT_LIST_HEAD(&bridge->windows);
+> > -	bridge->bus = b;
+> > -	return bridge;
+> > -}
+> > -
 > 
-> do you mind if we revert to the old scheme and merge TB changes
-> through your tree?
+> You might have strong arguments for removing this function but they are not properly
+> explained here and I feel that they should. Specially as ....
 
-I will be glad to take them, feel free to send them on to me.
+In my initial version, it simply became unnecessary because all callers
+of pci_host_bridge_register() would have to allocate it anyway, and with
+the pci_bus assignment gone, it didn't do much at all.
 
-thanks,
+> >  static const unsigned char pcix_bus_speed[] = {
+> >  	PCI_SPEED_UNKNOWN,		/* 0 */
+> >  	PCI_SPEED_66MHz_PCIX,		/* 1 */
+> > @@ -2117,53 +2104,56 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+> >  {
+> >  }
+> >  
+> > -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> > +void pci_host_bridge_init(struct pci_host_bridge *bridge)
+> > +{
+> > +	INIT_LIST_HEAD(&bridge->windows);
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_host_bridge_init);
+> 
+> I have no idea why it is useful to re-initialise the bridge->windows list at any
+> time other than allocation time.
 
-greg k-h
+That's why I suggested doing this in the allocation function now.
+
+> > +int pci_host_bridge_register(struct pci_host_bridge *bridge)
+> >  {
+> >  	int error;
+> > -	struct pci_host_bridge *bridge;
+> >  	struct pci_bus *b, *b2;
+> >  	struct resource_entry *window, *n;
+> > +	LIST_HEAD(resources);
+> >  	struct resource *res;
+> >  	resource_size_t offset;
+> >  	char bus_addr[64];
+> >  	char *fmt;
+> > +	struct device *parent = bridge->dev.parent;
+> >  
+> >  	b = pci_alloc_bus(NULL);
+> >  	if (!b)
+> > -		return NULL;
+> > +		return -ENOMEM;
+> > +	bridge->bus = b;
+> >  
+> > -	b->sysdata = sysdata;
+> > -	b->ops = ops;
+> > -	b->number = b->busn_res.start = bus;
+> > +	/* temporarily move resources off the list */
+> > +	list_splice_init(&bridge->windows, &resources);
+> 
+> What are you trying to accomplish here with the moving around of the bridge->windows list
+> elements? This also leaves the bridge->windows list empty afterwards, is that intended?
+
+I was trying to preserve the existing behavior, this can probably
+be simplified, but as my initial version was completely untested
+I decided not to touch it.
+
+Later in the function, the list is filled one entry at a time from
+the local 'resources' list that we traditionally passed as a function
+argument before.
+
+Ideally we'd just walk the list instead of doing the
+split/list_del/list_add dance, and this would be a logical
+cleanup on top of this patch.
+
+> > @@ -817,6 +821,8 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+> >  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >  				    struct pci_ops *ops, void *sysdata,
+> >  				    struct list_head *resources);
+> > +void pci_host_bridge_init(struct pci_host_bridge *bridge);
+> > +int pci_host_bridge_register(struct pci_host_bridge *bridge);
+> >  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+> >  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+> >  void pci_bus_release_busn_res(struct pci_bus *b);
+> 
+> There is too much stuff moving around. I know it is needed and the temptation is to get it
+> done as quickly as possible, but it makes the reviewing and the commenting on this series hard.
+
+This is why I left the list handling you mentioned above unchanged
+in my original patch instead of rewriting it.
+
+> Can you split the patch into one that adds the new members
+> into pci_host_bridge, then do the renaming/re-organisation in
+> another patch?
+
+That should be possible, I guess Thierry can deal with that when respinning
+the series.
+
+	Arnd
