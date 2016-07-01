@@ -1,43 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:44169 "EHLO ozlabs.org"
+Received: from foss.arm.com ([217.140.101.70]:39086 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932187AbcGOKx2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Jul 2016 06:53:28 -0400
-In-Reply-To: <1468444634-1866-14-git-send-email-imunsie@au.ibm.com>
-To: Ian Munsie <imunsie@au1.ibm.com>,
-	Michael Neuling <mikey@neuling.org>,
-	Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
-	Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, Huy Nguyen <huyn@mellanox.com>
-From: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Ian Munsie <imunsie@au1.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [13/15] PCI/hotplug: pnv_php: export symbols and move struct types needed by cxl
-Message-Id: <3rrTvC2V9yz9ssM@ozlabs.org>
-Date: Fri, 15 Jul 2016 20:53:27 +1000 (AEST)
+	id S1752023AbcGAOOz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Jul 2016 10:14:55 -0400
+Date: Fri, 1 Jul 2016 15:14:47 +0100
+From: Liviu Dudau <liviu.dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
+Message-ID: <20160701141447.GB8609@e106497-lin.cambridge.arm.com>
+References: <20160630151931.29216-1-thierry.reding@gmail.com>
+ <5307392.exoejlJp9x@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5307392.exoejlJp9x@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-13-07 at 21:17:12 UTC, Ian Munsie wrote:
-> From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+On Thu, Jun 30, 2016 at 05:37:35PM +0200, Arnd Bergmann wrote:
+> On Thursday, June 30, 2016 5:19:30 PM CEST Thierry Reding wrote:
+> > From: Arnd Bergmann <arnd@arndb.de>
+> > 
+> > This patch makes the existing pci_host_bridge structure a proper device
+> > that is usable by PCI host drivers in a more standard way. In addition
+> > to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
+> > and pci_create_root_bus interfaces, this unfortunately means having to
+> > add yet another interface doing basically the same thing, and add some
+> > extra code in the initial step.
 > 
-> The cxl driver will use infrastructure from pnv_php to handle device tree
-> updates when switching bi-modal CAPI cards into CAPI mode.
+> Thanks a lot for following up on my patches and getting them to work!
 > 
-> To enable this, export pnv_php_find_slot() and
-> pnv_php_set_slot_power_state(), and add corresponding declarations, as well
-> as the definition of struct pnv_php_slot, to asm/pnv-pci.h.
+> > As mentioned in a previous email, one open question is whether we want
+> > to export a function for allocating a pci_host_bridge device in
+> > combination with the per-device structure or let the driver itself
+> > call kzalloc.
+> > 
+> > Changes in v2 (Thierry Reding):
+> > - add a pci_host_bridge_init() helper that drivers can use to perform
+> >   all the necessary steps to initialize the bridge
 > 
-> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-> Signed-off-by: Ian Munsie <imunsie@au1.ibm.com>
-> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> For these two points, the addition of pci_host_bridge_init() to me
+> tips the balance in favour of having a separate allocation function
+> that also does the initialization, something like
+> 
+> struct struct pci_host_bridge *pci_host_bridge_alloc(size_t priv)
+> {
+> 	struct pci_host_bridge *bridge;
+> 
+> 	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
+> 	if (!bridge)
+> 		return NULL;
+> 
+> 	INIT_LIST_HEAD(&bridge->windows);
+> 
+> 	if (priv)
+> 		bridge->private = &bridge[1];
+> 
+> 	return bridge;
+> }
 
-Applied to powerpc next, thanks.
+I'm confused. Why are we butchering the old pci_alloc_host_bridge() function
+to then go back and add re-add it in a different form?
 
-https://git.kernel.org/powerpc/c/89379f165a1be13aa9b4731a90
+The old pci_alloc_host_bridge() was doing mostly what the above
+function does minus the bridge->private line. And the &bridge[1] construct
+could very well be pointing to the next struct pci_host_bridge aligned address,
+which means parts of priv area are ignored.
 
-cheers
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
