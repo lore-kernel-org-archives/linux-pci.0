@@ -1,21 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53100 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752049AbcGSD4w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Jul 2016 23:56:52 -0400
-Date: Tue, 19 Jul 2016 05:56:50 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Vincent =?iso-8859-1?Q?Stehl=E9?= <vincent.stehle@laposte.net>
-Cc: linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH next] genirq: fix missing irq allocation affinity hint
-Message-ID: <20160719035650.GA16838@lst.de>
-References: <1467621574-8277-4-git-send-email-hch@lst.de> <1468875386-31662-1-git-send-email-vincent.stehle@laposte.net>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: Rockchip: Add Rockchip PCIe controller
+ support
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
+ <1467336290-11282-2-git-send-email-shawn.lin@rock-chips.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <577646D3.7040207@arm.com>
+Date: Fri, 1 Jul 2016 11:32:51 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468875386-31662-1-git-send-email-vincent.stehle@laposte.net>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1467336290-11282-2-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looks fine, but I'm pretty sure irq_reserve_ipi didn't exist by the
-time we did these changes..
+On 01/07/16 02:24, Shawn Lin wrote:
+> This patch adds Rockchip PCIe controller support found
+> on RK3399 Soc platform.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+
+[...]
+
+> +static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+> +{
+> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+> +	struct rockchip_pcie_port *port;
+> +	u32 reg;
+> +
+> +	chained_irq_enter(chip, desc);
+> +	port = irq_desc_get_handler_data(desc);
+> +
+> +	reg = pcie_read(port, PCIE_CLIENT_INT_STATUS);
+> +	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
+> +	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
+> +	if (reg)
+> +		generic_handle_irq(irq_find_mapping(port->irq_domain,
+> +						    ffs(reg)));
+
+Can't you get multiple pending interrupts at the same time? Here, you
+seem to only process one interrupt at a time, which is going to be
+pretty inefficient.
+
+How about something like:
+
+	while (reg) {
+		int hwirq = ffs(reg);
+		int irq;
+		
+		reg &= ~BIT(hwirq);
+		irq = irq_find_mapping(port->irq_domain, hwirq);
+		if (irq)
+			generic_handle_irq(irq);
+	}
+
+> +	chained_irq_exit(chip, desc);
+> +}
+> +
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
