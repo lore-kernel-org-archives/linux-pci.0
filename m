@@ -1,87 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41781 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751527AbcGTMTh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jul 2016 08:19:37 -0400
-Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57835D35.1000901@arm.com>
- <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5785133A.6070908@arm.com>
- <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5785F8DC.4060100@arm.com>
- <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <578F6C56.2090805@arm.com>
-Date: Wed, 20 Jul 2016 13:19:34 +0100
+Received: from mout.kundenserver.de ([212.227.126.135]:57615 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036AbcGAP4J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 11:56:09 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <liviu.dudau@arm.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
+Date: Fri, 01 Jul 2016 17:58:50 +0200
+Message-ID: <5683703.E1NK8ak7mr@wuerfel>
+In-Reply-To: <20160701154046.GE8609@e106497-lin.cambridge.arm.com>
+References: <20160630151931.29216-1-thierry.reding@gmail.com> <14945085.QO6LcyFgTY@wuerfel> <20160701154046.GE8609@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+tglx
-
-On 13/07/16 09:33, Bharat Kumar Gogada wrote:
->> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
->>
->> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
->>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
->>>> call
->>>>
->>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
->>>>> Hi Marc,
->>>>>
->>>>> Thanks for the reply.
->>>>>
->>>>> From PCIe Spec:
->>>>> MSI Enable Bit:
->>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control register
->>>>> (see Section 6.8.2.3) is 0, the function is permitted to use MSI to
->>>>> request service and is prohibited from using its INTx# pin.
->>>>>
->>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
->>>> which means MSI address and data fields are available/programmed.
->>>>>
->>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
->>>>> latches
->>>> onto MSI address and MSI data values.
->>>>>
->>>>> With current MSI implementation in kernel, our SoC is latching on to
->>>>> incorrect address and data values, as address/data are updated much
->>>>> later
->>>> than MSI Enable bit.
->>>>
->>>> As a side question, how does setting the affinity work on this
->>>> end-point if this involves changing the address programmed in the MSI
->> registers?
->>>> Do you expect the enabled bit to be toggled to around the write?
->>>>
->>>
->>> Yes,
->>
->> Well, that's pretty annoying, as this will not work either. But maybe your MSI
->> controller has a single doorbell? You haven't mentioned which HW that is...
->>
-> The MSI address/data is located in config space, in our SoC for the logic behind PCIe
-> to become aware of new address/data  MSI enable transition is used (0 to 1).
-> The logic cannot keep polling these registers in configuration space as it would consume power.
+On Friday, July 1, 2016 4:40:46 PM CEST Liviu Dudau wrote:
+> On Fri, Jul 01, 2016 at 05:17:11PM +0200, Arnd Bergmann wrote:
+> > On Friday, July 1, 2016 3:52:44 PM CEST Liviu Dudau wrote:
+> > > 
+> > > > 
+> > > > or do you mean we should have extra alignment in there so the
+> > > > private pointer has a minimum alignment higher than the
+> > > > alignment of struct pci_host_bridge?
+> > > 
+> > > but this ^. bridge pointer arithmetic means +1 is not necessarily +sizeof(struct pci_host_bridge)
+> > > bytes. AFAIK that can be rounded to the nearest natural alignment for pointers on that
+> > > architecture.
+> > 
+> > No, that's not how it works.
 > 
-> So the logic uses the transition in MSI enable to latch on to address/data.
+> Really? If struct foo takes 31 bytes, and struct foo *p = (struct foo*)64, what's p's
+> value after p++ ? 95? I thought the compiler is allowed to consider the structure padded so that
+> p++ is 96.
 
-A couple of additional questions:
+In that example, sizeof(struct foo) is 32, so we get to the right result,
+for any type, this is true:
 
-Does your HW support MSI masking? And if it does, does it resample the
-address/data on unmask?
+	(char *)((struct foo *)p + 1) == (char *)p + sizeof(struct foo);
 
-Thanks,
+However, there is indeed a problem in the case that the private structure
+requires a larger alignment than struct pci_host_bridge, so adding some
+bytes for alignment the way that alloc_etherdev() does is probably
+a good idea to be on the safe side, so we could do
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+	bridge = kzalloc(ALIGN(sizeof(struct pci_host_bridge), ARCH_KMALLOC_MINALIGN) +
+					     sizeof_priv, GFP_KERNEL);
+	priv = PTR_ALIGN(bridge + 1, ARCH_KMALLOC_MINALIGN);
+
+which will guarantee that both bridge and priv are aligned to
+ARCH_KMALLOC_MINALIGN and the allocation is large enough to hold
+both.
+
+	Arnd
