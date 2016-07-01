@@ -1,45 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:33096 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758938AbcG1QQ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 12:16:58 -0400
-Received: by mail-pa0-f66.google.com with SMTP id q2so3786604pap.0
-        for <linux-pci@vger.kernel.org>; Thu, 28 Jul 2016 09:16:58 -0700 (PDT)
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: "K . Y . Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yongjun <weiyj.lk@gmail.com>, devel@linuxdriverproject.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH -next] PCI: hv: Use list_move_tail instead of list_del/list_add_tail
-Date: Thu, 28 Jul 2016 16:16:48 +0000
-Message-Id: <1469722608-14956-1-git-send-email-weiyj.lk@gmail.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:17763 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752043AbcGAHER (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 03:04:17 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6173bfl125729
+	for <linux-pci@vger.kernel.org>; Fri, 1 Jul 2016 03:04:16 -0400
+Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23wbbbdftw-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 01 Jul 2016 03:04:16 -0400
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Fri, 1 Jul 2016 17:04:13 +1000
+Subject: Re: [PATCH v3 5/7] PCI: Do not use IORESOURCE_STARTALIGN to identify
+ bridge resources
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160701023423.GB6739@gwshan>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 1 Jul 2016 15:04:10 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20160701023423.GB6739@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <c97584a0-b5b1-8660-1e16-04c43570eca6@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Using list_move_tail() instead of list_del() + list_add_tail().
+Hi Gavin,
 
-Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
----
- drivers/pci/host/pci-hyperv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On 2016/7/1 10:34, Gavin Shan wrote:
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 6955ffdb..a8deeca 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1466,8 +1466,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 			if (hpdev->reported_missing) {
- 				found = true;
- 				put_pcichild(hpdev, hv_pcidev_ref_childlist);
--				list_del(&hpdev->list_entry);
--				list_add_tail(&hpdev->list_entry, &removed);
-+				list_move_tail(&hpdev->list_entry, &removed);
- 				break;
- 			}
- 		}
+> On Thu, Jun 30, 2016 at 06:53:11PM +0800, Yongji Xie wrote:
+>> Now we use the IORESOURCE_STARTALIGN to identify bridge resources
+>> in __assign_resources_sorted(). That's quite fragile. We may also
+>> set flag IORESOURCE_STARTALIGN for SR-IOV resources in some cases,
+>> for example, using the option "noresize" of parameter
+>> "pci=resource_alignment".
+>>
+>> In this patch, we try to use a more robust way to identify
+>> bridge resources.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>
+> Yongji, I think this doesn't have to be part of this series, meaning
+> it can be sent or merged separately.
+>
 
+Seems like I give a wrong example in my changelog.  The
+parameter "pci=resource_alignment" would not set flag
+IORESOURCE_STARTALIGN for SR-IOV resources as I replied
+to you in previous patch. So this patch has nothing to do
+with this series now, I will remove it as you suggested.
 
+Thanks,
+Yongji
 
