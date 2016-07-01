@@ -1,72 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52315 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754180AbcGHJYw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jul 2016 05:24:52 -0400
-Date: Fri, 8 Jul 2016 12:24:40 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: export pci_bridge_d3_possible
-Message-ID: <20160708092440.GA23527@lahna.fi.intel.com>
-References: <20160707235448.2622-1-peter@lekensteyn.nl>
- <20160708082503.GY23527@lahna.fi.intel.com>
- <20160708084525.GA1205@al>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v3 3/7] PCI: Do not disable memory decoding in
+ pci_reassigndev_resource_alignment()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160701005036.GA18999@gwshan>
+Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	linux-doc@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, corbet@lwn.net,
+	linux-kernel@vger.kernel.org, warrier@linux.vnet.ibm.com,
+	alex.williamson@redhat.com, paulus@samba.org, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 1 Jul 2016 14:35:04 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160708084525.GA1205@al>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160701005036.GA18999@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <a968e6af-3a17-0c79-bdfe-34329f38b2f9@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 08, 2016 at 10:45:25AM +0200, Peter Wu wrote:
-> On Fri, Jul 08, 2016 at 11:25:03AM +0300, Mika Westerberg wrote:
-> > On Fri, Jul 08, 2016 at 01:54:48AM +0200, Peter Wu wrote:
-> > > Allow the nouveau driver to find out whether the bridge can put itself
-> > > in the D3cold state or whether it should use a specific DSM method to
-> > > achieve the same result.
-> > > 
-> > > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> > > ---
-> > > Since it is not yet merged in Linus tree, maybe the patch in pci/pm can be
-> > > amended? This is the follow-up patch I had in mind for nouveau:
-> > > 
-> > >     --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > >     +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > >     @@ -223,6 +223,9 @@ static bool nouveau_pr3_present(struct pci_dev *pdev)
-> > >      	if (!parent_pdev)
-> > >      		return false;
-> > >      
-> > >     +	if (!pci_bridge_d3_possible(parent_pdev))
-> > >     +		return false;
-> > >     +
-> > 
-> > Why not check bridge_d3 directly?
-> > 
-> > 	if (!parent_dev->bridge_d3)
-> > 		return false;
-> 
-> I have thought of that but then dismissed the idea because
-> pci_bridge_d3_update could change it after initialization based on the
-> d3cold_allowed flag on the bridge or its children. Then this could
-> happen:
-> 
->  - initially d3cold_allowed is set false by the user
->  - nouveau decides to use DSM
->  - d3cold_allowed is set by user to true
->  - PCI thinks that power resources are OK to use, but that conflicts
->    with nouveau.
+Hi Gavin,
 
-Indeed that might happen. However, to be on the safe side I think we
-should just do something like this:
+On 2016/7/1 8:50, Gavin Shan wrote:
 
-	if (!parent_dev->bridge_d3) {
-		/*
-		 * Parent PCI bridge is currently not power managed.
-		 * Since userspace can change these afterwards to be on
-		 * the safe side we stick with _DSM and prevent usage of
-		 * _PR3 from the bridge.
-		 */
-		pci_d3cold_disable(pdev);
-		return false;
-	}
+> On Thu, Jun 30, 2016 at 06:53:09PM +0800, Yongji Xie wrote:
+>> We should not disable memory decoding when we reassign alignment
+>> in pci_reassigndev_resource_alignment(). It's meaningless and
+>> have some side effect. For example, some fixup functions such as
+>> quirk_e100_interrupt() read PCI_COMMAND_MEMORY to know whether
+>> the devices has been initialized by the firmware or not. If we
+>> disable memory decoding here, these functions will get a wrong
+>> information that the devices was not initialized by the firmware
+>> which may cause a wrong fixup. Besides, disabling memory decoding
+>> may also break some devices that need to have memory decoding
+>> always-on during probing.
+>>
+> It seems the changelog isn't correct enough if it's talking about
+> below check in code:
+>
+> if (!(command & PCI_COMMAND_MEMORY) || !pci_resource_start(dev, 0))
+> 	return;
+
+Could you give me more details?  It seems that we couldn't disable
+e100 interrupts which enabled by some firmware if we disabling
+memory decoding here.
+
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>> drivers/pci/pci.c |    8 +-------
+>> 1 file changed, 1 insertion(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 6ae02de..6241cfc 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4820,7 +4820,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>> 	int i;
+>> 	struct resource *r;
+>> 	resource_size_t align, size;
+>> -	u16 command;
+>>
+>> 	/* We should never try to reassign VF's alignment */
+>> 	if (dev->is_virtfn)
+>> @@ -4838,12 +4837,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>> 		return;
+>> 	}
+>>
+>> -	dev_info(&dev->dev,
+>> -		"Disabling memory decoding and releasing memory resources.\n");
+>> -	pci_read_config_word(dev, PCI_COMMAND, &command);
+>> -	command &= ~PCI_COMMAND_MEMORY;
+>> -	pci_write_config_word(dev, PCI_COMMAND, command);
+>> -
+>> +	dev_info(&dev->dev, "Releasing memory resources.\n");
+> Is there a problem you found with PCI_COMMAND removed? If so, could you
+> please share more details, thanks.
+
+Disabling memory decoding may break some devices which
+have flag mmio_always_on. Besides the mmio_always_on case,
+I also found this would break some P2P bridge such as
+PEX 8718 controller.
+
+Thanks,
+Yongji
