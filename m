@@ -1,91 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH 2/2] PCI: rcar: Drop gen2 dummy I/O port region
-To: Simon Horman <horms@verge.net.au>, Russell King <linux@armlinux.org.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 21 Jun 2016 12:01:50 -0500
-Message-ID: <20160621170150.7997.4821.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160621165646.7997.44001.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160621165646.7997.44001.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33063 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751922AbcGAGlD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 02:41:03 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u616cgu5082765
+	for <linux-pci@vger.kernel.org>; Fri, 1 Jul 2016 02:40:22 -0400
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23vvcdnemm-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 01 Jul 2016 02:40:22 -0400
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Fri, 1 Jul 2016 16:40:19 +1000
+Subject: Re: [PATCH v3 2/7] PCI: Ignore enforced alignment to VF BARs
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160701003959.GB15147@gwshan>
+ <21112bd7-d343-46b6-1df1-b20cc1c1b24e@linux.vnet.ibm.com>
+ <20160701060519.GA8863@gwshan>
+Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	linux-doc@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, corbet@lwn.net,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	alex.williamson@redhat.com, paulus@samba.org,
+	warrier@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 1 Jul 2016 14:40:16 +0800
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- Valentine Barshak <valentine.barshak@cogentembedded.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20160701060519.GA8863@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <ad90a18f-fcf3-b07d-f887-8daa6a313c77@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously we added a dummy I/O port region even though the R-Car
-controller doesn't support PCI port I/O.  This resulted in bogus root bus
-resources like this:
+Hi Gavin,
 
-  pci_bus 0000:00: root bus resource [io  0xee080000-0xee0810ff]
-  pci_bus 0000:00: root bus resource [mem 0xee080000-0xee0810ff]
+On 2016/7/1 14:05, Gavin Shan wrote:
 
-Drop the unused dummy I/O port region and set struct hw_pci.io_optional so
-the ARM PCI code doesn't add a default one for us.
+> On Fri, Jul 01, 2016 at 01:27:17PM +0800, Yongji Xie wrote:
+>>> On Thu, Jun 30, 2016 at 06:53:08PM +0800, Yongji Xie wrote:
+>>>> VF BARs are read-only zeroes according to SRIOV spec,
+>>>> the normal way(writing BARs) of allocating resources wouldn't
+>>>> be applied to VFs. The VFs' resources would be allocated
+>>>> when we enable SR-IOV capability. So we should not try to
+>>>> reassign alignment after we enable VFs. It's meaningless
+>>>> and will release the allocated resources which leads to a bug.
+>>>>
+>>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>>> ---
+>>>> drivers/pci/pci.c |    4 ++++
+>>>> 1 file changed, 4 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index be8f72c..6ae02de 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -4822,6 +4822,10 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>>> 	resource_size_t align, size;
+>>>> 	u16 command;
+>>>>
+>>>> +	/* We should never try to reassign VF's alignment */
+>>>> +	if (dev->is_virtfn)
+>>>> +		return;
+>>>> +
+>>> Yongji, I think it's correct to ignore VF's BARs. Another concern is:
+>>> it's safe to apply alignment to PF's IOV BARs? Lets have an extreme
+>>> example here: one PF has 16 VFs; each VF has only one 1KB. It means
+>>> the only PF IOV BAR is 16KB. I don't see how it works after expanding
+>>> it to 64KB which is the page size. It might be not a problem on PowerNV
+>>> platform, but potentially a issue on x86?
+>> Seems like the alignment would not be applied to IOV BARs because
+>> pci_reassigndev_resource_alignment() will be called before
+>> sriov_init().
+>>
+> Correct, thanks for the claim. I guess the alignment applied to PF IOV
+> BARs should be ignored as well? Anyway, the IOV BARs are retireved from
+> SRIOV capability. It deserves a comment if you plan to take the change.
+> Actually, the comment here (for ignoring alignment to VF BARs) can be
+> improved a bit as well, it'd better why the alignment cannot be applied.
+>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-rcar-gen2.c |   11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+Do you mean we should ignore PF IOV BARs like this:
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 9980a4b..ddf7765 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -97,7 +97,6 @@
- struct rcar_pci_priv {
- 	struct device *dev;
- 	void __iomem *reg;
--	struct resource io_res;
- 	struct resource mem_res;
- 	struct resource *cfg_res;
- 	unsigned busnr;
-@@ -273,7 +272,6 @@ static int rcar_pci_setup(int nr, struct pci_sys_data *sys)
- 		rcar_pci_setup_errirq(priv);
- 
- 	/* Add PCI resources */
--	pci_add_resource(&sys->resources, &priv->io_res);
- 	pci_add_resource(&sys->resources, &priv->mem_res);
- 
- 	/* Setup bus number based on platform device id / of bus-range */
-@@ -371,14 +369,6 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	priv->mem_res = *mem_res;
--	/*
--	 * The controller does not support/use port I/O,
--	 * so setup a dummy port I/O region here.
--	 */
--	priv->io_res.start = priv->mem_res.start;
--	priv->io_res.end = priv->mem_res.end;
--	priv->io_res.flags = IORESOURCE_IO;
--
- 	priv->cfg_res = cfg_res;
- 
- 	priv->irq = platform_get_irq(pdev, 0);
-@@ -421,6 +411,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	hw_private[0] = priv;
- 	memset(&hw, 0, sizeof(hw));
- 	hw.nr_controllers = ARRAY_SIZE(hw_private);
-+	hw.io_optional = 1;
- 	hw.private_data = hw_private;
- 	hw.map_irq = rcar_pci_map_irq;
- 	hw.ops = &rcar_pci_ops;
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4833,7 +4833,7 @@ void pci_reassigndev_resource_alignment(struct 
+pci_dev *dev)
+         command &= ~PCI_COMMAND_MEMORY;
+         pci_write_config_word(dev, PCI_COMMAND, command);
 
+-       for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
++       for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+                 r = &dev->resource[i];
+                 if (!(r->flags & IORESOURCE_MEM))
+                         continue;
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Yongji
+
