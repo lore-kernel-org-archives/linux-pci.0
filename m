@@ -1,91 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v1 25/25] PCI: versatile: Simplify host bridge window iteration
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 06 Jun 2016 18:07:51 -0500
-Message-ID: <20160606230751.20936.38789.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160606225630.20936.77349.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 1 Jul 2016 16:05:19 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, nikunj@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, linux-doc@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, corbet@lwn.net,
+	linux-kernel@vger.kernel.org, warrier@linux.vnet.ibm.com,
+	alex.williamson@redhat.com, paulus@samba.org, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v3 2/7] PCI: Ignore enforced alignment to VF BARs
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160701003959.GB15147@gwshan>
+ <21112bd7-d343-46b6-1df1-b20cc1c1b24e@linux.vnet.ibm.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, linux-kernel@vger.kernel.org,
- rfi@lists.rocketboards.org, linux-renesas-soc@vger.kernel.org,
- Simon Horman <horms@verge.net.au>, Thierry Reding <thierry.reding@gmail.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Ray Jui <rjui@broadcom.com>,
- linux-tegra@vger.kernel.org, Ley Foon Tan <lftan@altera.com>,
- Michal Simek <michal.simek@xilinx.com>,
- =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <21112bd7-d343-46b6-1df1-b20cc1c1b24e@linux.vnet.ibm.com>
+Message-Id: <20160701060519.GA8863@gwshan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The switch is the only statement in the resource_list_for_each_entry()
-loop, so remove unnecessary "continue" statements in the switch.  Simplify
-checking for the required non-prefetchable memory aperture.
+On Fri, Jul 01, 2016 at 01:27:17PM +0800, Yongji Xie wrote:
+>>On Thu, Jun 30, 2016 at 06:53:08PM +0800, Yongji Xie wrote:
+>>>VF BARs are read-only zeroes according to SRIOV spec,
+>>>the normal way(writing BARs) of allocating resources wouldn't
+>>>be applied to VFs. The VFs' resources would be allocated
+>>>when we enable SR-IOV capability. So we should not try to
+>>>reassign alignment after we enable VFs. It's meaningless
+>>>and will release the allocated resources which leads to a bug.
+>>>
+>>>Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>>---
+>>>drivers/pci/pci.c |    4 ++++
+>>>1 file changed, 4 insertions(+)
+>>>
+>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>index be8f72c..6ae02de 100644
+>>>--- a/drivers/pci/pci.c
+>>>+++ b/drivers/pci/pci.c
+>>>@@ -4822,6 +4822,10 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>>	resource_size_t align, size;
+>>>	u16 command;
+>>>
+>>>+	/* We should never try to reassign VF's alignment */
+>>>+	if (dev->is_virtfn)
+>>>+		return;
+>>>+
+>>Yongji, I think it's correct to ignore VF's BARs. Another concern is:
+>>it's safe to apply alignment to PF's IOV BARs? Lets have an extreme
+>>example here: one PF has 16 VFs; each VF has only one 1KB. It means
+>>the only PF IOV BAR is 16KB. I don't see how it works after expanding
+>>it to 64KB which is the page size. It might be not a problem on PowerNV
+>>platform, but potentially a issue on x86?
+>
+>Seems like the alignment would not be applied to IOV BARs because
+>pci_reassigndev_resource_alignment() will be called before
+>sriov_init().
+>
 
-No functional change intended.
+Correct, thanks for the claim. I guess the alignment applied to PF IOV
+BARs should be ignored as well? Anyway, the IOV BARs are retireved from
+SRIOV capability. It deserves a comment if you plan to take the change.
+Actually, the comment here (for ignoring alignment to VF BARs) can be
+improved a bit as well, it'd better why the alignment cannot be applied.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-versatile.c |   17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-index 273edac..f2344057 100644
---- a/drivers/pci/host/pci-versatile.c
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -90,11 +90,9 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
- 			err = pci_remap_iospace(res, iobase);
--			if (err) {
-+			if (err)
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
--				continue;
--			}
- 			break;
- 		case IORESOURCE_MEM:
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-@@ -104,19 +102,14 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
- 			mem++;
- 
- 			break;
--		case IORESOURCE_BUS:
--		default:
--			continue;
- 		}
- 	}
- 
--	if (!res_valid) {
--		dev_err(dev, "non-prefetchable memory resource required\n");
--		err = -EINVAL;
--		goto out_release_res;
--	}
-+	if (res_valid)
-+		return 0;
- 
--	return 0;
-+	dev_err(dev, "non-prefetchable memory resource required\n");
-+	err = -EINVAL;
- 
- out_release_res:
- 	pci_free_resource_list(res);
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Gavin
