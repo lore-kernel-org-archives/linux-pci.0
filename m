@@ -1,59 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 05/13] irq/msi: Make use of affinity aware allocations
-Date: Mon,  4 Jul 2016 17:39:26 +0900
-Message-Id: <1467621574-8277-6-git-send-email-hch@lst.de>
-In-Reply-To: <1467621574-8277-1-git-send-email-hch@lst.de>
-References: <1467621574-8277-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35948 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbcGAVQu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 17:16:50 -0400
+MIME-Version: 1.0
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 1 Jul 2016 23:16:48 +0200
+Message-ID: <CAJZ5v0jhCkM8azgxisb-wf08-ecsqqKFh6TRNP5-tKHn2jao5A@mail.gmail.com>
+Subject: [GIT PULL] ACPI fix for v4.7-rc6
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+Hi Linus,
 
-Allow the MSI code to provide affinity hints per MSI descriptor.
+Please pull from
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- include/linux/msi.h | 2 ++
- kernel/irq/msi.c    | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ acpi-4.7-rc6
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index c33abfa..4f0bfe5 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -47,6 +47,7 @@ struct fsl_mc_msi_desc {
-  * @nvec_used:	The number of vectors used
-  * @dev:	Pointer to the device which uses this descriptor
-  * @msg:	The last set MSI message cached for reuse
-+ * @affinity:	Optional pointer to a cpu affinity mask for this descriptor
-  *
-  * @masked:	[PCI MSI/X] Mask bits
-  * @is_msix:	[PCI MSI/X] True if MSI-X
-@@ -67,6 +68,7 @@ struct msi_desc {
- 	unsigned int			nvec_used;
- 	struct device			*dev;
- 	struct msi_msg			msg;
-+	const struct cpumask		*affinity;
- 
- 	union {
- 		/* PCI MSI/X specific data */
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 58dbbac..0e2a736 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -335,7 +335,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 
- 		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
- 					       dev_to_node(dev), &arg, false,
--					       NULL);
-+					       desc->affinity);
- 		if (virq < 0) {
- 			ret = -ENOSPC;
- 			if (ops->handle_error)
--- 
-2.1.4
+to receive an ACPI fix for v4.7-rc6 as commit
+54794580f5949253520265e46c903878ab222d84
+
+ ACPI,PCI,IRQ: correct operator precedence
+
+on top of commit 4c2e07c6a29e0129e975727b9f57eede813eea85
+
+ Linux 4.7-rc5
+
+Fix an expression in the PCI ACPI IRQ management code added by a
+recent commit that overlooked missing parens in it, so the result
+of the computation is incorrect in some cases (Sinan Kaya).
+
+Thanks!
+
+---------------
+
+Sinan Kaya (1):
+      ACPI,PCI,IRQ: correct operator precedence
+
+---------------
+
+ drivers/acpi/pci_link.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
