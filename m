@@ -1,118 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:32824 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933037AbcFQUMO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jun 2016 16:12:14 -0400
-Subject: [PATCH v1 3/4] powerpc/pci: Implement pci_resource_to_user() with
- pcibios_resource_to_bus()
-To: Michal Simek <monstr@monstr.eu>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: sparclinux@vger.kernel.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Fri, 17 Jun 2016 15:12:10 -0500
-Message-ID: <20160617201210.11714.5624.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160617195835.11714.18657.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160617195835.11714.18657.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:33563 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751994AbcGAEto (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 00:49:44 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u614mh8H077089
+	for <linux-pci@vger.kernel.org>; Fri, 1 Jul 2016 00:49:43 -0400
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23w62xdncm-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 01 Jul 2016 00:49:43 -0400
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Fri, 1 Jul 2016 14:49:40 +1000
+Subject: Re: [PATCH v3 1/7] PCI: Ignore enforced alignment when kernel uses
+ existing firmware setup
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160701002852.GA15147@gwshan>
+Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	linux-doc@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, corbet@lwn.net,
+	linux-kernel@vger.kernel.org, warrier@linux.vnet.ibm.com,
+	alex.williamson@redhat.com, paulus@samba.org, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Fri, 1 Jul 2016 12:49:39 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20160701002852.GA15147@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <ecaa7d85-b705-31d7-60d7-b60f8f3b3fc2@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"User" addresses are shown in /sys/devices/pci.../.../resource and
-/proc/bus/pci/devices and used as mmap offsets for /proc/bus/pci/BB/DD.F
-files.  For I/O port resources on powerpc, these are PCI bus addresses,
-i.e., raw BAR values.
+Hi Gavin,
 
-Previously pci_resource_to_user() computed the user address by subtracting
-"hose->io_base_virt - _IO_BASE" from the resource start:
+On 2016/7/1 8:28, Gavin Shan wrote:
 
-  pci_resource_to_user()
-    if (IO)
-      offset = (unsigned long)hose->io_base_virt - _IO_BASE;
-    *start = rsrc->start - offset;
+> On Thu, Jun 30, 2016 at 06:53:07PM +0800, Yongji Xie wrote:
+>> PCI resources allocator will use firmware setup and not try to
+>> reassign resource when PCI_PROBE_ONLY or IORESOURCE_PCI_FIXED
+>> is set.
+>>
+>> The enforced alignment in pci_reassigndev_resource_alignment()
+>> should be ignored in this case. Otherwise, some PCI devices'
+>> resources would be released here and not re-allocated.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>> drivers/pci/pci.c |   12 ++++++++++++
+>> 1 file changed, 12 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index c8b4dbd..be8f72c 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4760,6 +4760,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>>
+>> 	spin_lock(&resource_alignment_lock);
+>> 	p = resource_alignment_param;
+>> +	if (pci_has_flag(PCI_PROBE_ONLY)) {
+>> +		if (*p)
+>> +			printk_once(KERN_INFO "PCI: Ignore resource_alignment parameter: %s with PCI_PROBE_ONLY set\n",
+>> +						p);
+> We don't have to print @resource_alignment as it's ignored completely.
+> The content included in it doesn't mean anything:
+>
+> 			pr_info_once("PCI: resource_alignment ignored with PCI_PROBE_ONLY\n");
 
-We've already told the PCI core about that "hose->io_base_virt - _IO_BASE"
-offset:
+OK. It looks simpler now.
 
-  pcibios_setup_phb_resources()
-    res = &hose->io_resource;
-    offset = pcibios_io_space_offset();
-    /* i.e., "offset = hose->io_base_virt - _IO_BASE" */
-    pci_add_resource_offset(resources, res, offset);
+>> +		spin_unlock(&resource_alignment_lock);
+>> +		return 0;
+>> +	}
+> A empty line is needed here.
+>
+>> 	while (*p) {
+>> 		count = 0;
+>> 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+>> @@ -4837,6 +4844,11 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>> 		r = &dev->resource[i];
+>> 		if (!(r->flags & IORESOURCE_MEM))
+>> 			continue;
+>> +		if (r->flags & IORESOURCE_PCI_FIXED) {
+>> +			dev_info(&dev->dev, "No alignment for fixed BAR%d: %pR\n",
+>> +				i, r);
+> The message would be like below to match PCI code style. I'm thinking it probably
+> uses dev_dbg() instead dev_info(), but not sure for 100%.
+>
+> 			dev_info(&dev->dev, "BAR %d: fixed %pR, no alignment\n", i, r);
 
-so pcibios_resource_to_bus() knows how to do that translation.
+Maybe dev_info() is OK.:-)
 
-No functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/powerpc/kernel/pci-common.c |   42 +++++++++++++-------------------------
- 1 file changed, 14 insertions(+), 28 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 8c6beb0..6de6e0e 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -581,39 +581,25 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
- 			  const struct resource *rsrc,
- 			  resource_size_t *start, resource_size_t *end)
- {
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	resource_size_t offset = 0;
-+	struct pci_bus_region region;
- 
--	if (hose == NULL)
-+	if (rsrc->flags & IORESOURCE_IO) {
-+		pcibios_resource_to_bus(dev->bus, &region,
-+					(struct resource *) rsrc);
-+		*start = region.start;
-+		*end = region.end;
- 		return;
-+	}
- 
--	if (rsrc->flags & IORESOURCE_IO)
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--
--	/* We pass a fully fixed up address to userland for MMIO instead of
--	 * a BAR value because X is lame and expects to be able to use that
--	 * to pass to /dev/mem !
--	 *
--	 * That means that we'll have potentially 64 bits values where some
--	 * userland apps only expect 32 (like X itself since it thinks only
--	 * Sparc has 64 bits MMIO) but if we don't do that, we break it on
--	 * 32 bits CHRPs :-(
--	 *
--	 * Hopefully, the sysfs insterface is immune to that gunk. Once X
--	 * has been fixed (and the fix spread enough), we can re-enable the
--	 * 2 lines below and pass down a BAR value to userland. In that case
--	 * we'll also have to re-enable the matching code in
--	 * __pci_mmap_make_offset().
-+	/* We pass a CPU physical address to userland for MMIO instead of a
-+	 * BAR value because X is lame and expects to be able to use that
-+	 * to pass to /dev/mem!
- 	 *
--	 * BenH.
-+	 * That means we may have 64-bit values where some apps only expect
-+	 * 32 (like X itself since it thinks only Sparc has 64-bit MMIO).
- 	 */
--#if 0
--	else if (rsrc->flags & IORESOURCE_MEM)
--		offset = hose->pci_mem_offset;
--#endif
--
--	*start = rsrc->start - offset;
--	*end = rsrc->end - offset;
-+	*start = rsrc->start;
-+	*end = rsrc->end;
- }
- 
- /**
+>> +			continue;
+>> +		}
+> A empty line is needed here.
+>
+>> 		size = resource_size(r);
+>> 		if (size < align) {
+>> 			size = align;
+> Thanks,
+> Gavin
+>
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
 
