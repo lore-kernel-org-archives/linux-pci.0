@@ -1,62 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:38356 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435AbcGOUdf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2016 16:33:35 -0400
-Received: by mail-wm0-f41.google.com with SMTP id o80so44285962wme.1
-        for <linux-pci@vger.kernel.org>; Fri, 15 Jul 2016 13:33:35 -0700 (PDT)
+Received: from mail.windriver.com ([147.11.1.11]:32946 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544AbcGBXOM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Jul 2016 19:14:12 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH 04/14] PCI: generic: make it explicitly non-modular
+Date: Sat, 2 Jul 2016 19:13:24 -0400
+Message-ID: <20160702231334.26684-5-paul.gortmaker@windriver.com>
+In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-From: Kallol Biswas <kallol@nucleodyne.com>
-Date: Fri, 15 Jul 2016 13:33:32 -0700
-Message-ID: <CAH=XD5-6QXxA42ukxJ40sOzGXqScS7u3QZAwCaCYT2r3pJxdCA@mail.gmail.com>
-Subject: No bus number available for hot-added bridge
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-   I have been trying to hot-add a PCIe bridge and getting the
-following message in dmesg:
+The Kconfig currently controlling compilation of this code is:
 
-No bus number available for hot-added bridge 0000:06:00.
+drivers/pci/host/Kconfig:config PCI_HOST_GENERIC
+drivers/pci/host/Kconfig:       bool "Generic PCI host controller"
 
-The kernel is 4.4. Do we have any patch for this?  I tried Yinghai's
-for-pci-busn-alloc patch. Did not work. Not sure I picked up the right
-changes.
+...meaning that it currently is not being built as a module by anyone.
 
-Any input...
+Lets remove the few trace uses of modular code and macros, so that
+when reading the driver there is no doubt it is builtin-only.
 
-[  793.982780] pciehp 0000:05:00.0:pcie24: pciehp_check_link_active:
-lnk_status = a103
-[  793.982783] pciehp 0000:05:00.0:pcie24: slot(0-1): Link Up event
-[  793.982815] pciehp 0000:05:00.0:pcie24: pciehp_get_power_status:
-SLOTCTRL 80 value read 1571
-[  793.982835] pciehp 0000:05:00.0:pcie24: pending interrupts 0x0010
-from Slot Status
-[  793.982841] pciehp 0000:05:00.0:pcie24: pciehp_power_on_slot:
-SLOTCTRL 80 write cmd 0
-[  793.982847] pciehp 0000:05:00.0:pcie24: __pciehp_link_set: lnk_ctrl = 0
-[  793.982859] pciehp 0000:05:00.0:pcie24: pending interrupts 0x0010
-from Slot Status
-[  793.982865] pciehp 0000:05:00.0:pcie24: pciehp_green_led_blink:
-SLOTCTRL 80 write cmd 200
-[  793.982871] pciehp 0000:05:00.0:pcie24: pciehp_check_link_active:
-lnk_status = a103
-[  794.085818] pciehp 0000:05:00.0:pcie24: pciehp_check_link_status:
-lnk_status = a103
-[  794.085909] pci 0000:06:00.0: [10b5:9797] type 01 class 0x060400
-[  794.086232] pci 0000:06:00.0: Max Payload Size set to 256 (was 128, max 512)
-[  794.086563] pci 0000:06:00.0: PME# supported from D0 D3hot D3cold
-[  794.086884] iommu: Adding device 0000:06:00.0 to group 47
-[  794.093797] No bus number available for hot-added bridge 0000:06:00.0
-[  794.093816] pcieport 0000:05:00.0: PCI bridge to [bus 06]
-[  794.093822] pcieport 0000:05:00.0:   bridge window [io  0x1000-0x1fff]
-[  794.093829] pcieport 0000:05:00.0:   bridge window [mem
-0xc8000000-0xc83fffff]
-[  794.093835] pcieport 0000:05:00.0:   bridge window [mem
-0x280000000-0x2801fffff 64bit pref]
-[  794.094364] pciehp 0000:05:00.0:pcie24: pending interrupts 0x0010
-from Slot Status
-[  794.094369] pciehp 0000:05:00.0:pcie24: pciehp_green_led_on:
-SLOTCTRL 80 write cmd 100
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
+
+Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+is already contained at the top of the file in the comments.
+
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pci-host-generic.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index f0ca6de0d87e..c05ea9d72f69 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -20,7 +20,7 @@
+  */
+ 
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci-ecam.h>
+@@ -45,8 +45,6 @@ static const struct of_device_id gen_pci_of_match[] = {
+ 	{ },
+ };
+ 
+-MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+-
+ static int gen_pci_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+@@ -65,8 +63,4 @@ static struct platform_driver gen_pci_driver = {
+ 	},
+ 	.probe = gen_pci_probe,
+ };
+-module_platform_driver(gen_pci_driver);
+-
+-MODULE_DESCRIPTION("Generic PCI host driver");
+-MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+-MODULE_LICENSE("GPL v2");
++builtin_platform_driver(gen_pci_driver);
+-- 
+2.8.4
+
