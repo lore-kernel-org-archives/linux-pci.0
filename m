@@ -1,136 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: <bhelgaas@google.com>
-CC: <rjw@rjwysocki.net>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI: release pci_host_bridge resource after remove root bus
-Date: Thu, 23 Jun 2016 19:42:18 +0800
-Message-ID: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:9446 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752540AbcGBAiD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 20:38:03 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u620XiE9091512
+	for <linux-pci@vger.kernel.org>; Fri, 1 Jul 2016 20:38:02 -0400
+Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23wpmfex7y-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 01 Jul 2016 20:38:02 -0400
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Sat, 2 Jul 2016 10:37:59 +1000
+Date: Sat, 2 Jul 2016 10:37:54 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
+	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+Subject: Re: [PATCH v3 5/7] PCI: Do not use IORESOURCE_STARTALIGN to identify
+ bridge resources
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1467283993-3185-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160701023423.GB6739@gwshan>
+ <c97584a0-b5b1-8660-1e16-04c43570eca6@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c97584a0-b5b1-8660-1e16-04c43570eca6@linux.vnet.ibm.com>
+Message-Id: <20160702003754.GB7582@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_host_bridge holds the top resources(IO port/Mem/bus),
-now we release pci_host_bridge resources in
-acpi_pci_root_release_info() which would be called when
-pci_host_bridge device refcount reach 0. In some cases,
-pci_host_bridge refcount cannot reach 0 after we remove
-pci root bus in pci_remove_root_bus(). Then if we want to
-hot add pci root bus, we cannot use pci_host_bridge
-resources because of conflicts with old resources which are
-still in system. I think this is not reasonable.
+On Fri, Jul 01, 2016 at 03:04:10PM +0800, Yongji Xie wrote:
+>Hi Gavin,
+>
+>On 2016/7/1 10:34, Gavin Shan wrote:
+>
+>>On Thu, Jun 30, 2016 at 06:53:11PM +0800, Yongji Xie wrote:
+>>>Now we use the IORESOURCE_STARTALIGN to identify bridge resources
+>>>in __assign_resources_sorted(). That's quite fragile. We may also
+>>>set flag IORESOURCE_STARTALIGN for SR-IOV resources in some cases,
+>>>for example, using the option "noresize" of parameter
+>>>"pci=resource_alignment".
+>>>
+>>>In this patch, we try to use a more robust way to identify
+>>>bridge resources.
+>>>
+>>>Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>
+>>Yongji, I think this doesn't have to be part of this series, meaning
+>>it can be sent or merged separately.
+>>
+>
+>Seems like I give a wrong example in my changelog.  The
+>parameter "pci=resource_alignment" would not set flag
+>IORESOURCE_STARTALIGN for SR-IOV resources as I replied
+>to you in previous patch. So this patch has nothing to do
+>with this series now, I will remove it as you suggested.
+>
 
-1. For pci devices, we would release their resources in
-   pci_destroy_dev() regardless of pci device refcount.
-2. When we try to remove pci root bus, there is no devices
-   need to use the pci_host_bridge resources again, release
-   pci_host_bridge resources is safe.
-3. In some cases, users woule make mistake, for example,
-   user get a pci device(increase refcount), but forget to
-   put this device, then if we do hotplug pci root bus,
-   it would make all pci devices cannot work after hot add.
+Thanks, please refine the changelog as it's not related to the
+enforced alignment as you claimed when resending it separately.
 
-I found this issue in the following case:
-1. I have a raid pci device in my system;
-2. I mount a disk which connect to this raid.
-3. hot remove the pci root bus.
-4. hot add the pci root bus.
-5. found the resource conflicts for the children pci devices under this root bus.
-
-pci_root_bus increase a refcount at pci_host_bridge.
-pci_root_bus decrease a refcount at pci_host_bridge in
-  release_pcibus_dev() when pci_root_bus device refcount reach 0.
-
-pci_dev increase a refcount at pci_bus in pci_alloc_dev().
-pci_dev decrease a refcount at pci_bus in pci_release_dev()
-when pci_dev refcount reach 0.
-
-If any pci device refcount cannot reach 0, then its pci_bus
-refcount cannot reach 0 too, the result is pci_host_bridge
-refcount cannot reach 0.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/acpi/pci_root.c   |   11 -----------
- drivers/pci/host-bridge.c |   15 +++++++++++++++
- drivers/pci/pci.h         |    2 +-
- drivers/pci/remove.c      |    1 +
- 4 files changed, 17 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index d144168..c5142d0 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -839,17 +839,6 @@ static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
- 
- static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- {
--	struct resource *res;
--	struct resource_entry *entry;
--
--	resource_list_for_each_entry(entry, &bridge->windows) {
--		res = entry->res;
--		if (res->flags & IORESOURCE_IO)
--			pci_unmap_iospace(res);
--		if (res->parent &&
--		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
--			release_resource(res);
--	}
- 	__acpi_pci_root_release_info(bridge->release_data);
- }
- 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 5f4a2e0..3594967 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -8,6 +8,21 @@
- 
- #include "pci.h"
- 
-+void release_host_bridge_resources(struct pci_host_bridge *bridge)
-+{
-+	struct resource *res;
-+	struct resource_entry *entry;
-+
-+	resource_list_for_each_entry(entry, &bridge->windows) {
-+		res = entry->res;
-+		if (res->flags & IORESOURCE_IO)
-+			pci_unmap_iospace(res);
-+		if (res->parent &&
-+		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			release_resource(res);
-+	}
-+}
-+
- static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- {
- 	while (bus->parent)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 9730c47..46725d9 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -11,7 +11,7 @@ extern const unsigned char pcie_link_speed[];
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
- 
- /* Functions internal to the PCI core code */
--
-+void release_host_bridge_resources(struct pci_host_bridge *bridge);
- int pci_create_sysfs_dev_files(struct pci_dev *pdev);
- void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
- #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index d1ef7ac..a42b396 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -161,6 +161,7 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	pci_remove_bus(bus);
- 	host_bridge->bus = NULL;
- 
-+	release_host_bridge_resources(host_bridge);
- 	/* remove the host bridge */
- 	device_unregister(&host_bridge->dev);
- }
--- 
-1.7.1
+Thanks,
+Gavin
 
