@@ -1,44 +1,82 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net,
-	tony.luck@intel.com
-Cc: bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com
-Subject: [PATCH 2/4] x86/ioapic: Fix setup_res() failing to get resource
-Date: Wed, 27 Jul 2016 00:13:15 +0800
-Message-Id: <1469549597-19253-3-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
-References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Joao Pinto <jpinto@synopsys.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH 03/14] PCI: designware-plat: make it explicitly non-modular
+Date: Sat, 2 Jul 2016 19:13:23 -0400
+Message-ID: <20160702231334.26684-4-paul.gortmaker@windriver.com>
+In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-setup_res() doesn't actually get any resoure because it mistakenly
-checks the return value of acpi_dev_filter_resource_type(), which
-returns 0 on success, and 1 on failure. Fix it by taking the return
-value of non-zero as failing to match the specified resource type.
+The Kconfig currently controlling compilation of this code is:
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+drivers/pci/host/Kconfig:config PCIE_DW_PLAT
+drivers/pci/host/Kconfig:       bool "Platform bus based DesignWare PCIe Controller"
+
+...meaning that it currently is not being built as a module by anyone.
+
+Lets remove the few trace uses of modular code and macros, so that
+when reading the driver there is no doubt it is builtin-only.
+
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
+
+Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+is already contained at the top of the file in the comments.
+
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Joao Pinto <jpinto@synopsys.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- drivers/acpi/ioapic.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-designware-plat.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index 0f272e2..daf4a40 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -46,7 +46,7 @@ static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
- 	struct resource_win win;
+diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+index b3500994d08a..c8079dc81c10 100644
+--- a/drivers/pci/host/pcie-designware-plat.c
++++ b/drivers/pci/host/pcie-designware-plat.c
+@@ -14,7 +14,7 @@
+ #include <linux/gpio.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/of_gpio.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+@@ -121,7 +121,6 @@ static const struct of_device_id dw_plat_pcie_of_match[] = {
+ 	{ .compatible = "snps,dw-pcie", },
+ 	{},
+ };
+-MODULE_DEVICE_TABLE(of, dw_plat_pcie_of_match);
  
- 	res->flags = 0;
--	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
-+	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM))
- 		return AE_OK;
- 
- 	if (!acpi_dev_resource_memory(acpi_res, res)) {
+ static struct platform_driver dw_plat_pcie_driver = {
+ 	.driver = {
+@@ -130,9 +129,4 @@ static struct platform_driver dw_plat_pcie_driver = {
+ 	},
+ 	.probe = dw_plat_pcie_probe,
+ };
+-
+-module_platform_driver(dw_plat_pcie_driver);
+-
+-MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
+-MODULE_DESCRIPTION("Synopsys PCIe host controller glue platform driver");
+-MODULE_LICENSE("GPL v2");
++builtin_platform_driver(dw_plat_pcie_driver);
 -- 
-1.8.3.1
+2.8.4
