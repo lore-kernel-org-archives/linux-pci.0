@@ -1,88 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39086 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752023AbcGAOOz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Jul 2016 10:14:55 -0400
-Date: Fri, 1 Jul 2016 15:14:47 +0100
-From: Liviu Dudau <liviu.dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Simon Horman <horms@verge.net.au>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
-Message-ID: <20160701141447.GB8609@e106497-lin.cambridge.arm.com>
-References: <20160630151931.29216-1-thierry.reding@gmail.com>
- <5307392.exoejlJp9x@wuerfel>
+	<linux-pci@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+Subject: [PATCH 09/14] PCI: rcar: make it explicitly non-modular
+Date: Sat, 2 Jul 2016 19:13:29 -0400
+Message-ID: <20160702231334.26684-10-paul.gortmaker@windriver.com>
+In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5307392.exoejlJp9x@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 30, 2016 at 05:37:35PM +0200, Arnd Bergmann wrote:
-> On Thursday, June 30, 2016 5:19:30 PM CEST Thierry Reding wrote:
-> > From: Arnd Bergmann <arnd@arndb.de>
-> > 
-> > This patch makes the existing pci_host_bridge structure a proper device
-> > that is usable by PCI host drivers in a more standard way. In addition
-> > to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
-> > and pci_create_root_bus interfaces, this unfortunately means having to
-> > add yet another interface doing basically the same thing, and add some
-> > extra code in the initial step.
-> 
-> Thanks a lot for following up on my patches and getting them to work!
-> 
-> > As mentioned in a previous email, one open question is whether we want
-> > to export a function for allocating a pci_host_bridge device in
-> > combination with the per-device structure or let the driver itself
-> > call kzalloc.
-> > 
-> > Changes in v2 (Thierry Reding):
-> > - add a pci_host_bridge_init() helper that drivers can use to perform
-> >   all the necessary steps to initialize the bridge
-> 
-> For these two points, the addition of pci_host_bridge_init() to me
-> tips the balance in favour of having a separate allocation function
-> that also does the initialization, something like
-> 
-> struct struct pci_host_bridge *pci_host_bridge_alloc(size_t priv)
-> {
-> 	struct pci_host_bridge *bridge;
-> 
-> 	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
-> 	if (!bridge)
-> 		return NULL;
-> 
-> 	INIT_LIST_HEAD(&bridge->windows);
-> 
-> 	if (priv)
-> 		bridge->private = &bridge[1];
-> 
-> 	return bridge;
-> }
+The Kconfig currently controlling compilation of this code is:
 
-I'm confused. Why are we butchering the old pci_alloc_host_bridge() function
-to then go back and add re-add it in a different form?
+drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
+drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
 
-The old pci_alloc_host_bridge() was doing mostly what the above
-function does minus the bridge->private line. And the &bridge[1] construct
-could very well be pointing to the next struct pci_host_bridge aligned address,
-which means parts of priv area are ignored.
+...meaning that it currently is not being built as a module by anyone.
 
-Best regards,
-Liviu
+Lets remove the few trace uses of modular code and macros, so that
+when reading the driver there is no doubt it is builtin-only.
 
-> 
-> 	Arnd
-> 
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
 
+Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+was (or is now) contained at the top of the file in the comments.
+
+Cc: Simon Horman <horms@verge.net.au>
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pcie-rcar.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 6546ca79f188..7e61ae41910e 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -7,6 +7,8 @@
+  *  arch/sh/drivers/pci/ops-sh7786.c
+  *  Copyright (C) 2009 - 2011  Paul Mundt
+  *
++ * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
++ *
+  * This file is licensed under the terms of the GNU General Public
+  * License version 2.  This program is licensed "as is" without any
+  * warranty of any kind, whether express or implied.
+@@ -18,7 +20,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+@@ -936,7 +938,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+ 	{},
+ };
+-MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
+ 
+ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+ {
+@@ -1056,8 +1057,4 @@ static struct platform_driver rcar_pcie_driver = {
+ 	},
+ 	.probe = rcar_pcie_probe,
+ };
+-module_platform_driver(rcar_pcie_driver);
+-
+-MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
+-MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
+-MODULE_LICENSE("GPL v2");
++builtin_platform_driver(rcar_pcie_driver);
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.8.4
