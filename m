@@ -1,138 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:36166 "EHLO
-	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751027AbcHAG6k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Aug 2016 02:58:40 -0400
-From: Haggai Eran <haggaie@mellanox.com>
-To: linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: linux-pci@vger.kernel.org,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	Liran Liss <liranl@mellanox.com>,
-	Leon Romanovsky <leonro@mellanox.com>,
-	Artemy Kovalyov <artemyko@mellanox.com>,
-	Jerome Glisse <j.glisse@gmail.com>,
-	Yishai Hadas <yishaih@mellanox.com>,
-	Haggai Eran <haggaie@mellanox.com>
-Subject: [RFC 3/7] IB/core: Helpers for mapping DMA-BUF in MRs
-Date: Mon,  1 Aug 2016 09:57:29 +0300
-Message-Id: <1470034653-9097-4-git-send-email-haggaie@mellanox.com>
-In-Reply-To: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:20303 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750745AbcGCFrk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jul 2016 01:47:40 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u635i0ff042536
+	for <linux-pci@vger.kernel.org>; Sun, 3 Jul 2016 01:47:39 -0400
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23x9pnqf8c-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Sun, 03 Jul 2016 01:47:39 -0400
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Sun, 3 Jul 2016 15:47:37 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 60DCB2CE8054
+	for <linux-pci@vger.kernel.org>; Sun,  3 Jul 2016 15:47:34 +1000 (EST)
+Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u635lYnD10289284
+	for <linux-pci@vger.kernel.org>; Sun, 3 Jul 2016 15:47:34 +1000
+Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
+	by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u635lXUc018425
+	for <linux-pci@vger.kernel.org>; Sun, 3 Jul 2016 15:47:34 +1000
+Date: Sun, 3 Jul 2016 15:47:32 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
+	benh@kernel.crashing.org, imunsie@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	paulus@samba.org, mikey@neuling.org, andrew.donnellan@au1.ibm.com,
+	bhelgaas@google.com, frederic.barrat@fr.ibm.com,
+	mrochs@linux.vnet.ibm.com
+Subject: Re: [PATCH v7] powerpc/pci: Assign fixed PHB number based on
+ device-tree properties
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467224062-9173-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1467224062-9173-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Message-Id: <20160703054732.GA20271@gwshan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DMA-BUF API allows devices to export buffers for other devices to
-access. This can provide a means to implement peer to peer communication
-for RDMA. A device with internal memory would expose its memory to the
-PCIe BAR, and export that region as a DMA-BUF object. Then, the user or
-ULP would register a memory region that is backed by the DMA-BUF object.
+On Wed, Jun 29, 2016 at 03:14:22PM -0300, Guilherme G. Piccoli wrote:
+>The domain/PHB field of PCI addresses has its value obtained from a
+>global variable, incremented each time a new domain (represented by
+>struct pci_controller) is added on the system. The domain addition
+>process happens during boot or due to PHB hotplug add.
+>
+>As recent kernels are using predictable naming for network interfaces,
+>the network stack is more tied to PCI naming. This can be a problem in
+>hotplug scenarios, because PCI addresses will change if devices are
+>removed and then re-added. This situation seems unusual, but it can
+>happen if a user wants to replace a NIC without rebooting the machine,
+>for example.
+>
+>This patch changes the way PCI domain values are generated: now, we use
+>device-tree properties to assign fixed PHB numbers to PCI addresses
+>when available (meaning pSeries and PowerNV cases). We also use a bitmap
+>to allow dynamic PHB numbering when device-tree properties are not
+>used. This bitmap keeps track of used PHB numbers and if a PHB is
+>released (by hotplug operations for example), it allows the reuse of
+>this PHB number, avoiding PCI address to change in case of device remove
+>and re-add soon after. No functional changes were introduced.
+>
+>Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+>Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
 
-Signed-off-by: Haggai Eran <haggaie@mellanox.com>
----
- drivers/infiniband/core/verbs.c | 60 +++++++++++++++++++++++++++++++++++++++++
- include/rdma/ib_verbs.h         |  9 +++++++
- 2 files changed, 69 insertions(+)
+Guilherme, thanks for keeping improving it. If Michael needs:
 
-diff --git a/drivers/infiniband/core/verbs.c b/drivers/infiniband/core/verbs.c
-index 6298f54b4137..633831e77a62 100644
---- a/drivers/infiniband/core/verbs.c
-+++ b/drivers/infiniband/core/verbs.c
-@@ -44,6 +44,7 @@
- #include <linux/in.h>
- #include <linux/in6.h>
- #include <net/addrconf.h>
-+#include <linux/dma-buf.h>
- 
- #include <rdma/ib_verbs.h>
- #include <rdma/ib_cache.h>
-@@ -1922,3 +1923,62 @@ void ib_drain_qp(struct ib_qp *qp)
- 		ib_drain_rq(qp);
- }
- EXPORT_SYMBOL(ib_drain_qp);
-+
-+int ib_mr_attach_dmabuf(struct ib_mr *mr, struct dma_buf *dmabuf, int access)
-+{
-+	struct device *dev = mr->device->dma_device;
-+	struct dma_buf_attachment *attach;
-+	struct sg_table *sg;
-+	int err;
-+	int n;
-+
-+	get_dma_buf(dmabuf);
-+
-+	attach = dma_buf_attach(dmabuf, dev);
-+	if (IS_ERR(attach)) {
-+		dev_err(dev, "unable to attach to DMA-BUF object (from %s): %ld",
-+			dmabuf->exp_name, PTR_ERR(attach));
-+		err = PTR_ERR(attach);
-+		goto put_dma_buf;
-+	}
-+
-+	sg = dma_buf_map_attachment(attach, DMA_BIDIRECTIONAL);
-+	if (IS_ERR(sg)) {
-+		dev_err(dev, "unable to map a DMA-BUF object (from %s): %ld",
-+			dmabuf->exp_name, PTR_ERR(sg));
-+		err = PTR_ERR(sg);
-+		goto detach;
-+	}
-+
-+	n = ib_map_mr_sg_zbva(mr, sg->sgl, sg->nents, NULL, PAGE_SIZE);
-+	if (unlikely(n != sg->nents)) {
-+		dev_err(dev, "failed to map sg (%d/%d) of DMA-BUF object (from %s)\n",
-+			n, sg->nents, dmabuf->exp_name);
-+		err = n < 0 ? n : -EINVAL;
-+		goto unmap;
-+	}
-+
-+	mr->attach = attach;
-+	mr->sg = sg;
-+	return 0;
-+
-+unmap:
-+	dma_buf_unmap_attachment(attach, sg, DMA_BIDIRECTIONAL);
-+detach:
-+	dma_buf_detach(dmabuf, attach);
-+put_dma_buf:
-+	dma_buf_put(dmabuf);
-+	return err;
-+}
-+EXPORT_SYMBOL(ib_mr_attach_dmabuf);
-+
-+void ib_mr_detach_dmabuf(struct dma_buf_attachment *attach,
-+			 struct sg_table *sg)
-+{
-+	struct dma_buf *dmabuf = attach->dmabuf;
-+
-+	dma_buf_unmap_attachment(attach, sg, DMA_BIDIRECTIONAL);
-+	dma_buf_detach(dmabuf, attach);
-+	dma_buf_put(dmabuf);
-+}
-+EXPORT_SYMBOL(ib_mr_detach_dmabuf);
-diff --git a/include/rdma/ib_verbs.h b/include/rdma/ib_verbs.h
-index 7e440d41487a..da23ec0a06d7 100644
---- a/include/rdma/ib_verbs.h
-+++ b/include/rdma/ib_verbs.h
-@@ -1465,6 +1465,9 @@ struct ib_mr {
- 		struct ib_uobject	*uobject;	/* user */
- 		struct list_head	qp_entry;	/* FR */
- 	};
-+	/* For MRs that expose a DMA-BUF */
-+	struct dma_buf_attachment *attach;
-+	struct sg_table *sg;
- };
- 
- struct ib_mw {
-@@ -3189,4 +3192,10 @@ int ib_sg_to_pages(struct ib_mr *mr, struct scatterlist *sgl, int sg_nents,
- void ib_drain_rq(struct ib_qp *qp);
- void ib_drain_sq(struct ib_qp *qp);
- void ib_drain_qp(struct ib_qp *qp);
-+
-+struct dma_buf;
-+int ib_mr_attach_dmabuf(struct ib_mr *mr, struct dma_buf *dmabuf, int access);
-+void ib_mr_detach_dmabuf(struct dma_buf_attachment *attach,
-+			 struct sg_table *sg);
-+
- #endif /* IB_VERBS_H */
--- 
-1.7.11.2
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+
+>---
+>v7:
+>    * Removed the goto as per Michael's suggestion;
+>
+>    * Changed of_property_read_u32_array() to of_property_read_u32_index(),
+>as per Gavin's suggestion. This way, we end up using buid_low as the index
+>of PHB in pSeries, which is expected but was not being achieved in v6,
+>as per my mistake.
+>
+>    * Didn't remove machine check for pSeries on "reg" property lookup.
+>It's worthy to keep it, since almost every platform (if not all of them)
+>contain the "reg" property on PHB node in device-tree, but only in
+>pSeries we're 100% sure it can be used as the PHB unique identifier.
+>Since the patch has a dynamic PHB numbering mechanism, the other platforms
+>won't have trouble with it.
+>
+> arch/powerpc/kernel/pci-common.c | 53 +++++++++++++++++++++++++++++++++++++---
+> 1 file changed, 50 insertions(+), 3 deletions(-)
+>
+>diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>index 0f7a60f..c87545b 100644
+>--- a/arch/powerpc/kernel/pci-common.c
+>+++ b/arch/powerpc/kernel/pci-common.c
+>@@ -41,11 +41,18 @@
+> #include <asm/ppc-pci.h>
+> #include <asm/eeh.h>
+>
+>+/* hose_spinlock protects accesses to the the phb_bitmap. */
+> static DEFINE_SPINLOCK(hose_spinlock);
+> LIST_HEAD(hose_list);
+>
+>-/* XXX kill that some day ... */
+>-static int global_phb_number;		/* Global phb counter */
+>+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
+>+#define MAX_PHBS 0x10000
+>+
+>+/*
+>+ * For dynamic PHB numbering: used/free PHBs tracking bitmap.
+>+ * Accesses to this bitmap should be protected by hose_spinlock.
+>+ */
+>+static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
+>
+> /* ISA Memory physical address */
+> resource_size_t isa_mem_base;
+>@@ -64,6 +71,41 @@ struct dma_map_ops *get_pci_dma_ops(void)
+> }
+> EXPORT_SYMBOL(get_pci_dma_ops);
+>
+>+/*
+>+ * This function should run under locking protection, specifically
+>+ * hose_spinlock.
+>+ */
+>+static int get_phb_number(struct device_node *dn)
+>+{
+>+	u64 prop;
+>+	int ret, phb_id = -1;
+>+
+>+	/*
+>+	 * Try fixed PHB numbering first, by checking archs and reading
+>+	 * the respective device-tree properties. Firstly, try PowerNV by
+>+	 * reading "ibm,opal-phbid", only present in OPAL environment.
+>+	 */
+>+	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
+>+	if (ret && machine_is(pseries))
+>+		ret = of_property_read_u32_index(dn, "reg", 1, (u32 *)&prop);
+>+	if (!ret)
+>+		phb_id = (int)(prop & (MAX_PHBS - 1));
+>+
+>+	/* We need to be sure to not use the same PHB number twice. */
+>+	if ((phb_id >= 0) && !test_and_set_bit(phb_id, phb_bitmap))
+>+		return phb_id;
+>+
+>+	/*
+>+	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
+>+	 * the same PHB number twice, then fallback to dynamic PHB numbering.
+>+	 */
+>+	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
+>+	BUG_ON(phb_id >= MAX_PHBS);
+>+	set_bit(phb_id, phb_bitmap);
+>+
+>+	return phb_id;
+>+}
+>+
+> struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+> {
+> 	struct pci_controller *phb;
+>@@ -72,7 +114,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+> 	if (phb == NULL)
+> 		return NULL;
+> 	spin_lock(&hose_spinlock);
+>-	phb->global_number = global_phb_number++;
+>+	phb->global_number = get_phb_number(dev);
+> 	list_add_tail(&phb->list_node, &hose_list);
+> 	spin_unlock(&hose_spinlock);
+> 	phb->dn = dev;
+>@@ -94,6 +136,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
+> void pcibios_free_controller(struct pci_controller *phb)
+> {
+> 	spin_lock(&hose_spinlock);
+>+
+>+	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
+>+	if (phb->global_number < MAX_PHBS)
+>+		clear_bit(phb->global_number, phb_bitmap);
+>+
+> 	list_del(&phb->list_node);
+> 	spin_unlock(&hose_spinlock);
+>
+>-- 
+>2.1.0
+>
 
