@@ -1,61 +1,55 @@
-Return-Path: <gregkh@linuxfoundation.org>
-Return-Path: <gregkh@linuxfoundation.org>
-Date: Wed, 27 Jul 2016 15:15:52 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Xavier Gnata <xavier.gnata@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH 2/2] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C
- controller.
-Message-ID: <20160727221552.GA9975@kroah.com>
-References: <20160726164038.1481-1-andreas.noever@gmail.com>
- <20160726164038.1481-2-andreas.noever@gmail.com>
- <ed33043d-fe00-9478-80fa-bdca311a52f1@gmail.com>
- <CAMxnaaULYgu00dNzbu3LLNkdnAFz0bkke3vVt19yfHT=Y0_dkw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMxnaaULYgu00dNzbu3LLNkdnAFz0bkke3vVt19yfHT=Y0_dkw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:57610 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932556AbcGDIkR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 04:40:17 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 13/13] nvme: remove the post_scan callout
+Date: Mon,  4 Jul 2016 17:39:34 +0900
+Message-Id: <1467621574-8277-14-git-send-email-hch@lst.de>
+In-Reply-To: <1467621574-8277-1-git-send-email-hch@lst.de>
+References: <1467621574-8277-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 28, 2016 at 12:08:42AM +0200, Andreas Noever wrote:
-> On Wed, Jul 27, 2016 at 10:11 AM, Xavier Gnata <xavier.gnata@gmail.com> wrote:
-> >
-> >
-> > On 26/07/2016 18:40, Andreas Noever wrote:
-> >>
-> >> From: Xavier Gnata <xavier.gnata@gmail.com>
-> >>
-> >> From: Xavier Gnata <xavier.gnata@gmail.com>
-> >>
-> >> Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk
-> >> to support suspend/resume.
-> >> Tested against 4.7 master on a MacBook Air 11" 2015.
-> >>
-> >> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-> >> ---
-> >>  drivers/pci/quirks.c      | 4 ++++
-> >>  drivers/thunderbolt/nhi.c | 6 ++++++
-> >>  2 files changed, 10 insertions(+)
-> >>
-> >> Rebased version of Xavier's patch.
-> >>
-> >> Xavier, could you verify that this still works on your system?
-> >>
-> > It does work on my system.
-> >
-> > Thanks,
-> > Xavier
-> 
-> Cool.
-> 
-> Greg, can we still get these into the current merge window?
+No need now that we don't have to reverse engineer the irq affinity.
 
-Hah, no, trees closed a week or so ago.  This is all for 4.9, sorry.  My
-trees will open up after 4.8-rc1 is out and I'll start working on
-reviewing patches then.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/nvme/host/core.c | 3 ---
+ drivers/nvme/host/nvme.h | 1 -
+ 2 files changed, 4 deletions(-)
 
-thanks,
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 9d7cee4..b100cce 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -1627,9 +1627,6 @@ static void nvme_scan_work(struct work_struct *work)
+ 	list_sort(NULL, &ctrl->namespaces, ns_cmp);
+ 	mutex_unlock(&ctrl->namespaces_mutex);
+ 	kfree(id);
+-
+-	if (ctrl->ops->post_scan)
+-		ctrl->ops->post_scan(ctrl);
+ }
+ 
+ void nvme_queue_scan(struct nvme_ctrl *ctrl)
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index 282421f..bb343b3 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -150,7 +150,6 @@ struct nvme_ctrl_ops {
+ 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
+ 	int (*reset_ctrl)(struct nvme_ctrl *ctrl);
+ 	void (*free_ctrl)(struct nvme_ctrl *ctrl);
+-	void (*post_scan)(struct nvme_ctrl *ctrl);
+ 	void (*submit_async_event)(struct nvme_ctrl *ctrl, int aer_idx);
+ };
+ 
+-- 
+2.1.4
 
-greg k-h
