@@ -1,280 +1,111 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: helgaas@kernel.org,
-	jingoohan1@gmail.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jszhang@marvell.com, CARLOS.PALMINHA@synopsys.com,
-	MiguelFalcao.Sousa@synopsys.com, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 1/2] pcie-designware: add iATU Unroll feature
-Date: Fri, 22 Jul 2016 14:29:38 +0100
-Message-Id: <0ce5678ac78d082afa3df7ad284111afcc03b2a1.1469193895.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1469193895.git.jpinto@synopsys.com>
-References: <cover.1469193895.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1469193895.git.jpinto@synopsys.com>
-References: <cover.1469193895.git.jpinto@synopsys.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:18134 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932142AbcGDIqt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 04:46:49 -0400
+Subject: Re: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
+To: Po Liu <po.liu@nxp.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+ <1465892645-32381-1-git-send-email-po.liu@nxp.com>
+ <1465892645-32381-2-git-send-email-po.liu@nxp.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	"Marc Zyngier" <marc.zyngier@arm.com>,
+	Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Minghuan Lian <minghuan.lian@nxp.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Linuxarm <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <577A21E4.1030301@huawei.com>
+Date: Mon, 4 Jul 2016 16:44:20 +0800
+MIME-Version: 1.0
+In-Reply-To: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the support to the new iATU mechanism that will be used
-from Core version 4.80, which is called iATU Unroll.
-The new Cores can support the iATU Unroll or support the "old" iATU 
-method now called Legacy Mode. The driver is perfectly capable of
-performing well for both.
+Hi Po
 
-In order to make sure that the iATU is really enabled a for loop was
-introduced in dw_pcie_prog_outbound_atu() to improve reliability.
+I found a problem with the similar patch. as the below log.
 
-This patch also moves the sleep definitions to the *.c file like
-suggested by Jisheng Zhang in a previous patch.
+[    4.287060] pci 0000:80:00.0: quirk_aer_interrupt dev->irq 416
+[    4.293778] pcieport 0000:80:00.0: pci_device_probe in
+[    4.299605] pcieport 0000:80:00.0: of_irq_parse_pci() failed with rc=-22
+[    4.307209] pcieport 0000:80:00.0: init_service_irqs  dev->irq 0
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-changes v1->v2:
-- Patch was breaking kernel build due to bad definition in macro funtion.
-- Rebased on top of pci/next.
+The fucntions are called as below sequence.
+1. quirk_aer_interrupt, get the aer dev->irq 416.
+2. pci_device_probe->of_irq_parse_pci, of_irq_parse_pci() failed, then dev->irq changed to 0.
 
- drivers/pci/host/pcie-designware.c | 157 +++++++++++++++++++++++++++++++++----
- drivers/pci/host/pcie-designware.h |   6 +-
- 2 files changed, 144 insertions(+), 19 deletions(-)
+So this patch could not work with aer.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12afce1..9135725 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -26,7 +26,15 @@
- 
- #include "pcie-designware.h"
- 
--/* Synopsis specific PCIE configuration registers */
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_MAX_ATU_RETRIES	5
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
-+#define LINK_WAIT_IATU_MIN		9000
-+#define LINK_WAIT_IATU_MAX		10000
-+
-+/* Synopsys specific PCIE configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_MODE_MASK		(0x3f << 16)
- #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
-@@ -58,6 +66,7 @@
- #define PCIE_ATU_TYPE_IO		(0x2 << 0)
- #define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
- #define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
-+
- #define PCIE_ATU_CR2			0x908
- #define PCIE_ATU_ENABLE			(0x1 << 31)
- #define PCIE_ATU_BAR_MODE_ENABLE	(0x1 << 30)
-@@ -75,6 +84,37 @@
- #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
- #define PCIE_PHY_DEBUG_R1_LINK_UP	0x00000010
- 
-+/*
-+ * iatu unroll specific registers and definitions
-+ * From 4.80 Core version the address translation will be made by unroll
-+ */
-+
-+/* Registers */
-+#define PCIE_ATU_UNR_REGION_CTRL1	0x00
-+#define PCIE_ATU_UNR_REGION_CTRL2	0x01
-+#define PCIE_ATU_UNR_LOWER_BASE		0x02
-+#define PCIE_ATU_UNR_UPPER_BASE		0x03
-+#define PCIE_ATU_UNR_LIMIT		0x04
-+#define PCIE_ATU_UNR_LOWER_TARGET	0x05
-+#define PCIE_ATU_UNR_UPPER_TARGET	0x06
-+#define PCIE_ATU_UNR_REGION_CTRL3	0x07
-+#define PCIE_ATU_UNR_UPPR_LIMIT		0x08
-+
-+/* register address builder */
-+#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
-+					((0x3 << 20) | (region << 9) |	\
-+					(0x1 << 8) | (register << 2))
-+
-+#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
-+					((0x3 << 20) | (region << 9) |	\
-+					(register << 2))
-+
-+/* translation types */
-+#define PCIE_TRANSL_INB			0x1
-+#define PCIE_TRANSL_OUTB		0x2
-+
-+/* end of Unroll specific */
-+
- static struct pci_ops dw_pcie_ops;
- 
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
-@@ -131,6 +171,38 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
- 		writel(val, pp->dbi_base + reg);
- }
- 
-+static inline void dw_pcie_readl_unroll(struct pcie_port *pp, u32 type,
-+						u32 index, u32 reg, u32 *val)
-+{
-+	u32 reg_addr = 0;
-+
-+	if (type == PCIE_TRANSL_OUTB)
-+		reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
-+	else if  (type == PCIE_TRANSL_INB)
-+		reg_addr = PCIE_GET_ATU_INB_UNR_REG_ADDR(index, reg);
-+
-+	if (pp->ops->readl_rc)
-+		pp->ops->readl_rc(pp, pp->dbi_base + reg_addr, val);
-+	else
-+		*val = readl(pp->dbi_base + reg_addr);
-+}
-+
-+static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 type,
-+						u32 index, u32 val, u32 reg)
-+{
-+	u32 reg_addr = 0;
-+
-+	if (type == PCIE_TRANSL_OUTB)
-+		reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
-+	else if  (type == PCIE_TRANSL_INB)
-+		reg_addr = PCIE_GET_ATU_INB_UNR_REG_ADDR(index, reg);
-+
-+	if (pp->ops->writel_rc)
-+		pp->ops->writel_rc(pp, val, pp->dbi_base + reg_addr);
-+	else
-+		writel(val, pp->dbi_base + reg_addr);
-+}
-+
- static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 			       u32 *val)
- {
-@@ -152,24 +224,66 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
- 		int type, u64 cpu_addr, u64 pci_addr, u32 size)
- {
--	u32 val;
--
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+	u32 val = 0;
-+	u32 retries = 0;
-+
-+	if (pp->iatu_unroll_status) {
-+		/* outbound translation using Unroll feature*/
-+		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
-+		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
-+		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
-+		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
-+		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
-+		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			type, PCIE_ATU_UNR_REGION_CTRL1);
-+		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
-+		dw_pcie_readl_unroll(pp, PCIE_TRANSL_OUTB, index,
-+			PCIE_ATU_UNR_REGION_CTRL2, &val);
-+	} else {
-+		/* outbound translation using legacy mechanism */
-+		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
-+						PCIE_ATU_VIEWPORT);
-+		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
-+						PCIE_ATU_LOWER_BASE);
-+		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
-+						PCIE_ATU_UPPER_BASE);
-+		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
-+						PCIE_ATU_LIMIT);
-+		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
-+						PCIE_ATU_LOWER_TARGET);
-+		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
-+						PCIE_ATU_UPPER_TARGET);
-+		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-+		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+		dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
-+	}
- 
- 	/*
- 	 * Make sure ATU enable takes effect before any subsequent config
- 	 * and I/O accesses.
- 	 */
--	dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
-+	for (retries = 0; retries < LINK_WAIT_MAX_ATU_RETRIES; retries++) {
-+
-+		if (val == PCIE_ATU_ENABLE)
-+			break;
-+
-+		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+
-+		if (pp->iatu_unroll_status) {
-+			dw_pcie_readl_unroll(pp, PCIE_TRANSL_OUTB, index,
-+				PCIE_ATU_UNR_REGION_CTRL2, &val);
-+		} else {
-+			dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
-+		}
-+	}
-+
-+	dev_dbg(pp->dev, "iATU is not being enabled\n");
- }
- 
- static struct irq_chip dw_msi_irq_chip = {
-@@ -428,6 +542,18 @@ static const struct irq_domain_ops msi_domain_ops = {
- 	.map = dw_pcie_msi_map,
- };
- 
-+static void dw_pcie_get_atu_mode(struct pcie_port *pp)
-+{
-+	u32 val = 0;
-+
-+	/* Check if the iATU unroll is enabled or not */
-+	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
-+
-+	pp->iatu_unroll_status = 0; /* disabled - legacy is used */
-+	if (val == 0xFFFFFFFF)
-+		pp->iatu_unroll_status = 1; /* enabled */
-+}
-+
- int dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
-@@ -544,6 +670,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
-+	/* get ATU mode */
-+	dw_pcie_get_atu_mode(pp);
-+
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
- 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index f437f9b..354a981 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,11 +22,6 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES		10
--#define LINK_WAIT_USLEEP_MIN		90000
--#define LINK_WAIT_USLEEP_MAX		100000
--
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
-@@ -53,6 +48,7 @@ struct pcie_port {
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
-+	u8			iatu_unroll_status;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
- 
--- 
-1.8.1.5
+Thanks
+Dongdong
+ÔÚ 2016/6/14 16:24, Po Liu Ð´µÀ:
+> On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
+> When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
+> maybe there is interrupt line for aer pme etc. Search the interrupt
+> number in the fdt file. Then fixup the dev->irq with it.
+>
+> Signed-off-by: Po Liu <po.liu@nxp.com>
+> ---
+> changes for V3:
+> 	- Move to quirk;
+> 	- Only correct the irq in RC mode;
+>
+>   drivers/pci/quirks.c | 29 +++++++++++++++++++++++++++++
+>   1 file changed, 29 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ee72ebe..8b39cce 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -25,6 +25,7 @@
+>   #include <linux/sched.h>
+>   #include <linux/ktime.h>
+>   #include <linux/mm.h>
+> +#include <linux/of_irq.h>
+>   #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+>   #include "pci.h"
+>
+> @@ -4419,3 +4420,31 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
+>   	}
+>   }
+>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+> +
+> +/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
+> + * but use standalone irq. Read the device tree for the aer
+> + * interrupt number.
+> + */
+> +static void quirk_aer_interrupt(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +	u8 header_type;
+> +	struct device_node *np = NULL;
+> +
+> +	/* Only for the RC mode device */
+> +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
+> +	if ((header_type & 0x7F) != PCI_HEADER_TYPE_BRIDGE)
+> +		return;
+> +
+> +	if (dev->bus->dev.of_node)
+> +		np = dev->bus->dev.of_node;
+> +
+> +	if (IS_ENABLED(CONFIG_OF_IRQ) && np) {
+> +		ret = of_irq_get_byname(np, "aer");
+> +		if (ret > 0) {
+> +			dev->no_msi = 1;
+> +			dev->irq = ret;
+> +		}
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, quirk_aer_interrupt);
+>
+
+
