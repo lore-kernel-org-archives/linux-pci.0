@@ -1,86 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 3/7] PCI: Do not disable memory decoding in
- pci_reassigndev_resource_alignment()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1467283993-3185-4-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160701005036.GA18999@gwshan>
-Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	linux-doc@vger.kernel.org, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, corbet@lwn.net,
-	linux-kernel@vger.kernel.org, warrier@linux.vnet.ibm.com,
-	alex.williamson@redhat.com, paulus@samba.org, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Fri, 1 Jul 2016 14:35:04 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160701005036.GA18999@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <a968e6af-3a17-0c79-bdfe-34329f38b2f9@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 05/13] irq/msi: Make use of affinity aware allocations
+Date: Mon,  4 Jul 2016 17:39:26 +0900
+Message-Id: <1467621574-8277-6-git-send-email-hch@lst.de>
+In-Reply-To: <1467621574-8277-1-git-send-email-hch@lst.de>
+References: <1467621574-8277-1-git-send-email-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
+From: Thomas Gleixner <tglx@linutronix.de>
 
-On 2016/7/1 8:50, Gavin Shan wrote:
+Allow the MSI code to provide affinity hints per MSI descriptor.
 
-> On Thu, Jun 30, 2016 at 06:53:09PM +0800, Yongji Xie wrote:
->> We should not disable memory decoding when we reassign alignment
->> in pci_reassigndev_resource_alignment(). It's meaningless and
->> have some side effect. For example, some fixup functions such as
->> quirk_e100_interrupt() read PCI_COMMAND_MEMORY to know whether
->> the devices has been initialized by the firmware or not. If we
->> disable memory decoding here, these functions will get a wrong
->> information that the devices was not initialized by the firmware
->> which may cause a wrong fixup. Besides, disabling memory decoding
->> may also break some devices that need to have memory decoding
->> always-on during probing.
->>
-> It seems the changelog isn't correct enough if it's talking about
-> below check in code:
->
-> if (!(command & PCI_COMMAND_MEMORY) || !pci_resource_start(dev, 0))
-> 	return;
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ include/linux/msi.h | 2 ++
+ kernel/irq/msi.c    | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Could you give me more details?  It seems that we couldn't disable
-e100 interrupts which enabled by some firmware if we disabling
-memory decoding here.
-
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> drivers/pci/pci.c |    8 +-------
->> 1 file changed, 1 insertion(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 6ae02de..6241cfc 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4820,7 +4820,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->> 	int i;
->> 	struct resource *r;
->> 	resource_size_t align, size;
->> -	u16 command;
->>
->> 	/* We should never try to reassign VF's alignment */
->> 	if (dev->is_virtfn)
->> @@ -4838,12 +4837,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->> 		return;
->> 	}
->>
->> -	dev_info(&dev->dev,
->> -		"Disabling memory decoding and releasing memory resources.\n");
->> -	pci_read_config_word(dev, PCI_COMMAND, &command);
->> -	command &= ~PCI_COMMAND_MEMORY;
->> -	pci_write_config_word(dev, PCI_COMMAND, command);
->> -
->> +	dev_info(&dev->dev, "Releasing memory resources.\n");
-> Is there a problem you found with PCI_COMMAND removed? If so, could you
-> please share more details, thanks.
-
-Disabling memory decoding may break some devices which
-have flag mmio_always_on. Besides the mmio_always_on case,
-I also found this would break some P2P bridge such as
-PEX 8718 controller.
-
-Thanks,
-Yongji
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index c33abfa..4f0bfe5 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -47,6 +47,7 @@ struct fsl_mc_msi_desc {
+  * @nvec_used:	The number of vectors used
+  * @dev:	Pointer to the device which uses this descriptor
+  * @msg:	The last set MSI message cached for reuse
++ * @affinity:	Optional pointer to a cpu affinity mask for this descriptor
+  *
+  * @masked:	[PCI MSI/X] Mask bits
+  * @is_msix:	[PCI MSI/X] True if MSI-X
+@@ -67,6 +68,7 @@ struct msi_desc {
+ 	unsigned int			nvec_used;
+ 	struct device			*dev;
+ 	struct msi_msg			msg;
++	const struct cpumask		*affinity;
+ 
+ 	union {
+ 		/* PCI MSI/X specific data */
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 58dbbac..0e2a736 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -335,7 +335,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 
+ 		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
+ 					       dev_to_node(dev), &arg, false,
+-					       NULL);
++					       desc->affinity);
+ 		if (virq < 0) {
+ 			ret = -ENOSPC;
+ 			if (ops->handle_error)
+-- 
+2.1.4
