@@ -1,85 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52108 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751278AbcGNL3C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Jul 2016 07:29:02 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v3 2/8] thunderbolt: Updating device IDs
-Date: Thu, 14 Jul 2016 14:28:16 +0300
-Message-Id: <1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
-References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:57196 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932476AbcGDIkG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 04:40:06 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 09/13] blk-mq: don't redistribute hardware queues on a CPU hotplug event
+Date: Mon,  4 Jul 2016 17:39:30 +0900
+Message-Id: <1467621574-8277-10-git-send-email-hch@lst.de>
+In-Reply-To: <1467621574-8277-1-git-send-email-hch@lst.de>
+References: <1467621574-8277-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding the new Thunderbolt(TM) device IDs to the list.
+Currently blk-mq will totally remap hardware context when a CPU hotplug
+even happened, which causes major havoc for drivers, as they are never
+told about this remapping.  E.g. any carefully sorted out CPU affinity
+will just be completely messed up.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+The rebuild also doesn't really help for the common case of cpu
+hotplug, which is soft onlining / offlining of cpus - in this case we
+should just leave the queue and irq mapping as is.  If it actually
+worked it would have helped in the case of physical cpu hotplug,
+although for that we'd need a way to actually notify the driver.
+Note that drivers may already be able to accommodate such a topology
+change on their own, e.g. using the reset_controller sysfs file in NVMe
+will cause the driver to get things right for this case.
+
+With the rebuild removed we will simplify retain the queue mapping for
+a soft offlined CPU that will work when it comes back online, and will
+map any newly onlined CPU to queue NULL until the driver initiates
+a rebuild of the queue map.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/pci_ids.h | 44 ++++++++++++++++++++++++++------------------
- 1 file changed, 26 insertions(+), 18 deletions(-)
+ block/blk-mq.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c58752f..2d4cc50 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2604,24 +2604,32 @@
- #define PCI_DEVICE_ID_INTEL_82441	0x1237
- #define PCI_DEVICE_ID_INTEL_82380FB	0x124b
- #define PCI_DEVICE_ID_INTEL_82439	0x1250
--#define PCI_DEVICE_ID_INTEL_LIGHT_RIDGE             0x1513 /* Tbt 1 Gen 1 */
--#define PCI_DEVICE_ID_INTEL_EAGLE_RIDGE             0x151a
--#define PCI_DEVICE_ID_INTEL_LIGHT_PEAK              0x151b
--#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C         0x1547 /* Tbt 1 Gen 2 */
--#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C         0x1548
--#define PCI_DEVICE_ID_INTEL_PORT_RIDGE              0x1549
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI    0x1566 /* Tbt 1 Gen 3 */
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE 0x1567
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI    0x1568
--#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE 0x1569
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI     0x156a /* Thunderbolt 2 */
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE  0x156b
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI     0x156c
--#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE  0x156d
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI     0x1575 /* Thunderbolt 3 */
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
--#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
-+#define PCI_DEVICE_ID_INTEL_LIGHT_RIDGE              0x1513 /* Tbt 1 Gen 1 */
-+#define PCI_DEVICE_ID_INTEL_EAGLE_RIDGE              0x151a
-+#define PCI_DEVICE_ID_INTEL_LIGHT_PEAK               0x151b
-+#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C          0x1547 /* Tbt 1 Gen 2 */
-+#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C          0x1548
-+#define PCI_DEVICE_ID_INTEL_PORT_RIDGE               0x1549
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI     0x1566 /* Tbt 1 Gen 3 */
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE  0x1567
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI     0x1568
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE  0x1569
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI      0x156a /* Thunderbolt 2 */
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE   0x156b
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI      0x156c
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE   0x156d
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI      0x1575 /* Thunderbolt 3 */
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE   0x1576
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI      0x1577
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE   0x1578
-+#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_NHI         0x157d /* Tbt 2 Low Pwr */
-+#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_BRIDGE      0x157e
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_NHI      0x15bf /* Tbt 3 Low Pwr */
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_LP_BRIDGE   0x15c0
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_NHI    0x15d2 /* Thunderbolt 3 */
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_4C_BRIDGE 0x15d3
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_NHI    0x15d9
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_C_2C_BRIDGE 0x15da
- #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
- #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
- #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index bc7166d..f972d32 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2114,8 +2114,6 @@ static void blk_mq_queue_reinit(struct request_queue *q,
+ 
+ 	blk_mq_sysfs_unregister(q);
+ 
+-	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues, online_mask);
+-
+ 	/*
+ 	 * redo blk_mq_init_cpu_queues and blk_mq_init_hw_queues. FIXME: maybe
+ 	 * we should change hctx numa_node according to new topology (this
 -- 
-2.7.4
+2.1.4
 
