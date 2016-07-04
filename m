@@ -1,79 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46096 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:42500 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932563AbcG1Qtp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jul 2016 12:49:45 -0400
-Date: Thu, 28 Jul 2016 11:49:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] genirq/msi: Make sure PCI MSIs are activated early
-Message-ID: <20160728164941.GA2738@localhost>
-References: <1468426713-31431-1-git-send-email-marc.zyngier@arm.com>
- <20160722220440.GC32142@localhost>
- <alpine.DEB.2.11.1607250928370.5629@nanos>
- <20160725144702.GA12484@localhost>
- <alpine.DEB.2.11.1607261307180.19896@nanos>
- <alpine.DEB.2.11.1607261503120.19896@nanos>
- <alpine.DEB.2.11.1607261549350.19896@nanos>
- <alpine.DEB.2.11.1607281703080.19896@nanos>
+	id S1753058AbcGDJaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jul 2016 05:30:21 -0400
+Date: Mon, 4 Jul 2016 11:35:28 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 11/13] blk-mq: allow the driver to pass in an affinity
+ mask
+Message-ID: <20160704093527.GB2783@agordeev.lab.eng.brq.redhat.com>
+References: <1465934346-20648-1-git-send-email-hch@lst.de>
+ <1465934346-20648-12-git-send-email-hch@lst.de>
+ <20160704081540.GA2783@agordeev.lab.eng.brq.redhat.com>
+ <20160704083849.GA3585@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.11.1607281703080.19896@nanos>
+In-Reply-To: <20160704083849.GA3585@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 28, 2016 at 05:03:30PM +0200, Thomas Gleixner wrote:
-> On Tue, 26 Jul 2016, Thomas Gleixner wrote:
-> > On Tue, 26 Jul 2016, Thomas Gleixner wrote:
-> > > On Tue, 26 Jul 2016, Thomas Gleixner wrote:
-> > > > On Mon, 25 Jul 2016, Bjorn Helgaas wrote:
-> > > > > On Mon, Jul 25, 2016 at 09:45:13AM +0200, Thomas Gleixner wrote:
-> > > > > I thought the original issue [1] was that PCI_MSI_FLAGS_ENABLE was being
-> > > > > written before PCI_MSI_ADDRESS_LO.  That doesn't sound like a good
-> > > > > idea to me.
-> > > > 
-> > > > Well. That's only a problem if the PCI device does not support masking. But
-> > > > yes, we missed that case back then.
-> > > >  
-> > > > > That does seem like a problem.  Maybe it would be better to delay
-> > > > > setting PCI_MSI_FLAGS_ENABLE until after the MSI address & data bits
-> > > > > have been set?
-> > > > 
-> > > > I thought about that, but that gets ugly pretty fast. Here is an alternative
-> > > > solution.
-> > > > 
-> > > > I think that's the proper place to do it _AFTER_ the hierarchical allocation
-> > > > took place. On x86 Marc's ACTIVATE_EARLY flag would not work because the
-> > > > message is not yet ready to be assembled.
-> > > 
-> > > Actually it works, because the MSI domain is the last one which is running the
-> > > allocation function. So everything else is initialized already.
-> > > 
-> > > I'll take Marc's patch with some additional commentry as it turned out to be a
-> > > workaround for the reported VMware issues with PCI/MSI-X pass through.
+On Mon, Jul 04, 2016 at 10:38:49AM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 04, 2016 at 10:15:41AM +0200, Alexander Gordeev wrote:
+> > On Tue, Jun 14, 2016 at 09:59:04PM +0200, Christoph Hellwig wrote:
+> > > +static int blk_mq_create_mq_map(struct blk_mq_tag_set *set,
+> > > +		const struct cpumask *affinity_mask)
+> > > +{
+> > > +	int queue = -1, cpu = 0;
+> > > +
+> > > +	set->mq_map = kzalloc_node(sizeof(*set->mq_map) * nr_cpu_ids,
+> > > +			GFP_KERNEL, set->numa_node);
+> > > +	if (!set->mq_map)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	if (!affinity_mask)
+> > > +		return 0;	/* map all cpus to queue 0 */
+> > > +
+> > > +	/* If cpus are offline, map them to first hctx */
+> > > +	for_each_online_cpu(cpu) {
+> > > +		if (cpumask_test_cpu(cpu, affinity_mask))
+> > > +			queue++;
 > > 
-> > Now I digged a little bit deeper into all that PCI/MSI maze.
-> > 
-> > When a interrupt is freed, then we write the msi message to 0, but the
-> > PCI_MSI_FLAGS_ENABLE flag is still set. That makes me wonder ...
+> > CPUs missing in an affinity mask are mapped to hctxs. Is that intended?
 > 
-> Bjorn, any opinion on that?
+> Yes - each CPU needs to be mapped to some hctx, otherwise we can't
+> submit I/O from that CPU.
+> 
+> > > +		if (queue > 0)
+> > 
+> > Why this check?
+> > 
+> > > +			set->mq_map[cpu] = queue;
+> 
+> mq_map is initialized to zero already, so we don't really need the
+> assignment for queue 0.  The reason why this check exists is because
+> we start with queue = -1 and we never want to assignment -1 to mq_map.
 
-I assume you mean we write 0 to PCI_MSI_ADDRESS_LO, PCI_MSI_DATA_32,
-and similar registers in the MSI Capability structure.
+Would this read better then?
 
-It doesn't sound safe to me to do that while PCI_MSI_FLAGS_ENABLE is
-still set.  I don't see anything in the spec that constrains when a
-device latches the values from those registers.  It seems legal to do
-it on PCI_MSI_FLAGS_ENABLE transitions, but it also seems legal to do
-it whenever the device needs to signal an interrupt.
+	int queue = 0;
 
-If a device does the latter, it seems like clearing PCI_MSI_ADDRESS_LO
-while PCI_MSI_FLAGS_ENABLE is set could lead to stray DMA writes if
-the device for some reason signals an interrupt later.
+	...
 
-Bjorn
+	/* If cpus are offline, map them to first hctx */
+	for_each_online_cpu(cpu) {
+		set->mq_map[cpu] = queue;
+		if (cpumask_test_cpu(cpu, affinity_mask))
+			queue++;
+	}
+
