@@ -1,185 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:36142 "EHLO
-	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751027AbcHAG61 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Aug 2016 02:58:27 -0400
-From: Haggai Eran <haggaie@mellanox.com>
-To: linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: linux-pci@vger.kernel.org,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	Liran Liss <liranl@mellanox.com>,
-	Leon Romanovsky <leonro@mellanox.com>,
-	Artemy Kovalyov <artemyko@mellanox.com>,
-	Jerome Glisse <j.glisse@gmail.com>,
-	Yishai Hadas <yishaih@mellanox.com>,
-	Haggai Eran <haggaie@mellanox.com>
-Subject: [RFC 2/7] IB/mlx5: Support registration and invalidate operations on the UMR QP
-Date: Mon,  1 Aug 2016 09:57:28 +0300
-Message-Id: <1470034653-9097-3-git-send-email-haggaie@mellanox.com>
-In-Reply-To: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, axboe@fb.com
+Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: automatic interrupt affinity for MSI/MSI-X capable devices V3
+Date: Mon,  4 Jul 2016 17:39:21 +0900
+Message-Id: <1467621574-8277-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the UMR QP only supports UMR work requests. There is nothing
-preventing it from also supporting fast registration and local
-invalidate operations. This would allow internal driver operations to
-use the fast registration API internally, without having to create an RC
-QP.
+This series enhances the irq and PCI code to allow spreading around MSI and
+MSI-X vectors so that they have per-cpu affinity if possible, or at least
+per-node.  For that it takes the algorithm from blk-mq, moves it to
+a common place, and makes it available through a vastly simplified PCI
+interrupt allocation API.  It then switches blk-mq to be able to pick up
+the queue mapping from the device if available, and demonstrates all this
+using the NVMe driver.
 
-Use the ib_create_qp instead of mlx5_ib_create_qp in order to initialize
-the PD field of the new UMR QP.
+Compared to the last posting the core IRQ changes are stable and it would
+be great to get them merged int the tip tree.  The two PCI patches have
+been completely rewritten after feedback from Alexander, while the block
+changes have also been stable.
 
-Signed-off-by: Haggai Eran <haggaie@mellanox.com>
----
- drivers/infiniband/hw/mlx5/main.c |  6 +---
- drivers/infiniband/hw/mlx5/qp.c   | 71 +++++++++++++++++++++++++++------------
- 2 files changed, 50 insertions(+), 27 deletions(-)
+There also is a git tree available at:
 
-diff --git a/drivers/infiniband/hw/mlx5/main.c b/drivers/infiniband/hw/mlx5/main.c
-index b48ad85315dc..f41254f3689a 100644
---- a/drivers/infiniband/hw/mlx5/main.c
-+++ b/drivers/infiniband/hw/mlx5/main.c
-@@ -2023,16 +2023,12 @@ static int create_umr_res(struct mlx5_ib_dev *dev)
- 	init_attr->cap.max_send_sge = 1;
- 	init_attr->qp_type = MLX5_IB_QPT_REG_UMR;
- 	init_attr->port_num = 1;
--	qp = mlx5_ib_create_qp(pd, init_attr, NULL);
-+	qp = ib_create_qp(pd, init_attr);
- 	if (IS_ERR(qp)) {
- 		mlx5_ib_dbg(dev, "Couldn't create sync UMR QP\n");
- 		ret = PTR_ERR(qp);
- 		goto error_3;
- 	}
--	qp->device     = &dev->ib_dev;
--	qp->real_qp    = qp;
--	qp->uobject    = NULL;
--	qp->qp_type    = MLX5_IB_QPT_REG_UMR;
- 
- 	attr->qp_state = IB_QPS_INIT;
- 	attr->port_num = 1;
-diff --git a/drivers/infiniband/hw/mlx5/qp.c b/drivers/infiniband/hw/mlx5/qp.c
-index ce0a7ab35a22..861ec1f6a20b 100644
---- a/drivers/infiniband/hw/mlx5/qp.c
-+++ b/drivers/infiniband/hw/mlx5/qp.c
-@@ -3237,8 +3237,8 @@ static int set_psv_wr(struct ib_sig_domain *domain,
- 	return 0;
- }
- 
--static int set_reg_wr(struct mlx5_ib_qp *qp,
--		      struct ib_reg_wr *wr,
-+static int set_reg_wr(struct mlx5_ib_qp *qp, struct ib_reg_wr *wr,
-+		      unsigned int idx, struct mlx5_wqe_ctrl_seg *ctrl,
- 		      void **seg, int *size)
- {
- 	struct mlx5_ib_mr *mr = to_mmr(wr->mr);
-@@ -3266,10 +3266,15 @@ static int set_reg_wr(struct mlx5_ib_qp *qp,
- 	*seg += sizeof(struct mlx5_wqe_data_seg);
- 	*size += (sizeof(struct mlx5_wqe_data_seg) / 16);
- 
-+	qp->sq.wr_data[idx] = IB_WR_REG_MR;
-+	ctrl->imm = cpu_to_be32(wr->key);
-+
- 	return 0;
- }
- 
--static void set_linv_wr(struct mlx5_ib_qp *qp, void **seg, int *size)
-+static void set_linv_wr(struct mlx5_ib_qp *qp, struct ib_send_wr *wr,
-+			unsigned int idx, struct mlx5_wqe_ctrl_seg *ctrl,
-+			void **seg, int *size)
- {
- 	set_linv_umr_seg(*seg);
- 	*seg += sizeof(struct mlx5_wqe_umr_ctrl_seg);
-@@ -3281,6 +3286,9 @@ static void set_linv_wr(struct mlx5_ib_qp *qp, void **seg, int *size)
- 	*size += sizeof(struct mlx5_mkey_seg) / 16;
- 	if (unlikely((*seg == qp->sq.qend)))
- 		*seg = mlx5_get_send_wqe(qp, 0);
-+
-+	qp->sq.wr_data[idx] = IB_WR_LOCAL_INV;
-+	ctrl->imm = cpu_to_be32(wr->ex.invalidate_rkey);
- }
- 
- static void dump_wqe(struct mlx5_ib_qp *qp, int idx, int size_16)
-@@ -3476,17 +3484,14 @@ int mlx5_ib_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
- 
- 			case IB_WR_LOCAL_INV:
- 				next_fence = MLX5_FENCE_MODE_INITIATOR_SMALL;
--				qp->sq.wr_data[idx] = IB_WR_LOCAL_INV;
--				ctrl->imm = cpu_to_be32(wr->ex.invalidate_rkey);
--				set_linv_wr(qp, &seg, &size);
-+				set_linv_wr(qp, wr, idx, ctrl, &seg, &size);
- 				num_sge = 0;
- 				break;
- 
- 			case IB_WR_REG_MR:
- 				next_fence = MLX5_FENCE_MODE_INITIATOR_SMALL;
--				qp->sq.wr_data[idx] = IB_WR_REG_MR;
--				ctrl->imm = cpu_to_be32(reg_wr(wr)->key);
--				err = set_reg_wr(qp, reg_wr(wr), &seg, &size);
-+				err = set_reg_wr(qp, reg_wr(wr), idx, ctrl,
-+						 &seg, &size);
- 				if (err) {
- 					*bad_wr = wr;
- 					goto out;
-@@ -3613,23 +3618,45 @@ int mlx5_ib_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
- 			}
- 			break;
- 		case MLX5_IB_QPT_REG_UMR:
--			if (wr->opcode != MLX5_IB_WR_UMR) {
-+			switch (wr->opcode) {
-+			case MLX5_IB_WR_UMR:
-+				qp->sq.wr_data[idx] = MLX5_IB_WR_UMR;
-+				ctrl->imm = cpu_to_be32(umr_wr(wr)->mkey);
-+				set_reg_umr_segment(seg, wr);
-+				seg += sizeof(struct mlx5_wqe_umr_ctrl_seg);
-+				size += sizeof(struct mlx5_wqe_umr_ctrl_seg)
-+					/ 16;
-+				if (unlikely((seg == qend)))
-+					seg = mlx5_get_send_wqe(qp, 0);
-+				set_reg_mkey_segment(seg, wr);
-+				seg += sizeof(struct mlx5_mkey_seg);
-+				size += sizeof(struct mlx5_mkey_seg) / 16;
-+				if (unlikely((seg == qend)))
-+					seg = mlx5_get_send_wqe(qp, 0);
-+				break;
-+
-+			case IB_WR_LOCAL_INV:
-+				next_fence = MLX5_FENCE_MODE_INITIATOR_SMALL;
-+				set_linv_wr(qp, wr, idx, ctrl, &seg, &size);
-+				num_sge = 0;
-+				break;
-+
-+			case IB_WR_REG_MR:
-+				next_fence = MLX5_FENCE_MODE_INITIATOR_SMALL;
-+				err = set_reg_wr(qp, reg_wr(wr), idx, ctrl,
-+						 &seg, &size);
-+				if (err) {
-+					*bad_wr = wr;
-+					goto out;
-+				}
-+				num_sge = 0;
-+				break;
-+
-+			default:
- 				err = -EINVAL;
- 				mlx5_ib_warn(dev, "bad opcode\n");
- 				goto out;
- 			}
--			qp->sq.wr_data[idx] = MLX5_IB_WR_UMR;
--			ctrl->imm = cpu_to_be32(umr_wr(wr)->mkey);
--			set_reg_umr_segment(seg, wr);
--			seg += sizeof(struct mlx5_wqe_umr_ctrl_seg);
--			size += sizeof(struct mlx5_wqe_umr_ctrl_seg) / 16;
--			if (unlikely((seg == qend)))
--				seg = mlx5_get_send_wqe(qp, 0);
--			set_reg_mkey_segment(seg, wr);
--			seg += sizeof(struct mlx5_mkey_seg);
--			size += sizeof(struct mlx5_mkey_seg) / 16;
--			if (unlikely((seg == qend)))
--				seg = mlx5_get_send_wqe(qp, 0);
- 			break;
- 
- 		default:
--- 
-1.7.11.2
+   git://git.infradead.org/users/hch/block.git msix-spreading.6
 
+Gitweb:
+
+   http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/msix-spreading.6
+
+Changes since V2:
+ - improve the description of IRQD_AFFINITY_MANAGED
+ - update MSI-HOWTO.txt
+ - add a PCI_IRQ_NOMSI flag to avoid using MSI vectors
+ - add a PCI_IRQ_NOAFFINITY flag to skip auto affinity
+ - change the irq_create_affinity_mask calling convention
+ - rewrite pci_alloc_irq_vectors to create the affinity mask only after
+   we know the final vector count
+ - cleanup pci_free_irq_vectors
+ - replace pdev->irqs with pdev->msix_vectors and introduce
+   a pci_irq_vector helper to get the Linux IRQ numbers
+
+Changes since V1:
+ - irq core improvements to properly assign the affinity before
+   request_irq (tglx)
+ - better handling of the MSI vs MSI-X differences in the low level
+   MSI allocator (hch and tglx)
+ - various improvements to pci_alloc_irq_vectors (hch)
+ - remove blk-mq hardware queue reassigned on hotplug cpu events (hch)
+ - forward ported to Jens' current for-next tree (hch)
