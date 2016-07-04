@@ -1,66 +1,47 @@
-Return-Path: <ibmirkin@gmail.com>
-Return-Path: <ibmirkin@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 4 Jul 2016 17:21:31 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mathias Nyman <mathias.nyman@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	USB <linux-usb@vger.kernel.org>, acelan@gmail.com
+Subject: Re: kmem_cache_alloc fail with unable to handle paging request after
+ pci hotplug remove.
+Message-ID: <20160704152131.GA2766@wunner.de>
+References: <577A7203.9010305@linux.intel.com>
+ <CAJZ5v0ji9pVgAZZJT+RG83RNE4-GgJAp88Mw2ddVt3H6eHG72g@mail.gmail.com>
+ <577A7B0A.4090107@linux.intel.com>
 MIME-Version: 1.0
-Sender: ibmirkin@gmail.com
-In-Reply-To: <CADnq5_Oqo3+e=vK_4NUgzPc7U8aXp1dnw3S-rCEJYno9CGm7BQ@mail.gmail.com>
-References: <20160715131218.2416-1-peter@lekensteyn.nl> <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
- <CADnq5_OBjHXO4sfakK0ZJPbHPrMACqdU7J-j9sHLjod0QcuzcA@mail.gmail.com>
- <CAKb7Uvh8vGFZXgbt08nODo6QBP==w=LuqZ5c6UQZPFWc8675AA@mail.gmail.com> <CADnq5_Oqo3+e=vK_4NUgzPc7U8aXp1dnw3S-rCEJYno9CGm7BQ@mail.gmail.com>
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Date: Fri, 15 Jul 2016 12:42:38 -0400
-Message-ID: <CAKb7UvgbTyconY4k6WkA8O94Qu_fBWv-QNb-auSVwzGK_B9bQw@mail.gmail.com>
-Subject: Re: [Nouveau] [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Peter Wu <peter@lekensteyn.nl>, Linux PCI <linux-pci@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>, Dave Airlie <airlied@redhat.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <577A7B0A.4090107@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 15, 2016 at 12:40 PM, Alex Deucher <alexdeucher@gmail.com> wrote:
-> On Fri, Jul 15, 2016 at 12:31 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
->> On Fri, Jul 15, 2016 at 12:27 PM, Alex Deucher <alexdeucher@gmail.com> wrote:
->>> On Fri, Jul 15, 2016 at 12:10 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
->>>> On Fri, Jul 15, 2016 at 9:12 AM, Peter Wu <peter@lekensteyn.nl> wrote:
->>>>> Hi,
->>>>>
->>>>> Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
->>>>> due to unchecked function) and a more important fix to fix hanging Optimus
->>>>> machines when runtime PM is enabled (with pm/pci patches).
->>>>>
->>>>> These are the final patches targeting v4.8. Changes compared to v2[1]:
->>>>> collected R-b from Hans and Mika and fixed a minor comment style issue.
->>>>>
->>>>> I recommend it to be merged before the pci/pm patches[2], otherwise there is a
->>>>> window where newer Nvidia Optimus laptops might fail to runtime resume and/or
->>>>> lock up.  Once the pci/pm branch is merged I will propose another patch to
->>>>> improve reliability[3].
->>>>>
->>>>> Known issue with patch 4: when a Nvidia HDMI audio function is present, the
->>>>> bridge will not suspend and hence the Nvidia card will still be powered. Fixing
->>>>
->>>> That's basically all optimus gpu's, right? Anything GT21x+ has a HDMI
->>>> audio subfunction, and prior to that, the nvidia gpu tended to be the
->>>> only gpu, or hard-muxed.
->>>
->>> I'd imagine there is a strap on the asic so the audio function is only
->>> enabled if there is a connector actually wired to the dGPU.  It
->>> doesn't make much sense to expose audio if there is no way to use it.
->>
->> A lot of the time, there actually is a connector wired up. A lot of
->> the other time, there is no connector, but the display unit is still
->> there. Very recently, NVIDIA gpu's have started coming out marked as
->> "3d accelerator", which sometimes but not always means that there's no
->> display unit, and for those, I would assume there is no audio
->> subfunction.
->>
->
-> Just because there is a display block, doesn't mean the audio function
-> is always enabled.  I suspect it is disabled by hardware straps on
-> systems with no display connectors or other specific OEM configs.
+On Mon, Jul 04, 2016 at 06:04:42PM +0300, Mathias Nyman wrote:
+> On 04.07.2016 17:25, Rafael J. Wysocki wrote:
+> > On Mon, Jul 4, 2016 at 4:26 PM, Mathias Nyman <mathias.nyman@linux.intel.com> wrote:
+> > > AceLan Kao can get his DELL XPS 13 laptop to hang by plugging/un-plugging
+> > > a USB 3.1 key via thunderbolt port.
+> > > 
+> > > Allocating memory fails after this, always pointing to NULL pointer or
+> > > page request failing in get_freepointer() called by
+> > > kmalloc/kmem_cache_alloc.
+> > > 
+> > > Unplugging a usb type-c device from the thunderbolt port on Alpine Ridge
+> > > based systems like this one will hotplug remove PCI bridges together
+> > > with the USB xhci controller behind them.
 
-That's what I'm saying - it is not. There are straps, and they can be
-used to disable the display block. But they're often not set that way.
+Yes, that matches with the lspci output you've posted, the whole
+Thunderbolt controller is gone after unplug. Perhaps it's powered
+down? What does "lspci -vvvv -s 00:1d.6" say? (Does the root port
+still have a link to the Thunderbolt controller?)
 
-  -ilia
+Best regards,
+
+Lukas
