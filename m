@@ -1,101 +1,121 @@
-Return-Path: <andreas.noever@gmail.com>
-Return-Path: <andreas.noever@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:23745 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750789AbcGDPim (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jul 2016 11:38:42 -0400
+Subject: Re: kmem_cache_alloc fail with unable to handle paging request after
+ pci hotplug remove.
+To: Lukas Wunner <lukas@wunner.de>
+References: <577A7203.9010305@linux.intel.com>
+ <CAJZ5v0ji9pVgAZZJT+RG83RNE4-GgJAp88Mw2ddVt3H6eHG72g@mail.gmail.com>
+ <577A7B0A.4090107@linux.intel.com> <20160704152131.GA2766@wunner.de>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	USB <linux-usb@vger.kernel.org>, acelan@gmail.com
+From: Mathias Nyman <mathias.nyman@linux.intel.com>
+Message-ID: <577A84B4.8020505@linux.intel.com>
+Date: Mon, 4 Jul 2016 18:45:56 +0300
 MIME-Version: 1.0
-In-Reply-To: <ed33043d-fe00-9478-80fa-bdca311a52f1@gmail.com>
-References: <20160726164038.1481-1-andreas.noever@gmail.com>
- <20160726164038.1481-2-andreas.noever@gmail.com> <ed33043d-fe00-9478-80fa-bdca311a52f1@gmail.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Thu, 28 Jul 2016 00:08:42 +0200
-Message-ID: <CAMxnaaULYgu00dNzbu3LLNkdnAFz0bkke3vVt19yfHT=Y0_dkw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C controller.
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Xavier Gnata <xavier.gnata@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <helgaas@kernel.org>, Andreas Noever <andreas.noever@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20160704152131.GA2766@wunner.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 27, 2016 at 10:11 AM, Xavier Gnata <xavier.gnata@gmail.com> wrote:
+On 04.07.2016 18:21, Lukas Wunner wrote:
+> On Mon, Jul 04, 2016 at 06:04:42PM +0300, Mathias Nyman wrote:
+>> On 04.07.2016 17:25, Rafael J. Wysocki wrote:
+>>> On Mon, Jul 4, 2016 at 4:26 PM, Mathias Nyman <mathias.nyman@linux.intel.com> wrote:
+>>>> AceLan Kao can get his DELL XPS 13 laptop to hang by plugging/un-plugging
+>>>> a USB 3.1 key via thunderbolt port.
+>>>>
+>>>> Allocating memory fails after this, always pointing to NULL pointer or
+>>>> page request failing in get_freepointer() called by
+>>>> kmalloc/kmem_cache_alloc.
+>>>>
+>>>> Unplugging a usb type-c device from the thunderbolt port on Alpine Ridge
+>>>> based systems like this one will hotplug remove PCI bridges together
+>>>> with the USB xhci controller behind them.
 >
+> Yes, that matches with the lspci output you've posted, the whole
+> Thunderbolt controller is gone after unplug. Perhaps it's powered
+> down? What does "lspci -vvvv -s 00:1d.6" say? (Does the root port
+> still have a link to the Thunderbolt controller?)
 >
-> On 26/07/2016 18:40, Andreas Noever wrote:
->>
->> From: Xavier Gnata <xavier.gnata@gmail.com>
->>
->> From: Xavier Gnata <xavier.gnata@gmail.com>
->>
->> Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk
->> to support suspend/resume.
->> Tested against 4.7 master on a MacBook Air 11" 2015.
->>
->> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
->> ---
->>  drivers/pci/quirks.c      | 4 ++++
->>  drivers/thunderbolt/nhi.c | 6 ++++++
->>  2 files changed, 10 insertions(+)
->>
->> Rebased version of Xavier's patch.
->>
->> Xavier, could you verify that this still works on your system?
->>
-> It does work on my system.
->
-> Thanks,
-> Xavier
 
-Cool.
 
-Greg, can we still get these into the current merge window?
+"lspci -vvvv -s 00:1d.6" after unplug (on my working DELL XPS)
 
-Andreas
 
->
->> Thanks,
->> Andreas
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 75b2105..981f17d 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -3325,6 +3325,7 @@ static void quirk_apple_wait_for_thunderbolt(struct
->> pci_dev *dev)
->>         if (nhi->vendor != PCI_VENDOR_ID_INTEL
->>                     || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
->>                         nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
->> &&
->> +                       nhi->device !=
->> PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI &&
->>                         nhi->device !=
->> PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
->>                     || nhi->class != PCI_CLASS_SYSTEM_OTHER << 8)
->>                 goto out;
->> @@ -3341,6 +3342,9 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
->>                                PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
->>                                quirk_apple_wait_for_thunderbolt);
->>  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
->> +                              PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
->> +                              quirk_apple_wait_for_thunderbolt);
->> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
->>                                PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
->>                                quirk_apple_wait_for_thunderbolt);
->>  #endif
->> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
->> index 9c15344..a8c2041 100644
->> --- a/drivers/thunderbolt/nhi.c
->> +++ b/drivers/thunderbolt/nhi.c
->> @@ -651,6 +651,12 @@ static struct pci_device_id nhi_ids[] = {
->>         {
->>                 .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
->>                 .vendor = PCI_VENDOR_ID_INTEL,
->> +               .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
->> +               .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
->> +       },
->> +       {
->> +               .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
->> +               .vendor = PCI_VENDOR_ID_INTEL,
->>                 .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
->>                 .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
->>         },
->>
->
+00:1d.6 PCI bridge: Intel Corporation Sunrise Point-H PCI Express Root Port #15 (rev f1) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin C routed to IRQ 18
+	Bus: primary=00, secondary=06, subordinate=3e, sec-latency=0
+	I/O behind bridge: 00002000-00002fff
+	Memory behind bridge: c4000000-da0fffff
+	Prefetchable memory behind bridge: 0000000080000000-00000000a1ffffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+		DevCap:	MaxPayload 256 bytes, PhantFunc 0
+			ExtTag- RBE+
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+		LnkCap:	Port #15, Speed 8GT/s, Width x2, ASPM L0s L1, Exit Latency L0s <1us, L1 <16us
+			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+			Slot #18, PowerLimit 25.000W; Interlock- NoCompl+
+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt- HPIrq- LinkChg-
+			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+			Changed: MRL- PresDet- LinkState+
+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+		RootCap: CRSVisible-
+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR+, OBFF Not Supported ARIFwd+
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+	Capabilities: [90] Subsystem: Dell Sunrise Point-H PCI Express Root Port
+	Capabilities: [a0] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO+ CmpltAbrt- UnxCmplt+ RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr+ BadTLP- BadDLLP- Rollover+ Timeout+ NonFatalErr+
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+	Capabilities: [140 v1] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
+		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+	Capabilities: [200 v1] L1 PM Substates
+		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+			  PortCommonModeRestoreTime=40us PortTPowerOnTime=10us
+	Capabilities: [220 v1] #19
+	Kernel driver in use: pcieport
+	Kernel modules: shpchp
+
+
+AceLan Kao, can you confirm your lspci output looks similar on the failing DELL XPS?
+
+-Mathias
