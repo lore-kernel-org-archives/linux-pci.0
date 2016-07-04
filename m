@@ -1,246 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:58595 "EHLO
-	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbcGMBLZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 21:11:25 -0400
-Subject: Re: [PATCH v6 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-To: Brian Norris <briannorris@chromium.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-References: <1467789398-13501-1-git-send-email-shawn.lin@rock-chips.com>
- <20160707003912.GB100467@google.com>
-Cc: shawn.lin@rock-chips.com, devicetree@vger.kernel.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	linux-kernel@vger.kernel.org,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <59b328c9-3a21-36fa-7f28-4ba24d77fef0@rock-chips.com>
-Date: Wed, 13 Jul 2016 09:10:15 +0800
+Received: from mga09.intel.com ([134.134.136.24]:38163 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753686AbcGDOSm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jul 2016 10:18:42 -0400
+From: Mathias Nyman <mathias.nyman@linux.intel.com>
+Subject: kmem_cache_alloc fail with unable to handle paging request after pci
+ hotplug remove.
+Cc: linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	USB <linux-usb@vger.kernel.org>, acelan@gmail.com
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Message-ID: <577A7203.9010305@linux.intel.com>
+Date: Mon, 4 Jul 2016 17:26:11 +0300
 MIME-Version: 1.0
-In-Reply-To: <20160707003912.GB100467@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-在 2016/7/7 8:39, Brian Norris 写道:
-> Hi Shawn,
->
-> On Wed, Jul 06, 2016 at 03:16:37PM +0800, Shawn Lin wrote:
->> This patch adds a binding that describes the Rockchip PCIe controller
->> found on Rockchip SoCs PCIe interface.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> Acked-by: Rob Herring <robh@kernel.org>
->> ---
->>
->> Changes in v6:
->> - add ack tag from Rob
->>
->> Changes in v5:
->> - fix wrong example reported by Marc
->> - add seperate section to describe the interrupt controller child
->>   node
->>
->> Changes in v4:
->> - fix example of adding intermediate interrupt controller for pcie
->>   legacy interrrupt
->>
->> Changes in v3:
->> - fix example dts code suggested by Rob and Marc
->> - remove driver's behaviour of regulator
->>
->> Changes in v2:
->> - fix lots clk/reset stuff suggested by Heiko
->> - remove msi-parent and add msi-map suggested by Marc
->> - drop phy related stuff
->> - some others minor fixes
->>
->>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 104 +++++++++++++++++++++
->>  1 file changed, 104 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->>
->> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> new file mode 100644
->> index 0000000..7616ecc
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> @@ -0,0 +1,104 @@
->> +* Rockchip AXI PCIe Root Port Bridge DT description
->> +
->> +Required properties:
->> +- #address-cells: Address representation for root ports, set to <3>
->> +- #size-cells: Size representation for root ports, set to <2>
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +		interrupt source. The value must be 1.
->> +- compatible: Should contain "rockchip,rk3399-pcie"
->> +- reg: Two register ranges as listed in the reg-names property
->> +- reg-names: Must include the following names
->> +	- "axi-base"
->> +	- "apb-base"
->> +- clocks: Must contain an entry for each entry in clock-names.
->> +		See ../clocks/clock-bindings.txt for details.
->> +- clock-names: Must include the following entries:
->> +	- "aclk"
->> +	- "aclk-perf"
->> +	- "hclk"
->> +	- "pm"
->> +- msi-map: Maps a Requester ID to an MSI controller and associated.
->> +		See ./pci-msi.txt
->> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
->> +- phy-names:  MUST be "pcie-phy".
->> +- interrupts: Three interrupt entries must be specified.
->> +- interrupt-names: Must include the following names
->> +	- "sys"
->> +	- "legacy"
->> +	- "client"
->> +- resets: Must contain five entries for each entry in reset-names.
->> +	   See ../reset/reset.txt for details.
->> +- reset-names: Must include the following names
->> +	- "core"
->> +	- "mgmt"
->> +	- "mgmt-sticky"
->> +	- "pipe"
->> +- pinctrl-names : The pin control state names
->> +- pinctrl-0: The "default" pinctrl state
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +	interrupt source. The value must be 1.
->> +- interrupt-map-mask and interrupt-map: standard PCI properties
->> +
->> +*Interrupt controller child node*
->> +The core controller provides a single interrupt for legacy INTx. So,
->> +pcie node should create a interrupt controller node to support 'interrupt-map'
->> +DT functionality. The driver will create an IRQ domain for this map, decode
->> +the four INTx interrupts in ISR and route them to this domain.
->
-> Where in your driver do you actually handle this child node? I don't see
-> anything, but perhaps I'm missing something. I see how your earlier
-> revisions of this driver used of_get_next_child() to acquire the child
-> node, for use with irq_domain_add_linear(). But that's not in this
-> version...
->
->> +
->> +Required properties for Interrupt controller child node:
->> +- interrupt-controller: identifies the node as an interrupt controller
->> +- #address-cells: specifies the number of cells needed to encode an
->> +	address. The value must be 0.
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +	interrupt source. The value must be 1.
->> +
->> +Optional Property:
->
-> These optional properties apply to the pcie node, not the interrupt
-> controller child, right? Seems like the subnode and its properties
-> should be last (i.e., the 'Optional Property' section should be above
-> 'Interrupt controller child node').
+Hi
 
-okay, i will move it ahead.
+AceLan Kao can get his DELL XPS 13 laptop to hang by plugging/un-plugging
+a USB 3.1 key via thunderbolt port.
 
->
->> +- ep-gpios: contain the entry for pre-reset gpio
->> +- num-lanes: number of lanes to use
->> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
->> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
->> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
->> +
->> +Example:
->> +
->> +pcie0: pcie@f8000000 {
->> +	compatible = "rockchip,rk3399-pcie";
->> +	#address-cells = <3>;
->> +	#size-cells = <2>;
->> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
->> +		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
->> +	clock-names = "aclk", "aclk-perf",
->> +		      "hclk", "pm";
->> +	bus-range = <0x0 0x1>;
->> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
->> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
->> +	interrupt-names = "sys", "legacy", "client";
->> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
->> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
->> +	assigned-clock-rates = <100000000>;
->> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
->> +	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
->> +		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
->> +	num-lanes = <4>;
->> +	msi-map = <0x0 &its 0x0 0x1000>;
->> +	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
->> +	reg-names = "axi-base", "apb-base";
->> +	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
->> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
->> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
->> +	phys = <&pcie_phy>;
->> +	phy-names = "pcie-phy";
->> +	pinctrl-names = "default";
->> +	pinctrl-0 = <&pcie_clkreq>;
->> +	#interrupt-cells = <1>;
->> +	interrupt-map-mask = <0 0 0 7>;
->> +	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
->> +			<0 0 0 2 &pcie0_intc 2>,
->> +			<0 0 0 3 &pcie0_intc 3>,
->> +			<0 0 0 4 &pcie0_intc 4>;
->
-> I'm a little lost on this one, so forgive my ignorance; how did you
-> determine the last value in each entry (i.e., the 1, 2, 3, and 4 IRQ
-> numbers for pcie0_intc)? IIUC, those are supposed to represent indeces
-> into the IRQ status register found in the PCIe interrupt status
-> register, and so they should be 0-based (i.e., 0, 1, 2, 3). And then
-> you'd have:
->
-> 	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
-> 			<0 0 0 2 &pcie0_intc 1>,
-> 			<0 0 0 3 &pcie0_intc 2>,
-> 			<0 0 0 4 &pcie0_intc 3>;
->
-> But then, I never got this sub-node binding to work quite right, so I
-> may be missing something.
->
-> EDIT: ooh, I see what's going on! I'll comment on the driver as well,
-> but it looks like you're translating the register status to a HW IRQ
-> number with 'ffs(reg)', which yields a 1-based index. I think it is most
-> sensible to use a 0-based index (i.e., 'ffs(reg) - 1'). Now, that only
-> will work if you get the whole interrupt-map + interrupt-controller
-> thing right (i.e., using a subnode for the interrupt controller) --
-> otherwise, IRQ mapping might not work right. I suspect that's one reason
-> the original driver writer might have used 1-based indexing in the first
-> place.
+Allocating memory fails after this, always pointing to NULL pointer or
+page request failing in get_freepointer() called by kmalloc/kmem_cache_alloc.
 
-yes, I got it but.....what's the difference?
-You still need to get the whole interrupt-map + interrupt-controller
-things right and the code(ffs(reg) - 1)if applied your suggestion.
+Unplugging a usb type-c device from the thunderbolt port on Alpine Ridge based
+systems like this one will hotplug remove PCI bridges together with the USB xhci
+controller behind them.
 
-Look at most of the docs for pcie bindings, I saw they also take 0-base 
-index, how about?
+[   61.969221] usb 4-1: USB disconnect, device number 2
+[   61.992892] xhci_hcd 0000:39:00.0: Host not halted after 16000 microseconds.
+[   61.994002] xhci_hcd 0000:39:00.0: USB bus 4 deregistered
+[   61.994013] xhci_hcd 0000:39:00.0: remove, state 4
+[   61.994022] usb usb3: USB disconnect, device number 1
+[   61.995317] xhci_hcd 0000:39:00.0: USB bus 3 deregistered
+[   61.995949] pci_bus 0000:03: busn_res: [bus 03] is released
+[   61.996022] pci_bus 0000:04: busn_res: [bus 04-38] is released
+[   62.016460] pci_bus 0000:39: busn_res: [bus 39] is released
+[   62.016515] pci_bus 0000:02: busn_res: [bus 02-39] is released
+[   62.103618] BUG: unable to handle kernel NULL pointer dereference at 0000000000000001
+[   62.103651] IP: [<ffffffff811eb67b>] kmem_cache_alloc_trace+0x7b/0x1f0
+[   62.103681] PGD 0
+[   62.103689] Oops: 0000 [#1] SMP
+[   62.103702] Modules linked in:
 
->
-> Brian
->
->> +	pcie0_intc: interrupt-controller {
->> +		interrupt-controller;
->> +		#address-cells = <0>;
->> +		#interrupt-cells = <1>;
->> +	};
->> +};
->> --
->> 2.3.7
->>
->>
->
-> _______________________________________________
-> Linux-rockchip mailing list
-> Linux-rockchip@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-rockchip
->
+[   62.104303] CPU: 3 PID: 993 Comm: Xorg Tainted: G           OE   4.4.0-28-generic #47-Ubuntu
+[   62.104345] Hardware name: Dell Inc. XPS 13 9360/      , BIOS 0.1.7 06/22/2016
+[   62.104383] task: ffff88006f3a8000 ti: ffff880078fa0000 task.ti: ffff880078fa0000
+[   62.104420] RIP: 0010:[<ffffffff811eb67b>]  [<ffffffff811eb67b>] kmem_cache_alloc_trace+0x7b/0x1f0
+[   62.104468] RSP: 0018:ffff880078fa3c70  EFLAGS: 00010202
+[   62.104495] RAX: 0000000000000000 RBX: 00000000024000c0 RCX: 0000000000010d87
+[   62.104530] RDX: 0000000000010d86 RSI: 00000000024000c0 RDI: 0000000000019f80
+[   62.104565] RBP: ffff880078fa3cb0 R08: ffff88017e599f80 R09: ffff880179801b00
+[   62.104603] R10: 0000000000000001 R11: 000000000000007c R12: 00000000024000c0
+[   62.104641] R13: ffffffffc00c1b1a R14: ffff88017485a000 R15: ffff880179801b00
+[   62.104680] FS:  00007fe6a0241a00(0000) GS:ffff88017e580000(0000) knlGS:0000000000000000
+[   62.104722] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   62.104752] CR2: 0000000000000001 CR3: 0000000177234000 CR4: 00000000003406e0
+[   62.104789] Stack:
+[   62.104801]  ffff880078fa3cd8 ffffffff813ec8ee 0000000000000028 ffff8801759d4fd8
+[   62.104847]  ffff8801785d8b00 ffff880174f9be60 ffff88017485a000 000000000000007c
+[   62.104892]  ffff880078fa3cd8 ffffffffc00c1b1a ffff8801759d4fc0 ffff880174f9be00
+[   62.104938] Call Trace:
+[   62.104956]  [<ffffffff813ec8ee>] ? idr_alloc+0x9e/0x110
+[   62.105005]  [<ffffffffc00c1b1a>] drm_vma_node_allow+0x2a/0xc0 [drm]
+[   62.105047]  [<ffffffffc00a7d43>] drm_gem_handle_create_tail+0xc3/0x190 [drm]
+[   62.105088]  [<ffffffffc00a7e45>] drm_gem_handle_create+0x35/0x40 [drm]
+[   62.105145]  [<ffffffffc01cf531>] i915_gem_userptr_ioctl+0x271/0x350 [i915_bpo]
+[   62.105190]  [<ffffffffc00a8742>] drm_ioctl+0x152/0x540 [drm]
+[   62.105235]  [<ffffffffc01cf2c0>] ? __i915_gem_userptr_get_pages_worker+0x320/0x320 [i915_bpo]
+[   62.105262]  [<ffffffff81220b6f>] do_vfs_ioctl+0x29f/0x490
+[   62.105281]  [<ffffffff81701610>] ? __sys_recvmsg+0x80/0x90
+[   62.105298]  [<ffffffff81220dd9>] SyS_ioctl+0x79/0x90
+[   62.105319]  [<ffffffff818276b2>] entry_SYSCALL_64_fastpath+0x16/0x71
+[   62.105346] Code: 08 65 4c 03 05 2f eb e1 7e 49 83 78 10 00 4d 8b 10 0f 84 21 01 00 00 4d 85 d2 0f 84 18 01 00 00 49 63 41 20 48 8d 4a 01 49 8b 39 <49> 8b 1c 02 4c 89 d0 65 48 0f c7 0f 0f 94 c0 84 c0 74 bb 49 63
+[   62.105520] RIP  [<ffffffff811eb67b>] kmem_cache_alloc_trace+0x7b/0x1f0
+[   62.105543]  RSP <ffff880078fa3c70>
+[   62.105554] CR2: 0000000000000001
+[   62.113016] ---[ end trace 4f9991d2eebd1637 ]---
 
+(gdb) list *(kmem_cache_alloc_trace+0x7b)
+0xffffffff811eb67b is in kmem_cache_alloc_trace (/build/linux-BvkamA/linux-4.4.0/mm/slub.c:247).
+242		return 1;
+243	}
+244	
+245	static inline void *get_freepointer(struct kmem_cache *s, void *object)
+246	{
+247		return *(void **)(object + s->offset);
+248	}
+249	
+250	static void prefetch_freepointer(const struct kmem_cache *s, void *object)
+251	{
 
--- 
-Best Regards
-Shawn Lin
+More logs can be found at
+https://bugzilla.kernel.org/show_bug.cgi?id=120241
 
+This log was from a 4.4 based ubuntu kernel, but the same issue was reproduced
+with 4.7-rc5. Call trace often point to various graphics related drivers, but
+also xhci and acpi_hotplug_work_fn.
+Only thing they have in common is that they fail while trying to allocate memory.
+
+A log of acpi_hotplug_work_fn failing to allocate memory while removing pci
+devices:
+https://bugzilla.kernel.org/attachment.cgi?id=221561
+
+I've been looking at this from xhci perspective, but it starts to go too deep
+into mm, pci hotplug etc for my understanding.
+
+Any ideas?
+
+-Mathias
