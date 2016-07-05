@@ -1,188 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46378 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751053AbcGMVSR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 17:18:17 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6DL9iRO016291
-	for <linux-pci@vger.kernel.org>; Wed, 13 Jul 2016 17:18:16 -0400
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 2455fde8t1-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 13 Jul 2016 17:18:15 -0400
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <imunsie@au1.ibm.com>;
-	Thu, 14 Jul 2016 07:18:12 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 926062CE8054
-	for <linux-pci@vger.kernel.org>; Thu, 14 Jul 2016 07:18:10 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u6DLIAxj25821362
-	for <linux-pci@vger.kernel.org>; Thu, 14 Jul 2016 07:18:10 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u6DLI9i4025286
-	for <linux-pci@vger.kernel.org>; Thu, 14 Jul 2016 07:18:10 +1000
-From: "Ian Munsie" <imunsie@au1.ibm.com>
-To: Michael Ellerman <mpe@ellerman.id.au>,
-	Michael Neuling <mikey@neuling.org>,
-	Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
-	Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, Huy Nguyen <huyn@mellanox.com>
-Cc: Ian Munsie <imunsie@au1.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 13/15] PCI/hotplug: pnv_php: export symbols and move struct types needed by cxl
-Date: Thu, 14 Jul 2016 07:17:12 +1000
-In-Reply-To: <1468444634-1866-1-git-send-email-imunsie@au.ibm.com>
-References: <1468444634-1866-1-git-send-email-imunsie@au.ibm.com>
-Message-Id: <1468444634-1866-14-git-send-email-imunsie@au.ibm.com>
+Received: from mail-dm3nam03on0067.outbound.protection.outlook.com ([104.47.41.67]:19808
+	"EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750757AbcGEWxj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Jul 2016 18:53:39 -0400
+Message-ID: <577C1661.5000106@caviumnetworks.com>
+Date: Tue, 5 Jul 2016 13:19:45 -0700
+From: David Daney <ddaney@caviumnetworks.com>
+MIME-Version: 1.0
+To: Will Deacon <will.deacon@arm.com>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <arnd@arndb.de>,
+	<david.daney@cavium.com>, <jchandra@broadcom.com>
+Subject: Re: [PATCH 04/14] PCI: generic: make it explicitly non-modular
+References: <20160702231334.26684-1-paul.gortmaker@windriver.com> <20160702231334.26684-5-paul.gortmaker@windriver.com> <20160704173752.GR1639@arm.com>
+In-Reply-To: <20160704173752.GR1639@arm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+On 07/04/2016 10:37 AM, Will Deacon wrote:
+> On Sat, Jul 02, 2016 at 07:13:24PM -0400, Paul Gortmaker wrote:
+>> The Kconfig currently controlling compilation of this code is:
+>>
+>> drivers/pci/host/Kconfig:config PCI_HOST_GENERIC
+>> drivers/pci/host/Kconfig:       bool "Generic PCI host controller"
+>>
+>> ...meaning that it currently is not being built as a module by anyone.
+>>
+>> Lets remove the few trace uses of modular code and macros, so that
+>> when reading the driver there is no doubt it is builtin-only.
+>>
+>> Since module_platform_driver() uses the same init level priority as
+>> builtin_platform_driver() the init ordering remains unchanged with
+>> this commit.
+>>
+>> Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+>>
+>> We also delete the MODULE_LICENSE tag etc. since all that information
+>> is already contained at the top of the file in the comments.
+>
+> Ideally, we'd simply fix this to build as a module, but it's not clear
+> how to do that now that the ecam accessors have been split out into
+> their own file. A liberal sprinkling of EXPORT_SYMBOL might work, but
+> it's a bit grotty.
+>
+> David, Jayachandran -- do you have any desire to build your PCI host
+> controller drivers as modules?
 
-The cxl driver will use infrastructure from pnv_php to handle device tree
-updates when switching bi-modal CAPI cards into CAPI mode.
+I can only speak to the Cavium case.
 
-To enable this, export pnv_php_find_slot() and
-pnv_php_set_slot_power_state(), and add corresponding declarations, as well
-as the definition of struct pnv_php_slot, to asm/pnv-pci.h.
+The system is not usable without PCI, so there is no advantage to making 
+the PCI host drivers modular.  At this point I don't see any reason to 
+expend effort making it work as a module.
 
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Signed-off-by: Ian Munsie <imunsie@au1.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+David.
 
----
 
-V1->V2:
-
-	- Dropped extraneous "select HOTPLUG_PCI_POWERNV_BASE" in Kconfig,
-	  which was accidentally left in from an earlier non-public
-	  revision. Thanks to Gavin Shan for pointing it out
----
- arch/powerpc/include/asm/pnv-pci.h | 28 ++++++++++++++++++++++++++++
- drivers/pci/hotplug/pnv_php.c      | 32 +++++---------------------------
- 2 files changed, 33 insertions(+), 27 deletions(-)
-
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index c47097f..0cbd813 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -11,6 +11,7 @@
- #define _ASM_PNV_PCI_H
- 
- #include <linux/pci.h>
-+#include <linux/pci_hotplug.h>
- #include <misc/cxl-base.h>
- #include <asm/opal-api.h>
- 
-@@ -47,4 +48,31 @@ void pnv_cxl_phb_set_peer_afu(struct pci_dev *dev, struct cxl_afu *afu);
- 
- #endif
- 
-+struct pnv_php_slot {
-+	struct hotplug_slot		slot;
-+	struct hotplug_slot_info	slot_info;
-+	uint64_t			id;
-+	char				*name;
-+	int				slot_no;
-+	struct kref			kref;
-+#define PNV_PHP_STATE_INITIALIZED	0
-+#define PNV_PHP_STATE_REGISTERED	1
-+#define PNV_PHP_STATE_POPULATED		2
-+#define PNV_PHP_STATE_OFFLINE		3
-+	int				state;
-+	struct device_node		*dn;
-+	struct pci_dev			*pdev;
-+	struct pci_bus			*bus;
-+	bool				power_state_check;
-+	void				*fdt;
-+	void				*dt;
-+	struct of_changeset		ocs;
-+	struct pnv_php_slot		*parent;
-+	struct list_head		children;
-+	struct list_head		link;
-+};
-+extern struct pnv_php_slot *pnv_php_find_slot(struct device_node *dn);
-+extern int pnv_php_set_slot_power_state(struct hotplug_slot *slot,
-+					uint8_t state);
-+
- #endif
-diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-index 6086db6..2d2f704 100644
---- a/drivers/pci/hotplug/pnv_php.c
-+++ b/drivers/pci/hotplug/pnv_php.c
-@@ -22,30 +22,6 @@
- #define DRIVER_AUTHOR	"Gavin Shan, IBM Corporation"
- #define DRIVER_DESC	"PowerPC PowerNV PCI Hotplug Driver"
- 
--struct pnv_php_slot {
--	struct hotplug_slot		slot;
--	struct hotplug_slot_info	slot_info;
--	uint64_t			id;
--	char				*name;
--	int				slot_no;
--	struct kref			kref;
--#define PNV_PHP_STATE_INITIALIZED	0
--#define PNV_PHP_STATE_REGISTERED	1
--#define PNV_PHP_STATE_POPULATED		2
--#define PNV_PHP_STATE_OFFLINE		3
--	int				state;
--	struct device_node		*dn;
--	struct pci_dev			*pdev;
--	struct pci_bus			*bus;
--	bool				power_state_check;
--	void				*fdt;
--	void				*dt;
--	struct of_changeset		ocs;
--	struct pnv_php_slot		*parent;
--	struct list_head		children;
--	struct list_head		link;
--};
--
- static LIST_HEAD(pnv_php_slot_list);
- static DEFINE_SPINLOCK(pnv_php_lock);
- 
-@@ -91,7 +67,7 @@ static struct pnv_php_slot *pnv_php_match(struct device_node *dn,
- 	return NULL;
- }
- 
--static struct pnv_php_slot *pnv_php_find_slot(struct device_node *dn)
-+struct pnv_php_slot *pnv_php_find_slot(struct device_node *dn)
- {
- 	struct pnv_php_slot *php_slot, *tmp;
- 	unsigned long flags;
-@@ -108,6 +84,7 @@ static struct pnv_php_slot *pnv_php_find_slot(struct device_node *dn)
- 
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(pnv_php_find_slot);
- 
- /*
-  * Remove pdn for all children of the indicated device node.
-@@ -316,8 +293,8 @@ out:
- 	return ret;
- }
- 
--static int pnv_php_set_slot_power_state(struct hotplug_slot *slot,
--					uint8_t state)
-+int pnv_php_set_slot_power_state(struct hotplug_slot *slot,
-+				 uint8_t state)
- {
- 	struct pnv_php_slot *php_slot = slot->private;
- 	struct opal_msg msg;
-@@ -347,6 +324,7 @@ static int pnv_php_set_slot_power_state(struct hotplug_slot *slot,
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(pnv_php_set_slot_power_state);
- 
- static int pnv_php_get_power_state(struct hotplug_slot *slot, u8 *state)
- {
--- 
-2.8.1
+>
+> Will
+>
 
