@@ -1,51 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:38771 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755171AbcGHQfh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2016 12:35:37 -0400
-Date: Fri, 8 Jul 2016 09:35:11 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-Subject: Re: [v6,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
-Message-ID: <20160708163511.GA23348@roeck-us.net>
-References: <1467789398-13501-2-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:35592 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbcGEQXN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2016 12:23:13 -0400
+Date: Tue, 5 Jul 2016 11:23:10 -0500
+From: Rob Herring <robh@kernel.org>
+To: Pratyush Anand <panand@redhat.com>
+Cc: dongbo4@huawei.com, bhelgaas@google.com, jingoohan1@gmail.com,
+	linux-pci@vger.kernel.org,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+	<devicetree@vger.kernel.org>, Joao Pinto <jpinto@synopsys.com>,
+	open list <linux-kernel@vger.kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH 1/2] pcie/designware: Keep viewport fixed for IO
+ transaction if num_viewport > 2
+Message-ID: <20160705162310.GA23531@rob-hp-laptop>
+References: <cover.1467647958.git.panand@redhat.com>
+ <687a0706f69f6ebea047441aba5231113fd0c898.1467647958.git.panand@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1467789398-13501-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <687a0706f69f6ebea047441aba5231113fd0c898.1467647958.git.panand@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 06, 2016 at 03:16:38PM +0800, Shawn Lin wrote:
-> This patch adds Rockchip PCIe controller support found
-> on RK3399 Soc platform.
+On Mon, Jul 04, 2016 at 09:44:42PM +0530, Pratyush Anand wrote:
+> From: Pratyush Anand <pratyush.anand@gmail.com>
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Most of the platform have 3 or more viewports. We do not need to share
+> viewport for such platform between IO and CFG. Assign viewport 2 to IO
+> transactions in such cases.
+> 
+> Signed-off-by: Pratyush Anand <pratyush.anand@gmail.com>
+> Tested-by: Dong Bo <dongbo4@huawei.com>
 > ---
+>  .../devicetree/bindings/pci/designware-pcie.txt    |  3 +++
+>  drivers/pci/host/pcie-designware.c                 | 26 ++++++++++++++++------
+>  drivers/pci/host/pcie-designware.h                 |  1 +
+>  3 files changed, 23 insertions(+), 7 deletions(-)
 
-[ ... ]
-
-> +	/* Get the I/O and memory ranges from DT */
-> +	resource_list_for_each_entry(win, &res) {
-> +		switch (resource_type(win->res)) {
-> +		case IORESOURCE_IO:
-> +			io = win->res;
-> +			io->name = "I/O";
-> +			io_size = resource_size(io);
-> +			io_bus_addr = io->start - win->offset;
-> +			err = pci_remap_iospace(io, io_base);
-
-This function is not exported. Either it will have to be exported
-(which may be difficult since it is declared as __weak), or the
-driver must only be built into the kernel, or the function can
-not be used.
-
-Guenter
+Acked-by: Rob Herring <robh@kernel.org>
