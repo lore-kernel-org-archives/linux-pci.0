@@ -1,82 +1,108 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Joao Pinto <jpinto@synopsys.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 03/14] PCI: designware-plat: make it explicitly non-modular
-Date: Sat, 2 Jul 2016 19:13:23 -0400
-Message-ID: <20160702231334.26684-4-paul.gortmaker@windriver.com>
-In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
-References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0088.outbound.protection.outlook.com ([104.47.2.88]:64342
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752669AbcGEDDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Jul 2016 23:03:08 -0400
+From: Po Liu <po.liu@nxp.com>
+To: Dongdong Liu <liudongdong3@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	"Marc Zyngier" <marc.zyngier@arm.com>,
+	Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Minghuan Lian <minghuan.lian@nxp.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Linuxarm <linuxarm@huawei.com>
+Subject: RE: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
+Date: Tue, 5 Jul 2016 03:03:01 +0000
+Message-ID: <VI1PR0401MB1709D556D0A7F7BB9188221E92390@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+ <1465892645-32381-1-git-send-email-po.liu@nxp.com>
+ <1465892645-32381-2-git-send-email-po.liu@nxp.com>
+ <577A21E4.1030301@huawei.com>
+In-Reply-To: <577A21E4.1030301@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
-
-drivers/pci/host/Kconfig:config PCIE_DW_PLAT
-drivers/pci/host/Kconfig:       bool "Platform bus based DesignWare PCIe Controller"
-
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the few trace uses of modular code and macros, so that
-when reading the driver there is no doubt it is builtin-only.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Joao Pinto <jpinto@synopsys.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-designware-plat.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-index b3500994d08a..c8079dc81c10 100644
---- a/drivers/pci/host/pcie-designware-plat.c
-+++ b/drivers/pci/host/pcie-designware-plat.c
-@@ -14,7 +14,7 @@
- #include <linux/gpio.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
-@@ -121,7 +121,6 @@ static const struct of_device_id dw_plat_pcie_of_match[] = {
- 	{ .compatible = "snps,dw-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, dw_plat_pcie_of_match);
- 
- static struct platform_driver dw_plat_pcie_driver = {
- 	.driver = {
-@@ -130,9 +129,4 @@ static struct platform_driver dw_plat_pcie_driver = {
- 	},
- 	.probe = dw_plat_pcie_probe,
- };
--
--module_platform_driver(dw_plat_pcie_driver);
--
--MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
--MODULE_DESCRIPTION("Synopsys PCIe host controller glue platform driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(dw_plat_pcie_driver);
--- 
-2.8.4
+SGkgRG9uZ2RvbmcsDQoNClRoZSBwYXRjaCB3ZXJlIGludGVuZCB0byBmaXh1cCB0aGUgTlhQIGxh
+eWVyc2NhcGUgc2VyaWFsIFNPQyBhbmQgd2VyZSB0ZXN0ZWQgb2suDQpJIGFtIG5vdCBjbGVhciB3
+aGF0IHBsYXRmb3JtIGFyZSB5b3UgdHJ5aW5nIHRvIGZpeC4gDQpUaGUgcHJvYmxlbSBvbiB5b3Vy
+IGJvYXJkIG1heSBiZSBhcyBiZWxvdyBjb21tZW50czoNCg0KDQo+ICAtLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KPiAgRnJvbTogRG9uZ2RvbmcgTGl1IFttYWlsdG86bGl1ZG9uZ2RvbmczQGh1
+YXdlaS5jb21dDQo+ICBTZW50OiBNb25kYXksIEp1bHkgMDQsIDIwMTYgNDo0NCBQTQ0KPiAgVG86
+IFBvIExpdTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLQ0KPiAga2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+ICBk
+ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZw0KPiAgQ2M6IEJqb3JuIEhlbGdhYXM7IFNoYXduIEd1
+bzsgTWFyYyBaeW5naWVyOyBSb2IgSGVycmluZzsgUm95IFphbmc7DQo+ICBNaW5na2FpIEh1OyBT
+dHVhcnQgWW9kZXI7IFlhbmctTGVvIExpOyBBcm5kIEJlcmdtYW5uOyBNaW5naHVhbiBMaWFuOw0K
+PiAgTXVyYWxpIEthcmljaGVyaTsgTGludXhhcm0NCj4gIFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMg
+Mi8yXSBwY2kvYWVyOiBpbnRlcnJ1cHQgZml4dXAgaW4gdGhlIHF1aXJrDQo+ICANCj4gIEhpIFBv
+DQo+ICANCj4gIEkgZm91bmQgYSBwcm9ibGVtIHdpdGggdGhlIHNpbWlsYXIgcGF0Y2guIGFzIHRo
+ZSBiZWxvdyBsb2cuDQo+ICANCj4gIFsgICAgNC4yODcwNjBdIHBjaSAwMDAwOjgwOjAwLjA6IHF1
+aXJrX2Flcl9pbnRlcnJ1cHQgZGV2LT5pcnEgNDE2DQo+ICBbICAgIDQuMjkzNzc4XSBwY2llcG9y
+dCAwMDAwOjgwOjAwLjA6IHBjaV9kZXZpY2VfcHJvYmUgaW4NCj4gIFsgICAgNC4yOTk2MDVdIHBj
+aWVwb3J0IDAwMDA6ODA6MDAuMDogb2ZfaXJxX3BhcnNlX3BjaSgpIGZhaWxlZCB3aXRoDQo+ICBy
+Yz0tMjINCj4gIFsgICAgNC4zMDcyMDldIHBjaWVwb3J0IDAwMDA6ODA6MDAuMDogaW5pdF9zZXJ2
+aWNlX2lycXMgIGRldi0+aXJxIDANCj4gIA0KPiAgVGhlIGZ1Y250aW9ucyBhcmUgY2FsbGVkIGFz
+IGJlbG93IHNlcXVlbmNlLg0KPiAgMS4gcXVpcmtfYWVyX2ludGVycnVwdCwgZ2V0IHRoZSBhZXIg
+ZGV2LT5pcnEgNDE2Lg0KDQpUaGlzIGNvZGUgcXVpcmtfYWVyX2ludGVycnVwdCgpIHNob3VsZCBi
+ZSBydW4gYXQgcGNpX2ZpeHVwX2RldmljZShwY2lfZml4dXBfZmluYWwpIHdoaWNoIGlzIGluIHRo
+ZSBwY2lfYnVzX2FkZF9kZXZpY2VzKCkNCg0KPiAgMi4gcGNpX2RldmljZV9wcm9iZS0+b2ZfaXJx
+X3BhcnNlX3BjaSwgb2ZfaXJxX3BhcnNlX3BjaSgpIGZhaWxlZCwgdGhlbg0KPiAgZGV2LT5pcnEg
+Y2hhbmdlZCB0byAwLg0KDQpwY2lfZGV2aWNlX3Byb2JlLT5vZl9pcnFfcGFyc2VfcGNpIHdoaWNo
+IGluIHRoZSBwY2lfc2Nhbl9jaGlsZF9idXMoKSBydW4gYmVmb3JlICBwY2lfYnVzX2FkZF9kZXZp
+Y2VzKCkuIFNlZSBkd19wY2llX2hvc3RfaW5pdCgpLg0KQXBwYXJlbnRseSAsIHlvdXIgcXVpcmtf
+YWVyX2ludGVycnVwdCgpIGlzIHJ1bm5pbmcgYmVmb3JlIHRoZSBkZXYtPmlycSBhc3NpZ25tZW50
+IGluIHRoZSBvZl9pcnFfcGFyc2VfcGNpKCkuDQoNClNvIG1ha2Ugc3VyZSB5b3VyIGNvbmZpZ3Vy
+ZSB0aGUgcXVpcmtfYWVyX2ludGVycnVwdCgpIHJ1biBpbiB0aGUgRklOQUwgc3RhZ2UgaW4gdGhl
+IHF1aXJrLmMgT1IgY2hlY2sgeW91ciBob3N0IGRyaXZlciB3aGljaCB5b3UgYXJlIHVzaW5nLg0K
+DQoNCj4gIA0KPiAgU28gdGhpcyBwYXRjaCBjb3VsZCBub3Qgd29yayB3aXRoIGFlci4NCj4gIA0K
+PiAgVGhhbmtzDQo+ICBEb25nZG9uZw0KPiAg5ZyoIDIwMTYvNi8xNCAxNjoyNCwgUG8gTGl1IOWG
+memBkzoNCj4gID4gT24gc29tZSBwbGF0Zm9ybXMsIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBvcnQg
+TVNJL01TSS1YL0lOVHggaW4gUkMgbW9kZS4NCj4gID4gV2hlbiBjaGlwIHN1cHBvcnQgdGhlIGFl
+ciBpbnRlcnJ1cHQgd2l0aCBub25lIE1TSS9NU0ktWC9JTlR4IG1vZGUsDQo+ICA+IG1heWJlIHRo
+ZXJlIGlzIGludGVycnVwdCBsaW5lIGZvciBhZXIgcG1lIGV0Yy4gU2VhcmNoIHRoZSBpbnRlcnJ1
+cHQNCj4gID4gbnVtYmVyIGluIHRoZSBmZHQgZmlsZS4gVGhlbiBmaXh1cCB0aGUgZGV2LT5pcnEg
+d2l0aCBpdC4NCj4gID4NCj4gID4gU2lnbmVkLW9mZi1ieTogUG8gTGl1IDxwby5saXVAbnhwLmNv
+bT4NCj4gID4gLS0tDQo+ICA+IGNoYW5nZXMgZm9yIFYzOg0KPiAgPiAJLSBNb3ZlIHRvIHF1aXJr
+Ow0KPiAgPiAJLSBPbmx5IGNvcnJlY3QgdGhlIGlycSBpbiBSQyBtb2RlOw0KPiAgPg0KPiAgPiAg
+IGRyaXZlcnMvcGNpL3F1aXJrcy5jIHwgMjkgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysN
+Cj4gID4gICAxIGZpbGUgY2hhbmdlZCwgMjkgaW5zZXJ0aW9ucygrKQ0KPiAgPg0KPiAgPiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9wY2kvcXVpcmtzLmMgYi9kcml2ZXJzL3BjaS9xdWlya3MuYyBpbmRl
+eA0KPiAgPiBlZTcyZWJlLi44YjM5Y2NlIDEwMDY0NA0KPiAgPiAtLS0gYS9kcml2ZXJzL3BjaS9x
+dWlya3MuYw0KPiAgPiArKysgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiAgPiBAQCAtMjUsNiAr
+MjUsNyBAQA0KPiAgPiAgICNpbmNsdWRlIDxsaW51eC9zY2hlZC5oPg0KPiAgPiAgICNpbmNsdWRl
+IDxsaW51eC9rdGltZS5oPg0KPiAgPiAgICNpbmNsdWRlIDxsaW51eC9tbS5oPg0KPiAgPiArI2lu
+Y2x1ZGUgPGxpbnV4L29mX2lycS5oPg0KPiAgPiAgICNpbmNsdWRlIDxhc20vZG1hLmg+CS8qIGlz
+YV9kbWFfYnJpZGdlX2J1Z2d5ICovDQo+ICA+ICAgI2luY2x1ZGUgInBjaS5oIg0KPiAgPg0KPiAg
+PiBAQCAtNDQxOSwzICs0NDIwLDMxIEBAIHN0YXRpYyB2b2lkIHF1aXJrX2ludGVsX3FhdF92Zl9j
+YXAoc3RydWN0DQo+ICBwY2lfZGV2ICpwZGV2KQ0KPiAgPiAgIAl9DQo+ICA+ICAgfQ0KPiAgPiAg
+IERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NDQzLA0KPiAg
+PiBxdWlya19pbnRlbF9xYXRfdmZfY2FwKTsNCj4gID4gKw0KPiAgPiArLyogSWYgcm9vdCBwb3J0
+IGRvZXNuJ3Qgc3VwcG9ydCBNU0kvTVNJLVgvSU5UeCBpbiBSQyBtb2RlLA0KPiAgPiArICogYnV0
+IHVzZSBzdGFuZGFsb25lIGlycS4gUmVhZCB0aGUgZGV2aWNlIHRyZWUgZm9yIHRoZSBhZXINCj4g
+ID4gKyAqIGludGVycnVwdCBudW1iZXIuDQo+ICA+ICsgKi8NCj4gID4gK3N0YXRpYyB2b2lkIHF1
+aXJrX2Flcl9pbnRlcnJ1cHQoc3RydWN0IHBjaV9kZXYgKmRldikgew0KPiAgPiArCWludCByZXQ7
+DQo+ICA+ICsJdTggaGVhZGVyX3R5cGU7DQo+ICA+ICsJc3RydWN0IGRldmljZV9ub2RlICpucCA9
+IE5VTEw7DQo+ICA+ICsNCj4gID4gKwkvKiBPbmx5IGZvciB0aGUgUkMgbW9kZSBkZXZpY2UgKi8N
+Cj4gID4gKwlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIFBDSV9IRUFERVJfVFlQRSwgJmhlYWRl
+cl90eXBlKTsNCj4gID4gKwlpZiAoKGhlYWRlcl90eXBlICYgMHg3RikgIT0gUENJX0hFQURFUl9U
+WVBFX0JSSURHRSkNCj4gID4gKwkJcmV0dXJuOw0KPiAgPiArDQo+ICA+ICsJaWYgKGRldi0+YnVz
+LT5kZXYub2Zfbm9kZSkNCj4gID4gKwkJbnAgPSBkZXYtPmJ1cy0+ZGV2Lm9mX25vZGU7DQo+ICA+
+ICsNCj4gID4gKwlpZiAoSVNfRU5BQkxFRChDT05GSUdfT0ZfSVJRKSAmJiBucCkgew0KPiAgPiAr
+CQlyZXQgPSBvZl9pcnFfZ2V0X2J5bmFtZShucCwgImFlciIpOw0KPiAgPiArCQlpZiAocmV0ID4g
+MCkgew0KPiAgPiArCQkJZGV2LT5ub19tc2kgPSAxOw0KPiAgPiArCQkJZGV2LT5pcnEgPSByZXQ7
+DQo+ICA+ICsJCX0NCj4gID4gKwl9DQo+ICA+ICt9DQo+ICA+ICtERUNMQVJFX1BDSV9GSVhVUF9G
+SU5BTChQQ0lfVkVORE9SX0lEX0ZSRUVTQ0FMRSwgUENJX0FOWV9JRCwNCj4gID4gK3F1aXJrX2Fl
+cl9pbnRlcnJ1cHQpOw0KPiAgPg0KPiAgDQoNCg==
