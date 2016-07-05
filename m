@@ -1,45 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48056 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754446AbcGFQGR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Jul 2016 12:06:17 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 1/2] pcie/dpc: Match any port type
-Date: Wed,  6 Jul 2016 10:06:00 -0600
-Message-Id: <1467821161-25458-1-git-send-email-keith.busch@intel.com>
+Received: from lucky1.263xmail.com ([211.157.147.133]:60421 "EHLO
+	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754195AbcGECIX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 22:08:23 -0400
+Subject: Re: [PATCH v4 2/2] PCI: Rockchip: Add Rockchip PCIe controller
+ support
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
+ <1467336290-11282-2-git-send-email-shawn.lin@rock-chips.com>
+ <577646D3.7040207@arm.com>
+Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <dcb37af0-89c5-ec37-5ace-7e4df61724a5@rock-chips.com>
+Date: Tue, 5 Jul 2016 10:08:08 +0800
+MIME-Version: 1.0
+In-Reply-To: <577646D3.7040207@arm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe port type values are not flags, so OR'ing them is not
-correct. Previously the result was equivalent to PCIe downstream ports,
-so we were missing binding to DPC capable root ports. This patch changes
-the type to 'any' so we can bind to both port types. While this will
-cause the code to check upstream ports, the driver won't probe them
-since these are not DPC capable.
+在 2016/7/1 18:32, Marc Zyngier 写道:
+> On 01/07/16 02:24, Shawn Lin wrote:
+>> This patch adds Rockchip PCIe controller support found
+>> on RK3399 Soc platform.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> ---
+>
+> [...]
+>
+>> +static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+>> +{
+>> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+>> +	struct rockchip_pcie_port *port;
+>> +	u32 reg;
+>> +
+>> +	chained_irq_enter(chip, desc);
+>> +	port = irq_desc_get_handler_data(desc);
+>> +
+>> +	reg = pcie_read(port, PCIE_CLIENT_INT_STATUS);
+>> +	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
+>> +	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
+>> +	if (reg)
+>> +		generic_handle_irq(irq_find_mapping(port->irq_domain,
+>> +						    ffs(reg)));
+>
+> Can't you get multiple pending interrupts at the same time? Here, you
+> seem to only process one interrupt at a time, which is going to be
+> pretty inefficient.
+>
 
-Reported-by: Alexander Antonov <alexanderx.v.antonov@intel.com>
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/pcie/pcie-dpc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yup, will fix it, thanks.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index ab552f1..0b36525 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -138,7 +138,7 @@ static void dpc_remove(struct pcie_device *dev)
- 
- static struct pcie_port_service_driver dpcdriver = {
- 	.name		= "dpc",
--	.port_type	= PCI_EXP_TYPE_ROOT_PORT | PCI_EXP_TYPE_DOWNSTREAM,
-+	.port_type	= PCIE_ANY_PORT,
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
+> How about something like:
+>
+> 	while (reg) {
+> 		int hwirq = ffs(reg);
+> 		int irq;
+> 		
+> 		reg &= ~BIT(hwirq);
+> 		irq = irq_find_mapping(port->irq_domain, hwirq);
+> 		if (irq)
+> 			generic_handle_irq(irq);
+> 	}
+>
+>> +	chained_irq_exit(chip, desc);
+>> +}
+>> +
+>
+> Thanks,
+>
+> 	M.
+>
+
+
 -- 
-2.7.2
+Best Regards
+Shawn Lin
 
