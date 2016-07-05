@@ -1,99 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH v3 12/13] drivers: acpi: iort: replace rid map type with type mask
-Date: Wed, 20 Jul 2016 12:23:34 +0100
-Message-Id: <1469013815-24380-13-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:17390 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753908AbcGEAD5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 20:03:57 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u64NxLNo065390
+	for <linux-pci@vger.kernel.org>; Mon, 4 Jul 2016 20:03:56 -0400
+Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 23yfe8y6mm-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 04 Jul 2016 20:03:56 -0400
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 5 Jul 2016 10:03:53 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A496E357805A
+	for <linux-pci@vger.kernel.org>; Tue,  5 Jul 2016 10:03:49 +1000 (EST)
+Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u6503nXO24182932
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jul 2016 10:03:49 +1000
+Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
+	by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u6503m18013450
+	for <linux-pci@vger.kernel.org>; Tue, 5 Jul 2016 10:03:49 +1000
+Date: Tue, 5 Jul 2016 10:03:47 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Ian Munsie <imunsie@au1.ibm.com>
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+	Michael Neuling <mikey@neuling.org>,
+	Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
+	Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, Huy Nguyen <huyn@mellanox.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 12/14] PCI/hotplug: pnv_php: export symbols and move
+ struct types needed by cxl
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1467638532-9250-1-git-send-email-imunsie@au.ibm.com>
+ <1467638532-9250-13-git-send-email-imunsie@au.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1467638532-9250-13-git-send-email-imunsie@au.ibm.com>
+Message-Id: <20160705000347.GA6557@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IORT tables provide data that allow the kernel to carry out
-device ID mappings between endpoints and system components
-(eg interrupt controllers, IOMMUs). When the mapping for a
-given device ID is carried out, the translation mechanism
-is done on a per-subsystem basis rather than a component
-subtype (ie the IOMMU kernel layer will look for mappings
-from a device to all IORT node types corresponding to IOMMU
-components), therefore the corresponding mapping API should
-work on a range (ie mask) of IORT node types corresponding
-to a common set of components (eg IOMMUs) rather than a
-specific node type.
+On Mon, Jul 04, 2016 at 11:22:10PM +1000, Ian Munsie wrote:
+>From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+>
+>The cxl driver will use infrastructure from pnv_php to handle device tree
+>updates when switching bi-modal CAPI cards into CAPI mode.
+>
+>To enable this, export pnv_php_find_slot() and
+>pnv_php_set_slot_power_state(), and add corresponding declarations, as well
+>as the definition of struct pnv_php_slot, to asm/pnv-pci.h.
+>
+>Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>Cc: linux-pci@vger.kernel.org
+>Cc: Bjorn Helgaas <bhelgaas@google.com>
+>Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>---
 
-Upgrade the IORT iort_node_map_rid() API to work with a
-type mask instead of a single node type so that it can
-be used for mappings that span multiple components types
-(ie IOMMUs).
+.../...
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/iort.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+>diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+>index aadce45..b719a72 100644
+>--- a/drivers/pci/hotplug/Kconfig
+>+++ b/drivers/pci/hotplug/Kconfig
+>@@ -117,6 +117,7 @@ config HOTPLUG_PCI_POWERNV
+> 	tristate "PowerPC PowerNV PCI Hotplug driver"
+> 	depends on PPC_POWERNV && EEH
+> 	select OF_DYNAMIC
+>+	select HOTPLUG_PCI_POWERNV_BASE
+> 	help
+> 	  Say Y here if you run PowerPC PowerNV platform that supports
+> 	  PCI Hotplug
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index c91e45d..c116b68 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -25,6 +25,9 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
- 
-+#define IORT_TYPE_MASK(type)	(1 << (type))
-+#define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
-+
- struct iort_its_msi_chip {
- 	struct list_head	list;
- 	struct fwnode_handle	*fw_node;
-@@ -299,7 +302,7 @@ iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in, u32 *rid_out)
- 
- static struct acpi_iort_node *
- iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
--		  u32 *rid_out, u8 type)
-+		  u32 *rid_out, u8 type_mask)
- {
- 	u32 rid = rid_in;
- 
-@@ -308,7 +311,7 @@ iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
- 		struct acpi_iort_id_mapping *map;
- 		int i;
- 
--		if (node->type == type) {
-+		if (IORT_TYPE_MASK(node->type) & type_mask) {
- 			if (rid_out)
- 				*rid_out = rid;
- 			return node;
-@@ -386,7 +389,7 @@ u32 iort_msi_map_rid(struct device *dev, u32 req_id)
- 		return req_id;
- 	}
- 
--	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-+	iort_node_map_rid(node, req_id, &dev_id, IORT_MSI_TYPE);
- 	return dev_id;
- }
- 
-@@ -411,7 +414,7 @@ iort_dev_find_its_id(struct device *dev, u32 req_id, unsigned int idx,
- 		return -ENXIO;
- 	}
- 
--	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	node = iort_node_map_rid(node, req_id, NULL, IORT_MSI_TYPE);
- 	if (!node) {
- 		dev_err(dev, "can't find related ITS node\n");
- 		return -ENXIO;
--- 
-2.6.4
+Andrew/Ian, it seems HOTPLUG_PCI_POWERNV_BASE isn't defined and we needn't it.
+
+Thanks,
+Gavin
+
