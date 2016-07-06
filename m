@@ -1,103 +1,193 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for system sleep
-Date: Mon, 18 Jul 2016 15:39:15 +0200
-Message-ID: <2339231.tBO8VQgPAo@vostro.rjw.lan>
-In-Reply-To: <20160617221407.GB1927@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de> <20160617210924.GA12254@localhost> <20160617221407.GB1927@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:39467 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263AbcGFImH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2016 04:42:07 -0400
+Subject: Re: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
+To: Po Liu <po.liu@nxp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
+ <1465892645-32381-1-git-send-email-po.liu@nxp.com>
+ <1465892645-32381-2-git-send-email-po.liu@nxp.com>
+ <577A21E4.1030301@huawei.com>
+ <VI1PR0401MB1709D556D0A7F7BB9188221E92390@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	"Marc Zyngier" <marc.zyngier@arm.com>,
+	Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Minghuan Lian <minghuan.lian@nxp.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Linuxarm <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <577CC37B.9070806@huawei.com>
+Date: Wed, 6 Jul 2016 16:38:19 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <VI1PR0401MB1709D556D0A7F7BB9188221E92390@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
-> On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
-> > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> > > There are devices wich are not power-managed by the platform, yet can be
-> > 
-> > s/wich/which/
-> 
-> Oops.
-> 
-> > 
-> > > runtime suspended to D3cold with some other mechanism.  When putting the
-> > > system to sleep, we currently handle such devices improperly by trying
-> > > to transition them from D3cold to D3hot (the default power state defined
-> > > at the beginning of pci_target_state()).  Avoid that.
-> > > 
-> > > An example for devices affected by this are Thunderbolt controllers
-> > > built into Macs which can be put into D3cold with nonstandard ACPI
-> > > methods.
-> > > 
-> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > 
-> > This needs an ack from Rafael.
-> > 
-> > Naive question: why is the default target_state PCI_D3hot?
-> 
-> No idea. :-)
+Hi Po
 
-Because D3_hot is the deepest state you can *program* the device to go into
-unless the platform can cut off power from it.
+在 2016/7/5 11:03, Po Liu 写道:
+> Hi Dongdong,
+>
+> The patch were intend to fixup the NXP layerscape serial SOC and were tested ok.
+> I am not clear what platform are you trying to fix.
 
-> > 
-> > > ---
-> > >  drivers/pci/pci.c | 2 ++
-> > >  1 file changed, 2 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 791dfe7..6af9911 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
-> > >  			      && !(dev->pme_support & (1 << target_state)))
-> > >  				target_state--;
-> > >  		}
-> > > +	} else if (dev->current_state == PCI_D3cold) {
-> > > +		target_state = PCI_D3cold;
-> > >  	}
-> > 
-> > This only covers the case of !device_may_wakeup().  So I guess
-> > device_may_wakeup() is false for these Thunderbolt controllers.
-> 
-> Correct. device_may_wakeup() is defined in include/linux/pm_wakeup.h as:
-> dev->power.can_wakeup && !!dev->power.wakeup
-> 
-> The first one, dev->power.can_wakeup is true because PME is claimed to be
-> supported for all power states in the PMC register, so pci_pm_init() calls
-> device_set_wakeup_capable(&dev->dev, true):
->   Capabilities: [80] Power Management version 3
->     Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
->     Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
-> 
-> The second one, dev->power.wakeup is false because device_wakeup_enable()
-> is never called.
-> 
-> 
-> > Is there a reason you don't want to do this check for devices that
-> > may wakeup?
-> 
-> Fear of breaking things. It would mean that a device would be left in
-> D3cold even though it may not be able to signal wakeup from that power
-> state.
+My platform is an ARM64 platform, PCIe host controller also use Synopsys Designware.
 
-Then it should not be put into D3_cold at run time too if it is wakeup-capable.
+> The problem on your board may be as below comments:
+>
+>
+>>   -----Original Message-----
+>>   From: Dongdong Liu [mailto:liudongdong3@huawei.com]
+>>   Sent: Monday, July 04, 2016 4:44 PM
+>>   To: Po Liu; linux-pci@vger.kernel.org; linux-arm-
+>>   kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
+>>   devicetree@vger.kernel.org
+>>   Cc: Bjorn Helgaas; Shawn Guo; Marc Zyngier; Rob Herring; Roy Zang;
+>>   Mingkai Hu; Stuart Yoder; Yang-Leo Li; Arnd Bergmann; Minghuan Lian;
+>>   Murali Karicheri; Linuxarm
+>>   Subject: Re: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
+>>
+>>   Hi Po
+>>
+>>   I found a problem with the similar patch. as the below log.
+>>
+>>   [    4.287060] pci 0000:80:00.0: quirk_aer_interrupt dev->irq 416
+>>   [    4.293778] pcieport 0000:80:00.0: pci_device_probe in
+>>   [    4.299605] pcieport 0000:80:00.0: of_irq_parse_pci() failed with
+>>   rc=-22
+>>   [    4.307209] pcieport 0000:80:00.0: init_service_irqs  dev->irq 0
+>>
+>>   The fucntions are called as below sequence.
+>>   1. quirk_aer_interrupt, get the aer dev->irq 416.
+>
+> This code quirk_aer_interrupt() should be run at pci_fixup_device(pci_fixup_final) which is in the pci_bus_add_devices()
 
-> That's a change of behaviour the consequences of which I cannot
-> estimate. Intuitively, I would expect breakage from such a change.
+Yes, you are right.
 
-That would have been the case if the device had been capable of signaling
-wakeup from D3_cold at run time, but not from system sleep.  However, that
-can only happen when platform_pci_power_manageable() is true AFAICS.
+>
+>>   2. pci_device_probe->of_irq_parse_pci, of_irq_parse_pci() failed, then
+>>   dev->irq changed to 0.
+>
+> pci_device_probe->of_irq_parse_pci which in the pci_scan_child_bus() run before  pci_bus_add_devices(). See dw_pcie_host_init().
+> Apparently , your quirk_aer_interrupt() is running before the dev->irq assignment in the of_irq_parse_pci().
+>
+> So make sure your configure the quirk_aer_interrupt() run in the FINAL stage in the quirk.c OR check your host driver which you are using.
 
-So I'd change the switch () under the platform_pci_power_manageable() check to
-return "state" in the default case and then do
+Yes , It is FINAL stage in the quirk. I use DECLARE_PCI_FIXUP_FINAL.
+I find it is the below patch affect this. (https://patchwork.kernel.org/patch/9170333/),
+but the patch will be applied to linux 4.8. So the problem will also be existed.
 
-	return dev->current_state < target_state ? target_state : dev->current_state;
+ARM64: PCI: ACPI support for legacy IRQs parsing and consolidation with DT code
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index d5d3d26..b3b8a2c 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -51,11 +51,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+  }
 
-at the end of the function.
+  /*
+- * Try to assign the IRQ number from DT when adding a new device
++ * Try to assign the IRQ number when probing a new device
+   */
+-int pcibios_add_device(struct pci_dev *dev)
++int pcibios_alloc_irq(struct pci_dev *dev)
+  {
+-   dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++ if (acpi_disabled)
++         dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++#ifdef CONFIG_ACPI
++ else
++         return acpi_pci_irq_enable(dev);
++#endif
 
-Thanks,
-Rafael
+         return 0;
+  }
+
+Thanks
+Dongdong
+>
+>
+>>
+>>   So this patch could not work with aer.
+>>
+>>   Thanks
+>>   Dongdong
+>>   在 2016/6/14 16:24, Po Liu 写道:
+>>   > On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
+>>   > When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
+>>   > maybe there is interrupt line for aer pme etc. Search the interrupt
+>>   > number in the fdt file. Then fixup the dev->irq with it.
+>>   >
+>>   > Signed-off-by: Po Liu <po.liu@nxp.com>
+>>   > ---
+>>   > changes for V3:
+>>   > 	- Move to quirk;
+>>   > 	- Only correct the irq in RC mode;
+>>   >
+>>   >   drivers/pci/quirks.c | 29 +++++++++++++++++++++++++++++
+>>   >   1 file changed, 29 insertions(+)
+>>   >
+>>   > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
+>>   > ee72ebe..8b39cce 100644
+>>   > --- a/drivers/pci/quirks.c
+>>   > +++ b/drivers/pci/quirks.c
+>>   > @@ -25,6 +25,7 @@
+>>   >   #include <linux/sched.h>
+>>   >   #include <linux/ktime.h>
+>>   >   #include <linux/mm.h>
+>>   > +#include <linux/of_irq.h>
+>>   >   #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+>>   >   #include "pci.h"
+>>   >
+>>   > @@ -4419,3 +4420,31 @@ static void quirk_intel_qat_vf_cap(struct
+>>   pci_dev *pdev)
+>>   >   	}
+>>   >   }
+>>   >   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443,
+>>   > quirk_intel_qat_vf_cap);
+>>   > +
+>>   > +/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
+>>   > + * but use standalone irq. Read the device tree for the aer
+>>   > + * interrupt number.
+>>   > + */
+>>   > +static void quirk_aer_interrupt(struct pci_dev *dev) {
+>>   > +	int ret;
+>>   > +	u8 header_type;
+>>   > +	struct device_node *np = NULL;
+>>   > +
+>>   > +	/* Only for the RC mode device */
+>>   > +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
+>>   > +	if ((header_type & 0x7F) != PCI_HEADER_TYPE_BRIDGE)
+>>   > +		return;
+>>   > +
+>>   > +	if (dev->bus->dev.of_node)
+>>   > +		np = dev->bus->dev.of_node;
+>>   > +
+>>   > +	if (IS_ENABLED(CONFIG_OF_IRQ) && np) {
+>>   > +		ret = of_irq_get_byname(np, "aer");
+>>   > +		if (ret > 0) {
+>>   > +			dev->no_msi = 1;
+>>   > +			dev->irq = ret;
+>>   > +		}
+>>   > +	}
+>>   > +}
+>>   > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
+>>   > +quirk_aer_interrupt);
+>>   >
+>>
+>
+> �{.n�+�������+%��lzwm��b�맲��r��zX��\�)���w*jg��������ݢj/���z�ޖ��2�ޙ���&�)ߡ�a�����G���h��j:+v���w�٥
+>
+
