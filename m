@@ -1,85 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lb1-smtp-cloud3.xs4all.net ([194.109.24.22]:60570 "EHLO
-	lb1-smtp-cloud3.xs4all.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751476AbcGMHFs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 03:05:48 -0400
-Subject: Re: [PATCH v4] [media] pci: Add tw5864 driver - fixed few style nits,
- going to resubmit soon
-To: Andrey Utkin <andrey_utkin@fastmail.com>,
-	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-References: <20160711151714.5452-1-andrey.utkin@corp.bluecherry.net>
- <20160713020504.GH5934@zver>
-Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Kozlov Sergey <serjk@netup.ru>,
-	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	=?UTF-8?Q?Krzysztof_Ha=c5=82asa?= <khalasa@piap.pl>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
-	kernel-mentors@selenic.com
-From: Hans Verkuil <hverkuil@xs4all.nl>
-Message-ID: <5d3d8684-fe20-0bc8-7465-53c5f7b55447@xs4all.nl>
-Date: Wed, 13 Jul 2016 09:05:27 +0200
+Received: from down.free-electrons.com ([37.187.137.238]:34557 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751633AbcGGUoQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2016 16:44:16 -0400
+Date: Thu, 7 Jul 2016 22:44:03 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>
+Subject: Re: [PATCH v3 0/3] pci: Aardvark PCIe controller driver for Marvell
+ Armada 3700
+Message-ID: <20160707224403.3279d807@free-electrons.com>
+In-Reply-To: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <20160713020504.GH5934@zver>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/13/2016 04:05 AM, Andrey Utkin wrote:
-> Found and fixed few very minor coding style nits, will resubmit in few days,
-> now still waiting for comments to v4.
+Hello Bjorn,
 
-Can you resubmit now? I plan to review it on Friday or Monday, and I'd rather
-review the latest version.
+On Thu, 30 Jun 2016 11:32:29 +0200, Thomas Petazzoni wrote:
 
-Regards,
+> This is the third iteration of the patch series that adds a PCIe
+> controller driver for the Aardvark PCI controller, which is used on
+> Marvell Armada 3700.
 
-	Hans
+Have you had the chance to look into this third iteration, which
+hopefully integrates the feedback you made during your review of the
+second version?
 
-> 
-> https://github.com/bluecherrydvr/linux/commits/tw5864
-> 
-> commit 31f7c98a144cb3fb8a94662f002d9b6142d1f390
-> Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-> Date:   Wed Jul 13 05:00:28 2016 +0300
-> 
->     Fix checkpatch --strict issue
->     
->      CHECK: Alignment should match open parenthesis
->      #3599: FILE: drivers/media/pci/tw5864/tw5864-video.c:539:
->      +static int tw5864_fmt_vid_cap(struct file *file, void *priv,
->      +                               struct v4l2_format *f)
-> 
-> commit 11a09a1048af597ecf374507b08c809eed91b86d
-> Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-> Date:   Wed Jul 13 04:59:34 2016 +0300
-> 
->     Fix checkpatch --strict issue
->     
->      CHECK: Please don't use multiple blank lines
->      #3244: FILE: drivers/media/pci/tw5864/tw5864-video.c:184:
-> 
-> commit 861b2ba8593db7abe89291a4ba85976519783f4a
-> Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-> Date:   Wed Jul 13 04:58:37 2016 +0300
-> 
->     Fix checkpatch --strict issue
->     
->      CHECK: No space is necessary after a cast
->      #3053: FILE: drivers/media/pci/tw5864/tw5864-util.c:36:
->      +       return (u8) tw_readl(TW5864_IND_DATA);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-media" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I was hoping to get this in time for 4.8, so if you have any comments,
+do not hesitate to let me know so that I can address them.
+
+Thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
