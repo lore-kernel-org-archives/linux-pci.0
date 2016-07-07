@@ -1,77 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Niklas Cassel <niklas.cassel@axis.com>,
-	Jesper Nilsson <jesper.nilsson@axis.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 02/14] PCI: artpec6: make it explicitly non-modular
-Date: Sat, 2 Jul 2016 19:13:22 -0400
-Message-ID: <20160702231334.26684-3-paul.gortmaker@windriver.com>
-In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
-References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 8 Jul 2016 01:43:50 +0200
+Message-ID: <CAJZ5v0hDSZGX90hxkACwC0DktD-_Baq=+DDkR7_zv8464iHG-Q@mail.gmail.com>
+Subject: [GIT PULL] ACPI fixes for v4.7-rc7
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+Hi Linus,
 
-drivers/pci/host/Kconfig:config PCIE_ARTPEC6
-drivers/pci/host/Kconfig:       bool "Axis ARTPEC-6 PCIe controller"
+Please pull from
 
-...meaning that it currently is not being built as a module by anyone.
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ acpi-4.7-rc7
 
-Lets remove the few trace uses of modular code and macros, so that
-when reading the driver there is no doubt it is builtin-only.
+to receive ACPI fixes for v4.7-rc7 with top-most commit
+b6d90158c935d4a22e56f41647b479ab5ea449d4
 
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
+ Merge branches 'acpica-fixes', 'acpi-pci-fixes' and 'acpi-debug-fixes'
 
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+on top of commit a99cde438de0c4c0cecc1d1af1a55a75b10bfdef
 
-Cc: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-artpec6.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ Linux 4.7-rc6
 
-diff --git a/drivers/pci/host/pcie-artpec6.c b/drivers/pci/host/pcie-artpec6.c
-index be54fad4698b..73d4e8cb020b 100644
---- a/drivers/pci/host/pcie-artpec6.c
-+++ b/drivers/pci/host/pcie-artpec6.c
-@@ -10,7 +10,7 @@
- 
- #include <linux/delay.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/resource.h>
-@@ -267,7 +267,6 @@ static const struct of_device_id artpec6_pcie_of_match[] = {
- 	{ .compatible = "axis,artpec6-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, artpec6_pcie_of_match);
- 
- static struct platform_driver artpec6_pcie_driver = {
- 	.probe = artpec6_pcie_probe,
-@@ -276,9 +275,4 @@ static struct platform_driver artpec6_pcie_driver = {
- 		.of_match_table = artpec6_pcie_of_match,
- 	},
- };
--
--module_platform_driver(artpec6_pcie_driver);
--
--MODULE_AUTHOR("Niklas Cassel <niklas.cassel@axis.com>");
--MODULE_DESCRIPTION("Axis ARTPEC-6 PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(artpec6_pcie_driver);
--- 
-2.8.4
+All of these fix recent regressions in ACPICA, in the ACPI PCI IRQ
+management code and in the ACPI AML debugger.
+
+Specifics:
+
+ - Fix a lock ordering issue in ACPICA introduced by a recent commit
+   that attempted to fix a deadlock in the dynamic table loading code
+   which in turn appeared after changes related to the handling of
+   module-level AML also made in this cycle (Lv Zheng).
+
+ - Fix a recent regression in the ACPI IRQ management code that may
+   cause PCI drivers to be unable to register an IRQ if that IRQ
+   happens to be shared with a device on the ISA bus, like the
+   parallel port, by reverting one commit entirely and restoring the
+   previous behavior in two other places (Sinan Kaya).
+
+ - Fix a recent regression in the ACPI AML debugger introduced by
+   the commit that removed incorrect usage of IS_ERR_VALUE() from
+   multiple places (Lv Zheng).
+
+Thanks!
+
+---------------
+
+Lv Zheng (2):
+      ACPICA: Namespace: Fix namespace/interpreter lock ordering
+      ACPI / debugger: Fix regression introduced by IS_ERR_VALUE() removal
+
+Sinan Kaya (3):
+      ACPI,PCI,IRQ: factor in PCI possible
+      Revert "ACPI, PCI, IRQ: remove redundant code in acpi_irq_penalty_init()"
+      ACPI,PCI,IRQ: separate ISA penalty calculation
+
+---------------
+
+ arch/x86/pci/acpi.c           |  1 +
+ drivers/acpi/acpi_dbg.c       |  4 +--
+ drivers/acpi/acpica/nsload.c  |  7 ++++-
+ drivers/acpi/acpica/nsparse.c |  9 ++-----
+ drivers/acpi/pci_link.c       | 63 ++++++++++++++++++++++++++++++++-----------
+ include/acpi/acpi_drivers.h   |  1 +
+ 6 files changed, 60 insertions(+), 25 deletions(-)
