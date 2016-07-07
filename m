@@ -1,79 +1,220 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:36083 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751223AbcGNL3L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Jul 2016 07:29:11 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v3 4/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
-Date: Thu, 14 Jul 2016 14:28:18 +0300
-Message-Id: <1468495702-7467-5-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
-References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:35175 "EHLO
+	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbcGGAjQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2016 20:39:16 -0400
+Received: by mail-pf0-f171.google.com with SMTP id c2so901450pfa.2
+        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2016 17:39:16 -0700 (PDT)
+Date: Wed, 6 Jul 2016 17:39:12 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH v6 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+Message-ID: <20160707003912.GB100467@google.com>
+References: <1467789398-13501-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1467789398-13501-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updating the Kconfig Thunderbolt(TM) description.
+Hi Shawn,
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  2 +-
- 2 files changed, 22 insertions(+), 5 deletions(-)
+On Wed, Jul 06, 2016 at 03:16:37PM +0800, Shawn Lin wrote:
+> This patch adds a binding that describes the Rockchip PCIe controller
+> found on Rockchip SoCs PCIe interface.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> Acked-by: Rob Herring <robh@kernel.org>
+> ---
+> 
+> Changes in v6:
+> - add ack tag from Rob
+> 
+> Changes in v5:
+> - fix wrong example reported by Marc
+> - add seperate section to describe the interrupt controller child
+>   node
+> 
+> Changes in v4:
+> - fix example of adding intermediate interrupt controller for pcie
+>   legacy interrrupt
+> 
+> Changes in v3:
+> - fix example dts code suggested by Rob and Marc
+> - remove driver's behaviour of regulator
+> 
+> Changes in v2:
+> - fix lots clk/reset stuff suggested by Heiko
+> - remove msi-parent and add msi-map suggested by Marc
+> - drop phy related stuff
+> - some others minor fixes
+> 
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 104 +++++++++++++++++++++
+>  1 file changed, 104 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> new file mode 100644
+> index 0000000..7616ecc
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -0,0 +1,104 @@
+> +* Rockchip AXI PCIe Root Port Bridge DT description
+> +
+> +Required properties:
+> +- #address-cells: Address representation for root ports, set to <3>
+> +- #size-cells: Size representation for root ports, set to <2>
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +		interrupt source. The value must be 1.
+> +- compatible: Should contain "rockchip,rk3399-pcie"
+> +- reg: Two register ranges as listed in the reg-names property
+> +- reg-names: Must include the following names
+> +	- "axi-base"
+> +	- "apb-base"
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +		See ../clocks/clock-bindings.txt for details.
+> +- clock-names: Must include the following entries:
+> +	- "aclk"
+> +	- "aclk-perf"
+> +	- "hclk"
+> +	- "pm"
+> +- msi-map: Maps a Requester ID to an MSI controller and associated.
+> +		See ./pci-msi.txt
+> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+> +- phy-names:  MUST be "pcie-phy".
+> +- interrupts: Three interrupt entries must be specified.
+> +- interrupt-names: Must include the following names
+> +	- "sys"
+> +	- "legacy"
+> +	- "client"
+> +- resets: Must contain five entries for each entry in reset-names.
+> +	   See ../reset/reset.txt for details.
+> +- reset-names: Must include the following names
+> +	- "core"
+> +	- "mgmt"
+> +	- "mgmt-sticky"
+> +	- "pipe"
+> +- pinctrl-names : The pin control state names
+> +- pinctrl-0: The "default" pinctrl state
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +	interrupt source. The value must be 1.
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +
+> +*Interrupt controller child node*
+> +The core controller provides a single interrupt for legacy INTx. So,
+> +pcie node should create a interrupt controller node to support 'interrupt-map'
+> +DT functionality. The driver will create an IRQ domain for this map, decode
+> +the four INTx interrupts in ISR and route them to this domain.
 
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..d34b0f5 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,30 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt(TM) support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt(TM) Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt(TM) Networking"
-+	help
-+	  This driver is required if you want Thunderbolt(TM) Networking on
-+	  non-Apple hardware.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..7a85bd1 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
--- 
-2.7.4
+Where in your driver do you actually handle this child node? I don't see
+anything, but perhaps I'm missing something. I see how your earlier
+revisions of this driver used of_get_next_child() to acquire the child
+node, for use with irq_domain_add_linear(). But that's not in this
+version...
 
+> +
+> +Required properties for Interrupt controller child node:
+> +- interrupt-controller: identifies the node as an interrupt controller
+> +- #address-cells: specifies the number of cells needed to encode an
+> +	address. The value must be 0.
+> +- #interrupt-cells: specifies the number of cells needed to encode an
+> +	interrupt source. The value must be 1.
+> +
+> +Optional Property:
+
+These optional properties apply to the pcie node, not the interrupt
+controller child, right? Seems like the subnode and its properties
+should be last (i.e., the 'Optional Property' section should be above
+'Interrupt controller child node').
+
+> +- ep-gpios: contain the entry for pre-reset gpio
+> +- num-lanes: number of lanes to use
+> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
+> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
+> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
+> +
+> +Example:
+> +
+> +pcie0: pcie@f8000000 {
+> +	compatible = "rockchip,rk3399-pcie";
+> +	#address-cells = <3>;
+> +	#size-cells = <2>;
+> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
+> +		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
+> +	clock-names = "aclk", "aclk-perf",
+> +		      "hclk", "pm";
+> +	bus-range = <0x0 0x1>;
+> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
+> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+> +	interrupt-names = "sys", "legacy", "client";
+> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+> +	assigned-clock-rates = <100000000>;
+> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
+> +	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
+> +		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
+> +	num-lanes = <4>;
+> +	msi-map = <0x0 &its 0x0 0x1000>;
+> +	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
+> +	reg-names = "axi-base", "apb-base";
+> +	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
+> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
+> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
+> +	phys = <&pcie_phy>;
+> +	phy-names = "pcie-phy";
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&pcie_clkreq>;
+> +	#interrupt-cells = <1>;
+> +	interrupt-map-mask = <0 0 0 7>;
+> +	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
+> +			<0 0 0 2 &pcie0_intc 2>,
+> +			<0 0 0 3 &pcie0_intc 3>,
+> +			<0 0 0 4 &pcie0_intc 4>;
+
+I'm a little lost on this one, so forgive my ignorance; how did you
+determine the last value in each entry (i.e., the 1, 2, 3, and 4 IRQ
+numbers for pcie0_intc)? IIUC, those are supposed to represent indeces
+into the IRQ status register found in the PCIe interrupt status
+register, and so they should be 0-based (i.e., 0, 1, 2, 3). And then
+you'd have:
+
+	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
+			<0 0 0 2 &pcie0_intc 1>,
+			<0 0 0 3 &pcie0_intc 2>,
+			<0 0 0 4 &pcie0_intc 3>;
+
+But then, I never got this sub-node binding to work quite right, so I
+may be missing something.
+
+EDIT: ooh, I see what's going on! I'll comment on the driver as well,
+but it looks like you're translating the register status to a HW IRQ
+number with 'ffs(reg)', which yields a 1-based index. I think it is most
+sensible to use a 0-based index (i.e., 'ffs(reg) - 1'). Now, that only
+will work if you get the whole interrupt-map + interrupt-controller
+thing right (i.e., using a subnode for the interrupt controller) --
+otherwise, IRQ mapping might not work right. I suspect that's one reason
+the original driver writer might have used 1-based indexing in the first
+place.
+
+Brian
+
+> +	pcie0_intc: interrupt-controller {
+> +		interrupt-controller;
+> +		#address-cells = <0>;
+> +		#interrupt-cells = <1>;
+> +	};
+> +};
+> -- 
+> 2.3.7
+> 
+> 
