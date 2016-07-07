@@ -1,75 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:32926 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757307AbcG1Unf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jul 2016 16:43:35 -0400
-Date: Thu, 28 Jul 2016 15:43:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
-Message-ID: <20160728204328.GA20218@localhost>
-References: <20160630151931.29216-1-thierry.reding@gmail.com>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:51925 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbcGGO6S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2016 10:58:18 -0400
+Date: Thu, 7 Jul 2016 17:02:43 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
+Message-ID: <20160707150243.GA3633@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160630151931.29216-1-thierry.reding@gmail.com>
+In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thierry and Arnd,
+Dear Rafael,
 
-Thanks a lot for pushing this forward.  I would like to have gotten
-this into the v4.8 merge window, but I didn't get to it soon enough.
+The honor of your presence is requested to the review of this series
+posted May 13.
 
-On Thu, Jun 30, 2016 at 05:19:30PM +0200, Thierry Reding wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> This patch makes the existing pci_host_bridge structure a proper device
-> that is usable by PCI host drivers in a more standard way. In addition
-> to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
-> and pci_create_root_bus interfaces, this unfortunately means having to
-> add yet another interface doing basically the same thing, and add some
-> extra code in the initial step.
-> 
-> However, this time it's more likely to be extensible enough that we
-> won't have to do another one again in the future, and we should be
-> able to reduce code much more as a result.
-> 
-> The main idea is to pull the allocation of 'struct pci_host_bridge' out
-> of the registration, and let individual host drivers and architecture
-> code fill the members before calling the registration function.
-> 
-> There are a number of things we can do based on this:
-> 
-> * Use a single memory allocation for the driver-specific structure
->   and the generic PCI host bridge
-> * consolidate the contents of driver specific structures by moving
->   them into pci_host_bridge
-> * Add a consistent interface for removing a PCI host bridge again
->   when unloading a host driver module
-> * Replace the architecture specific __weak pcibios_* functions with
->   callbacks in a pci_host_bridge device
-> * Move common boilerplate code from host drivers into the generic
->   function, based on contents of the structure
-> * Extend pci_host_bridge with additional members when needed without
->   having to add arguments to pci_scan_*.
-> * Move members of struct pci_bus into pci_host_bridge to avoid
->   having lots of identical copies.
-> 
-> As mentioned in a previous email, one open question is whether we want
-> to export a function for allocating a pci_host_bridge device in
-> combination with the per-device structure or let the driver itself
-> call kzalloc.
+Bjorn has requested an ack from you on patches 9 and 10, so the series
+is essentially blocked until you find the time to comment. It would
+also be good if you could look at the PM-related patches 4, 5, 6 and 11.
+They're all fairly small. You do not have to bother about the larger
+thunderbolt patches at the end of the series:
 
-I agree with Arnd that a pci_host_bridge_alloc() would be nice.  The
-pointer to alloc_etherdev() was very useful and probably worth
-including in the changelog.  It helps a lot if we can copy the style
-of some other subsystem, but my head is buried so deep in PCI that I
-don't know what they do.
+[01/13]  https://patchwork.kernel.org/patch/9090411/
+[02/13]  https://patchwork.kernel.org/patch/9090421/
+[03/13]  https://patchwork.kernel.org/patch/9090451/
+[04/13]  https://patchwork.kernel.org/patch/9090471/
+[05/13]  https://patchwork.kernel.org/patch/9090491/
+[06/13]  https://patchwork.kernel.org/patch/9090511/
+[07/13]  https://patchwork.kernel.org/patch/9090531/
+[08/13]  https://patchwork.kernel.org/patch/9090541/
+[09/13]  https://patchwork.kernel.org/patch/9090621/
+[10/13]  https://patchwork.kernel.org/patch/9090641/
+[11/13]  https://patchwork.kernel.org/patch/9090651/
+[12/13]  https://patchwork.kernel.org/patch/9090571/
+[13/13]  https://patchwork.kernel.org/patch/9090591/
 
-Looking forward to the next iteration.
+There are also still unanswered questions about the architecture
+I've chosen in this series: I'm attaching to the upstream bridge
+of the Thunderbolt controller as a port service to be able to
+power it down when nothing is plugged in. This architecture is
+a workaround for the fact that dev_pm_domain_set() cannot be
+called after a device is bound to a driver.
 
-Bjorn
+I've explained this in detail in an e-mail to you on June 17:
+http://www.spinics.net/lists/linux-pci/msg52120.html
+
+Near the end of that e-mail are two questions:
+(1) Would it be possible to allow dev_pm_domain_set() for already
+    bound devices? (It would allow me to simplify this series
+    considerably.)
+(2) How should the PCI core deal with devices that can be suspended
+    to D3cold but not by the platform? Is it correct to solve this
+    with dev_pm_domain_set()? (As is currently done for Optimus GPUs.)
+    Is it also okay to suspend/resume them in the driver runtime PM
+    callbacks? (This requires patch [09/13] of my series to work
+    properly.)
+
+Your help answering those questions and/or reviewing this series
+is greatly appreciated.
+
+Thank you!
+
+Lukas
