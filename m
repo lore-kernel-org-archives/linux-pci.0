@@ -1,75 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:59200 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbcGAQ1o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 12:27:44 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
-Date: Fri, 01 Jul 2016 18:30:24 +0200
-Message-ID: <3872522.jdXcQClxV5@wuerfel>
-In-Reply-To: <20160701160923.GF8609@e106497-lin.cambridge.arm.com>
-References: <20160630151931.29216-1-thierry.reding@gmail.com> <4061641.rLdO1g8OBR@wuerfel> <20160701160923.GF8609@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from lekensteyn.nl ([178.21.112.251]:46527 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753028AbcGGXy4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Jul 2016 19:54:56 -0400
+From: Peter Wu <peter@lekensteyn.nl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI: export pci_bridge_d3_possible
+Date: Fri,  8 Jul 2016 01:54:48 +0200
+Message-Id: <20160707235448.2622-1-peter@lekensteyn.nl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 1, 2016 5:09:23 PM CEST Liviu Dudau wrote:
-> > > > 
-> > > > The main idea is to pull the allocation of 'struct pci_host_bridge' out
-> > > > of the registration, and let individual host drivers and architecture
-> > > > code fill the members before calling the registration function.
-> > > 
-> > > That's how we got into the arch/arm mess that we currently have. The host driver
-> > > should not drive the instantiation of the pci_host_bridge structure because it
-> > > will prevent you from having two drivers running at the same time.
-> > 
-> > Can you clarify that? I don't see what prevents two drivers from each
-> > creating a pci_host_bridge structure and passing it into
-> > pci_host_bridge_register().
-> 
-> Maybe I'm exagerating a bit, but I always disliked the pci_common_init() function and
-> the way it is creating a pci_host_bridge while relying on hw_pci hooks to get
-> things ready. I'm pretty sure there are still issues around the fact that a lot of
-> platform drivers have a subsys_initcall() function that calls pci_common_init(). I
-> don't want us to go down that path again.
+Allow the nouveau driver to find out whether the bridge can put itself
+in the D3cold state or whether it should use a specific DSM method to
+achieve the same result.
 
-I see what you mean now, and I agree we don't want to do this like
-pci_common_init(), but the patch here does a number of things very
-differently:
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+---
+Since it is not yet merged in Linus tree, maybe the patch in pci/pm can be
+amended? This is the follow-up patch I had in mind for nouveau:
 
-- it's not architecture specific
-- it is not tied into architecture specific pcibios_* functions
-- it does not create multiple bridges at once
-- it does not have three levels of callbacks going back and forth,
-  the idea is to eventually end up with one structure for the
-  callback pointers including those that today are done as __weak
-  functions.
+    --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+    +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+    @@ -223,6 +223,9 @@ static bool nouveau_pr3_present(struct pci_dev *pdev)
+     	if (!parent_pdev)
+     		return false;
+     
+    +	if (!pci_bridge_d3_possible(parent_pdev))
+    +		return false;
+    +
+     	parent_adev = ACPI_COMPANION(&parent_pdev->dev);
+     	if (!parent_adev)
+     		return false;
 
-Today we only have four callers of pci_common_init_dev that probe the
-PCI host from DT: cns3xxx, versatile, mvebu and rcar-gen2. I hope
-we can replace all of them with the new method here directly and
-not take any intermediate steps.
+Related nouveau patches were sent a few minutes ago, titled "[PATCH v2 0/4]
+nouveau RPM fixes for Optimus".
+---
+ drivers/pci/pci.c   | 3 ++-
+ include/linux/pci.h | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-The users of pci_common_init() (not _dev) are limited to board files
-on really old platforms that are either not getting updated (ixp, iop,
-footbridge, ks8695, mv78xx0, sa1100) or that have DT based replacement
-code coming (dove, orion5x, cns3xxx, integrator).
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9ff7183..714701b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2178,7 +2178,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+  * This function checks if it is possible to move the bridge to D3.
+  * Currently we only allow D3 for recent enough PCIe ports.
+  */
+-static bool pci_bridge_d3_possible(struct pci_dev *bridge)
++bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ {
+ 	unsigned int year;
+ 
+@@ -2207,6 +2207,7 @@ static bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 
+ 	return false;
+ }
++EXPORT_SYMBOL_GPL(pci_bridge_d3_possible);
+ 
+ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0a1a9e3..f19761d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1088,6 +1088,7 @@ int pci_back_from_sleep(struct pci_dev *dev);
+ bool pci_dev_run_wake(struct pci_dev *dev);
+ bool pci_check_pme_status(struct pci_dev *dev);
+ void pci_pme_wakeup_bus(struct pci_bus *bus);
++bool pci_bridge_d3_possible(struct pci_dev *bridge);
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
+ 
+-- 
+2.9.0
 
-> Don't get me wrong, clearly someone needs to create an instance of pci_host_bridge.
-> What I want people to accept is that in the PCI(e) architecture there is nothing that
-> stops a piece of HW that used to be the bridge between host and underlying bus into
-> becoming the bridge between a higher PCI(e) bus and the bus underneath. If the writes
-> to the configuration registers happens somehow, the Host Bridge doesn't even know if
-> it is talking to the actual host. Can the driver in that case make sure it did not made
-> assumptions that were tied to a specific SoC implementation?
-
-Sorry, I'm not really following what you mean with that, or what the
-consequence is for the Linux implementation. Can you try to rephrase this?
-
-	Arnd
