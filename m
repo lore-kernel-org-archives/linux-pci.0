@@ -1,181 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:50711 "HELO
-	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751251AbcGRNuO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jul 2016 09:50:14 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Huang Ying <ying.huang@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v2 09/13] PCI: Do not write to PM control register while in D3cold
-Date: Mon, 18 Jul 2016 15:55:06 +0200
-Message-ID: <8931841.P295yLpjlt@vostro.rjw.lan>
-In-Reply-To: <1741c0949a06c96a5bae9ef5d8eceaba8188730e.1463134232.git.lukas@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de> <1741c0949a06c96a5bae9ef5d8eceaba8188730e.1463134232.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43720 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756172AbcGHXT6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2016 19:19:58 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u68NJI0I100253
+	for <linux-pci@vger.kernel.org>; Fri, 8 Jul 2016 19:19:57 -0400
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 2415xpddqr-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 08 Jul 2016 19:19:57 -0400
+Received: from localhost
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+	Fri, 8 Jul 2016 17:19:56 -0600
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
+	nfont@linux.vnet.ibm.com, mdroth@linux.vnet.ibm.com,
+	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: [PATCH] rpaphp: fix slot registration for multiple slots under a PHB
+Date: Fri,  8 Jul 2016 18:19:47 -0500
+Message-Id: <1468019987-1733-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 13, 2016 01:15:31 PM Lukas Wunner wrote:
-> The PM control register is not accessible in D3cold so we shouldn't try
-> writing to it in pci_raw_set_power_state() and return an error instead.
-> 
-> The current behaviour is fatal for devices which are not power-managed
-> by the platform, yet can be runtime suspended to D3cold with some other
-> mechanism by the driver:
-> 
-> - When the device is runtime resumed, pci_pm_runtime_resume() first
->   calls pci_restore_standard_config() which calls pci_set_power_state()
->   which calls pci_raw_set_power_state() to put the device into D0.
->   This fails since the device is still in D3cold.  It will be powered up
->   later on when pci_pm_runtime_resume() calls the driver's
->   ->runtime_resume callback.
-> 
-> - pci_raw_set_power_state() prints a message that the device refused to
->   change power state and returns 0.  Further up in the call stack,
->   pci_restore_standard_config() calls pci_restore_state(), which fails
->   since the device is in D3cold, but nevertheless invalidates the
->   saved_state.
-> 
-> - When pci_pm_runtime_resume() finally calls the driver ->runtime_resume
->   callback to power up the device, the saved_state is gone.
-> 
-> Return an error from pci_raw_set_power_state() to avoid this.
-> 
-> An example for devices affected by this are Thunderbolt controllers
-> built into Macs which can be put into D3cold with nonstandard ACPI
-> methods.
-> 
-> Unfortunately we rely on pci_raw_set_power_state()'s current behaviour
-> in several places: When platform_pci_set_power_state() is called to wake
-> a device from D3cold, its current_state is not updated even though it is
-> no longer in D3cold.  Instead, pci_raw_set_power_state() is assumed to
-> clean up the resulting incongruence.  Fix by setting current_state to
-> PCI_UNKNOWN after platform_pci_set_power_state().
-> 
-> Also, when a bridge is put into D3cold, its children's current_state is
-> changed to D3cold in __pci_complete_power_transition().  (Introduced by
-> commit 448bd857d48e ("PCI/PM: add PCIe runtime D3cold support").) This
-> doesn't necessarily reflect the children's actual power state: They may
-> still be powered on, they're just no longer accessible.  However this
-> shouldn't be a concern because if the children are accessed, their
-> parent needs to resume anyway and the PM core takes care of this.
-> Again, pci_raw_set_power_state() is relied upon to clean up the
-> current_state when the children are resumed the next time.  We cannot
-> reliably reconstruct the children's current_state when resuming their
-> parent.  We also shouldn't blindly set it to PCI_UNKNOWN since some
-> children may actually be turned off and D3cold is their correct
-> current_state.  Therefore fix by no longer touching the children's
-> current_state at all.
-> 
-> Cc: Huang Ying <ying.huang@intel.com>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pci.c | 43 ++++++++++---------------------------------
->  1 file changed, 10 insertions(+), 33 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 95727b4..791dfe7 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -612,6 +612,9 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
->  	if (!dev->pm_cap)
->  		return -EIO;
->  
-> +	if (dev->current_state == PCI_D3cold)
-> +		return -EIO;
-> +
+PowerVM seems to only ever provide a single hotplug slot per PHB.
+The under lying slot hotplug registration code assumed multiple slots,
+but the actual implementation is broken for multiple slots. This went
+unnoticed for years due to the nature of PowerVM as mentioned
+previously. Under qemu/kvm the hotplug slot model aligns more with
+x86 where multiple slots are presented under a single PHB. As seen
+in the following each additional slot after the first fails to
+register due to each slot always being compared against the first
+child node of the PHB in the device tree.
 
-I can agree with this.
+[    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
+[    6.492569] rpaphp: Slot [Slot 0] registered
+[    6.492577] rpaphp: pci_hp_register failed with error -16
+[    6.493082] rpaphp: pci_hp_register failed with error -16
+[    6.493138] rpaphp: pci_hp_register failed with error -16
+[    6.493161] rpaphp: pci_hp_register failed with error -16
 
->  	if (state < PCI_D0 || state > PCI_D3hot)
->  		return -EINVAL;
->  
-> @@ -728,8 +731,10 @@ void pci_update_current_state(struct pci_dev *dev, pci_power_t state)
->   */
->  void pci_power_up(struct pci_dev *dev)
->  {
-> -	if (platform_pci_power_manageable(dev))
-> +	if (platform_pci_power_manageable(dev)) {
->  		platform_pci_set_power_state(dev, PCI_D0);
-> +		dev->current_state = PCI_UNKNOWN;
+The registration logic is fixed so that each slot is compared
+against the existing child devices of the PHB in the device tree to
+determine present slots vs empty slots.
 
-Why is this necessary?
+[   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
+[   38.482004] rpaphp: Slot [C0] registered
+[   38.482127] rpaphp: Slot [C1] registered
+[   38.482241] rpaphp: Slot [C2] registered
+[   38.482356] rpaphp: Slot [C3] registered
+[   38.482495] rpaphp: Slot [C4] registered
 
-> +	}
->  
->  	pci_raw_set_power_state(dev, PCI_D0);
->  	pci_update_current_state(dev, PCI_D0);
-> @@ -746,8 +751,10 @@ static int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state)
->  
->  	if (platform_pci_power_manageable(dev)) {
->  		error = platform_pci_set_power_state(dev, state);
-> -		if (!error)
-> +		if (!error) {
-> +			dev->current_state = PCI_UNKNOWN;
+Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+---
+ drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-Again, why is this necessary?
-
->  			pci_update_current_state(dev, state);
-> +		}
->  	} else
->  		error = -ENODEV;
->  
-> @@ -809,30 +816,6 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
->  }
->  
->  /**
-> - * __pci_dev_set_current_state - Set current state of a PCI device
-> - * @dev: Device to handle
-> - * @data: pointer to state to be set
-> - */
-> -static int __pci_dev_set_current_state(struct pci_dev *dev, void *data)
-> -{
-> -	pci_power_t state = *(pci_power_t *)data;
-> -
-> -	dev->current_state = state;
-> -	return 0;
-> -}
-> -
-> -/**
-> - * __pci_bus_set_current_state - Walk given bus and set current state of devices
-> - * @bus: Top bus of the subtree to walk.
-> - * @state: state to be set
-> - */
-> -static void __pci_bus_set_current_state(struct pci_bus *bus, pci_power_t state)
-> -{
-> -	if (bus)
-> -		pci_walk_bus(bus, __pci_dev_set_current_state, &state);
-> -}
-> -
-> -/**
->   * __pci_complete_power_transition - Complete power transition of a PCI device
->   * @dev: PCI device to handle.
->   * @state: State to put the device into.
-> @@ -841,15 +824,9 @@ static void __pci_bus_set_current_state(struct pci_bus *bus, pci_power_t state)
->   */
->  int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
->  {
-> -	int ret;
-> -
->  	if (state <= PCI_D0)
->  		return -EINVAL;
-> -	ret = pci_platform_power_transition(dev, state);
-> -	/* Power off the bridge may power off the whole hierarchy */
-> -	if (!ret && state == PCI_D3cold)
-> -		__pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
-> -	return ret;
-> +	return pci_platform_power_transition(dev, state);
->  }
->  EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
-
-What about if powering off the bridge does remove power from the hierarchy
-below?
-
-Thanks,
-Rafael
+diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+index 6937c72..c90fa8d 100644
+--- a/drivers/pci/hotplug/rpaphp_slot.c
++++ b/drivers/pci/hotplug/rpaphp_slot.c
+@@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
+ int rpaphp_register_slot(struct slot *slot)
+ {
+ 	struct hotplug_slot *php_slot = slot->hotplug_slot;
++	struct device_node *child;
++	u32 my_index;
+ 	int retval;
+-	int slotno;
++	int slotno = -1;
+ 
+ 	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
+ 		__func__, slot->dn->full_name, slot->index, slot->name,
+@@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
+ 		return -EAGAIN;
+ 	}
+ 
+-	if (slot->dn->child)
+-		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
+-	else
+-		slotno = -1;
++	for_each_child_of_node(slot->dn, child) {
++		retval = of_property_read_u32(child, "my,ibm-drc-index", &my_index);
++		if (my_index == slot->index) {
++			slotno = PCI_SLOT(PCI_DN(child)->devfn);
++			of_node_put(child);
++			break;
++		}
++	}
++
+ 	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
+ 	if (retval) {
+ 		err("pci_hp_register failed with error %d\n", retval);
+-- 
+2.7.4
 
