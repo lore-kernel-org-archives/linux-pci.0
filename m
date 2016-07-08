@@ -1,39 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:52549 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbcGOIdi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2016 04:33:38 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-Subject: Re: Memory and IO space Enabling different in x86 and ARM64
-Date: Fri, 15 Jul 2016 10:33:06 +0200
-Message-ID: <7127812.WYSppNUyGc@wuerfel>
-In-Reply-To: <8520D5D51A55D047800579B094147198258B9376@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B9376@XAP-PVEXMBX01.xlnx.xilinx.com>
+Received: from lekensteyn.nl ([178.21.112.251]:37888 "EHLO lekensteyn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751550AbcGHIqH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jul 2016 04:46:07 -0400
+Date: Fri, 8 Jul 2016 10:45:25 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: export pci_bridge_d3_possible
+Message-ID: <20160708084525.GA1205@al>
+References: <20160707235448.2622-1-peter@lekensteyn.nl>
+ <20160708082503.GY23527@lahna.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160708082503.GY23527@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 15, 2016 8:29:49 AM CEST Bharat Kumar Gogada wrote:
-> I observe that memory and IO space are enabled by BIOS in x86.
+On Fri, Jul 08, 2016 at 11:25:03AM +0300, Mika Westerberg wrote:
+> On Fri, Jul 08, 2016 at 01:54:48AM +0200, Peter Wu wrote:
+> > Allow the nouveau driver to find out whether the bridge can put itself
+> > in the D3cold state or whether it should use a specific DSM method to
+> > achieve the same result.
+> > 
+> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
+> > ---
+> > Since it is not yet merged in Linus tree, maybe the patch in pci/pm can be
+> > amended? This is the follow-up patch I had in mind for nouveau:
+> > 
+> >     --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> >     +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> >     @@ -223,6 +223,9 @@ static bool nouveau_pr3_present(struct pci_dev *pdev)
+> >      	if (!parent_pdev)
+> >      		return false;
+> >      
+> >     +	if (!pci_bridge_d3_possible(parent_pdev))
+> >     +		return false;
+> >     +
 > 
-> In ARM64 we need to call pci_enable_device form End Point to enable these resources.
+> Why not check bridge_d3 directly?
 > 
-> Why the resource enablement is different in x86 and ARM64 ?
-> 
-> Please correct me if my observation is wrong.
+> 	if (!parent_dev->bridge_d3)
+> 		return false;
 
-This is a difference between systems with a BIOS and embedded systems with
-a plain bootloader that ignores PCI. On an ARM64 server system with UEFI
-you should expect the device to be usable too, but on an embedded system,
-Linux takes the role of the BIOS.
+I have thought of that but then dismissed the idea because
+pci_bridge_d3_update could change it after initialization based on the
+d3cold_allowed flag on the bridge or its children. Then this could
+happen:
 
-	Arnd
+ - initially d3cold_allowed is set false by the user
+ - nouveau decides to use DSM
+ - d3cold_allowed is set by user to true
+ - PCI thinks that power resources are OK to use, but that conflicts
+   with nouveau.
 
+Hmm, maybe it is usable, but then something like this is needed:
+
+    /* Initially assume that D3cold is OK. */
+    pci_d3cold_enable(pdev);
+
+    if (!parent_dev->bridge_d3) {
+        /* bridge does not support D3cold, keep it disabled. */
+        pci_d3cold_disable(pdev);
+        return false;
+    }
+
+How does that look?
+-- 
+Kind regards,
+Peter Wu
+https://lekensteyn.nl
