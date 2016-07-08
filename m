@@ -1,58 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10021 "EHLO mga02.intel.com"
+Received: from ozlabs.org ([103.22.144.67]:41460 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753285AbcGZJIh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jul 2016 05:08:37 -0400
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	thunderbolt-linux <thunderbolt-linux@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v4 2/7] thunderbolt: Updating the register definitions
-Date: Tue, 26 Jul 2016 09:08:31 +0000
-Message-ID: <E607265CB020454880711A6F96C05A03926A9D7A@hasmsx107.ger.corp.intel.com>
-References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
- <1468836040-28043-3-git-send-email-amir.jer.levy@intel.com>
- <CAMxnaaVrxFNAANGWXi===pZTrA7T3Tj+ccywGG9ZtT5tWcOo4Q@mail.gmail.com>
-In-Reply-To: <CAMxnaaVrxFNAANGWXi===pZTrA7T3Tj+ccywGG9ZtT5tWcOo4Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1755019AbcGHOXA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Jul 2016 10:23:00 -0400
+In-Reply-To: <1467224062-9173-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
+	imunsie@au1.ibm.com, gwshan@linux.vnet.ibm.com
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: mikey@neuling.org, mrochs@linux.vnet.ibm.com,
+	gpiccoli@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	frederic.barrat@fr.ibm.com, paulus@samba.org,
+	andrew.donnellan@au1.ibm.com, bhelgaas@google.com
+Subject: Re: [v7] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Message-Id: <3rmGtB5BtTz9t0h@ozlabs.org>
+Date: Sat,  9 Jul 2016 00:22:58 +1000 (AEST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlLCBKdWwgMjYgMjAxNiwgMTA6MzkgQU0sIEFuZHJlYXMgTm9ldmVyIHdyb3RlOg0KPiBP
-biBNb24sIEp1bCAxOCwgMjAxNiBhdCAxMjowMCBQTSwgQW1pciBMZXZ5IDxhbWlyLmplci5sZXZ5
-QGludGVsLmNvbT4NCj4gd3JvdGU6DQo+ID4gQWRkaW5nIG1vcmUgVGh1bmRlcmJvbHQoVE0pIHJl
-Z2lzdGVyIGRlZmluaXRpb25zIGFuZCBzb21lIGhlbHBlcg0KPiA+IG1hY3Jvcy4NCj4gPg0KPiA+
-IFNpZ25lZC1vZmYtYnk6IEFtaXIgTGV2eSA8YW1pci5qZXIubGV2eUBpbnRlbC5jb20+DQo+ID4g
-LS0tDQo+ID4gIGRyaXZlcnMvdGh1bmRlcmJvbHQvbmhpX3JlZ3MuaCB8IDEwOQ0KPiA+ICsrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gIDEgZmlsZSBjaGFuZ2Vk
-LCAxMDkgaW5zZXJ0aW9ucygrKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvdGh1bmRl
-cmJvbHQvbmhpX3JlZ3MuaA0KPiA+IGIvZHJpdmVycy90aHVuZGVyYm9sdC9uaGlfcmVncy5oIGlu
-ZGV4IDc1Y2YwNjkuLmI4ZTk2MWYgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy90aHVuZGVyYm9s
-dC9uaGlfcmVncy5oDQo+ID4gKysrIGIvZHJpdmVycy90aHVuZGVyYm9sdC9uaGlfcmVncy5oDQo+
-ID4gQEAgLTksNiArOSwxMSBAQA0KPiA+DQo+ID4gICNpbmNsdWRlIDxsaW51eC90eXBlcy5oPg0K
-PiA+DQo+ID4gKyNkZWZpbmUgTkhJX01NSU9fQkFSIDANCj4gPiArDQo+ID4gKyNkZWZpbmUgVEJU
-X1JJTkdfTUlOX05VTV9CVUZGRVJTICAgICAgIDINCj4gPiArI2RlZmluZSBUQlRfUklOR19NQVhf
-RlJBTUVfU0laRSAgICAgICAgICAgICAgICAoNCAqIDEwMjQpDQo+ID4gKw0KPiA+ICBlbnVtIHJp
-bmdfZmxhZ3Mgew0KPiA+ICAgICAgICAgUklOR19GTEFHX0lTT0NIX0VOQUJMRSA9IDEgPDwgMjcs
-IC8qIFRYIG9ubHk/ICovDQo+ID4gICAgICAgICBSSU5HX0ZMQUdfRTJFX0ZMT1dfQ09OVFJPTCA9
-IDEgPDwgMjgsIEBAIC0zOSw2ICs0NCwzMyBAQA0KPiA+IHN0cnVjdCByaW5nX2Rlc2Mgew0KPiA+
-ICAgICAgICAgdTMyIHRpbWU7IC8qIHdyaXRlIHplcm8gKi8NCj4gPiAgfSBfX3BhY2tlZDsNCj4g
-Pg0KPiA+ICsvKioNCj4gPiArICogc3RydWN0IHRidF9idWZfZGVzYyAtIFRYL1JYIHJpbmcgYnVm
-ZmVyIGRlc2NyaXB0b3IuDQo+ID4gKyAqIFRoaXMgaXMgc2FtZSBhcyBzdHJ1Y3QgcmluZ19kZXNj
-LCBidXQgd2l0aG91dCB0aGUgdXNlIG9mIGJpdGZpZWxkcw0KPiA+ICthbmQNCj4gPiArICogd2l0
-aCBleHBsaWNpdCBlbmRpYW5pdHkuDQo+ID4gKyAqLw0KPiA+ICtzdHJ1Y3QgdGJ0X2J1Zl9kZXNj
-IHsNCj4gPiArICAgICAgIF9fbGU2NCBwaHlzOw0KPiA+ICsgICAgICAgX19sZTMyIGF0dHJpYnV0
-ZXM7DQo+ID4gKyAgICAgICBfX2xlMzIgdGltZTsNCj4gPiArfTsNCj4gRG9lcyBzaGFyaW5nIHRo
-aXMgZmlsZSBtYWtlIHNlbnNlPyBUaGUgc3R5bGUgc2VlbXMgdG8gYmUgcXVpdGUgZGlmZmVyZW50
-DQo+IChzdHJ1Y3RzIHdpdGggYml0ZmllbGRzIHZzIGV4cGxpY2l0IGJpdC1hY2Nlc3MpLiBJIHRo
-aW5rIEkgd291bGQgcHJlZmVyIHNlcGFyYXRlDQo+IHJlZ2lzdGVyIGRlZmluaXRpb25zLCB1bmxl
-c3MgeW91IGFyZSByZXVzaW5nIGEgc3Vic3RhbnRpYWwgYW1vdW50IChJIGhhdmUgbm90DQo+IGNo
-ZWNrZWQpLg0KPiANCg0KSSdtIHVzaW5nIGFsbCB0aGUgbWFjcm9zIGZyb20gdGhlIG9yaWdpbmFs
-IGZpbGUsIGV4Y2VwdCB0aGUgc3RydWN0IHdpdGggdGhlIGJpdGZpZWxkcy4NCg0KQW1pcg0K
+On Wed, 2016-29-06 at 18:14:22 UTC, "Guilherme G. Piccoli" wrote:
+> The domain/PHB field of PCI addresses has its value obtained from a
+> global variable, incremented each time a new domain (represented by
+> struct pci_controller) is added on the system. The domain addition
+> process happens during boot or due to PHB hotplug add.
+> 
+> As recent kernels are using predictable naming for network interfaces,
+> the network stack is more tied to PCI naming. This can be a problem in
+> hotplug scenarios, because PCI addresses will change if devices are
+> removed and then re-added. This situation seems unusual, but it can
+> happen if a user wants to replace a NIC without rebooting the machine,
+> for example.
+> 
+> This patch changes the way PCI domain values are generated: now, we use
+> device-tree properties to assign fixed PHB numbers to PCI addresses
+> when available (meaning pSeries and PowerNV cases). We also use a bitmap
+> to allow dynamic PHB numbering when device-tree properties are not
+> used. This bitmap keeps track of used PHB numbers and if a PHB is
+> released (by hotplug operations for example), it allows the reuse of
+> this PHB number, avoiding PCI address to change in case of device remove
+> and re-add soon after. No functional changes were introduced.
+> 
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+
+Applied to powerpc next, thanks.
+
+https://git.kernel.org/powerpc/c/63a72284b159c569ec52f380c9
+
+cheers
