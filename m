@@ -1,108 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0088.outbound.protection.outlook.com ([104.47.2.88]:64342
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752669AbcGEDDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Jul 2016 23:03:08 -0400
-From: Po Liu <po.liu@nxp.com>
-To: Dongdong Liu <liudongdong3@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	"Marc Zyngier" <marc.zyngier@arm.com>,
-	Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
-	Mingkai Hu <mingkai.hu@nxp.com>,
-	Stuart Yoder <stuart.yoder@nxp.com>,
-	Yang-Leo Li <leoyang.li@nxp.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Minghuan Lian <minghuan.lian@nxp.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Linuxarm <linuxarm@huawei.com>
-Subject: RE: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
-Date: Tue, 5 Jul 2016 03:03:01 +0000
-Message-ID: <VI1PR0401MB1709D556D0A7F7BB9188221E92390@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-2-git-send-email-po.liu@nxp.com>
- <577A21E4.1030301@huawei.com>
-In-Reply-To: <577A21E4.1030301@huawei.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:36320 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756620AbcGITQG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 9 Jul 2016 15:16:06 -0400
+Date: Sat, 9 Jul 2016 21:16:00 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: linux-pci@vger.kernel.org, vfio-users@redhat.com
+Cc: Alex Williamson <alex.williamson@redhat.com>, tglx@linutronix.de
+Subject: The same IOMMU group for igb and its igbvf siblings
+Message-ID: <20160709191600.GA26115@breakpoint.cc>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgRG9uZ2RvbmcsDQoNClRoZSBwYXRjaCB3ZXJlIGludGVuZCB0byBmaXh1cCB0aGUgTlhQIGxh
-eWVyc2NhcGUgc2VyaWFsIFNPQyBhbmQgd2VyZSB0ZXN0ZWQgb2suDQpJIGFtIG5vdCBjbGVhciB3
-aGF0IHBsYXRmb3JtIGFyZSB5b3UgdHJ5aW5nIHRvIGZpeC4gDQpUaGUgcHJvYmxlbSBvbiB5b3Vy
-IGJvYXJkIG1heSBiZSBhcyBiZWxvdyBjb21tZW50czoNCg0KDQo+ICAtLS0tLU9yaWdpbmFsIE1l
-c3NhZ2UtLS0tLQ0KPiAgRnJvbTogRG9uZ2RvbmcgTGl1IFttYWlsdG86bGl1ZG9uZ2RvbmczQGh1
-YXdlaS5jb21dDQo+ICBTZW50OiBNb25kYXksIEp1bHkgMDQsIDIwMTYgNDo0NCBQTQ0KPiAgVG86
-IFBvIExpdTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLQ0KPiAga2VybmVs
-QGxpc3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+ICBk
-ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZw0KPiAgQ2M6IEJqb3JuIEhlbGdhYXM7IFNoYXduIEd1
-bzsgTWFyYyBaeW5naWVyOyBSb2IgSGVycmluZzsgUm95IFphbmc7DQo+ICBNaW5na2FpIEh1OyBT
-dHVhcnQgWW9kZXI7IFlhbmctTGVvIExpOyBBcm5kIEJlcmdtYW5uOyBNaW5naHVhbiBMaWFuOw0K
-PiAgTXVyYWxpIEthcmljaGVyaTsgTGludXhhcm0NCj4gIFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMg
-Mi8yXSBwY2kvYWVyOiBpbnRlcnJ1cHQgZml4dXAgaW4gdGhlIHF1aXJrDQo+ICANCj4gIEhpIFBv
-DQo+ICANCj4gIEkgZm91bmQgYSBwcm9ibGVtIHdpdGggdGhlIHNpbWlsYXIgcGF0Y2guIGFzIHRo
-ZSBiZWxvdyBsb2cuDQo+ICANCj4gIFsgICAgNC4yODcwNjBdIHBjaSAwMDAwOjgwOjAwLjA6IHF1
-aXJrX2Flcl9pbnRlcnJ1cHQgZGV2LT5pcnEgNDE2DQo+ICBbICAgIDQuMjkzNzc4XSBwY2llcG9y
-dCAwMDAwOjgwOjAwLjA6IHBjaV9kZXZpY2VfcHJvYmUgaW4NCj4gIFsgICAgNC4yOTk2MDVdIHBj
-aWVwb3J0IDAwMDA6ODA6MDAuMDogb2ZfaXJxX3BhcnNlX3BjaSgpIGZhaWxlZCB3aXRoDQo+ICBy
-Yz0tMjINCj4gIFsgICAgNC4zMDcyMDldIHBjaWVwb3J0IDAwMDA6ODA6MDAuMDogaW5pdF9zZXJ2
-aWNlX2lycXMgIGRldi0+aXJxIDANCj4gIA0KPiAgVGhlIGZ1Y250aW9ucyBhcmUgY2FsbGVkIGFz
-IGJlbG93IHNlcXVlbmNlLg0KPiAgMS4gcXVpcmtfYWVyX2ludGVycnVwdCwgZ2V0IHRoZSBhZXIg
-ZGV2LT5pcnEgNDE2Lg0KDQpUaGlzIGNvZGUgcXVpcmtfYWVyX2ludGVycnVwdCgpIHNob3VsZCBi
-ZSBydW4gYXQgcGNpX2ZpeHVwX2RldmljZShwY2lfZml4dXBfZmluYWwpIHdoaWNoIGlzIGluIHRo
-ZSBwY2lfYnVzX2FkZF9kZXZpY2VzKCkNCg0KPiAgMi4gcGNpX2RldmljZV9wcm9iZS0+b2ZfaXJx
-X3BhcnNlX3BjaSwgb2ZfaXJxX3BhcnNlX3BjaSgpIGZhaWxlZCwgdGhlbg0KPiAgZGV2LT5pcnEg
-Y2hhbmdlZCB0byAwLg0KDQpwY2lfZGV2aWNlX3Byb2JlLT5vZl9pcnFfcGFyc2VfcGNpIHdoaWNo
-IGluIHRoZSBwY2lfc2Nhbl9jaGlsZF9idXMoKSBydW4gYmVmb3JlICBwY2lfYnVzX2FkZF9kZXZp
-Y2VzKCkuIFNlZSBkd19wY2llX2hvc3RfaW5pdCgpLg0KQXBwYXJlbnRseSAsIHlvdXIgcXVpcmtf
-YWVyX2ludGVycnVwdCgpIGlzIHJ1bm5pbmcgYmVmb3JlIHRoZSBkZXYtPmlycSBhc3NpZ25tZW50
-IGluIHRoZSBvZl9pcnFfcGFyc2VfcGNpKCkuDQoNClNvIG1ha2Ugc3VyZSB5b3VyIGNvbmZpZ3Vy
-ZSB0aGUgcXVpcmtfYWVyX2ludGVycnVwdCgpIHJ1biBpbiB0aGUgRklOQUwgc3RhZ2UgaW4gdGhl
-IHF1aXJrLmMgT1IgY2hlY2sgeW91ciBob3N0IGRyaXZlciB3aGljaCB5b3UgYXJlIHVzaW5nLg0K
-DQoNCj4gIA0KPiAgU28gdGhpcyBwYXRjaCBjb3VsZCBub3Qgd29yayB3aXRoIGFlci4NCj4gIA0K
-PiAgVGhhbmtzDQo+ICBEb25nZG9uZw0KPiAg5ZyoIDIwMTYvNi8xNCAxNjoyNCwgUG8gTGl1IOWG
-memBkzoNCj4gID4gT24gc29tZSBwbGF0Zm9ybXMsIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBvcnQg
-TVNJL01TSS1YL0lOVHggaW4gUkMgbW9kZS4NCj4gID4gV2hlbiBjaGlwIHN1cHBvcnQgdGhlIGFl
-ciBpbnRlcnJ1cHQgd2l0aCBub25lIE1TSS9NU0ktWC9JTlR4IG1vZGUsDQo+ICA+IG1heWJlIHRo
-ZXJlIGlzIGludGVycnVwdCBsaW5lIGZvciBhZXIgcG1lIGV0Yy4gU2VhcmNoIHRoZSBpbnRlcnJ1
-cHQNCj4gID4gbnVtYmVyIGluIHRoZSBmZHQgZmlsZS4gVGhlbiBmaXh1cCB0aGUgZGV2LT5pcnEg
-d2l0aCBpdC4NCj4gID4NCj4gID4gU2lnbmVkLW9mZi1ieTogUG8gTGl1IDxwby5saXVAbnhwLmNv
-bT4NCj4gID4gLS0tDQo+ICA+IGNoYW5nZXMgZm9yIFYzOg0KPiAgPiAJLSBNb3ZlIHRvIHF1aXJr
-Ow0KPiAgPiAJLSBPbmx5IGNvcnJlY3QgdGhlIGlycSBpbiBSQyBtb2RlOw0KPiAgPg0KPiAgPiAg
-IGRyaXZlcnMvcGNpL3F1aXJrcy5jIHwgMjkgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysN
-Cj4gID4gICAxIGZpbGUgY2hhbmdlZCwgMjkgaW5zZXJ0aW9ucygrKQ0KPiAgPg0KPiAgPiBkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9wY2kvcXVpcmtzLmMgYi9kcml2ZXJzL3BjaS9xdWlya3MuYyBpbmRl
-eA0KPiAgPiBlZTcyZWJlLi44YjM5Y2NlIDEwMDY0NA0KPiAgPiAtLS0gYS9kcml2ZXJzL3BjaS9x
-dWlya3MuYw0KPiAgPiArKysgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiAgPiBAQCAtMjUsNiAr
-MjUsNyBAQA0KPiAgPiAgICNpbmNsdWRlIDxsaW51eC9zY2hlZC5oPg0KPiAgPiAgICNpbmNsdWRl
-IDxsaW51eC9rdGltZS5oPg0KPiAgPiAgICNpbmNsdWRlIDxsaW51eC9tbS5oPg0KPiAgPiArI2lu
-Y2x1ZGUgPGxpbnV4L29mX2lycS5oPg0KPiAgPiAgICNpbmNsdWRlIDxhc20vZG1hLmg+CS8qIGlz
-YV9kbWFfYnJpZGdlX2J1Z2d5ICovDQo+ICA+ICAgI2luY2x1ZGUgInBjaS5oIg0KPiAgPg0KPiAg
-PiBAQCAtNDQxOSwzICs0NDIwLDMxIEBAIHN0YXRpYyB2b2lkIHF1aXJrX2ludGVsX3FhdF92Zl9j
-YXAoc3RydWN0DQo+ICBwY2lfZGV2ICpwZGV2KQ0KPiAgPiAgIAl9DQo+ICA+ICAgfQ0KPiAgPiAg
-IERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NDQzLA0KPiAg
-PiBxdWlya19pbnRlbF9xYXRfdmZfY2FwKTsNCj4gID4gKw0KPiAgPiArLyogSWYgcm9vdCBwb3J0
-IGRvZXNuJ3Qgc3VwcG9ydCBNU0kvTVNJLVgvSU5UeCBpbiBSQyBtb2RlLA0KPiAgPiArICogYnV0
-IHVzZSBzdGFuZGFsb25lIGlycS4gUmVhZCB0aGUgZGV2aWNlIHRyZWUgZm9yIHRoZSBhZXINCj4g
-ID4gKyAqIGludGVycnVwdCBudW1iZXIuDQo+ICA+ICsgKi8NCj4gID4gK3N0YXRpYyB2b2lkIHF1
-aXJrX2Flcl9pbnRlcnJ1cHQoc3RydWN0IHBjaV9kZXYgKmRldikgew0KPiAgPiArCWludCByZXQ7
-DQo+ICA+ICsJdTggaGVhZGVyX3R5cGU7DQo+ICA+ICsJc3RydWN0IGRldmljZV9ub2RlICpucCA9
-IE5VTEw7DQo+ICA+ICsNCj4gID4gKwkvKiBPbmx5IGZvciB0aGUgUkMgbW9kZSBkZXZpY2UgKi8N
-Cj4gID4gKwlwY2lfcmVhZF9jb25maWdfYnl0ZShkZXYsIFBDSV9IRUFERVJfVFlQRSwgJmhlYWRl
-cl90eXBlKTsNCj4gID4gKwlpZiAoKGhlYWRlcl90eXBlICYgMHg3RikgIT0gUENJX0hFQURFUl9U
-WVBFX0JSSURHRSkNCj4gID4gKwkJcmV0dXJuOw0KPiAgPiArDQo+ICA+ICsJaWYgKGRldi0+YnVz
-LT5kZXYub2Zfbm9kZSkNCj4gID4gKwkJbnAgPSBkZXYtPmJ1cy0+ZGV2Lm9mX25vZGU7DQo+ICA+
-ICsNCj4gID4gKwlpZiAoSVNfRU5BQkxFRChDT05GSUdfT0ZfSVJRKSAmJiBucCkgew0KPiAgPiAr
-CQlyZXQgPSBvZl9pcnFfZ2V0X2J5bmFtZShucCwgImFlciIpOw0KPiAgPiArCQlpZiAocmV0ID4g
-MCkgew0KPiAgPiArCQkJZGV2LT5ub19tc2kgPSAxOw0KPiAgPiArCQkJZGV2LT5pcnEgPSByZXQ7
-DQo+ICA+ICsJCX0NCj4gID4gKwl9DQo+ICA+ICt9DQo+ICA+ICtERUNMQVJFX1BDSV9GSVhVUF9G
-SU5BTChQQ0lfVkVORE9SX0lEX0ZSRUVTQ0FMRSwgUENJX0FOWV9JRCwNCj4gID4gK3F1aXJrX2Fl
-cl9pbnRlcnJ1cHQpOw0KPiAgPg0KPiAgDQoNCg==
+Hi,
+
+I am trying to use SR-IOV on a IGB card with PCI ID 8086:1521. After
+| echo 7 > /sys/devices/pci0000:00/0000:00:01.1/0000:02:00.0/sriov_numvfs
+I have them all on one iommu group:
+
+|# find /sys/kernel/iommu_groups/ -type l|grep /1/
+|/sys/kernel/iommu_groups/1/devices/0000:00:01.0
+|/sys/kernel/iommu_groups/1/devices/0000:00:01.1
+|/sys/kernel/iommu_groups/1/devices/0000:02:00.0
+|/sys/kernel/iommu_groups/1/devices/0000:02:00.1
+|/sys/kernel/iommu_groups/1/devices/0000:03:10.0
+|/sys/kernel/iommu_groups/1/devices/0000:03:10.4
+|/sys/kernel/iommu_groups/1/devices/0000:03:11.0
+|/sys/kernel/iommu_groups/1/devices/0000:03:11.4
+|/sys/kernel/iommu_groups/1/devices/0000:03:12.0
+|/sys/kernel/iommu_groups/1/devices/0000:03:12.4
+|/sys/kernel/iommu_groups/1/devices/0000:03:13.0
+
+lspci -t
+|-[0000:00]-+-00.0
+|           +-01.0-[01]--
+|           +-01.1-[02-03]--+-[0000:03]-+-10.0
+|           |               |           +-10.4
+|           |               |           +-11.0
+|           |               |           +-11.4
+|           |               |           +-12.0
+|           |               |           +-12.4
+|           |               |           \-13.0
+|           |               \-[0000:02]-+-00.0
+|           |                           \-00.1
+
+lspci for those devices:
+|00:00.0 Host bridge: Intel Corporation Device 1918 (rev 07)
+|00:01.0 PCI bridge: Intel Corporation Device 1901 (rev 07)
+|00:01.1 PCI bridge: Intel Corporation Device 1905 (rev 07)
+|02:00.0 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+|02:00.1 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+|03:10.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+|03:10.4 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+|03:11.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+|03:11.4 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+|03:12.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+|03:12.4 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+|03:13.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+
+and qemu won't pass the virtual-function NICs to a guest. Shouldn't each
+VF device be in its own IOMMU group?
+
+>From the ACS capabilities I see:
+|00:00.0 Host bridge: Intel Corporation Device 1918 (rev 07)
+|        Subsystem: Super Micro Computer Inc Device 0909
+|        Flags: bus master, fast devsel, latency 0
+|        Capabilities: [e0] Vendor Specific Information: Len=10 <?>
+|
+|00:01.0 PCI bridge: Intel Corporation Device 1901 (rev 07) (prog-if 00 [Normal decode])
+|        Flags: bus master, fast devsel, latency 0
+|        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+|        Capabilities: [88] Subsystem: Super Micro Computer Inc Device 0909
+|        Capabilities: [80] Power Management version 3
+|        Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+|        Capabilities: [a0] Express Root Port (Slot+), MSI 00
+|        Capabilities: [100] Virtual Channel
+|        Capabilities: [140] Root Complex Link
+|        Kernel driver in use: pcieport
+|
+|00:01.1 PCI bridge: Intel Corporation Device 1905 (rev 07) (prog-if 00 [Normal decode])
+|        Flags: bus master, fast devsel, latency 0
+|        Bus: primary=00, secondary=02, subordinate=03, sec-latency=0
+|        I/O behind bridge: 0000e000-0000efff
+|        Memory behind bridge: df100000-df3fffff
+|        Capabilities: [88] Subsystem: Super Micro Computer Inc Device 0909
+|        Capabilities: [80] Power Management version 3
+|        Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+|        Capabilities: [a0] Express Root Port (Slot+), MSI 00
+|        Capabilities: [100] Virtual Channel
+|        Capabilities: [140] Root Complex Link
+|        Capabilities: [d94] #19
+|        Kernel driver in use: pcieport
+|02:00.0 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+|        Subsystem: Super Micro Computer Inc Device 0652
+|…
+|        Capabilities: [1d0 v1] Access Control Services
+|        ACSCap: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+|        ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+|        Kernel driver in use: igb
+|
+|03:10.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+|        Subsystem: Super Micro Computer Inc Device 0652
+|        Flags: fast devsel
+|…
+|        Capabilities: [1d0 v1] Access Control Services
+|                ACSCap: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+|                ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+
+I *think* the problem is that the root port lacks ACS caps. Could this
+be the poblem? If so do I need to wait for a BIOS update or is there an
+other option?
+I tried v4.7-rc6. I noticed that the IGB device is part of the quirk
+table in pci_dev_acs_enabled but somehow it is not used.
+Any suggestions?
+
+Sebastian
