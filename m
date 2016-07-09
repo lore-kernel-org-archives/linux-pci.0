@@ -1,72 +1,224 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:33410 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbcGIOsq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Jul 2016 10:48:46 -0400
+Received: by mail-lf0-f43.google.com with SMTP id f6so44472107lfg.0
+        for <linux-pci@vger.kernel.org>; Sat, 09 Jul 2016 07:48:45 -0700 (PDT)
+Date: Sat, 9 Jul 2016 17:48:10 +0300
+From: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+To: Hans Verkuil <hverkuil@xs4all.nl>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kozlov Sergey <serjk@netup.ru>,
+	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
+	kernel-mentors@selenic.com,
+	Andrey Utkin <andrey_utkin@fastmail.com>
+Subject: Re: [PATCH v2] Add tw5864 driver
+Message-ID: <20160709144810.GA15909@acer>
+References: <20160609221142.10139-1-andrey.utkin@corp.bluecherry.net>
+ <0166f7df-2d34-f937-5cc0-0596fc14c5b1@xs4all.nl>
 MIME-Version: 1.0
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 8 Jul 2016 01:43:50 +0200
-Message-ID: <CAJZ5v0hDSZGX90hxkACwC0DktD-_Baq=+DDkR7_zv8464iHG-Q@mail.gmail.com>
-Subject: [GIT PULL] ACPI fixes for v4.7-rc7
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0166f7df-2d34-f937-5cc0-0596fc14c5b1@xs4all.nl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Hi Hans,
 
-Please pull from
+Thanks for great help.
+I believe the issues highlighted by your are rectified by now.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- acpi-4.7-rc7
+One chunk of your proposed changes seems to be wrong.
 
-to receive ACPI fixes for v4.7-rc7 with top-most commit
-b6d90158c935d4a22e56f41647b479ab5ea449d4
+Also I have one non-technical change I want to introduce to this driver, see it
+in the bottom of this letter ("Also, I decided to document known video quality
+issues in a printed warning...").
 
- Merge branches 'acpica-fixes', 'acpi-pci-fixes' and 'acpi-debug-fixes'
+On Fri, Jul 01, 2016 at 03:35:40PM +0200, Hans Verkuil wrote:
+> On 06/10/2016 12:11 AM, Andrey Utkin wrote:
+> > +	cap->capabilities = cap->device_caps | V4L2_CAP_DEVICE_CAPS;
+> 
+> This line can be dropped: the v4l2 core will do this automatically.
 
-on top of commit a99cde438de0c4c0cecc1d1af1a55a75b10bfdef
+This seems not so: dropping it resulted in new compliance fails:
 
- Linux 4.7-rc6
+Required ioctls:
+        fail: v4l2-compliance.cpp(550): dcaps & ~caps
+    test VIDIOC_QUERYCAP: FAIL
 
-All of these fix recent regressions in ACPICA, in the ACPI PCI IRQ
-management code and in the ACPI AML debugger.
+Allow for multiple opens:
+    test second video open: OK
+        fail: v4l2-compliance.cpp(550): dcaps & ~caps
+    test VIDIOC_QUERYCAP: FAIL
 
-Specifics:
 
- - Fix a lock ordering issue in ACPICA introduced by a recent commit
-   that attempted to fix a deadlock in the dynamic table loading code
-   which in turn appeared after changes related to the handling of
-   module-level AML also made in this cycle (Lv Zheng).
+I am running latest v4l-utils from git.
+This particular fail happens on kernels built from next-20160707 and
+next-20160609.
 
- - Fix a recent regression in the ACPI IRQ management code that may
-   cause PCI drivers to be unable to register an IRQ if that IRQ
-   happens to be shared with a device on the ISA bus, like the
-   parallel port, by reverting one commit entirely and restoring the
-   previous behavior in two other places (Sinan Kaya).
+BTW next-20160707 makes my dev machine to hang after few minutes of uptime,
+regardless of my module being loaded, so for now I am testing driver on
+next-20160609.
+This (running old linux-next) causes such new fail with latest v4l-utils:
 
- - Fix a recent regression in the ACPI AML debugger introduced by
-   the commit that removed incorrect usage of IS_ERR_VALUE() from
-   multiple places (Lv Zheng).
+fail: v4l2-test-buffers.cpp(293): g_flags() & V4L2_BUF_FLAG_DONE
 
-Thanks!
+which is understandable because of recent commit to v4l-utils flipping expected
+behaviour in this regard:
 
----------------
+commit 7d784c6894b10cdf5ec025c2cd7c320320f5f658
+Author: Hans Verkuil <hans.verkuil@cisco.com>
+Date:   Fri Jul 8 23:10:34 2016 +0200
 
-Lv Zheng (2):
-      ACPICA: Namespace: Fix namespace/interpreter lock ordering
-      ACPI / debugger: Fix regression introduced by IS_ERR_VALUE() removal
+    v4l2-compliance: fix a check for the DONE flag
+    
+    This was always set by vb2 drivers due to a bug. It is now cleared
+    again after that bug was fixed, but the test should now be inverted.
+    
+    Signed-off-by: Hans Verkuil <hans.verkuil@cisco.com>
 
-Sinan Kaya (3):
-      ACPI,PCI,IRQ: factor in PCI possible
-      Revert "ACPI, PCI, IRQ: remove redundant code in acpi_irq_penalty_init()"
-      ACPI,PCI,IRQ: separate ISA penalty calculation
+diff --git a/utils/v4l2-compliance/v4l2-test-buffers.cpp b/utils/v4l2-compliance/v4l2-test-buffers.cpp
+index fb14170..dc82918 100644
+--- a/utils/v4l2-compliance/v4l2-test-buffers.cpp
++++ b/utils/v4l2-compliance/v4l2-test-buffers.cpp
+@@ -290,7 +290,7 @@ int buffer::check(unsigned type, unsigned memory, unsigned index,
+                        fail_on_test(g_bytesused(p) > g_length(p));
+                }
+                fail_on_test(!g_timestamp().tv_sec && !g_timestamp().tv_usec);
+-               fail_on_test(!(g_flags() & V4L2_BUF_FLAG_DONE));
++               fail_on_test(g_flags() & V4L2_BUF_FLAG_DONE);
+                fail_on_test((int)g_sequence() < seq.last_seq + 1);
+                if (v4l_type_is_video(g_type())) {
+                        fail_on_test(g_field() == V4L2_FIELD_ALTERNATE);
 
----------------
+So please expect this fail in v4l2-compliance logs of my new submission.
 
- arch/x86/pci/acpi.c           |  1 +
- drivers/acpi/acpi_dbg.c       |  4 +--
- drivers/acpi/acpica/nsload.c  |  7 ++++-
- drivers/acpi/acpica/nsparse.c |  9 ++-----
- drivers/acpi/pci_link.c       | 63 ++++++++++++++++++++++++++++++++-----------
- include/acpi/acpi_drivers.h   |  1 +
- 6 files changed, 60 insertions(+), 25 deletions(-)
+
+
+Also, I decided to document known video quality issues in a printed warning; I
+like how it looks now both in code and in dmesg, but checkpatch.pl doesn't like
+it. See commit at
+https://github.com/bluecherrydvr/linux/commit/83395b6c5e1e5ceb642c9a04a28db5fc22566c87
+
+The message is split in pieces because otherwise it gets truncated.
+
+I'd like some approval or suggestion for rework on this.
+
+It looks like this in dmesg:
+
+[ 5101.182151] tw5864 0000:06:07.0: BEWARE OF KNOWN ISSUES WITH VIDEO QUALITY
+
+               This driver was developed by Bluecherry LLC by deducing behaviour of original manufacturer's driver, from both source code and execution traces.
+               It is known that there are some artifacts on output video with this driver:
+                - on all known hardware samples: random pixels of wrong color (mostly white, red or blue) appearing and disappearing on sequences of P-frames;
+                - on some hardware samples (known with H.264 core version e006:2800): total madness on P-frames: blocks of wrong luminance; blocks of wrong colors "creeping" across the picture.
+               There is a workaround for both issues: avoid P-frames by setting GOP size to 1. To do that, run such command on device files created by this driver:
+
+               for dev in /dev/video*; do v4l2-ctl --device $dev --set-ctrl=video_gop_size=1; done
+
+[ 5101.357312] systemd-journald[219]: Compressed data object 850 -> 636 using XZ
+[ 5101.471071] tw5864 0000:06:07.0: These issues are not decoding errors; all produced H.264 streams are decoded properly. Streams without P-frames don't have these artifacts so it's not analog-to-digital conversion issues nor internal memory errors; we conclude it's internal H.264 encoder issues.
+               We cannot even check the original driver's behaviour because it has never worked properly at all in our development environment. So these issues may be actually related to firmware or hardware. However it may be that there's just some more register settings missing in the driver which would please the hardware.
+               Manufacturer didn't help much on our inquiries, but feel free to disturb again the support of Intersil (owner of former Techwell).
+
+
+And checkpatch says this:
+
+ $ ./../../../../scripts/checkpatch.pl -f tw5864-core.c
+WARNING: quoted string split across lines
+#44: FILE: tw5864-core.c:44:
++"This driver was developed by Bluecherry LLC by deducing behaviour of original"
++" manufacturer's driver, from both source code and execution traces.\n"
+
+WARNING: quoted string split across lines
+#47: FILE: tw5864-core.c:47:
++" - on all known hardware samples: random pixels of wrong color (mostly white,"
++" red or blue) appearing and disappearing on sequences of P-frames;\n"
+
+WARNING: quoted string split across lines
+#49: FILE: tw5864-core.c:49:
++" - on some hardware samples (known with H.264 core version e006:2800):"
++" total madness on P-frames: blocks of wrong luminance; blocks of wrong colors"
+
+WARNING: quoted string split across lines
+#50: FILE: tw5864-core.c:50:
++" total madness on P-frames: blocks of wrong luminance; blocks of wrong colors"
++" \"creeping\" across the picture.\n"
+
+WARNING: quoted string split across lines
+#52: FILE: tw5864-core.c:52:
++"There is a workaround for both issues: avoid P-frames by setting GOP size to 1"
++". To do that, run such command on device files created by this driver:\n"
+
+WARNING: quoted string split across lines
+#55: FILE: tw5864-core.c:55:
++"for dev in /dev/video*; do"
++" v4l2-ctl --device $dev --set-ctrl=video_gop_size=1; done\n"
+
+WARNING: quoted string split across lines
+#59: FILE: tw5864-core.c:59:
++static char *artifacts_warning_continued = ""
++"These issues are not decoding errors; all produced H.264 streams are decoded"
+
+WARNING: quoted string split across lines
+#60: FILE: tw5864-core.c:60:
++"These issues are not decoding errors; all produced H.264 streams are decoded"
++" properly. Streams without P-frames don't have these artifacts so it's not"
+
+WARNING: quoted string split across lines
+#61: FILE: tw5864-core.c:61:
++" properly. Streams without P-frames don't have these artifacts so it's not"
++" analog-to-digital conversion issues nor internal memory errors; we conclude"
+
+WARNING: quoted string split across lines
+#62: FILE: tw5864-core.c:62:
++" analog-to-digital conversion issues nor internal memory errors; we conclude"
++" it's internal H.264 encoder issues.\n"
+
+WARNING: quoted string split across lines
+#64: FILE: tw5864-core.c:64:
++"We cannot even check the original driver's behaviour because it has never"
++" worked properly at all in our development environment. So these issues may be"
+
+WARNING: quoted string split across lines
+#65: FILE: tw5864-core.c:65:
++" worked properly at all in our development environment. So these issues may be"
++" actually related to firmware or hardware. However it may be that there's just"
+
+WARNING: quoted string split across lines
+#66: FILE: tw5864-core.c:66:
++" actually related to firmware or hardware. However it may be that there's just"
++" some more register settings missing in the driver which would please the"
+
+WARNING: quoted string split across lines
+#67: FILE: tw5864-core.c:67:
++" some more register settings missing in the driver which would please the"
++" hardware.\n"
+
+WARNING: quoted string split across lines
+#69: FILE: tw5864-core.c:69:
++"Manufacturer didn't help much on our inquiries, but feel free to disturb again"
++" the support of Intersil (owner of former Techwell).\n"
+
+total: 0 errors, 15 warnings, 377 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+tw5864-core.c has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
