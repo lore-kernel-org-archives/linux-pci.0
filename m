@@ -1,213 +1,154 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Aaron Durbin <adurbin@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: ACPI device using sub-resource of PCI device
-Date: Thu, 28 Jul 2016 02:09:24 +0200
-Message-ID: <3861743.KWBechkp08@vostro.rjw.lan>
-In-Reply-To: <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com> <3103060.86QBTjSLk3@vostro.rjw.lan> <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50016 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756699AbcGIToG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Jul 2016 15:44:06 -0400
+Date: Sat, 9 Jul 2016 13:44:03 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: linux-pci@vger.kernel.org, vfio-users@redhat.com,
+	tglx@linutronix.de
+Subject: Re: The same IOMMU group for igb and its igbvf siblings
+Message-ID: <20160709134403.0feb2150@t450s.home>
+In-Reply-To: <20160709191600.GA26115@breakpoint.cc>
+References: <20160709191600.GA26115@breakpoint.cc>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 25, 2016 02:11:12 PM Aaron Durbin wrote:
-> On Fri, Jul 22, 2016 at 4:04 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Friday, July 22, 2016 12:26:03 PM Aaron Durbin wrote:
-> >> On Thu, Jul 21, 2016 at 7:55 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >> > On Wednesday, July 20, 2016 08:58:29 PM Aaron Durbin wrote:
-> >> >> On Wed, Jul 20, 2016 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >> >> > On Wednesday, July 20, 2016 06:02:08 PM Aaron Durbin wrote:
-> >> >
-> >> > [...]
-> >> >
-> >> >> >> > Isn't the problem a probe ordering issue, though?
-> >> >> >>
-> >> >> >> No. Not just ordering. There's no parent-child relationship taken into
-> >> >> >> account when PCI devices are added to the resource tree. Deferring
-> >> >> >> adding an ACPI device's resources would likely fail similarly because
-> >> >> >> one doesn't take into account the proper parent. One lives in PCI land
-> >> >> >> -- the other in ACPI land.
-> >> >> >
-> >> >> > What exactly do you mean by "PCI land" and "ACPI land"?
-> >> >> >
-> >> >> > All PCI resources are derived from the host bridge ones that come from
-> >> >> > ACPI anyway.
-> >> >>
-> >> >> Except that the BARs are queried in the pci devices themselves and
-> >> >> those resources are added w/o any communication to/from ACPI. That's
-> >> >> all done in the pci subsystem internally. Only if
-> >> >
-> >> > Well, not quite.
-> >> >
-> >> > It gets to host bridge resources via pcibios_bus_to_resource() AFAICS and
-> >> > those come from ACPI on ACPI-based systems.
-> >>
-> >> From what I can tell that's just updating resource values that have a
-> >> translation across a bridge. For a 1:1 mapping nothing is different
-> >> from the BAR encoded in the PCI device itself. Those windows are just
-> >> encoded in the bridge device. The only thing adjusted on the resources
-> >> is an offset. The BAR values are read from the device. That path is
-> >> just adjusting resources -- it's not adding those individual resources
-> >> into the resource tree for pci devices. See below.
-> >>
-> >> >
-> >> >> >
-> >> >> >> Currently, the issue is manifesting that the ACPI device's resources
-> >> >> >> are added into the resource tree. PCI devices the follow trying to add
-> >> >> >> their own resources. Conflicts ensue without taking into account the
-> >> >> >> proper hierarchy. To make matters worse, struct resource doesn't have
-> >> >> >> a struct device -- only a name. That means there's no way of knowing
-> >> >> >> who owns what resource. All that information is unavailable. That's
-> >> >> >> why the semi-hacky proposal was to see if there is an ACPI companion
-> >> >> >> device and see if it has children. If it's children's names match the
-> >> >> >> conflicting resource it's a good bet that the PCI device's resources
-> >> >> >> should be placed as the parent in the resource tree.
-> >> >> >
-> >> >> > That really looks like a broken hierarchy of devices somewhere.
-> >> >>
-> >> >> Why do you think it's a broken hierarchy? This CL has the heirarchy:
-> >> >> https://chromium-review.googlesource.com/#/c/359432/
-> >> >>
-> >> >> There is a device, P2S, which would result in an ACPI companion device
-> >> >> when the pci_dev is added to the device infrastructure by way of
-> >> >> acpi_platform_notify() which does the ACPI companion binding.
-> >> >> device_add() is the caller of platform_notify() which is set to
-> >> >> acpi_platform_notify() in init_acpi_device_notify() by way of
-> >> >> acpi_init().
-> >> >>
-> >> >> There are 4 children of the P2S device: GPO0, GPO1, GPO2, GPO3.
-> >> >>
-> >> >> Those children devices utilize a sub-resource of the P2S device which
-> >> >> has a pci_dev companion. It's BAR0 is the resource.
-> >> >
-> >> > OK
-> >> >
-> >> >> >
-> >> >> > And one more thing: a struct acpi_device object is not a device in general
-> >> >> > (althogh some pieces of code in the kernel, arguably incorrectly, treat it
-> >> >> > this way).  It is an abstract representation of a firmware entity (a node
-> >> >> > in the ACPI namespace).
-> >> >> >
-> >> >> > There really should be a "physical device" thing corresponding to it and
-> >> >> > that should be a child of the PCI device object in question.
-> >> >>
-> >> >> I thought I established that by the sysfs readlink I output I
-> >> >> previously provided?
-> >> >>
-> >> >> # ls /sys/devices/platform/| grep INT3452
-> >> >> INT3452:00
-> >> >> INT3452:01
-> >> >> INT3452:02
-> >> >> INT3452:03
-> >> >>
-> >> >> # ls /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11 | grep INT3452
-> >> >> INT3452:00
-> >> >> INT3452:01
-> >> >> INT3452:02
-> >> >> INT3452:03
-> >> >>
-> >> >> # readlink -f /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11/INT3452:00/physical_node
-> >> >> /sys/devices/platform/INT3452:00
-> >> >
-> >> > OK
-> >> >
-> >> > I must have missed that part.
-> >> >
-> >> >> >
-> >> >> >> > Do we assign BARs for endpoints during enumeration or only when we find a
-> >> >> >> > matching driver?
-> >> >> >>
-> >> >> >> BARs look to be assigned during enumeration. There's where conflicts
-> >> >> >> are found and resources reassigned in the current failing case.
-> >> >> >
-> >> >> > OK
-> >> >> >
-> >> >> > You seem to be saying that we insert some resources for ACPI device objects
-> >> >> > that correspond to the children of ACPI companions of PCI devices before we
-> >> >> > assign the BARs for their parent devices.
-> >> >>
-> >> >> The pci_dev is the one owning the parent resource. Even if there is a
-> >> >> companion ACPI device with a resource it doesn't matter because there
-> >> >> will still be a conflict because there is no checking against the
-> >> >> companion. There are 2 parallel entities without any communication
-> >> >> between the PCI subsystem and the ACPI subsystem when resources are
-> >> >> being added.
-> >> >>
-> >> >> >
-> >> >> > To me, that sounds very suspicious.
-> >> >> >
-> >> >> > Where in the code are the ACPI resources inserted, exactly?
-> >> >>
-> >> >> I believe it's through this mechanism:
-> >> >> acpi_bus_attach() -> acpi_default_enumeration() ->
-> >> >> acpi_create_platform_device() -> platform_device_register_full()
-> >> >
-> >> > I still would like to understand how and why that is called for child devices
-> >> > before the (physical) parent is enumerated.
-> >> >
-> >> > The theory is that when the PCI host bridge is found in the ACPI namespace,
-> >> > it will be enumerated along with the entire PCI bus below it before enumerating
-> >> > any _HID devices in the ACPI namespace below the host bridge object.
-> >> >
-> >> > Therefore all PCI devices should be enumerated before any children of any of
-> >> > them that aren't PCI devices themselves.  If BARs are assigned during
-> >> > enumeration, they all should be assigned before inserting any resources
-> >> > for any non-PCI children of any PCI devices.
-> >> >
-> >> > If that doesn't happen, the practice doesn't match the theory and that very
-> >> > well may be the source of the problem you're seeing.
-> >> >
-> >>
-> >> I'll sprinkle some WARN_ON()s in the resource code to track down when
-> >> things are being added to provide a definitive answer to when these
-> >> resources are being inserted. The current issue is still stands:
-> >> there is nothing properly tying the 2 sources of resource information
-> >> together. And ACPI resources are added prior to PCI resources.
-> >
-> > OK, I see what's going on.
-> >
-> >> PCI devices might be enumerated, but that doesn't mean their
-> >> *resources* are added.
-> >
-> > Right.
-> >
-> >> Back to the subsys_initcall topic:
-> >>
-> >> pci_subsys_init() is called *after* acpi_init().
-> >>
-> >> pci_subsys_init() -> pcibios_init() -> pcibios_resource_survey() ->
-> >> pcibios_allocate_resources() -> pcibios_allocate_dev_resources() ->
-> >> pci_claim_resource()
-> >
-> > So first, the PCI resources are allocated in an additional pass after bus
-> > enumeration and after enumerating platform devices based on the ACPI namespace.
-> > That causes resources of the (non-PCI) children to be inserted before the
-> > resources of the (PCI) parents.
+On Sat, 9 Jul 2016 21:16:00 +0200
+Sebastian Andrzej Siewior <sebastian@breakpoint.cc> wrote:
+
+> Hi,
 > 
-> What is the proposal for fixing this issue?
-
-I can think about a couple of ways, but I'm not sure which one is the best
-candidate from the regression risk perspective etc.
-
-I need to talk about that to some people who are on vacation ATM.
-
-> > But the problem seems to be that acpi_create_platform_device() doesn't
-> > check parent resources at all.  Namely, when pdevinfo.parent is set, the
-> > function should look at the resources of the parent and possibly populate
-> > the parent field of the new device's resources before passing them to
-> > platform_device_register_full().
+> I am trying to use SR-IOV on a IGB card with PCI ID 8086:1521. After
+> | echo 7 > /sys/devices/pci0000:00/0000:00:01.1/0000:02:00.0/sriov_numvfs
+> I have them all on one iommu group:
 > 
-> In the particular issue I reported how would the parent device have
-> any resources if it's a PCI device?
+> |# find /sys/kernel/iommu_groups/ -type l|grep /1/
+> |/sys/kernel/iommu_groups/1/devices/0000:00:01.0
+> |/sys/kernel/iommu_groups/1/devices/0000:00:01.1
+> |/sys/kernel/iommu_groups/1/devices/0000:02:00.0
+> |/sys/kernel/iommu_groups/1/devices/0000:02:00.1
+> |/sys/kernel/iommu_groups/1/devices/0000:03:10.0
+> |/sys/kernel/iommu_groups/1/devices/0000:03:10.4
+> |/sys/kernel/iommu_groups/1/devices/0000:03:11.0
+> |/sys/kernel/iommu_groups/1/devices/0000:03:11.4
+> |/sys/kernel/iommu_groups/1/devices/0000:03:12.0
+> |/sys/kernel/iommu_groups/1/devices/0000:03:12.4
+> |/sys/kernel/iommu_groups/1/devices/0000:03:13.0
+> 
+> lspci -t
+> |-[0000:00]-+-00.0
+> |           +-01.0-[01]--
+> |           +-01.1-[02-03]--+-[0000:03]-+-10.0
+> |           |               |           +-10.4
+> |           |               |           +-11.0
+> |           |               |           +-11.4
+> |           |               |           +-12.0
+> |           |               |           +-12.4
+> |           |               |           \-13.0
+> |           |               \-[0000:02]-+-00.0
+> |           |                           \-00.1
+> 
+> lspci for those devices:
+> |00:00.0 Host bridge: Intel Corporation Device 1918 (rev 07)
+> |00:01.0 PCI bridge: Intel Corporation Device 1901 (rev 07)
+> |00:01.1 PCI bridge: Intel Corporation Device 1905 (rev 07)
+> |02:00.0 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+> |02:00.1 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+> |03:10.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> |03:10.4 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> |03:11.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> |03:11.4 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> |03:12.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> |03:12.4 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> |03:13.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> 
+> and qemu won't pass the virtual-function NICs to a guest. Shouldn't each
+> VF device be in its own IOMMU group?
+> 
+> From the ACS capabilities I see:
+> |00:00.0 Host bridge: Intel Corporation Device 1918 (rev 07)
+> |        Subsystem: Super Micro Computer Inc Device 0909
+> |        Flags: bus master, fast devsel, latency 0
+> |        Capabilities: [e0] Vendor Specific Information: Len=10 <?>
+> |
+> |00:01.0 PCI bridge: Intel Corporation Device 1901 (rev 07) (prog-if 00 [Normal decode])
+> |        Flags: bus master, fast devsel, latency 0
+> |        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> |        Capabilities: [88] Subsystem: Super Micro Computer Inc Device 0909
+> |        Capabilities: [80] Power Management version 3
+> |        Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+> |        Capabilities: [a0] Express Root Port (Slot+), MSI 00
+> |        Capabilities: [100] Virtual Channel
+> |        Capabilities: [140] Root Complex Link
+> |        Kernel driver in use: pcieport
+> |
+> |00:01.1 PCI bridge: Intel Corporation Device 1905 (rev 07) (prog-if 00 [Normal decode])
+> |        Flags: bus master, fast devsel, latency 0
+> |        Bus: primary=00, secondary=02, subordinate=03, sec-latency=0
+> |        I/O behind bridge: 0000e000-0000efff
+> |        Memory behind bridge: df100000-df3fffff
+> |        Capabilities: [88] Subsystem: Super Micro Computer Inc Device 0909
+> |        Capabilities: [80] Power Management version 3
+> |        Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+> |        Capabilities: [a0] Express Root Port (Slot+), MSI 00
+> |        Capabilities: [100] Virtual Channel
+> |        Capabilities: [140] Root Complex Link
+> |        Capabilities: [d94] #19
+> |        Kernel driver in use: pcieport
+> |02:00.0 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+> |        Subsystem: Super Micro Computer Inc Device 0652
+> |…
+> |        Capabilities: [1d0 v1] Access Control Services
+> |        ACSCap: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+> |        ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+> |        Kernel driver in use: igb
+> |
+> |03:10.0 Ethernet controller: Intel Corporation I350 Ethernet Controller Virtual Function (rev 01)
+> |        Subsystem: Super Micro Computer Inc Device 0652
+> |        Flags: fast devsel
+> |…
+> |        Capabilities: [1d0 v1] Access Control Services
+> |                ACSCap: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+> |                ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
+> 
+> I *think* the problem is that the root port lacks ACS caps. Could this
+> be the poblem? If so do I need to wait for a BIOS update or is there an
+> other option?
+> I tried v4.7-rc6. I noticed that the IGB device is part of the quirk
+> table in pci_dev_acs_enabled but somehow it is not used.
+> Any suggestions?
 
-If we can fix the ordering (so that the resources of parents are always
-inserted before the resources of their children), then it shouldn't
-matter whether or not it is a PCI device.
 
-In any case, though, its ACPI companion will have information on the
-resources the device is using.
+The root port device IDs translate to a Skylake platform, which is a
+"client" processor.  Core-i3/5/7 and even Xeon E3 fit into this
+category and they do not support ACS on the processor root ports.  This
+groups everything downstream of those root ports together and even
+binds together separate sub-hierarchies when the root ports are joined
+in a multifunction slot.  Without ACS we cannot guarantee that
+peer-to-peer DMA does not occur through redirection prior to IOMMU
+translation.
 
-Thanks,
-Rafael
+The easiest solution is to move the card to one of the PCH sourced root
+ports (ie. downstream of root ports at 00:1c.*).  As of kernel v4.7-rc1
+we have quirks for the Sunrise Point PCH to work around the botched
+implementation of ACS found in this chipset.  Pretty much all Intel
+client processors have the same story, no ACS in the processor root
+ports, quirks to enable ACS in the PCH root ports.  Xeon E5 and higher
+as well as "High End Desktop Processors" (based on E5) support ACS
+correctly (though the PCH root ports need and already have quirks for
+ACS).
+
+There exists a non-upstream patch to override ACS, which does nothing
+to solve the isolation problem, it just allows you to gamble with data
+integrity, which is why it really has no place upstream.  The IGB
+devices you note in pci_dev_acs_enabled are quirks for the IGB PFs.
+Intel has confirmed that there is isolation between the PFs, so when
+installed into topology that does have ACS support, this allows the PFs
+to be put into separate groups.  Since the point at which your system
+lacks isolation is upstream of the PFs, this doesn't help you.  Thanks,
+
+Alex
