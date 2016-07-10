@@ -1,106 +1,99 @@
-Return-Path: <Paul.Gortmaker@windriver.com>
-Return-Path: <Paul.Gortmaker@windriver.com>
-Date: Wed, 27 Jul 2016 17:57:39 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, <linux-pci@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, LKML
-	<linux-kernel@vger.kernel.org>,
-        <linux-rockchip@lists.infradead.org>,
-        Heiko
- Stuebner <heiko@sntech.de>,
-        Doug Anderson <dianders@chromium.org>,
-        Wenrui Li
-	<wenrui.li@rock-chips.com>,
-        Rob Herring <robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH v7 2/2] PCI: Rockchip: Add Rockchip PCIe controller
- support
-Message-ID: <20160727215739.GV11410@windriver.com>
-References: <1468802533-17699-1-git-send-email-shawn.lin@rock-chips.com>
- <1468802533-17699-2-git-send-email-shawn.lin@rock-chips.com>
- <20160727182233.GB8901@localhost>
- <CAP=VYLqPj=81Q_8kV1wi=FHP-CB6arrXFAC0ktJrLqR-1TSCjw@mail.gmail.com>
- <20160727200443.GA30281@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20160727200443.GA30281@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:33415 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932237AbcGJL57 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 07:57:59 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org
+Cc: agordeev@redhat.com
+Subject: [PATCH 3/5] pci: make the entries argument to pci_enable_msix optional
+Date: Sun, 10 Jul 2016 20:57:44 +0900
+Message-Id: <1468151866-7776-4-git-send-email-hch@lst.de>
+In-Reply-To: <1468151866-7776-1-git-send-email-hch@lst.de>
+References: <1468151866-7776-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Re: [PATCH v7 2/2] PCI: Rockchip: Add Rockchip PCIe controller support] On 27/07/2016 (Wed 13:04) Brian Norris wrote:
+The entries argument isn't needed if the list of entries does not
+contain any holes.  Make it optional so that we can the need for
+having to allocate a msix_entry structure for this (common) case.
 
-> + Guenter
-> 
-> Hi,
-> 
-> On Wed, Jul 27, 2016 at 03:56:36PM -0400, Paul Gortmaker wrote:
-> > On Wed, Jul 27, 2016 at 2:22 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Mon, Jul 18, 2016 at 08:42:13AM +0800, Shawn Lin wrote:
-> > >> This patch adds Rockchip PCIe controller support found
-> > >> on RK3399 Soc platform.
-> > >>
-> > >> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > >>
-> > >> ---
-> > >>
-> > >> Changes in v7:
-> > >> - make it as a build-in driver
-> > 
-> > [...]
-> > 
-> 
-> ...
-> 
-> > [...]
-> > 
-> > >> +static struct platform_driver rockchip_pcie_driver = {
-> > >> +     .driver = {
-> > >> +             .name = "rockchip-pcie",
-> > >> +             .of_match_table = rockchip_pcie_of_match,
-> > >> +     },
-> > >> +     .probe = rockchip_pcie_probe,
-> > >> +
-> > >> +};
-> > >> +module_platform_driver(rockchip_pcie_driver);
-> > >> +
-> > >> +MODULE_AUTHOR("Rockchip Inc");
-> > >> +MODULE_DESCRIPTION("Rockchip AXI PCIe driver");
-> > >> +MODULE_LICENSE("GPL v2");
-> > >
-> > > Per your Kconfig, this driver cannot be a module, so remove these MODULE_*
-> > > annotations.  This is to follow Paul Gortmaker's recent "Make explicitly
-> > > non-modular" work.  Also change the include of <linux/module.h> to
-> > > <linux/init.h>.
-> > 
-> > Thanks!  You beat me to it.    I didn't see any EXPORT_SYMBOL so it doesn't
-> > look like we need export.h  added here.   Also, at the risk of stating
-> > the obvious,
-> > the module_platform_driver becomes builtin_platform_driver.
-> 
-> Just for reference (not to necessarily disagree here): we've kinda
-> ping-ponged on this one. I suggested it could be built as a module, so
-> Shawn added it, but apparently we're missing an export:
-> 
-> https://lkml.org/lkml/2016/7/8/704
-> 
-> so he reverted back. It's probably best to just leave this built-in and
-> resolve the comments Paul and Bjorn made, to avoid too much more
-> flip-flopping. If we still want to patch up the __weak
-> pci_remap_iospace(), then we can make this a module at a later time.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-Agreed, and this was the general consensus we came to for other PCI code
-as well.   It might be different if we were deleting hundreds of lines
-of code, but we are just making a few simple changes to make it clear
-that things aren't modular, and that ensures others don't continue to
-copy the same inconsistency into their new driver(s).  It doesn't in any
-way prevent a future conversion to tristate if that use case makes sense.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a385f39..98ace67 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -695,7 +695,10 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 
+ 		entry->msi_attrib.is_msix	= 1;
+ 		entry->msi_attrib.is_64		= 1;
+-		entry->msi_attrib.entry_nr	= entries[i].entry;
++		if (entries)
++			entry->msi_attrib.entry_nr = entries[i].entry;
++		else
++			entry->msi_attrib.entry_nr = i;
+ 		entry->msi_attrib.default_irq	= dev->irq;
+ 		entry->mask_base		= base;
+ 		entry->nvec_used		= 1;
+@@ -713,11 +716,11 @@ static void msix_program_entries(struct pci_dev *dev,
+ 	int i = 0;
+ 
+ 	for_each_pci_msi_entry(entry, dev) {
+-		entries[i].vector = entry->irq;
++		if (entries)
++			entries[i++].vector = entry->irq;
+ 		entry->masked = readl(pci_msix_desc_addr(entry) +
+ 				PCI_MSIX_ENTRY_VECTOR_CTRL);
+ 		msix_mask_irq(entry, 1);
+-		i++;
+ 	}
+ }
+ 
+@@ -930,7 +933,7 @@ EXPORT_SYMBOL(pci_msix_vec_count);
+ /**
+  * pci_enable_msix - configure device's MSI-X capability structure
+  * @dev: pointer to the pci_dev data structure of MSI-X device function
+- * @entries: pointer to an array of MSI-X entries
++ * @entries: pointer to an array of MSI-X entries (optional)
+  * @nvec: number of MSI-X irqs requested for allocation by device driver
+  *
+  * Setup the MSI-X capability structure of device function with the number
+@@ -950,22 +953,21 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	if (!pci_msi_supported(dev, nvec))
+ 		return -EINVAL;
+ 
+-	if (!entries)
+-		return -EINVAL;
+-
+ 	nr_entries = pci_msix_vec_count(dev);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+ 	if (nvec > nr_entries)
+ 		return nr_entries;
+ 
+-	/* Check for any invalid entries */
+-	for (i = 0; i < nvec; i++) {
+-		if (entries[i].entry >= nr_entries)
+-			return -EINVAL;		/* invalid entry */
+-		for (j = i + 1; j < nvec; j++) {
+-			if (entries[i].entry == entries[j].entry)
+-				return -EINVAL;	/* duplicate entry */
++	if (entries) {
++		/* Check for any invalid entries */
++		for (i = 0; i < nvec; i++) {
++			if (entries[i].entry >= nr_entries)
++				return -EINVAL;		/* invalid entry */
++			for (j = i + 1; j < nvec; j++) {
++				if (entries[i].entry == entries[j].entry)
++					return -EINVAL;	/* duplicate entry */
++			}
+ 		}
+ 	}
+ 	WARN_ON(!!dev->msix_enabled);
+-- 
+2.1.4
 
-THanks,
-Paul.
---
-
-> 
-> Regards,
-> Brian
