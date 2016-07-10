@@ -1,44 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51394 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757833AbcGKIrx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jul 2016 04:47:53 -0400
-Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <57835D35.1000901@arm.com>
-Date: Mon, 11 Jul 2016 09:47:49 +0100
-MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from bombadil.infradead.org ([198.137.202.9]:33410 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302AbcGJL54 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 07:57:56 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org
+Cc: agordeev@redhat.com
+Subject: [PATCH 2/5] pci: switch msix_program_entries to use pci_msix_desc_addr
+Date: Sun, 10 Jul 2016 20:57:43 +0900
+Message-Id: <1468151866-7776-3-git-send-email-hch@lst.de>
+In-Reply-To: <1468151866-7776-1-git-send-email-hch@lst.de>
+References: <1468151866-7776-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/07/16 03:32, Bharat Kumar Gogada wrote:
-> Hi,
-> 
-> I have a query.
-> I see that when we use PCI_MSI_IRQ_DOMAIN to handle MSI's, MSI address is not being
-> written in to end point's PCI_MSI_ADDRESS_LO/HI at the call pci_enable_msi_range.
-> 
-> Instead it is being written at the time end point requests irq.
-> 
-> Can any one tell the reason why is it handled in this manner ?
+Instead of relying on the msix_entry structure for the vector number read
+it from the msi_desc.
 
-Because there is no real need to do it earlier, and in some case you
-cannot allocate MSIs at that stage. pci_enable_msi_range only works out
-how many vectors are required. At least one MSI controller (GICv3 ITS)
-needs to know how many vectors are required before they can be provided
-to the end-point.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Do you see any issue with this?
-
-Thanks,
-
-	M.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 0d94fbf..a385f39 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -713,11 +713,9 @@ static void msix_program_entries(struct pci_dev *dev,
+ 	int i = 0;
+ 
+ 	for_each_pci_msi_entry(entry, dev) {
+-		int offset = entries[i].entry * PCI_MSIX_ENTRY_SIZE +
+-						PCI_MSIX_ENTRY_VECTOR_CTRL;
+-
+ 		entries[i].vector = entry->irq;
+-		entry->masked = readl(entry->mask_base + offset);
++		entry->masked = readl(pci_msix_desc_addr(entry) +
++				PCI_MSIX_ENTRY_VECTOR_CTRL);
+ 		msix_mask_irq(entry, 1);
+ 		i++;
+ 	}
 -- 
-Jazz is not dead. It just smells funny...
+2.1.4
+
