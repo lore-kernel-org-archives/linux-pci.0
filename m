@@ -1,165 +1,82 @@
-Return-Path: <mathias.koehrer@etas.com>
-Return-Path: <mathias.koehrer@etas.com>
-From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: [PATCH resend v2] Extending kernel option pci=resource_alignment to
- be able to specify PCI device/vendor IDs
-Date: Fri, 22 Jul 2016 10:41:59 +0000
-Message-ID: <14535ddd929448b4b8a9f8f2f58439a6@FE-MBX1012.de.bosch.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:33406 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129AbcGJL5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 07:57:53 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org
+Cc: agordeev@redhat.com
+Subject: [PATCH 1/5] pci: add a pci_msix_desc_addr helper
+Date: Sun, 10 Jul 2016 20:57:42 +0900
+Message-Id: <1468151866-7776-2-git-send-email-hch@lst.de>
+In-Reply-To: <1468151866-7776-1-git-send-email-hch@lst.de>
+References: <1468151866-7776-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned=20
-PCI memory resources are not page aligned.
-By using the kernel option "pci=3Dresource_alignment" it is possible to for=
-ce
-single PCI boards to use page alignment for their memory resources.
-However, this is fairly cumbersome if multiple of these boards are in use a=
-s=20
-the specification of the cards has to be done via PCI bus/slot/function num=
-ber
-which might change e.g. by adding another board.
-This patch extends the kernel option "pci=3Dresource_alignment" to allow to
-specify the relevant boards via PCI device/vendor (and subdevice/subvendor)=
- ids.
-The specification of the devices via device/vendor is indicated by a leadin=
-g
-string "pci:" as argument to "pci=3Dresource_alignment".
-The format of the specification is
-  pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+To factor out the calculation of the base address for a given MSI-X vector.
 
-Examples:=20
-  pci=3Dresource_alignment=3D4096@pci:1234:abcd:1234:bcde
-  pci=3Dresource_alignment=3Dpci:1234:abcd
-
-Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/kernel-parameters.txt |    2 +
- drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++------=
------
- 2 files changed, 49 insertions(+), 19 deletions(-)
+ drivers/pci/msi.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
-+++ linux-4.7-rc1/Documentation/kernel-parameters.txt
-@@ -2998,12 +2998,17 @@ bytes respectively. Such letter suffixes
- 		resource_alignment=3D
- 				Format:
- 				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-+				[<order of align>@]pci:<vendor>:<device>\
-+						[:<subvendor>:<subdevice>][; ...]
- 				Specifies alignment and device to reassign
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
-+				To specify the alignment for certain types of devices, the
-+				PCI vendor/device (and subvendor/subdevice) may be
-+				specified. E.g. 4096@pci:1234:abcd:1234:bcde
- 		ecrc=3D		Enable/disable PCIe ECRC (transaction layer
- 				end-to-end CRC checking).
- 				bios: Use BIOS/firmware settings. This is the
-Index: linux-4.7-rc1/drivers/pci/pci.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-4.7-rc1.orig/drivers/pci/pci.c
-+++ linux-4.7-rc1/drivers/pci/pci.c
-@@ -4755,6 +4755,7 @@ static DEFINE_SPINLOCK(resource_alignmen
- static resource_size_t pci_specified_resource_alignment(struct pci_dev *de=
-v)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a080f44..0d94fbf 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -207,6 +207,12 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+ 	desc->masked = __pci_msi_desc_mask_irq(desc, mask, flag);
+ }
+ 
++static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
++{
++	return desc->mask_base +
++		desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
++}
++
+ /*
+  * This internal function does not flush PCI writes to the device.
+  * All users must ensure that they read from the device before either
+@@ -217,8 +223,6 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+ u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
  {
- 	int seg, bus, slot, func, align_order, count;
-+	unsigned short vendor, device, subsystem_vendor, subsystem_device;
- 	resource_size_t align =3D 0;
- 	char *p;
-=20
-@@ -4768,28 +4769,55 @@ static resource_size_t pci_specified_res
- 		} else {
- 			align_order =3D -1;
- 		}
--		if (sscanf(p, "%x:%x:%x.%x%n",
--			&seg, &bus, &slot, &func, &count) !=3D 4) {
--			seg =3D 0;
--			if (sscanf(p, "%x:%x.%x%n",
--					&bus, &slot, &func, &count) !=3D 3) {
--				/* Invalid format */
--				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
--					p);
-+		if (strncmp(p, "pci:", 4) =3D=3D 0) {
-+			/* PCI vendor/device (subvendor/subdevice) ids are specified */
-+			p +=3D 4;
-+			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
-+				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) !=3D 4=
-) {
-+				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) !=3D 2) {
-+					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%=
-s\n",
-+						p);
-+					break;
-+				}
-+				subsystem_vendor =3D subsystem_device =3D 0;
-+			}
-+			p +=3D count;
-+			if ((!vendor || (vendor =3D=3D dev->vendor)) &&
-+				(!device || (device =3D=3D dev->device)) &&
-+				(!subsystem_vendor || (subsystem_vendor =3D=3D dev->subsystem_vendor))=
- &&
-+				(!subsystem_device || (subsystem_device =3D=3D dev->subsystem_device))=
-) {
-+				if (align_order =3D=3D -1)
-+					align =3D PAGE_SIZE;
-+				else
-+					align =3D 1 << align_order;
-+				/* Found */
- 				break;
- 			}
- 		}
--		p +=3D count;
--		if (seg =3D=3D pci_domain_nr(dev->bus) &&
--			bus =3D=3D dev->bus->number &&
--			slot =3D=3D PCI_SLOT(dev->devfn) &&
--			func =3D=3D PCI_FUNC(dev->devfn)) {
--			if (align_order =3D=3D -1)
--				align =3D PAGE_SIZE;
--			else
--				align =3D 1 << align_order;
--			/* Found */
--			break;
-+		else {
-+			if (sscanf(p, "%x:%x:%x.%x%n",
-+				&seg, &bus, &slot, &func, &count) !=3D 4) {
-+				seg =3D 0;
-+				if (sscanf(p, "%x:%x.%x%n",
-+						&bus, &slot, &func, &count) !=3D 3) {
-+					/* Invalid format */
-+					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n"=
-,
-+						p);
-+					break;
-+				}
-+			}
-+			p +=3D count;
-+			if (seg =3D=3D pci_domain_nr(dev->bus) &&
-+				bus =3D=3D dev->bus->number &&
-+				slot =3D=3D PCI_SLOT(dev->devfn) &&
-+				func =3D=3D PCI_FUNC(dev->devfn)) {
-+				if (align_order =3D=3D -1)
-+					align =3D PAGE_SIZE;
-+				else
-+					align =3D 1 << align_order;
-+				/* Found */
-+				break;
-+			}
- 		}
- 		if (*p !=3D ';' && *p !=3D ',') {
- 			/* End of param or invalid format */
+ 	u32 mask_bits = desc->masked;
+-	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+-						PCI_MSIX_ENTRY_VECTOR_CTRL;
+ 
+ 	if (pci_msi_ignore_mask)
+ 		return 0;
+@@ -226,7 +230,7 @@ u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
+ 	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
+ 	if (flag)
+ 		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
+-	writel(mask_bits, desc->mask_base + offset);
++	writel(mask_bits, pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
+ 
+ 	return mask_bits;
+ }
+@@ -284,8 +288,7 @@ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	BUG_ON(dev->current_state != PCI_D0);
+ 
+ 	if (entry->msi_attrib.is_msix) {
+-		void __iomem *base = entry->mask_base +
+-			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
++		void __iomem *base = pci_msix_desc_addr(entry);
+ 
+ 		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
+ 		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
+@@ -315,9 +318,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 	if (dev->current_state != PCI_D0) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->msi_attrib.is_msix) {
+-		void __iomem *base;
+-		base = entry->mask_base +
+-			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
++		void __iomem *base = pci_msix_desc_addr(entry);
+ 
+ 		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
+ 		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
+-- 
+2.1.4
+
