@@ -1,62 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.w1.samsung.com ([210.118.77.14]:62863 "EHLO
-	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbcGLMTP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 08:19:15 -0400
-Subject: Re: [PATCH v5 00/44] dma-mapping: Use unsigned long for dma_attrs
-To: Andrew Morton <akpm@linux-foundation.org>,
-	linux-mips@linux-mips.org, linux-ia64@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	sparclinux@vger.kernel.org, linux-s390@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, linux-c6x-dev@linux-c6x.org,
-	linux-rdma@vger.kernel.org, linux-hexagon@vger.kernel.org,
-	linux-sh@vger.kernel.org, hch@infradead.org,
-	linux-rockchip@lists.infradead.org, nouveau@lists.freedesktop.org,
-	xen-devel@lists.xenproject.org, linux-snps-arc@lists.infradead.org,
-	linux-media@vger.kernel.org, linux-xtensa@linux-xtensa.org,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	linux-arm-msm@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-mediatek@lists.infradead.org, linux-omap@vger.kernel.org,
-	linux-metag@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-parisc@vger.kernel.org, linux-cris-kernel@axis.com,
-	freedreno@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-	iommu@lists.linux-foundation.org, linux-alpha@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-References: <1467275019-30789-1-git-send-email-k.kozlowski@samsung.com>
- <20160712121625.GP23520@phenom.ffwll.local>
-From: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-Message-id: <5784E03B.6060000@samsung.com>
-Date: Tue, 12 Jul 2016 14:19:07 +0200
-MIME-version: 1.0
-In-reply-to: <20160712121625.GP23520@phenom.ffwll.local>
-Content-type: text/plain; charset=windows-1252
+Received: from lb1-smtp-cloud2.xs4all.net ([194.109.24.21]:43738 "EHLO
+	lb1-smtp-cloud2.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753855AbcGKLxI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jul 2016 07:53:08 -0400
+Subject: Re: [PATCH v3] Add tw5864 driver
+To: Andrey Utkin <andrey_utkin@fastmail.com>
+References: <20160709194618.15609-1-andrey_utkin@fastmail.com>
+ <cac4c81a-9065-2337-7d34-eea8b8482519@xs4all.nl> <20160711114800.GW5934@zver>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kozlov Sergey <serjk@netup.ru>,
+	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	=?UTF-8?Q?Krzysztof_Ha=c5=82asa?= <khalasa@piap.pl>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
+	kernel-mentors@selenic.com,
+	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+From: Hans Verkuil <hverkuil@xs4all.nl>
+Message-ID: <670e4e8b-ea65-e6ed-b313-d1aad80e79fa@xs4all.nl>
+Date: Mon, 11 Jul 2016 13:52:55 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160711114800.GW5934@zver>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/12/2016 02:16 PM, Daniel Vetter wrote:
-> On Thu, Jun 30, 2016 at 10:23:39AM +0200, Krzysztof Kozlowski wrote:
->> Hi,
->>
->>
->> This is fifth approach for replacing struct dma_attrs with unsigned
->> long.
->>
->> The main patch (1/44) doing the change is split into many subpatches
->> for easier review (2-42).  They should be squashed together when
->> applying.
+On 07/11/2016 01:48 PM, Andrey Utkin wrote:
+> Thanks for review Hans!
 > 
-> For all the drm driver patches:
+> On Mon, Jul 11, 2016 at 07:58:38AM +0200, Hans Verkuil wrote:
+>>> +" v4l2-ctl --device $dev --set-ctrl=video_gop_size=1; done\n"
+>>
+>> Replace $dev by /dev/videoX
+>>
+>> Wouldn't it make more sense to default to this? And show the warning only if
+>> P-frames are enabled?
 > 
-> Acked-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+> I believe it's better to leave P-frames on by default. All-I-frames
+> stream has huge bitrate. And the pixels artifacts is not very strong,
+> it's 0 - 10 bad pixels on picture at same time in our dev environment,
+> and probably up to 50 bad pixels max in other environments I know of.
 > 
-> Should I pull these in through drm-misc, or do you prefer to merge them
-> through a special topic branch (with everything else) instead on your own?
-> -Daniel
+>>> +	dma_sync_single_for_cpu(&dev->pci->dev, cur_frame->vlc.dma_addr,
+>>> +				H264_VLC_BUF_SIZE, DMA_FROM_DEVICE);
+>>> +	dma_sync_single_for_cpu(&dev->pci->dev, cur_frame->mv.dma_addr,
+>>> +				H264_MV_BUF_SIZE, DMA_FROM_DEVICE);
+>>
+>> This is almost certainly the wrong place. This should probably happen in the
+>> tasklet. The tasklet runs after the isr, so by the time the tasklet runs
+>> you've already called dma_sync_single_for_device.
+> 
+> Thanks, moved to tasklet subroutine tw5864_handle_frame().
+> 
+> I didn't seem to me like dma_sync_single_for_* can take long time or be
+> otherwise bad to be done from interrupt context.
+> 
+>>> +static int tw5864_querycap(struct file *file, void *priv,
+>>> +			   struct v4l2_capability *cap)
+>>> +{
+>>> +	struct tw5864_input *input = video_drvdata(file);
+>>> +
+>>> +	strcpy(cap->driver, "tw5864");
+>>> +	snprintf(cap->card, sizeof(cap->card), "TW5864 Encoder %d",
+>>> +		 input->nr);
+>>> +	sprintf(cap->bus_info, "PCI:%s", pci_name(input->root->pci));
+>>> +	cap->device_caps = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_READWRITE |
+>>> +		V4L2_CAP_STREAMING;
+>>> +	cap->capabilities = cap->device_caps | V4L2_CAP_DEVICE_CAPS;
+>>
+>> This line can be dropped, the core will fill in the capabilities field for you.
+> 
+> No, removing this line causes v4l2-compliance failures and also ffmpeg fails to
+> play the device.
 
-Thanks. I saw today that Andrew Morton applied the patchset so I think
-he will handle it.
+My fault. I mixed things up. The struct video_device has a new device_caps field. That
+should be filled in with the caps and then in the function above you can drop both
+the device_caps and capabitlities assignments.
 
-Best regards,
-Krzysztof
+Sorry about that.
 
+Regards,
+
+	Hans
+
+> 
+> Required ioctls:
+>                 fail: v4l2-compliance.cpp(550): dcaps & ~caps
+>         test VIDIOC_QUERYCAP: FAIL
+> 
+> Allow for multiple opens:
+>         test second video open: OK
+>                 fail: v4l2-compliance.cpp(550): dcaps & ~caps
+>         test VIDIOC_QUERYCAP: FAIL
+> 
