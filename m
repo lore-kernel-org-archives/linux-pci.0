@@ -1,92 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:42376 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756905AbcG1TeJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 15:34:09 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular
-Date: Thu, 28 Jul 2016 15:33:03 -0400
-Message-ID: <20160728193303.12945-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:32405 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750904AbcGKWQo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jul 2016 18:16:44 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6BM9N1U139433
+	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 18:16:43 -0400
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 243enrb493-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 18:16:43 -0400
+Received: from localhost
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+	Mon, 11 Jul 2016 16:16:42 -0600
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
+	nfont@linux.vnet.ibm.com, mdroth@linux.vnet.ibm.com,
+	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: [Patch v2] rpaphp: fix slot registration for multiple slots under a PHB
+Date: Mon, 11 Jul 2016 17:16:27 -0500
+Message-Id: <1468275387-22392-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+PowerVM seems to only ever provide a single hotplug slot per PHB.
+The under lying slot hotplug registration code assumed multiple slots,
+but the actual implementation is broken for multiple slots. This went
+unnoticed for years due to the nature of PowerVM as mentioned
+previously. Under qemu/kvm the hotplug slot model aligns more with
+x86 where multiple slots are presented under a single PHB. As seen
+in the following each additional slot after the first fails to
+register due to each slot always being compared against the first
+child node of the PHB in the device tree.
 
-drivers/pci/pcie/Kconfig:config PCIE_DPC
-drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
+[    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
+[    6.492569] rpaphp: Slot [Slot 0] registered
+[    6.492577] rpaphp: pci_hp_register failed with error -16
+[    6.493082] rpaphp: pci_hp_register failed with error -16
+[    6.493138] rpaphp: pci_hp_register failed with error -16
+[    6.493161] rpaphp: pci_hp_register failed with error -16
 
-...meaning that it currently is not being built as a module by anyone.
+The registration logic is fixed so that each slot is compared
+against the existing child devices of the PHB in the device tree to
+determine present slots vs empty slots.
 
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
+[   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
+[   38.482004] rpaphp: Slot [C0] registered
+[   38.482127] rpaphp: Slot [C1] registered
+[   38.482241] rpaphp: Slot [C2] registered
+[   38.482356] rpaphp: Slot [C3] registered
+[   38.482495] rpaphp: Slot [C4] registered
 
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 ---
 
-[This mismatch just appeared in Thursday's linux-next; doesn't matter
- to me if we update it now or I batch it in with other pending PCI
- changes for-4.9 -- either one is fine; choice is up to you folks.]
+Changes in v2: corrected ibm,my-drc-index property name
 
- drivers/pci/pcie/pcie-dpc.c | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+---
+ drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 250f87861786..9811b14d9ad8 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -1,5 +1,7 @@
- /*
-  * PCI Express Downstream Port Containment services driver
-+ * Author: Keith Busch <keith.busch@intel.com>
-+ *
-  * Copyright (C) 2016 Intel Corp.
-  *
-  * This file is subject to the terms and conditions of the GNU General Public
-@@ -9,7 +11,7 @@
- 
- #include <linux/delay.h>
- #include <linux/interrupt.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/pci.h>
- #include <linux/pcieport_if.h>
- 
-@@ -143,16 +145,4 @@ static int __init dpc_service_init(void)
+diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+index 6937c72..388c4d8 100644
+--- a/drivers/pci/hotplug/rpaphp_slot.c
++++ b/drivers/pci/hotplug/rpaphp_slot.c
+@@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
+ int rpaphp_register_slot(struct slot *slot)
  {
- 	return pcie_port_service_register(&dpcdriver);
- }
--
--static void __exit dpc_service_exit(void)
--{
--	pcie_port_service_unregister(&dpcdriver);
--}
--
--MODULE_DESCRIPTION("PCI Express Downstream Port Containment driver");
--MODULE_AUTHOR("Keith Busch <keith.busch@intel.com>");
--MODULE_LICENSE("GPL");
--MODULE_VERSION("0.1");
--
--module_init(dpc_service_init);
--module_exit(dpc_service_exit);
-+device_initcall(dpc_service_init);
+ 	struct hotplug_slot *php_slot = slot->hotplug_slot;
++	struct device_node *child;
++	u32 my_index;
+ 	int retval;
+-	int slotno;
++	int slotno = -1;
+ 
+ 	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
+ 		__func__, slot->dn->full_name, slot->index, slot->name,
+@@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
+ 		return -EAGAIN;
+ 	}
+ 
+-	if (slot->dn->child)
+-		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
+-	else
+-		slotno = -1;
++	for_each_child_of_node(slot->dn, child) {
++		retval = of_property_read_u32(child, "ibm,my-drc-index", &my_index);
++		if (my_index == slot->index) {
++			slotno = PCI_SLOT(PCI_DN(child)->devfn);
++			of_node_put(child);
++			break;
++		}
++	}
++
+ 	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
+ 	if (retval) {
+ 		err("pci_hp_register failed with error %d\n", retval);
 -- 
-2.8.4
+2.7.4
 
