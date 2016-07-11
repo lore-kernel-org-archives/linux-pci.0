@@ -1,40 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0069.outbound.protection.outlook.com ([104.47.37.69]:20896
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753408AbcGVJY3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jul 2016 05:24:29 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	nofooter <nofooter@xilinx.com>, nofooter2 <nofooter2@xilinx.com>
-Subject: Why does BIOS assign memory to 16 byte BAR
-Date: Fri, 22 Jul 2016 09:24:22 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258BB59B@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:34887 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030323AbcGKHoo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jul 2016 03:44:44 -0400
+Subject: Re: [PATCH v3] Add tw5864 driver
+To: Hans Verkuil <hverkuil@xs4all.nl>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andrey Utkin <andrey_utkin@fastmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kozlov Sergey <serjk@netup.ru>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, khalasa@piap.pl,
+	Guenter Roeck <linux@roeck-us.net>,
+	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>
+References: <20160709194618.15609-1-andrey_utkin@fastmail.com>
+ <cac4c81a-9065-2337-7d34-eea8b8482519@xs4all.nl>
+Cc: Andrey Utkin <andrey.utkin@corp.bluecherry.net>,
+	devel@driverdev.osuosl.org, kernel-mentors@selenic.com,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org
+From: Jiri Slaby <jslaby@suse.cz>
+Message-ID: <aad971f2-914f-95a1-8681-201d50593bd9@suse.cz>
+Date: Mon, 11 Jul 2016 09:44:40 +0200
 MIME-Version: 1.0
+In-Reply-To: <cac4c81a-9065-2337-7d34-eea8b8482519@xs4all.nl>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 07/11/2016, 07:58 AM, Hans Verkuil wrote:
+>> +static char *artifacts_warning = "BEWARE OF KNOWN ISSUES WITH VIDEO QUALITY\n"
+> 
+> const char * const
 
-I'm observing that on x86 BIOS successfully assigns memory if an End point requests
-BAR of size 16byte.
+Or even better, drop the extra space for pointer:
 
-But as per Spec:
-The minimum memory address range requested by a BAR is 128 bytes.
+static const char artifacts_warning[] =
 
-Why BIOS is successfully allocating region to 16 byte BAR requests?
-
-Please let me know if my observation is wrong.
-
-Regards,
-Bharat
-
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-
+thanks,
+-- 
+js
+suse labs
