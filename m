@@ -1,86 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH v3 07/13] drivers: acpi: iort: add node match function
-Date: Wed, 20 Jul 2016 12:23:29 +0100
-Message-Id: <1469013815-24380-8-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:53872 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754142AbcGKPuK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jul 2016 11:50:10 -0400
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5783733C.70702@arm.com>
+ <8520D5D51A55D047800579B094147198258B823D@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5783C02F.7030901@arm.com>
+Date: Mon, 11 Jul 2016 16:50:07 +0100
+MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B094147198258B823D@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Device drivers (eg ARM SMMU) need to know if a specific component
-is part of the IORT table, so that kernel data structures are not
-initialized at initcalls time if the respective component is not
-part of the IORT table.
+On 11/07/16 11:51, Bharat Kumar Gogada wrote:
+>>> Hi Marc,
+>>>
+>>> Thanks for the reply.
+>>>
+>>> From PCIe Spec:
+>>> MSI Enable Bit:
+>>> If 1 and the MSI-X Enable bit in the MSI-X Message
+>>> Control register (see Section 6.8.2.3) is 0, the
+>>> function is permitted to use MSI to request service
+>>> and is prohibited from using its INTx# pin.
+>>>
+>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
+>> which means MSI address and data fields are available/programmed.
+>>>
+>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware latches
+>> onto MSI address and MSI data values.
+>>>
+>>> With current MSI implementation in kernel, our SoC is latching on to
+>> incorrect address and data values, as address/data
+>>> are updated much later than MSI Enable bit.
+>>
+>> Interesting. It looks like we're doing something wrong in the MSI flow.
+>> Can you confirm that this is limited to MSI and doesn't affect MSI-X?
+>>
+> I think it's the same issue irrespective of MSI or MSI-X as we are
+> enabling these interrupts before providing the  vectors.
+> 
+> So we always have a hole when MSI/MSI-X is 1, and software driver has
+> not registered the irq, and End Point may raise an interrupt (may be
+> due to error) in this point of time.
 
-To this end, this patch adds a trivial function that allows detecting
-if a given IORT node type is present or not in the ACPI table, providing
-an ACPI IORT equivalent for of_find_matching_node().
+Looking at the MSI-X part of the code, there is this:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/iort.c  | 15 +++++++++++++++
- include/linux/iort.h |  2 ++
- 2 files changed, 17 insertions(+)
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/msi.c#n764
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 86f6985..71516e8 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -205,6 +205,21 @@ iort_scan_node(enum acpi_iort_node_type type,
- }
- 
- static acpi_status
-+iort_match_callback(struct acpi_iort_node *node, void *context)
-+{
-+	return AE_OK;
-+}
-+
-+bool iort_node_match(u8 type)
-+{
-+	struct acpi_iort_node *node;
-+
-+	node = iort_scan_node(type, iort_match_callback, NULL);
-+
-+	return node != NULL;
-+}
-+
-+static acpi_status
- iort_match_node_callback(struct acpi_iort_node *node, void *context)
- {
- 	struct device *dev = context;
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index 9bb30c5..ac2706a 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -27,10 +27,12 @@ int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
- void iort_deregister_domain_token(int trans_id);
- struct fwnode_handle *iort_find_domain_token(int trans_id);
- #ifdef CONFIG_IORT_TABLE
-+bool iort_node_match(u8 type);
- void iort_table_detect(void);
- u32 iort_msi_map_rid(struct device *dev, u32 req_id);
- struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- #else
-+static inline bool iort_node_match(u8 type) { return false; }
- static inline void iort_table_detect(void) { }
- static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
- { return req_id; }
+which hints that it may not be possible to do otherwise. Damned if you
+do, damned if you don't.
+
+	M.
 -- 
-2.6.4
-
+Jazz is not dead. It just smells funny...
