@@ -1,35 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbfkord-smmo02.seg.att.com ([209.65.160.78]:25437 "EHLO
-	nbfkord-smmo02.seg.att.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161010AbcG1Rbc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 13:31:32 -0400
-From: Edward Cree <ecree@solarflare.com>
-Subject: [PATCH] pci: quirks: Add ACS quirk to Solarflare SFC9220
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
-CC: <linux-net-drivers@solarflare.com>
-Message-ID: <df310014-18d6-0f65-e902-107b04577090@solarflare.com>
-Date: Thu, 28 Jul 2016 18:13:56 +0100
+Received: from mail-bl2nam02on0078.outbound.protection.outlook.com ([104.47.38.78]:41520
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757302AbcGKCho convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 22:37:44 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>
+Subject: PCIe MSI address is not written at pci_enable_msi_range call
+Date: Mon, 11 Jul 2016 02:37:37 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258B8102@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Device does not perform peer-to-peer between functions.
+Hi,
 
-Signed-off-by: Edward Cree <ecree@solarflare.com>
----
- drivers/pci/quirks.c | 1 +
- 1 file changed, 1 insertion(+)
+I have a query.
+I see that when we use PCI_MSI_IRQ_DOMAIN to handle MSI's, MSI address is not being
+written in to end point's PCI_MSI_ADDRESS_LO/HI at the call pci_enable_msi_range.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b69321c..37ff015 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4095,6 +4095,7 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_AMD, 0x7809, pci_quirk_amd_sb_acs },
- 	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_SOLARFLARE, 0x0A03, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x10C6, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x10DB, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x10DD, pci_quirk_mf_endpoint_acs },
+Instead it is being written at the time end point requests irq.
+
+Can any one tell the reason why is it handled in this manner ?
+
+Correct me If my observation is wrong.
+
+Thanks & Regards,
+Bharat
+
+
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+
