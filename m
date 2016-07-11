@@ -1,100 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58079 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932131AbcGLJUo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 05:20:44 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Cc: agordeev@redhat.com, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/5] pci: make the entries argument to pci_enable_msix optional
-Date: Tue, 12 Jul 2016 18:20:16 +0900
-Message-Id: <1468315218-20490-4-git-send-email-hch@lst.de>
-In-Reply-To: <1468315218-20490-1-git-send-email-hch@lst.de>
-References: <1468315218-20490-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] rpaphp: fix slot registration for multiple slots under a
+ PHB
+To: Nathan Fontenot <nfont@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+References: <1468019987-1733-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <57803DD2.601@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
+	mdroth@linux.vnet.ibm.com, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Date: Mon, 11 Jul 2016 08:15:07 -0700
+MIME-Version: 1.0
+In-Reply-To: <57803DD2.601@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252
+Message-Id: <5783B7FB.1010007@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The entries argument isn't needed if the list of entries does not
-contain any holes.  Make it optional so that we can the need for
-having to allocate a msix_entry structure for this (common) case.
+On 07/08/2016 04:57 PM, Nathan Fontenot wrote:
+> On 07/08/2016 06:19 PM, Tyrel Datwyler wrote:
+>> PowerVM seems to only ever provide a single hotplug slot per PHB.
+>> The under lying slot hotplug registration code assumed multiple slots,
+>> but the actual implementation is broken for multiple slots. This went
+>> unnoticed for years due to the nature of PowerVM as mentioned
+>> previously. Under qemu/kvm the hotplug slot model aligns more with
+>> x86 where multiple slots are presented under a single PHB. As seen
+>> in the following each additional slot after the first fails to
+>> register due to each slot always being compared against the first
+>> child node of the PHB in the device tree.
+>>
+>> [    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
+>> [    6.492569] rpaphp: Slot [Slot 0] registered
+>> [    6.492577] rpaphp: pci_hp_register failed with error -16
+>> [    6.493082] rpaphp: pci_hp_register failed with error -16
+>> [    6.493138] rpaphp: pci_hp_register failed with error -16
+>> [    6.493161] rpaphp: pci_hp_register failed with error -16
+>>
+>> The registration logic is fixed so that each slot is compared
+>> against the existing child devices of the PHB in the device tree to
+>> determine present slots vs empty slots.
+>>
+>> [   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
+>> [   38.482004] rpaphp: Slot [C0] registered
+>> [   38.482127] rpaphp: Slot [C1] registered
+>> [   38.482241] rpaphp: Slot [C2] registered
+>> [   38.482356] rpaphp: Slot [C3] registered
+>> [   38.482495] rpaphp: Slot [C4] registered
+>>
+>> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
+>>  1 file changed, 12 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+>> index 6937c72..c90fa8d 100644
+>> --- a/drivers/pci/hotplug/rpaphp_slot.c
+>> +++ b/drivers/pci/hotplug/rpaphp_slot.c
+>> @@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
+>>  int rpaphp_register_slot(struct slot *slot)
+>>  {
+>>  	struct hotplug_slot *php_slot = slot->hotplug_slot;
+>> +	struct device_node *child;
+>> +	u32 my_index;
+>>  	int retval;
+>> -	int slotno;
+>> +	int slotno = -1;
+>>
+>>  	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
+>>  		__func__, slot->dn->full_name, slot->index, slot->name,
+>> @@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
+>>  		return -EAGAIN;
+>>  	}
+>>
+>> -	if (slot->dn->child)
+>> -		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
+>> -	else
+>> -		slotno = -1;
+>> +	for_each_child_of_node(slot->dn, child) {
+>> +		retval = of_property_read_u32(child, "my,ibm-drc-index", &my_index);
+> 
+> Shouldn't this be reading ibm,my-drc-index? instead of my,ibm-drc-index.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/pci/msi.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+Doh, indeed it should.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a385f39..98ace67 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -695,7 +695,10 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 
- 		entry->msi_attrib.is_msix	= 1;
- 		entry->msi_attrib.is_64		= 1;
--		entry->msi_attrib.entry_nr	= entries[i].entry;
-+		if (entries)
-+			entry->msi_attrib.entry_nr = entries[i].entry;
-+		else
-+			entry->msi_attrib.entry_nr = i;
- 		entry->msi_attrib.default_irq	= dev->irq;
- 		entry->mask_base		= base;
- 		entry->nvec_used		= 1;
-@@ -713,11 +716,11 @@ static void msix_program_entries(struct pci_dev *dev,
- 	int i = 0;
- 
- 	for_each_pci_msi_entry(entry, dev) {
--		entries[i].vector = entry->irq;
-+		if (entries)
-+			entries[i++].vector = entry->irq;
- 		entry->masked = readl(pci_msix_desc_addr(entry) +
- 				PCI_MSIX_ENTRY_VECTOR_CTRL);
- 		msix_mask_irq(entry, 1);
--		i++;
- 	}
- }
- 
-@@ -930,7 +933,7 @@ EXPORT_SYMBOL(pci_msix_vec_count);
- /**
-  * pci_enable_msix - configure device's MSI-X capability structure
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
-- * @entries: pointer to an array of MSI-X entries
-+ * @entries: pointer to an array of MSI-X entries (optional)
-  * @nvec: number of MSI-X irqs requested for allocation by device driver
-  *
-  * Setup the MSI-X capability structure of device function with the number
-@@ -950,22 +953,21 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	if (!pci_msi_supported(dev, nvec))
- 		return -EINVAL;
- 
--	if (!entries)
--		return -EINVAL;
--
- 	nr_entries = pci_msix_vec_count(dev);
- 	if (nr_entries < 0)
- 		return nr_entries;
- 	if (nvec > nr_entries)
- 		return nr_entries;
- 
--	/* Check for any invalid entries */
--	for (i = 0; i < nvec; i++) {
--		if (entries[i].entry >= nr_entries)
--			return -EINVAL;		/* invalid entry */
--		for (j = i + 1; j < nvec; j++) {
--			if (entries[i].entry == entries[j].entry)
--				return -EINVAL;	/* duplicate entry */
-+	if (entries) {
-+		/* Check for any invalid entries */
-+		for (i = 0; i < nvec; i++) {
-+			if (entries[i].entry >= nr_entries)
-+				return -EINVAL;		/* invalid entry */
-+			for (j = i + 1; j < nvec; j++) {
-+				if (entries[i].entry == entries[j].entry)
-+					return -EINVAL;	/* duplicate entry */
-+			}
- 		}
- 	}
- 	WARN_ON(!!dev->msix_enabled);
--- 
-2.1.4
+-Tyrel
 
+> 
+> -Nathan
+> 
+>> +		if (my_index == slot->index) {
+>> +			slotno = PCI_SLOT(PCI_DN(child)->devfn);
+>> +			of_node_put(child);
+>> +			break;
+>> +		}
+>> +	}
+>> +
+>>  	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
+>>  	if (retval) {
+>>  		err("pci_hp_register failed with error %d\n", retval);
+>>
+> 
