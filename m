@@ -1,140 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Jul 2016 15:24:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rui Wang <rui.y.wang@intel.com>
-Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-	bhelgaas@google.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/4] x86/ioapic: Fix lost ioapic resource after
- hot-removal and hotadd
-Message-ID: <20160726202422.GF15037@localhost>
-References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
- <1469549597-19253-4-git-send-email-rui.y.wang@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1469549597-19253-4-git-send-email-rui.y.wang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60925 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752838AbcGKLwg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jul 2016 07:52:36 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6BBnIdJ067996
+	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 07:52:36 -0400
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 2448qjcr93-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 07:52:36 -0400
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <imunsie@au1.ibm.com>;
+	Mon, 11 Jul 2016 21:52:33 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id B632C2BB0057
+	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 21:52:30 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u6BBqUtK19988604
+	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 21:52:30 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u6BBqT80018030
+	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 21:52:30 +1000
+From: "Ian Munsie" <imunsie@au1.ibm.com>
+To: Michael Ellerman <mpe@ellerman.id.au>,
+	Michael Neuling <mikey@neuling.org>,
+	Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
+	Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, Huy Nguyen <huyn@mellanox.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ian Munsie <imunsie@au1.ibm.com>
+Subject: [PATCH 14/15] PCI/hotplug: pnv_php: handle OPAL_PCI_SLOT_OFFLINE power state
+Date: Mon, 11 Jul 2016 21:50:21 +1000
+In-Reply-To: <1468237822-26276-1-git-send-email-imunsie@au.ibm.com>
+References: <1468237822-26276-1-git-send-email-imunsie@au.ibm.com>
+Message-Id: <1468237822-26276-15-git-send-email-imunsie@au.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 27, 2016 at 12:13:16AM +0800, Rui Wang wrote:
-> ioapic resource at 0xfecxxxxx gets lost from /proc/iomem after
-> hot-removing and then hot-adding the ioapic devices.
-> 
-> After system boot, in /proc/iomem:
-> fec00000-fecfffff : PNP0003:00
->   fec00000-fec003ff : IOAPIC 0
->   fec01000-fec013ff : IOAPIC 1
->   fec40000-fec403ff : IOAPIC 2
->   fec80000-fec803ff : IOAPIC 3
->   fecc0000-fecc03ff : IOAPIC 4
-> 
-> Then hot-remove IOAPIC 2 and hot-add it again:
-> fec00000-fecfffff : PNP0003:00
->   fec00000-fec003ff : IOAPIC 0
->   fec01000-fec013ff : IOAPIC 1
->   fec80000-fec803ff : IOAPIC 3
->   fecc0000-fecc03ff : IOAPIC 4
-> 
-> The range at 0xfec40000 is lost from /proc/iomem. It is because
-> handle_ioapic_add() requests resource from either PCI config BAR or
-> acpi _CRS, not both. But Intel platforms map the IOxAPIC registers
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-s/acpi/ACPI/
-s/ioapic/IOAPIC/ throughout
+When calling pnv_php_set_slot_power_state() with state ==
+OPAL_PCI_SLOT_OFFLINE, remove devices from the device tree as if we're
+dealing with OPAL_PCI_SLOT_POWER_OFF.
 
-> at both the PCI config BAR (called MBAR) and the 0xfecX_YZ00 to
-> 0xfecX_Y2FF range (called ABAR). Both of the ranges should be claimed
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Signed-off-by: Ian Munsie <imunsie@au1.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/hotplug/pnv_php.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I guess you mean the 0xfecX_YZ00-0xfecX_Y2FF range appears in _CRS?
+diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+index 2d2f704..e6245b0 100644
+--- a/drivers/pci/hotplug/pnv_php.c
++++ b/drivers/pci/hotplug/pnv_php.c
+@@ -317,7 +317,7 @@ int pnv_php_set_slot_power_state(struct hotplug_slot *slot,
+ 		return ret;
+ 	}
+ 
+-	if (state == OPAL_PCI_SLOT_POWER_OFF)
++	if (state == OPAL_PCI_SLOT_POWER_OFF || state == OPAL_PCI_SLOT_OFFLINE)
+ 		pnv_php_rmv_devtree(php_slot);
+ 	else
+ 		ret = pnv_php_add_devtree(php_slot);
+-- 
+2.8.1
 
-> from /proc/iomem for exclusive use.
-> 
-> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
-> ---
->  drivers/acpi/ioapic.c | 36 ++++++++++++++++++++----------------
->  1 file changed, 20 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-> index daf4a40..80b0b1a 100644
-> --- a/drivers/acpi/ioapic.c
-> +++ b/drivers/acpi/ioapic.c
-> @@ -97,7 +97,7 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
->  	unsigned long long gsi_base;
->  	struct acpi_pci_ioapic *ioapic;
->  	struct pci_dev *dev = NULL;
-> -	struct resource *res = NULL;
-> +	struct resource *res = NULL, *pci_res, *crs_res;
->  	char *type = NULL;
->  
->  	if (!acpi_is_ioapic(handle, &type))
-> @@ -137,23 +137,28 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
->  		pci_set_master(dev);
->  		if (pci_request_region(dev, 0, type))
->  			goto exit_disable;
-> -		res = &dev->resource[0];
-> +		pci_res = &dev->resource[0];
->  		ioapic->pdev = dev;
->  	} else {
->  		pci_dev_put(dev);
->  		dev = NULL;
-> +	}
->  
-> -		res = &ioapic->res;
-> -		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
-> -		if (res->flags == 0) {
-> -			acpi_handle_warn(handle, "failed to get resource\n");
-> -			goto exit_free;
-> -		} else if (request_resource(&iomem_resource, res)) {
-> -			acpi_handle_warn(handle, "failed to insert resource\n");
-> -			goto exit_free;
-> -		}
-> +	crs_res = &ioapic->res;
-> +	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
-> +	if (crs_res->flags == 0) {
-> +		acpi_handle_warn(handle, "failed to get resource\n");
-> +		goto exit_release;
-> +	} else if (request_resource(&iomem_resource, crs_res)) {
-> +		acpi_handle_warn(handle, "failed to insert resource\n");
-> +		goto exit_release;
->  	}
->  
-> +	/* try pci resource first, then "_CRS" resource */
-> +	res = pci_res;
-> +	if (!res || !res->flags)
-> +		res = crs_res;
-> +
->  	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
->  		acpi_handle_warn(handle, "failed to register IOAPIC\n");
->  		goto exit_release;
-> @@ -174,14 +179,13 @@ done:
->  exit_release:
->  	if (dev)
->  		pci_release_region(dev, 0);
-> -	else
-> -		release_resource(res);
-> +	if (ioapic->res.flags && ioapic->res.parent)
-> +		release_resource(&ioapic->res);
->  exit_disable:
->  	if (dev)
->  		pci_disable_device(dev);
->  exit_put:
->  	pci_dev_put(dev);
-> -exit_free:
->  	kfree(ioapic);
->  exit:
->  	mutex_unlock(&ioapic_list_lock);
-> @@ -218,9 +222,9 @@ int acpi_ioapic_remove(struct acpi_pci_root *root)
->  			pci_release_region(ioapic->pdev, 0);
->  			pci_disable_device(ioapic->pdev);
->  			pci_dev_put(ioapic->pdev);
-> -		} else if (ioapic->res.flags && ioapic->res.parent) {
-> -			release_resource(&ioapic->res);
->  		}
-> +		if (ioapic->res.flags && ioapic->res.parent)
-> +			release_resource(&ioapic->res);
->  		list_del(&ioapic->list);
->  		kfree(ioapic);
->  	}
-> -- 
-> 1.8.3.1
-> 
