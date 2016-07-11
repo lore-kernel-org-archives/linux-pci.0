@@ -1,35 +1,41 @@
-Return-Path: <arnd@arndb.de>
-Return-Path: <arnd@arndb.de>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: helgaas@kernel.org, rafael@kernel.org, Lorenzo.Pieralisi@arm.com, tn@semihalf.com, wangzhou1@hisilicon.com, pratyush.anand@gmail.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, gabriele.paoloni@huawei.com, charles.chenxin@huawei.com, linuxarm@huawei.com
-Subject: Re: [RFC PATCH 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
-Date: Tue, 12 Jul 2016 10:35:15 +0200
-Message-ID: <3580311.QdyhSxNzVU@wuerfel>
-In-Reply-To: <1468291344-122909-4-git-send-email-liudongdong3@huawei.com>
-References: <1468291344-122909-1-git-send-email-liudongdong3@huawei.com> <1468291344-122909-4-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53621 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753461AbcGKKin (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Jul 2016 06:38:43 -0400
+Date: Mon, 11 Jul 2016 12:43:41 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 07/13] pci: Provide sensible irq vector alloc/free
+ routines
+Message-ID: <20160711104340.GB21169@agordeev.lab.eng.brq.redhat.com>
+References: <1467621574-8277-1-git-send-email-hch@lst.de>
+ <1467621574-8277-8-git-send-email-hch@lst.de>
+ <20160706080545.GA14583@dhcp-27-118.brq.redhat.com>
+ <20160710034737.GB15720@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160710034737.GB15720@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 12, 2016 10:42:24 AM CEST Dongdong Liu wrote:
->  MAINTAINERS                       |   1 +
->  drivers/pci/host/Kconfig          |   7 ++
->  drivers/pci/host/Makefile         |   1 +
->  drivers/pci/host/mcfg-quirks.c    |   8 ++
->  drivers/pci/host/mcfg-quirks.h    |   8 ++
->  drivers/pci/host/pcie-hisi-acpi.c | 151 ++++++++++++++++++++++++++++++++++++++
->  drivers/pci/host/pcie-hisi.c      |   2 -
->  drivers/pci/host/pcie-hisi.h      |   2 +
->  8 files changed, 178 insertions(+), 2 deletions(-)
->  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+On Sun, Jul 10, 2016 at 05:47:37AM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 06, 2016 at 10:05:45AM +0200, Alexander Gordeev wrote:
+> > > + pci_enable_msi, pci_enable_msi_range, pci_enable_msi_exact, pci_disable_msi,
+> > > + pci_msi_vec_count, pci_enable_msix_range, pci_enable_msix_exact,
+> > > + pci_disable_msix, pci_msix_vec_count
+> > 
+> > Description of these functions can be removed when all drivers migrated
+> > to the new API. Also implementation descriptions + examples would still
+> > be needed AFAICT.
 > 
-> 
+> I diagreed - if we deprecated functions the only thing that should
+> be mentioned is a "don't use these". 
 
-Please keep the quirks separate from the PCI host drivers.
-
-The ACPI code includes its own host driver and the only thing
-you need to override here is the config space access, so just put that
-into drivers/acpi/
-
-	Arnd
+I will try to paraphrase myself. The new API deprecates pci_enable_msi*_range
+functions, but I am not that sure about others. Certainly, pci_msi*_vec_count
+and pci_enable_msi*_exact could have (and AFAIR do have) uses that can not be
+covered by automatic initialization of pci_alloc_irq_vectors().
