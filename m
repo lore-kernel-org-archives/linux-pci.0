@@ -1,114 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 20 Jul 2016 17:23:40 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
- support
-Message-ID: <20160720152340.GA8337@wunner.de>
-References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
- <1975118.iO8UCAENoH@vostro.rjw.lan>
- <20160720062450.GA8066@wunner.de>
- <3969169.CcnEsvYuly@vostro.rjw.lan>
-MIME-Version: 1.0
-In-Reply-To: <3969169.CcnEsvYuly@vostro.rjw.lan>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
- linux-samsung-soc@vger.kernel.org,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Joerg Roedel <joro@8bytes.org>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Inki Dae <inki.dae@samsung.com>,
- "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
- Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
- linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0049.outbound.protection.outlook.com ([104.47.36.49]:62176
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758585AbcGKKvL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jul 2016 06:51:11 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+Subject: RE: PCIe MSI address is not written at pci_enable_msi_range call
+Date: Mon, 11 Jul 2016 10:51:02 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258B823D@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5783733C.70702@arm.com>
+In-Reply-To: <5783733C.70702@arm.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
-> > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
-> > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
-> > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
-> > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
-> > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> > > > > > We also have such a functional dependency for Thunderbolt on Macs:
-> > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
-> > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
-> > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
-> > > > > > in drivers/pci/quirks.c. It would be good if we could represent
-> > > > > > this dependency using something like Rafael's approach instead of
-> > > > > > open coding it, however one detail in Rafael's patches is problematic:
-> > > > > >
-> > > > > > > New links are added by calling device_link_add() which may happen
-> > > > > > > either before the consumer device is probed or when probing it, in
-> > > > > > > which case the caller needs to ensure that the driver of the
-> > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
-> > > > > > > flag should be passed to device_link_add() to reflect that.
-> > > > > >
-> > > > > > The thunderbolt driver cannot call device_link_add() before the
-> > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
-> > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
-> > > > > > if the thunderbolt driver isn't loaded.
-> > > > > >
-> > > > > > It would therefore be beneficial if device_link_add() can be
-> > > > > > called even *after* the consumer is bound.
-> > > > > 
-> > > > > I don't quite follow.
-> > > > > 
-> > > > > Who's the provider and who's the consumer here?
-> > > > 
-> > > > thunderbolt.ko is the supplier.
-> > > 
-> > > But it binds to the children of the ports that are supposed to be its
-> > > consumers?
-> > > 
-> > > Why is that even expected to work?
-> > 
-> > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
-> > 
-> > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
-> > the drawing below). The supplier is the NHI:
-> > 
-> >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> >                                          +-- Downstream Bridge 1 --
-> >                                          +-- Downstream Bridge 2 --
-> >                                          ...
-> > 
-> > We're calling pci_power_up() and pci_restore_state() from
-> > pci_pm_resume_noirq(). And that will fail for devices below
-> > the hotplug ports if the PCI tunnels haven't been re-established
-> > yet by the NHI.
-> 
-> So the NHI is a PCIe device, right?
-> 
-> Does the Thunderbolt driver bind to that device?
+> > Hi Marc,
+> >
+> > Thanks for the reply.
+> >
+> > From PCIe Spec:
+> > MSI Enable Bit:
+> > If 1 and the MSI-X Enable bit in the MSI-X Message
+> > Control register (see Section 6.8.2.3) is 0, the
+> > function is permitted to use MSI to request service
+> > and is prohibited from using its INTx# pin.
+> >
+> > From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
+> which means MSI address and data fields are available/programmed.
+> >
+> > In our SoC whenever MSI Enable goes from 0 --> 1 the hardware latches
+> onto MSI address and MSI data values.
+> >
+> > With current MSI implementation in kernel, our SoC is latching on to
+> incorrect address and data values, as address/data
+> > are updated much later than MSI Enable bit.
+>
+> Interesting. It looks like we're doing something wrong in the MSI flow.
+> Can you confirm that this is limited to MSI and doesn't affect MSI-X?
+>
 
-The NHI is a PCI device but not a bridge. It has class 0x88000.
-Yes, thunderbolt.ko binds to the NHI.
+I think it's the same issue irrespective of MSI or MSI-X as we are enabling these interrupts before providing
+the  vectors.
 
-And portdrv binds to the upstream bridge and downstream bridges.
-Those have class 0x60400.
+So we always have a hole when MSI/MSI-X is 1, and software driver has not registered the irq, and End Point
+may raise an interrupt (may be due to error) in this point of time.
 
-Best regards,
+Thanks & Regards,
+Bharat
 
-Lukas
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+
