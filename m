@@ -1,72 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41321 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751083AbcGJD5y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 9 Jul 2016 23:57:54 -0400
-Date: Sun, 10 Jul 2016 05:57:51 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de, axboe@fb.com,
-	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/13] pci: spread interrupt vectors in
-	pci_alloc_irq_vectors
-Message-ID: <20160710035751.GC15720@lst.de>
-References: <1467621574-8277-1-git-send-email-hch@lst.de> <1467621574-8277-9-git-send-email-hch@lst.de> <20160707110501.GA4917@dhcp-27-118.brq.redhat.com>
+Received: from mail-cys01nam02on0064.outbound.protection.outlook.com ([104.47.37.64]:37094
+	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757302AbcGKCsK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 22:48:10 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: PCIe MSI address is not written at pci_enable_msi_range call
+Date: Mon, 11 Jul 2016 02:32:04 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160707110501.GA4917@dhcp-27-118.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 07, 2016 at 01:05:01PM +0200, Alexander Gordeev wrote:
-> irq_create_affinity_mask() bails out with no affinity in case of single
-> vector, but alloc_descs() (see below (*)) assigns the whole affinity
-> mask. It should be consistent instead.
+Hi,
 
-I don't understand the comment.  If we only have one vector (of any
-kinds) there is no need to create an affinity mask, we'll leave the
-interrupt to the existing irq balancing code.
+I have a query.
+I see that when we use PCI_MSI_IRQ_DOMAIN to handle MSI's, MSI address is not being
+written in to end point's PCI_MSI_ADDRESS_LO/HI at the call pci_enable_msi_range.
 
-> Actually, I just realized pci_alloc_irq_vectors() should probably call
-> irq_create_affinity_mask() and handle it in a consistent way for all four
-> cases: MSI-X, mulit-MSI, MSI and legacy.
+Instead it is being written at the time end point requests irq.
 
-That's what the earlier versions did, but you correctly pointed out
-that we should call irq_create_affinity_mask only after we have reduced
-the number of vectors to the number that the bridges can route, i.e.
-that we have to move it into the pci_enable_msi(x)_range main loop.
+Can any one tell the reason why is it handled in this manner ?
 
-> Optionally, the three latter could be dropped for now so you could proceed
-> with NVMe.
+Correct me If my observation is wrong.
 
-NVMe cares for all these cases at least in theory.
+Thanks & Regards,
+Bharat
 
-> (*) In the future IRQ vs CPU mapping 1:N is possible/desirable so I suppose
-> this piece of code worth a comment or better - a separate function. In fact,
-> this algorithm already exists in alloc_descs(), which makes even more sense
-> to factor it out:
-> 
-> 	for (i = 0; i < cnt; i++) {
-> 		if (affinity) {
-> 			cpu = cpumask_next(cpu, affinity);
-> 			if (cpu >= nr_cpu_ids)
-> 				cpu = cpumask_first(affinity);
-> 			node = cpu_to_node(cpu);
-> 
-> 			/*
-> 			 * For single allocations we use the caller provided
-> 			 * mask otherwise we use the mask of the target cpu
-> 			 */
-> 			mask = cnt == 1 ? affinity : cpumask_of(cpu);
-> 		}
-> 
-> 		[...]
 
-While these two pieces of code look very similar there is an important
-difference in why and how the mask is calculated.  In alloc_descs()
-the difference here is that cnt = 1 is the MSI-X case where the
-passed in affinity is that for the MSI-X descriptor which is for
-a single vector.  in the MSI case where we have multiple vectors per
-descriptor a different affinity is asigned for each vector based
-of a single passed in mask.
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+
