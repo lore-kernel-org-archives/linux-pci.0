@@ -1,99 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33415 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932237AbcGJL57 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 07:57:59 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Cc: agordeev@redhat.com
-Subject: [PATCH 3/5] pci: make the entries argument to pci_enable_msix optional
-Date: Sun, 10 Jul 2016 20:57:44 +0900
-Message-Id: <1468151866-7776-4-git-send-email-hch@lst.de>
-In-Reply-To: <1468151866-7776-1-git-send-email-hch@lst.de>
-References: <1468151866-7776-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Arnd Bergmann
+	<arnd@arndb.de>,
+        "liudongdong (C)" <liudongdong3@huawei.com>
+CC: "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+        "Chenxin
+ (Charles)" <charles.chenxin@huawei.com>,
+        "rafael@kernel.org"
+	<rafael@kernel.org>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm
+	<linuxarm@huawei.com>,
+        "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "jcm@redhat.com"
+	<jcm@redhat.com>
+Subject: RE: [RFC PATCH 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon
+	SoCs Host Controllers
+Date: Tue, 12 Jul 2016 10:32:33 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F7D730E@lhreml507-mbx>
+References: <1468291344-122909-1-git-send-email-liudongdong3@huawei.com>
+	<1468291344-122909-4-git-send-email-liudongdong3@huawei.com>
+	<3580311.QdyhSxNzVU@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F7D72BF@lhreml507-mbx>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F7D72BF@lhreml507-mbx>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-The entries argument isn't needed if the list of entries does not
-contain any holes.  Make it optional so that we can the need for
-having to allocate a msix_entry structure for this (common) case.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/msi.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a385f39..98ace67 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -695,7 +695,10 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 
- 		entry->msi_attrib.is_msix	= 1;
- 		entry->msi_attrib.is_64		= 1;
--		entry->msi_attrib.entry_nr	= entries[i].entry;
-+		if (entries)
-+			entry->msi_attrib.entry_nr = entries[i].entry;
-+		else
-+			entry->msi_attrib.entry_nr = i;
- 		entry->msi_attrib.default_irq	= dev->irq;
- 		entry->mask_base		= base;
- 		entry->nvec_used		= 1;
-@@ -713,11 +716,11 @@ static void msix_program_entries(struct pci_dev *dev,
- 	int i = 0;
- 
- 	for_each_pci_msi_entry(entry, dev) {
--		entries[i].vector = entry->irq;
-+		if (entries)
-+			entries[i++].vector = entry->irq;
- 		entry->masked = readl(pci_msix_desc_addr(entry) +
- 				PCI_MSIX_ENTRY_VECTOR_CTRL);
- 		msix_mask_irq(entry, 1);
--		i++;
- 	}
- }
- 
-@@ -930,7 +933,7 @@ EXPORT_SYMBOL(pci_msix_vec_count);
- /**
-  * pci_enable_msix - configure device's MSI-X capability structure
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
-- * @entries: pointer to an array of MSI-X entries
-+ * @entries: pointer to an array of MSI-X entries (optional)
-  * @nvec: number of MSI-X irqs requested for allocation by device driver
-  *
-  * Setup the MSI-X capability structure of device function with the number
-@@ -950,22 +953,21 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	if (!pci_msi_supported(dev, nvec))
- 		return -EINVAL;
- 
--	if (!entries)
--		return -EINVAL;
--
- 	nr_entries = pci_msix_vec_count(dev);
- 	if (nr_entries < 0)
- 		return nr_entries;
- 	if (nvec > nr_entries)
- 		return nr_entries;
- 
--	/* Check for any invalid entries */
--	for (i = 0; i < nvec; i++) {
--		if (entries[i].entry >= nr_entries)
--			return -EINVAL;		/* invalid entry */
--		for (j = i + 1; j < nvec; j++) {
--			if (entries[i].entry == entries[j].entry)
--				return -EINVAL;	/* duplicate entry */
-+	if (entries) {
-+		/* Check for any invalid entries */
-+		for (i = 0; i < nvec; i++) {
-+			if (entries[i].entry >= nr_entries)
-+				return -EINVAL;		/* invalid entry */
-+			for (j = i + 1; j < nvec; j++) {
-+				if (entries[i].entry == entries[j].entry)
-+					return -EINVAL;	/* duplicate entry */
-+			}
- 		}
- 	}
- 	WARN_ON(!!dev->msix_enabled);
--- 
-2.1.4
+> -----Original Message-----
+> From: linuxarm-bounces@huawei.com [mailto:linuxarm-bounces@huawei.com]
+> On Behalf Of Gabriele Paoloni
+> Sent: 12 July 2016 18:22
+> To: Arnd Bergmann; liudongdong (C)
+> Cc: Lorenzo.Pieralisi@arm.com; Chenxin (Charles); rafael@kernel.org;
+> tn@semihalf.com; pratyush.anand@gmail.com; linux-kernel@vger.kernel.org;
+> Linuxarm; linux-acpi@vger.kernel.org; helgaas@kernel.org; linux-
+> pci@vger.kernel.org; jcm@redhat.com
+> Subject: RE: [RFC PATCH 3/3] PCI/ACPI: hisi: Add ACPI support for
+> HiSilicon SoCs Host Controllers
+>=20
+> > -----Original Message-----
+> > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > Sent: 12 July 2016 16:35
+> > To: liudongdong (C)
+> > Cc: helgaas@kernel.org; rafael@kernel.org; Lorenzo.Pieralisi@arm.com;
+> > tn@semihalf.com; Wangzhou (B); pratyush.anand@gmail.com; linux-
+> > pci@vger.kernel.org; linux-acpi@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; jcm@redhat.com; Gabriele Paoloni; Chenxin
+> > (Charles); Linuxarm
+> > Subject: Re: [RFC PATCH 3/3] PCI/ACPI: hisi: Add ACPI support for
+> > HiSilicon SoCs Host Controllers
+> >
+> > On Tuesday, July 12, 2016 10:42:24 AM CEST Dongdong Liu wrote:
+> > >  MAINTAINERS                       |   1 +
+> > >  drivers/pci/host/Kconfig          |   7 ++
+> > >  drivers/pci/host/Makefile         |   1 +
+> > >  drivers/pci/host/mcfg-quirks.c    |   8 ++
+> > >  drivers/pci/host/mcfg-quirks.h    |   8 ++
+> > >  drivers/pci/host/pcie-hisi-acpi.c | 151
+> > ++++++++++++++++++++++++++++++++++++++
+> > >  drivers/pci/host/pcie-hisi.c      |   2 -
+> > >  drivers/pci/host/pcie-hisi.h      |   2 +
+> > >  8 files changed, 178 insertions(+), 2 deletions(-)
+> > >  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+> > >
+> > >
+> >
+> > Please keep the quirks separate from the PCI host drivers.
+> >
+> > The ACPI code includes its own host driver and the only thing
+> > you need to override here is the config space access, so just put
+> that
+> > into drivers/acpi/
+>=20
+> Hi Arnd, thanks for replying.
+>=20
+> Basically we just followed what Tomasz has done in
+> "[RFC PATCH v4 0/5] ECAM quirks handling for ARM64 platforms"
+>=20
+> In this case the ThunderX quirks have been defined in
+> "drivers/pci/host/pci-thunder-pem.c".
+>=20
 
+Also on top of this I think that from
+"Re: [RFC PATCH v3 1/2] ACPI/PCI: Check platform specific ECAM quirks"
+
+Lorenzo suggested to add the static array of quirks (and therefore the
+respective quirk mechanisms in "drivers/pci/host").
+
+See:
+[...]
+It should be easier to implement (provided we find a place where
+to add this static array of hooks matching MCFG, I suspect it is
+going to be a file in drivers/pci/host but Tomasz and I need
+input on that) and prevent abuse (since it is a static array of
+hooks in a single place, it is easier to manage than section
+entries).
+[...]
+=09
+Thanks
+
+Gab
+
+> Cheers
+> Gab
+>=20
+> >
+> > 	Arnd
+>=20
+> _______________________________________________
+> linuxarm mailing list
+> linuxarm@huawei.com
+> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
