@@ -1,71 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:56276 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbcG1V2I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 17:28:08 -0400
-Date: Thu, 28 Jul 2016 17:28:02 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Keith Busch <keith.busch@intel.com>
-CC: <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Mika Westerberg" <mika.westerberg@linux.intel.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular
-Message-ID: <20160728212801.GY11410@windriver.com>
-References: <20160728193303.12945-1-paul.gortmaker@windriver.com>
- <20160728202859.GA2420@localhost.localdomain>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36094 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106AbcGLWS0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 18:18:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20160728202859.GA2420@localhost.localdomain>
+In-Reply-To: <20160712211324.GA5488@wunner.de>
+References: <5785474B.6070608@gmail.com> <20160712211324.GA5488@wunner.de>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Wed, 13 Jul 2016 00:17:33 +0200
+Message-ID: <CAMxnaaU1eMw5o9nJRmEgyw97oD25fRnjTcB_i+xAgc-V6m5HvA@mail.gmail.com>
+Subject: Re: [PATCH] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C controller
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Xavier Gnata <xavier.gnata@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular] On 28/07/2016 (Thu 16:29) Keith Busch wrote:
+On Tue, Jul 12, 2016 at 11:13 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Tue, Jul 12, 2016 at 09:38:51PM +0200, Xavier Gnata wrote:
+>> Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk to
+>> support suspend/resume.
+>> Tested against 4.7 master on a MacBook Air 11" 2015
+>
+> Nice, thanks for doing this. See below for some comments.
+>
+>
+>>
+>> ---
+>> drivers/thunderbolt/nhi.c | 6 ++++++
+>> 1 file changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+>> index 9c15344..b3d55ec 100644
+>> --- a/drivers/thunderbolt/nhi.c
+>> +++ b/drivers/thunderbolt/nhi.c
+>> @@ -654,6 +654,12 @@ static struct pci_device_id nhi_ids[] = {
+>> .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
+>> .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+>> },
+>> + {
+>> + .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+>> + .vendor = PCI_VENDOR_ID_INTEL,
+>> + .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
+>> + .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+>> + },
+>> { 0,}
+>> };
+>>
+>> --
+>> 2.7.4
+>>
+>
+> It looks like the indentation got mangled here, perhaps a Thunderbird
+> issue or copy-pasta.
+>
+>
+>>
+>> ---
+>>  drivers/pci/quirks.c | 23 +++++++++++++++--------
+>>  1 file changed, 15 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index ee72ebe..e280351 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3320,15 +3320,19 @@ static void quirk_apple_wait_for_thunderbolt(struct
+>> pci_dev *dev)
+>>         if (!sibling || !sibling->subordinate)
+>>                 goto out;
+>>         nhi = pci_get_slot(sibling->subordinate, 0x0);
+>> -       if (!nhi)
+>> -               goto out;
+>> -       if (nhi->vendor != PCI_VENDOR_ID_INTEL
+>> -                   || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
+>> -                       nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+>> &&
+>> -                       nhi->device !=
+>> PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+>> -                   || nhi->subsystem_vendor != 0x2222
+>> -                   || nhi->subsystem_device != 0x1111)
+>> +       if (!nhi || nhi->vendor != PCI_VENDOR_ID_INTEL)
+>>                 goto out;
+>> +       if (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
+>> +               nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+>> +               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI &&
+>> +               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI)
+>> +        goto out;
+>> +       if((nhi->device == PCI_DEVICE_ID_INTEL_LIGHT_RIDGE ||
+>> +               nhi->device == PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C ||
+>> +               nhi->device == PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+>> +               && (nhi->subsystem_vendor != 0x222
+>                                                     ^
+> You're missing a 2 here ----------------------------+
+>
+> The subsystem vendor/device should also not be checked on Falcon Ridge 4C,
+> commit a42fb351ca1f ("thunderbolt: Allow loading of module on recent Apple
+> MacBooks with thunderbolt 2 controller") removed that from the pci_device_id
+> list but forgot to amend the quirk.
 
-> On Thu, Jul 28, 2016 at 03:33:03PM -0400, Paul Gortmaker wrote:
-> > The Kconfig currently controlling compilation of this code is:
-> > 
-> > drivers/pci/pcie/Kconfig:config PCIE_DPC
-> > drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
-> > 
-> > ...meaning that it currently is not being built as a module by anyone.
-> > 
-> > Lets remove the modular code that is essentially orphaned, so that
-> > when reading the driver there is no doubt it is builtin-only.
-> > 
-> > Since module_init translates to device_initcall in the non-modular
-> > case, the init ordering remains unchanged with this commit.
-> > 
-> > We also delete the MODULE_LICENSE tag etc. since all that information
-> > was (or is now) contained at the top of the file in the comments.
-> 
-> Thanks for cleaning this up.
-> 
-> FWIW, all of the other pcie service drivers look like they could use
-> the same cleanup.
+Yeah, we noticed that (off list). I was going to send a follow up
+patch to fix that (just to keep the two things "Support FC_2C" and
+"Fix suspend/resume for FC_4C" separate).
 
-Yep, not to worry, I've still got the following patches pending for-4.9:
+> Actually I'm wondering if we need to check the subsystem vendor/device id
+> at all. If the motivation is to execute the quirk only for host controllers,
+> this should probably be achieved by checking if the parent of the parent
+> of the NHI has PCI_EXP_TYPE_ROOT_PORT set.
+My idea was to check the device class - external thunderbolt devices
+do not expose their controller through pci (even if they support
+chaining). So all devices which match the device id and class should
+be actual controllers.
 
-$ grep PCI series 
-# PCI
-PCI-aerdrv-make-it-explicitly-non-modular.patch
-PCI-altera-make-it-explicitly-non-modular.patch
-PCI-dra7xx-make-it-explicitly-non-modular.patch
-PCI-imx6-make-it-explicitly-non-modular.patch
-PCI-pme-make-it-explicitly-non-modular.patch
-PCI-qcom-make-it-explicitly-non-modular.patch
-PCI-spear13xx-make-it-explicitly-non-modular.patch
-PCI-xilinx-make-it-explicitly-non-modular.patch
-PCI-xilinx-nwl-make-it-eplicitly-non-modular.patch
-PCI-portdrv-make-it-explicitly-non-modular.patch
-PCI-PCIe-make-dpc-explicitly-non-modular.patch
-PCI-generic-make-host-common-explicitly-non-modular.patch
-PCI-hotplug_core-make-it-explicitly-non-modular.patch
-PCI-hotplug-make-core-code-explicitly-non-modular.patch
+Are thunderbolt controllers always installed directly below the root
+port? In theory there could be more bridges in between (a candidate
+for such a topology would be the mac pro which has 3 controllers).
 
-Thanks,
-Paul.
---
-
-> 
-> Reviewed-by: Keith Busch <keith.busch@intel.com>
+Andreas
+>
+> Please also add PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI to tb_switch_alloc()
+> so that the message "unsupported switch device id" is not printed for this
+> controller.
+>
+> Thanks,
+>
+> Lukas
+>
+>> +               || nhi->subsystem_device != 0x1111))
+>> +        goto out;
+>>         dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish
+>> PCI tunnels...\n");
+>>         device_pm_wait_for_dev(&dev->dev, &nhi->dev);
+>>  out:
+>> @@ -3344,6 +3348,9 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+>>  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+>>                                PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
+>>                                quirk_apple_wait_for_thunderbolt);
+>> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+>> +                              PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
+>> +                              quirk_apple_wait_for_thunderbolt);
+>>  #endif
+>>
+>>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>> --
+>> 2.7.4
