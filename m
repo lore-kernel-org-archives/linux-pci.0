@@ -1,121 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45346 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:37345 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754887AbcGZUGq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jul 2016 16:06:46 -0400
-Date: Tue, 26 Jul 2016 15:06:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [GIT PULL] PCI: tegra: Changes for v4.8-rc1
-Message-ID: <20160726200641.GB15037@localhost>
-References: <20160701150056.26537-3-thierry.reding@gmail.com>
+	id S1751588AbcGLMyt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jul 2016 08:54:49 -0400
+Date: Tue, 12 Jul 2016 14:59:47 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/5] pci: add a pci_msix_desc_addr helper
+Message-ID: <20160712125946.GF26969@agordeev.lab.eng.brq.redhat.com>
+References: <1468315218-20490-1-git-send-email-hch@lst.de>
+ <1468315218-20490-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160701150056.26537-3-thierry.reding@gmail.com>
+In-Reply-To: <1468315218-20490-2-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 01, 2016 at 05:00:56PM +0200, Thierry Reding wrote:
-> Hi Bjorn,
+On Tue, Jul 12, 2016 at 06:20:14PM +0900, Christoph Hellwig wrote:
+> To factor out the calculation of the base address for a given MSI-X vector.
 > 
-> The following changes since commit 1a695a905c18548062509178b98bc91e67510864:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/msi.c | 17 +++++++++--------
+>  1 file changed, 9 insertions(+), 8 deletions(-)
 > 
->   Linux 4.7-rc1 (2016-05-29 09:29:24 -0700)
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a080f44..0d94fbf 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -207,6 +207,12 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>  	desc->masked = __pci_msi_desc_mask_irq(desc, mask, flag);
+>  }
+>  
+> +static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
+> +{
+> +	return desc->mask_base +
+> +		desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
+> +}
+> +
+>  /*
+>   * This internal function does not flush PCI writes to the device.
+>   * All users must ensure that they read from the device before either
+> @@ -217,8 +223,6 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+>  u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
+>  {
+>  	u32 mask_bits = desc->masked;
+> -	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
+> -						PCI_MSIX_ENTRY_VECTOR_CTRL;
+>  
+>  	if (pci_msi_ignore_mask)
+>  		return 0;
+> @@ -226,7 +230,7 @@ u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
+>  	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
+>  	if (flag)
+>  		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
+> -	writel(mask_bits, desc->mask_base + offset);
+> +	writel(mask_bits, pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
+>  
+>  	return mask_bits;
+>  }
+> @@ -284,8 +288,7 @@ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>  	BUG_ON(dev->current_state != PCI_D0);
+>  
+>  	if (entry->msi_attrib.is_msix) {
+> -		void __iomem *base = entry->mask_base +
+> -			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
+> +		void __iomem *base = pci_msix_desc_addr(entry);
+>  
+>  		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
+>  		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
+> @@ -315,9 +318,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+>  	if (dev->current_state != PCI_D0) {
+>  		/* Don't touch the hardware now */
+>  	} else if (entry->msi_attrib.is_msix) {
+> -		void __iomem *base;
+> -		base = entry->mask_base +
+> -			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
+> +		void __iomem *base = pci_msix_desc_addr(entry);
+>  
+>  		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
+>  		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
+> -- 
+> 2.1.4
 > 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git tags/tegra-for-4.8-pci
-> 
-> for you to fetch changes up to 0f32700faed919946e21e9d1dc4d74ae8f1b1226:
-> 
->   PCI: tegra: Correctly program PADS_REFCLK_CFG* registers (2016-06-30 15:30:16 +0200)
-> 
-> There's a minor conflict between this and your pci/host-request-windows
-> branch, let me know if you'd like me to rebase on top of that.
-> 
-> Thierry
-> 
-> ----------------------------------------------------------------
-> PCI: tegra: Changes for v4.8-rc1
-> 
-> A couple of cleanups and preparation work for 64-bit ARM support, as
-> well as fixes for writing the PADS_REFCLK_CFG* registers.
-> 
-> ----------------------------------------------------------------
-> Stephen Warren (2):
->       PCI: tegra: Actually program PADS_REFCLK_CFG* on recent SoCs
-
-I don't see this patch on the list.  I'll attach it below for
-completeness.
-
-I don't think the original changelog is quite right; I don't see
-tegra_xusb_phy_enable() being involved at all.  I replaced it with the
-following:
-
-    PCI: tegra: Program PADS_REFCLK_CFG* always, not just on legacy SoCs
-    
-    tegra_pcie_phy_power_on() calls tegra_pcie_phy_enable() only for legacy
-    SoCs.  However, part of tegra_pcie_phy_enable() needs to happen in all
-    cases.  Move that code up one level into tegra_pcie_phy_power_on().
-
-
-Here's the original commit from your git tree:
-
-commit 0ad9be61b5af
-Author: Stephen Warren <swarren@nvidia.com>
-Date:   Fri Jun 24 08:37:03 2016 -0600
-
-    PCI: tegra: Actually program PADS_REFCLK_CFG* on recent SoCs
-    
-    On recent SoCs, tegra_pcie_phy_enable() isn't called; but instead
-    tegra_pcie_enable_controller() calls tegra_xusb_phy_enable(). However,
-    part of tegra_pcie_phy_enable() needs to happen in all cases. Move that
-    code up one level into tegra_pcie_phy_power_on().
-    
-    Signed-off-by: Stephen Warren <swarren@nvidia.com>
-    Reviewed-by: Simon Glass <sjg@chromium.org>
-    Signed-off-by: Thierry Reding <treding@nvidia.com>
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index bbf77a4..8cac1a0 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -838,12 +838,6 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- 	value |= PADS_PLL_CTL_RST_B4SM;
- 	pads_writel(pcie, value, soc->pads_pll_ctl);
- 
--	/* Configure the reference clock driver */
--	value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
--	pads_writel(pcie, value, PADS_REFCLK_CFG0);
--	if (soc->num_ports > 2)
--		pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
--
- 	/* wait for the PLL to lock */
- 	err = tegra_pcie_pll_wait(pcie, 500);
- 	if (err < 0) {
-@@ -927,7 +921,9 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
- 
- static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
- {
-+	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
- 	struct tegra_pcie_port *port;
-+	u32 value;
- 	int err;
- 
- 	if (pcie->legacy_phy) {
-@@ -952,6 +948,13 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
- 		}
- 	}
- 
-+	/* Configure the reference clock driver */
-+	value = PADS_REFCLK_CFG_VALUE | (PADS_REFCLK_CFG_VALUE << 16);
-+	pads_writel(pcie, value, PADS_REFCLK_CFG0);
-+
-+	if (soc->num_ports > 2)
-+		pads_writel(pcie, PADS_REFCLK_CFG_VALUE, PADS_REFCLK_CFG1);
-+
- 	return 0;
- }
- 
+Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
