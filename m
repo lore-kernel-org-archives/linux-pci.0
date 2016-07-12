@@ -1,45 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay0064.hostedemail.com ([216.40.44.64]:54381 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753022AbcGSROK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2016 13:14:10 -0400
-Message-ID: <1468948445.1900.53.camel@perches.com>
-Subject: Re: [PATCH v4 0/7] thunderbolt: Introducing Thunderbolt(TM)
- networking
-From: Joe Perches <joe@perches.com>
-To: Amir Levy <amir.jer.levy@intel.com>, andreas.noever@gmail.com,
-	gregkh@linuxfoundation.org, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com
-Date: Tue, 19 Jul 2016 10:14:05 -0700
-In-Reply-To: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
-References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from verein.lst.de ([213.95.11.211]:49026 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779AbcGLJND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jul 2016 05:13:03 -0400
+Date: Tue, 12 Jul 2016 11:13:00 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de, axboe@fb.com,
+	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 07/13] pci: Provide sensible irq vector alloc/free
+	routines
+Message-ID: <20160712091300.GA4845@lst.de>
+References: <1467621574-8277-1-git-send-email-hch@lst.de> <1467621574-8277-8-git-send-email-hch@lst.de> <20160706080545.GA14583@dhcp-27-118.brq.redhat.com> <20160710034737.GB15720@lst.de> <20160711104340.GB21169@agordeev.lab.eng.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160711104340.GB21169@agordeev.lab.eng.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2016-07-18 at 13:00 +0300, Amir Levy wrote:
-> This is version 4 of Thunderbolt(TM) driver for non-Apple hardware.
-[]
->  Documentation/00-INDEX                   |    2 +
->  Documentation/thunderbolt-networking.txt |  135 ++
->  drivers/thunderbolt/Kconfig              |   25 +-
->  drivers/thunderbolt/Makefile             |    3 +-
->  drivers/thunderbolt/icm/Makefile         |   28 +
->  drivers/thunderbolt/icm/icm_nhi.c        | 1642 +++++++++++++++++++++
->  drivers/thunderbolt/icm/icm_nhi.h        |   93 ++
->  drivers/thunderbolt/icm/net.c            | 2276 ++++++++++++++++++++++++++++++
->  drivers/thunderbolt/icm/net.h            |  274 ++++
->  drivers/thunderbolt/nhi_regs.h           |  115 +-
->  10 files changed, 4585 insertions(+), 8 deletions(-)
->  create mode 100644 Documentation/thunderbolt-networking.txt
->  create mode 100644 drivers/thunderbolt/icm/Makefile
->  create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
->  create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
->  create mode 100644 drivers/thunderbolt/icm/net.c
->  create mode 100644 drivers/thunderbolt/icm/net.h
+On Mon, Jul 11, 2016 at 12:43:41PM +0200, Alexander Gordeev wrote:
+> > I diagreed - if we deprecated functions the only thing that should
+> > be mentioned is a "don't use these". 
+> 
+> I will try to paraphrase myself. The new API deprecates pci_enable_msi*_range
+> functions, but I am not that sure about others. Certainly, pci_msi*_vec_count
+> and pci_enable_msi*_exact could have (and AFAIR do have) uses that can not be
+> covered by automatic initialization of pci_alloc_irq_vectors().
 
-Is a MAINTAINERS update necessary or is Andreas going to
-be the maintainer?
+pci_enable_msi*_exact is the equivalent of pci_enable_msi*_range
+with minvecs == maxvecs and treating any return value >= 0 as 0.
+
+I've updated the documentation so that the old usage examples are kept
+around, but now use pci_alloc_irq_vectors.  I've also added a more detaild
+blurb on pci_msi*_vec_count - I think there is no need for them, but
+if I'm proven wrong we'll have to add a pci_irq_vector_count that handles
+all interrupt types later.
