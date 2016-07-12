@@ -1,33 +1,94 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v5 2/2] PCI: Rockchip: Add Rockchip PCIe controller support
-Date: Tue, 05 Jul 2016 10:15:33 +0200
-Message-ID: <3471444.31RlTMvDfn@wuerfel>
-In-Reply-To: <1467686561-25638-2-git-send-email-shawn.lin@rock-chips.com>
-References: <1467686561-25638-1-git-send-email-shawn.lin@rock-chips.com> <1467686561-25638-2-git-send-email-shawn.lin@rock-chips.com>
+From: Xavier Gnata <xavier.gnata@gmail.com>
+Subject: [PATCH] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C controller
+To: linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Message-ID: <5785474B.6070608@gmail.com>
+Date: Tue, 12 Jul 2016 21:38:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 5, 2016 10:42:41 AM CEST Shawn Lin wrote:
-> +config PCIE_ROCKCHIP
-> +       tristate "Rockchip PCIe controller"
-> +       depends on ARM64 && ARCH_ROCKCHIP
-> +       depends on OF
-> +       select MFD_SYSCON
-> +       select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk 
+to support suspend/resume.
+Tested against 4.7 master on a MacBook Air 11" 2015
 
-Please use "depends on PCI_MSI_IRQ_DOMAIN" now, instead of "select PCI_MSI_IRQ_DOMAIN
-if PCI_MSI", we have reworked how this is handled for consistency.
+---
+drivers/thunderbolt/nhi.c | 6 ++++++
+1 file changed, 6 insertions(+)
 
-	Arnd
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 9c15344..b3d55ec 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -654,6 +654,12 @@ static struct pci_device_id nhi_ids[] = {
+.device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
+.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+},
++ {
++ .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
++ .vendor = PCI_VENDOR_ID_INTEL,
++ .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
++ .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
++ },
+{ 0,}
+};
+
+-- 
+2.7.4
+
+
+---
+  drivers/pci/quirks.c | 23 +++++++++++++++--------
+  1 file changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ee72ebe..e280351 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3320,15 +3320,19 @@ static void 
+quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
+         if (!sibling || !sibling->subordinate)
+                 goto out;
+         nhi = pci_get_slot(sibling->subordinate, 0x0);
+-       if (!nhi)
+-               goto out;
+-       if (nhi->vendor != PCI_VENDOR_ID_INTEL
+-                   || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
+-                       nhi->device != 
+PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+-                       nhi->device != 
+PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+-                   || nhi->subsystem_vendor != 0x2222
+-                   || nhi->subsystem_device != 0x1111)
++       if (!nhi || nhi->vendor != PCI_VENDOR_ID_INTEL)
+                 goto out;
++       if (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
++               nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
++               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI &&
++               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI)
++        goto out;
++       if((nhi->device == PCI_DEVICE_ID_INTEL_LIGHT_RIDGE ||
++               nhi->device == PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C ||
++               nhi->device == PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
++               && (nhi->subsystem_vendor != 0x222
++               || nhi->subsystem_device != 0x1111))
++        goto out;
+         dev_info(&dev->dev, "quirk: waiting for thunderbolt to 
+reestablish PCI tunnels...\n");
+         device_pm_wait_for_dev(&dev->dev, &nhi->dev);
+  out:
+@@ -3344,6 +3348,9 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+                                PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
+                                quirk_apple_wait_for_thunderbolt);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
++                              PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
++                              quirk_apple_wait_for_thunderbolt);
+  #endif
+
+  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+-- 
+2.7.4
