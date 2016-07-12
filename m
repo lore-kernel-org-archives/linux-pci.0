@@ -1,87 +1,316 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Wed, 27 Jul 2016 10:34:22 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	nofooter <nofooter@xilinx.com>
-Subject: Re: Why does BIOS assign memory to 16 byte BAR
-Message-ID: <20160727093422.GA8334@red-moon>
-References: <8520D5D51A55D047800579B094147198258BB59B@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160722151546.GA20646@localhost>
- <20160722155133.GB20646@localhost>
- <8520D5D51A55D047800579B094147198258BC23C@XAP-PVEXMBX01.xlnx.xilinx.com>
- <8520D5D51A55D047800579B094147198258BC2BB@XAP-PVEXMBX01.xlnx.xilinx.com>
- <CAE9FiQWaFAD0+biMmnKqSQ2K4AdRJJmeEZ=ASSsvEgiDsKAP6Q@mail.gmail.com>
- <8520D5D51A55D047800579B094147198258BC5E3@XAP-PVEXMBX01.xlnx.xilinx.com>
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
+Subject: [RFC PATCH 1/3] PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for ACPI
+Date: Tue, 12 Jul 2016 10:42:22 +0800
+Message-ID: <1468291344-122909-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1468291344-122909-1-git-send-email-liudongdong3@huawei.com>
+References: <1468291344-122909-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B094147198258BC5E3@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 27, 2016 at 06:33:29AM +0000, Bharat Kumar Gogada wrote:
-> > Your system host bridge: has resource
-> > pci_bus 0000:00: root bus resource [mem 0xe0100000-0xefffffff] pci_bus
-> > 0000:00: root bus resource [mem 0x600000000-0x7ffffffff pref] then one pci
-> > bridge:
-> > pci 0000:00:00.0
-> > then 0000:01:00.0 have four bars:
-> > pci 0000:01:00.0: BAR 0:  [mem size 0x40000000] pci 0000:01:00.0: BAR 4:
-> > [mem size 0x00100000 64bit] pci 0000:01:00.0: BAR 2:  [mem size 0x00000010]
-> > pci 0000:01:00.0: BAR 3:  [mem size 0x00000010]
-> > 
-> > 
-> > kernel need to get allocation for pci 0000:00:00.0 at first
-> > 
-> > but can not find big enough space.
-> > 
-> > pci 0000:00:00.0: BAR 8: no space for [mem size 0x60000000] as it should
-> > come from [mem 0xe0100000-0xefffffff], and that is less 1.5G.
-> > 
-> > so all children resource from pci 0000:01:00.0 all fail.
-> > 
-> > 
-> > please check if you modify your FPGA code to make pci 0000:01:00.0
-> > 
-> > BAR 0, and BAR 4 to use 64bit pref instead non-pref mmio.
-> > 
-> > or you can check if can increase root bus mmio range
-> > 
-> >  MEM 0xe0100000..0xefffffff -> 0xe0100000 nwl-pcie fd0e0000.pcie: PCI host
-> > bridge to bus 0000:00
-> > 
-> > to have more than 1.5G.
-> > 
-> Thanks Yinghai Lu.
-> We see that similar test is passing in x86 machine, where function one
-> requesting 1GB BAR's is failing, but function two requesting BAR's
-> with 16byte is getting assigned BAR's.
-> 
-> To my knowledge on x86 BIOS assigns resources, or will kernel assign
-> reosurces on x86 ?  If kernel does is there any difference between x86
-> and arm64 resource assignment logic ?
+re-architect the Hip05/Hip06 host controllers driver to prepare
+for the ACPI based driver.
+The common functions used also by the ACPI driver have been grouped
+into a new "common" file.
 
-We can't answer your question if you do not provide a full log
-of x86 and ARM PCI configurations you are testing I am afraid.
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ MAINTAINERS                         |   2 +
+ drivers/pci/host/Makefile           |   2 +-
+ drivers/pci/host/pcie-hisi-common.c |  66 ++++++++++++++++++++++
+ drivers/pci/host/pcie-hisi.c        | 110 ++++++++++--------------------------
+ drivers/pci/host/pcie-hisi.h        |  23 ++++++++
+ 5 files changed, 123 insertions(+), 80 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-hisi-common.c
+ create mode 100644 drivers/pci/host/pcie-hisi.h
 
-It is also unclear to me what "a similar test is passing in x86
-machine" means, in particular in relation to the HW configuration
-you are testing on x86.
-
-Yes, there are differences between x86 and ARM resources assignments,
-x86 tries to claim PCI resources as set-up by BIOS and assign them
-iff the claiming fails whereas on ARM (and that's done in the host
-bridge driver) FW configuration is always discarded and the kernel
-reassigns the whole PCI resource hierarchy entirely, but to help we
-need more data as I said above.
-
-I suspect the issue you are facing has to do as Yinghai mentioned
-with the prefetchable memory window set-up, saying that "it works"
-on x86 does not really help unless you provide data to debug it.
-
-Thanks,
-Lorenzo
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ed42cb6..7e8e2c9 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8829,7 +8829,9 @@ M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.h
+ F:	drivers/pci/host/pcie-hisi.c
++F:	drivers/pci/host/pcie-hisi-common.c
+ 
+ PCIE DRIVER FOR QUALCOMM MSM
+ M:     Stanimir Varbanov <svarbanov@mm-sol.com>
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 5fadfd9..05950f3 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -24,7 +24,7 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+-obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
++obj-$(CONFIG_PCI_HISI) += pcie-hisi.o pcie-hisi-common.o
+ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+ obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+ obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
+diff --git a/drivers/pci/host/pcie-hisi-common.c b/drivers/pci/host/pcie-hisi-common.c
+new file mode 100644
+index 0000000..5a5f269
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi-common.c
+@@ -0,0 +1,66 @@
++/*
++ * PCIe host controller common functions for HiSilicon SoCs
++ *
++ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/pci.h>
++#include "pcie-hisi.h"
++
++/* HipXX PCIe host only supports 32-bit config access */
++int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
++			      u32 *val)
++{
++	u32 reg;
++	u32 reg_val;
++	void *walker = &reg_val;
++
++	walker += (where & 0x3);
++	reg = where & ~0x3;
++	reg_val = readl(reg_base + reg);
++
++	if (size == 1)
++		*val = *(u8 __force *) walker;
++	else if (size == 2)
++		*val = *(u16 __force *) walker;
++	else if (size == 4)
++		*val = reg_val;
++	else
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++/* HipXX PCIe host only supports 32-bit config access */
++int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int  size,
++				u32 val)
++{
++	u32 reg_val;
++	u32 reg;
++	void *walker = &reg_val;
++
++	walker += (where & 0x3);
++	reg = where & ~0x3;
++	if (size == 4)
++		writel(val, reg_base + reg);
++	else if (size == 2) {
++		reg_val = readl(reg_base + reg);
++		*(u16 __force *) walker = val;
++		writel(reg_val, reg_base + reg);
++	} else if (size == 1) {
++		reg_val = readl(reg_base + reg);
++		*(u8 __force *) walker = val;
++		writel(reg_val, reg_base + reg);
++	} else
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	return PCIBIOS_SUCCESSFUL;
++}
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 3e98d4e..086af15 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -21,6 +21,7 @@
+ #include <linux/regmap.h>
+ 
+ #include "pcie-designware.h"
++#include "pcie-hisi.h"
+ 
+ #define PCIE_LTSSM_LINKUP_STATE				0x11
+ #define PCIE_LTSSM_STATE_MASK				0x3F
+@@ -30,12 +31,6 @@
+ 
+ #define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
+ 
+-struct hisi_pcie;
+-
+-struct pcie_soc_ops {
+-	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
+-};
+-
+ struct hisi_pcie {
+ 	struct regmap *subctrl;
+ 	void __iomem *reg_base;
+@@ -44,87 +39,24 @@ struct hisi_pcie {
+ 	struct pcie_soc_ops *soc_ops;
+ };
+ 
+-static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
+-					u32 val, u32 reg)
+-{
+-	writel(val, pcie->reg_base + reg);
+-}
+-
+-static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
+-{
+-	return readl(pcie->reg_base + reg);
+-}
++struct pcie_soc_ops {
++	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
++};
+ 
+-/* HipXX PCIe host only supports 32-bit config access */
+-static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+-			      u32 *val)
++static inline int hisi_pcie_cfg_read(struct pcie_port *pp, int where,
++		int size, u32 *val)
+ {
+-	u32 reg;
+-	u32 reg_val;
+ 	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+-	void *walker = &reg_val;
+-
+-	walker += (where & 0x3);
+-	reg = where & ~0x3;
+-	reg_val = hisi_pcie_apb_readl(pcie, reg);
+-
+-	if (size == 1)
+-		*val = *(u8 __force *) walker;
+-	else if (size == 2)
+-		*val = *(u16 __force *) walker;
+-	else if (size == 4)
+-		*val = reg_val;
+-	else
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+ 
+-/* HipXX PCIe host only supports 32-bit config access */
+-static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
+-				u32 val)
+-{
+-	u32 reg_val;
+-	u32 reg;
+-	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+-	void *walker = &reg_val;
+-
+-	walker += (where & 0x3);
+-	reg = where & ~0x3;
+-	if (size == 4)
+-		hisi_pcie_apb_writel(pcie, val, reg);
+-	else if (size == 2) {
+-		reg_val = hisi_pcie_apb_readl(pcie, reg);
+-		*(u16 __force *) walker = val;
+-		hisi_pcie_apb_writel(pcie, reg_val, reg);
+-	} else if (size == 1) {
+-		reg_val = hisi_pcie_apb_readl(pcie, reg);
+-		*(u8 __force *) walker = val;
+-		hisi_pcie_apb_writel(pcie, reg_val, reg);
+-	} else
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	return PCIBIOS_SUCCESSFUL;
++	return hisi_pcie_common_cfg_read(pcie->reg_base, where, size, val);
+ }
+ 
+-static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
++static inline int hisi_pcie_cfg_write(struct pcie_port *pp, int where,
++		int size, u32 val)
+ {
+-	u32 val;
+-
+-	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
+-		    0x100 * hisi_pcie->port_id, &val);
+-
+-	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
+-}
+-
+-static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
+-{
+-	u32 val;
+-
+-	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
+-			PCIE_SYS_STATE4);
++	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+ 
+-	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++	return hisi_pcie_common_cfg_write(pcie->reg_base, where, size, val);
+ }
+ 
+ static int hisi_pcie_link_up(struct pcie_port *pp)
+@@ -215,6 +147,26 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
++{
++	u32 val;
++
++	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
++		    0x100 * hisi_pcie->port_id, &val);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
++{
++	u32 val;
++
++	val = readl(hisi_pcie->reg_base + PCIE_HIP06_CTRL_OFF +
++			PCIE_SYS_STATE4);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
+ static struct pcie_soc_ops hip05_ops = {
+ 		&hisi_pcie_link_up_hip05
+ };
+diff --git a/drivers/pci/host/pcie-hisi.h b/drivers/pci/host/pcie-hisi.h
+new file mode 100644
+index 0000000..44fc680
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi.h
+@@ -0,0 +1,23 @@
++/*
++ * PCIe host controller driver for HiSilicon SoCs
++ *
++ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#ifndef PCIE_HISI_H_
++#define PCIE_HISI_H_
++
++
++int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
++			      u32 *val);
++int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int size,
++			       u32 val);
++
++#endif /* PCIE_HISI_H_ */
+-- 
+1.9.1
