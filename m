@@ -1,158 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
-Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <57766995.9070302@arm.com>
-Date: Fri, 1 Jul 2016 14:01:09 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57805 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933170AbcGLMlG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jul 2016 08:41:06 -0400
+Date: Tue, 12 Jul 2016 14:46:03 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 07/13] pci: Provide sensible irq vector alloc/free
+ routines
+Message-ID: <20160712124603.GB26969@agordeev.lab.eng.brq.redhat.com>
+References: <1467621574-8277-1-git-send-email-hch@lst.de>
+ <1467621574-8277-8-git-send-email-hch@lst.de>
+ <20160706080545.GA14583@dhcp-27-118.brq.redhat.com>
+ <20160710034737.GB15720@lst.de>
+ <20160711104340.GB21169@agordeev.lab.eng.brq.redhat.com>
+ <20160712091300.GA4845@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160712091300.GA4845@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/07/16 02:24, Shawn Lin wrote:
-> This patch adds a binding that describes the Rockchip PCIe controller
-> found on Rockchip SoCs PCIe interface.
+On Tue, Jul 12, 2016 at 11:13:00AM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 11, 2016 at 12:43:41PM +0200, Alexander Gordeev wrote:
+> > > I diagreed - if we deprecated functions the only thing that should
+> > > be mentioned is a "don't use these". 
+> > 
+> > I will try to paraphrase myself. The new API deprecates pci_enable_msi*_range
+> > functions, but I am not that sure about others. Certainly, pci_msi*_vec__ount
+> > and pci_enable_msi*_exact could have (and AFAIR do have) uses that can not be
+> > covered by automatic initialization of pci_alloc_irq_vectors().
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v4:
-> - fix example of adding intermediate interrupt controller for pcie
->   legacy interrrupt
-> 
-> Changes in v3:
-> - fix example dts code suggested by Rob and Marc
-> - remove driver's behaviour of regulator
-> 
-> Changes in v2:
-> - fix lots clk/reset stuff suggested by Heiko
-> - remove msi-parent and add msi-map suggested by Marc
-> - drop phy related stuff
-> - some others minor fixes
-> 
->  .../devicetree/bindings/pci/rockchip-pcie.txt      | 91 ++++++++++++++++++++++
->  1 file changed, 91 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> new file mode 100644
-> index 0000000..8092fc5
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -0,0 +1,91 @@
-> +* Rockchip AXI PCIe Root Port Bridge DT description
-> +
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +		interrupt source. The value must be 1.
-> +- compatible: Should contain "rockchip,rk3399-pcie"
-> +- reg: Two register ranges as listed in the reg-names property
-> +- reg-names: Must include the following names
-> +	- "axi-base"
-> +	- "apb-base"
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +		See ../clocks/clock-bindings.txt for details.
-> +- clock-names: Must include the following entries:
-> +	- "aclk"
-> +	- "aclk-perf"
-> +	- "hclk"
-> +	- "pm"
-> +- msi-map: Maps a Requester ID to an MSI controller and associated.
-> +		See ./pci-msi.txt
-> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-> +- phy-names:  MUST be "pcie-phy".
-> +- interrupts: Three interrupt entries must be specified.
-> +- interrupt-names: Must include the following names
-> +	- "sys"
-> +	- "legacy"
-> +	- "client"
-> +- resets: Must contain five entries for each entry in reset-names.
-> +	   See ../reset/reset.txt for details.
-> +- reset-names: Must include the following names
-> +	- "core"
-> +	- "mgmt"
-> +	- "mgmt-sticky"
-> +	- "pipe"
-> +- pinctrl-names : The pin control state names
-> +- pinctrl-0: The "default" pinctrl state
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +- interrupt-controller: identifies the node as an interrupt controller
-> +
-> +Optional Property:
-> +- ep-gpios: contain the entry for pre-reset gpio
-> +- num-lanes: number of lanes to use
-> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
-> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
-> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
-> +
-> +Example:
-> +
-> +pcie0: pcie@f8000000 {
-> +	compatible = "rockchip,rk3399-pcie";
-> +	#address-cells = <3>;
-> +	#size-cells = <2>;
-> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-> +		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-> +	clock-names = "aclk", "aclk-perf",
-> +		      "hclk", "pm";
-> +	bus-range = <0x0 0x1>;
-> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
-> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
-> +	interrupt-names = "sys", "legacy", "client";
-> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
-> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
-> +	assigned-clock-rates = <100000000>;
-> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
-> +	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
-> +		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
-> +	num-lanes = <4>;
-> +	msi-map = <0x0 &its 0x0 0x1000>;
-> +	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
-> +	reg-names = "axi-base", "apb-base";
-> +	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-> +	phys = <&pcie_phy>;
-> +	phy-names = "pcie-phy";
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&pcie_clkreq>;
-> +	#interrupt-cells = <1>;
-> +	interrupt-controller;
+> pci_enable_msi*_exact is the equivalent of pci_enable_msi*_range
+> with minvecs == maxvecs and treating any return value >= 0 as 0.
 
-So the pcie node itself is an interrupt controller...
+Right. And people asked explicitly to introduce these helpers when
+range functions were introduced in the first place. Since there is
+handful of drivers that do use pci_enable_msi*_exact() I suppose a
+need for them persists.
 
-> +	interrupt-map-mask = <0 0 0 7>;
-> +	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
-> +			<0 0 0 2 &pcie0_intc 2>,
-> +			<0 0 0 3 &pcie0_intc 3>,
-> +			<0 0 0 4 &pcie0_intc 4>;
-> +	pcie0_intc: interrupt-controller {
-> +		interrupt-controller;
-> +		#address-cells = <0>;
-> +		#interrupt-cells = <1>;
-> +	};
+> I've updated the documentation so that the old usage examples are kept
+> around, but now use pci_alloc_irq_vectors.  I've also added a more detaild
+> blurb on pci_msi*_vec_count - I think there is no need for them, but
+> if I'm proven wrong we'll have to add a pci_irq_vector_count that handles
+> all interrupt types later.
 
-But there's also another here. I just don't understand how it works.
+I guess, it is up to Bjorn. But.
 
-> +};
-> 
+Your proposed pci_nr_irq_vectors() function (a) is not a replacement for
+pci_msi*_vec_count() and (b) would be useless if I read its description
+properly:
 
-Thanks,
+(a) Functions pci_msi*_vec_count() return number of vectors reported by
+a PCI device. It is a constant for the device and a driver may make an
+assumption based on this number;
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+(b) A number returned by pci_nr_irq_vectors() is not guaranteed what a
+following call to pci_alloc_irq_vectors() can return (since the number
+of actually allocated vectors might change between the two calls).
+Therefore, a value returned by pci_nr_irq_vectors() can not be used for
+anything.
