@@ -1,41 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.asahi-net.or.jp ([202.224.39.197]:9987 "EHLO
-	mail1.asahi-net.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860AbcGCQrQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jul 2016 12:47:16 -0400
-From: Yoshinori Sato <ysato@users.sourceforge.jp>
-To: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>
-Subject: [PATCH v5 17/22] pci: PCI_HOST_GENERIC enable for SH
-Date: Mon,  4 Jul 2016 01:46:37 +0900
-Message-Id: <1467564402-2649-18-git-send-email-ysato@users.sourceforge.jp>
-In-Reply-To: <1467564402-2649-1-git-send-email-ysato@users.sourceforge.jp>
-References: <1467564402-2649-1-git-send-email-ysato@users.sourceforge.jp>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
+Subject: [RFC PATCH 0/3] Add ACPI support for Hisilicon PCIe Host Controller
+Date: Tue, 12 Jul 2016 10:42:21 +0800
+Message-ID: <1468291344-122909-1-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes v4
-none
+This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe
+controllers.
+The three patches respectively:
+        - re-architect the current HiSilicon driver to make it scalable to
+          the new ACPI quirks.
+        - rework the current HiSilicon driver to add support for ECAM
+          platforms(not RC).
+        - adds the HiSilicon ACPI specific quirks.
 
-Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
----
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patchset is base on Tomasz RFC V4 quirk mechanism:
+https://lkml.org/lkml/2016/6/28/165
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index df60505..83184eb 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -83,7 +83,7 @@ config PCI_HOST_COMMON
- 
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
--	depends on (ARM || ARM64) && OF
-+	depends on (ARM || ARM64 || SUPERH) && OF
- 	select PCI_HOST_COMMON
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
+Dongdong Liu (3):
+  PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for
+    ACPI
+  PCI: hisi: Add ECAM support for devices that are not RC
+  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  15 +-
+ MAINTAINERS                                        |   3 +
+ drivers/pci/host/Kconfig                           |   7 +
+ drivers/pci/host/Makefile                          |   3 +-
+ drivers/pci/host/mcfg-quirks.c                     |   8 ++
+ drivers/pci/host/mcfg-quirks.h                     |   8 ++
+ drivers/pci/host/pcie-designware.c                 |   3 +-
+ drivers/pci/host/pcie-designware.h                 |   2 +
+ drivers/pci/host/pcie-hisi-acpi.c                  | 151 +++++++++++++++++++++
+ drivers/pci/host/pcie-hisi-common.c                |  66 +++++++++
+ drivers/pci/host/pcie-hisi.c                       | 143 ++++++++++---------
+ drivers/pci/host/pcie-hisi.h                       |  25 ++++
+ 12 files changed, 351 insertions(+), 83 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+ create mode 100644 drivers/pci/host/pcie-hisi-common.c
+ create mode 100644 drivers/pci/host/pcie-hisi.h
+
 -- 
-2.7.0
-
+1.9.1
