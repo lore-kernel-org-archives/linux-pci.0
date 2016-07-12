@@ -1,92 +1,125 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1499f802-5f98-b0c0-d3aa-dabcac81e84e@arm.com>
-References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1469013815-24380-6-git-send-email-lorenzo.pieralisi@arm.com> <1499f802-5f98-b0c0-d3aa-dabcac81e84e@arm.com>
-From: Rob Herring <robh@kernel.org>
-Date: Mon, 25 Jul 2016 10:21:10 -0500
-Message-ID: <CAL_JsqKc4aJ1xiJAS6HRKeVO8mrZWpBF0uugvmCgNuUamJF=Eg@mail.gmail.com>
-Subject: Re: [RFC PATCH v3 05/13] drivers: iommu: make iommu_fwspec OF agnostic
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Linux IOMMU <iommu@lists.linux-foundation.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:59596 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754513AbcGLO2Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jul 2016 10:28:24 -0400
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5783733C.70702@arm.com>
+ <8520D5D51A55D047800579B094147198258B823D@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5783C02F.7030901@arm.com>
+ <8520D5D51A55D047800579B094147198258B861F@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5784FE85.1010301@arm.com>
+Date: Tue, 12 Jul 2016 15:28:21 +0100
+MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B094147198258B861F@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 25, 2016 at 10:09 AM, Robin Murphy <robin.murphy@arm.com> wrote:
-> Hi Lorenzo,
->
-> On 20/07/16 12:23, Lorenzo Pieralisi wrote:
->> The iommu_fwspec structure, used to hold per device iommu configuration
->> data is not OF specific and therefore can be moved to a generic
->> and OF independent compilation unit.
+On 12/07/16 10:11, Bharat Kumar Gogada wrote:
+>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
 >>
->> In particular, the iommu_fwspec handling hinges on the device_node
->> pointer to identify the IOMMU device associated with the iommu_fwspec
->> structure, that is easily converted to a more generic fwnode_handle
->> pointer that can cater for OF and non-OF (ie ACPI) systems.
+>> On 11/07/16 11:51, Bharat Kumar Gogada wrote:
+>>>>> Hi Marc,
+>>>>>
+>>>>> Thanks for the reply.
+>>>>>
+>>>>> From PCIe Spec:
+>>>>> MSI Enable Bit:
+>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control register
+>>>>> (see Section 6.8.2.3) is 0, the function is permitted to use MSI to
+>>>>> request service and is prohibited from using its INTx# pin.
+>>>>>
+>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
+>>>> which means MSI address and data fields are available/programmed.
+>>>>>
+>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+>>>>> latches
+>>>> onto MSI address and MSI data values.
+>>>>>
+>>>>> With current MSI implementation in kernel, our SoC is latching on to
+>>>> incorrect address and data values, as address/data
+>>>>> are updated much later than MSI Enable bit.
+>>>>
+>>>> Interesting. It looks like we're doing something wrong in the MSI flow.
+>>>> Can you confirm that this is limited to MSI and doesn't affect MSI-X?
+>>>>
+>>> I think it's the same issue irrespective of MSI or MSI-X as we are
+>>> enabling these interrupts before providing the  vectors.
+>>>
+>>> So we always have a hole when MSI/MSI-X is 1, and software driver has
+>>> not registered the irq, and End Point may raise an interrupt (may be
+>>> due to error) in this point of time.
 >>
->> Create the files and related Kconfig entry to decouple iommu_fwspec
->> structure from the OF iommu kernel layer.
+>> Looking at the MSI-X part of the code, there is this:
 >>
->> Given that the current iommu_fwspec implementation relies on
->> the arch specific struct device.archdata.iommu field in its
->> implementation, by making the code standalone and independent
->> of the OF layer this patch makes sure that the iommu_fwspec
->> kernel code can be selected only on arches implementing the
->> struct device.archdata.iommu field by adding an explicit
->> arch dependency in its config entry.
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/pci
+>> /msi.c#n764
 >>
->> Current drivers using the iommu_fwspec for streamid translation
->> are converted to the new iommu_fwspec API by simply converting
->> the device_node to its fwnode_handle pointer.
+>> which hints that it may not be possible to do otherwise. Damned if you do,
+>> damned if you don't.
 >>
->> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Will Deacon <will.deacon@arm.com>
->> Cc: Hanjun Guo <hanjun.guo@linaro.org>
->> Cc: Robin Murphy <robin.murphy@arm.com>
->> Cc: Joerg Roedel <joro@8bytes.org>
->> ---
->>  drivers/iommu/Kconfig        |   4 ++
->>  drivers/iommu/Makefile       |   1 +
->>  drivers/iommu/arm-smmu-v3.c  |  13 +++--
->>  drivers/iommu/iommu-fwspec.c | 114 +++++++++++++++++++++++++++++++++++++++++++
->>  drivers/iommu/of_iommu.c     |  52 --------------------
->>  include/linux/iommu-fwspec.h |  60 +++++++++++++++++++++++
->>  include/linux/of_iommu.h     |  24 +++------
->>  7 files changed, 196 insertions(+), 72 deletions(-)
->>  create mode 100644 drivers/iommu/iommu-fwspec.c
->>  create mode 100644 include/linux/iommu-fwspec.h
->>
->> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
->> index d1c66af..2b26bfb 100644
->> --- a/drivers/iommu/Kconfig
->> +++ b/drivers/iommu/Kconfig
->> @@ -67,6 +67,10 @@ config OF_IOMMU
->>         def_bool y
->>         depends on OF && IOMMU_API
->>
->> +config IOMMU_FWSPEC
->> +       def_bool y
->> +       depends on ARM64 && IOMMU_API
->
-> I think that could be at least (ARM || ARM64).
+> MSI-X might not have problem then, how to resolve the issue with MSI ?
 
-Why any arch dependency?
+Can you give this patch a go and let me know if that works for you?
 
-Seems like OF_IOMMU (and ACPI?) should select this.
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a080f44..565e2a4 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1277,6 +1277,8 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		pci_msi_domain_update_chip_ops(info);
+ 
++	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
++
+ 	domain = msi_create_irq_domain(fwnode, info, parent);
+ 	if (!domain)
+ 		return NULL;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8b425c6..513b7c7 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -270,6 +270,8 @@ enum {
+ 	MSI_FLAG_MULTI_PCI_MSI		= (1 << 3),
+ 	/* Support PCI MSIX interrupts */
+ 	MSI_FLAG_PCI_MSIX		= (1 << 4),
++	/* Needs early activate, required for PCI */
++	MSI_FLAG_ACTIVATE_EARLY		= (1 << 5),
+ };
+ 
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 38e89ce..4ed2cca 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -361,6 +361,13 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 		else
+ 			dev_dbg(dev, "irq [%d-%d] for MSI\n",
+ 				virq, virq + desc->nvec_used - 1);
++
++		if (info->flags & MSI_FLAG_ACTIVATE_EARLY) {
++			struct irq_data *irq_data;
++
++			irq_data = irq_domain_get_irq_data(domain, desc->irq);
++			irq_domain_activate_irq(irq_data);
++		}
+ 	}
+ 
+ 	return 0;
 
-Rob
+
+Thanks,
+
+	M.
+
+-- 
+Jazz is not dead. It just smells funny...
