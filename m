@@ -1,51 +1,39 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net,
-	tony.luck@intel.com
-Cc: bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com
-Subject: [PATCH v2 0/5] Fixing a set of bugs for ioapic hotplug
-Date: Wed, 27 Jul 2016 23:44:10 +0800
-Message-Id: <1469634255-24101-1-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <20160726204640.GA17664@localhost>
-References: <20160726204640.GA17664@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34364 "EHLO
+	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292AbcGLKTa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 06:19:30 -0400
+MIME-Version: 1.0
+In-Reply-To: <1466499193-1987-1-git-send-email-lftan@altera.com>
+References: <1466499193-1987-1-git-send-email-lftan@altera.com>
+From: Ley Foon Tan <lftan@altera.com>
+Date: Tue, 12 Jul 2016 18:19:27 +0800
+Message-ID: <CAFiDJ5-5sVZHFCXeSE-DQk+QkvQ400bxDB4FAtd5_fq4dZRMCA@mail.gmail.com>
+Subject: Re: [PATCH 0/2] PCI: altera: fix link retrain
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Ley Foon Tan <lftan.linux@gmail.com>,
+	Ley Foon Tan <lftan@altera.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A set of patches fixing bugs found while testing IOAPIC hotplug.
+On Tue, Jun 21, 2016 at 4:53 PM, Ley Foon Tan <lftan@altera.com> wrote:
+>
+> This 2 patches fix the issue before and after retrain link.
+>
+> Ley Foon Tan (2):
+>   PCI: altera: check link status before retrain link
+>   PCI: altera: Polling for link up status after retrain the link
+>
+>  drivers/pci/host/pcie-altera.c | 48 +++++++++++++++++++++++++++---------------
+>  1 file changed, 31 insertions(+), 17 deletions(-)
+>
 
-Regards,
-Rui
+Hi Bjorn
 
-Changelog:
+Do you any comment on these 2 patches?
 
-Changes from v1 to v2:
-* Split the first patch into two as advised by Bjorn: "would be nicer if
-the interface change and header file munging were in a separate patch so
-they wouldn't obscure the meat of the change, i.e., the addition of calls
-to acpi_ioapic_add()."
-* Removed acpi_ioapic_add() as an exported symbol.
-* Fixed some typos, and s/acpi/ACPI/, s/ioapic/IOAPIC/ throughout.
-* Fixed a warning from 0-day testing.
-
-Rui Wang (5):
-  x86/ioapic: Change prototype of acpi_ioapic_add()
-  x86/ioapic: Support hot-removal of IOAPICs present during boot
-  x86/ioapic: Fix setup_res() failing to get resource
-  x86/ioapic: Fix lost IOAPIC resource after hot-removal and hotadd
-  x86/ioapic: Fix ioapic failing to request resource
-
- drivers/acpi/internal.h |  2 --
- drivers/acpi/ioapic.c   | 46 ++++++++++++++++++++++++++--------------------
- drivers/acpi/pci_root.c | 12 +++++++++++-
- drivers/pci/setup-bus.c |  5 ++++-
- include/linux/acpi.h    |  6 ++++++
- 5 files changed, 47 insertions(+), 24 deletions(-)
-
--- 
-1.8.3.1
+Regards
+Ley Foon
