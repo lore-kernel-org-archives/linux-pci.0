@@ -1,48 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35948 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbcGAVQu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 17:16:50 -0400
+Received: from mailout1.hostsharing.net ([83.223.95.204]:42479 "EHLO
+	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbcGLVVl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 17:21:41 -0400
+Date: Tue, 12 Jul 2016 23:21:39 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Xavier Gnata <xavier.gnata@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C
+ controller
+Message-ID: <20160712212139.GB5488@wunner.de>
+References: <5785474B.6070608@gmail.com>
+ <20160712211324.GA5488@wunner.de>
 MIME-Version: 1.0
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 1 Jul 2016 23:16:48 +0200
-Message-ID: <CAJZ5v0jhCkM8azgxisb-wf08-ecsqqKFh6TRNP5-tKHn2jao5A@mail.gmail.com>
-Subject: [GIT PULL] ACPI fix for v4.7-rc6
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160712211324.GA5488@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Tue, Jul 12, 2016 at 11:13:24PM +0200, Lukas Wunner wrote:
+> On Tue, Jul 12, 2016 at 09:38:51PM +0200, Xavier Gnata wrote:
+> > Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk to
+> > support suspend/resume.
+> > Tested against 4.7 master on a MacBook Air 11" 2015
+[...]
+> Please also add PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI to tb_switch_alloc()
+> so that the message "unsupported switch device id" is not printed for this
+> controller.
 
-Please pull from
+Sorry, I meant PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE rather than _NHI.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- acpi-4.7-rc6
+And Falcon Ridge 4C is also missing there.
 
-to receive an ACPI fix for v4.7-rc6 as commit
-54794580f5949253520265e46c903878ab222d84
+Thanks,
 
- ACPI,PCI,IRQ: correct operator precedence
-
-on top of commit 4c2e07c6a29e0129e975727b9f57eede813eea85
-
- Linux 4.7-rc5
-
-Fix an expression in the PCI ACPI IRQ management code added by a
-recent commit that overlooked missing parens in it, so the result
-of the computation is incorrect in some cases (Sinan Kaya).
-
-Thanks!
-
----------------
-
-Sinan Kaya (1):
-      ACPI,PCI,IRQ: correct operator precedence
-
----------------
-
- drivers/acpi/pci_link.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Lukas
