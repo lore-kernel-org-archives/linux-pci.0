@@ -1,94 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Xavier Gnata <xavier.gnata@gmail.com>
-Subject: [PATCH] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C controller
-To: linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Message-ID: <5785474B.6070608@gmail.com>
-Date: Tue, 12 Jul 2016 21:38:51 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:60320 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751512AbcGLP4q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jul 2016 11:56:46 -0400
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5785133A.6070908@arm.com>
+Date: Tue, 12 Jul 2016 16:56:42 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk 
-to support suspend/resume.
-Tested against 4.7 master on a MacBook Air 11" 2015
+On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+> Hi Marc,
+> 
+> Thanks for the reply.
+> 
+> From PCIe Spec:
+> MSI Enable Bit:
+> If 1 and the MSI-X Enable bit in the MSI-X Message
+> Control register (see Section 6.8.2.3) is 0, the
+> function is permitted to use MSI to request service
+> and is prohibited from using its INTx# pin.
+> 
+> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used which means MSI address and data fields are available/programmed.
+> 
+> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware latches onto MSI address and MSI data values.
+> 
+> With current MSI implementation in kernel, our SoC is latching on to incorrect address and data values, as address/data
+> are updated much later than MSI Enable bit.
 
----
-drivers/thunderbolt/nhi.c | 6 ++++++
-1 file changed, 6 insertions(+)
+As a side question, how does setting the affinity work on this end-point
+if this involves changing the address programmed in the MSI registers?
+Do you expect the enabled bit to be toggled to around the write?
 
-diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-index 9c15344..b3d55ec 100644
---- a/drivers/thunderbolt/nhi.c
-+++ b/drivers/thunderbolt/nhi.c
-@@ -654,6 +654,12 @@ static struct pci_device_id nhi_ids[] = {
-.device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
-.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
-},
-+ {
-+ .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
-+ .vendor = PCI_VENDOR_ID_INTEL,
-+ .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
-+ .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
-+ },
-{ 0,}
-};
+Thanks,
 
+	M.
 -- 
-2.7.4
-
-
----
-  drivers/pci/quirks.c | 23 +++++++++++++++--------
-  1 file changed, 15 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ee72ebe..e280351 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3320,15 +3320,19 @@ static void 
-quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
-         if (!sibling || !sibling->subordinate)
-                 goto out;
-         nhi = pci_get_slot(sibling->subordinate, 0x0);
--       if (!nhi)
--               goto out;
--       if (nhi->vendor != PCI_VENDOR_ID_INTEL
--                   || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
--                       nhi->device != 
-PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
--                       nhi->device != 
-PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
--                   || nhi->subsystem_vendor != 0x2222
--                   || nhi->subsystem_device != 0x1111)
-+       if (!nhi || nhi->vendor != PCI_VENDOR_ID_INTEL)
-                 goto out;
-+       if (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
-+               nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
-+               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI &&
-+               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI)
-+        goto out;
-+       if((nhi->device == PCI_DEVICE_ID_INTEL_LIGHT_RIDGE ||
-+               nhi->device == PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C ||
-+               nhi->device == PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
-+               && (nhi->subsystem_vendor != 0x222
-+               || nhi->subsystem_device != 0x1111))
-+        goto out;
-         dev_info(&dev->dev, "quirk: waiting for thunderbolt to 
-reestablish PCI tunnels...\n");
-         device_pm_wait_for_dev(&dev->dev, &nhi->dev);
-  out:
-@@ -3344,6 +3348,9 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
-  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
-                                PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
-                                quirk_apple_wait_for_thunderbolt);
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
-+                              PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
-+                              quirk_apple_wait_for_thunderbolt);
-  #endif
-
-  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
--- 
-2.7.4
+Jazz is not dead. It just smells funny...
