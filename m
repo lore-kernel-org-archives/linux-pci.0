@@ -1,157 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:51779 "HELO
-	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1162468AbcG1AZ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jul 2016 20:25:28 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	linux-samsung-soc@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Inki Dae <inki.dae@samsung.com>, Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Mark Brown <broonie@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking support
-Date: Thu, 28 Jul 2016 02:30:31 +0200
-Message-ID: <2841548.NIYVpJFBcH@vostro.rjw.lan>
-In-Reply-To: <20160724224832.GB9516@wunner.de>
-References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com> <4258432.JNKr9zJtMp@vostro.rjw.lan> <20160724224832.GB9516@wunner.de>
+Return-Path: <andreas.noever@gmail.com>
+Return-Path: <andreas.noever@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160709052359.GC6330@kroah.com>
+References: <cover.1463134231.git.lukas@wunner.de> <CAMxnaaU_3z6BSmSnYfi4ee=aTKm3aPyUaXds=G29wdp8O0m5Cw@mail.gmail.com>
+ <20160614163703.GA31488@localhost> <CAMxnaaUQC0kyoBK1ri_AYEi=Dc_aiuiMp=kx1mFaZpsw9-D-eA@mail.gmail.com>
+ <20160614202228.GA8449@localhost> <CAMxnaaUij=0QvT2frky2KCtrf4KuA-GQrpCYUa6Bs1EdRK+WFg@mail.gmail.com>
+ <20160709052359.GC6330@kroah.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Tue, 12 Jul 2016 23:46:16 +0200
+Message-ID: <CAMxnaaVjMV3+VkvaE3EsRu9e7X=92Ya4Hq0TTu1T=Ribwx3qnQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 25, 2016 12:48:32 AM Lukas Wunner wrote:
-> On Thu, Jul 21, 2016 at 02:25:15AM +0200, Rafael J. Wysocki wrote:
-> > On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
-> > > On Thu, Jul 21, 2016 at 12:51:31AM +0200, Rafael J. Wysocki wrote:
-> > > > On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
-> > > > > On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
-> > > > > > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
-> > > > > > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
-> > > > > > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
-> > > > > > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
-> > > > > > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > > > > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
-> > > > > > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> > > > > > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
-> > > > > > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
-> > > > > > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
-> > > > > > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
-> > > > > > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
-> > > > > > > > > > > this dependency using something like Rafael's approach instead of
-> > > > > > > > > > > open coding it, however one detail in Rafael's patches is problematic:
-> > > > > > > > > > >
-> > > > > > > > > > > > New links are added by calling device_link_add() which may happen
-> > > > > > > > > > > > either before the consumer device is probed or when probing it, in
-> > > > > > > > > > > > which case the caller needs to ensure that the driver of the
-> > > > > > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
-> > > > > > > > > > > > flag should be passed to device_link_add() to reflect that.
-> > > > > > > > > > >
-> > > > > > > > > > > The thunderbolt driver cannot call device_link_add() before the
-> > > > > > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
-> > > > > > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
-> > > > > > > > > > > if the thunderbolt driver isn't loaded.
-> > > > > > > > > > >
-> > > > > > > > > > > It would therefore be beneficial if device_link_add() can be
-> > > > > > > > > > > called even *after* the consumer is bound.
-> > > > > > > > > > 
-> > > > > > > > > > I don't quite follow.
-> > > > > > > > > > 
-> > > > > > > > > > Who's the provider and who's the consumer here?
-> > > > > > > > > 
-> > > > > > > > > thunderbolt.ko is the supplier.
-> > > > > > > > 
-> > > > > > > > But it binds to the children of the ports that are supposed to be its
-> > > > > > > > consumers?
-> > > > > > > > 
-> > > > > > > > Why is that even expected to work?
-> > > > > > > 
-> > > > > > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
-> > > > > > > 
-> > > > > > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
-> > > > > > > the drawing below). The supplier is the NHI:
-> > > > > > > 
-> > > > > > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> > > > > > >                                          +-- Downstream Bridge 1 --
-> > > > > > >                                          +-- Downstream Bridge 2 --
-> > > > > > >                                          ...
-> > > > > > > 
-> > > > > > > We're calling pci_power_up() and pci_restore_state() from
-> > > > > > > pci_pm_resume_noirq(). And that will fail for devices below
-> > > > > > > the hotplug ports if the PCI tunnels haven't been re-established
-> > > > > > > yet by the NHI.
-> > > > > > 
-> > > > > > So the NHI is a PCIe device, right?
-> > > > > > 
-> > > > > > Does the Thunderbolt driver bind to that device?
-> > > > > 
-> > > > > The NHI is a PCI device but not a bridge. It has class 0x88000.
-> > > > > Yes, thunderbolt.ko binds to the NHI.
-> > > > > 
-> > > > > And portdrv binds to the upstream bridge and downstream bridges.
-> > > > > Those have class 0x60400.
-> > > > 
-> > > > OK, so why would there be a problem with creating links from the NHI
-> > > > (producer) to the ports (consumers) before binding portdrv to them?
-> > > 
-> > > Because the ordering in which drivers bind isn't guaranteed. At least
-> > > on my machine (Debian), portdrv always binds before thunderbolt.
-> > 
-> > But what drivers have to do with that really?  Do you need drivers to
-> > know that the dependency is there?
-> > 
-> > Just add likns *before* even probing for drivers (yes, you can do that)
-> > and the core will handle that for you.
-> 
-> Forgive me for being dense: How do you suggest to add links before
-> probing drivers? Only way I could think of is with a PCI quirk.
-> 
-> Which is what we're already doing right now (see drivers/pci/quirk.c:
-> quirk_apple_wait_for_thunderbolt()). And it ain't pretty.
+On Sat, Jul 9, 2016 at 7:23 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Thu, Jul 07, 2016 at 07:39:12PM +0200, Andreas Noever wrote:
+>> On Tue, Jun 14, 2016 at 10:22 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Tue, Jun 14, 2016 at 09:14:27PM +0200, Andreas Noever wrote:
+>> >> On Tue, Jun 14, 2016 at 6:37 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> >> > [+cc linux-kernel]
+>> >> >
+>> >> > On Sat, May 21, 2016 at 11:48:42AM +0200, Andreas Noever wrote:
+>> >> >>
+>> >> >> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+>> >> >>
+>> >> >> Tested on MacBookPro10,1
+>> >> >>
+>> >> >> On Fri, May 13, 2016 at 1:15 PM, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> >> > This series powers Thunderbolt controllers on Macs down when nothing is
+>> >> >> > plugged in, saving 1.7 W on machines with a Light Ridge controller and
+>> >> >> > reportedly 4 W on Cactus Ridge 4C and Falcon Ridge 4C.
+>> >> >> >
+>> >> >> > Briefly, a custom ACPI method provided by Apple is used to cut power to
+>> >> >> > the controller.  A GPE is enabled while the controller is powered down
+>> >> >> > which side-band signals a plug event, whereupon power is reinstated using
+>> >> >> > the ACPI method.  Note that even though this mechanism is ACPI-based,
+>> >> >> > it does not use _PSx methods and is thus entirely nonstandard.
+>> >> >
+>> >> > I think the current arrangement was that Andreas would ack Thunderbolt
+>> >> > patches and I would merge them via the PCI tree.  That makes some sense
+>> >> > because Thunderbolt and PCIe are related, but the more I think about
+>> >> > it, the less I'm happy with it.
+>> >> >
+>> >> > This series is a good example.  I'm sure it's good work and
+>> >> > worthwhile.  But I can't really say anything about the content of it
+>> >> > because most of it is Thunderbolt-specific and there's no public spec.
+>> >> > It seems like this is basically a collection of reverse-engineered
+>> >> > quirks that happen to work with the current state of Linux PM on
+>> >> > certain Macs.  We don't know what might change on future Macs.  We
+>> >> > don't know what might break when we make changes to Linux PM.
+>> >> >
+>> >> > I can't test this series, nor do I want to.  I can't test most of the
+>> >> > patches I merge, but I can at least read the spec and see whether the
+>> >> > patches make sense.  What I would *like* is to have public Thunderbolt
+>> >> > specs and a kernel developer's guide so we know what to expect from
+>> >> > the hardware and the firmware and we can write code that should work
+>> >> > not just on current Macs, but also on non-Macs and future Macs.
+>> >> >
+>> >> > I don't think the current situation is really maintainable, and I'm
+>> >> > not comfortable merging code that I can't maintain.
+>> >> Most of the code is contained within the thunderbolt driver. I think
+>> >> there is quite some precedence for reverse engineered drivers without
+>> >> specs being part of the kernel. My understanding was that, since I am
+>> >> listed in MAINTAINERS, I am responsible for the driver. Now our
+>> >> changes often need improvements to the pci core, which is why I think
+>> >> merging through your tree is a good idea (without transferring
+>> >> responsibility). The changes to the drivers/pci should be supported by
+>> >> the PCI-spec and make sense without knowing about thunderbolt (but it
+>> >> might be the case that thunderbolt is the only user of these
+>> >> features).
+>> >>
+>> >> Specifically for this series we want to:
+>> >>  - whitelist thunderbolt bridges for PM. Detecting those bridges is
+>> >> non-standard but I think this is acceptable, since this
+>> >> blacklist/whitelist is basically a quirk.
+>> >>  - Load our portdrv on tb bridges. PCI just sees another portdriver
+>> >> and all the reverse engineered magic lives inside the driver.
+>> >>  - Forward more PM callbacks to portdrivers (not tb specific)
+>> >>  - hotplug D3cold fixes: resume around board_added/remove_board,
+>> >> ignore interrupts in d3cold (not tb specific and probably a general
+>> >> bugfix)
+>> >>  - Make pci not fail if bridges have been put into D3cold by some
+>> >> external mechanism.
+>> >>
+>> >> So maybe you could review the pci changes as a solution to the problem
+>> >> "we want to load a custom portdriver which can put bridges into d3cold
+>> >> in a device specific way". We certainly to not expect you to take
+>> >> responsibility for the thunderbolt driver.
+>> >
+>> > That's a fine solution as far as I'm personally concerned.  I think
+>> > it's poor for Linux overall, because I think it's fragile, and it's
+>> > disappointing that a technology as important as Thunderbolt is so
+>> > poorly supported by the promulgators.  But if you're willing to work
+>> > in that environment, that's great.
+>> >
+>> > You maintain the thunderbolt code and merge changes, and I'll review
+>> > the pieces that touch drivers/pci.  I do have a couple comments on
+>> > those pieces, but I don't think they'll be major.
+>> >
+>> > I just want to get out of the business of merging drivers/thunderbolt
+>> > code that I can't maintain.
+>>
+>> [+ Greg]
+>>
+>> Hi Greg,
+>>
+>> do you mind if we revert to the old scheme and merge TB changes
+>> through your tree?
+>
+> I will be glad to take them, feel free to send them on to me.
 
-Well, maybe not, but doing it once during enumeration would be better than
-on every resume.
+Thanks!
+Andreas
 
-Plus there is runtime PM to cover.
-
-> > > I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
-> > > no driver is bound to the NHI. Doesn't feel pretty to me though.
-> > > 
-> > > Ultimately this seems to be the same issue as with calling
-> > > dev_pm_domain_set() for a bound device. Perhaps device_link_add()
-> > > can likewise be allowed if a runtime PM ref is held for the devices
-> > > and the call happens under lock_system_sleep()?
-> > 
-> > No, the whole synchronization scheme in the links code would have had to be
-> > changed for that to really work.
-> > 
-> > And it really is about what is needed (at least in principle) to run your
-> > device.  If you think you need device X with a driver to handle device Y
-> > correctly, then either you need it all the time, from probe to remove, or
-> > you just don't really need it at all.
-> 
-> Real life isn't as simple as that.
-> 
-> In this case, we have consumers (hotplug ports) which are doing fine
-> if the driver for the supplier (NHI) is not loaded. But once it loads,
-> the links must be in place.
-
-Hmm.
-
-What if it is not loaded and the system suspends.  Will everything work
-as expected after the subsequent resume?
-
-Thanks,
-Rafael
-
+> thanks,
+>
+> greg k-h
