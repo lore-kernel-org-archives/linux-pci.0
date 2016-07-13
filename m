@@ -1,51 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52870 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751631AbcGVPvo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jul 2016 11:51:44 -0400
-Date: Fri, 22 Jul 2016 10:51:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>, nofooter <nofooter@xilinx.com>,
-	nofooter2 <nofooter2@xilinx.com>
-Subject: Re: Why does BIOS assign memory to 16 byte BAR
-Message-ID: <20160722155133.GB20646@localhost>
-References: <8520D5D51A55D047800579B094147198258BB59B@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160722151546.GA20646@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785F8DC.4060100@arm.com>
+ <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5785FDCB.2070208@arm.com>
+Date: Wed, 13 Jul 2016 09:37:31 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160722151546.GA20646@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 22, 2016 at 10:15:46AM -0500, Bjorn Helgaas wrote:
-> Hi Bharat,
+On 13/07/16 09:33, Bharat Kumar Gogada wrote:
+>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+>>
+>> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+>>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
+>>>> call
+>>>>
+>>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+>>>>> Hi Marc,
+>>>>>
+>>>>> Thanks for the reply.
+>>>>>
+>>>>> From PCIe Spec:
+>>>>> MSI Enable Bit:
+>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control register
+>>>>> (see Section 6.8.2.3) is 0, the function is permitted to use MSI to
+>>>>> request service and is prohibited from using its INTx# pin.
+>>>>>
+>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
+>>>> which means MSI address and data fields are available/programmed.
+>>>>>
+>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+>>>>> latches
+>>>> onto MSI address and MSI data values.
+>>>>>
+>>>>> With current MSI implementation in kernel, our SoC is latching on to
+>>>>> incorrect address and data values, as address/data are updated much
+>>>>> later
+>>>> than MSI Enable bit.
+>>>>
+>>>> As a side question, how does setting the affinity work on this
+>>>> end-point if this involves changing the address programmed in the MSI
+>> registers?
+>>>> Do you expect the enabled bit to be toggled to around the write?
+>>>>
+>>>
+>>> Yes,
+>>
+>> Well, that's pretty annoying, as this will not work either. But maybe your MSI
+>> controller has a single doorbell? You haven't mentioned which HW that is...
+>>
+> The MSI address/data is located in config space, in our SoC for the logic behind PCIe
+> to become aware of new address/data  MSI enable transition is used (0 to 1).
+> The logic cannot keep polling these registers in configuration space as it would consume power.
 > 
-> On Fri, Jul 22, 2016 at 09:24:22AM +0000, Bharat Kumar Gogada wrote:
-> > Hi,
-> > 
-> > I'm observing that on x86 BIOS successfully assigns memory if an End point requests
-> > BAR of size 16byte.
-> > 
-> > But as per Spec:
-> > The minimum memory address range requested by a BAR is 128 bytes.
-> 
-> Can you provide the spec reference for this?  I don't see it in PCI
-> r3.0.
->
-> PCI r3.0, sec 6.2.5.1, shows bits 4-31 of a memory BAR as writable,
-> which would correspond to a minimum size of 16 bytes.
+> So the logic uses the transition in MSI enable to latch on to address/data.
 
-The reference above is to the conventional PCI spec.  I happened to
-trip over a note in PCIe r3.0, sec 1.3.2.2, that for a PCI Express
-endpoint, "the minimum memory address range requested by a BAR is 128
-bytes."
+I understand the "why". I'm just wondering if your SoC needs to have
+the MSI address changed when changing the affinity of the MSI? What MSI
+controller are you using? Is it in mainline?
 
-I don't think linux currently enforces this minimum.
+Thanks,
 
-Bjorn
+	M.
+-- 
+Jazz is not dead. It just smells funny...
