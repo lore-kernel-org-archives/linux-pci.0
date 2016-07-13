@@ -1,194 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:56024 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146AbcGAPl2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 11:41:28 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <liviu.dudau@arm.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
-Date: Fri, 01 Jul 2016 17:44:09 +0200
-Message-ID: <4061641.rLdO1g8OBR@wuerfel>
-In-Reply-To: <20160701144648.GC8609@e106497-lin.cambridge.arm.com>
-References: <20160630151931.29216-1-thierry.reding@gmail.com> <20160701144648.GC8609@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
+Received: from mail-sn1nam02on0043.outbound.protection.outlook.com ([104.47.36.43]:15048
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750780AbcGMPfJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 11:35:09 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+Subject: RE: PCIe MSI address is not written at pci_enable_msi_range call
+Date: Wed, 13 Jul 2016 15:34:35 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258B8C86@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785F8DC.4060100@arm.com>
+ <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785FDCB.2070208@arm.com>
+ <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5786079F.1050605@arm.com>
+ <8520D5D51A55D047800579B094147198258B8A2E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57860C91.5010602@arm.com>
+In-Reply-To: <57860C91.5010602@arm.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 1, 2016 3:46:48 PM CEST Liviu Dudau wrote:
-> On Thu, Jun 30, 2016 at 05:19:30PM +0200, Thierry Reding wrote:
-> > From: Arnd Bergmann <arnd@arndb.de>
-> > 
-> > This patch makes the existing pci_host_bridge structure a proper device
-> > that is usable by PCI host drivers in a more standard way. In addition
-> > to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
-> > and pci_create_root_bus interfaces, this unfortunately means having to
-> > add yet another interface doing basically the same thing, and add some
-> > extra code in the initial step.
-> > 
-> > However, this time it's more likely to be extensible enough that we
-> > won't have to do another one again in the future, and we should be
-> > able to reduce code much more as a result.
-> 
-> I am really disapointed by the direction in which the whole pci_host_bridge
-> structure and associated functions is going. When I started to get involved
-> in this mess that is the creation of a root PCI bus I was hoping that we
-> are moving towards one or few functions that create the root bus by using
-> the details provided in the host bridge without having so many variants for
-> the functionality.
+> On 13/07/16 10:36, Bharat Kumar Gogada wrote:
+> >> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
+> >> call
+> >>
+> >> On 13/07/16 10:10, Bharat Kumar Gogada wrote:
+> >>>> Subject: Re: PCIe MSI address is not written at
+> >>>> pci_enable_msi_range call
+> >>>>
+> >>>> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
+> >>>>>> Subject: Re: PCIe MSI address is not written at
+> >>>>>> pci_enable_msi_range call
+> >>>>>>
+> >>>>>> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+> >>>>>>>> Subject: Re: PCIe MSI address is not written at
+> >>>>>>>> pci_enable_msi_range call
+> >>>>>>>>
+> >>>>>>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+> >>>>>>>>> Hi Marc,
+> >>>>>>>>>
+> >>>>>>>>> Thanks for the reply.
+> >>>>>>>>>
+> >>>>>>>>> From PCIe Spec:
+> >>>>>>>>> MSI Enable Bit:
+> >>>>>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control
+> >>>>>>>>> register (see Section 6.8.2.3) is 0, the function is permitted
+> >>>>>>>>> to use MSI to request service and is prohibited from using its
+> >>>>>>>>> INTx#
+> >> pin.
+> >>>>>>>>>
+> >>>>>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be
+> >>>>>>>>> used
+> >>>>>>>> which means MSI address and data fields are
+> available/programmed.
+> >>>>>>>>>
+> >>>>>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+> >>>>>>>>> latches
+> >>>>>>>> onto MSI address and MSI data values.
+> >>>>>>>>>
+> >>>>>>>>> With current MSI implementation in kernel, our SoC is latching
+> >>>>>>>>> on to incorrect address and data values, as address/data are
+> >>>>>>>>> updated much later
+> >>>>>>>> than MSI Enable bit.
+> >>>>>>>>
+> >>>>>>>> As a side question, how does setting the affinity work on this
+> >>>>>>>> end-point if this involves changing the address programmed in
+> >>>>>>>> the MSI
+> >>>>>> registers?
+> >>>>>>>> Do you expect the enabled bit to be toggled to around the write?
+> >>>>>>>>
+> >>>>>>>
+> >>>>>>> Yes,
+> >>>>>>
+> >>>>>> Well, that's pretty annoying, as this will not work either. But
+> >>>>>> maybe your
+> >>>> MSI
+> >>>>>> controller has a single doorbell? You haven't mentioned which HW
+> >>>>>> that
+> >>>> is...
+> >>>>>>
+> >>>>> The MSI address/data is located in config space, in our SoC for
+> >>>>> the logic
+> >>>> behind PCIe
+> >>>>> to become aware of new address/data  MSI enable transition is used
+> >>>>> (0 to
+> >>>> 1).
+> >>>>> The logic cannot keep polling these registers in configuration
+> >>>>> space as it
+> >>>> would consume power.
+> >>>>>
+> >>>>> So the logic uses the transition in MSI enable to latch on to
+> address/data.
+> >>>>
+> >>>> I understand the "why". I'm just wondering if your SoC needs to
+> >>>> have the MSI address changed when changing the affinity of the MSI?
+> >>>> What MSI controller are you using? Is it in mainline?
+> >>>>
+> >>> Can you please give more information on MSI affinity ?
+> >>> For cpu affinity for interrupts we would use MSI-X.
+> >>>
+> >>> We are using GIC 400 v2.
+> >>
+> >> None of that is relevant. GIC400 doesn't have the faintest notion of
+> >> what an MSI is, and MSI-X vs MSI is an end-point property.
+> >>
+> >> Please answer these questions: does your MSI controller have a unique
+> >> doorbell, or multiple doorbells? Does it use wired interrupts (SPIs)
+> >> connected to the GIC? Is the support code for this MSI controller in
+> mainline or not?
+> >>
+> >
+> > It has single doorbell.
+> > The MSI decoding is part of our PCIe bridge, and it has SPI to GIC.
+> > Our root driver is in mainline drivers/pci/host/pcie-xilinx-nwl.c
+>
+> OK, so you're not affected by this affinity setting issue. Please let me know if
+> the patch I sent yesterday improve things for you once you have a chance to
+> test it.
+>
+Hi Marc,
 
-That is the plan, we just never made a lot of progress here.
+I tested with the patch you provided, now it is working for us.
 
-> One reason for this holy mess is the duplication of information. Both root
-> bus and the pci_host_bridge hold pointers to useful information (msi_controller,
-> pci_ops) and coherency should be guaranteed when one or the other gets created.
-> Hence the ridiculous dance being done to find if root bus hasn't already been
-> created and if not reusing the scrap bus we have created at the top of
-> pci_create_root_bus() to actually set the data, then create the pci_host_bridge,
-> oops we need more information, and so on. (apologies for the incoherent style,
-> I'm trying to duplicate the spirit of the probe.c code :) )
+Can you please point to any doc related to affinity in MSI, until now we
+came across affinity for MSI-X. I will explore more on it.
 
-Agreed.
+Thanks for your help.
 
-> I think this patchset has the right intention but it is not doing it in
-> the right way. To me, the right way is to separate the whole allocation
-> of the pci_host_bridge structure from the scanning or the root bus (keeping the
-> INIT_LIST_HEAD(&bridge->windows) call inside), not add the sysdata pointer
-> *at all* to pci_host_bridge, move the information from pci_bus into pci_host_bridge
-> and make pci_scan_root_bus take a pci_host_bridge pointer once that has been
-> done.
+Regards,
+Bharat
 
-Again, this is what I'm doing here, unfortunately we cannot remove the
-sysdata pointer altogether as we still have over a hundred existing PCI
-host bridge implementations that all use sysdata.
 
-> Think of the code structure as a reflection of how the system is structured: the
-> PCI-to-host bridge is a structure that holds the information required to connect
-> the functionality of the host code (msi_controller, host-to-bus resource windows)
-> to the PCI(e) bus. The root pci_bus should only have PCI(e) bus information if
-> possible.
 
-Exactly.
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
 
-> > 
-> > The main idea is to pull the allocation of 'struct pci_host_bridge' out
-> > of the registration, and let individual host drivers and architecture
-> > code fill the members before calling the registration function.
-> 
-> That's how we got into the arch/arm mess that we currently have. The host driver
-> should not drive the instantiation of the pci_host_bridge structure because it
-> will prevent you from having two drivers running at the same time.
-
-Can you clarify that? I don't see what prevents two drivers from each
-creating a pci_host_bridge structure and passing it into
-pci_host_bridge_register().
-
-> > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> > -{
-> > -	struct pci_host_bridge *bridge;
-> > -
-> > -	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-> > -	if (!bridge)
-> > -		return NULL;
-> > -
-> > -	INIT_LIST_HEAD(&bridge->windows);
-> > -	bridge->bus = b;
-> > -	return bridge;
-> > -}
-> > -
-> 
-> You might have strong arguments for removing this function but they are not properly
-> explained here and I feel that they should. Specially as ....
-
-In my initial version, it simply became unnecessary because all callers
-of pci_host_bridge_register() would have to allocate it anyway, and with
-the pci_bus assignment gone, it didn't do much at all.
-
-> >  static const unsigned char pcix_bus_speed[] = {
-> >  	PCI_SPEED_UNKNOWN,		/* 0 */
-> >  	PCI_SPEED_66MHz_PCIX,		/* 1 */
-> > @@ -2117,53 +2104,56 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
-> >  {
-> >  }
-> >  
-> > -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> > +void pci_host_bridge_init(struct pci_host_bridge *bridge)
-> > +{
-> > +	INIT_LIST_HEAD(&bridge->windows);
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_host_bridge_init);
-> 
-> I have no idea why it is useful to re-initialise the bridge->windows list at any
-> time other than allocation time.
-
-That's why I suggested doing this in the allocation function now.
-
-> > +int pci_host_bridge_register(struct pci_host_bridge *bridge)
-> >  {
-> >  	int error;
-> > -	struct pci_host_bridge *bridge;
-> >  	struct pci_bus *b, *b2;
-> >  	struct resource_entry *window, *n;
-> > +	LIST_HEAD(resources);
-> >  	struct resource *res;
-> >  	resource_size_t offset;
-> >  	char bus_addr[64];
-> >  	char *fmt;
-> > +	struct device *parent = bridge->dev.parent;
-> >  
-> >  	b = pci_alloc_bus(NULL);
-> >  	if (!b)
-> > -		return NULL;
-> > +		return -ENOMEM;
-> > +	bridge->bus = b;
-> >  
-> > -	b->sysdata = sysdata;
-> > -	b->ops = ops;
-> > -	b->number = b->busn_res.start = bus;
-> > +	/* temporarily move resources off the list */
-> > +	list_splice_init(&bridge->windows, &resources);
-> 
-> What are you trying to accomplish here with the moving around of the bridge->windows list
-> elements? This also leaves the bridge->windows list empty afterwards, is that intended?
-
-I was trying to preserve the existing behavior, this can probably
-be simplified, but as my initial version was completely untested
-I decided not to touch it.
-
-Later in the function, the list is filled one entry at a time from
-the local 'resources' list that we traditionally passed as a function
-argument before.
-
-Ideally we'd just walk the list instead of doing the
-split/list_del/list_add dance, and this would be a logical
-cleanup on top of this patch.
-
-> > @@ -817,6 +821,8 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
-> >  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  				    struct pci_ops *ops, void *sysdata,
-> >  				    struct list_head *resources);
-> > +void pci_host_bridge_init(struct pci_host_bridge *bridge);
-> > +int pci_host_bridge_register(struct pci_host_bridge *bridge);
-> >  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
-> >  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
-> >  void pci_bus_release_busn_res(struct pci_bus *b);
-> 
-> There is too much stuff moving around. I know it is needed and the temptation is to get it
-> done as quickly as possible, but it makes the reviewing and the commenting on this series hard.
-
-This is why I left the list handling you mentioned above unchanged
-in my original patch instead of rewriting it.
-
-> Can you split the patch into one that adds the new members
-> into pci_host_bridge, then do the renaming/re-organisation in
-> another patch?
-
-That should be possible, I guess Thierry can deal with that when respinning
-the series.
-
-	Arnd
