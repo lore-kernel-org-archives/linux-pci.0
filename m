@@ -1,79 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34600 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:35896 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757365AbcG0VqV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Jul 2016 17:46:21 -0400
-Date: Wed, 27 Jul 2016 16:46:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.or>,
+	id S1750978AbcGMJkz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jul 2016 05:40:55 -0400
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, john_mazzie@dell.com,
-	Mark Wenning <mark.wenning@canonical.com>
-Subject: Re: [Regression][3.18-rc1 -> mainline] PCI: Configure *all* devices,
- not just hot-added ones
-Message-ID: <20160727214616.GA23857@localhost>
-References: <5798FC1C.40405@canonical.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785F8DC.4060100@arm.com>
+ <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785FDCB.2070208@arm.com>
+ <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5786079F.1050605@arm.com>
+ <8520D5D51A55D047800579B094147198258B8A2E@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57860C91.5010602@arm.com>
+Date: Wed, 13 Jul 2016 10:40:33 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5798FC1C.40405@canonical.com>
+In-Reply-To: <8520D5D51A55D047800579B094147198258B8A2E@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 27, 2016 at 02:23:24PM -0400, Joseph Salisbury wrote:
-> A kernel bug report was opened against Ubuntu [0].  After a kernel
-> bisect, it was found that reverting the following commit resolved this bug:
+On 13/07/16 10:36, Bharat Kumar Gogada wrote:
+>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+>>
+>> On 13/07/16 10:10, Bharat Kumar Gogada wrote:
+>>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
+>>>> call
+>>>>
+>>>> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
+>>>>>> Subject: Re: PCIe MSI address is not written at
+>>>>>> pci_enable_msi_range call
+>>>>>>
+>>>>>> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+>>>>>>>> Subject: Re: PCIe MSI address is not written at
+>>>>>>>> pci_enable_msi_range call
+>>>>>>>>
+>>>>>>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+>>>>>>>>> Hi Marc,
+>>>>>>>>>
+>>>>>>>>> Thanks for the reply.
+>>>>>>>>>
+>>>>>>>>> From PCIe Spec:
+>>>>>>>>> MSI Enable Bit:
+>>>>>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control
+>>>>>>>>> register (see Section 6.8.2.3) is 0, the function is permitted
+>>>>>>>>> to use MSI to request service and is prohibited from using its INTx#
+>> pin.
+>>>>>>>>>
+>>>>>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be
+>>>>>>>>> used
+>>>>>>>> which means MSI address and data fields are available/programmed.
+>>>>>>>>>
+>>>>>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+>>>>>>>>> latches
+>>>>>>>> onto MSI address and MSI data values.
+>>>>>>>>>
+>>>>>>>>> With current MSI implementation in kernel, our SoC is latching
+>>>>>>>>> on to incorrect address and data values, as address/data are
+>>>>>>>>> updated much later
+>>>>>>>> than MSI Enable bit.
+>>>>>>>>
+>>>>>>>> As a side question, how does setting the affinity work on this
+>>>>>>>> end-point if this involves changing the address programmed in the
+>>>>>>>> MSI
+>>>>>> registers?
+>>>>>>>> Do you expect the enabled bit to be toggled to around the write?
+>>>>>>>>
+>>>>>>>
+>>>>>>> Yes,
+>>>>>>
+>>>>>> Well, that's pretty annoying, as this will not work either. But
+>>>>>> maybe your
+>>>> MSI
+>>>>>> controller has a single doorbell? You haven't mentioned which HW
+>>>>>> that
+>>>> is...
+>>>>>>
+>>>>> The MSI address/data is located in config space, in our SoC for the
+>>>>> logic
+>>>> behind PCIe
+>>>>> to become aware of new address/data  MSI enable transition is used
+>>>>> (0 to
+>>>> 1).
+>>>>> The logic cannot keep polling these registers in configuration space
+>>>>> as it
+>>>> would consume power.
+>>>>>
+>>>>> So the logic uses the transition in MSI enable to latch on to address/data.
+>>>>
+>>>> I understand the "why". I'm just wondering if your SoC needs to have
+>>>> the MSI address changed when changing the affinity of the MSI? What
+>>>> MSI controller are you using? Is it in mainline?
+>>>>
+>>> Can you please give more information on MSI affinity ?
+>>> For cpu affinity for interrupts we would use MSI-X.
+>>>
+>>> We are using GIC 400 v2.
+>>
+>> None of that is relevant. GIC400 doesn't have the faintest notion of what an
+>> MSI is, and MSI-X vs MSI is an end-point property.
+>>
+>> Please answer these questions: does your MSI controller have a unique
+>> doorbell, or multiple doorbells? Does it use wired interrupts (SPIs) connected
+>> to the GIC? Is the support code for this MSI controller in mainline or not?
+>>
 > 
-> commit 1302fcf0d03e6ea74846c7fee14736306ab2ce4b
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date: Sat Aug 30 07:23:01 2014 -0600
-> 
->     PCI: Configure *all* devices, not just hot-added ones
-> 
-> The regression was introduced as of v3.18-rc1 and the bug still exists
-> in current mainline.
-> 
-> [0] http://pad.lv/1571798
+> It has single doorbell.
+> The MSI decoding is part of our PCIe bridge, and it has SPI to GIC.
+> Our root driver is in mainline drivers/pci/host/pcie-xilinx-nwl.c
 
-I added the following response to the Launchpad bug report; pasting it
-here for better visibility:
+OK, so you're not affected by this affinity setting issue. Please let me
+know if the patch I sent yesterday improve things for you once you have
+a chance to test it.
 
-The register in question is the Advanced Error Capabilities and
-Control register, at offset 0x18 in the Advanced Error Reporting
-capability, which starts at 0x148 in the config space of device
-80:02.0.
+Thanks,
 
-In the pre-boot value of 0x00a0, the following bits are set (per PCIe
-spec r3.0, sec 7.10.7, these bits are read-only):
-
-  PCI_ERR_CAP_ECRC_GENC 0x00000020 /* ECRC Generation Capable */
-  PCI_ERR_CAP_ECRC_CHKC 0x00000080 /* ECRC Check Capable */
-
-In the value of 0x01e0 after Linux boots, the following additional
-bits are set:
-
-  PCI_ERR_CAP_ECRC_GENE 0x00000040 /* ECRC Generation Enable */
-  PCI_ERR_CAP_ECRC_CHKE 0x00000100 /* ECRC Check Enable */
-
-Linux is setting these bits in program_hpp_type2() because there is
-apparently an ACPI _HPX method that applies to this device, and it
-returns a PCI Express setting record (ACPI spec 5.0, sec 6.2.8.3) with
-an "Advanced Error Capabilities and Control Register OR Mask" that has
-PCI_ERR_CAP_ECRC_GENE and PCI_ERR_CAP_ECRC_CHKE set.
-
-Can you collect an ACPI dump to confirm that this is the case?
-
-As I mentioned in the 1302fcf0d03e changelog, it's not completely
-clear from the spec (ACPI 5.0, sec 6.2.8) when to apply these _HPX
-settings. It says OSPM should use them to "configure devices not
-configured by the platform firmware during initial system boot." The
-question is how OSPM can tell whether a device has been configured by
-platform firmware.
-
-Since I don't know how to tell if a device has been configured by
-platform firmware, I chose to apply the _HPX settings to *all*
-devices.
-
-Any BIOS folks want to suggest a way to tell whether firmware has
-configured a device?
+	M.
+-- 
+Jazz is not dead. It just smells funny...
