@@ -1,62 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:36314 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751968AbcGVWBo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jul 2016 18:01:44 -0400
-Received: by mail-wm0-f41.google.com with SMTP id q128so71538902wma.1
-        for <linux-pci@vger.kernel.org>; Fri, 22 Jul 2016 15:01:43 -0700 (PDT)
+Received: from foss.arm.com ([217.140.101.70]:37581 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751567AbcGMPkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jul 2016 11:40:09 -0400
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785F8DC.4060100@arm.com>
+ <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785FDCB.2070208@arm.com>
+ <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5786079F.1050605@arm.com>
+ <8520D5D51A55D047800579B094147198258B8A2E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57860C91.5010602@arm.com>
+ <8520D5D51A55D047800579B094147198258B8C86@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <578660CB.5030301@arm.com>
+Date: Wed, 13 Jul 2016 16:39:55 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXQNZPiWzL=hMsnQjkR7HSfbOxptFeLXWoEj30ucLSBMA@mail.gmail.com>
-References: <CAH=XD5-6QXxA42ukxJ40sOzGXqScS7u3QZAwCaCYT2r3pJxdCA@mail.gmail.com>
- <CAE9FiQXQNZPiWzL=hMsnQjkR7HSfbOxptFeLXWoEj30ucLSBMA@mail.gmail.com>
-From: Kallol Biswas <kallol@nucleodyne.com>
-Date: Fri, 22 Jul 2016 15:01:41 -0700
-Message-ID: <CAH=XD59KK7H2jSoie4xPMXQkezJDacXVphYJkAi6_TqXi=g4zg@mail.gmail.com>
-Subject: Re: No bus number available for hot-added bridge
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <8520D5D51A55D047800579B094147198258B8C86@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thank you very much for response.
-
-
-I have worked around the failure by manually allocating bus number,
-and memory bar window for a specific downstream port.
-
-
-I will send you the logs when I get back to this issue again.
-Thank you very much for response.
-
-
-
-On Fri, Jul 22, 2016 at 2:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Jul 15, 2016 at 1:33 PM, Kallol Biswas <kallol@nucleodyne.com> wrote:
->> Hi,
->>    I have been trying to hot-add a PCIe bridge and getting the
->> following message in dmesg:
+On 13/07/16 16:34, Bharat Kumar Gogada wrote:
+>> On 13/07/16 10:36, Bharat Kumar Gogada wrote:
+>>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
+>>>> call
+>>>>
+>>>> On 13/07/16 10:10, Bharat Kumar Gogada wrote:
+>>>>>> Subject: Re: PCIe MSI address is not written at
+>>>>>> pci_enable_msi_range call
+>>>>>>
+>>>>>> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
+>>>>>>>> Subject: Re: PCIe MSI address is not written at
+>>>>>>>> pci_enable_msi_range call
+>>>>>>>>
+>>>>>>>> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+>>>>>>>>>> Subject: Re: PCIe MSI address is not written at
+>>>>>>>>>> pci_enable_msi_range call
+>>>>>>>>>>
+>>>>>>>>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+>>>>>>>>>>> Hi Marc,
+>>>>>>>>>>>
+>>>>>>>>>>> Thanks for the reply.
+>>>>>>>>>>>
+>>>>>>>>>>> From PCIe Spec:
+>>>>>>>>>>> MSI Enable Bit:
+>>>>>>>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control
+>>>>>>>>>>> register (see Section 6.8.2.3) is 0, the function is permitted
+>>>>>>>>>>> to use MSI to request service and is prohibited from using its
+>>>>>>>>>>> INTx#
+>>>> pin.
+>>>>>>>>>>>
+>>>>>>>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be
+>>>>>>>>>>> used
+>>>>>>>>>> which means MSI address and data fields are
+>> available/programmed.
+>>>>>>>>>>>
+>>>>>>>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+>>>>>>>>>>> latches
+>>>>>>>>>> onto MSI address and MSI data values.
+>>>>>>>>>>>
+>>>>>>>>>>> With current MSI implementation in kernel, our SoC is latching
+>>>>>>>>>>> on to incorrect address and data values, as address/data are
+>>>>>>>>>>> updated much later
+>>>>>>>>>> than MSI Enable bit.
+>>>>>>>>>>
+>>>>>>>>>> As a side question, how does setting the affinity work on this
+>>>>>>>>>> end-point if this involves changing the address programmed in
+>>>>>>>>>> the MSI
+>>>>>>>> registers?
+>>>>>>>>>> Do you expect the enabled bit to be toggled to around the write?
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> Yes,
+>>>>>>>>
+>>>>>>>> Well, that's pretty annoying, as this will not work either. But
+>>>>>>>> maybe your
+>>>>>> MSI
+>>>>>>>> controller has a single doorbell? You haven't mentioned which HW
+>>>>>>>> that
+>>>>>> is...
+>>>>>>>>
+>>>>>>> The MSI address/data is located in config space, in our SoC for
+>>>>>>> the logic
+>>>>>> behind PCIe
+>>>>>>> to become aware of new address/data  MSI enable transition is used
+>>>>>>> (0 to
+>>>>>> 1).
+>>>>>>> The logic cannot keep polling these registers in configuration
+>>>>>>> space as it
+>>>>>> would consume power.
+>>>>>>>
+>>>>>>> So the logic uses the transition in MSI enable to latch on to
+>> address/data.
+>>>>>>
+>>>>>> I understand the "why". I'm just wondering if your SoC needs to
+>>>>>> have the MSI address changed when changing the affinity of the MSI?
+>>>>>> What MSI controller are you using? Is it in mainline?
+>>>>>>
+>>>>> Can you please give more information on MSI affinity ?
+>>>>> For cpu affinity for interrupts we would use MSI-X.
+>>>>>
+>>>>> We are using GIC 400 v2.
+>>>>
+>>>> None of that is relevant. GIC400 doesn't have the faintest notion of
+>>>> what an MSI is, and MSI-X vs MSI is an end-point property.
+>>>>
+>>>> Please answer these questions: does your MSI controller have a unique
+>>>> doorbell, or multiple doorbells? Does it use wired interrupts (SPIs)
+>>>> connected to the GIC? Is the support code for this MSI controller in
+>> mainline or not?
+>>>>
+>>>
+>>> It has single doorbell.
+>>> The MSI decoding is part of our PCIe bridge, and it has SPI to GIC.
+>>> Our root driver is in mainline drivers/pci/host/pcie-xilinx-nwl.c
 >>
->> No bus number available for hot-added bridge 0000:06:00.
+>> OK, so you're not affected by this affinity setting issue. Please let me know if
+>> the patch I sent yesterday improve things for you once you have a chance to
+>> test it.
 >>
->> The kernel is 4.4. Do we have any patch for this?  I tried Yinghai's
->> for-pci-busn-alloc patch. Did not work. Not sure I picked up the right
->> changes.
->>
->> Any input...
->>
->> [  794.085909] pci 0000:06:00.0: [10b5:9797] type 01 class 0x060400
->> [  794.086232] pci 0000:06:00.0: Max Payload Size set to 256 (was 128, max 512)
->> [  794.086563] pci 0000:06:00.0: PME# supported from D0 D3hot D3cold
->> [  794.086884] iommu: Adding device 0000:06:00.0 to group 47
->> [  794.093797] No bus number available for hot-added bridge 0000:06:00.0
->
->
-> Can you please send out the whole boot log with
-> CONFIG_PCI_DEBUG=y ?
->
-> also output for lspci -tv and lspci -vvxxx.
->
-> Thanks
->
-> Yinghai
+> Hi Marc,
+> 
+> I tested with the patch you provided, now it is working for us.
+
+Thanks, I'll repost this as a proper patch with your Tested-by.
+
+> Can you please point to any doc related to affinity in MSI, until now we
+> came across affinity for MSI-X. I will explore more on it.
+
+I don't have anything at hand, but simply look at how MSI (and MSI-X) is
+implemented on x86, for example: each CPU has its own doorbell, and
+changing the affinity of a MSI is done by changing the target address of
+that interrupt. And it doesn't seem that the kernel switches the Enable
+bit off and on for those.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
