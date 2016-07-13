@@ -1,215 +1,122 @@
-Return-Path: <adurbin@google.com>
-Return-Path: <adurbin@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:38546 "EHLO
+	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750863AbcGMBqU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 21:46:20 -0400
+Subject: Re: [PATCH v6 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+To: Brian Norris <briannorris@chromium.org>
+References: <1467789398-13501-1-git-send-email-shawn.lin@rock-chips.com>
+ <20160707003912.GB100467@google.com>
+ <59b328c9-3a21-36fa-7f28-4ba24d77fef0@rock-chips.com>
+ <20160713013117.GA130126@google.com>
+Cc: shawn.lin@rock-chips.com, devicetree@vger.kernel.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	linux-kernel@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	linux-rockchip@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <95a7ffdd-becc-bb3f-c026-d07c691b7a53@rock-chips.com>
+Date: Wed, 13 Jul 2016 09:45:43 +0800
 MIME-Version: 1.0
-In-Reply-To: <1787767.fkqrmkTfXg@vostro.rjw.lan>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
- <CAE2855t5M2=OVXTBfosdNjqg6jUpM-PK02eP6KHC82eKk71-4w@mail.gmail.com>
- <20160720193543.GA4186@localhost> <1787767.fkqrmkTfXg@vostro.rjw.lan>
-From: Aaron Durbin <adurbin@google.com>
-Date: Wed, 20 Jul 2016 18:02:08 -0500
-Message-ID: <CAE2855vSk3Pawuzj_Zs=ztia3EeEhd_NbFU=_1TxZyq7w83uVA@mail.gmail.com>
-Subject: Re: ACPI device using sub-resource of PCI device
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20160713013117.GA130126@google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 20, 2016 at 5:46 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Wednesday, July 20, 2016 02:35:43 PM Bjorn Helgaas wrote:
->> On Tue, Jun 28, 2016 at 09:41:19PM -0700, Aaron Durbin wrote:
->> > On Fri, Jun 24, 2016 at 12:34 PM, Aaron Durbin <adurbin@google.com> wrote:
->> > > On Tue, Jun 14, 2016 at 12:04 PM, Aaron Durbin <adurbin@google.com> wrote:
->> > >> On Wed, May 18, 2016 at 3:32 PM, Aaron Durbin <adurbin@google.com> wrote:
->> > >>> On Wed, May 18, 2016 at 4:25 PM, Rafael J. Wysocki <rafael@kernel.org> wrote:
->> > >>>> On Wed, May 18, 2016 at 5:54 PM, Aaron Durbin <adurbin@google.com> wrote:
->> > >>>>> Hi,
->> > >>>>>
->> > >>>>> We're currently running into a problem of resource conflicts with a
->> > >>>>> PCI device and ACPI devices.
->> > >>>>>
->> > >>>>> [    0.243534] pci 0000:00:0d.0: can't claim BAR 0 [mem
->> > >>>>> 0xd0000000-0xd0ffffff 64bit]: address conflict with INT3452:03 [mem
->> > >>>>> 0xd0c00000-0xd0c03fff]
->> > >>>>>
->> > >>>>> The PCI BAR covers a large amount mmio resources, however, there are
->> > >>>>> ACPI devices with their own HID (for probing) which uses resources
->> > >>>>> that are a subset of the PCI BAR.
->> > >>>>>
->> > >>>>> Short of re-structuring the linux driver is there anything that can be
->> > >>>>> done with ASL to properly have the ACPI device use a sub-resource of
->> > >>>>> the PCI device during the ACPI/PCI probing?
->> > >>>>
->> > >>>> Do you have an ACPI device object corresponding to the PCI device?
->> > >>>
->> > >>> I've been debugging this by proxy, and I did request that test. The
->> > >>> following is the overall structure:
->> > >>>
->> > >>> scope (\_SB.PCI0) {
->> > >>>
->> > >>> Device (P2S)
->> > >>> {
->> > >>>         Name (_ADR, 0x000D0000)
->> > >>>         Device (GPO0)
->> > >>>         {
->> > >>>                 Name (_ADR, 0)
->> > >>>                 Name (_HID, "INT3452")
->> > >>>                 Name (_CID, "INT3452")
->> > >>>         }
->> > >>> }
->> > >>> }
->> > >>>
->> > >>> There are _STA methods in both Devices. The GP0 device has a _CRS
->> > >>> method which just returns a ResourceTemplate which is filled in with
->> > >>> static values. The PCI bar is at a fixed address from the firmware
->> > >>> which allows the fixed calculations. However there is no specific
->> > >>> reference to the P2S device's resources proper -- only the parent
->> > >>> child relationship within the ASL. I'm not sure how to directly say "I
->> > >>> want this sub-region of this other device's resource for my resource."
->> > >>> That seems like the right thing, but it's not clear if that's implied
->> > >>> by hierarchy of the devices.
->> > >>>
->> > >>> Lastly, if it helps, the kernel being used is based on v4.4 (no core
->> > >>> patches on top).
->> > >>>
->> > >>
->> > >> Hi Rafael,
->> > >>
->> > >> I haven't tried a newer kernel yet, but are you of the opinion that
->> > >> having the Devices as parent-child within the ASL should work? I'm
->> > >> wondering if there's already a patch in newer kernels that doesn't
->> > >> report the conflict and works as expected once there are child Devices
->> > >> under the P2S device.
->> > >>
->> > >
->> > > I've been looking at this more closely. A child ACPI device under a
->> > > ACPI PCI device doesn't change the resource conflict even when a _CRS
->> > > method is added to the ACPI PCI device.  Below is my sleuthing which
->> > > is probably not a surprise to anyone here, but please correct me where
->> > > I am wrong.
->> > >
->> > > acpi_init() and pci_subsys_init() are both subsys_initcalls during
->> > > boot up. I'm not sure if the ordering is dumb luck or not, but
->> > > acpi_init() is called prior to pci_subsys_init(). The conflict error
->> > > is spit out from pcibios_resource_survey() by way of pci_subsys_init()
->> > >  subsys_initcall. However, the PCI device scanning is kicked off prior
->> > > to this through acpi_scan_init() by way of acpi_init()
->> > > subsys_initcall.  The conflict error occurs because there's already
->> > > the child ACPI device in the resource tree. I'm not sure when/where
->> > > those ACPI devices' resources are added, but clearly they are sitting
->> > > in there since the conflict was found.
->>
->> I think the acpi_init()/pci_subsys_init() ordering is correct.  The
->> ACPI namespace is primary.  A PCI hierarchy originates at a PCI host
->> bridge in the ACPI namespace, so we should enumerate the ACPI
->> namespace first, and when we find a PCI host bridge, we should
->> enumerate the PCI devices below it.
->>
->> That said, I think it is correct mostly by accident and it would be
->> nice if it were more explicit.
+在 2016/7/13 9:31, Brian Norris 写道:
+> Hi Shawn,
 >
-> No, it isn't by accident.
->
-> The enumeration of PCI devices under a PCI host bridge discovered via ACPI
-> starts in acpi_pci_root_add() which quite explicitly is only called after
-> enumerating the ACPI namespace entirely.
->
-> acpi_bus_scan() has two passes now, one is to call acpi_bus_check_add() for
-> all namespace objects and the other is the acpi_bus_attach() pass where
-> all things like acpi_pci_root_add() are called.
->
->> > > Somewhere along the way a PCI device from a scan is linked with the
->> > > ACPI device for that same PCI device in sysfs.  This is with me
->> > > putting a _HID and _CID in the PCI ACPI device.
->> > > # readlink -f /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/INT5A92:00/physical_node
->> > > /sys/devices/pci0000:00/0000:00:0d.0
->> > > # readlink -f /sys/devices/pci0000\:00/0000\:00\:0d.0/firmware_node/
->> > > /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/INT5A92:00
->> > >
->> > > So the hierarchy is known eventually, but it's clearly not honored
->> > > when adding resources. The current ACPI support doesn't handle
->> > > PciBarTarget which initially sounds (from ACPI spec) like the way to
->> > > go for referencing a resource in a PCI device from an ACPI device.
+> On Wed, Jul 13, 2016 at 09:10:15AM +0800, Shawn Lin wrote:
+>> 在 2016/7/7 8:39, Brian Norris 写道:
+>>> On Wed, Jul 06, 2016 at 03:16:37PM +0800, Shawn Lin wrote:
+>>>> +	#interrupt-cells = <1>;
+>>>> +	interrupt-map-mask = <0 0 0 7>;
+>>>> +	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
+>>>> +			<0 0 0 2 &pcie0_intc 2>,
+>>>> +			<0 0 0 3 &pcie0_intc 3>,
+>>>> +			<0 0 0 4 &pcie0_intc 4>;
+>>>
+>>> I'm a little lost on this one, so forgive my ignorance; how did you
+>>> determine the last value in each entry (i.e., the 1, 2, 3, and 4 IRQ
+>>> numbers for pcie0_intc)? IIUC, those are supposed to represent indeces
+>>> into the IRQ status register found in the PCIe interrupt status
+>>> register, and so they should be 0-based (i.e., 0, 1, 2, 3). And then
+>>> you'd have:
+>>>
+>>> 	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
+>>> 			<0 0 0 2 &pcie0_intc 1>,
+>>> 			<0 0 0 3 &pcie0_intc 2>,
+>>> 			<0 0 0 4 &pcie0_intc 3>;
+>>>
+>>> But then, I never got this sub-node binding to work quite right, so I
+>>> may be missing something.
+>>>
+>>> EDIT: ooh, I see what's going on! I'll comment on the driver as well,
+>>> but it looks like you're translating the register status to a HW IRQ
+>>> number with 'ffs(reg)', which yields a 1-based index. I think it is most
+>>> sensible to use a 0-based index (i.e., 'ffs(reg) - 1'). Now, that only
+>>> will work if you get the whole interrupt-map + interrupt-controller
+>>> thing right (i.e., using a subnode for the interrupt controller) --
+>>> otherwise, IRQ mapping might not work right. I suspect that's one reason
+>>> the original driver writer might have used 1-based indexing in the first
+>>> place.
 >>
->> Yes, I think PCIBARTarget looks like the right way to do this.  It
->> doesn't *seem* like it'd be that hard to implement; have you looked
->> into that at all?
->>
->> Without PCIBARTarget, the AML contains fixed register addresses, so it
->> will break if Linux reassigns the BAR.
+>> yes, I got it but.....what's the difference?
 >
-> Right.
->
->> > > So
->> > > that's out of the question currently, but maybe someone has a patch
->> > > for that? I don't think reordering the acpi_init() and
->> > > pci_subsys_init() would do anything different except change which
->> > > device discovers the conflict.
->> > >
->> > > Is there a way to honor the ACPI device hierarchy during resource
->> > > addition for the PCI devices? The conflict is found because of the
->> > > presence of a child device claiming resources through _CRS.
->> > > Alternatively, is there a good way to defer the probing of an ACPI
->> > > device until one knows PCI resources have been added?
->> > >
->> > > Any insights would be very helpful. Thank you.
->> >
->> > I stumbled upon the hierarchy connection. That's all handled with the
->> > platform_notify() end of things when device_add() is done on the pci
->> > device. I was thinking we could take advantage of this when adding
->> > resources, but a struct resource has no struct device. It's just a
->> > name description for the resource at hand. However, platform devices
->> > are added when the ACPI tree is parsed along with adding the resources
->> > associated with them (PciBarTarget would be helpful here) so those
->> > resources are sitting in the resource tree when PCI BARs are added.
->> >
->> > The following suggestion is sort of hacky, but it's the best I could
->> > come up with provided the currently supported infrastructure. In
->> > pci_claim_resource() do request_resource_conflict() as before. If it
->> > fails do the following: 1. check if the device has an ACPI companion.
->> > 2. For any children hanging off the ACPI companion device. check if
->> > that device's name matches the conflict resource's name. 3. If so,
->> > insert_resource_conflict() to place the BAR within the tree itself.
->>
->> I think the best solution would be to implement PCIBARTarget, but if
->> that's impossible, this seems like a plausible workaround.
->>
->> I don't know if the conflict would necessarily have to be with the
->> ACPI companion itself.  It seems like you could have some hierarchy of
->> ACPI devices where the leaf conflicts with a PCI BAR.  Maybe if a
->> resource of *any* ACPI device below a PCI host bridge conflicts with a
->> PCI BAR, we should insert the PCI BAR as a parent?
->>
->> And since moving that BAR would break the AML, we should probably mark
->> the BAR as IORESOURCE_PCI_FIXED.
->
-> Isn't the problem a probe ordering issue, though?
+> At some level, it's a matter of preference. But when you're talking
+> about the rk3399 PCIe "interrupt controller" domain, it seems that you
+> should be talking about HW bits in the controller -- i.e., you have a
+> 4-bit interrupt status bitfield, that we typically call [0:3]. If you
+> use [1:4], then you have to remember to subtract 1 mentally when mapping
+> to the actual HW bit. I believe that confusion (since bitfields normally
+> count from 0) might have helped cause the infinite loop bug I noticed
+> too. And I also think that counting from 0 helps clarify the fact that
+> your interrupt controller indexing is an independent numbering from the
+> PCI interrupt numbering, even though they happen to map 1:1.
 
-No. Not just ordering. There's no parent-child relationship taken into
-account when PCI devices are added to the resource tree. Deferring
-adding an ACPI device's resources would likely fail similarly because
-one doesn't take into account the proper parent. One lives in PCI land
--- the other in ACPI land.
-
-Currently, the issue is manifesting that the ACPI device's resources
-are added into the resource tree. PCI devices the follow trying to add
-their own resources. Conflicts ensue without taking into account the
-proper hierarchy. To make matters worse, struct resource doesn't have
-a struct device -- only a name. That means there's no way of knowing
-who owns what resource. All that information is unavailable. That's
-why the semi-hacky proposal was to see if there is an ACPI companion
-device and see if it has children. If it's children's names match the
-conflicting resource it's a good bet that the PCI device's resources
-should be placed as the parent in the resource tree.
+If that's the fact of how we should numbering our index base, we should
+probably start if from 5 as the layout of INTx is
+PCIE_CLIENT_INT_STATUS[5:8]... ?
 
 >
-> Do we assign BARs for endpoints during enumeration or only when we find a
-> matching driver?
+> But then, PCI INTx numbering is kinda weird already, as it starts from
+> 1. So maybe it's just as valid to say our domain starts from 1 as well.
+>
+>> You still need to get the whole interrupt-map + interrupt-controller
+>> things right and the code(ffs(reg) - 1)if applied your suggestion.
+>
+> Yes, of course. And I already sent you patches that do that.
+>
+>> Look at most of the docs for pcie bindings, I saw they also take
+>> 0-base index, how about?
+>
+> I don't know which ones you're referring to. I see that altera-pcie.txt
+> supports interrupt indeces counting from 1, but that's probably because
+> they're using the same broken binding that was in your ~v3 patches
+> (where the pcie node has both 'interrupt-controller' and
+> 'interrupt-map', with phandles to itself), so they had no other choice.
+>
+> If you still think it makes more sense to count from 1, then I won't
+> stop you.
 
-BARs look to be assigned during enumeration. There's where conflicts
-are found and resources reassigned in the current failing case.
+I don't have a hard opinion for the index base as I think it's trivial.
+So if it's more sensible to you, I will apply your suggestion.
 
 >
-> Thanks,
-> Rafael
+> Regards,
+> Brian
 >
+>
+>
+
+
+-- 
+Best Regards
+Shawn Lin
+
