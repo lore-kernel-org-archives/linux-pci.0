@@ -1,142 +1,126 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 25 Jul 2016 09:36:41 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:36989 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750883AbcGMNq2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jul 2016 09:46:28 -0400
+Date: Wed, 13 Jul 2016 14:46:42 +0100
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Dennis Chen <dennis.chen@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, nd@arm.com
-Subject: Re: [RFC PATCH v3 00/13] ACPI IORT ARM SMMU v3 support
-Message-ID: <20160725083641.GA20044@red-moon>
-References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20160725055330.GA21004@arm.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	nofooter <nofooter@xilinx.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>
+Subject: Re: Purpose of pci_remap_iospace
+Message-ID: <20160713134642.GA29309@red-moon>
+References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <3927657.6zNCtCntSU@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <4235946.u1vYRsOpTR@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160725055330.GA21004@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 25, 2016 at 01:53:32PM +0800, Dennis Chen wrote:
-> Hi
-> On Wed, Jul 20, 2016 at 12:23:22PM +0100, Lorenzo Pieralisi wrote:
-> > This RFC patch series is v3 of a previous posting:
-> > 
-> > https://lkml.org/lkml/2016/6/7/523
-> > 
-> > v2 -> v3
-> > 	- Rebased on top of dependencies series [1][2][3](v4.7-rc3)
-> > 	- Added back reliance on ACPI early probing infrastructure
-> > 	- Patch[1-3] merged through other dependent series
-> > 	- Added back IOMMU fwnode generalization
-> > 	- Move SMMU v3 static functions configuration to IORT code
-> > 	- Implemented generic IOMMU fwspec API
-> > 	- Added code to implement fwnode platform device look-up
-> > 
-> > v1 -> v2:
-> > 	- Rebased on top of dependencies series [1][2][3](v4.7-rc1)
-> > 	- Removed IOMMU fwnode generalization
-> > 	- Implemented ARM SMMU v3 ACPI probing instead of ARM SMMU v2
-> > 	  owing to patch series dependencies [1]
-> > 	- Moved platform device creation logic to IORT code to
-> > 	  generalize its usage for ARM SMMU v1-v2-v3 components
-> > 	- Removed reliance on ACPI early device probing
-> > 	- Created IORT specific iommu_xlate() translation hook leaving
-> > 	  OF code unchanged according to v1 reviews
-> > 
-> > The ACPI IORT table provides information that allows instantiating
-> > ARM SMMU devices and carrying out id mappings between components on
-> > ARM based systems (devices, IOMMUs, interrupt controllers).
-> > 
-> > http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-> > 
-> > Building on basic IORT support, available through [2]:
-> > 
-> > this patchset enables ARM SMMU v3 support on ACPI systems.
-> > 
-> > Most of the code is aimed at building the required generic ACPI
-> > infrastructure to create and enable IOMMU components and to bring
-> > the IOMMU infrastructure for ACPI on par with DT, which is going to
-> > make future ARM SMMU components easier to integrate.
-> > 
-> > PATCH (1) adds a FWNODE_IOMMU type to the struct fwnode_handle type.
-> >           It is required to attach a fwnode identifier to platform
-> >           devices allocated/detected through IORT tables entries;
-> >           IOMMU devices have to have an identifier to look them up
-> >           eg IOMMU core layer carrying out id translation. This can be
-> >           done through a fwnode_handle (ie IOMMU platform devices created
-> >           out of IORT tables are not ACPI devices hence they can't be
-> >           allocated as such, otherwise they would have a fwnode_handle of
-> >           type FWNODE_ACPI). This patch requires discussion and it is key
-> >           to the RFC.
-> > 
-> > PATCH (2) makes use of the ACPI early probing API to add a linker script
-> >           section for probing devices via IORT ACPI kernel code.
-> > 
-> > PATCH (3) provides IORT support for registering IOMMU IORT node through
-> >           their fwnode handle.
-> > 
-> > PATCH (4) implements core code fwnode based platform devices look-up.
-> > 
-> > PATCH (5) extends iommu_fwspec so that it can be used on ACPI based
-> >           system by creating a generic IOMMU fwspec kernel layer.
-> > 
-> > PATCH (6) implements the of_dma_configure() API in ACPI world -
-> >           acpi_dma_configure() - and patches PCI and ACPI core code to
-> >           start making use of it.
-> > 
-> > PATCH (7) provides an IORT function to detect existence of specific type
-> >           of IORT components.
-> > 
-> > PATCH (8) creates the kernel infrastructure required to create ARM SMMU
-> >           platform devices for IORT nodes.
-> > 
-> > PATCH (9) refactors the ARM SMMU v3 driver so that the init functions are
-> >           split in a way that groups together code that probes through DT
-> >           and code that carries out HW registers FW agnostic probing, in
-> >           preparation for adding the ACPI probing path.
-> > 
-> > PATCH (10) rework ARM SMMU v3 platform driver registration to make it work
-> >            on ACPI systems.
-> > 
-> > PATCH (11) Building on patch (8), it adds ARM SMMU v3 IORT IOMMU
-> >            operations to create and probe ARM SMMU v3 components.
-> > 
-> > PATCH (12) Extend the IORT iort_node_map_rid() to work on a type mask
-> >            instead of a single type so that the translation API can
-> >            be used on a range of components.
-> > 
-> > PATCH (13) provides IORT infrastructure to carry out IOMMU configuration
-> >            for devices and hook it up to the previously introduced ACPI
-> >            DMA configure API.
-> > 
-> > This patchset is built on top and depends on these three patch series:
-> > 
-> > [1] R.Murphy "Generic DT bindings for PCI and ARM SMMU v3" v4
-> >     https://marc.info/?l=devicetree&m=146739193215518&w=2
-> > 
-> > [2] T.Nowicki "Introduce ACPI world to ITS irqchip" v7
-> >     https://marc.info/?l=linux-arm-kernel&m=146642080022289&w=2
-> > 
-> > [3] T.Nowicki "Support for ARM64 ACPI based PCI host controller" v8
-> >     http://marc.info/?l=linux-acpi&m=146462129816292&w=2
-> > 
-> > and is provided for early review/testing purposes here:
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v3i
-> >
-> I thought I can got all the 13 patches applied with the above git
-> tree, but I can't find any ACPI related stuff after I cloned the git
-> repos to my local machine, am I missing something here?
+On Wed, Jul 13, 2016 at 12:30:44PM +0000, Bharat Kumar Gogada wrote:
 
-Have you pulled the acpi/iort-smmu-v3 branch ?
+[...]
 
-Thanks,
+> err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
+>         if (err) {
+>                 pr_err("Getting bridge resources failed\n");
+>                 return err;
+>         }
+> resource_list_for_each_entry(window, &res) {            //code for io resource
+>                 struct resource *res = window->res;
+>                 u64 restype = resource_type(res);
+> 
+>                 switch (restype) {
+>                 case IORESOURCE_IO:
+>                         err = pci_remap_iospace(res, iobase);
+>                         if(err)
+>                                 pr_info("FAILED TO IPREMAP RESOURCE\n");
+>                         break;
+>                 default:
+>                         dev_err(pcie->dev, "invalid resource %pR\n", res);
+> 
+>                 }
+>         }
+> 
+> Other than above code I haven't done any change in driver.
+> 
+> Here is the printk added boot log:
+> [    2.308680] nwl-pcie fd0e0000.pcie: Link is UP
+> [    2.308724] PCI host bridge /amba/pcie@fd0e0000 ranges:
+> [    2.308741]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
+> [    2.308755] in pci_add_resource_offset res->start 0   offset 0
+> [    2.308774]    IO 0xe0000000..0xe00fffff -> 0x00000000
+> [    2.308795] in pci_add_resource_offset res->start 0   offset 0
+> [    2.308805]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
+> [    2.308824] in pci_add_resource_offset res->start e0100000    offset 0
+> [    2.308834] nwl-pcie fd0e0000.pcie: invalid resource [bus 00-ff]
+> [    2.308870] nwl-pcie fd0e0000.pcie: invalid resource [mem 0xe0100000-0xeeffffff]
+> [    2.308979] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
+> [    2.308998] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    2.309014] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff]
+> [    2.309030] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeeffffff]
+> [    2.309253] pci 0000:00:00.0: cannot attach to SMMU, is it on the same bus?
+> [    2.309269] iommu: Adding device 0000:00:00.0 to group 1
+> [    2.309625] pci 0000:01:00.0: cannot attach to SMMU, is it on the same bus?
+> [    2.309641] iommu: Adding device 0000:01:00.0 to group 1
+> [    2.309697] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-0xe02fffff]
+
+Here is your PCI bridge mem space window assignment. I do not see
+an IO window assignment which makes me think that IO cycles and
+relative IO window is not enabled through the bridge, that's the
+reason you can't assign IO space to the endpoint, because it has
+no parent IO window enabled IIUC.
+
+You can add some debug info into pci_bridge_check_ranges() in
+particular to the reading of PCI_IO_BASE resources to confirm
+what I am saying above, thanks.
+
 Lorenzo
+
+> [    2.309718] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe01fffff 64bit]
+> [    2.309752] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-0xe02fffff 64bit]
+> [    2.309784] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0040]
+> [    2.309800] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0040]
+> [    2.309816] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
+> [    2.309833] pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe02fffff]
+> 
+> Here is the output of ioports and iomem:
+> 
+> root@:~# cat /proc/iomem
+> 00000000-7fffffff : System RAM
+>   00080000-00a76fff : Kernel code
+>   01c72000-01d4bfff : Kernel data
+> fd0c0000-fd0c1fff : /amba/ahci@fd0c0000
+> fd0e0000-fd0e0fff : breg
+> fd480000-fd480fff : pcireg
+> ff000000-ff000fff : xuartps
+> ff010000-ff010fff : xuartps
+> ff020000-ff020fff : /amba/i2c@ff020000
+> ff030000-ff030fff : /amba/i2c@ff030000
+> ff070000-ff070fff : /amba/can@ff070000
+> ff0a0000-ff0a0fff : /amba/gpio@ff0a0000
+> ff0f0000-ff0f0fff : /amba/spi@ff0f0000
+> ff170000-ff170fff : mmc0
+> ffa60000-ffa600ff : /amba/rtc@ffa60000
+> 8000000000-8000ffffff : cfg
+> root@:~# cat /proc/ioports
+> root@:~#
+> 
+> /proc/ioports is empty.
+> 
+> Thanks & Regards,
+> Bharat
+> 
+> 
+> This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+> 
