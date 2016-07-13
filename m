@@ -1,166 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:57989 "EHLO
-	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753888AbcGECoU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 22:44:20 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 12 Jul 2016 18:31:18 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
 	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 1/2] Documentation: bindings: add dt doc for Rockchip PCIe controller
-Date: Tue,  5 Jul 2016 10:42:40 +0800
-Message-Id: <1467686561-25638-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	linux-rockchip@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+Message-ID: <20160713013117.GA130126@google.com>
+References: <1467789398-13501-1-git-send-email-shawn.lin@rock-chips.com>
+ <20160707003912.GB100467@google.com>
+ <59b328c9-3a21-36fa-7f28-4ba24d77fef0@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <59b328c9-3a21-36fa-7f28-4ba24d77fef0@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a binding that describes the Rockchip PCIe controller
-found on Rockchip SoCs PCIe interface.
+Hi Shawn,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On Wed, Jul 13, 2016 at 09:10:15AM +0800, Shawn Lin wrote:
+> 在 2016/7/7 8:39, Brian Norris 写道:
+> >On Wed, Jul 06, 2016 at 03:16:37PM +0800, Shawn Lin wrote:
+> >>+	#interrupt-cells = <1>;
+> >>+	interrupt-map-mask = <0 0 0 7>;
+> >>+	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
+> >>+			<0 0 0 2 &pcie0_intc 2>,
+> >>+			<0 0 0 3 &pcie0_intc 3>,
+> >>+			<0 0 0 4 &pcie0_intc 4>;
+> >
+> >I'm a little lost on this one, so forgive my ignorance; how did you
+> >determine the last value in each entry (i.e., the 1, 2, 3, and 4 IRQ
+> >numbers for pcie0_intc)? IIUC, those are supposed to represent indeces
+> >into the IRQ status register found in the PCIe interrupt status
+> >register, and so they should be 0-based (i.e., 0, 1, 2, 3). And then
+> >you'd have:
+> >
+> >	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
+> >			<0 0 0 2 &pcie0_intc 1>,
+> >			<0 0 0 3 &pcie0_intc 2>,
+> >			<0 0 0 4 &pcie0_intc 3>;
+> >
+> >But then, I never got this sub-node binding to work quite right, so I
+> >may be missing something.
+> >
+> >EDIT: ooh, I see what's going on! I'll comment on the driver as well,
+> >but it looks like you're translating the register status to a HW IRQ
+> >number with 'ffs(reg)', which yields a 1-based index. I think it is most
+> >sensible to use a 0-based index (i.e., 'ffs(reg) - 1'). Now, that only
+> >will work if you get the whole interrupt-map + interrupt-controller
+> >thing right (i.e., using a subnode for the interrupt controller) --
+> >otherwise, IRQ mapping might not work right. I suspect that's one reason
+> >the original driver writer might have used 1-based indexing in the first
+> >place.
+> 
+> yes, I got it but.....what's the difference?
 
----
+At some level, it's a matter of preference. But when you're talking
+about the rk3399 PCIe "interrupt controller" domain, it seems that you
+should be talking about HW bits in the controller -- i.e., you have a
+4-bit interrupt status bitfield, that we typically call [0:3]. If you
+use [1:4], then you have to remember to subtract 1 mentally when mapping
+to the actual HW bit. I believe that confusion (since bitfields normally
+count from 0) might have helped cause the infinite loop bug I noticed
+too. And I also think that counting from 0 helps clarify the fact that
+your interrupt controller indexing is an independent numbering from the
+PCI interrupt numbering, even though they happen to map 1:1.
 
-Changes in v5:
-- fix wrong example reported by Marc
-- add seperate section to describe the interrupt controller child
-  node
+But then, PCI INTx numbering is kinda weird already, as it starts from
+1. So maybe it's just as valid to say our domain starts from 1 as well.
 
-Changes in v4:
-- fix example of adding intermediate interrupt controller for pcie
-  legacy interrrupt
+> You still need to get the whole interrupt-map + interrupt-controller
+> things right and the code(ffs(reg) - 1)if applied your suggestion.
 
-Changes in v3:
-- fix example dts code suggested by Rob and Marc
-- remove driver's behaviour of regulator
+Yes, of course. And I already sent you patches that do that.
 
-Changes in v2:
-- fix lots clk/reset stuff suggested by Heiko
-- remove msi-parent and add msi-map suggested by Marc
-- drop phy related stuff
-- some others minor fixes
+> Look at most of the docs for pcie bindings, I saw they also take
+> 0-base index, how about?
 
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 104 +++++++++++++++++++++
- 1 file changed, 104 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+I don't know which ones you're referring to. I see that altera-pcie.txt
+supports interrupt indeces counting from 1, but that's probably because
+they're using the same broken binding that was in your ~v3 patches
+(where the pcie node has both 'interrupt-controller' and
+'interrupt-map', with phandles to itself), so they had no other choice.
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-new file mode 100644
-index 0000000..7616ecc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -0,0 +1,104 @@
-+* Rockchip AXI PCIe Root Port Bridge DT description
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+		interrupt source. The value must be 1.
-+- compatible: Should contain "rockchip,rk3399-pcie"
-+- reg: Two register ranges as listed in the reg-names property
-+- reg-names: Must include the following names
-+	- "axi-base"
-+	- "apb-base"
-+- clocks: Must contain an entry for each entry in clock-names.
-+		See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+	- "aclk"
-+	- "aclk-perf"
-+	- "hclk"
-+	- "pm"
-+- msi-map: Maps a Requester ID to an MSI controller and associated.
-+		See ./pci-msi.txt
-+- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-+- phy-names:  MUST be "pcie-phy".
-+- interrupts: Three interrupt entries must be specified.
-+- interrupt-names: Must include the following names
-+	- "sys"
-+	- "legacy"
-+	- "client"
-+- resets: Must contain five entries for each entry in reset-names.
-+	   See ../reset/reset.txt for details.
-+- reset-names: Must include the following names
-+	- "core"
-+	- "mgmt"
-+	- "mgmt-sticky"
-+	- "pipe"
-+- pinctrl-names : The pin control state names
-+- pinctrl-0: The "default" pinctrl state
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+
-+*Interrupt controller child node*
-+The core controller provides a single interrupt for legacy INTx. So,
-+pcie node should create a interrupt controller node to support 'interrupt-map'
-+DT functionality. The driver will create an IRQ domain for this map, decode
-+the four INTx interrupts in ISR and route them to this domain.
-+
-+Required properties for Interrupt controller child node:
-+- interrupt-controller: identifies the node as an interrupt controller
-+- #address-cells: specifies the number of cells needed to encode an
-+	address. The value must be 0.
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+
-+Optional Property:
-+- ep-gpios: contain the entry for pre-reset gpio
-+- num-lanes: number of lanes to use
-+- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
-+- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
-+- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
-+
-+Example:
-+
-+pcie0: pcie@f8000000 {
-+	compatible = "rockchip,rk3399-pcie";
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-+		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-+	clock-names = "aclk", "aclk-perf",
-+		      "hclk", "pm";
-+	bus-range = <0x0 0x1>;
-+	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>,
-+		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
-+	interrupt-names = "sys", "legacy", "client";
-+	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
-+	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
-+	assigned-clock-rates = <100000000>;
-+	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
-+	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
-+		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
-+	num-lanes = <4>;
-+	msi-map = <0x0 &its 0x0 0x1000>;
-+	reg = < 0x0 0xf8000000 0x0 0x2000000 >, < 0x0 0xfd000000 0x0 0x1000000 >;
-+	reg-names = "axi-base", "apb-base";
-+	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-+	phys = <&pcie_phy>;
-+	phy-names = "pcie-phy";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_clkreq>;
-+	#interrupt-cells = <1>;
-+	interrupt-map-mask = <0 0 0 7>;
-+	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
-+			<0 0 0 2 &pcie0_intc 2>,
-+			<0 0 0 3 &pcie0_intc 3>,
-+			<0 0 0 4 &pcie0_intc 4>;
-+	pcie0_intc: interrupt-controller {
-+		interrupt-controller;
-+		#address-cells = <0>;
-+		#interrupt-cells = <1>;
-+	};
-+};
--- 
-2.3.7
+If you still think it makes more sense to count from 1, then I won't
+stop you.
 
-
+Regards,
+Brian
