@@ -1,73 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0050.outbound.protection.outlook.com ([104.47.2.50]:22611
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752562AbcGYIJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jul 2016 04:09:23 -0400
-Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"Tian, Kevin" <kevin.tian@intel.com>
-References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
- <20160620113728.74ed79f3@ul30vt.home>
- <VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
- <20160621094537.4416cbce@t450s.home>
- <VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
- <20160714110341.7716c619@t450s.home>
- <fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
- <20160718153428.6b988539@t450s.home>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F90960A@SHSMSX101.ccr.corp.intel.com>
- <20160719091017.4c23244f@t450s.home> <20160719134336.79d24af9@t450s.home>
-CC: Ilya Lesokhin <ilyal@mellanox.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Noa Osherovich <noaos@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Liran Liss <liranl@mellanox.com>
-From: Haggai Eran <haggaie@mellanox.com>
-Message-ID: <613c4470-d899-2698-dfe5-9dbb2388787e@mellanox.com>
-Date: Mon, 25 Jul 2016 10:53:56 +0300
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33855 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbcGMVqe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 17:46:34 -0400
+Subject: Re: [PATCH] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C
+ controller
+To: Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>
+References: <5785474B.6070608@gmail.com> <20160712211324.GA5488@wunner.de>
+ <CAMxnaaU1eMw5o9nJRmEgyw97oD25fRnjTcB_i+xAgc-V6m5HvA@mail.gmail.com>
+ <20160713170459.GA5840@wunner.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Xavier Gnata <xavier.gnata@gmail.com>
+Message-ID: <5786B6B6.1070604@gmail.com>
+Date: Wed, 13 Jul 2016 23:46:30 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160719134336.79d24af9@t450s.home>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20160713170459.GA5840@wunner.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/19/2016 10:43 PM, Alex Williamson wrote:
-> Thinking about this further, it seems that trying to create this IOV
-> enablement interface through a channel which is explicitly designed to
-> interact with an untrusted and potentially malicious user is the wrong
-> approach.  We already have an interface for a trusted entity to enable
-> VFs, it's through pci-sysfs.  Therefore if we were to use something like
-> libvirt to orchestrate the lifecycle of the VFs, I think we remove a
-> lot of the problems.  In this case QEMU would virtualize the SR-IOV
-> capability (maybe this is along the lines of what Kevin was thinking),
-> but that virtualization would take a path out through the QEMU QMP
-> interface to execute the SR-IOV change on the device rather than going
-> through the vfio kernel interface.  A management tool like libvirt
-> would then need to translate that into sysfs operations to create the
-> VFs and do whatever we're going to do with them (device_add them back
-> to the VM, make them available to a peer VM, make them available to
-> the host *gasp*).  VFIO in the kernel would need to add SR-IOV
-> support, but the only automatic SR-IOV path would be to disable IOV
-> when the PF is released, enabling would only occur through sysfs.  We
-> would probably need a new pci-sysfs interface to manage the driver for
-> newly created VFs though to avoid default host drivers
-> (sriov_driver_override?).  In this model QEMU is essentially just
-> making requests to other userspace entities to perform actions and how
-> those actions are performed can be left to userspace policy, not kernel
-> policy.  I think this would still satisfy the development use case, the
-> enabling path just takes a different route where privileged userspace
-> is more intimately involved in the process.  Thoughts?  Thanks,
 
-I understand the desire to use a different interface such as sysfs for
-the trusted user-space component. I'm not sure though how using
-sriov_driver_override solves the issues we have been discussing. After
-SR-IOV is enabled by libvirt, it is still possible for the administrator
-(or another trusted daemon racing with libvirt) to open the VFs with
-VFIO before libvirt had a chance to open them and send them to QEMU.
+> On Wed, Jul 13, 2016 at 12:17:33AM +0200, Andreas Noever wrote:
+>> Are thunderbolt controllers always installed directly below the root
+>> port? In theory there could be more bridges in between (a candidate
+>> for such a topology would be the mac pro which has 3 controllers).
+>
+> Hm, good point. I failed to find lspci or dmesg output for a MacPro6,1
+> but I did find this diagram:
+> http://i.imgur.com/ItIqxDY.png
+>
+> Turns out the 3 controllers are connected to a PCIe switch.
+> And according to the PCIe spec, a switch consists of an upstream
+> bridge and downstream bridges. So the parent of the Thunderbolt
+> upstream port would be a downstream port and not a root port. :-/
+>
+>
+> Another idea would be to detect if the parent of the Thunderbolt
+> upstream port has the VSEC 0x1234. This is only present on Thunderbolt
+> devices, so a host controller is identifiable by the non-presence of
+> that VSEC on its parent. Patch [01/13] of my runpm series adds a
+> convenient is_thunderbolt flag to detect the VSEC:
+> https://github.com/l1k/linux/commit/8148c395ef6e
+>
+> Generally I think it would be beneficial to replace the PCI quirk
+> with code that lives in drivers/thunderbolt/. Here's an example what
+> I have in mind, this is based on top of the runpm series and ensures
+> that the NHI resumes before the hotplug ports by waking it directly
+> from the upstream bridge:
+> https://github.com/l1k/linux/commit/c596932608cd
+>
+> An even better approach would probably be Rafael's "device links"
+> series which allows the PM core to take care of device dependencies
+> beyond the mere parent/child relationship:
+> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1170039.html
+>
+> Best regards,
+>
+> Lukas
+>
+I agree that it would be a good idea to get rid of both the subsystem 
+vendor/device id and the quirk.
+I quite like the approach of 
+https://github.com/l1k/linux/commit/c596932608cd : Do you want me to 
+give it a try on my hardware?
+Rafael's approach is more ambitious and complex but even cleaner.
+Maybe a two step approach : First we get rid of the quirk and we support 
+INTEL_FALCON_RIDGE_2C controller and, in a longer run, we try to 
+implement these functional dependencies in PCI core.
+Anyway you are the experts :)
 
-Are you okay with that?
 
-Thanks,
-Haggai
+Xavier
