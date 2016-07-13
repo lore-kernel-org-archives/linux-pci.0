@@ -1,90 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:63928 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750999AbcGLFJt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 01:09:49 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6C58kAa141751
-	for <linux-pci@vger.kernel.org>; Tue, 12 Jul 2016 01:09:48 -0400
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 243eddcd3m-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 12 Jul 2016 01:09:48 -0400
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Tue, 12 Jul 2016 15:09:45 +1000
-Subject: Re: [PATCH v3 0/7] PCI: Add support for enforcing all MMIO BARs not
- to share PAGE_SIZE
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	bhelgaas@google.com
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Cc: nikunj@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	corbet@lwn.net, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
-	warrier@linux.vnet.ibm.com, alex.williamson@redhat.com,
-	paulus@samba.org
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Tue, 12 Jul 2016 13:09:38 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 13 Jul 2016 05:05:04 +0300
+From: Andrey Utkin <andrey_utkin@fastmail.com>
+To: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kozlov Sergey <serjk@netup.ru>,
+	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
+	kernel-mentors@selenic.com
+Subject: Re: [PATCH v4] [media] pci: Add tw5864 driver - fixed few style
+ nits, going to resubmit soon
+Message-ID: <20160713020504.GH5934@zver>
+References: <20160711151714.5452-1-andrey.utkin@corp.bluecherry.net>
 MIME-Version: 1.0
-In-Reply-To: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <7df769a2-4dbb-ade4-532f-3a61197c14d1@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160711151714.5452-1-andrey.utkin@corp.bluecherry.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Found and fixed few very minor coding style nits, will resubmit in few days,
+now still waiting for comments to v4.
 
-Any comment on V3?
+https://github.com/bluecherrydvr/linux/commits/tw5864
 
-Thanks,
+commit 31f7c98a144cb3fb8a94662f002d9b6142d1f390
+Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+Date:   Wed Jul 13 05:00:28 2016 +0300
 
-Yongji
+    Fix checkpatch --strict issue
+    
+     CHECK: Alignment should match open parenthesis
+     #3599: FILE: drivers/media/pci/tw5864/tw5864-video.c:539:
+     +static int tw5864_fmt_vid_cap(struct file *file, void *priv,
+     +                               struct v4l2_format *f)
 
+commit 11a09a1048af597ecf374507b08c809eed91b86d
+Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+Date:   Wed Jul 13 04:59:34 2016 +0300
 
-On 2016/6/30 18:53, Yongji Xie wrote:
-> This series aims to add an option for PCI resource allocator to
-> force BARs not to share PAGE_SIZE. This would make sense to VFIO
-> driver. Because current VFIO implementation disallows to mmap
-> sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
-> with other BARs for security reasons. Thus, we have to handle mmio
-> access to these BARs in QEMU emulation rather than in guest which
-> will cause some performance loss.
->
-> To achieve that, we would like to make use of the existing
-> resource_alignment kernel parameter and force a minimum alignment
-> of PAGE_SIZE. It's flexible. And we can enable it by default on
-> some archs which may easily hit the performance issue because of
-> their 64K page.
->
-> In this series, patch 1,2,3 fixed bugs of using resource_alignment;
-> patch 4,5 tried to add a new option for resource_alignment to use
-> IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 6
-> modified resource_alignment to support syntax which can be used to
-> enforce the alignment of all MMIO BARs to be at least PAGE_SIZE;
-> patch 7 enabled this feature by default on PowerNV platform.
->
-> Changelog v3:
-> - Ignore enforced alignment to fixed BARs
-> - Fix issue that disabling memory decoding when reassigning the alignment
-> - Only enable default alignment on PowerNV platform
->
-> Changelog v2:
-> - Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
->
-> Yongji Xie (7):
->    PCI: Ignore enforced alignment when kernel uses existing firmware setup
->    PCI: Ignore enforced alignment to VF BARs
->    PCI: Do not disable memory decoding in pci_reassigndev_resource_alignment()
->    PCI: Add a new option for resource_alignment to reassign alignment
->    PCI: Do not use IORESOURCE_STARTALIGN to identify bridge resources
->    PCI: Add support for enforcing all MMIO BARs to be page aligned
->    PCI: Add a macro to set default alignment for all PCI devices
->
->   Documentation/kernel-parameters.txt |    7 +-
->   arch/powerpc/include/asm/pci.h      |    4 ++
->   drivers/pci/pci.c                   |  123 +++++++++++++++++++++++++++--------
->   drivers/pci/setup-bus.c             |    9 ++-
->   4 files changed, 111 insertions(+), 32 deletions(-)
->
+    Fix checkpatch --strict issue
+    
+     CHECK: Please don't use multiple blank lines
+     #3244: FILE: drivers/media/pci/tw5864/tw5864-video.c:184:
 
+commit 861b2ba8593db7abe89291a4ba85976519783f4a
+Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+Date:   Wed Jul 13 04:58:37 2016 +0300
+
+    Fix checkpatch --strict issue
+    
+     CHECK: No space is necessary after a cast
+     #3053: FILE: drivers/media/pci/tw5864/tw5864-util.c:36:
+     +       return (u8) tw_readl(TW5864_IND_DATA);
