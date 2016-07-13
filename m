@@ -1,74 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:64113 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbcGNIbb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 04:31:31 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] bindings: PCI: artpec: correct pci binding example
-Date: Thu, 14 Jul 2016 10:31:15 +0200
-Message-ID: <12381657.aqKGT5pz07@wuerfel>
-In-Reply-To: <1336f919-e145-7875-9204-c1fc124fb9fe@axis.com>
-References: <1467934090-12834-1-git-send-email-niklass@axis.com> <1838529.X3K6mcn6MA@wuerfel> <1336f919-e145-7875-9204-c1fc124fb9fe@axis.com>
+Received: from foss.arm.com ([217.140.101.70]:35342 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751220AbcGMIQv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jul 2016 04:16:51 -0400
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5785F8DC.4060100@arm.com>
+Date: Wed, 13 Jul 2016 09:16:28 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 14, 2016 1:54:20 AM CEST Niklas Cassel wrote:
-> On 07/08/2016 11:39 AM, Arnd Bergmann wrote:
-> > On Friday, July 8, 2016 1:28:10 AM CEST Niklas Cassel wrote:
-> >> From: Niklas Cassel <niklas.cassel@axis.com>
-> >>
-> >>  - Increase config size. When using a PCIe switch,
-> >>    the previous config size only had room for one device.
-> >>  - Add bus range. Inherited optional property.
-> >>  - Map downstream I/O to PCI address 0. We can map it to any
-> >>    address, but let's be consistent with other drivers.
-> >>
-> >> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> >> ---
-> >>  Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt | 7 ++++---
-> >>  1 file changed, 4 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> >> index 330a45b..5ecaea1 100644
-> >> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> >> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> >> @@ -24,16 +24,17 @@ Example:
-> >>              compatible = "axis,artpec6-pcie", "snps,dw-pcie";
-> >>              reg = <0xf8050000 0x2000
-> >>                     0xf8040000 0x1000
-> >> -                   0xc0000000 0x1000>;
-> >> +                   0xc0000000 0x2000>;
-> > If this is your config space size
-> >
-> >>              num-lanes = <2>;
-> >> +            bus-range = <0x00 0xff>;
-> > then the bus range looks too large. These two are typically connected.
-> > I couldn't immediately see which config space access function is
-> > used, but if you have 0x1000 bytes per bus, then the bus range matching
-> > a 0x2000 byte config space would be either <0x00 0x01> or <0x00 0x02>
-> > depending whether the root bus is part of that range.
+On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+>>
+>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+>>> Hi Marc,
+>>>
+>>> Thanks for the reply.
+>>>
+>>> From PCIe Spec:
+>>> MSI Enable Bit:
+>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control register
+>>> (see Section 6.8.2.3) is 0, the function is permitted to use MSI to
+>>> request service and is prohibited from using its INTx# pin.
+>>>
+>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
+>> which means MSI address and data fields are available/programmed.
+>>>
+>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware latches
+>> onto MSI address and MSI data values.
+>>>
+>>> With current MSI implementation in kernel, our SoC is latching on to
+>>> incorrect address and data values, as address/data are updated much later
+>> than MSI Enable bit.
+>>
+>> As a side question, how does setting the affinity work on this end-point if this
+>> involves changing the address programmed in the MSI registers?
+>> Do you expect the enabled bit to be toggled to around the write?
+>>
 > 
-> I see your point, a config space size of 0x2000 is only enough to
-> hold two configuration space headers.
-> 
-> However, all other PCIe controllers based on Synopsys DesignWare IP
-> with a config space size of 0x2000, uses a bus-range of 0x0-0xff.
-> (Except hisilicon which for some reason uses 0x0-0xf).
-> Isn't it better to be consistent with the other DesignWare based controllers?
+> Yes,
 
-No, if we found a bug, we should fix it for all of them.
+Well, that's pretty annoying, as this will not work either. But maybe
+your MSI controller has a single doorbell? You haven't mentioned which
+HW that is...
 
-> Also, isn't is possible to have a device behind bus 1, then nothing behind
-> bus 2, and then a device behind bus 3?
-> Not sure if this could actually happen though, since Linux appears to assign
-> the bus numbers, unless already defined by BIOS.
+> Would anybody change MSI address in between wouldn't it cause race condition ?
 
-I think this might happen with hotplugged devices.
+Changing the affinity of an interrupt is always racy, and the kernel
+deals with it.
 
-	Arnd
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
