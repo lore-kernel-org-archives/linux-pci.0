@@ -1,91 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lb1-smtp-cloud3.xs4all.net ([194.109.24.22]:60570 "EHLO
+	lb1-smtp-cloud3.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751476AbcGMHFs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 03:05:48 -0400
+Subject: Re: [PATCH v4] [media] pci: Add tw5864 driver - fixed few style nits,
+ going to resubmit soon
+To: Andrey Utkin <andrey_utkin@fastmail.com>,
+	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+References: <20160711151714.5452-1-andrey.utkin@corp.bluecherry.net>
+ <20160713020504.GH5934@zver>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 11/14] PCI: tegra: make it explicitly non-modular
-Date: Sat, 2 Jul 2016 19:13:31 -0400
-Message-ID: <20160702231334.26684-12-paul.gortmaker@windriver.com>
-In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
-References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kozlov Sergey <serjk@netup.ru>,
+	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	=?UTF-8?Q?Krzysztof_Ha=c5=82asa?= <khalasa@piap.pl>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
+	kernel-mentors@selenic.com
+From: Hans Verkuil <hverkuil@xs4all.nl>
+Message-ID: <5d3d8684-fe20-0bc8-7465-53c5f7b55447@xs4all.nl>
+Date: Wed, 13 Jul 2016 09:05:27 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160713020504.GH5934@zver>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On 07/13/2016 04:05 AM, Andrey Utkin wrote:
+> Found and fixed few very minor coding style nits, will resubmit in few days,
+> now still waiting for comments to v4.
 
-drivers/pci/host/Kconfig:config PCI_TEGRA
-drivers/pci/host/Kconfig:       bool "NVIDIA Tegra PCIe controller"
+Can you resubmit now? I plan to review it on Friday or Monday, and I'd rather
+review the latest version.
 
-...meaning that it currently is not being built as a module by anyone.
+Regards,
 
-Lets remove the few trace uses of modular code and macros, so that
-when reading the driver there is no doubt it is builtin-only.
+	Hans
 
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Alexandre Courbot <gnurou@gmail.com>
-Cc: linux-tegra@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pci-tegra.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 013d5488f9f8..c9a8eb252f50 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -9,6 +9,8 @@
-  *
-  * Bits taken from arch/arm/mach-dove/pcie.c
-  *
-+ * Author: Thierry Reding <treding@nvidia.com>
-+ *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-  * the Free Software Foundation; either version 2 of the License, or
-@@ -32,7 +34,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -2088,7 +2090,6 @@ static const struct of_device_id tegra_pcie_of_match[] = {
- 	{ .compatible = "nvidia,tegra20-pcie", .data = &tegra20_pcie_data },
- 	{ },
- };
--MODULE_DEVICE_TABLE(of, tegra_pcie_of_match);
- 
- static void *tegra_pcie_ports_seq_start(struct seq_file *s, loff_t *pos)
- {
-@@ -2277,8 +2278,4 @@ static struct platform_driver tegra_pcie_driver = {
- 	},
- 	.probe = tegra_pcie_probe,
- };
--module_platform_driver(tegra_pcie_driver);
--
--MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
--MODULE_DESCRIPTION("NVIDIA Tegra PCIe driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(tegra_pcie_driver);
--- 
-2.8.4
+> 
+> https://github.com/bluecherrydvr/linux/commits/tw5864
+> 
+> commit 31f7c98a144cb3fb8a94662f002d9b6142d1f390
+> Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> Date:   Wed Jul 13 05:00:28 2016 +0300
+> 
+>     Fix checkpatch --strict issue
+>     
+>      CHECK: Alignment should match open parenthesis
+>      #3599: FILE: drivers/media/pci/tw5864/tw5864-video.c:539:
+>      +static int tw5864_fmt_vid_cap(struct file *file, void *priv,
+>      +                               struct v4l2_format *f)
+> 
+> commit 11a09a1048af597ecf374507b08c809eed91b86d
+> Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> Date:   Wed Jul 13 04:59:34 2016 +0300
+> 
+>     Fix checkpatch --strict issue
+>     
+>      CHECK: Please don't use multiple blank lines
+>      #3244: FILE: drivers/media/pci/tw5864/tw5864-video.c:184:
+> 
+> commit 861b2ba8593db7abe89291a4ba85976519783f4a
+> Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> Date:   Wed Jul 13 04:58:37 2016 +0300
+> 
+>     Fix checkpatch --strict issue
+>     
+>      CHECK: No space is necessary after a cast
+>      #3053: FILE: drivers/media/pci/tw5864/tw5864-util.c:36:
+>      +       return (u8) tw_readl(TW5864_IND_DATA);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-media" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
