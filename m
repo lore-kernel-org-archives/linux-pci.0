@@ -1,145 +1,75 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-From: Peter Wu <peter@lekensteyn.nl>
-To: nouveau@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org
-Cc: Dave Airlie <airlied@redhat.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: [PATCH v2 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
-Date: Fri,  8 Jul 2016 01:38:27 +0200
-Message-Id: <20160707233827.2100-5-peter@lekensteyn.nl>
-In-Reply-To: <20160707233827.2100-1-peter@lekensteyn.nl>
-References: <20160707233827.2100-1-peter@lekensteyn.nl>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35077 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750912AbcGMCG3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 22:06:29 -0400
+Received: by mail-pa0-f41.google.com with SMTP id dx3so12426786pab.2
+        for <linux-pci@vger.kernel.org>; Tue, 12 Jul 2016 19:06:23 -0700 (PDT)
+Date: Tue, 12 Jul 2016 19:05:31 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	linux-kernel@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	linux-rockchip@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 1/2] Documentation: bindings: add dt doc for Rockchip
+ PCIe controller
+Message-ID: <20160713020531.GA14833@google.com>
+References: <1467789398-13501-1-git-send-email-shawn.lin@rock-chips.com>
+ <20160707003912.GB100467@google.com>
+ <59b328c9-3a21-36fa-7f28-4ba24d77fef0@rock-chips.com>
+ <20160713013117.GA130126@google.com>
+ <95a7ffdd-becc-bb3f-c026-d07c691b7a53@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <95a7ffdd-becc-bb3f-c026-d07c691b7a53@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
-can be runtime-suspended which disables power resources via ACPI. This
-is incompatible with DSM, resulting in a GPU device which is still in D3
-and locks up the kernel on resume (on a Clevo P651RA, GTX965M).
+Hi,
 
-Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
-debugger trace) and stop using the DSM functions for D3cold when power
-resources are available on the parent PCIe port.
+On Wed, Jul 13, 2016 at 09:45:43AM +0800, Shawn Lin wrote:
+> 在 2016/7/13 9:31, Brian Norris 写道:
+> >On Wed, Jul 13, 2016 at 09:10:15AM +0800, Shawn Lin wrote:
+> >At some level, it's a matter of preference. But when you're talking
+> >about the rk3399 PCIe "interrupt controller" domain, it seems that you
+> >should be talking about HW bits in the controller -- i.e., you have a
+> >4-bit interrupt status bitfield, that we typically call [0:3]. If you
+> >use [1:4], then you have to remember to subtract 1 mentally when mapping
+> >to the actual HW bit. I believe that confusion (since bitfields normally
+> >count from 0) might have helped cause the infinite loop bug I noticed
+> >too. And I also think that counting from 0 helps clarify the fact that
+> >your interrupt controller indexing is an independent numbering from the
+> >PCI interrupt numbering, even though they happen to map 1:1.
+> 
+> If that's the fact of how we should numbering our index base, we should
+> probably start if from 5 as the layout of INTx is
+> PCIE_CLIENT_INT_STATUS[5:8]... ?
 
-pci_d3cold_disable() is not used because on some machines, the old DSM
-method is broken. On a Lenovo T440p (GT 730M) memory and disk corruption
-would occur, but that is fixed with this patch[2].
+Possibly better than starting from 1, but IMO also doesn't make sense,
+because the other bits aren't interrupts you want to translate on behalf
+of other devices (are they?) -- they're interrupt bits consumed by the
+host controller itself. (If they are possibly needed for translation,
+then sure, index the entire status register and handle it in the driver,
+and start the INTx mapping from 5 here.)
 
- [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
- [2]: https://github.com/Bumblebee-Project/bbswitch/issues/78#issuecomment-223549072
+[...]
 
- v2: simply check directly for _PR3. Added affected machines.
+> >If you still think it makes more sense to count from 1, then I won't
+> >stop you.
+> 
+> I don't have a hard opinion for the index base as I think it's trivial.
 
-Signed-off-by: Peter Wu <peter@lekensteyn.nl>
----
- drivers/gpu/drm/nouveau/nouveau_acpi.c | 33 +++++++++++++++++++++++++++++----
- 1 file changed, 29 insertions(+), 4 deletions(-)
+It's simple, but I think it influenced code understanding and bugginess.
 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index ad273ad..38a6445 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
- 	bool dsm_detected;
- 	bool optimus_detected;
- 	bool optimus_flags_detected;
-+	bool optimus_skip_dsm;
- 	acpi_handle dhandle;
- 	acpi_handle rom_handle;
- } nouveau_dsm_priv;
-@@ -212,9 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
- 	.get_client_id = nouveau_dsm_get_client_id,
- };
- 
-+/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
-+ * D3cold, they instead rely on disabling power resources on the parent. */
-+static bool nouveau_pr3_present(struct pci_dev *pdev)
-+{
-+	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
-+	struct acpi_device *parent_adev;
-+
-+	if (!parent_pdev)
-+		return false;
-+
-+	parent_adev = ACPI_COMPANION(&parent_pdev->dev);
-+	if (!parent_adev)
-+		return false;
-+
-+	return acpi_has_method(parent_adev->handle, "_PR3");
-+}
-+
- static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out,
- 				  bool *has_mux, bool *has_opt,
--				  bool *has_opt_flags)
-+				  bool *has_opt_flags, bool *has_pr3)
- {
- 	acpi_handle dhandle;
- 	bool supports_mux;
-@@ -239,6 +257,7 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out
- 	*has_mux = supports_mux;
- 	*has_opt = !!optimus_funcs;
- 	*has_opt_flags = optimus_funcs & (1 << NOUVEAU_DSM_OPTIMUS_FLAGS);
-+	*has_pr3 = false;
- 
- 	if (optimus_funcs) {
- 		uint32_t result;
-@@ -248,6 +267,8 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out
- 			 (result & OPTIMUS_ENABLED) ? "enabled" : "disabled",
- 			 (result & OPTIMUS_DYNAMIC_PWR_CAP) ? "dynamic power, " : "",
- 			 (result & OPTIMUS_HDA_CODEC_MASK) ? "hda bios codec supported" : "");
-+
-+		*has_pr3 = nouveau_pr3_present(pdev);
- 	}
- }
- 
-@@ -260,6 +281,7 @@ static bool nouveau_dsm_detect(void)
- 	bool has_mux = false;
- 	bool has_optimus = false;
- 	bool has_optimus_flags = false;
-+	bool has_power_resources = false;
- 	int vga_count = 0;
- 	bool guid_valid;
- 	bool ret = false;
-@@ -275,14 +297,14 @@ static bool nouveau_dsm_detect(void)
- 		vga_count++;
- 
- 		nouveau_dsm_pci_probe(pdev, &dhandle, &has_mux, &has_optimus,
--				      &has_optimus_flags);
-+				      &has_optimus_flags, &has_power_resources);
- 	}
- 
- 	while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_3D << 8, pdev)) != NULL) {
- 		vga_count++;
- 
- 		nouveau_dsm_pci_probe(pdev, &dhandle, &has_mux, &has_optimus,
--				      &has_optimus_flags);
-+				      &has_optimus_flags, &has_power_resources);
- 	}
- 
- 	/* find the optimus DSM or the old v1 DSM */
-@@ -292,8 +314,11 @@ static bool nouveau_dsm_detect(void)
- 			&buffer);
- 		printk(KERN_INFO "VGA switcheroo: detected Optimus DSM method %s handle\n",
- 			acpi_method_name);
-+		if (has_power_resources)
-+			pr_info("nouveau: detected PR support, will not use DSM\n");
- 		nouveau_dsm_priv.optimus_detected = true;
- 		nouveau_dsm_priv.optimus_flags_detected = has_optimus_flags;
-+		nouveau_dsm_priv.optimus_skip_dsm = has_power_resources;
- 		ret = true;
- 	} else if (vga_count == 2 && has_mux && guid_valid) {
- 		nouveau_dsm_priv.dhandle = dhandle;
-@@ -324,7 +349,7 @@ void nouveau_register_dsm_handler(void)
- void nouveau_switcheroo_optimus_dsm(void)
- {
- 	u32 result = 0;
--	if (!nouveau_dsm_priv.optimus_detected)
-+	if (!nouveau_dsm_priv.optimus_detected || nouveau_dsm_priv.optimus_skip_dsm)
- 		return;
- 
- 	if (nouveau_dsm_priv.optimus_flags_detected)
--- 
-2.9.0
+> So if it's more sensible to you, I will apply your suggestion.
+
+Well, I was just offering my opinion. I think it makes more sense, but
+maybe it doesn't to you.
+
+Brian
