@@ -1,67 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 22 Jul 2016 11:40:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Aaron Durbin <adurbin@google.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: ACPI device using sub-resource of PCI device
-Message-ID: <20160722164056.GD20646@localhost>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
- <CAE2855t5M2=OVXTBfosdNjqg6jUpM-PK02eP6KHC82eKk71-4w@mail.gmail.com>
- <20160720193543.GA4186@localhost>
- <1787767.fkqrmkTfXg@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:35775 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750916AbcGMJTl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jul 2016 05:19:41 -0400
+Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785F8DC.4060100@arm.com>
+ <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785FDCB.2070208@arm.com>
+ <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5786079F.1050605@arm.com>
+Date: Wed, 13 Jul 2016 10:19:27 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1787767.fkqrmkTfXg@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 21, 2016 at 12:46:03AM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, July 20, 2016 02:35:43 PM Bjorn Helgaas wrote:
-> > On Tue, Jun 28, 2016 at 09:41:19PM -0700, Aaron Durbin wrote:
-> > > On Fri, Jun 24, 2016 at 12:34 PM, Aaron Durbin <adurbin@google.com> wrote:
-
-> > > > acpi_init() and pci_subsys_init() are both subsys_initcalls during
-> > > > boot up. I'm not sure if the ordering is dumb luck or not, but
-> > > > acpi_init() is called prior to pci_subsys_init(). The conflict error
-> > > > is spit out from pcibios_resource_survey() by way of pci_subsys_init()
-> > > >  subsys_initcall. However, the PCI device scanning is kicked off prior
-> > > > to this through acpi_scan_init() by way of acpi_init()
-> > > > subsys_initcall.  The conflict error occurs because there's already
-> > > > the child ACPI device in the resource tree. I'm not sure when/where
-> > > > those ACPI devices' resources are added, but clearly they are sitting
-> > > > in there since the conflict was found.
-> > 
-> > I think the acpi_init()/pci_subsys_init() ordering is correct.  The
-> > ACPI namespace is primary.  A PCI hierarchy originates at a PCI host
-> > bridge in the ACPI namespace, so we should enumerate the ACPI
-> > namespace first, and when we find a PCI host bridge, we should
-> > enumerate the PCI devices below it.
-> > 
-> > That said, I think it is correct mostly by accident and it would be
-> > nice if it were more explicit.
+On 13/07/16 10:10, Bharat Kumar Gogada wrote:
+>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+>>
+>> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
+>>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+>>>>
+>>>> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+>>>>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
+>>>>>> call
+>>>>>>
+>>>>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+>>>>>>> Hi Marc,
+>>>>>>>
+>>>>>>> Thanks for the reply.
+>>>>>>>
+>>>>>>> From PCIe Spec:
+>>>>>>> MSI Enable Bit:
+>>>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control register
+>>>>>>> (see Section 6.8.2.3) is 0, the function is permitted to use MSI to
+>>>>>>> request service and is prohibited from using its INTx# pin.
+>>>>>>>
+>>>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
+>>>>>> which means MSI address and data fields are available/programmed.
+>>>>>>>
+>>>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+>>>>>>> latches
+>>>>>> onto MSI address and MSI data values.
+>>>>>>>
+>>>>>>> With current MSI implementation in kernel, our SoC is latching on to
+>>>>>>> incorrect address and data values, as address/data are updated much
+>>>>>>> later
+>>>>>> than MSI Enable bit.
+>>>>>>
+>>>>>> As a side question, how does setting the affinity work on this
+>>>>>> end-point if this involves changing the address programmed in the MSI
+>>>> registers?
+>>>>>> Do you expect the enabled bit to be toggled to around the write?
+>>>>>>
+>>>>>
+>>>>> Yes,
+>>>>
+>>>> Well, that's pretty annoying, as this will not work either. But maybe your
+>> MSI
+>>>> controller has a single doorbell? You haven't mentioned which HW that
+>> is...
+>>>>
+>>> The MSI address/data is located in config space, in our SoC for the logic
+>> behind PCIe
+>>> to become aware of new address/data  MSI enable transition is used (0 to
+>> 1).
+>>> The logic cannot keep polling these registers in configuration space as it
+>> would consume power.
+>>>
+>>> So the logic uses the transition in MSI enable to latch on to address/data.
+>>
+>> I understand the "why". I'm just wondering if your SoC needs to have
+>> the MSI address changed when changing the affinity of the MSI? What MSI
+>> controller are you using? Is it in mainline?
+>>
+> Can you please give more information on MSI affinity ?
+> For cpu affinity for interrupts we would use MSI-X.
 > 
-> No, it isn't by accident.
-> 
-> The enumeration of PCI devices under a PCI host bridge discovered via ACPI
-> starts in acpi_pci_root_add() which quite explicitly is only called after
-> enumerating the ACPI namespace entirely.
-> 
-> acpi_bus_scan() has two passes now, one is to call acpi_bus_check_add() for
-> all namespace objects and the other is the acpi_bus_attach() pass where
-> all things like acpi_pci_root_add() are called.
+> We are using GIC 400 v2.
 
-I meant the ordering between acpi_init() and pci_subsys_init().
-They're both subsys_initcalls, so their ordering is determined by link
-order, which is not at all obvious (at least to me), since acpi_init()
-is in drivers/acpi and pci_subsys_init() is in arch/x86.  If they were
-both in drivers, the drivers/Makefile would make it pretty obvious.
-But finding the order of "arch" relative to "drivers" in Makefile is
-less obvious.
+None of that is relevant. GIC400 doesn't have the faintest notion of
+what an MSI is, and MSI-X vs MSI is an end-point property.
 
-acpi_init() has to be before pci_subsys_init(), and it is.  I
-shouldn't have said it was by accident, just that it's non-obvious.
+Please answer these questions: does your MSI controller have a unique
+doorbell, or multiple doorbells? Does it use wired interrupts (SPIs)
+connected to the GIC? Is the support code for this MSI controller in
+mainline or not?
 
-Bjorn
+I'm trying to work out what I can do to help you.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
