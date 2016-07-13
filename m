@@ -1,147 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36318 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750787AbcGKUvP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jul 2016 16:51:15 -0400
-Date: Mon, 11 Jul 2016 22:51:11 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 5/5] pci: spread interrupt vectors in
- pci_alloc_irq_vectors
-Message-ID: <20160711205110.GA23915@dhcp-27-118.brq.redhat.com>
-References: <1468151866-7776-1-git-send-email-hch@lst.de>
- <1468151866-7776-6-git-send-email-hch@lst.de>
+Received: from mail-cys01nam02on0089.outbound.protection.outlook.com ([104.47.37.89]:12159
+	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751919AbcGMJhH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 05:37:07 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>
+Subject: RE: PCIe MSI address is not written at pci_enable_msi_range call
+Date: Wed, 13 Jul 2016 09:36:37 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258B8A2E@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785F8DC.4060100@arm.com>
+ <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785FDCB.2070208@arm.com>
+ <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5786079F.1050605@arm.com>
+In-Reply-To: <5786079F.1050605@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468151866-7776-6-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 10, 2016 at 08:57:46PM +0900, Christoph Hellwig wrote:
-> @@ -1028,19 +1038,8 @@ int pci_msi_enabled(void)
->  }
->  EXPORT_SYMBOL(pci_msi_enabled);
->  
-> -/**
-> - * pci_enable_msi_range - configure device's MSI capability structure
-> - * @dev: device to configure
-> - * @minvec: minimal number of interrupts to configure
-> - * @maxvec: maximum number of interrupts to configure
-> - *
-> - * This function tries to allocate a maximum possible number of interrupts in a
-> - * range between @minvec and @maxvec. It returns a negative errno if an error
-> - * occurs. If it succeeds, it returns the actual number of interrupts allocated
-> - * and updates the @dev's irq member to the lowest new interrupt number;
-> - * the other interrupt numbers allocated to this device are consecutive.
-> - **/
-> -int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
-> +static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
-> +		unsigned int flags)
->  {
->  	int nvec;
->  	int rc;
-> @@ -1068,21 +1067,78 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
->  	else if (nvec > maxvec)
->  		nvec = maxvec;
->  
-> -	do {
-> +	for (;;) {
-> +		if (!(flags & PCI_IRQ_NOAFFINITY)) {
-> +			dev->irq_affinity = irq_create_affinity_mask(&nvec);
-> +			if (nvec < minvec)
-> +				return -ERANGE;
+> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+>
+> On 13/07/16 10:10, Bharat Kumar Gogada wrote:
+> >> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
+> >> call
+> >>
+> >> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
+> >>>> Subject: Re: PCIe MSI address is not written at
+> >>>> pci_enable_msi_range call
+> >>>>
+> >>>> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+> >>>>>> Subject: Re: PCIe MSI address is not written at
+> >>>>>> pci_enable_msi_range call
+> >>>>>>
+> >>>>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+> >>>>>>> Hi Marc,
+> >>>>>>>
+> >>>>>>> Thanks for the reply.
+> >>>>>>>
+> >>>>>>> From PCIe Spec:
+> >>>>>>> MSI Enable Bit:
+> >>>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control
+> >>>>>>> register (see Section 6.8.2.3) is 0, the function is permitted
+> >>>>>>> to use MSI to request service and is prohibited from using its INTx#
+> pin.
+> >>>>>>>
+> >>>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be
+> >>>>>>> used
+> >>>>>> which means MSI address and data fields are available/programmed.
+> >>>>>>>
+> >>>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+> >>>>>>> latches
+> >>>>>> onto MSI address and MSI data values.
+> >>>>>>>
+> >>>>>>> With current MSI implementation in kernel, our SoC is latching
+> >>>>>>> on to incorrect address and data values, as address/data are
+> >>>>>>> updated much later
+> >>>>>> than MSI Enable bit.
+> >>>>>>
+> >>>>>> As a side question, how does setting the affinity work on this
+> >>>>>> end-point if this involves changing the address programmed in the
+> >>>>>> MSI
+> >>>> registers?
+> >>>>>> Do you expect the enabled bit to be toggled to around the write?
+> >>>>>>
+> >>>>>
+> >>>>> Yes,
+> >>>>
+> >>>> Well, that's pretty annoying, as this will not work either. But
+> >>>> maybe your
+> >> MSI
+> >>>> controller has a single doorbell? You haven't mentioned which HW
+> >>>> that
+> >> is...
+> >>>>
+> >>> The MSI address/data is located in config space, in our SoC for the
+> >>> logic
+> >> behind PCIe
+> >>> to become aware of new address/data  MSI enable transition is used
+> >>> (0 to
+> >> 1).
+> >>> The logic cannot keep polling these registers in configuration space
+> >>> as it
+> >> would consume power.
+> >>>
+> >>> So the logic uses the transition in MSI enable to latch on to address/data.
+> >>
+> >> I understand the "why". I'm just wondering if your SoC needs to have
+> >> the MSI address changed when changing the affinity of the MSI? What
+> >> MSI controller are you using? Is it in mainline?
+> >>
+> > Can you please give more information on MSI affinity ?
+> > For cpu affinity for interrupts we would use MSI-X.
+> >
+> > We are using GIC 400 v2.
+>
+> None of that is relevant. GIC400 doesn't have the faintest notion of what an
+> MSI is, and MSI-X vs MSI is an end-point property.
+>
+> Please answer these questions: does your MSI controller have a unique
+> doorbell, or multiple doorbells? Does it use wired interrupts (SPIs) connected
+> to the GIC? Is the support code for this MSI controller in mainline or not?
+>
 
-				return -ENOSPC;
+It has single doorbell.
+The MSI decoding is part of our PCIe bridge, and it has SPI to GIC.
+Our root driver is in mainline drivers/pci/host/pcie-xilinx-nwl.c
 
-> +		}
-> +
->  		rc = msi_capability_init(dev, nvec);
-> -		if (rc < 0) {
-> +		if (rc == 0)
-> +			return nvec;
-> +
-> +		kfree(dev->irq_affinity);
-> +		dev->irq_affinity = NULL;
-> +
-> +		if (rc < 0)
->  			return rc;
-> -		} else if (rc > 0) {
-> -			if (rc < minvec)
-> -				return -ENOSPC;
-> -			nvec = rc;
-> -		}
-> -	} while (rc);
-> +		if (rc < minvec)
+Regards,
+Bharat
 
-		else if (rc < minvec)
 
-> +			return -ENOSPC;
-> +		nvec = rc;
-> +	}
-> +}
->  
-> -	return nvec;
-> +/**
-> + * pci_enable_msi_range - configure device's MSI capability structure
-> + * @dev: device to configure
-> + * @minvec: minimal number of interrupts to configure
-> + * @maxvec: maximum number of interrupts to configure
-> + *
-> + * This function tries to allocate a maximum possible number of interrupts in a
-> + * range between @minvec and @maxvec. It returns a negative errno if an error
-> + * occurs. If it succeeds, it returns the actual number of interrupts allocated
-> + * and updates the @dev's irq member to the lowest new interrupt number;
-> + * the other interrupt numbers allocated to this device are consecutive.
-> + **/
-> +int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
-> +{
-> +	return __pci_enable_msi_range(dev, minvec, maxvec, PCI_IRQ_NOAFFINITY);
->  }
->  EXPORT_SYMBOL(pci_enable_msi_range);
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
 
-As a one-liner pci_enable_msi_range() appears rather as a static inline
-in linux/pci.h, but we do not want __pci_enable_msi*_range() to show up
-in a public header, right?
-
-> +static int __pci_enable_msix_range(struct pci_dev *dev,
-> +		struct msix_entry *entries, int minvec, int maxvec,
-> +		unsigned int flags)
-> +{
-> +	int nvec = maxvec;
-> +	int rc;
-> +
-> +	if (maxvec < minvec)
-> +		return -ERANGE;
-> +
-> +	for (;;) {
-> +		if (!(flags & PCI_IRQ_NOAFFINITY)) {
-> +			dev->irq_affinity = irq_create_affinity_mask(&nvec);
-> +			if (nvec < minvec)
-> +				return -ERANGE;
-
-				return -ENOSPC;
-
-> +		}
-> +
-> +		rc = pci_enable_msix(dev, entries, nvec);
-> +		if (rc == 0)
-> +			return nvec;
-> +
-> +		kfree(dev->irq_affinity);
-> +		dev->irq_affinity = NULL;
-> +
-> +		if (rc < 0)
-> +			return rc;
-> +		if (rc < minvec)
-
-		else if (rc < minvec)
-
-> +			return -ENOSPC;
-> +		nvec = rc;
-> +	}
-> +}
-> +
->  /**
->   * pci_enable_msix_range - configure device's MSI-X capability structure
->   * @dev: pointer to the pci_dev data structure of MSI-X device function
