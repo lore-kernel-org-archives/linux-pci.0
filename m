@@ -1,1468 +1,1349 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54626 "EHLO mail.kernel.org"
+Received: from mga11.intel.com ([192.55.52.93]:36083 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695AbcG2Qs7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jul 2016 12:48:59 -0400
-Date: Fri, 29 Jul 2016 11:48:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v8 2/2] PCI: Rockchip: Add Rockchip PCIe controller
- support
-Message-ID: <20160729164847.GB23928@localhost>
-References: <1469760493-25821-1-git-send-email-shawn.lin@rock-chips.com>
- <1469760493-25821-2-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1469760493-25821-2-git-send-email-shawn.lin@rock-chips.com>
+	id S1751133AbcGNL3S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jul 2016 07:29:18 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v3 6/8] thunderbolt: Networking state machine
+Date: Thu, 14 Jul 2016 14:28:20 +0300
+Message-Id: <1468495702-7467-7-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+Negotiation states that a peer goes through in order to establish
+the communication with the second peer.
+This includes communication with upper layer and additional
+infrastructure support to communicate with the second peer through ICM.
 
-You fixed some of the things I mentioned, but not all, and you
-over-fixed some things, leading to issues.
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/icm/Makefile  |   2 +-
+ drivers/thunderbolt/icm/icm_nhi.c | 304 ++++++++++++++-
+ drivers/thunderbolt/icm/net.c     | 802 ++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/icm/net.h     |  74 ++++
+ 4 files changed, 1171 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/thunderbolt/icm/net.c
 
-On Fri, Jul 29, 2016 at 10:48:13AM +0800, Shawn Lin wrote:
-> This patch adds Rockchip PCIe controller support found
-> on RK3399 Soc platform.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> ---
-> 
-> Changes in v8:
-> - fix all the comments suggested by Bjorn Helgaas in v7[1]
->   [1] https://patchwork.kernel.org/patch/9233887/
-> - enable bandwith interrupt for debug
-> 
-> Changes in v7:
-> - make it as a build-in driver
-> - improve gen1/2 training timeout checking
-> - only clear known interrupt
-> - fix INTx for 0-base index
-> 
-> Changes in v6:
-> - use "depends on PCI_MSI_IRQ_DOMAIN" suggested by Arnd
-> 
-> Changes in v5:
-> - handle multiple pending INTx at the same time
->   suggested by Marc
-> 
-> Changes in v4:
-> - address the comments from Brain
-> 
-> Changes in v3:
-> - remove header file
-> - remove struct msi_controller and move most of variables
->   of rockchip_pcie_port to become the local ones.
-> - allow legacy int even if enabling MSI
-> - drop regulator set voltage operation suggested by Doug
-> 
-> Changes in v2:
-> - remove phy related stuff and call phy API
-> - add new head file and define lots of macro to make
->   the code more readable
-> - remove lots msi related code suggested by Marc
-> - add IO window address translation
-> - init_port and parse_dt reconstruction suggested by Bharat
-> - improve wr_own_conf suggested by Arnd
-> - make pcie as an interrupt controller and fix wrong int handler
->   suggested by Marc
-> - remove PCI_PROBE_ONLY suggested by Lorenzo
-> 
->  drivers/pci/host/Kconfig         |   11 +
->  drivers/pci/host/Makefile        |    1 +
->  drivers/pci/host/pcie-rockchip.c | 1257 ++++++++++++++++++++++++++++++++++++++
->  3 files changed, 1269 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-rockchip.c
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index c917e2f..4d714d2 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -264,4 +264,15 @@ config PCIE_ARTPEC6
->  	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->  	  SoCs.  This PCIe controller uses the DesignWare core.
->  
-> +config PCIE_ROCKCHIP
-> +	bool "Rockchip PCIe controller"
-> +	depends on ARM64 && ARCH_ROCKCHIP
-> +	depends on OF
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select MFD_SYSCON
-> +	help
-> +	  Say Y here if you want internal PCI support on Rockchip SoC.
-> +	  There is 1 internal PCIe port available to support GEN2 with
-> +	  4 slots.
-> +
->  endmenu
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 5bc0af2..695f716 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -30,3 +30,4 @@ obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
->  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
->  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
->  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> +obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> new file mode 100644
-> index 0000000..13ac199
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -0,0 +1,1257 @@
-> +/*
-> + * Rockchip AXI PCIe host controller driver
-> + *
-> + * Copyright (c) 2016 Rockchip, Inc.
-> + *
-> + * Author: Shawn Lin <shawn.lin@rock-chips.com>
-> + *         Wenrui Li <wenrui.li@rock-chips.com>
-> + *
-> + * Bits taken from Synopsys Designware Host controller driver and
-> + * ARM PCI Host generic driver.
-> + *
-> + * This program is free software: you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation, either version 2 of the License, or
-> + * (at your option) any later version.
-> + */
-> +
-> +#include <linux/clk.h>
-> +#include <linux/delay.h>
-> +#include <linux/gpio/consumer.h>
-> +#include <linux/init.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/irq.h>
-> +#include <linux/irqchip/chained_irq.h>
-> +#include <linux/irqdomain.h>
-> +#include <linux/kernel.h>
-> +#include <linux/mfd/syscon.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_device.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci_ids.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/reset.h>
-> +#include <linux/regmap.h>
-> +
+diff --git a/drivers/thunderbolt/icm/Makefile b/drivers/thunderbolt/icm/Makefile
+index 3adfc35..624ee31 100644
+--- a/drivers/thunderbolt/icm/Makefile
++++ b/drivers/thunderbolt/icm/Makefile
+@@ -25,4 +25,4 @@
+ ################################################################################
+ 
+ obj-${CONFIG_THUNDERBOLT_ICM} += thunderbolt-icm.o
+-thunderbolt-icm-objs := icm_nhi.o
++thunderbolt-icm-objs := icm_nhi.o net.o
+diff --git a/drivers/thunderbolt/icm/icm_nhi.c b/drivers/thunderbolt/icm/icm_nhi.c
+index 9d178a5..060bb38 100644
+--- a/drivers/thunderbolt/icm/icm_nhi.c
++++ b/drivers/thunderbolt/icm/icm_nhi.c
+@@ -101,6 +101,12 @@ static const struct nla_policy nhi_genl_policy[NHI_ATTR_MAX + 1] = {
+ 					.len = TBT_ICM_RING_MAX_FRAME_SIZE },
+ 	[NHI_ATTR_MSG_FROM_ICM]		= { .type = NLA_BINARY,
+ 					.len = TBT_ICM_RING_MAX_FRAME_SIZE },
++	[NHI_ATTR_LOCAL_ROUTE_STRING]	= {.len = sizeof(struct route_string)},
++	[NHI_ATTR_LOCAL_UNIQUE_ID]	= { .len = sizeof(unique_id) },
++	[NHI_ATTR_REMOTE_UNIQUE_ID]	= { .len = sizeof(unique_id) },
++	[NHI_ATTR_LOCAL_DEPTH]		= { .type = NLA_U8, },
++	[NHI_ATTR_ENABLE_FULL_E2E]	= { .type = NLA_FLAG, },
++	[NHI_ATTR_MATCH_FRAME_ID]	= { .type = NLA_FLAG, },
+ };
+ 
+ /* NHI genetlink family */
+@@ -531,6 +537,29 @@ int nhi_mailbox(struct tbt_nhi_ctxt *nhi_ctxt, u32 cmd, u32 data, bool deinit)
+ 	return 0;
+ }
+ 
++static inline bool nhi_is_path_disconnected(u32 cmd, u8 num_ports)
++{
++	return (cmd >= DISCONNECT_PORT_A_INTER_DOMAIN_PATH &&
++		cmd < (DISCONNECT_PORT_A_INTER_DOMAIN_PATH + num_ports));
++}
++
++static int nhi_mailbox_disconn_path(struct tbt_nhi_ctxt *nhi_ctxt, u32 cmd)
++	__releases(&controllers_list_rwsem)
++{
++	struct port_net_dev *port;
++	u32 port_num = cmd - DISCONNECT_PORT_A_INTER_DOMAIN_PATH;
++
++	port = &(nhi_ctxt->net_devices[port_num]);
++	mutex_lock(&port->state_mutex);
++
++	up_read(&controllers_list_rwsem);
++	port->medium_sts = MEDIUM_READY_FOR_APPROVAL;
++	if (port->net_dev)
++		negotiation_events(port->net_dev, MEDIUM_DISCONNECTED);
++	mutex_unlock(&port->state_mutex);
++	return  0;
++}
++
+ static int nhi_mailbox_generic(struct tbt_nhi_ctxt *nhi_ctxt, u32 mb_cmd)
+ 	__releases(&controllers_list_rwsem)
+ {
+@@ -579,13 +608,93 @@ static int nhi_genl_mailbox(__always_unused struct sk_buff *u_skb,
+ 	down_read(&controllers_list_rwsem);
+ 
+ 	nhi_ctxt = nhi_search_ctxt(*(u32 *)info->userhdr);
+-	if (nhi_ctxt && !nhi_ctxt->d0_exit)
+-		return nhi_mailbox_generic(nhi_ctxt, mb_cmd);
++	if (nhi_ctxt && !nhi_ctxt->d0_exit) {
++
++		/* rwsem is released later by the below functions */
++		if (nhi_is_path_disconnected(cmd, nhi_ctxt->num_ports))
++			return nhi_mailbox_disconn_path(nhi_ctxt, cmd);
++		else
++			return nhi_mailbox_generic(nhi_ctxt, mb_cmd);
++
++	}
+ 
+ 	up_read(&controllers_list_rwsem);
+ 	return -ENODEV;
+ }
+ 
++static int nhi_genl_approve_networking(__always_unused struct sk_buff *u_skb,
++				       struct genl_info *info)
++{
++	struct tbt_nhi_ctxt *nhi_ctxt;
++	struct route_string *route_str;
++	int res = -ENODEV;
++	u8 port_num;
++
++	if (!info || !info->userhdr || !info->attrs ||
++	    !info->attrs[NHI_ATTR_LOCAL_ROUTE_STRING] ||
++	    !info->attrs[NHI_ATTR_LOCAL_UNIQUE_ID] ||
++	    !info->attrs[NHI_ATTR_REMOTE_UNIQUE_ID] ||
++	    !info->attrs[NHI_ATTR_LOCAL_DEPTH])
++		return -EINVAL;
++
++	/*
++	 * route_str is an unique topological address
++	 * used for approving remote controller
++	 */
++	route_str = nla_data(info->attrs[NHI_ATTR_LOCAL_ROUTE_STRING]);
++	/* extracts the port we're connected to */
++	port_num = PORT_NUM_FROM_LINK(L0_PORT_NUM(route_str->lo));
++
++	down_read(&controllers_list_rwsem);
++
++	nhi_ctxt = nhi_search_ctxt(*(u32 *)info->userhdr);
++	if (nhi_ctxt && !nhi_ctxt->d0_exit) {
++		struct port_net_dev *port;
++
++		if (port_num >= nhi_ctxt->num_ports) {
++			res = -EINVAL;
++			goto free_ctl_list;
++		}
++
++		port = &(nhi_ctxt->net_devices[port_num]);
++
++		mutex_lock(&port->state_mutex);
++		up_read(&controllers_list_rwsem);
++
++		if (port->medium_sts != MEDIUM_READY_FOR_APPROVAL) {
++			dev_info(&nhi_ctxt->pdev->dev,
++				"%s: controller id %#x in state %u <> MEDIUM_READY_FOR_APPROVAL\n",
++				__func__, nhi_ctxt->id, port->medium_sts);
++			goto unlock;
++		}
++
++		port->medium_sts = MEDIUM_READY_FOR_CONNECTION;
++
++		if (!port->net_dev) {
++			port->net_dev = nhi_alloc_etherdev(nhi_ctxt, port_num,
++							   info);
++			if (!port->net_dev) {
++				mutex_unlock(&port->state_mutex);
++				return -ENOMEM;
++			}
++		} else {
++			nhi_update_etherdev(nhi_ctxt, port->net_dev, info);
++
++			negotiation_events(port->net_dev,
++					   MEDIUM_READY_FOR_CONNECTION);
++		}
++
++unlock:
++		mutex_unlock(&port->state_mutex);
++
++		return 0;
++	}
++
++free_ctl_list:
++	up_read(&controllers_list_rwsem);
++
++	return res;
++}
+ 
+ static int nhi_genl_send_msg(struct tbt_nhi_ctxt *nhi_ctxt, enum pdf_value pdf,
+ 			     const u8 *msg, u32 msg_len)
+@@ -635,17 +744,169 @@ genl_put_reply_failure:
+ 	return res;
+ }
+ 
++static bool nhi_handle_inter_domain_msg(struct tbt_nhi_ctxt *nhi_ctxt,
++					struct thunderbolt_ip_header *hdr)
++{
++	struct port_net_dev *port;
++	u8 port_num;
++
++	const unique_id_be proto_uuid = APPLE_THUNDERBOLT_IP_PROTOCOL_UUID;
++
++	if (memcmp(proto_uuid, hdr->apple_tbt_ip_proto_uuid,
++		   sizeof(proto_uuid)) != 0) {
++		dev_dbg(&nhi_ctxt->pdev->dev,
++			"controller id %#x XDomain discovery message\n",
++			nhi_ctxt->id);
++		return true;
++	}
++
++	dev_dbg(&nhi_ctxt->pdev->dev,
++		"controller id %#x ThunderboltIP %u\n",
++		nhi_ctxt->id, be32_to_cpu(hdr->packet_type));
++
++	port_num = PORT_NUM_FROM_LINK(
++				L0_PORT_NUM(be32_to_cpu(hdr->route_str.lo)));
++
++	if (unlikely(port_num >= nhi_ctxt->num_ports)) {
++		dev_err(&nhi_ctxt->pdev->dev,
++			"controller id %#x invalid port %u in ThunderboltIP message\n",
++			nhi_ctxt->id, port_num);
++		return false;
++	}
++
++	port = &(nhi_ctxt->net_devices[port_num]);
++	mutex_lock(&port->state_mutex);
++	if (likely(port->net_dev != NULL))
++		negotiation_messages(port->net_dev, hdr);
++	else
++		dev_notice(&nhi_ctxt->pdev->dev,
++			   "controller id %#x port %u in ThunderboltIP message was not initialized\n",
++			   nhi_ctxt->id, port_num);
++	mutex_unlock(&port->state_mutex);
++
++	return false;
++}
++
++static void nhi_handle_notification_msg(struct tbt_nhi_ctxt *nhi_ctxt,
++					const u8 *msg)
++{
++	struct port_net_dev *port;
++	u8 port_num;
++
++#define INTER_DOMAIN_LINK_SHIFT 0
++#define INTER_DOMAIN_LINK_MASK	GENMASK(2, INTER_DOMAIN_LINK_SHIFT)
++	switch (msg[3]) {
++
++	case NC_INTER_DOMAIN_CONNECTED:
++		port_num = PORT_NUM_FROM_MSG(msg[5]);
++#define INTER_DOMAIN_APPROVED BIT(3)
++		if (likely(port_num < nhi_ctxt->num_ports)) {
++			if (!(msg[5] & INTER_DOMAIN_APPROVED))
++				nhi_ctxt->net_devices[
++					port_num].medium_sts =
++				     MEDIUM_READY_FOR_APPROVAL;
++		} else {
++			dev_err(&nhi_ctxt->pdev->dev,
++				"controller id %#x invalid port %u in inter domain connected message\n",
++				nhi_ctxt->id, port_num);
++		}
++		break;
++
++	case NC_INTER_DOMAIN_DISCONNECTED:
++		port_num = PORT_NUM_FROM_MSG(msg[5]);
++
++		if (unlikely(port_num >= nhi_ctxt->num_ports)) {
++			dev_err(&nhi_ctxt->pdev->dev,
++				"controller id %#x invalid port %u in inter domain disconnected message\n",
++				nhi_ctxt->id, port_num);
++			break;
++		}
++
++		port = &(nhi_ctxt->net_devices[port_num]);
++		mutex_lock(&port->state_mutex);
++		port->medium_sts = MEDIUM_DISCONNECTED;
++
++		if (likely(port->net_dev != NULL))
++			negotiation_events(port->net_dev,
++					   MEDIUM_DISCONNECTED);
++		else
++			dev_notice(&nhi_ctxt->pdev->dev,
++				   "controller id %#x port %u in inter domain disconnected message was not initialized\n",
++				   nhi_ctxt->id, port_num);
++		mutex_unlock(&port->state_mutex);
++		break;
++	}
++}
++
++static bool nhi_handle_icm_response_msg(struct tbt_nhi_ctxt *nhi_ctxt,
++					const u8 *msg)
++{
++	struct port_net_dev *port;
++	bool send_event = true;
++	u8 port_num;
++
++	if (nhi_ctxt->ignore_icm_resp &&
++	    msg[3] == RC_INTER_DOMAIN_PKT_SENT) {
++		nhi_ctxt->ignore_icm_resp = false;
++		send_event = false;
++	}
++	if (nhi_ctxt->wait_for_icm_resp) {
++		nhi_ctxt->wait_for_icm_resp = false;
++		up(&nhi_ctxt->send_sem);
++	}
++
++	if (msg[3] == RC_APPROVE_INTER_DOMAIN_CONNEXION) {
++#define APPROVE_INTER_DOMAIN_ERROR BIT(0)
++		if (unlikely(msg[2] & APPROVE_INTER_DOMAIN_ERROR)) {
++			dev_err(&nhi_ctxt->pdev->dev,
++				"controller id %#x inter domain approve error\n",
++				nhi_ctxt->id);
++			return send_event;
++		}
++		port_num = PORT_NUM_FROM_LINK((msg[5]&INTER_DOMAIN_LINK_MASK)>>
++					       INTER_DOMAIN_LINK_SHIFT);
++
++		if (unlikely(port_num >= nhi_ctxt->num_ports)) {
++			dev_err(&nhi_ctxt->pdev->dev,
++				"controller id %#x invalid port %u in inter domain approve message\n",
++				nhi_ctxt->id, port_num);
++			return send_event;
++		}
++
++		port = &(nhi_ctxt->net_devices[port_num]);
++		mutex_lock(&port->state_mutex);
++		port->medium_sts = MEDIUM_CONNECTED;
++
++		if (likely(port->net_dev != NULL))
++			negotiation_events(port->net_dev, MEDIUM_CONNECTED);
++		else
++			dev_err(&nhi_ctxt->pdev->dev,
++				"controller id %#x port %u in inter domain approve message was not initialized\n",
++				nhi_ctxt->id, port_num);
++		mutex_unlock(&port->state_mutex);
++	}
++
++	return send_event;
++}
++
+ static bool nhi_msg_from_icm_analysis(struct tbt_nhi_ctxt *nhi_ctxt,
+ 					enum pdf_value pdf,
+ 					const u8 *msg, u32 msg_len)
+ {
+-	/*
+-	 * preparation for messages that won't be sent,
+-	 * currently unused in this patch.
+-	 */
+ 	bool send_event = true;
+ 
+ 	switch (pdf) {
++	case PDF_INTER_DOMAIN_REQUEST:
++	case PDF_INTER_DOMAIN_RESPONSE:
++		send_event = nhi_handle_inter_domain_msg(
++					nhi_ctxt,
++					(struct thunderbolt_ip_header *)msg);
++		break;
++
++	case PDF_FW_TO_SW_NOTIFICATION:
++		nhi_handle_notification_msg(nhi_ctxt, msg);
++		break;
++
+ 	case PDF_ERROR_NOTIFICATION:
+ 		dev_err(&nhi_ctxt->pdev->dev,
+ 			"controller id %#x PDF_ERROR_NOTIFICATION %hhu msg len %u\n",
+@@ -661,10 +922,7 @@ static bool nhi_msg_from_icm_analysis(struct tbt_nhi_ctxt *nhi_ctxt,
+ 		break;
+ 
+ 	case PDF_FW_TO_SW_RESPONSE:
+-		if (nhi_ctxt->wait_for_icm_resp) {
+-			nhi_ctxt->wait_for_icm_resp = false;
+-			up(&nhi_ctxt->send_sem);
+-		}
++		send_event = nhi_handle_icm_response_msg(nhi_ctxt, msg);
+ 		break;
+ 
+ 	default:
+@@ -869,6 +1127,12 @@ static const struct genl_ops nhi_ops[] = {
+ 		.doit = nhi_genl_mailbox,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NHI_CMD_APPROVE_TBT_NETWORKING,
++		.policy = nhi_genl_policy,
++		.doit = nhi_genl_approve_networking,
++		.flags = GENL_ADMIN_PERM,
++	},
+ };
+ 
+ static int nhi_suspend(struct device *dev) __releases(&nhi_ctxt->send_sem)
+@@ -876,6 +1140,17 @@ static int nhi_suspend(struct device *dev) __releases(&nhi_ctxt->send_sem)
+ 	struct tbt_nhi_ctxt *nhi_ctxt = pci_get_drvdata(to_pci_dev(dev));
+ 	void __iomem *rx_reg, *tx_reg;
+ 	u32 rx_reg_val, tx_reg_val;
++	int i;
++
++	for (i = 0; i < nhi_ctxt->num_ports; i++) {
++		struct port_net_dev *port = &nhi_ctxt->net_devices[i];
++
++		mutex_lock(&port->state_mutex);
++		port->medium_sts = MEDIUM_DISCONNECTED;
++		if (port->net_dev)
++			negotiation_events(port->net_dev, MEDIUM_DISCONNECTED);
++		mutex_unlock(&port->state_mutex);
++	}
+ 
+ 	/* must be after negotiation_events, since messages might be sent */
+ 	nhi_ctxt->d0_exit = true;
+@@ -1035,6 +1310,15 @@ static void icm_nhi_remove(struct pci_dev *pdev)
+ 
+ 	nhi_suspend(&pdev->dev);
+ 
++	for (i = 0; i < nhi_ctxt->num_ports; i++) {
++		mutex_lock(&nhi_ctxt->net_devices[i].state_mutex);
++		if (nhi_ctxt->net_devices[i].net_dev) {
++			nhi_dealloc_etherdev(nhi_ctxt->net_devices[i].net_dev);
++			nhi_ctxt->net_devices[i].net_dev = NULL;
++		}
++		mutex_unlock(&nhi_ctxt->net_devices[i].state_mutex);
++	}
++
+ 	if (nhi_ctxt->net_workqueue)
+ 		destroy_workqueue(nhi_ctxt->net_workqueue);
+ 
+diff --git a/drivers/thunderbolt/icm/net.c b/drivers/thunderbolt/icm/net.c
+new file mode 100644
+index 0000000..e983dfb
+--- /dev/null
++++ b/drivers/thunderbolt/icm/net.c
+@@ -0,0 +1,802 @@
++/*******************************************************************************
++ *
++ * Intel Thunderbolt(TM) driver
++ * Copyright(c) 2014 - 2016 Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * The full GNU General Public License is included in this distribution in
++ * the file called "COPYING".
++ *
++ * Contact Information:
++ * Intel Thunderbolt Mailing List <thunderbolt-software@lists.01.org>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ ******************************************************************************/
++
++#include <linux/module.h>
++#include <linux/etherdevice.h>
++#include <linux/crc32.h>
++#include <linux/prefetch.h>
++#include <linux/highmem.h>
++#include <linux/if_vlan.h>
++#include <linux/jhash.h>
++#include <linux/vmalloc.h>
++#include <net/ip6_checksum.h>
++#include "icm_nhi.h"
++#include "net.h"
++
++#define DEFAULT_MSG_ENABLE (NETIF_MSG_PROBE | NETIF_MSG_LINK | NETIF_MSG_IFUP)
++static int debug = -1;
++module_param(debug, int, 0);
++MODULE_PARM_DESC(debug, "Debug level (0=none,...,16=all)");
++
++#define TBT_NET_RX_HDR_SIZE 256
++
++#define NUM_TX_LOGIN_RETRIES 60
++
++#define APPLE_THUNDERBOLT_IP_PROTOCOL_REVISION 1
++
++#define LOGIN_TX_PATH 0xf
++
++#define TBT_NET_MTU (64 * 1024)
++
++/* Number of Rx buffers we bundle into one write to the hardware */
++#define TBT_NET_RX_BUFFER_WRITE	16
++
++#define TBT_NET_MULTICAST_HASH_TABLE_SIZE 1024
++#define TBT_NET_ETHER_ADDR_HASH(addr) (((addr[4] >> 4) | (addr[5] << 4)) % \
++				       TBT_NET_MULTICAST_HASH_TABLE_SIZE)
++
++#define BITS_PER_U32 (sizeof(u32) * BITS_PER_BYTE)
++
++#define TBT_NET_NUM_TX_BUFS 256
++#define TBT_NET_NUM_RX_BUFS 256
++#define TBT_NET_SIZE_TOTAL_DESCS ((TBT_NET_NUM_TX_BUFS + TBT_NET_NUM_RX_BUFS) \
++				  * sizeof(struct tbt_buf_desc))
++
++
++#define TBT_NUM_FRAMES_PER_PAGE (PAGE_SIZE / TBT_RING_MAX_FRAME_SIZE)
++
++#define TBT_NUM_BUFS_BETWEEN(idx1, idx2, num_bufs) \
++	(((num_bufs) - 1) - \
++	 ((((idx1) - (idx2)) + (num_bufs)) & ((num_bufs) - 1)))
++
++#define TX_WAKE_THRESHOLD (2 * DIV_ROUND_UP(TBT_NET_MTU, \
++			   TBT_RING_MAX_FRM_DATA_SZ))
++
++#define TBT_NET_DESC_ATTR_SOF_EOF (((PDF_TBT_NET_START_OF_FRAME << \
++				     DESC_ATTR_SOF_SHIFT) & \
++				    DESC_ATTR_SOF_MASK) | \
++				   ((PDF_TBT_NET_END_OF_FRAME << \
++				     DESC_ATTR_EOF_SHIFT) & \
++				    DESC_ATTR_EOF_MASK))
++
++/* E2E workaround */
++#define TBT_EXIST_BUT_UNUSED_HOPID 2
++
++enum tbt_net_frame_pdf {
++	PDF_TBT_NET_MIDDLE_FRAME,
++	PDF_TBT_NET_START_OF_FRAME,
++	PDF_TBT_NET_END_OF_FRAME,
++};
++
++struct thunderbolt_ip_login {
++	struct thunderbolt_ip_header header;
++	__be32 protocol_revision;
++	__be32 transmit_path;
++	__be32 reserved[4];
++	__be32 crc;
++};
++
++struct thunderbolt_ip_login_response {
++	struct thunderbolt_ip_header header;
++	__be32 status;
++	__be32 receiver_mac_address[2];
++	__be32 receiver_mac_address_length;
++	__be32 reserved[4];
++	__be32 crc;
++};
++
++struct thunderbolt_ip_logout {
++	struct thunderbolt_ip_header header;
++	__be32 crc;
++};
++
++struct thunderbolt_ip_status {
++	struct thunderbolt_ip_header header;
++	__be32 status;
++	__be32 crc;
++};
++
++struct approve_inter_domain_connection_cmd {
++	__be32 req_code;
++	__be32 attributes;
++#define AIDC_ATTR_LINK_SHIFT	16
++#define AIDC_ATTR_LINK_MASK	GENMASK(18, AIDC_ATTR_LINK_SHIFT)
++#define AIDC_ATTR_DEPTH_SHIFT	20
++#define AIDC_ATTR_DEPTH_MASK	GENMASK(23, AIDC_ATTR_DEPTH_SHIFT)
++	unique_id_be remote_unique_id;
++	__be16 transmit_ring_number;
++	__be16 transmit_path;
++	__be16 receive_ring_number;
++	__be16 receive_path;
++	__be32 crc;
++
++};
++
++enum neg_event {
++	RECEIVE_LOGOUT = NUM_MEDIUM_STATUSES,
++	RECEIVE_LOGIN_RESPONSE,
++	RECEIVE_LOGIN,
++	NUM_NEG_EVENTS
++};
++
++enum disconnect_path_stage {
++	STAGE_1 = BIT(0),
++	STAGE_2 = BIT(1)
++};
++
++/**
++*  struct tbt_port - the basic tbt_port structure
++*  @tbt_nhi_ctxt:		context of the nhi controller.
++*  @net_dev:			networking device object.
++*  @login_retry_work:		work queue for sending login requests.
++*  @login_response_work:	work queue for sending login responses.
++*  @work_struct logout_work:	work queue for sending logout requests.
++*  @status_reply_work:		work queue for sending logout replies.
++*  @approve_inter_domain_work:	work queue for sending interdomain to icm.
++*  @route_str:			allows to route the messages to destination.
++*  @interdomain_local_uniq_id:	allows to route the messages from local source.
++*  @interdomain_remote_uniq_id:	allows to route the messages to destination.
++*  @command_id			a number that identifies the command.
++*  @negotiation_status:		holds the network negotiation state.
++*  @msg_enable:			used for debugging filters.
++*  @seq_num:			a number that identifies the session.
++*  @login_retry_count:		counts number of login retries sent.
++*  @local_depth:		depth of the remote peer in the chain.
++*  @transmit_path:		routing parameter for the icm.
++*  @frame_id:			counting ID of frames.
++*  @num:			port number.
++*  @local_path:			routing parameter for the icm.
++*  @enable_full_e2e:		whether to enable full E2E.
++*  @match_frame_id:		whether to match frame id on incoming packets.
++*/
++struct tbt_port {
++	struct tbt_nhi_ctxt *nhi_ctxt;
++	struct net_device *net_dev;
++	struct delayed_work login_retry_work;
++	struct work_struct login_response_work;
++	struct work_struct logout_work;
++	struct work_struct status_reply_work;
++	struct work_struct approve_inter_domain_work;
++	struct route_string route_str;
++	unique_id interdomain_local_uniq_id;
++	unique_id interdomain_remote_uniq_id;
++	u32 command_id;
++	u16 negotiation_status;
++	u16 msg_enable;
++	u8 seq_num;
++	u8 login_retry_count;
++	u8 local_depth;
++	u8 transmit_path;
++	u16 frame_id;
++	u8 num;
++	u8 local_path;
++	bool enable_full_e2e : 1;
++	bool match_frame_id : 1;
++};
++
++static void disconnect_path(struct tbt_port *port,
++			    enum disconnect_path_stage stage)
++{
++	u32 cmd = (DISCONNECT_PORT_A_INTER_DOMAIN_PATH + port->num);
++
++	cmd <<= REG_INMAIL_CMD_CMD_SHIFT;
++	cmd &= REG_INMAIL_CMD_CMD_MASK;
++	cmd |= REG_INMAIL_CMD_REQUEST;
++
++	mutex_lock(&port->nhi_ctxt->mailbox_mutex);
++	if (!mutex_trylock(&port->nhi_ctxt->d0_exit_mailbox_mutex)) {
++		netif_notice(port, link, port->net_dev, "controller id %#x is existing D0\n",
++			     port->nhi_ctxt->id);
++	} else {
++		nhi_mailbox(port->nhi_ctxt, cmd, stage, false);
++
++		port->nhi_ctxt->net_devices[port->num].medium_sts =
++					MEDIUM_READY_FOR_CONNECTION;
++
++		mutex_unlock(&port->nhi_ctxt->d0_exit_mailbox_mutex);
++	}
++	mutex_unlock(&port->nhi_ctxt->mailbox_mutex);
++}
++
++static void tbt_net_tear_down(struct net_device *net_dev, bool send_logout)
++{
++	struct tbt_port *port = netdev_priv(net_dev);
++	void __iomem *iobase = port->nhi_ctxt->iobase;
++	void __iomem *tx_reg = NULL;
++	u32 tx_reg_val = 0;
++
++	netif_carrier_off(net_dev);
++	netif_stop_queue(net_dev);
++
++	if (port->negotiation_status & BIT(MEDIUM_CONNECTED)) {
++		void __iomem *rx_reg = iobase + REG_RX_OPTIONS_BASE +
++		      (port->local_path * REG_OPTS_STEP);
++		u32 rx_reg_val = ioread32(rx_reg) & ~REG_OPTS_E2E_EN;
++
++		tx_reg = iobase + REG_TX_OPTIONS_BASE +
++			 (port->local_path * REG_OPTS_STEP);
++		tx_reg_val = ioread32(tx_reg) & ~REG_OPTS_E2E_EN;
++
++		disconnect_path(port, STAGE_1);
++
++		/* disable RX flow control  */
++		iowrite32(rx_reg_val, rx_reg);
++		/* disable TX flow control  */
++		iowrite32(tx_reg_val, tx_reg);
++		/* disable RX ring  */
++		iowrite32(rx_reg_val & ~REG_OPTS_VALID, rx_reg);
++
++		rx_reg = iobase + REG_RX_RING_BASE +
++			 (port->local_path * REG_RING_STEP);
++		iowrite32(0, rx_reg + REG_RING_PHYS_LO_OFFSET);
++		iowrite32(0, rx_reg + REG_RING_PHYS_HI_OFFSET);
++	}
++
++	/* Stop login messages */
++	cancel_delayed_work_sync(&port->login_retry_work);
++
++	if (send_logout)
++		queue_work(port->nhi_ctxt->net_workqueue, &port->logout_work);
++
++	if (port->negotiation_status & BIT(MEDIUM_CONNECTED)) {
++		unsigned long flags;
++
++		/* wait for TX to finish */
++		usleep_range(5 * USEC_PER_MSEC, 7 * USEC_PER_MSEC);
++		/* disable TX ring  */
++		iowrite32(tx_reg_val & ~REG_OPTS_VALID, tx_reg);
++
++		disconnect_path(port, STAGE_2);
++
++		spin_lock_irqsave(&port->nhi_ctxt->lock, flags);
++		/* disable RX and TX interrupts */
++		RING_INT_DISABLE_TX_RX(iobase, port->local_path,
++				       port->nhi_ctxt->num_paths);
++		spin_unlock_irqrestore(&port->nhi_ctxt->lock, flags);
++	}
++}
++
++static inline int send_message(struct tbt_port *port, const char *func,
++				enum pdf_value pdf, u32 msg_len, const u8 *msg)
++{
++	u32 crc_offset = msg_len - sizeof(__be32);
++	__be32 *crc = (__be32 *)(msg + crc_offset);
++	bool is_intdom = (pdf == PDF_INTER_DOMAIN_RESPONSE);
++	int res;
++
++	*crc = cpu_to_be32(~__crc32c_le(~0, msg, crc_offset));
++	res = down_timeout(&port->nhi_ctxt->send_sem,
++			   msecs_to_jiffies(3 * MSEC_PER_SEC));
++	if (res) {
++		netif_err(port, link, port->net_dev, "%s: controller id %#x timeout on send semaphore\n",
++			  func, port->nhi_ctxt->id);
++		return res;
++	}
++
++	if (!mutex_trylock(&port->nhi_ctxt->d0_exit_send_mutex)) {
++		up(&port->nhi_ctxt->send_sem);
++		netif_notice(port, link, port->net_dev, "%s: controller id %#x is existing D0\n",
++			     func, port->nhi_ctxt->id);
++		return -ENODEV;
++	}
++
++	res = nhi_send_message(port->nhi_ctxt, pdf, msg_len, msg, is_intdom);
++
++	mutex_unlock(&port->nhi_ctxt->d0_exit_send_mutex);
++	if (res)
++		up(&port->nhi_ctxt->send_sem);
++
++	return res;
++}
++
++static void approve_inter_domain(struct work_struct *work)
++{
++	struct tbt_port *port = container_of(work, typeof(*port),
++					     approve_inter_domain_work);
++	int i;
++	struct approve_inter_domain_connection_cmd approve_msg = {
++		.req_code = cpu_to_be32(CC_APPROVE_INTER_DOMAIN_CONNECTION),
++		.transmit_path = cpu_to_be16(LOGIN_TX_PATH),
++	};
++
++	u32 aidc = (L0_PORT_NUM(port->route_str.lo) << AIDC_ATTR_LINK_SHIFT) &
++		    AIDC_ATTR_LINK_MASK;
++
++	aidc |= (port->local_depth << AIDC_ATTR_DEPTH_SHIFT) &
++		 AIDC_ATTR_DEPTH_MASK;
++
++	approve_msg.attributes = cpu_to_be32(aidc);
++
++	for (i = 0; i < ARRAY_SIZE(port->interdomain_remote_uniq_id); i++)
++		approve_msg.remote_unique_id[i] =
++			cpu_to_be32(port->interdomain_remote_uniq_id[i]);
++	approve_msg.transmit_ring_number = cpu_to_be16(port->local_path);
++	approve_msg.receive_ring_number = cpu_to_be16(port->local_path);
++	approve_msg.receive_path = cpu_to_be16(port->transmit_path);
++
++	send_message(port, __func__, PDF_SW_TO_FW_COMMAND, sizeof(approve_msg),
++		     (const u8 *)&approve_msg);
++}
++
++static inline void prepare_header(struct thunderbolt_ip_header *header,
++				  struct tbt_port *port,
++				  enum thunderbolt_ip_packet_type packet_type,
++				  u8 len_dwords)
++{
++	int i;
++
++	const unique_id_be apple_tbt_ip_proto_uuid =
++					APPLE_THUNDERBOLT_IP_PROTOCOL_UUID;
++
++	header->packet_type = cpu_to_be32(packet_type);
++	header->route_str.hi = cpu_to_be32(port->route_str.hi);
++	header->route_str.lo = cpu_to_be32(port->route_str.lo);
++	header->attributes = cpu_to_be32(
++		((port->seq_num << HDR_ATTR_SEQ_NUM_SHIFT) &
++		 HDR_ATTR_SEQ_NUM_MASK) |
++		((len_dwords << HDR_ATTR_LEN_SHIFT) & HDR_ATTR_LEN_MASK));
++	for (i = 0; i < ARRAY_SIZE(apple_tbt_ip_proto_uuid); i++)
++		header->apple_tbt_ip_proto_uuid[i] =
++			apple_tbt_ip_proto_uuid[i];
++	for (i = 0; i < ARRAY_SIZE(header->initiator_uuid); i++)
++		header->initiator_uuid[i] =
++			cpu_to_be32(port->interdomain_local_uniq_id[i]);
++	for (i = 0; i < ARRAY_SIZE(header->target_uuid); i++)
++		header->target_uuid[i] =
++			cpu_to_be32(port->interdomain_remote_uniq_id[i]);
++	header->command_id = cpu_to_be32(port->command_id);
++
++	port->command_id++;
++}
++
++static void status_reply(struct work_struct *work)
++{
++	struct tbt_port *port = container_of(work, typeof(*port),
++					     status_reply_work);
++	struct thunderbolt_ip_status status_msg = {
++		.status = 0,
++	};
++
++	prepare_header(&status_msg.header, port,
++		       THUNDERBOLT_IP_STATUS_TYPE,
++		       (offsetof(struct thunderbolt_ip_status, crc) -
++			offsetof(struct thunderbolt_ip_status,
++				 header.apple_tbt_ip_proto_uuid)) /
++		       sizeof(u32));
++
++	send_message(port, __func__, PDF_INTER_DOMAIN_RESPONSE,
++		     sizeof(status_msg), (const u8 *)&status_msg);
++
++}
++
++static void logout(struct work_struct *work)
++{
++	struct tbt_port *port = container_of(work, typeof(*port),
++					     logout_work);
++	struct thunderbolt_ip_logout logout_msg;
++
++	prepare_header(&logout_msg.header, port,
++		       THUNDERBOLT_IP_LOGOUT_TYPE,
++		       (offsetof(struct thunderbolt_ip_logout, crc) -
++			offsetof(struct thunderbolt_ip_logout,
++			       header.apple_tbt_ip_proto_uuid)) / sizeof(u32));
++
++	send_message(port, __func__, PDF_INTER_DOMAIN_RESPONSE,
++		     sizeof(logout_msg), (const u8 *)&logout_msg);
++
++}
++
++static void login_response(struct work_struct *work)
++{
++	struct tbt_port *port = container_of(work, typeof(*port),
++					     login_response_work);
++	struct thunderbolt_ip_login_response login_res_msg = {
++		.receiver_mac_address_length = cpu_to_be32(ETH_ALEN),
++	};
++
++	prepare_header(&login_res_msg.header, port,
++		       THUNDERBOLT_IP_LOGIN_RESPONSE_TYPE,
++		       (offsetof(struct thunderbolt_ip_login_response, crc) -
++			offsetof(struct thunderbolt_ip_login_response,
++			       header.apple_tbt_ip_proto_uuid)) / sizeof(u32));
++
++	ether_addr_copy((u8 *)login_res_msg.receiver_mac_address,
++			port->net_dev->dev_addr);
++
++	send_message(port, __func__, PDF_INTER_DOMAIN_RESPONSE,
++		     sizeof(login_res_msg), (const u8 *)&login_res_msg);
++
++}
++
++static void login_retry(struct work_struct *work)
++{
++	struct tbt_port *port = container_of(work, typeof(*port),
++					     login_retry_work.work);
++	struct thunderbolt_ip_login login_msg = {
++		.protocol_revision = cpu_to_be32(
++				APPLE_THUNDERBOLT_IP_PROTOCOL_REVISION),
++		.transmit_path = cpu_to_be32(LOGIN_TX_PATH),
++	};
++
++
++	if (port->nhi_ctxt->d0_exit)
++		return;
++
++	port->login_retry_count++;
++
++	prepare_header(&login_msg.header, port,
++		       THUNDERBOLT_IP_LOGIN_TYPE,
++		       (offsetof(struct thunderbolt_ip_login, crc) -
++		       offsetof(struct thunderbolt_ip_login,
++		       header.apple_tbt_ip_proto_uuid)) / sizeof(u32));
++
++	if (send_message(port, __func__, PDF_INTER_DOMAIN_RESPONSE,
++			 sizeof(login_msg), (const u8 *)&login_msg) == -ENODEV)
++		return;
++
++	if (likely(port->login_retry_count < NUM_TX_LOGIN_RETRIES))
++		queue_delayed_work(port->nhi_ctxt->net_workqueue,
++				   &port->login_retry_work,
++				   msecs_to_jiffies(5 * MSEC_PER_SEC));
++	else
++		netif_notice(port, link, port->net_dev, "port %u (%#x) login timeout after %u retries\n",
++			     port->num, port->negotiation_status,
++			     port->login_retry_count);
++}
++
++void negotiation_events(struct net_device *net_dev,
++			enum medium_status medium_sts)
++{
++	struct tbt_port *port = netdev_priv(net_dev);
++	void __iomem *iobase = port->nhi_ctxt->iobase;
++	u32 sof_eof_en, tx_ring_conf, rx_ring_conf, e2e_en;
++	void __iomem *reg;
++	unsigned long flags;
++	u16 hop_id;
++	bool send_logout;
++
++	if (!netif_running(net_dev)) {
++		netif_dbg(port, link, net_dev, "port %u (%#x) is down\n",
++			  port->num, port->negotiation_status);
++		return;
++	}
++
++	netif_dbg(port, link, net_dev, "port %u (%#x) receive event %u\n",
++		  port->num, port->negotiation_status, medium_sts);
++
++	switch (medium_sts) {
++	case MEDIUM_DISCONNECTED:
++		send_logout = (port->negotiation_status
++				& (BIT(MEDIUM_CONNECTED)
++				   |  BIT(MEDIUM_READY_FOR_CONNECTION)));
++		send_logout = send_logout && !(port->negotiation_status &
++					       BIT(RECEIVE_LOGOUT));
++
++		tbt_net_tear_down(net_dev, send_logout);
++		port->negotiation_status = BIT(MEDIUM_DISCONNECTED);
++		break;
++
++	case MEDIUM_CONNECTED:
++		/*
++		 * check if meanwhile other side sent logout
++		 * if yes, just don't allow connection to take place
++		 * and disconnect path
++		 */
++		if (port->negotiation_status & BIT(RECEIVE_LOGOUT)) {
++			disconnect_path(port, STAGE_1 | STAGE_2);
++			break;
++		}
++
++		port->negotiation_status = BIT(MEDIUM_CONNECTED);
++
++		/* configure TX ring */
++		reg = iobase + REG_TX_RING_BASE +
++		      (port->local_path * REG_RING_STEP);
++
++		tx_ring_conf = (TBT_NET_NUM_TX_BUFS << REG_RING_SIZE_SHIFT) &
++				REG_RING_SIZE_MASK;
++
++		iowrite32(tx_ring_conf, reg + REG_RING_SIZE_OFFSET);
++
++		/* enable the rings */
++		reg = iobase + REG_TX_OPTIONS_BASE +
++		      (port->local_path * REG_OPTS_STEP);
++		if (port->enable_full_e2e) {
++			iowrite32(REG_OPTS_VALID | REG_OPTS_E2E_EN, reg);
++			hop_id = port->local_path;
++		} else {
++			iowrite32(REG_OPTS_VALID, reg);
++			hop_id = TBT_EXIST_BUT_UNUSED_HOPID;
++		}
++
++		reg = iobase + REG_RX_OPTIONS_BASE +
++		      (port->local_path * REG_OPTS_STEP);
++
++		sof_eof_en = (BIT(PDF_TBT_NET_START_OF_FRAME) <<
++			      REG_RX_OPTS_MASK_SOF_SHIFT) &
++			     REG_RX_OPTS_MASK_SOF_MASK;
++
++		sof_eof_en |= (BIT(PDF_TBT_NET_END_OF_FRAME) <<
++			       REG_RX_OPTS_MASK_EOF_SHIFT) &
++			      REG_RX_OPTS_MASK_EOF_MASK;
++
++		iowrite32(sof_eof_en, reg + REG_RX_OPTS_MASK_OFFSET);
++
++		e2e_en = REG_OPTS_VALID | REG_OPTS_E2E_EN;
++		e2e_en |= (hop_id << REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT) &
++			  REG_RX_OPTS_TX_E2E_HOP_ID_MASK;
++
++		iowrite32(e2e_en, reg);
++
++		/*
++		 * Configure RX ring
++		 * must be after enable ring for E2E to work
++		 */
++		reg = iobase + REG_RX_RING_BASE +
++		      (port->local_path * REG_RING_STEP);
++
++		rx_ring_conf = (TBT_NET_NUM_RX_BUFS << REG_RING_SIZE_SHIFT) &
++				REG_RING_SIZE_MASK;
++
++		rx_ring_conf |= (TBT_RING_MAX_FRAME_SIZE <<
++				 REG_RING_BUF_SIZE_SHIFT) &
++				REG_RING_BUF_SIZE_MASK;
++
++		iowrite32(rx_ring_conf, reg + REG_RING_SIZE_OFFSET);
++
++		spin_lock_irqsave(&port->nhi_ctxt->lock, flags);
++		/* enable RX interrupt */
++		iowrite32(ioread32(iobase + REG_RING_INTERRUPT_BASE) |
++			  REG_RING_INT_RX_PROCESSED(port->local_path,
++						    port->nhi_ctxt->num_paths),
++			  iobase + REG_RING_INTERRUPT_BASE);
++		spin_unlock_irqrestore(&port->nhi_ctxt->lock, flags);
++
++		netif_info(port, link, net_dev, "Thunderbolt(TM) Networking port %u - ready\n",
++			   port->num);
++
++		netif_carrier_on(net_dev);
++		netif_start_queue(net_dev);
++		break;
++
++	case MEDIUM_READY_FOR_CONNECTION:
++		/*
++		 * If medium is connected, no reason to go back,
++		 * keep it 'connected'.
++		 * If received login response, don't need to trigger login
++		 * retries again.
++		 */
++		if (unlikely(port->negotiation_status &
++			     (BIT(MEDIUM_CONNECTED) |
++			      BIT(RECEIVE_LOGIN_RESPONSE))))
++			break;
++
++		port->negotiation_status = BIT(MEDIUM_READY_FOR_CONNECTION);
++		port->login_retry_count = 0;
++		queue_delayed_work(port->nhi_ctxt->net_workqueue,
++				   &port->login_retry_work, 0);
++		break;
++
++	default:
++		break;
++	}
++}
++
++void negotiation_messages(struct net_device *net_dev,
++			  struct thunderbolt_ip_header *hdr)
++{
++	struct tbt_port *port = netdev_priv(net_dev);
++	__be32 status;
++
++	if (!netif_running(net_dev)) {
++		netif_dbg(port, link, net_dev, "port %u (%#x) is down\n",
++			  port->num, port->negotiation_status);
++		return;
++	}
++
++	switch (hdr->packet_type) {
++	case cpu_to_be32(THUNDERBOLT_IP_LOGIN_TYPE):
++		port->transmit_path = be32_to_cpu(
++			((struct thunderbolt_ip_login *)hdr)->transmit_path);
++		netif_dbg(port, link, net_dev, "port %u (%#x) receive ThunderboltIP login message with transmit path %u\n",
++			  port->num, port->negotiation_status,
++			  port->transmit_path);
++
++		if (unlikely(port->negotiation_status &
++			     BIT(MEDIUM_DISCONNECTED)))
++			break;
++
++		queue_work(port->nhi_ctxt->net_workqueue,
++			   &port->login_response_work);
++
++		if (unlikely(port->negotiation_status & BIT(MEDIUM_CONNECTED)))
++			break;
++
++		/*
++		 *  In case a login response received from other peer
++		 * on my login and acked their login for the first time,
++		 * so just approve the inter-domain now
++		 */
++		if (port->negotiation_status & BIT(RECEIVE_LOGIN_RESPONSE)) {
++			if (!(port->negotiation_status & BIT(RECEIVE_LOGIN)))
++				queue_work(port->nhi_ctxt->net_workqueue,
++					   &port->approve_inter_domain_work);
++		/*
++		 * if we reached the number of max retries or previous
++		 * logout, schedule another round of login retries
++		 */
++		} else if ((port->login_retry_count >= NUM_TX_LOGIN_RETRIES) ||
++			   (port->negotiation_status & BIT(RECEIVE_LOGOUT))) {
++			port->negotiation_status &= ~(BIT(RECEIVE_LOGOUT));
++			port->login_retry_count = 0;
++			queue_delayed_work(port->nhi_ctxt->net_workqueue,
++					   &port->login_retry_work, 0);
++		}
++
++		port->negotiation_status |= BIT(RECEIVE_LOGIN);
++
++		break;
++
++	case cpu_to_be32(THUNDERBOLT_IP_LOGIN_RESPONSE_TYPE):
++		status = ((struct thunderbolt_ip_login_response *)hdr)->status;
++		if (likely(status == 0)) {
++			netif_dbg(port, link, net_dev, "port %u (%#x) receive ThunderboltIP login response message\n",
++				  port->num,
++				  port->negotiation_status);
++
++			if (unlikely(port->negotiation_status &
++				     (BIT(MEDIUM_DISCONNECTED) |
++				      BIT(MEDIUM_CONNECTED) |
++				      BIT(RECEIVE_LOGIN_RESPONSE))))
++				break;
++
++			port->negotiation_status |=
++						BIT(RECEIVE_LOGIN_RESPONSE);
++			cancel_delayed_work_sync(&port->login_retry_work);
++			/*
++			 * login was received from other peer and now response
++			 * on our login so approve the inter-domain
++			 */
++			if (port->negotiation_status & BIT(RECEIVE_LOGIN))
++				queue_work(port->nhi_ctxt->net_workqueue,
++					   &port->approve_inter_domain_work);
++			else
++				port->negotiation_status &=
++							~BIT(RECEIVE_LOGOUT);
++		} else {
++			netif_notice(port, link, net_dev, "port %u (%#x) receive ThunderboltIP login response message with status %u\n",
++				     port->num,
++				     port->negotiation_status,
++				     be32_to_cpu(status));
++		}
++		break;
++
++	case cpu_to_be32(THUNDERBOLT_IP_LOGOUT_TYPE):
++		netif_dbg(port, link, net_dev, "port %u (%#x) receive ThunderboltIP logout message\n",
++			  port->num, port->negotiation_status);
++
++		queue_work(port->nhi_ctxt->net_workqueue,
++			   &port->status_reply_work);
++		port->negotiation_status &= ~(BIT(RECEIVE_LOGIN) |
++					      BIT(RECEIVE_LOGIN_RESPONSE));
++		port->negotiation_status |= BIT(RECEIVE_LOGOUT);
++
++		if (!(port->negotiation_status & BIT(MEDIUM_CONNECTED))) {
++			tbt_net_tear_down(net_dev, false);
++			break;
++		}
++
++		tbt_net_tear_down(net_dev, true);
++
++		port->negotiation_status |= BIT(MEDIUM_READY_FOR_CONNECTION);
++		port->negotiation_status &= ~(BIT(MEDIUM_CONNECTED));
++		break;
++
++	case cpu_to_be32(THUNDERBOLT_IP_STATUS_TYPE):
++		netif_dbg(port, link, net_dev, "port %u (%#x) receive ThunderboltIP status message with status %u\n",
++			  port->num, port->negotiation_status,
++			  be32_to_cpu(
++			  ((struct thunderbolt_ip_status *)hdr)->status));
++		break;
++	}
++}
++
++void nhi_dealloc_etherdev(struct net_device *net_dev)
++{
++	unregister_netdev(net_dev);
++	free_netdev(net_dev);
++}
++
++void nhi_update_etherdev(struct tbt_nhi_ctxt *nhi_ctxt,
++			 struct net_device *net_dev, struct genl_info *info)
++{
++	struct tbt_port *port = netdev_priv(net_dev);
++
++	nla_memcpy(&(port->route_str),
++		   info->attrs[NHI_ATTR_LOCAL_ROUTE_STRING],
++		   sizeof(port->route_str));
++	nla_memcpy(port->interdomain_remote_uniq_id,
++		   info->attrs[NHI_ATTR_REMOTE_UNIQUE_ID],
++		   sizeof(port->interdomain_remote_uniq_id));
++	port->local_depth = nla_get_u8(info->attrs[NHI_ATTR_LOCAL_DEPTH]);
++	port->enable_full_e2e = nhi_ctxt->support_full_e2e ?
++		nla_get_flag(info->attrs[NHI_ATTR_ENABLE_FULL_E2E]) : false;
++	port->match_frame_id =
++		nla_get_flag(info->attrs[NHI_ATTR_MATCH_FRAME_ID]);
++	port->frame_id = 0;
++}
++
++struct net_device *nhi_alloc_etherdev(struct tbt_nhi_ctxt *nhi_ctxt,
++				      u8 port_num, struct genl_info *info)
++{
++	struct tbt_port *port;
++	struct net_device *net_dev = alloc_etherdev(sizeof(struct tbt_port));
++	u32 hash;
++
++	if (!net_dev)
++		return NULL;
++
++	SET_NETDEV_DEV(net_dev, &nhi_ctxt->pdev->dev);
++
++	port = netdev_priv(net_dev);
++	port->nhi_ctxt = nhi_ctxt;
++	port->net_dev = net_dev;
++	nla_memcpy(port->interdomain_local_uniq_id,
++		   info->attrs[NHI_ATTR_LOCAL_UNIQUE_ID],
++		   sizeof(port->interdomain_local_uniq_id));
++	nhi_update_etherdev(nhi_ctxt, net_dev, info);
++	port->num = port_num;
++	port->local_path = PATH_FROM_PORT(nhi_ctxt->num_paths, port_num);
++
++	port->msg_enable = netif_msg_init(debug, DEFAULT_MSG_ENABLE);
++
++	net_dev->addr_assign_type = NET_ADDR_PERM;
++	/* unicast and locally administred MAC */
++	net_dev->dev_addr[0] = (port_num << 4) | 0x02;
++	hash = jhash2(port->interdomain_local_uniq_id,
++		      ARRAY_SIZE(port->interdomain_local_uniq_id), 0);
++
++	memcpy(net_dev->dev_addr + 1, &hash, sizeof(hash));
++	hash = jhash2(port->interdomain_local_uniq_id,
++		      ARRAY_SIZE(port->interdomain_local_uniq_id), hash);
++
++	net_dev->dev_addr[5] = hash & 0xff;
++
++	scnprintf(net_dev->name, sizeof(net_dev->name), "tbtnet%%dp%hhu",
++		  port_num);
++
++	INIT_DELAYED_WORK(&port->login_retry_work, login_retry);
++	INIT_WORK(&port->login_response_work, login_response);
++	INIT_WORK(&port->logout_work, logout);
++	INIT_WORK(&port->status_reply_work, status_reply);
++	INIT_WORK(&port->approve_inter_domain_work, approve_inter_domain);
++
++	netif_info(port, probe, net_dev,
++		   "Thunderbolt(TM) Networking port %u - MAC Address: %pM\n",
++		   port_num, net_dev->dev_addr);
++
++	return net_dev;
++}
+diff --git a/drivers/thunderbolt/icm/net.h b/drivers/thunderbolt/icm/net.h
+index 55693ea..d3ea801 100644
+--- a/drivers/thunderbolt/icm/net.h
++++ b/drivers/thunderbolt/icm/net.h
+@@ -33,6 +33,11 @@
+ #include <linux/semaphore.h>
+ #include <net/genetlink.h>
+ 
++#define APPLE_THUNDERBOLT_IP_PROTOCOL_UUID	{cpu_to_be32(0x9E588F79),\
++						 cpu_to_be32(0x478A1636),\
++						 cpu_to_be32(0x6456C697),\
++						 cpu_to_be32(0xDDC820A9)}
++
+ /*
+  * Each physical port contains 2 channels.
+  * Devices are exposed to user based on physical ports.
+@@ -43,6 +48,9 @@
+  * host channel/link which starts from 1.
+  */
+ #define PORT_NUM_FROM_LINK(link) (((link) - 1) / CHANNELS_PER_PORT_NUM)
++#define PORT_NUM_FROM_MSG(msg) PORT_NUM_FROM_LINK(((msg) & \
++			       INTER_DOMAIN_LINK_MASK) >> \
++			       INTER_DOMAIN_LINK_SHIFT)
+ 
+ #define TBT_TX_RING_FULL(prod, cons, size) ((((prod) + 1) % (size)) == (cons))
+ #define TBT_TX_RING_EMPTY(prod, cons) ((prod) == (cons))
+@@ -108,6 +116,20 @@ enum {
+ 	CC_SET_FW_MODE_FDA_DA_ALL
+ };
+ 
++struct route_string {
++	u32 hi;
++	u32 lo;
++};
++
++struct route_string_be {
++	__be32 hi;
++	__be32 lo;
++};
++
++#define L0_PORT_NUM(cpu_route_str_lo) ((cpu_route_str_lo) & GENMASK(5, 0))
++
++typedef u32 unique_id[4];
++typedef __be32 unique_id_be[4];
+ 
+ /* NHI genetlink attributes */
+ enum {
+@@ -121,12 +143,53 @@ enum {
+ 	NHI_ATTR_PDF,
+ 	NHI_ATTR_MSG_TO_ICM,
+ 	NHI_ATTR_MSG_FROM_ICM,
++	NHI_ATTR_LOCAL_ROUTE_STRING,
++	NHI_ATTR_LOCAL_UNIQUE_ID,
++	NHI_ATTR_REMOTE_UNIQUE_ID,
++	NHI_ATTR_LOCAL_DEPTH,
++	NHI_ATTR_ENABLE_FULL_E2E,
++	NHI_ATTR_MATCH_FRAME_ID,
+ 	__NHI_ATTR_MAX,
+ };
+ #define NHI_ATTR_MAX (__NHI_ATTR_MAX - 1)
+ 
++/* ThunderboltIP Packet Types */
++enum thunderbolt_ip_packet_type {
++	THUNDERBOLT_IP_LOGIN_TYPE,
++	THUNDERBOLT_IP_LOGIN_RESPONSE_TYPE,
++	THUNDERBOLT_IP_LOGOUT_TYPE,
++	THUNDERBOLT_IP_STATUS_TYPE
++};
++
++struct thunderbolt_ip_header {
++	struct route_string_be route_str;
++	__be32 attributes;
++#define HDR_ATTR_LEN_SHIFT	0
++#define HDR_ATTR_LEN_MASK	GENMASK(5, HDR_ATTR_LEN_SHIFT)
++#define HDR_ATTR_SEQ_NUM_SHIFT	27
++#define HDR_ATTR_SEQ_NUM_MASK	GENMASK(28, HDR_ATTR_SEQ_NUM_SHIFT)
++	unique_id_be apple_tbt_ip_proto_uuid;
++	unique_id_be initiator_uuid;
++	unique_id_be target_uuid;
++	__be32 packet_type;
++	__be32 command_id;
++};
++
++enum medium_status {
++	/* Handle cable disconnection or peer down */
++	MEDIUM_DISCONNECTED,
++	/* Connection is fully established */
++	MEDIUM_CONNECTED,
++	/*  Awaiting for being approved by user-space module */
++	MEDIUM_READY_FOR_APPROVAL,
++	/* Approved by user-space, awaiting for establishment flow to finish */
++	MEDIUM_READY_FOR_CONNECTION,
++	NUM_MEDIUM_STATUSES
++};
++
+ struct port_net_dev {
+ 	struct net_device *net_dev;
++	enum medium_status medium_sts;
+ 	struct mutex state_mutex;
+ };
+ 
+@@ -196,5 +259,16 @@ struct tbt_nhi_ctxt {
+ int nhi_send_message(struct tbt_nhi_ctxt *nhi_ctxt, enum pdf_value pdf,
+ 		      u32 msg_len, const u8 *msg, bool ignore_icm_resp);
+ int nhi_mailbox(struct tbt_nhi_ctxt *nhi_ctxt, u32 cmd, u32 data, bool deinit);
++struct net_device *nhi_alloc_etherdev(struct tbt_nhi_ctxt *nhi_ctxt,
++				      u8 port_num, struct genl_info *info);
++void nhi_update_etherdev(struct tbt_nhi_ctxt *nhi_ctxt,
++			 struct net_device *net_dev, struct genl_info *info);
++void nhi_dealloc_etherdev(struct net_device *net_dev);
++void negotiation_events(struct net_device *net_dev,
++			enum medium_status medium_sts);
++void negotiation_messages(struct net_device *net_dev,
++			  struct thunderbolt_ip_header *hdr);
++void tbt_net_rx_msi(struct net_device *net_dev);
++void tbt_net_tx_msi(struct net_device *net_dev);
+ 
+ #endif
+-- 
+2.7.4
 
-Indent all the following constants with tabs, not spaces.
-
-> +#define PCIE_CLIENT_BASE                   0x0
-> +#define PCIE_RC_CONFIG_NORMAL_BASE         0x800000
-> +#define PCIE_RC_CONFIG_BASE                0xa00000
-
-> +#define PCIE_RC_CONFIG_LCSR_OFFSET         0xd0
-> +#define PCIE_RC_CONFIG_LCSR_BW_ENA         0x1
-> +#define PCIE_RC_CONFIG_LCSR_LBMIE          BIT(10)
-> +#define PCIE_RC_CONFIG_LCSR_LABIE          BIT(11)
-> +#define PCIE_RC_CONFIG_LCSR_LBMS           BIT(30)
-> +#define PCIE_RC_CONFIG_LCSR_LAMS           BIT(31)
-
-This section looks like the offset and fields in one register (LCSR).
-
-1) Remove "_OFFSET".  You don't use it on similar registers below,
-e.g., IE_CORE_OB_REGION_ADDR1.
-
-2) Indent the field definitions a space or two to show the association
-with the register name, e.g.,
-
-  #define PCIE_RC_CONFIG_LCSR                0xd0
-  #define   PCIE_RC_CONFIG_LCSR_BW_ENA       0x1
-
-3) Make the field definition the same width as the register.  In this
-case, you use readl, so it would be:
-
-  #define   PCIE_RC_CONFIG_LCSR_BW_ENA       0x00000001
-
-4) Use the same type of definition (plain hex value vs. BIT()) for all
-fields in a register.  BIT(x) likely maps to your documentation, but
-my personal preference is the plain hex value because it's simpler to
-debug, it shows the register width, and it works nicely for multi-bit
-fields.  I guess GENMASK() is one way to handle multi-bit fields, too.
-Whichever you choose, use it consistently.
-
-> +#define PCIE_CORE_LINK_CTRL_STATUS         0x8000d0
-
-Unused, remove.
-
-> +#define PCIE_CORE_CTRL_MGMT_BASE           0x900000
-> +#define PCIE_CORE_AXI_CONF_BASE            0xc00000
-> +#define PCIE_CORE_AXI_INBOUND_BASE         0xc00800
-> +#define PCIE_CLIENT_BASIC_STATUS0          0x44
-
-Unused, remove.
-
-> +#define PCIE_CLIENT_BASIC_STATUS1          0x48
-> +#define PCIE_CLIENT_INT_MASK               0x4c
-> +#define PCIE_CLIENT_INT_STATUS             0x50
-> +#define PCIE_CLIENT_INT_LEGACY_DONE        BIT(15)
-> +#define PCIE_CLIENT_INT_MSG                BIT(14)
-> +#define PCIE_CLIENT_INT_HOT_RST            BIT(13)
-> +#define PCIE_CLIENT_INT_DPA                BIT(12)
-> +#define PCIE_CLIENT_INT_FATAL_ERR          BIT(11)
-> +#define PCIE_CLIENT_INT_NFATAL_ERR         BIT(10)
-> +#define PCIE_CLIENT_INT_CORR_ERR           BIT(9)
-> +#define PCIE_CLIENT_INT_INTD               BIT(8)
-> +#define PCIE_CLIENT_INT_INTC               BIT(7)
-> +#define PCIE_CLIENT_INT_INTB               BIT(6)
-> +#define PCIE_CLIENT_INT_INTA               BIT(5)
-> +#define PCIE_CLIENT_INT_LOCAL              BIT(4)
-> +#define PCIE_CLIENT_INT_UDMA               BIT(3)
-> +#define PCIE_CLIENT_INT_PHY                BIT(2)
-> +#define PCIE_CLIENT_INT_HOT_PLUG           BIT(1)
-> +#define PCIE_CLIENT_INT_PWR_STCG           BIT(0)
-> +#define PCIE_RC_CONFIG_RID_CCR             0x8
-> +#define PCIE_RC_CONFIG_LCS                 0xd0
-> +#define PCIE_RC_BAR_CONF                   0x300
-> +#define PCIE_CORE_OB_REGION_ADDR1          0x4
-> +#define PCIE_CORE_OB_REGION_DESC0          0x8
-> +#define PCIE_CORE_OB_REGION_DESC1          0xc
-> +#define PCIE_CORE_OB_REGION_ADDR0_NUM_BITS 0x3fU
-
-Why do some of these constants have "U" and others not?  I don't think
-they're needed.
-
-> +#define PCIE_CORE_OB_REGION_ADDR0_LO_ADDR  0xffffff00U
-> +#define PCIE_CORE_IB_REGION_ADDR0_NUM_BITS 0x3fU
-> +#define PCIE_CORE_IB_REGION_ADDR0_LO_ADDR  0xffffff00U
-> +#define PCIE_RP_IB_ADDR_TRANS              0x4
-> +#define PCIE_CORE_INT_MASK                 0x900210
-> +#define PCIE_CORE_INT_STATUS               0x90020c
-> +#define PCIE_CORE_INT_PRFPE                BIT(0)
-> +#define PCIE_CORE_INT_CRFPE                BIT(1)
-> +#define PCIE_CORE_INT_RRPE                 BIT(2)
-> +#define PCIE_CORE_INT_PRFO                 BIT(3)
-> +#define PCIE_CORE_INT_CRFO                 BIT(4)
-> +#define PCIE_CORE_INT_RT                   BIT(5)
-> +#define PCIE_CORE_INT_RTR                  BIT(6)
-> +#define PCIE_CORE_INT_PE                   BIT(7)
-> +#define PCIE_CORE_INT_MTR                  BIT(8)
-> +#define PCIE_CORE_INT_UCR                  BIT(9)
-> +#define PCIE_CORE_INT_FCE                  BIT(10)
-> +#define PCIE_CORE_INT_CT                   BIT(11)
-> +#define PCIE_CORE_INT_UTC                  BIT(18)
-> +#define PCIE_CORE_INT_MMVC                 BIT(19)
-> +
-> +/* Size of one AXI Region (not Region 0) */
-> +#define AXI_REGION_SIZE                    BIT(20)
-> +/* Size of Region 0, equal to sum of sizes of other regions */
-> +#define AXI_REGION_0_SIZE                 (32 * (0x1 << 20))
-> +#define OB_REG_SIZE_SHIFT                  5
-> +#define IB_ROOT_PORT_REG_SIZE_SHIFT        3
-> +#define AXI_WRAPPER_IO_WRITE               0x6
-> +#define AXI_WRAPPER_MEM_WRITE              0x2
-
-This could do with a blank line.  The below are not directly
-associated with the registers above.
-
-> +#define MAX_AXI_IB_ROOTPORT_REGION_NUM     3
-> +#define MIN_AXI_ADDR_BITS_PASSED           8
-> +#define ROCKCHIP_VENDOR_ID                 0x1d87
-> +#define PCIE_ECAM_BUS(x)		  (((x) & 0xff) << 20)
-> +#define PCIE_ECAM_DEV(x)		  (((x) & 0x1f) << 15)
-> +#define PCIE_ECAM_FUNC(x)		  (((x) & 0x7) << 12)
-> +#define PCIE_ECAM_REG(x)		  (((x) & 0xfff) << 0)
-> +#define PCIE_ECAM_ADDR(bus, dev, func, reg) \
-> +	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
-> +	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
-> +
-> +/*
-> +  * The higher 16-bit of this register is used for write protection
-> +  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
-> +  */
-> +#define HIWORD_UPDATE(val, mask, shift) \
-> +	((val) << (shift) | (mask) << ((shift) + 16))
-> +
-> +#define RC_REGION_0_ADDR_TRANS_H          0x00000000
-> +#define RC_REGION_0_ADDR_TRANS_L          0x00000000
-> +#define RC_REGION_0_PASS_BITS             (25 - 1)
-> +#define RC_REGION_1_ADDR_TRANS_H          0x00000000
-> +#define RC_REGION_1_ADDR_TRANS_L          0x00400000
-> +#define RC_REGION_1_PASS_BITS             (20 - 1)
-> +#define MAX_AXI_WRAPPER_REGION_NUM        33
-> +#define PCIE_CORE_LCSR_RETRAIN_LINK       BIT(5)
-> +#define PCIE_CLIENT_CONF_ENABLE           1
-> +#define PCIE_CLIENT_CONF_ENABLE_SHIFT     0
-> +#define PCIE_CLIENT_CONF_ENABLE_MASK      0x1
-> +#define PCIE_CLIENT_LINK_TRAIN_ENABLE     1
-> +#define PCIE_CLIENT_LINK_TRAIN_SHIFT      1
-> +#define PCIE_CLIENT_LINK_TRAIN_MASK       0x1
-> +#define PCIE_CLIENT_ARI_ENABLE            1
-> +#define PCIE_CLIENT_ARI_ENABLE_SHIFT      3
-> +#define PCIE_CLIENT_ARI_ENABLE_MASK       0x1
-> +#define PCIE_CLIENT_CONF_LANE_NUM(x)      (x / 2)
-> +#define PCIE_CLIENT_CONF_LANE_NUM_SHIFT   4
-> +#define PCIE_CLIENT_CONF_LANE_NUM_MASK    0x3
-> +#define PCIE_CLIENT_MODE_RC               1
-> +#define PCIE_CLIENT_MODE_SHIFT            6
-> +#define PCIE_CLIENT_MODE_MASK             0x1
-> +#define PCIE_CLIENT_GEN_SEL_2             1
-> +#define PCIE_CLIENT_GEN_SEL_1             0
-> +#define PCIE_CLIENT_GEN_SEL_SHIFT         7
-> +#define PCIE_CLIENT_GEN_SEL_MASK          0x1
-> +#define PCIE_CLIENT_LINK_STATUS_UP        0x3
-> +#define PCIE_CLIENT_LINK_STATUS_SHIFT     20
-> +#define PCIE_CLIENT_LINK_STATUS_MASK      0x3
-> +#define PCIE_CORE_PL_CONF_SPEED_2_5G      0x0
-> +#define PCIE_CORE_PL_CONF_SPEED_5G        0x1
-> +#define PCIE_CORE_PL_CONF_SPEED_8G        0x2
-> +#define PCIE_CORE_PL_CONF_SPEED_SHIFT     3
-> +#define PCIE_CORE_PL_CONF_SPEED_MASK      0x3
-> +#define PCIE_CORE_PL_CONF_LANE_SHIFT      1
-> +#define PCIE_CORE_PL_CONF_LANE_MASK       0x3
-> +#define PCIE_CORE_RC_CONF_SCC_SHIFT       16
-> +
-> +#define ROCKCHIP_PCIE_RPIFR1_INTR_MASK    GENMASK(8, 5)
-> +#define ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT   5
-> +
-> +#define PCIE_CORE_INT \
-> +		(PCIE_CORE_INT_PRFPE | PCIE_CORE_INT_CRFPE | \
-> +		 PCIE_CORE_INT_RRPE | PCIE_CORE_INT_CRFO | \
-> +		 PCIE_CORE_INT_RT | PCIE_CORE_INT_RTR | \
-> +		 PCIE_CORE_INT_PE | PCIE_CORE_INT_MTR | \
-> +		 PCIE_CORE_INT_UCR | PCIE_CORE_INT_FCE | \
-> +		 PCIE_CORE_INT_CT | PCIE_CORE_INT_UTC | \
-> +		 PCIE_CORE_INT_MMVC)
-> +
-> +#define PCIE_CLIENT_INT_SUBSYSTEM \
-> +	(PCIE_CLIENT_INT_PWR_STCG | PCIE_CLIENT_INT_HOT_PLUG | \
-> +	PCIE_CLIENT_INT_PHY | PCIE_CLIENT_INT_UDMA | \
-> +	PCIE_CLIENT_INT_LOCAL)
-> +
-> +#define PCIE_CLIENT_INT_LEGACY \
-> +	(PCIE_CLIENT_INT_INTA | PCIE_CLIENT_INT_INTB | \
-> +	PCIE_CLIENT_INT_INTC | PCIE_CLIENT_INT_INTD)
-> +
-> +#define PCIE_CLIENT_INT_CLI \
-> +	(PCIE_CLIENT_INT_CORR_ERR | PCIE_CLIENT_INT_NFATAL_ERR | \
-> +	PCIE_CLIENT_INT_FATAL_ERR | PCIE_CLIENT_INT_DPA | \
-> +	PCIE_CLIENT_INT_HOT_RST | PCIE_CLIENT_INT_MSG | \
-> +	PCIE_CLIENT_INT_LEGACY_DONE | PCIE_CLIENT_INT_LEGACY | \
-> +	PCIE_CLIENT_INT_PHY)
-> +
-> +struct rockchip_pcie_port {
-> +	void	__iomem *reg_base;
-> +	void	__iomem *apb_base;
-> +	struct	phy *phy;
-> +	struct	reset_control *core_rst;
-> +	struct	reset_control *mgmt_rst;
-> +	struct	reset_control *mgmt_sticky_rst;
-> +	struct	reset_control *pipe_rst;
-> +	struct	clk *aclk_pcie;
-> +	struct	clk *aclk_perf_pcie;
-> +	struct	clk *hclk_pcie;
-> +	struct	clk *clk_pcie_pm;
-> +	struct	regulator *vpcie3v3; /* 3.3V power supply */
-> +	struct	regulator *vpcie1v8; /* 1.8V power supply */
-> +	struct	regulator *vpcie0v9; /* 0.9V power supply */
-> +	struct	gpio_desc *ep_gpio;
-> +	u32	lanes;
-> +	u8	root_bus_nr;
-> +	struct	device *dev;
-> +	struct	irq_domain *irq_domain;
-> +};
-> +
-> +static inline u32 pcie_read(struct rockchip_pcie_port *port, u32 reg)
-> +{
-> +	return readl(port->apb_base + reg);
-> +}
-> +
-> +static inline void pcie_write(struct rockchip_pcie_port *port,
-> +			      u32 val, u32 reg)
-> +{
-> +	writel(val, port->apb_base + reg);
-> +}
-> +
-> +static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *port)
-> +{
-> +	u32 status;
-> +
-> +	status = pcie_read(port, PCIE_RC_CONFIG_BASE +
-> +				 PCIE_RC_CONFIG_LCSR_OFFSET);
-> +	status |= (PCIE_RC_CONFIG_LCSR_LBMIE | PCIE_RC_CONFIG_LCSR_LABIE);
-> +	pcie_write(port, status, PCIE_RC_CONFIG_BASE +
-> +				 PCIE_RC_CONFIG_LCSR_OFFSET);
-> +}
-> +
-> +static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *port)
-> +{
-> +	u32 status;
-> +
-> +	status = pcie_read(port, PCIE_RC_CONFIG_BASE +
-> +				 PCIE_RC_CONFIG_LCSR_OFFSET);
-> +	status |= (PCIE_RC_CONFIG_LCSR_LBMS | PCIE_RC_CONFIG_LCSR_LAMS);
-> +	pcie_write(port, status, PCIE_RC_CONFIG_BASE +
-> +				 PCIE_RC_CONFIG_LCSR_OFFSET);
-> +}
-> +
-> +static int rockchip_pcie_valid_config(struct rockchip_pcie_port *pp,
-> +				      struct pci_bus *bus, int dev)
-> +{
-> +	/* access only one slot on each root port */
-> +	if (bus->number == pp->root_bus_nr && dev > 0)
-> +		return 0;
-> +
-> +	/*
-> +	 * do not read more than one device on the bus directly attached
-> +	 * to RC's downstream side.
-> +	 */
-> +	if (bus->primary == pp->root_bus_nr && dev > 0)
-> +		return 0;
-> +
-> +	return 1;
-> +}
-> +
-> +static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *pp,
-> +				     int where, int size,
-> +				     u32 *val)
-> +{
-> +	void __iomem *addr = pp->apb_base + PCIE_RC_CONFIG_BASE + where;
-> +
-> +	if (!IS_ALIGNED((uintptr_t)addr, size)) {
-> +		*val = 0;
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +	}
-> +
-> +	if (size == 4) {
-> +		*val = readl(addr);
-> +	} else if (size == 2) {
-> +		*val = readw(addr);
-> +	} else if (size == 1) {
-> +		*val = readb(addr);
-> +	} else {
-> +		*val = 0;
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +	}
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *pp,
-> +				     int where, int size, u32 val)
-> +{
-> +	u32 mask, tmp, offset;
-> +
-> +	offset = (where & (~0x3));
-> +
-> +	if (size == 4) {
-> +		writel(val, pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
-> +		return PCIBIOS_SUCCESSFUL;
-> +	}
-> +
-> +	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
-> +
-> +	tmp = readl(pp->apb_base + PCIE_RC_CONFIG_BASE + offset) & mask;
-> +	tmp |= val << ((where & 0x3) * 8);
-> +	writel(tmp, pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
-> +
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *pp,
-> +				       struct pci_bus *bus, u32 devfn,
-> +				       int where, int size, u32 *val)
-> +{
-> +	u32 busdev;
-> +
-> +	busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
-> +				PCI_FUNC(devfn), where);
-> +
-> +	if (!IS_ALIGNED(busdev, size)) {
-> +		*val = 0;
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +	}
-> +
-> +	if (size == 4) {
-> +		*val = readl(pp->reg_base + busdev);
-> +	} else if (size == 2) {
-> +		*val = readw(pp->reg_base + busdev);
-> +	} else if (size == 1) {
-> +		*val = readb(pp->reg_base + busdev);
-> +	} else {
-> +		*val = 0;
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +	}
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *pp,
-> +				       struct pci_bus *bus, u32 devfn,
-> +				       int where, int size, u32 val)
-> +{
-> +	u32 busdev;
-> +
-> +	busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
-> +				PCI_FUNC(devfn), where);
-> +	if (!IS_ALIGNED(busdev, size))
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +
-> +	if (size == 4)
-> +		writel(val, pp->reg_base + busdev);
-> +	else if (size == 2)
-> +		writew(val, pp->reg_base + busdev);
-> +	else if (size == 1)
-> +		writeb(val, pp->reg_base + busdev);
-> +	else
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
-> +				 int size, u32 *val)
-> +{
-> +	struct rockchip_pcie_port *pp = bus->sysdata;
-> +
-> +	if (rockchip_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
-> +		*val = 0xffffffff;
-> +		return PCIBIOS_DEVICE_NOT_FOUND;
-> +	}
-> +
-> +	if (bus->number != pp->root_bus_nr)
-> +		return rockchip_pcie_rd_other_conf(pp, bus, devfn,
-> +						  where, size, val);
-> +
-> +	return rockchip_pcie_rd_own_conf(pp, where, size, val);
-
-You only did this half-way:
-
-1) Do this instead to avoid the negation:
-
-  if (bus->number == pp->root_bus_nr)
-    return rockchip_pcie_rd_own_conf(pp, where, size, val);
-
-  return rockchip_pcie_rd_other_conf(pp, bus, devfn, ...);
-
-2) Apply the same change to rockchip_pcie_wr_conf() below.
-
-> +}
-> +
-> +static int rockchip_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
-> +				 int where, int size, u32 val)
-> +{
-> +	struct rockchip_pcie_port *pp = bus->sysdata;
-> +	int ret;
-> +
-> +	if (rockchip_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
-> +		return PCIBIOS_DEVICE_NOT_FOUND;
-> +
-> +	if (bus->number != pp->root_bus_nr)
-> +		ret = rockchip_pcie_wr_other_conf(pp, bus, devfn,
-> +						  where, size, val);
-> +	else
-> +		ret = rockchip_pcie_wr_own_conf(pp, where, size, val);
-> +
-> +	return ret;
-> +}
-> +
-> +static struct pci_ops rockchip_pcie_ops = {
-> +	.read = rockchip_pcie_rd_conf,
-> +	.write = rockchip_pcie_wr_conf,
-> +};
-> +
-> +/**
-> + * rockchip_pcie_init_port - Initialize hardware
-> + * @port: PCIe port information
-> + */
-> +static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
-> +{
-> +	int err;
-> +	u32 status;
-> +	unsigned long timeout;
-> +
-> +	gpiod_set_value(port->ep_gpio, 0);
-> +
-> +	err = phy_init(port->phy);
-> +	if (err < 0) {
-> +		dev_err(port->dev, "fail to init phy, err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_assert(port->core_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "assert core_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_assert(port->mgmt_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "assert mgmt_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_assert(port->mgmt_sticky_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "assert mgmt_sticky_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_assert(port->pipe_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "assert pipe_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	pcie_write(port,
-> +		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
-> +				 PCIE_CLIENT_CONF_ENABLE_MASK,
-> +				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
-> +		   HIWORD_UPDATE(PCIE_CLIENT_CONF_LANE_NUM(port->lanes),
-> +				 PCIE_CLIENT_CONF_LANE_NUM_MASK,
-> +				 PCIE_CLIENT_CONF_LANE_NUM_SHIFT) |
-> +		   HIWORD_UPDATE(PCIE_CLIENT_MODE_RC,
-> +				 PCIE_CLIENT_MODE_MASK,
-> +				 PCIE_CLIENT_MODE_SHIFT) |
-> +		   HIWORD_UPDATE(PCIE_CLIENT_ARI_ENABLE,
-> +				 PCIE_CLIENT_ARI_ENABLE_MASK,
-> +				 PCIE_CLIENT_ARI_ENABLE_SHIFT) |
-> +		   HIWORD_UPDATE(PCIE_CLIENT_GEN_SEL_2,
-> +				 PCIE_CLIENT_GEN_SEL_MASK,
-> +				 PCIE_CLIENT_GEN_SEL_SHIFT),
-> +		   PCIE_CLIENT_BASE);
-> +
-> +	err = phy_power_on(port->phy);
-> +	if (err) {
-> +		dev_err(port->dev, "fail to power on phy, err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_deassert(port->core_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "deassert core_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_deassert(port->mgmt_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "deassert mgmt_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_deassert(port->mgmt_sticky_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "deassert mgmt_sticky_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err = reset_control_deassert(port->pipe_rst);
-> +	if (err) {
-> +		dev_err(port->dev, "deassert pipe_rst err %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	/* Enable Gen1 training */
-> +	pcie_write(port,
-> +		   HIWORD_UPDATE(PCIE_CLIENT_LINK_TRAIN_ENABLE,
-> +				 PCIE_CLIENT_LINK_TRAIN_MASK,
-> +				 PCIE_CLIENT_LINK_TRAIN_SHIFT),
-> +		   PCIE_CLIENT_BASE);
-> +
-> +	gpiod_set_value(port->ep_gpio, 1);
-> +
-> +	/* 500ms timeout value should be enough for Gen1/2 training */
-> +	timeout = jiffies + msecs_to_jiffies(500);
-> +
-> +	for (;;) {
-> +		status = pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
-> +		if (((status >> PCIE_CLIENT_LINK_STATUS_SHIFT) &
-> +		      PCIE_CLIENT_LINK_STATUS_MASK) ==
-> +		      PCIE_CLIENT_LINK_STATUS_UP) {
-> +			dev_dbg(port->dev, "PCIe link training gen1 pass!\n");
-> +			break;
-> +		}
-> +
-> +		msleep(20);
-> +
-> +		if (!time_before(jiffies, timeout)) {
-> +			err = -ETIMEDOUT;
-> +			break;
-> +		}
-> +
-> +	}
-> +
-> +	/* Double check gen1 training */
-> +	if (err) {
-> +		status = pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
-> +		err = (((status >> PCIE_CLIENT_LINK_STATUS_SHIFT) &
-> +			PCIE_CLIENT_LINK_STATUS_MASK) ==
-> +			PCIE_CLIENT_LINK_STATUS_UP) ? 0 : -ETIMEDOUT;
-> +		if (err) {
-> +			dev_err(port->dev, "PCIe link training gen1 timeout!\n");
-> +			return err;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Enable retrain for gen2. This should be configured only after
-> +	 * gen1 finished.
-> +	 */
-> +	status = pcie_read(port,
-> +			   PCIE_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
-> +	status |= PCIE_CORE_LCSR_RETRAIN_LINK;
-> +	pcie_write(port, status,
-> +		   PCIE_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
-> +
-> +	timeout = jiffies + msecs_to_jiffies(500);
-> +	for (;;) {
-> +		status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
-> +		if (((status >> PCIE_CORE_PL_CONF_SPEED_SHIFT) &
-> +		     PCIE_CORE_PL_CONF_SPEED_MASK) ==
-> +		     PCIE_CORE_PL_CONF_SPEED_5G) {
-> +			dev_dbg(port->dev, "PCIe link training gen2 pass!\n");
-> +			break;
-> +		}
-> +
-> +		msleep(20);
-> +
-> +		if (!time_before(jiffies, timeout)) {
-> +			err = -ETIMEDOUT;
-> +			break;
-> +		}
-> +	}
-> +
-> +	/* Double check gen2 training */
-> +	if (err) {
-> +		status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
-> +		err = (((status >> PCIE_CORE_PL_CONF_SPEED_SHIFT) &
-> +			PCIE_CORE_PL_CONF_SPEED_MASK) ==
-> +			PCIE_CORE_PL_CONF_SPEED_5G) ? 0 : -ETIMEDOUT;
-> +		if (err)
-> +			dev_dbg(port->dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
-> +	}
-> +
-> +	/* Check the final link width from negotiated lane counter from MGMT */
-> +	status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
-> +	status =  0x1 << ((status >> PCIE_CORE_PL_CONF_LANE_SHIFT) &
-> +			   PCIE_CORE_PL_CONF_LANE_MASK);
-> +	dev_dbg(port->dev, "current link width is x%d\n", status);
-> +
-> +	pcie_write(port, ROCKCHIP_VENDOR_ID, PCIE_RC_CONFIG_BASE);
-> +	pcie_write(port, PCI_CLASS_BRIDGE_PCI << PCIE_CORE_RC_CONF_SCC_SHIFT,
-> +		   PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_RID_CCR);
-> +	pcie_write(port, 0x0, PCIE_CORE_CTRL_MGMT_BASE + PCIE_RC_BAR_CONF);
-> +
-> +	pcie_write(port, (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
-> +		   PCIE_CORE_AXI_CONF_BASE);
-> +	pcie_write(port, RC_REGION_0_ADDR_TRANS_H,
-> +		   PCIE_CORE_AXI_CONF_BASE + PCIE_CORE_OB_REGION_ADDR1);
-> +	pcie_write(port, 0x0080000a,
-> +		   PCIE_CORE_AXI_CONF_BASE + PCIE_CORE_OB_REGION_DESC0);
-> +	pcie_write(port, 0x0,
-> +		   PCIE_CORE_AXI_CONF_BASE + PCIE_CORE_OB_REGION_DESC1);
-> +
-> +	return 0;
-> +}
-> +
-> +static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
-> +{
-> +	struct rockchip_pcie_port *pp = arg;
-> +	u32 reg;
-> +	u32 sub_reg;
-> +
-> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
-> +	if (reg & PCIE_CLIENT_INT_LOCAL) {
-> +		dev_dbg(pp->dev, "local interrupt received\n");
-> +		sub_reg = pcie_read(pp, PCIE_CORE_INT_STATUS);
-> +		if (sub_reg & PCIE_CORE_INT_PRFPE)
-> +			dev_dbg(pp->dev, "parity error detected while reading from the PNP receive FIFO RAM\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_CRFPE)
-> +			dev_dbg(pp->dev, "parity error detected while reading from the Completion Receive FIFO RAM\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_RRPE)
-> +			dev_dbg(pp->dev, "parity error detected while reading from replay buffer RAM\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_PRFO)
-> +			dev_dbg(pp->dev, "overflow occurred in the PNP receive FIFO\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_CRFO)
-> +			dev_dbg(pp->dev, "overflow occurred in the completion receive FIFO\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_RT)
-> +			dev_dbg(pp->dev, "replay timer timed out\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_RTR)
-> +			dev_dbg(pp->dev, "replay timer rolled over after 4 transmissions of the same TLP\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_PE)
-> +			dev_dbg(pp->dev, "phy error detected on receive side\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_MTR)
-> +			dev_dbg(pp->dev, "malformed TLP received from the link\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_UCR)
-> +			dev_dbg(pp->dev, "malformed TLP received from the link\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_FCE)
-> +			dev_dbg(pp->dev, "an error was observed in the flow control advertisements from the other side\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_CT)
-> +			dev_dbg(pp->dev, "a request timed out waiting for completion\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_UTC)
-> +			dev_dbg(pp->dev, "unmapped TC error\n");
-> +
-> +		if (sub_reg & PCIE_CORE_INT_MMVC)
-> +			dev_dbg(pp->dev, "MSI mask register changes\n");
-> +
-> +		pcie_write(pp, sub_reg, PCIE_CORE_INT_STATUS);
-> +	} else if (reg & PCIE_CLIENT_INT_PHY) {
-> +		dev_dbg(pp->dev, "phy link changes\n");
-> +		rockchip_pcie_clr_bw_int(pp);
-> +	}
-> +
-> +	pcie_write(pp, reg & PCIE_CLIENT_INT_LOCAL, PCIE_CLIENT_INT_STATUS);
-> +
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
-> +{
-> +	struct rockchip_pcie_port *pp = arg;
-> +	u32 reg;
-> +
-> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
-> +	if (reg & PCIE_CLIENT_INT_LEGACY_DONE)
-> +		dev_dbg(pp->dev, "legacy done interrupt received\n");
-> +
-> +	if (reg & PCIE_CLIENT_INT_MSG)
-> +		dev_dbg(pp->dev, "message done interrupt received\n");
-> +
-> +	if (reg & PCIE_CLIENT_INT_HOT_RST)
-> +		dev_dbg(pp->dev, "hot reset interrupt received\n");
-> +
-> +	if (reg & PCIE_CLIENT_INT_DPA)
-> +		dev_dbg(pp->dev, "dpa interrupt received\n");
-> +
-> +	if (reg & PCIE_CLIENT_INT_FATAL_ERR)
-> +		dev_dbg(pp->dev, "fatal error interrupt received\n");
-> +
-> +	if (reg & PCIE_CLIENT_INT_NFATAL_ERR)
-> +		dev_dbg(pp->dev, "no fatal error interrupt received\n");
-> +
-> +	if (reg & PCIE_CLIENT_INT_CORR_ERR)
-> +		dev_dbg(pp->dev, "correctable error interrupt received\n");
-> +
-> +	if (reg & PCIE_CLIENT_INT_PHY)
-> +		dev_dbg(pp->dev, "phy interrupt received\n");
-> +
-> +	pcie_write(pp, reg & (PCIE_CLIENT_INT_LEGACY_DONE |
-> +			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
-> +			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
-> +			      PCIE_CLIENT_INT_NFATAL_ERR |
-> +			      PCIE_CLIENT_INT_CORR_ERR),
-> +			      PCIE_CLIENT_INT_STATUS |
-> +			      PCIE_CLIENT_INT_PHY);
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
-> +{
-> +	struct irq_chip *chip = irq_desc_get_chip(desc);
-> +	struct rockchip_pcie_port *port;
-> +	u32 reg;
-> +	u32 hwirq;
-> +	u32 virq;
-> +
-> +	chained_irq_enter(chip, desc);
-> +	port = irq_desc_get_handler_data(desc);
-> +
-> +	reg = pcie_read(port, PCIE_CLIENT_INT_STATUS);
-> +	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
-> +	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
-> +
-> +	while (reg) {
-> +		hwirq = ffs(reg) - 1;
-> +		reg &= ~BIT(hwirq);
-> +
-> +		virq = irq_find_mapping(port->irq_domain, hwirq);
-> +		if (virq)
-> +			generic_handle_irq(virq);
-> +		else
-> +			dev_err(port->dev, "unexpected IRQ, INT%d\n", hwirq);
-> +	}
-> +
-> +	chained_irq_exit(chip, desc);
-> +}
-> +
-> +
-> +/**
-> + * rockchip_pcie_parse_dt - Parse Device tree
-
-s/Device tree/Device Tree/
-
-> + * @port: PCIe port information
-> + *
-> + * Return: '0' on success and error value on failure
-> + */
-> +static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *port)
-> +{
-> +	struct device *dev = port->dev;
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct device_node *node = dev->of_node;
-> +	struct resource *regs;
-> +	int irq;
-> +	int err;
-> +
-> +	regs = platform_get_resource_byname(pdev,
-> +					    IORESOURCE_MEM,
-> +					    "axi-base");
-> +	if (!regs) {
-> +		dev_err(dev, "missing axi-base property\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	port->reg_base = devm_ioremap_resource(dev, regs);
-> +	if (IS_ERR(port->reg_base))
-> +		return PTR_ERR(port->reg_base);
-> +
-> +	regs = platform_get_resource_byname(pdev,
-> +					    IORESOURCE_MEM,
-> +					    "apb-base");
-> +	if (!regs) {
-> +		dev_err(dev, "missing apb-base property\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	port->apb_base = devm_ioremap_resource(dev, regs);
-> +	if (IS_ERR(port->apb_base))
-> +		return PTR_ERR(port->apb_base);
-> +
-> +	port->phy = devm_phy_get(dev, "pcie-phy");
-> +	if (IS_ERR(port->phy)) {
-> +		if (PTR_ERR(port->phy) != -EPROBE_DEFER)
-> +			dev_err(dev, "Missing phy\n");
-> +		return PTR_ERR(port->phy);
-> +	}
-> +
-> +	port->lanes = 1;
-> +	err = of_property_read_u32(node, "num-lanes", &port->lanes);
-> +	if (!err && ((port->lanes == 0) ||
-> +		     (port->lanes == 3) ||
-> +		     (port->lanes > 4))) {
-> +		dev_warn(dev, "invalid num-lanes, default use one lane\n");
-> +		port->lanes = 1;
-> +	}
-> +
-> +	port->core_rst = devm_reset_control_get(dev, "core");
-> +	if (IS_ERR(port->core_rst)) {
-> +		if (PTR_ERR(port->core_rst) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing core rst property in node\n");
-> +		return PTR_ERR(port->core_rst);
-> +	}
-> +
-> +	port->mgmt_rst = devm_reset_control_get(dev, "mgmt");
-> +	if (IS_ERR(port->mgmt_rst)) {
-> +		if (PTR_ERR(port->mgmt_rst) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing mgmt rst property in node\n");
-> +		return PTR_ERR(port->mgmt_rst);
-> +	}
-> +
-> +	port->mgmt_sticky_rst = devm_reset_control_get(dev, "mgmt-sticky");
-> +	if (IS_ERR(port->mgmt_sticky_rst)) {
-> +		if (PTR_ERR(port->mgmt_sticky_rst) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing mgmt-sticky rst property in node\n");
-> +		return PTR_ERR(port->mgmt_sticky_rst);
-> +	}
-> +
-> +	port->pipe_rst = devm_reset_control_get(dev, "pipe");
-> +	if (IS_ERR(port->pipe_rst)) {
-> +		if (PTR_ERR(port->pipe_rst) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing pipe rst property in node\n");
-> +		return PTR_ERR(port->pipe_rst);
-> +	}
-> +
-> +	port->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
-> +	if (IS_ERR(port->ep_gpio)) {
-> +		dev_err(dev, "missing ep-gpios property in node\n");
-> +		return PTR_ERR(port->ep_gpio);
-> +	}
-> +
-> +	port->aclk_pcie = devm_clk_get(dev, "aclk");
-> +	if (IS_ERR(port->aclk_pcie)) {
-> +		dev_err(dev, "aclk clock not found\n");
-> +		return PTR_ERR(port->aclk_pcie);
-> +	}
-> +
-> +	port->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
-> +	if (IS_ERR(port->aclk_perf_pcie)) {
-> +		dev_err(dev, "aclk_perf clock not found\n");
-> +		return PTR_ERR(port->aclk_perf_pcie);
-> +	}
-> +
-> +	port->hclk_pcie = devm_clk_get(dev, "hclk");
-> +	if (IS_ERR(port->hclk_pcie)) {
-> +		dev_err(dev, "hclk clock not found\n");
-> +		return PTR_ERR(port->hclk_pcie);
-> +	}
-> +
-> +	port->clk_pcie_pm = devm_clk_get(dev, "pm");
-> +	if (IS_ERR(port->clk_pcie_pm)) {
-> +		dev_err(dev, "pm clock not found\n");
-> +		return PTR_ERR(port->clk_pcie_pm);
-> +	}
-> +
-> +	irq = platform_get_irq_byname(pdev, "sys");
-> +	if (irq < 0) {
-> +		dev_err(dev, "missing sys IRQ resource\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
-> +			       IRQF_SHARED, "pcie-sys", port);
-> +	if (err) {
-> +		dev_err(dev, "failed to request pcie subsystem IRQ\n");
-> +		return err;
-> +	}
-> +
-> +	irq = platform_get_irq_byname(pdev, "legacy");
-> +	if (irq < 0) {
-> +		dev_err(dev, "missing legacy IRQ resource\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	irq_set_chained_handler_and_data(irq,
-> +					 rockchip_pcie_legacy_int_handler,
-> +					 port);
-> +
-> +	irq = platform_get_irq_byname(pdev, "client");
-> +	if (irq < 0) {
-> +		dev_err(dev, "missing client IRQ resource\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
-> +			       IRQF_SHARED, "pcie-client", port);
-> +	if (err) {
-> +		dev_err(dev, "failed to request pcie client IRQ\n");
-
-"PCIe"
-
-> +		return err;
-> +	}
-> +
-> +	port->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
-> +	if (IS_ERR(port->vpcie3v3)) {
-> +		if (PTR_ERR(port->vpcie3v3) == -EPROBE_DEFER)
-> +			return -EPROBE_DEFER;
-> +		dev_info(dev, "no vpcie3v3 regulator found\n");
-> +	}
-> +
-> +	port->vpcie1v8 = devm_regulator_get_optional(dev, "vpcie1v8");
-> +	if (IS_ERR(port->vpcie1v8)) {
-> +		if (PTR_ERR(port->vpcie1v8) == -EPROBE_DEFER)
-> +			return -EPROBE_DEFER;
-> +		dev_info(dev, "no vpcie1v8 regulator found\n");
-> +	}
-> +
-> +	port->vpcie0v9 = devm_regulator_get_optional(dev, "vpcie0v9");
-> +	if (IS_ERR(port->vpcie0v9)) {
-> +		if (PTR_ERR(port->vpcie0v9) == -EPROBE_DEFER)
-> +			return -EPROBE_DEFER;
-> +		dev_info(dev, "no vpcie0v9 regulator found\n");
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int rockchip_pcie_set_vpcie(struct rockchip_pcie_port *port)
-> +{
-> +	int err;
-> +
-> +	if (!IS_ERR(port->vpcie3v3)) {
-> +		err = regulator_enable(port->vpcie3v3);
-> +		if (err) {
-> +			dev_err(port->dev, "Fail to enable vpcie3v3 regulator.\n");
-
-s/Fail/fail/ here and similar cases below.
-
-> +			goto err_out;
-> +		}
-> +	}
-> +
-> +	if (!IS_ERR(port->vpcie1v8)) {
-> +		err = regulator_enable(port->vpcie1v8);
-> +		if (err) {
-> +			dev_err(port->dev, "Fail to enable vpcie1v8 regulator.\n");
-> +			goto err_disable_3v3;
-> +		}
-> +	}
-> +
-> +	if (!IS_ERR(port->vpcie0v9)) {
-> +		err = regulator_enable(port->vpcie0v9);
-> +		if (err) {
-> +			dev_err(port->dev, "Fail to enable vpcie0v9 regulator.\n");
-> +			goto err_disable_1v8;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +
-> +err_disable_1v8:
-> +	if (!IS_ERR(port->vpcie1v8))
-> +		regulator_disable(port->vpcie1v8);
-> +err_disable_3v3:
-> +	if (!IS_ERR(port->vpcie3v3))
-> +		regulator_disable(port->vpcie3v3);
-> +err_out:
-> +	return err;
-> +}
-> +
-> +static void rockchip_pcie_enable_interrupts(struct rockchip_pcie_port *port)
-> +{
-> +	pcie_write(port, (PCIE_CLIENT_INT_CLI << 16) &
-> +		   (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
-> +	pcie_write(port, (u32)(~PCIE_CORE_INT), PCIE_CORE_INT_MASK);
-> +
-> +	rockchip_pcie_enable_bw_int(port);
-> +}
-> +
-> +static int rockchip_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-> +				  irq_hw_number_t hwirq)
-> +{
-> +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-> +	irq_set_chip_data(irq, domain->host_data);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct irq_domain_ops intx_domain_ops = {
-> +	.map = rockchip_pcie_intx_map,
-> +};
-> +
-> +static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *pp)
-> +{
-> +	struct device *dev = pp->dev;
-> +	struct device_node *intc = of_get_next_child(dev->of_node, NULL);
-> +
-> +	if (!intc) {
-> +		dev_err(dev, "Missing child interrupt-controller node\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	pp->irq_domain = irq_domain_add_linear(intc, 4, &intx_domain_ops, pp);
-> +	if (!pp->irq_domain) {
-> +		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *pp,
-> +				     int region_no,
-> +				     int type, u8 num_pass_bits,
-> +				     u32 lower_addr, u32 upper_addr)
-> +{
-> +	u32 ob_addr_0;
-> +	u32 ob_addr_1;
-> +	u32 ob_desc_0;
-> +	void __iomem *aw_base;
-> +
-> +	if (region_no >= MAX_AXI_WRAPPER_REGION_NUM)
-> +		return -EINVAL;
-> +	if ((num_pass_bits + 1) < 8)
-> +		return -EINVAL;
-> +	if (num_pass_bits > 63)
-> +		return -EINVAL;
-> +	if (region_no == 0) {
-> +		if (AXI_REGION_0_SIZE < (2ULL << num_pass_bits))
-> +		return -EINVAL;
-> +	}
-> +	if (region_no != 0) {
-> +		if (AXI_REGION_SIZE < (2ULL << num_pass_bits))
-> +		return -EINVAL;
-
-Misleading indentation.
-
-> +	}
-
-Add a blank line between all the error checking and the meat of the
-function.  Also below in the corresponding ib_atu code.
-
-> +	aw_base = pp->apb_base + PCIE_CORE_AXI_CONF_BASE;
-> +	aw_base += (region_no << OB_REG_SIZE_SHIFT);
-> +
-> +	ob_addr_0 = num_pass_bits & PCIE_CORE_OB_REGION_ADDR0_NUM_BITS;
-> +	ob_addr_0 |= lower_addr & PCIE_CORE_OB_REGION_ADDR0_LO_ADDR;
-> +	ob_addr_1 = upper_addr;
-> +	ob_desc_0 = (1 << 23 | type);
-> +
-> +	writel(ob_addr_0, aw_base);
-> +	writel(ob_addr_1, aw_base + PCIE_CORE_OB_REGION_ADDR1);
-> +	writel(ob_desc_0, aw_base + PCIE_CORE_OB_REGION_DESC0);
-> +	writel(0, aw_base + PCIE_CORE_OB_REGION_DESC1);
-> +
-> +	return 0;
-> +}
-> +
-> +static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *pp,
-> +				     int region_no,
-> +				     u8 num_pass_bits,
-> +				     u32 lower_addr,
-> +				     u32 upper_addr)
-> +{
-> +	u32 ib_addr_0;
-> +	u32 ib_addr_1;
-> +	void __iomem *aw_base;
-> +
-> +	if (!pp)
-> +		return -EINVAL;
-
-Remove this test here, too, same as in the ob_atu path.
-
-> +	if (region_no > MAX_AXI_IB_ROOTPORT_REGION_NUM)
-> +		return -EINVAL;
-> +	if ((num_pass_bits + 1) < MIN_AXI_ADDR_BITS_PASSED)
-> +		return -EINVAL;
-> +	if (num_pass_bits > 63)
-> +		return -EINVAL;
-> +	aw_base = pp->apb_base + PCIE_CORE_AXI_INBOUND_BASE;
-> +	aw_base += (region_no << IB_ROOT_PORT_REG_SIZE_SHIFT);
-> +
-> +	ib_addr_0 = num_pass_bits & PCIE_CORE_IB_REGION_ADDR0_NUM_BITS;
-> +	ib_addr_0 |= (lower_addr << 8) & PCIE_CORE_IB_REGION_ADDR0_LO_ADDR;
-> +	ib_addr_1 = upper_addr;
-> +
-> +	writel(ib_addr_0, aw_base);
-> +	writel(ib_addr_1, aw_base + PCIE_RP_IB_ADDR_TRANS);
-> +
-> +	return 0;
-> +}
-> +
-> +static int rockchip_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct rockchip_pcie_port *port;
-> +	struct device *dev = &pdev->dev;
-> +	struct pci_bus *bus, *child;
-> +	struct resource_entry *win;
-> +	resource_size_t io_base;
-> +	struct resource	*busn;
-
-Removing the initialization here means "busn" may be used
-uninitialized below if the DT doesn't include an IORESOURCE_BUS item.
-That's why I didn't suggest removing the initialization from "busn".
-
-I didn't check all these variables again, so there may be others that
-actually need the initialization.  Please check them all yourself.
-
-> +	struct resource	*mem;
-> +	struct resource	*io;
-> +	phys_addr_t io_bus_addr;
-> +	u32 io_size;
-> +	phys_addr_t mem_bus_addr;
-> +	u32 mem_size;
-> +	int reg_no;
-> +	int err;
-> +	int offset;
-> +
-> +	LIST_HEAD(res);
-> +
-> +	if (!dev->of_node)
-> +		return -ENODEV;
-> +
-> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> +	if (!port)
-> +		return -ENOMEM;
-> +
-> +	port->dev = dev;
-> +
-> +	err = rockchip_pcie_parse_dt(port);
-> +	if (err)
-> +		return err;
-> +
-> +	err = clk_prepare_enable(port->aclk_pcie);
-> +	if (err) {
-> +		dev_err(dev, "Unable to enable aclk_pcie clock.\n");
-> +		goto err_aclk_pcie;
-> +	}
-> +
-> +	err = clk_prepare_enable(port->aclk_perf_pcie);
-> +	if (err) {
-> +		dev_err(dev, "Unable to enable aclk_perf_pcie clock.\n");
-> +		goto err_aclk_perf_pcie;
-> +	}
-> +
-> +	err = clk_prepare_enable(port->hclk_pcie);
-> +	if (err) {
-> +		dev_err(dev, "Unable to enable hclk_pcie clock.\n");
-> +		goto err_hclk_pcie;
-> +	}
-> +
-> +	err = clk_prepare_enable(port->clk_pcie_pm);
-> +	if (err) {
-> +		dev_err(dev, "Unable to enable hclk_pcie clock.\n");
-> +		goto err_pcie_pm;
-> +	}
-> +
-> +	err = rockchip_pcie_set_vpcie(port);
-> +	if (err) {
-> +		dev_err(port->dev, "Fail to set vpcie regulator.\n");
-> +		goto err_set_vpcie;
-> +	}
-> +
-> +	err = rockchip_pcie_init_port(port);
-> +	if (err)
-> +		goto err_vpcie;
-> +
-> +	platform_set_drvdata(pdev, port);
-> +
-> +	rockchip_pcie_enable_interrupts(port);
-> +
-> +	err = rockchip_pcie_init_irq_domain(port);
-> +	if (err < 0)
-> +		goto err_vpcie;
-> +
-> +	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
-> +					       &res, &io_base);
-> +	if (err)
-> +		goto err_vpcie;
-> +
-> +	err = devm_request_pci_bus_resources(dev, &res);
-> +	if (err)
-> +		goto err_vpcie;
-> +
-> +	/* Get the I/O and memory ranges from DT */
-> +	resource_list_for_each_entry(win, &res) {
-> +		switch (resource_type(win->res)) {
-> +		case IORESOURCE_IO:
-> +			io = win->res;
-> +			io->name = "I/O";
-> +			io_size = resource_size(io);
-> +			io_bus_addr = io->start - win->offset;
-> +			err = pci_remap_iospace(io, io_base);
-> +			if (err) {
-> +				dev_warn(port->dev, "error %d: failed to map resource %pR\n",
-> +					 err, io);
-> +				continue;
-> +			}
-> +			break;
-> +		case IORESOURCE_MEM:
-> +			mem = win->res;
-> +			mem->name = "MEM";
-> +			mem_size = resource_size(mem);
-> +			mem_bus_addr = mem->start - win->offset;
-> +			break;
-> +		case IORESOURCE_BUS:
-> +			busn = win->res;
-> +			break;
-> +		default:
-> +			continue;
-> +		}
-> +	}
-> +
-> +	if (mem_size)
-> +		for (reg_no = 0; reg_no < (mem_size >> 20); reg_no++) {
-> +			err = rockchip_pcie_prog_ob_atu(port, reg_no + 1,
-> +							AXI_WRAPPER_MEM_WRITE,
-> +							20 - 1,
-> +							mem_bus_addr +
-> +							(reg_no << 20),
-> +							0);
-> +			if (err) {
-> +				dev_err(dev, "Program RC mem outbound ATU failed\n");
-> +				goto err_vpcie;
-> +			}
-> +		}
-> +
-> +	err = rockchip_pcie_prog_ib_atu(port, 2, 32 - 1, 0x0, 0);
-> +	if (err) {
-> +		dev_err(dev, "Program RC mem inbound ATU failed\n");
-> +		goto err_vpcie;
-> +	}
-> +
-> +	offset = mem_size >> 20;
-> +
-> +	if (io_size)
-> +		for (reg_no = 0; reg_no < (io_size >> 20); reg_no++) {
-> +			err = rockchip_pcie_prog_ob_atu(port,
-> +							reg_no + 1 + offset,
-> +							AXI_WRAPPER_IO_WRITE,
-> +							20 - 1,
-> +							io_bus_addr +
-> +							(reg_no << 20),
-> +							0);
-> +			if (err) {
-> +				dev_err(dev, "Program RC io outbound ATU failed\n");
-> +				goto err_vpcie;
-> +			}
-> +		}
-> +
-> +	if (busn)
-> +		port->root_bus_nr = busn->start;
-> +
-> +	bus = pci_scan_root_bus(&pdev->dev, 0,
-> +				&rockchip_pcie_ops, port, &res);
-
-General practice is to fill the line with as much as will fit in 80
-columns, then wrap.  It looks like "&rockchip_pcie_ops" would fit on
-the previous line.  Actually, I think *everything* fits.
-
-> +
-> +	if (!bus) {
-> +		err = -ENOMEM;
-> +		goto err_vpcie;
-> +	}
-> +
-> +	pci_bus_size_bridges(bus);
-> +	pci_bus_assign_resources(bus);
-> +	list_for_each_entry(child, &bus->children, node)
-> +		pcie_bus_configure_settings(child);
-> +
-> +	pci_bus_add_devices(bus);
-> +
-> +	dev_warn(dev, "only 32-bit config accesses supported; smaller writes may corrupt adjacent RW1C fields\n");
-> +
-> +	return err;
-> +
-> +err_vpcie:
-> +	if (!IS_ERR(port->vpcie3v3))
-> +		regulator_disable(port->vpcie3v3);
-> +	if (!IS_ERR(port->vpcie1v8))
-> +		regulator_disable(port->vpcie1v8);
-> +	if (!IS_ERR(port->vpcie0v9))
-> +		regulator_disable(port->vpcie0v9);
-> +err_set_vpcie:
-> +	clk_disable_unprepare(port->clk_pcie_pm);
-> +err_pcie_pm:
-> +	clk_disable_unprepare(port->hclk_pcie);
-> +err_hclk_pcie:
-> +	clk_disable_unprepare(port->aclk_perf_pcie);
-> +err_aclk_perf_pcie:
-> +	clk_disable_unprepare(port->aclk_pcie);
-> +err_aclk_pcie:
-> +	return err;
-> +}
-> +
-> +static const struct of_device_id rockchip_pcie_of_match[] = {
-> +	{ .compatible = "rockchip,rk3399-pcie", },
-> +	{}
-> +};
-> +
-> +static struct platform_driver rockchip_pcie_driver = {
-> +	.driver = {
-> +		.name = "rockchip-pcie",
-> +		.of_match_table = rockchip_pcie_of_match,
-> +	},
-> +	.probe = rockchip_pcie_probe,
-> +
-> +};
-> +builtin_platform_driver(rockchip_pcie_driver);
-> +
-
-Spurious blank line here.
