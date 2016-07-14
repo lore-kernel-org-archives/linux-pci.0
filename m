@@ -1,87 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37345 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751588AbcGLMyt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jul 2016 08:54:49 -0400
-Date: Tue, 12 Jul 2016 14:59:47 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5] pci: add a pci_msix_desc_addr helper
-Message-ID: <20160712125946.GF26969@agordeev.lab.eng.brq.redhat.com>
-References: <1468315218-20490-1-git-send-email-hch@lst.de>
- <1468315218-20490-2-git-send-email-hch@lst.de>
+Received: from smtp04.smtpout.orange.fr ([80.12.242.126]:22846 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025AbcGNKMV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 06:12:21 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: bhelgaas@google.com, michal.simek@xilinx.com,
+	soren.brinkmann@xilinx.com, bharat.kumar.gogada@xilinx.com,
+	rgummal@xilinx.com, arnd@arndb.de, jiang.liu@linux.intel.com,
+	grygorii.strashko@ti.com, russell.joyce@york.ac.uk,
+	lorenzo.pieralisi@arm.com
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] PCI: xilinx: Fix return value in case of error
+Date: Thu, 14 Jul 2016 12:10:46 +0200
+Message-Id: <1468491046-1427-1-git-send-email-christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468315218-20490-2-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 12, 2016 at 06:20:14PM +0900, Christoph Hellwig wrote:
-> To factor out the calculation of the base address for a given MSI-X vector.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/msi.c | 17 +++++++++--------
->  1 file changed, 9 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a080f44..0d94fbf 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -207,6 +207,12 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->  	desc->masked = __pci_msi_desc_mask_irq(desc, mask, flag);
->  }
->  
-> +static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
-> +{
-> +	return desc->mask_base +
-> +		desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
-> +}
-> +
->  /*
->   * This internal function does not flush PCI writes to the device.
->   * All users must ensure that they read from the device before either
-> @@ -217,8 +223,6 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->  u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
->  {
->  	u32 mask_bits = desc->masked;
-> -	unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
-> -						PCI_MSIX_ENTRY_VECTOR_CTRL;
->  
->  	if (pci_msi_ignore_mask)
->  		return 0;
-> @@ -226,7 +230,7 @@ u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
->  	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
->  	if (flag)
->  		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
-> -	writel(mask_bits, desc->mask_base + offset);
-> +	writel(mask_bits, pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
->  
->  	return mask_bits;
->  }
-> @@ -284,8 +288,7 @@ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  	BUG_ON(dev->current_state != PCI_D0);
->  
->  	if (entry->msi_attrib.is_msix) {
-> -		void __iomem *base = entry->mask_base +
-> -			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
-> +		void __iomem *base = pci_msix_desc_addr(entry);
->  
->  		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
->  		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
-> @@ -315,9 +318,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
->  	if (dev->current_state != PCI_D0) {
->  		/* Don't touch the hardware now */
->  	} else if (entry->msi_attrib.is_msix) {
-> -		void __iomem *base;
-> -		base = entry->mask_base +
-> -			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
-> +		void __iomem *base = pci_msix_desc_addr(entry);
->  
->  		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
->  		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
-> -- 
-> 2.1.4
-> 
-Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
+In function 'xilinx_pcie_init_irq_domain', the pattern used to check and
+return error is:
+
+   if (!var) {
+      dev_err(...);
+      return PTR_ERR(var);
+   }
+
+So the returned value in case of error is always 0, which means 'success'.
+Change it to return -ENODEV instead.
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/pci/host/pcie-xilinx.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 4703aa3..a30e016 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -550,7 +550,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 	pcie_intc_node = of_get_next_child(node, NULL);
+ 	if (!pcie_intc_node) {
+ 		dev_err(dev, "No PCIe Intc node found\n");
+-		return PTR_ERR(pcie_intc_node);
++		return -ENODEV;
+ 	}
+ 
+ 	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+@@ -558,7 +558,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 						 port);
+ 	if (!port->irq_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return PTR_ERR(port->irq_domain);
++		return -ENODEV;
+ 	}
+ 
+ 	/* Setup MSI */
+@@ -569,7 +569,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 							 &xilinx_pcie_msi_chip);
+ 		if (!port->irq_domain) {
+ 			dev_err(dev, "Failed to get a MSI IRQ domain\n");
+-			return PTR_ERR(port->irq_domain);
++			return -ENODEV;
+ 		}
+ 
+ 		xilinx_pcie_enable_msi(port);
+-- 
+2.7.4
+
+
+---
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
+
