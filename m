@@ -1,79 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50824 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753251AbcG1IQe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jul 2016 04:16:34 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, corbet@lwn.net
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v5 3/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
-Date: Thu, 28 Jul 2016 11:15:16 +0300
-Message-Id: <1469693721-5641-4-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
-References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 14 Jul 2016 16:20:44 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	nofooter <nofooter@xilinx.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>
+Subject: Re: Purpose of pci_remap_iospace
+Message-ID: <20160714152044.GC30657@red-moon>
+References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <3927657.6zNCtCntSU@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <4235946.u1vYRsOpTR@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160713134642.GA29309@red-moon>
+ <8520D5D51A55D047800579B094147198258B8F73@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160714145624.GB30657@red-moon>
+ <8520D5D51A55D047800579B094147198258B8FC3@XAP-PVEXMBX01.xlnx.xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8520D5D51A55D047800579B094147198258B8FC3@XAP-PVEXMBX01.xlnx.xilinx.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updating the Kconfig Thunderbolt(TM) description.
+On Thu, Jul 14, 2016 at 03:05:40PM +0000, Bharat Kumar Gogada wrote:
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  2 +-
- 2 files changed, 22 insertions(+), 5 deletions(-)
+[...]
 
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..d34b0f5 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,30 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt(TM) support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt(TM) Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt(TM) Networking"
-+	help
-+	  This driver is required if you want Thunderbolt(TM) Networking on
-+	  non-Apple hardware.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..7a85bd1 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
--- 
-2.7.4
+> > On Thu, Jul 14, 2016 at 01:32:13PM +0000, Bharat Kumar Gogada wrote:
+> > > ranges = <0x01000000 0x00000000 0xe0000000 0x00000000 0xe0000000 0
+> > 0x00010000   //io
+> >
+> > You have not missed anything, you changed the PCI bus address at which
+> > your host bridge responds to IO space and it must match your configuration.
+> > At what PCI bus address your host bridge maps IO space ?
+> >
+> > >                      0x02000000 0x00000000 0xe0100000 0x00000000
+> > > 0xe0100000 0 0x0ef00000>; //non prefetchabe memory
+> > >
+> > > [    2.389498] nwl-pcie fd0e0000.pcie: Link is UP
+> > > [    2.389541] PCI host bridge /amba/pcie@fd0e0000 ranges:
+> > > [    2.389558]   No bus range found for /amba/pcie@fd0e0000, using [bus
+> > 00-ff]
+> > > [    2.389583]    IO 0xe0000000..0xe000ffff -> 0xe0000000
+> > > [    2.389624]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
+> > > [    2.389803] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
+> > > [    2.389822] pci_bus 0000:00: root bus resource [bus 00-ff]
+> > > [    2.389839] pci_bus 0000:00: root bus resource [io  0x0000-0xffff] (bus
+> > address [0xe0000000-0xe000ffff])
+> > > [    2.389863] pci_bus 0000:00: root bus resource [mem 0xe0100000-
+> > 0xeeffffff]
+> > > [    2.390094] pci 0000:00:00.0: cannot attach to SMMU, is it on the same
+> > bus?
+> > > [    2.390110] iommu: Adding device 0000:00:00.0 to group 1
+> > > [    2.390274] pci 0000:01:00.0: reg 0x20: initial BAR value 0x00000000 invalid
+> > > [    2.390481] pci 0000:01:00.0: cannot attach to SMMU, is it on the same
+> > bus?
+> > > [    2.390496] iommu: Adding device 0000:01:00.0 to group 1
+> > > [    2.390533] in pci_bridge_check_ranges io 101
+> > > [    2.390545] in pci_bridge_check_ranges io 2 101
+> > > [    2.390575] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-
+> > 0xe02fffff]
+> > > [    2.390592] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+> > > [    2.390609] pci 0000:00:00.0: BAR 6: assigned [mem 0xe0300000-
+> > 0xe03007ff pref]
+> > > [    2.390636] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe01fffff
+> > 64bit]
+> > > [    2.390669] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-0xe02fffff
+> > 64bit]
+> > > [    2.390702] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x103f]
+> > > [    2.390721] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
+> > > [    2.390785] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+> > > [    2.390823] pci 0000:00:00.0:   bridge window [mem 0xe0100000-
+> > 0xe02fffff]
+> > >
+> Thanks a lot Loenzo for your kind and clear explanation, I will dig
+> through hardware and correct my device tree.
+> 
+> From above log why IO space is allocated as only 4k even though I'm
+> allocating 64k through device tree ?
 
+You are not allocating anything in the device tree, you are just
+defining the physical memory window at which your PCI host bridge
+address decoders "map" PCI IO cycles.
+
+PCI core code, while assigning resources, sizes the PCI bridge
+IO window BAR by sizing the downstream PCI devices BARs:
+
+See:
+
+pbus_size_io()
+
+PCI core won't allocate an IO window to your PCI bridge window BARs
+bigger than what's necessary (according to downstream devices), keeping
+alignment in mind.
+
+Is that clear ?
+
+> This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+
+This disclaimer should disappear if you want to discuss patches on
+public mailing lists.
+
+Thanks,
+Lorenzo
