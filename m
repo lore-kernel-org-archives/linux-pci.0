@@ -1,65 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 13 Jul 2016 05:05:04 +0300
-From: Andrey Utkin <andrey_utkin@fastmail.com>
-To: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Kozlov Sergey <serjk@netup.ru>,
-	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
-	kernel-mentors@selenic.com
-Subject: Re: [PATCH v4] [media] pci: Add tw5864 driver - fixed few style
- nits, going to resubmit soon
-Message-ID: <20160713020504.GH5934@zver>
-References: <20160711151714.5452-1-andrey.utkin@corp.bluecherry.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:2606 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751119AbcGNTAA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 15:00:00 -0400
+From: "Rosen, Rami" <rami.rosen@intel.com>
+To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	"andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Rosen, Rami" <rami.rosen@intel.com>
+Subject: RE: [PATCH v3 5/8] thunderbolt: Communication with the ICM
+ (firmware)
+Date: Thu, 14 Jul 2016 18:59:54 +0000
+Message-ID: <9B0331B6EBBD0E4684FBFAEDA55776F92CD7E6C8@HASMSX110.ger.corp.intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+ <1468495702-7467-6-git-send-email-amir.jer.levy@intel.com>
+ <5B8DA87D05A7694D9FA63FD143655C1B54294E4A@hasmsx108.ger.corp.intel.com>
+ <9B0331B6EBBD0E4684FBFAEDA55776F92CD7D05F@HASMSX110.ger.corp.intel.com>
+ <E607265CB020454880711A6F96C05A03893CD910@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <E607265CB020454880711A6F96C05A03893CD910@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160711151714.5452-1-andrey.utkin@corp.bluecherry.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found and fixed few very minor coding style nits, will resubmit in few days,
-now still waiting for comments to v4.
+Hi, Amir,
 
-https://github.com/bluecherrydvr/linux/commits/tw5864
+>This patch is the communication with the FW.
+>The network functionality is added in the next patches in the series 
+>and with it, more messages from FW.
+>Indeed this function always returns true in this patch, 
+>but while writing it, I predicted that the network functionality will 
+>use the send_event flag differently.
+>You can see the documentation of send_event - currently unused in this patch.
+>I don't see any harm that in this patch, this function will always return true,
+>while applying the rest of the series will change it.
 
-commit 31f7c98a144cb3fb8a94662f002d9b6142d1f390
-Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-Date:   Wed Jul 13 05:00:28 2016 +0300
+Ok, seems reasonable.
 
-    Fix checkpatch --strict issue
-    
-     CHECK: Alignment should match open parenthesis
-     #3599: FILE: drivers/media/pci/tw5864/tw5864-video.c:539:
-     +static int tw5864_fmt_vid_cap(struct file *file, void *priv,
-     +                               struct v4l2_format *f)
+>The prototype of suspend is return int:
+>http://lxr.free-electrons.com/source/include/linux/pm.h#L295
 
-commit 11a09a1048af597ecf374507b08c809eed91b86d
-Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-Date:   Wed Jul 13 04:59:34 2016 +0300
+>The prototype of resume is return int:
+>http://lxr.free-electrons.com/source/include/linux/pm.h#L295
 
-    Fix checkpatch --strict issue
-    
-     CHECK: Please don't use multiple blank lines
-     #3244: FILE: drivers/media/pci/tw5864/tw5864-video.c:184:
+You are right about this, I missed the macro invocation in your code, SET_SYSTEM_SLEEP_PM_OPS(nhi_suspend, nhi_resume),
+apologies.
 
-commit 861b2ba8593db7abe89291a4ba85976519783f4a
-Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-Date:   Wed Jul 13 04:58:37 2016 +0300
+ Regards,
+ Rami Rosen
+ Intel Corporation
 
-    Fix checkpatch --strict issue
-    
-     CHECK: No space is necessary after a cast
-     #3053: FILE: drivers/media/pci/tw5864/tw5864-util.c:36:
-     +       return (u8) tw_readl(TW5864_IND_DATA);
+
