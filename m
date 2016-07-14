@@ -1,113 +1,127 @@
-Return-Path: <bharat.kumar.gogada@xilinx.com>
-Return-Path: <bharat.kumar.gogada@xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0080.outbound.protection.outlook.com ([104.47.36.80]:62969
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751239AbcGNGDv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 02:03:51 -0400
 From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>, nofooter <nofooter@xilinx.com>, nofooter2
-	<nofooter2@xilinx.com>
-Subject: RE: Why does BIOS assign memory to 16 byte BAR
-Date: Fri, 22 Jul 2016 16:39:04 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258BB7FE@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258BB59B@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160722151546.GA20646@localhost> <20160722155133.GB20646@localhost>
-In-Reply-To: <20160722155133.GB20646@localhost>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	nofooter <nofooter@xilinx.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>
+Subject: RE: Purpose of pci_remap_iospace
+Date: Thu, 14 Jul 2016 06:03:44 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258B8E24@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <3927657.6zNCtCntSU@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <4235946.u1vYRsOpTR@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160713134642.GA29309@red-moon>
+In-Reply-To: <20160713134642.GA29309@red-moon>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: Why does BIOS assign memory to 16 byte BAR
->=20
-> On Fri, Jul 22, 2016 at 10:15:46AM -0500, Bjorn Helgaas wrote:
-> > Hi Bharat,
+> Subject: Re: Purpose of pci_remap_iospace
+>
+> On Wed, Jul 13, 2016 at 12:30:44PM +0000, Bharat Kumar Gogada wrote:
+>
+> [...]
+>
+> > err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
+> >         if (err) {
+> >                 pr_err("Getting bridge resources failed\n");
+> >                 return err;
+> >         }
+> > resource_list_for_each_entry(window, &res) {            //code for io resource
+> >                 struct resource *res = window->res;
+> >                 u64 restype = resource_type(res);
 > >
-> > On Fri, Jul 22, 2016 at 09:24:22AM +0000, Bharat Kumar Gogada wrote:
-> > > Hi,
-> > >
-> > > I'm observing that on x86 BIOS successfully assigns memory if an End
-> > > point requests BAR of size 16byte.
-> > >
-> > > But as per Spec:
-> > > The minimum memory address range requested by a BAR is 128 bytes.
+> >                 switch (restype) {
+> >                 case IORESOURCE_IO:
+> >                         err = pci_remap_iospace(res, iobase);
+> >                         if(err)
+> >                                 pr_info("FAILED TO IPREMAP RESOURCE\n");
+> >                         break;
+> >                 default:
+> >                         dev_err(pcie->dev, "invalid resource %pR\n",
+> > res);
 > >
-> > Can you provide the spec reference for this?  I don't see it in PCI
-> > r3.0.
+> >                 }
+> >         }
 > >
-> > PCI r3.0, sec 6.2.5.1, shows bits 4-31 of a memory BAR as writable,
-> > which would correspond to a minimum size of 16 bytes.
->=20
-> The reference above is to the conventional PCI spec.  I happened to trip =
-over
-> a note in PCIe r3.0, sec 1.3.2.2, that for a PCI Express endpoint, "the m=
-inimum
-> memory address range requested by a BAR is 128 bytes."
->=20
-> I don't think linux currently enforces this minimum.
->=20
+> > Other than above code I haven't done any change in driver.
+> >
+> Here is your PCI bridge mem space window assignment. I do not see an IO
+> window assignment which makes me think that IO cycles and relative IO
+> window is not enabled through the bridge, that's the reason you can't assign
+> IO space to the endpoint, because it has no parent IO window enabled IIUC.
+>
 
-Hi Bjorn Thanks for the reply.
+We sorted this out, enabled the IO base limit / upper 16bit registers in the bridge for 32 bit decode.
+However my IO address being assigned to EP is different than what I provide in device tree.
 
-Here is what the issue we are seeing.
+Device tree property:
+ranges = <0x01000000 0x00000000 0x00000000 0x00000000 0xe0000000 0 0x00010000   //io
+                      0x02000000 0x00000000 0xe0100000 0x00000000 0xe0100000 0 0x0ef00000>; //non prefetchabe memory
 
-We have total memory for BAR's on our SoC of 256 MB.
-When an End Point request individually 16 byte BAR's our root port assigns =
-memory to BAR's successfully.
+Here is the boot log:
+[    2.312504] nwl-pcie fd0e0000.pcie: Link is UP
+[    2.312548] PCI host bridge /amba/pcie@fd0e0000 ranges:
+[    2.312565]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
+[    2.312591]    IO 0xe0000000..0xe000ffff -> 0x00000000
+[    2.312610]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
+[    2.312711] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
+[    2.312729] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    2.312745] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    2.312761] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeeffffff]
+[    2.312993] pci 0000:00:00.0: cannot attach to SMMU, is it on the same bus?
+[    2.313009] iommu: Adding device 0000:00:00.0 to group 1
+[    2.313363] pci 0000:01:00.0: cannot attach to SMMU, is it on the same bus?
+[    2.313379] iommu: Adding device 0000:01:00.0 to group 1
+[    2.313434] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-0xe02fffff]
+[    2.313452] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+[    2.313469] pci 0000:00:00.0: BAR 6: assigned [mem 0xe0300000-0xe03007ff pref]
+[    2.313495] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe01fffff 64bit]
+[    2.313529] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-0xe02fffff 64bit]
+[    2.313561] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x103f]
+[    2.313581] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
+[    2.313597] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+[    2.313614] pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe02fffff]
 
-But if I have an End point which has 4 BAR's each 32 bit and request as fol=
-lowing:
-When 1st BAR requests 1GB BAR it fails due to lack of memory. (We are runni=
-ng this as part of SIG compliance test case)
-2nd BAR requests 1MB and other 2 BAR's request 16byte, but these are not ge=
-tting BAR's assigned. (Even though BAR space is available, since 1GB failed=
-,
-We have 256 MB still)
+If we are mapping our IO space to 0xe0000000 and 64k size, why kernel is showing 0x1000-0x1fff which is 4k ?
 
-We have only one End point connected to our root port.
+Lspci of bridge :
+00:00.0 PCI bridge: Xilinx Corporation Device a024 (prog-if 00 [Normal decode])
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin A routed to IRQ 224
+        Bus: primary=00, secondary=01, subordinate=0c, sec-latency=0
+        I/O behind bridge: 00001000-00001fff
+        Memory behind bridge: e0100000-e02fffff
 
-Here is the log:
-[    2.319289] nwl-pcie fd0e0000.pcie: Link is UP
-[    2.319332] PCI host bridge /amba/pcie@fd0e0000 ranges:
-[    2.319349]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-=
-ff]
-[    2.319374]    IO 0xe0000000..0xe000ffff -> 0x00000000
-[    2.319415]   MEM 0xe0100000..0xefffffff -> 0xe0100000
-[    2.319431]   MEM 0x600000000..0x7ffffffff -> 0x600000000
-[    2.319539] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
-[    2.319557] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    2.319573] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    2.319589] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeffffff=
-f]
-[    2.319606] pci_bus 0000:00: root bus resource [mem 0x600000000-0x7fffff=
-fff pref]
-[    2.319845] pci 0000:00:00.0: cannot attach to SMMU, is it on the same b=
-us?
-[    2.319861] iommu: Adding device 0000:00:00.0 to group 1
-[    2.320243] pci 0000:01:00.0: cannot attach to SMMU, is it on the same b=
-us?
-[    2.320258] iommu: Adding device 0000:01:00.0 to group 1
-[    2.320313] pci 0000:00:00.0: BAR 8: no space for [mem size 0x60000000]
-[    2.320331] pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x600000=
-00]
-[    2.320349] pci 0000:00:00.0: BAR 6: assigned [mem 0xe0100000-0xe01007ff=
- pref]
-[    2.320374] pci 0000:01:00.0: BAR 0: no space for [mem size 0x40000000]
-[    2.320390] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x400000=
-00]
-[    2.320407] pci 0000:01:00.0: BAR 4: no space for [mem size 0x00100000 6=
-4bit]
-[    2.320423] pci 0000:01:00.0: BAR 4: failed to assign [mem size 0x001000=
-00 64bit]
-[    2.320446] pci 0000:01:00.0: BAR 2: no space for [mem size 0x00000010]
-[    2.320461] pci 0000:01:00.0: BAR 2: failed to assign [mem size 0x000000=
-10]
-[    2.320477] pci 0000:01:00.0: BAR 3: no space for [mem size 0x00000010]
-[    2.320493] pci 0000:01:00.0: BAR 3: failed to assign [mem size 0x000000=
-10]
-[    2.320509] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
+Lspci ofEP:
+01:00.0 Memory controller: Xilinx Corporation Device d024
+        Subsystem: Xilinx Corporation Device 0007
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin A routed to IRQ 224
+        Region 0: Memory at e0100000 (64-bit, non-prefetchable) [disabled] [size=1M]
+        Region 2: Memory at e0200000 (64-bit, non-prefetchable) [disabled] [size=1M]
+        Region 4: I/O ports at 1000 [disabled] [size=64]
 
-Please let me know, what might might be the issue.
+I'm yet to try with the other API's you have pointed out (devm_request_resource()).
 
 Thanks & Regards,
 Bharat
+
+
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+
