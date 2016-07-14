@@ -1,47 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:45702 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750798AbcGCGk1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 3 Jul 2016 02:40:27 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1bJb4k-0004Ep-Bm
-	for linux-pci@vger.kernel.org; Sun, 03 Jul 2016 08:40:24 +0200
-Received: from 124.123.186.244 ([124.123.186.244])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sun, 03 Jul 2016 08:40:18 +0200
-Received: from valmikibow by 124.123.186.244 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sun, 03 Jul 2016 08:40:18 +0200
-To: linux-pci@vger.kernel.org
-From: valmiki <valmikibow@gmail.com>
-Subject: Performance mesaurement over pcie inconsistent
-Date: Sun, 3 Jul 2016 06:40:12 +0000 (UTC)
-Message-ID: <loom.20160703T083028-741@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>,
+	"andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>
+Subject: RE: [PATCH v3 5/8] thunderbolt: Communication with the ICM
+ (firmware)
+Date: Thu, 14 Jul 2016 14:49:52 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03893CD38E@hasmsx107.ger.corp.intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+ <1468495702-7467-6-git-send-email-amir.jer.levy@intel.com>
+ <5B8DA87D05A7694D9FA63FD143655C1B54294E4A@hasmsx108.ger.corp.intel.com>
+In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B54294E4A@hasmsx108.ger.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+Hi Tomas,
+Thanks for your comments.
 
-Im trying to measure DMA performance over pcie. We dont have any counters 
-in our hardware which shows per second data rate values. 
-I'm trying to measure performance by taking kernel timestamps using 
-ktime_get(), but for transferring 'n' bytes data i'm always getting 
-inconsistent time difference, im taking timestamps before and after 
-transferring data(latter timestamp taken when transfer complete interrupt 
-comes). 
+On Thu, Jul 14 2016, 03:44 PM, Winkler, Tomas wrote:
+> > +/* NHI genetlink commands */
+> > +enum {
+> > +	NHI_CMD_UNSPEC,
+> > +	NHI_CMD_SUBSCRIBE,
+> > +	NHI_CMD_UNSUBSCRIBE,
+> > +	NHI_CMD_QUERY_INFORMATION,
+> > +	NHI_CMD_MSG_TO_ICM,
+> > +	NHI_CMD_MSG_FROM_ICM,
+> > +	NHI_CMD_MAILBOX,
+> > +	NHI_CMD_APPROVE_TBT_NETWORKING,
+> > +	NHI_CMD_ICM_IN_SAFE_MODE,
+> > +	__NHI_CMD_MAX,
+> > +};
+> > +#define NHI_CMD_MAX (__NHI_CMD_MAX - 1)
+> NHI_CMD_MAX  = NHI_CMD_ICM_IN_SAFE_MODE ?
+> 
 
-Is is good method to measure performance with software timestamps ? 
-I need help in what would be better way to measure performance when we 
-dont have hardware counters. 
+This template is used a lot with (generic) netlink. 
+Few examples:
+http://lxr.free-electrons.com/source/drivers/acpi/event.c#L62
+http://lxr.free-electrons.com/source/include/uapi/linux/irda.h#L224
+It is easier to maintain - adding entry in the list will automatically update MAX.
 
-what are the kernel provided better timestamping calls other that 
-ktime_get and do_gettimeoftheday, which are more stable ?
+[...]
 
+> > +		u32 status;
+> > +
+> > +		status = ioread32(nhi_ctxt->iobase + REG_FW_STS);
+> > +
+> > +		if (status & REG_FW_STS_NVM_AUTH_DONE)
+> > +			break;
+> > +		msleep(30);
+> 
+> 30 is  big number, for polling, what is behind this?
+> 
 
-Thanks & Regards,
-Valmiki     
+The NVM authentication can take time for ICM.
+This number comes from experiments.
 
+[...]
+
+> > +static struct tbt_nhi_ctxt *nhi_search_ctxt(u32 id)
+> > +{
+> > +	struct tbt_nhi_ctxt *nhi_ctxt;
+> > +
+> > +	list_for_each_entry(nhi_ctxt, &controllers_list, node)
+> > +		if (nhi_ctxt->id == id)
+> > +			return nhi_ctxt;
+> 
+> Don't you need to lock this list with the controllers_list_rwsem ?
+> 
+
+This is a helper function for searching the list.
+The callers take and release the lock.
+
+[...]
+
+> > +	bool nvm_auth_on_boot : 1;
+> Don't use bool with bit fields use u32 
+
+What is the concern here?
+If it is size of bool, it doesn't matter for this struct.
+It is more readable that the expected value is bool,
+and it is used a lot in kernel, for example:
+http://lxr.free-electrons.com/source/include/linux/pm.h#L558
