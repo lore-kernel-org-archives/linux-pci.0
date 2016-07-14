@@ -1,67 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0079.outbound.protection.outlook.com ([104.47.37.79]:49984
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750794AbcGLIk6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 04:40:58 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mout.kundenserver.de ([217.72.192.75]:53735 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074AbcGNPMQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 11:12:16 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
 	nofooter <nofooter@xilinx.com>,
 	"thomas.petazzoni@free-electrons.com"
 	<thomas.petazzoni@free-electrons.com>
-Subject: RE: Purpose of pci_remap_iospace
-Date: Tue, 12 Jul 2016 08:40:52 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258B860D@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
- <3927657.6zNCtCntSU@wuerfel>
-In-Reply-To: <3927657.6zNCtCntSU@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Subject: Re: Purpose of pci_remap_iospace
+Date: Thu, 14 Jul 2016 17:12:01 +0200
+Message-ID: <5073702.5KYvV2f0PW@wuerfel>
+In-Reply-To: <20160714145624.GB30657@red-moon>
+References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com> <8520D5D51A55D047800579B094147198258B8F73@XAP-PVEXMBX01.xlnx.xilinx.com> <20160714145624.GB30657@red-moon>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: Purpose of pci_remap_iospace
->
-> On Tuesday, July 12, 2016 6:57:10 AM CEST Bharat Kumar Gogada wrote:
-> > Hi,
-> >
-> > I have a query.
-> >
-> > Can any once explain the purpose of pci_remap_iospace function in root
-> port driver.
-> >
-> > What is its dependency with architecture ?
-> >
-> > Here is my understanding, the above API takes PCIe IO resource and its
-> > to be mapped CPU address from ranges property and remaps into virtual
-> address space.
-> >
-> > So my question is who uses this virtual addresses ?
->
-> The inb()/outb() functions declared in asm/io.h
->
-> > When End Point requests for IO BARs doesn't it get from the above
-> > resource range (first parameter of API) and do ioremap to access this
-> > region ?
->
-> Device drivers generally do not ioremap() the I/O BARs but they use
-> inb()/outb() directly. They can also call pci_iomap() and do
-> ioread8()/iowrite8() on the pointer returned from that function, but
-> generally the call to pci_iomap() then returns a pointer into the virtual
-> address that is already mapped.
->
-> > But why root complex driver is mapping this address region ?
->
-> The PCI core does not know that the I/O space is memory mapped.
-> On x86 and a few others, I/O space is not memory mapped but requires the
-> use of special CPU instructions.
->
-Thanks Bergmann
+On Thursday, July 14, 2016 3:56:24 PM CEST Lorenzo Pieralisi wrote:
+> On Thu, Jul 14, 2016 at 01:32:13PM +0000, Bharat Kumar Gogada wrote:
+> 
+> [...]
+> 
+> > Hi Lorenzo,
+> > 
+> > I missed something in my device tree now I corrected it.
+> > 
+> > ranges = <0x01000000 0x00000000 0xe0000000 0x00000000 0xe0000000 0 0x00010000   //io
+> 
+> You have not missed anything, you changed the PCI bus address at
+> which your host bridge responds to IO space and it must match
+> your configuration.
 
+I'd always recommend mapping the I/O space to PCI address zero, but
+evidently the hardware is not configured that way here.
 
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-
+	Arnd
