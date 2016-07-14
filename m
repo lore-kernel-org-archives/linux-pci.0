@@ -1,47 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:44546 "EHLO muru.com"
+Received: from mga11.intel.com ([192.55.52.93]:36083 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751790AbcGVHQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jul 2016 03:16:48 -0400
-Date: Fri, 22 Jul 2016 00:16:44 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, bcousson@baylibre.com,
-	robh+dt@kernel.org, mark.rutland@arm.com, linux@armlinux.org.uk,
-	linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, nsekhar@ti.com
-Subject: Re: [PATCH 2/2] ARM: DRA7: select PCI_DOMAINS config
-Message-ID: <20160722071644.GZ28140@atomide.com>
-References: <1469102276-14777-1-git-send-email-kishon@ti.com>
- <1469102276-14777-3-git-send-email-kishon@ti.com>
- <8047226.VhgpLo8JQu@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8047226.VhgpLo8JQu@wuerfel>
+	id S1751223AbcGNL3L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jul 2016 07:29:11 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v3 4/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
+Date: Thu, 14 Jul 2016 14:28:18 +0300
+Message-Id: <1468495702-7467-5-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Arnd Bergmann <arnd@arndb.de> [160721 05:08]:
-> On Thursday, July 21, 2016 5:27:56 PM CEST Kishon Vijay Abraham I wrote:
-> > diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
-> > index 1a648e9..8e6e2c0 100644
-> > --- a/arch/arm/mach-omap2/Kconfig
-> > +++ b/arch/arm/mach-omap2/Kconfig
-> > @@ -86,6 +86,7 @@ config SOC_DRA7XX
-> >         select OMAP_INTERCONNECT_BARRIER
-> >         select PM_OPP if PM
-> >         select ZONE_DMA if ARM_LPAE
-> > +       select PCI_DOMAINS if PCI
-> >  
-> >  config ARCH_OMAP2PLUS
-> >         bool
-> > 
-> 
-> Should we just set this unconditionally for ARCH_MULTIPLATFORM maybe?
+Updating the Kconfig Thunderbolt(TM) description.
 
-Makes sense to me if many SoCs need this.
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
+ drivers/thunderbolt/Makefile |  2 +-
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-Regards,
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+index c121acc..d34b0f5 100644
+--- a/drivers/thunderbolt/Kconfig
++++ b/drivers/thunderbolt/Kconfig
+@@ -1,13 +1,30 @@
+-menuconfig THUNDERBOLT
+-	tristate "Thunderbolt support for Apple devices"
++config THUNDERBOLT
++	tristate "Thunderbolt(TM) support"
+ 	depends on PCI
+ 	select CRC32
+ 	help
+-	  Cactus Ridge Thunderbolt Controller driver
++	  Thunderbolt(TM) Controller driver
++
++if THUNDERBOLT
++
++config THUNDERBOLT_APPLE
++	tristate "Apple hardware support"
++	help
+ 	  This driver is required if you want to hotplug Thunderbolt devices on
+ 	  Apple hardware.
+ 
+ 	  Device chaining is currently not supported.
+ 
+-	  To compile this driver a module, choose M here. The module will be
++	  To compile this driver as a module, choose M here. The module will be
+ 	  called thunderbolt.
++
++config THUNDERBOLT_ICM
++	tristate "Thunderbolt(TM) Networking"
++	help
++	  This driver is required if you want Thunderbolt(TM) Networking on
++	  non-Apple hardware.
++
++	  To compile this driver as a module, choose M here. The module will be
++	  called thunderbolt_icm.
++
++endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..7a85bd1 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+-obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
+ thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
+-- 
+2.7.4
 
-Tony
