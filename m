@@ -1,146 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36884 "EHLO foss.arm.com"
+Received: from mga11.intel.com ([192.55.52.93]:11820 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751002AbcGMNZC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jul 2016 09:25:02 -0400
-Date: Wed, 13 Jul 2016 14:24:35 +0100
-From: "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>
-Subject: Re: Purpose of pci_remap_iospace
-Message-ID: <20160713132435.GM8609@e106497-lin.cambridge.arm.com>
-References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
- <3927657.6zNCtCntSU@wuerfel>
- <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
+	id S1751434AbcGNL3Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jul 2016 07:29:25 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v3 8/8] thunderbolt: Networking doc
+Date: Thu, 14 Jul 2016 14:28:22 +0300
+Message-Id: <1468495702-7467-9-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 13, 2016 at 08:11:56AM +0000, Bharat Kumar Gogada wrote:
-> > Subject: Re: Purpose of pci_remap_iospace
-> >
-> > On Tuesday, July 12, 2016 6:57:10 AM CEST Bharat Kumar Gogada wrote:
-> > > Hi,
-> > >
-> > > I have a query.
-> > >
-> > > Can any once explain the purpose of pci_remap_iospace function in root
-> > port driver.
-> > >
-> > > What is its dependency with architecture ?
-> > >
-> > > Here is my understanding, the above API takes PCIe IO resource and its
-> > > to be mapped CPU address from ranges property and remaps into virtual
-> > address space.
-> > >
-> > > So my question is who uses this virtual addresses ?
-> >
-> > The inb()/outb() functions declared in asm/io.h
-> >
-> > > When End Point requests for IO BARs doesn't it get from the above
-> > > resource range (first parameter of API) and do ioremap to access this
-> > > region ?
-> >
-> > Device drivers generally do not ioremap() the I/O BARs but they use
-> > inb()/outb() directly. They can also call pci_iomap() and do
-> > ioread8()/iowrite8() on the pointer returned from that function, but
-> > generally the call to pci_iomap() then returns a pointer into the virtual
-> > address that is already mapped.
-> >
-> > > But why root complex driver is mapping this address region ?
-> >
-> > The PCI core does not know that the I/O space is memory mapped.
-> > On x86 and a few others, I/O space is not memory mapped but requires the
-> > use of special CPU instructions.
-> >
-> Thanks Arnd.
-> 
-> I'm facing issue in testing IO bars on our SoC.
-> 
-> I added following ranges in our device tree :
-> ranges = <0x01000000 0x00000000 0x00000000 0x00000000 0xe0000000 0 0x00100000   //io
->              0x02000000 0x00000000 0xe0100000 0x00000000 0xe0100000 0 0x0ef00000>;   //non prefetchabe memory
-> 
-> And I'm using above API to map the res and cpu physical address in my driver.
-> 
-> Kernel Boot log:
-> [    2.345294] nwl-pcie fd0e0000.pcie: Link is UP
-> [    2.345339] PCI host bridge /amba/pcie@fd0e0000 ranges:
-> [    2.345356]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
-> [    2.345382]    IO 0xe0000000..0xe00fffff -> 0x00000000
-> [    2.345401]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
-> [    2.345498] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
-> [    2.345517] pci_bus 0000:00: root bus resource [bus 00-ff]
-> [    2.345533] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff]
-> [    2.345550] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeeffffff]
-> [    2.345770] pci 0000:00:00.0: cannot attach to SMMU, is it on the same bus?
-> [    2.345786] iommu: Adding device 0000:00:00.0 to group 1
-> [    2.346142] pci 0000:01:00.0: cannot attach to SMMU, is it on the same bus?
-> [    2.346158] iommu: Adding device 0000:01:00.0 to group 1
-> [    2.346213] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-0xe02fffff]
-> [    2.346234] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe01fffff 64bit]
-> [    2.346268] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-0xe02fffff 64bit]
-> [    2.346300] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0040]
+Adding Thunderbolt(TM) networking documentation.
 
-Can you try to print the value of ret in pci_assign_resource() when it is printing the above message?
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ Documentation/00-INDEX                   |   2 +
+ Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
+ 2 files changed, 137 insertions(+)
+ create mode 100644 Documentation/thunderbolt-networking.txt
 
-I would tr debugging that function and the __pci_assign_resource() function to figure out
-where it fails. Maybe due to IO region being 1MB?
-
-Best regards,
-Liviu
-
-> [    2.346316] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0040]
-> [    2.346333] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
-> [    2.346350] pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe02fffff]
-> 
-> IO assignment fails.
-> 
-> On End Point:
-> 01:00.0 Memory controller: Xilinx Corporation Device a024
->         Subsystem: Xilinx Corporation Device 0007
->         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Interrupt: pin A routed to IRQ 224
->         Region 0: Memory at e0100000 (64-bit, non-prefetchable) [disabled] [size=1M]
->         Region 2: Memory at e0200000 (64-bit, non-prefetchable) [disabled] [size=1M]
->         Region 4: I/O ports at <unassigned> [disabled]
-> 
-> When I tested on x86 machine the same End Point I/O address is assigned, but it is a IO port mapped address.
-> 
-> So my doubt is why the memory mapped IO addresses are not assigned to EP on SoC ?
-> 
-> Do we need to have port mapped addresses on SoC also for PCI IO bars ?
-> 
-> Please let me know If I'm doing something wrong or missing something.
-> 
-> Thanks & Regards,
-> Bharat
-> 
-> 
-> 
-> This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
+index cd077ca..8cf1717 100644
+--- a/Documentation/00-INDEX
++++ b/Documentation/00-INDEX
+@@ -439,6 +439,8 @@ this_cpu_ops.txt
+ 	- List rationale behind and the way to use this_cpu operations.
+ thermal/
+ 	- directory with information on managing thermal issues (CPU/temp)
++thunderbolt-networking.txt
++	- Thunderbolt(TM) Networking driver description.
+ trace/
+ 	- directory with info on tracing technologies within linux
+ unaligned-memory-access.txt
+diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
+new file mode 100644
+index 0000000..b7714cf
+--- /dev/null
++++ b/Documentation/thunderbolt-networking.txt
+@@ -0,0 +1,135 @@
++Intel Thunderbolt(TM) Linux driver
++==================================
++
++Copyright(c) 2013 - 2016 Intel Corporation.
++
++Contact Information:
++Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
++Edited by Michael Jamet <michael.jamet@intel.com>
++
++Overview
++========
++
++Thunderbolt(TM) Networking mode is introduced with this driver.
++This kernel code creates an ethernet device utilized in computer to computer
++communication over a Thunderbolt cable.
++This driver has been added on the top of the existing thunderbolt driver
++for systems with firwmare (FW) based Thunderbolt controllers supporting
++Thunderbolt Networking.
++
++Files
++=====
++
++- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
++		In addition, they create an interface for netlink communication with
++		a user space daemon.
++
++- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
++		networking.
++
++Interface to user space
++=======================
++
++The interface to the user space module is implemented through a Generic Netlink.
++In order to be accessed by the user space module, both kernel and user space
++modules have to register with the same GENL_NAME. In our case, this is
++simply "thunderbolt".
++The registration is done at driver initialization time for all instances of
++the Thunderbolt controllers.
++The communication is then carried through pre-defined Thunderbolt messages.
++Each specific message has a callback function that is called when
++the related message is received.
++
++The messages are defined as follows:
++* NHI_CMD_UNSPEC: Not used.
++* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
++  communication channel.
++* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
++  to close communication channel.
++* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
++  driver version, FW version offset, number of ports in the controller
++  and DMA port.
++* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
++* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
++* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
++  changes or disconnect path.
++* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
++  module to FW to establish path.
++* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
++
++Communication with ICM (Firmware)
++=================================
++
++The communication with ICM is principally achieved through
++a DMA mechanism on Ring 0.
++The driver allocates a shared memory that is physically mapped onto
++the DMA physical space at Ring 0.
++
++Interrupts
++==========
++
++Thunderbolt relies on MSI-X interrupts.
++The MSI-X vector is allocated as follows:
++ICM
++     - Tx: MSI-X vector index 0
++     - Rx: MSI-X vector index 1
++
++Port 0
++     - Tx: MSI-X vector index 2
++     - Rx: MSI-X vector index 3
++
++Port 1
++     - Tx: MSI-X vector index 4
++     - Rx: MSI-X vector index 5
++
++ICM interrupts are used for communication with ICM only.
++Port 0 and Port 1 interrupts are used for Thunderbolt Networking
++communications.
++In case MSI-X is not available, the driver requests to enable MSI only.
++
++Mutexes, semaphores and spinlocks
++=================================
++
++The driver should be able to operate in an environment where hardware
++is asynchronously accessed by multiple entities such as netlink,
++multiple controllers etc.
++
++* send_sem: This semaphore enforces unique sender (one sender at a time)
++  to avoid wrong impairing with responses. FW may process one message
++  at the time.
++* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
++  to avoid continuing to send messages to FW.
++* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
++  avoid continuing to send commands to mailbox.
++* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
++  for the mailbox command.
++  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
++  to get the command response.
++* lock: This spinlock protects from simultaneous changes during
++  disable/enable interrupts.
++* state_lock: This mutex comes to protect changes during net device state
++  changes and net_device operations.
++* controllers_list_rwsem: This read/write sempahore syncs the access to
++  the controllers list when there are multiple controllers in the system.
++
++FW path enablement
++==================
++
++In order to SW to communicate with the FW, the driver needs to send to FW
++the PDF driver ready command and receive response from FW.
++The driver ready command PDF value is 12 and the response is 13.
++Once the exchange is completed, the user space module should be able to send
++messages through the driver to the FW and FW starts to send notifications
++about HW/FW events.
++
++Information
++===========
++
++Mailing list:
++	thunderbolt-software@lists.01.org
++	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
++	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
++
++For additional information about Thunderbolt technology visit:
++	https://01.org/thunderbolt-sw
++	https://thunderbolttechnology.net/
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+2.7.4
+
