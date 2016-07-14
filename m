@@ -1,60 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0048.outbound.protection.outlook.com ([104.47.2.48]:55427
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751071AbcGQQhf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 17 Jul 2016 12:37:35 -0400
-Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Ilya Lesokhin <ilyal@mellanox.com>
-References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
- <20160620113728.74ed79f3@ul30vt.home>
- <VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
- <20160621094537.4416cbce@t450s.home>
- <VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
- <20160714110341.7716c619@t450s.home>
-CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Noa Osherovich" <noaos@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	"Liran Liss" <liranl@mellanox.com>
-From: Haggai Eran <haggaie@mellanox.com>
-Message-ID: <fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
-Date: Sun, 17 Jul 2016 13:05:21 +0300
+Received: from mail-it0-f46.google.com ([209.85.214.46]:37674 "EHLO
+	mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbcGNLNu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 07:13:50 -0400
+Received: by mail-it0-f46.google.com with SMTP id f6so67794520ith.0
+        for <linux-pci@vger.kernel.org>; Thu, 14 Jul 2016 04:13:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160714110341.7716c619@t450s.home>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20160707224403.3279d807@free-electrons.com>
+References: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20160707224403.3279d807@free-electrons.com>
+From: Marcin Wojtas <mw@semihalf.com>
+Date: Thu, 14 Jul 2016 13:13:48 +0200
+Message-ID: <CAPv3WKcY3wWsbqkwjH7e51jDpgSxFtru=f=Sv3AXabaHEEr0XA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/3] pci: Aardvark PCIe controller driver for Marvell
+ Armada 3700
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Victor Gu <xigu@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/14/2016 8:03 PM, Alex Williamson wrote:
->> 2. Add an owner_pid to struct vfio_group and make sure in vfio_group_get_device_fd that
->> > the PFs  vfio_group is owned by the same process as the one that is trying to get a fd for a VF.
-> This only solves a very specific use case, it doesn't address any of
-> the issues where the VF struct device in the host kernel might get
-> bound to another driver.  
-The current patch uses driver_override to make the kernel use VFIO for
-all the new VFs. It still allows the host kernel to bind them to another
-driver, but that would require an explicit action on the part of the
-administrator. Don't you think that is enough? Do you think we should
-also take a reference on the VFIO devices to prevent an administrator
-from unbinding them?
+Hi Thomas,
 
-> Also is the pid really what we want to attach
-> ownership to?  What if the owner of the PF wants to assign the VF to a
-> peer VM, not to a nested VM?  It seems like there's an entire aspect of
-> owning and being able to grant ownership of a device to a user or group
-> missing.
-In order to support assigning to a peer VM, maybe we can do something a
-little different. What if we add a ioctl to enable SR-IOV, and the new
-ioctl would return an open fd for the VFIO group of each VF? Other
-attempts to open these groups by other processes would fail because the
-groups would already be open. The process that enabled SR-IOV could
-still pass these fds to other processes if needed, allowing other VMs to
-use them.
+I tested MSI's, Legacy IRQ's and stability problems with configuration
+space access - everything works fine, so
+Tested-by: Marcin Wojtas <mw@semihalf.com>
 
-What do you think?
+Best regards,
+Marcin
 
-Haggai
-
+2016-07-07 22:44 GMT+02:00 Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com>:
+> Hello Bjorn,
+>
+> On Thu, 30 Jun 2016 11:32:29 +0200, Thomas Petazzoni wrote:
+>
+>> This is the third iteration of the patch series that adds a PCIe
+>> controller driver for the Aardvark PCI controller, which is used on
+>> Marvell Armada 3700.
+>
+> Have you had the chance to look into this third iteration, which
+> hopefully integrates the feedback you made during your review of the
+> second version?
+>
+> I was hoping to get this in time for 4.8, so if you have any comments,
+> do not hesitate to let me know so that I can address them.
+>
+> Thanks!
+>
+> Thomas
+> --
+> Thomas Petazzoni, CTO, Free Electrons
+> Embedded Linux, Kernel and Android engineering
+> http://free-electrons.com
