@@ -1,112 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:23967 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755005AbcGHLuE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2016 07:50:04 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: <linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
-Date: Fri,  8 Jul 2016 12:49:55 +0100
-Message-Id: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com>
+Received: from mail-db5eur01on0065.outbound.protection.outlook.com ([104.47.2.65]:52960
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751224AbcGNU0d convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 16:26:33 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Noa Osherovich <noaos@mellanox.com>,
+	Haggai Eran <haggaie@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Liran Liss <liranl@mellanox.com>
+Subject: RE: [PATCH v2 0/2] VFIO SRIOV support
+Date: Thu, 14 Jul 2016 14:53:10 +0000
+Message-ID: <VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+	<20160620113728.74ed79f3@ul30vt.home>
+	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+ <20160621094537.4416cbce@t450s.home>
+In-Reply-To: <20160621094537.4416cbce@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Alex,
 
-I've marked this as RFC as I guess there might be a better way to do
-this, but I'm not sure how. I would appreciate your thoughts on this.
+Regarding the security model, I still think the need for admin privileges is enough,
+But Since you disagree, we can go with one of the following solutions:
+1. Go back to the model where the VFs are assigned to the same IOMMU group as the PF.
+2. Add an owner_pid to struct vfio_group and make sure in vfio_group_get_device_fd that
+the PFs  vfio_group is owned by the same process as the one that is trying to get a fd for a VF.
 
-Thanks
-Phil
+Will you accept either of this solutions?
 
----
-pdev_fixup_irq() performs interrupt swizzling on all PCI devices,
-no matter that the device may be on a completely unrelated PCI
-Host controller.
+Regarding the cleanup, I can fix it with a small bug fix
++ a call to pci_disable_sriov inside vfio_pci_disable.
 
-When you have multiple PCI Host controllers, pdev_fixup_irq() can
-clobber the dev->irq of devices it should not be changing.
-This has been seen when performing suspend/resume on boards with
-two R-Car PCIe Host controllers, resulting in a NULL ptr access
-in __pci_restore_msi_state. This happens because dev->irq has been
-overwritten with 0, and irq_get_msi_desc(dev->irq) returns NULL.
-
-This patch introduces a new function, pci_fixup_irqs_local(), that
-performs the same operation as pdev_fixup_irq(), but only changes
-the dev->irq of device on the same domain.
-
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- drivers/pci/setup-irq.c | 25 ++++++++++++++++++++++---
- include/linux/pci.h     |  3 +++
- 2 files changed, 25 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 95c225b..90ea8fa 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -22,7 +22,8 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
- 
--static void pdev_fixup_irq(struct pci_dev *dev,
-+static void pdev_fixup_irq(int domain_nr,
-+			   struct pci_dev *dev,
- 			   u8 (*swizzle)(struct pci_dev *, u8 *),
- 			   int (*map_irq)(const struct pci_dev *, u8, u8))
- {
-@@ -48,8 +49,15 @@ static void pdev_fixup_irq(struct pci_dev *dev,
- 		if (irq == -1)
- 			irq = 0;
- 	}
--	dev->irq = irq;
-+	/* Since pci_fixup_irqs() can be called more than once due to multiple
-+	 * host controllers, and we scan all PCI devices, not just those
-+	 * attached to this controller, make sure we don't clobber dev->irq
-+	 * that has nothing to do with this domain.
-+	 */
-+	if (domain_nr >= 0 && dev->bus->domain_nr != domain_nr)
-+		return;
- 
-+	dev->irq = irq;
- 	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
- 
- 	/* Always tell the device, so the driver knows what is
-@@ -63,6 +71,17 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	struct pci_dev *dev = NULL;
- 
- 	for_each_pci_dev(dev)
--		pdev_fixup_irq(dev, swizzle, map_irq);
-+		pdev_fixup_irq(-1, dev, swizzle, map_irq);
- }
- EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-+
-+void pci_fixup_irqs_local(struct pci_bus *bus,
-+		    u8 (*swizzle)(struct pci_dev *, u8 *),
-+		    int (*map_irq)(const struct pci_dev *, u8, u8))
-+{
-+	struct pci_dev *dev = NULL;
-+
-+	for_each_pci_dev(dev)
-+		pdev_fixup_irq(bus->domain_nr, dev, swizzle, map_irq);
-+}
-+EXPORT_SYMBOL_GPL(pci_fixup_irqs_local);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8badb66..37a97df 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1134,6 +1134,9 @@ void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
- 		    int (*)(const struct pci_dev *, u8, u8));
-+void pci_fixup_irqs_local(struct pci_bus *,
-+		    u8 (*)(struct pci_dev *, u8 *),
-+		    int (*)(const struct pci_dev *, u8, u8));
- #define HAVE_PCI_REQ_REGIONS	2
- int __must_check pci_request_regions(struct pci_dev *, const char *);
- int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
--- 
-2.5.0
-
+Thanks,
+Ilya
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Tuesday, June 21, 2016 6:46 PM
+> To: Ilya Lesokhin <ilyal@mellanox.com>
+> Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; bhelgaas@google.com;
+> Noa Osherovich <noaos@mellanox.com>; Haggai Eran
+> <haggaie@mellanox.com>; Or Gerlitz <ogerlitz@mellanox.com>; Liran Liss
+> <liranl@mellanox.com>
+> Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
+> 
+> On Tue, 21 Jun 2016 07:19:14 +0000
+> Ilya Lesokhin <ilyal@mellanox.com> wrote:
+> 
+> > Why is the need for admin privileges not enough to make it safe?
+> 
+> Seems like an opportunity for a phishing attempt, an exploited VM generates
+> VFs and hopes that they get assigned to other VMs or put to other uses.  It
+> simply allows one VM to create resources that are really not tied to that VM
+> and can easily be mis-used in other ways, potentially even with the
+> assumption that it's secure.
+> 
+> > What's the difference between the following?
+> > 	1. A PF is assigned to one user and the admin assigns one of it VFs to
+> a different user.
+> > 	2. The admin assign the main network interface of the machine to a
+> VM and bring down all the connectivity of the host.
+> 
+> In case 1. does the admin realize what they've done?  How?  Maybe they just
+> start filing bugs when they shutdown the PF assigned VM or even just reboot
+> it and the VF assigned VM no longer has connectivity.  A typical user might
+> just think "hey cool, now I can assign PFs and VFs"
+> w/o considering the implications of that.  There are aspects of the host that
+> we need to trust, allowing another VM to hold some of that trust is not such
+> an obvious thing.  Clearly in case 2. the admin is going to pretty quickly figure
+> out that they've done something terribly wrong.
+> 
+> > Indeed we don't address clean up, but we didn't see any adverse effect
+> from the VFs remaining probed by the VFIO driver after the VM is shutdown.
+> 
+> Yet that's clearly not the state the PF was in when assigned and those VFs
+> have no cleanup mechanism.  This is a big problem.
+> 
+> > Would you be willing to accept this feature under some kconfig option or if
+> it was allowed only for Privileged processes?
+> > I would hate to throw this feature away just because we can't address
+> every corner case.
+> 
+> I'm not willing to accept half baked features and letting them bitrot under a
+> config option that doesn't get regular use doesn't help.  If this is really that
+> useful to you then make it safe and predictable.  I don't have answers to all
+> the issues this generates, it might require extensions to driver APIs or new
+> mechanisms for vfio to associate device ownership.  There might be valid use
+> cases for a user owned PF sourcing VFs owned by other users, but obviously
+> to me it sounds like a rats nest of security issues and "because we can" and
+> "useful development tool" are not resounding motives for me to sign up
+> trying to support it.  Thanks,
+> 
+> Alex
