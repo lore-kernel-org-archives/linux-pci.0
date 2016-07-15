@@ -1,54 +1,40 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-From: Peter Wu <peter@lekensteyn.nl>
-To: Dave Airlie <airlied@redhat.com>
-Cc: nouveau@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
-Date: Fri, 15 Jul 2016 15:12:14 +0200
-Message-Id: <20160715131218.2416-1-peter@lekensteyn.nl>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:34636 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932187AbcGOKxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Jul 2016 06:53:30 -0400
+In-Reply-To: <1468444634-1866-15-git-send-email-imunsie@au.ibm.com>
+To: Ian Munsie <imunsie@au1.ibm.com>,
+	Michael Neuling <mikey@neuling.org>,
+	Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
+	Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, Huy Nguyen <huyn@mellanox.com>
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Ian Munsie <imunsie@au1.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [14/15] PCI/hotplug: pnv_php: handle OPAL_PCI_SLOT_OFFLINE power state
+Message-Id: <3rrTvD2DB5z9sBg@ozlabs.org>
+Date: Fri, 15 Jul 2016 20:53:28 +1000 (AEST)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Wed, 2016-13-07 at 21:17:13 UTC, Ian Munsie wrote:
+> From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+> 
+> When calling pnv_php_set_slot_power_state() with state ==
+> OPAL_PCI_SLOT_OFFLINE, remove devices from the device tree as if we're
+> dealing with OPAL_PCI_SLOT_POWER_OFF.
+> 
+> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+> Signed-off-by: Ian Munsie <imunsie@au1.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
-due to unchecked function) and a more important fix to fix hanging Optimus
-machines when runtime PM is enabled (with pm/pci patches).
+Applied to powerpc next, thanks.
 
-These are the final patches targeting v4.8. Changes compared to v2[1]:
-collected R-b from Hans and Mika and fixed a minor comment style issue.
+https://git.kernel.org/powerpc/c/5473a6bf635d35d5c1d12d0e13
 
-I recommend it to be merged before the pci/pm patches[2], otherwise there is a
-window where newer Nvidia Optimus laptops might fail to runtime resume and/or
-lock up.  Once the pci/pm branch is merged I will propose another patch to
-improve reliability[3].
-
-Known issue with patch 4: when a Nvidia HDMI audio function is present, the
-bridge will not suspend and hence the Nvidia card will still be powered. Fixing
-this properly will require more work[4], until then you can kill the audio
-device and make runtime PM work properly:
-
-    echo 1 > /sys/bus/pci/devices/0000:01:00.1/remove
-
-Kind regards,
-Peter
-
- [1]: https://lists.freedesktop.org/archives/nouveau/2016-July/025519.html
- [2]: https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/?h=pci/pm
- [3]: http://www.spinics.net/lists/linux-pci/msg52601.html
- [4]: https://lists.freedesktop.org/archives/dri-devel/2016-July/112759.html
-
-Peter Wu (4):
-  drm/nouveau/acpi: ensure matching ACPI handle and supported functions
-  drm/nouveau/acpi: return supported DSM functions
-  drm/nouveau/acpi: check for function 0x1B before using it
-  drm/nouveau/acpi: fix lockup with PCIe runtime PM
-
- drivers/gpu/drm/nouveau/nouveau_acpi.c | 105 +++++++++++++++++++++------------
- 1 file changed, 68 insertions(+), 37 deletions(-)
-
--- 
-2.9.0
+cheers
