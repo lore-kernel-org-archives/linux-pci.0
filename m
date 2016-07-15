@@ -1,53 +1,66 @@
-Return-Path: <tglx@linutronix.de>
-Return-Path: <tglx@linutronix.de>
-Date: Tue, 26 Jul 2016 16:05:37 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-    Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-    linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] genirq/msi: Make sure PCI MSIs are activated early
-In-Reply-To: <alpine.DEB.2.11.1607261503120.19896@nanos>
-Message-ID: <alpine.DEB.2.11.1607261549350.19896@nanos>
-References: <1468426713-31431-1-git-send-email-marc.zyngier@arm.com> <20160722220440.GC32142@localhost> <alpine.DEB.2.11.1607250928370.5629@nanos> <20160725144702.GA12484@localhost> <alpine.DEB.2.11.1607261307180.19896@nanos>
- <alpine.DEB.2.11.1607261503120.19896@nanos>
+Return-Path: <ibmirkin@gmail.com>
+Return-Path: <ibmirkin@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: ibmirkin@gmail.com
+In-Reply-To: <CADnq5_Oqo3+e=vK_4NUgzPc7U8aXp1dnw3S-rCEJYno9CGm7BQ@mail.gmail.com>
+References: <20160715131218.2416-1-peter@lekensteyn.nl> <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
+ <CADnq5_OBjHXO4sfakK0ZJPbHPrMACqdU7J-j9sHLjod0QcuzcA@mail.gmail.com>
+ <CAKb7Uvh8vGFZXgbt08nODo6QBP==w=LuqZ5c6UQZPFWc8675AA@mail.gmail.com> <CADnq5_Oqo3+e=vK_4NUgzPc7U8aXp1dnw3S-rCEJYno9CGm7BQ@mail.gmail.com>
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+Date: Fri, 15 Jul 2016 12:42:38 -0400
+Message-ID: <CAKb7UvgbTyconY4k6WkA8O94Qu_fBWv-QNb-auSVwzGK_B9bQw@mail.gmail.com>
+Subject: Re: [Nouveau] [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Peter Wu <peter@lekensteyn.nl>, Linux PCI <linux-pci@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>, Dave Airlie <airlied@redhat.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 26 Jul 2016, Thomas Gleixner wrote:
-> On Tue, 26 Jul 2016, Thomas Gleixner wrote:
-> > On Mon, 25 Jul 2016, Bjorn Helgaas wrote:
-> > > On Mon, Jul 25, 2016 at 09:45:13AM +0200, Thomas Gleixner wrote:
-> > > I thought the original issue [1] was that PCI_MSI_FLAGS_ENABLE was being
-> > > written before PCI_MSI_ADDRESS_LO.  That doesn't sound like a good
-> > > idea to me.
-> > 
-> > Well. That's only a problem if the PCI device does not support masking. But
-> > yes, we missed that case back then.
-> >  
-> > > That does seem like a problem.  Maybe it would be better to delay
-> > > setting PCI_MSI_FLAGS_ENABLE until after the MSI address & data bits
-> > > have been set?
-> > 
-> > I thought about that, but that gets ugly pretty fast. Here is an alternative
-> > solution.
-> > 
-> > I think that's the proper place to do it _AFTER_ the hierarchical allocation
-> > took place. On x86 Marc's ACTIVATE_EARLY flag would not work because the
-> > message is not yet ready to be assembled.
-> 
-> Actually it works, because the MSI domain is the last one which is running the
-> allocation function. So everything else is initialized already.
-> 
-> I'll take Marc's patch with some additional commentry as it turned out to be a
-> workaround for the reported VMware issues with PCI/MSI-X pass through.
+On Fri, Jul 15, 2016 at 12:40 PM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On Fri, Jul 15, 2016 at 12:31 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
+>> On Fri, Jul 15, 2016 at 12:27 PM, Alex Deucher <alexdeucher@gmail.com> wrote:
+>>> On Fri, Jul 15, 2016 at 12:10 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
+>>>> On Fri, Jul 15, 2016 at 9:12 AM, Peter Wu <peter@lekensteyn.nl> wrote:
+>>>>> Hi,
+>>>>>
+>>>>> Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
+>>>>> due to unchecked function) and a more important fix to fix hanging Optimus
+>>>>> machines when runtime PM is enabled (with pm/pci patches).
+>>>>>
+>>>>> These are the final patches targeting v4.8. Changes compared to v2[1]:
+>>>>> collected R-b from Hans and Mika and fixed a minor comment style issue.
+>>>>>
+>>>>> I recommend it to be merged before the pci/pm patches[2], otherwise there is a
+>>>>> window where newer Nvidia Optimus laptops might fail to runtime resume and/or
+>>>>> lock up.  Once the pci/pm branch is merged I will propose another patch to
+>>>>> improve reliability[3].
+>>>>>
+>>>>> Known issue with patch 4: when a Nvidia HDMI audio function is present, the
+>>>>> bridge will not suspend and hence the Nvidia card will still be powered. Fixing
+>>>>
+>>>> That's basically all optimus gpu's, right? Anything GT21x+ has a HDMI
+>>>> audio subfunction, and prior to that, the nvidia gpu tended to be the
+>>>> only gpu, or hard-muxed.
+>>>
+>>> I'd imagine there is a strap on the asic so the audio function is only
+>>> enabled if there is a connector actually wired to the dGPU.  It
+>>> doesn't make much sense to expose audio if there is no way to use it.
+>>
+>> A lot of the time, there actually is a connector wired up. A lot of
+>> the other time, there is no connector, but the display unit is still
+>> there. Very recently, NVIDIA gpu's have started coming out marked as
+>> "3d accelerator", which sometimes but not always means that there's no
+>> display unit, and for those, I would assume there is no audio
+>> subfunction.
+>>
+>
+> Just because there is a display block, doesn't mean the audio function
+> is always enabled.  I suspect it is disabled by hardware straps on
+> systems with no display connectors or other specific OEM configs.
 
-Now I digged a little bit deeper into all that PCI/MSI maze.
+That's what I'm saying - it is not. There are straps, and they can be
+used to disable the display block. But they're often not set that way.
 
-When a interrupt is freed, then we write the msi message to 0, but the
-PCI_MSI_FLAGS_ENABLE flag is still set. That makes me wonder ...
-
-Thanks,
-
-	tglx
+  -ilia
