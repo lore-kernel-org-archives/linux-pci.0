@@ -1,110 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57742 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756135AbcGHX6O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2016 19:58:14 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u68NsUCU143414
-	for <linux-pci@vger.kernel.org>; Fri, 8 Jul 2016 19:57:14 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 242f8g4177-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 08 Jul 2016 19:57:14 -0400
-Received: from localhost
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <nfont@linux.vnet.ibm.com>;
-	Fri, 8 Jul 2016 17:57:13 -0600
-Subject: Re: [PATCH] rpaphp: fix slot registration for multiple slots under a
- PHB
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-References: <1468019987-1733-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
-	mdroth@linux.vnet.ibm.com, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-From: Nathan Fontenot <nfont@linux.vnet.ibm.com>
-Date: Fri, 8 Jul 2016 18:57:06 -0500
+Return-Path: <ibmirkin@gmail.com>
+Return-Path: <ibmirkin@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1468019987-1733-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252
-Message-Id: <57803DD2.601@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: ibmirkin@gmail.com
+In-Reply-To: <20160715163622.GC2632@al>
+References: <20160715131218.2416-1-peter@lekensteyn.nl> <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
+ <20160715163622.GC2632@al>
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+Date: Fri, 15 Jul 2016 12:41:49 -0400
+Message-ID: <CAKb7Uvg+E_92DF6p_3O0XtzG66qTdDM7Fa=TaesNs2Y6bzTQSA@mail.gmail.com>
+Subject: Re: [Nouveau] [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
+To: Peter Wu <peter@lekensteyn.nl>
+Cc: Dave Airlie <airlied@redhat.com>,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/08/2016 06:19 PM, Tyrel Datwyler wrote:
-> PowerVM seems to only ever provide a single hotplug slot per PHB.
-> The under lying slot hotplug registration code assumed multiple slots,
-> but the actual implementation is broken for multiple slots. This went
-> unnoticed for years due to the nature of PowerVM as mentioned
-> previously. Under qemu/kvm the hotplug slot model aligns more with
-> x86 where multiple slots are presented under a single PHB. As seen
-> in the following each additional slot after the first fails to
-> register due to each slot always being compared against the first
-> child node of the PHB in the device tree.
-> 
-> [    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-> [    6.492569] rpaphp: Slot [Slot 0] registered
-> [    6.492577] rpaphp: pci_hp_register failed with error -16
-> [    6.493082] rpaphp: pci_hp_register failed with error -16
-> [    6.493138] rpaphp: pci_hp_register failed with error -16
-> [    6.493161] rpaphp: pci_hp_register failed with error -16
-> 
-> The registration logic is fixed so that each slot is compared
-> against the existing child devices of the PHB in the device tree to
-> determine present slots vs empty slots.
-> 
-> [   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-> [   38.482004] rpaphp: Slot [C0] registered
-> [   38.482127] rpaphp: Slot [C1] registered
-> [   38.482241] rpaphp: Slot [C2] registered
-> [   38.482356] rpaphp: Slot [C3] registered
-> [   38.482495] rpaphp: Slot [C4] registered
-> 
-> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-> ---
->  drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
-> index 6937c72..c90fa8d 100644
-> --- a/drivers/pci/hotplug/rpaphp_slot.c
-> +++ b/drivers/pci/hotplug/rpaphp_slot.c
-> @@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
->  int rpaphp_register_slot(struct slot *slot)
->  {
->  	struct hotplug_slot *php_slot = slot->hotplug_slot;
-> +	struct device_node *child;
-> +	u32 my_index;
->  	int retval;
-> -	int slotno;
-> +	int slotno = -1;
-> 
->  	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
->  		__func__, slot->dn->full_name, slot->index, slot->name,
-> @@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
->  		return -EAGAIN;
->  	}
-> 
-> -	if (slot->dn->child)
-> -		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
-> -	else
-> -		slotno = -1;
-> +	for_each_child_of_node(slot->dn, child) {
-> +		retval = of_property_read_u32(child, "my,ibm-drc-index", &my_index);
+On Fri, Jul 15, 2016 at 12:36 PM, Peter Wu <peter@lekensteyn.nl> wrote:
+> On Fri, Jul 15, 2016 at 12:10:23PM -0400, Ilia Mirkin wrote:
+>> On Fri, Jul 15, 2016 at 9:12 AM, Peter Wu <peter@lekensteyn.nl> wrote:
+>> > Hi,
+>> >
+>> > Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
+>> > due to unchecked function) and a more important fix to fix hanging Optimus
+>> > machines when runtime PM is enabled (with pm/pci patches).
+>> >
+>> > These are the final patches targeting v4.8. Changes compared to v2[1]:
+>> > collected R-b from Hans and Mika and fixed a minor comment style issue.
+>> >
+>> > I recommend it to be merged before the pci/pm patches[2], otherwise there is a
+>> > window where newer Nvidia Optimus laptops might fail to runtime resume and/or
+>> > lock up.  Once the pci/pm branch is merged I will propose another patch to
+>> > improve reliability[3].
+>> >
+>> > Known issue with patch 4: when a Nvidia HDMI audio function is present, the
+>> > bridge will not suspend and hence the Nvidia card will still be powered. Fixing
+>>
+>> That's basically all optimus gpu's, right? Anything GT21x+ has a HDMI
+>> audio subfunction, and prior to that, the nvidia gpu tended to be the
+>> only gpu, or hard-muxed.
+>>
+>> If that's the case, that's pretty much a non-starter, IMO.
+>
+> For some reason the audio function tends to disappear/hide, so maybe it
+> is not as problematic as it appears (see
+> https://bugs.freedesktop.org/show_bug.cgi?id=75985). For my laptop I
 
-Shouldn't this be reading ibm,my-drc-index? instead of my,ibm-drc-index.
+I'm aware of that bug. I believe this is an exceedingly rare scenario
+or it would have been reported a lot more.
 
--Nathan
+> also had to runtime suspend/resume before lspci -H1 shows the device,
+> loading with runpm=0 didn't return my HDMI audio device.
 
-> +		if (my_index == slot->index) {
-> +			slotno = PCI_SLOT(PCI_DN(child)->devfn);
-> +			of_node_put(child);
-> +			break;
-> +		}
-> +	}
-> +
->  	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
->  	if (retval) {
->  		err("pci_hp_register failed with error %d\n", retval);
-> 
+Hm ok. Do you have the same laptop as the reporter of that bug?
 
+>
+> The powered on issue will also only appear on devices produced in 2013
+> and newer that happen to have this ACPI _PR3 ACPI method (which is quite
+> common for new machines supporting Windows 8 though).
+>
+> For these newer laptops, after the pci/pm merge and after a patch like
+> http://www.spinics.net/lists/linux-pci/msg52601.html, the user can
+> revert to the old DSM method by booting with pcie_port_pm=off which will
+> retain the current behavior.
+>
+> The advantage of this patch is that it fixes memory corruption on some
+> devices. The risk is that the card stays on because the audio subsystem
+> needs some more work.  FWIW, I was working on some patches that properly
+> suspended in presence of the HDA controller, but somehow the audio
+> device was not properly resumed resulting in "no AFG or MFG node found"
+> and "snd_hda_intel 0000:01:00.1: no codecs initialized".
+
+Does this restriction (runpm being broken in presence of the audio
+subfunction) only affect devices with _PR3? If so, that's a lot more
+palatable - I bet Windows 8+ is in an era when the display-less thing
+became more popular, and thus less likely to affect a ton of people.
+
+  -ilia
