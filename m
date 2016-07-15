@@ -1,66 +1,38 @@
-Return-Path: <andreas.noever@gmail.com>
-Return-Path: <andreas.noever@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <20160719220236.GC18635@localhost>
-References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com> <20160719220236.GC18635@localhost>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Tue, 26 Jul 2016 09:35:01 +0200
-Message-ID: <CAMxnaaW6O9rcEyDiqR7mMb4iS6hfhg9Zq=Ep2NaOhTCg34em0g@mail.gmail.com>
-Subject: Re: [PATCH v4 0/7] thunderbolt: Introducing Thunderbolt(TM) networking
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Amir Levy <amir.jer.levy@intel.com>, Greg KH <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: David Miller <davem@davemloft.net>
+CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
 	thunderbolt-linux <thunderbolt-linux@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>, "Winkler, Tomas" <tomas.winkler@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v3 2/8] thunderbolt: Updating device IDs
+Date: Fri, 15 Jul 2016 18:56:39 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03893CE285@hasmsx107.ger.corp.intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+	<1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
+ <20160715.114902.1149848183971707484.davem@davemloft.net>
+In-Reply-To: <20160715.114902.1149848183971707484.davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 20, 2016 at 12:02 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Jul 18, 2016 at 01:00:33PM +0300, Amir Levy wrote:
->> This is version 4 of Thunderbolt(TM) driver for non-Apple hardware.
->>
->> Changes since v3:
->>  - Moved new Thunderbolt device IDs from pci_ids.h to icm_nhi.h.
->>  - Cleanup and added some comments in code.
->>
->> These patches were pushed to GitHub where they can be reviewed more
->> comfortably with green/red highlighting:
->>       https://github.com/01org/thunderbolt-software-kernel-tree
->>
->> Daemon code:
->>       https://github.com/01org/thunderbolt-software-daemon
->>
->> For reference, here's a link to version 3:
->> [v3]: https://lkml.org/lkml/2016/7/14/311
->>
->> Amir Levy (7):
->>   thunderbolt: Macro rename
->>   thunderbolt: Updating the register definitions
->>   thunderbolt: Kconfig for Thunderbolt(TM) networking
->>   thunderbolt: Communication with the ICM (firmware)
->>   thunderbolt: Networking state machine
->>   thunderbolt: Networking transmit and receive
->>   thunderbolt: Networking doc
->>
->>  Documentation/00-INDEX                   |    2 +
->>  Documentation/thunderbolt-networking.txt |  135 ++
->>  drivers/thunderbolt/Kconfig              |   25 +-
->>  drivers/thunderbolt/Makefile             |    3 +-
->>  drivers/thunderbolt/icm/Makefile         |   28 +
->>  drivers/thunderbolt/icm/icm_nhi.c        | 1642 +++++++++++++++++++++
->>  drivers/thunderbolt/icm/icm_nhi.h        |   93 ++
->>  drivers/thunderbolt/icm/net.c            | 2276 ++++++++++++++++++++++++++++++
->>  drivers/thunderbolt/icm/net.h            |  274 ++++
->>  drivers/thunderbolt/nhi_regs.h           |  115 +-
->>  10 files changed, 4585 insertions(+), 8 deletions(-)
->>  create mode 100644 Documentation/thunderbolt-networking.txt
->>  create mode 100644 drivers/thunderbolt/icm/Makefile
->>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
->>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
->>  create mode 100644 drivers/thunderbolt/icm/net.c
->>  create mode 100644 drivers/thunderbolt/icm/net.h
->
-> Andreas, I assume you'll handle this.
-No, this is a separate driver.
+On Fri, Jul 15 2016, 09:49 PM, David Miller wrote:
+> From: Amir Levy <amir.jer.levy@intel.com>
+> Date: Thu, 14 Jul 2016 14:28:16 +0300
+> 
+> > Adding the new Thunderbolt(TM) device IDs to the list.
+> >
+> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> 
+> Unless these PCI-IDs, all of them, are going to be used in multiple spots in the
+> kernel, it is not appropriate to add them here.
+> 
+> They belong as private macros in the drivers themselves, instead.
+
+They might be used: http://www.spinics.net/lists/linux-pci/msg51331.html
