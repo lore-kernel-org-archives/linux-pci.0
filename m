@@ -1,63 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.smtpout.orange.fr ([80.12.242.124]:49890 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362AbcGNVSg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 17:18:36 -0400
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: kishon@ti.com, bhelgaas@google.com
-Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] PCI: dra7xx: Fix return value in case of error
-Date: Thu, 14 Jul 2016 23:18:27 +0200
-Message-Id: <1468531107-3639-1-git-send-email-christophe.jaillet@wanadoo.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <peter@lekensteyn.nl>
+Return-Path: <peter@lekensteyn.nl>
+From: Peter Wu <peter@lekensteyn.nl>
+To: Dave Airlie <airlied@redhat.com>
+Cc: nouveau@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
+Date: Fri, 15 Jul 2016 15:12:14 +0200
+Message-Id: <20160715131218.2416-1-peter@lekensteyn.nl>
 List-ID: <linux-pci.vger.kernel.org>
 
-In function 'dra7xx_pcie_init_irq_domain', the pattern used to check and
-return error is:
+Hi,
 
-   if (!var) {
-      dev_err(...);
-      return PTR_ERR(var);
-   }
+Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
+due to unchecked function) and a more important fix to fix hanging Optimus
+machines when runtime PM is enabled (with pm/pci patches).
 
-So the returned value in case of error is always 0, which means 'success'.
-Change it to return -ENODEV instead.
+These are the final patches targeting v4.8. Changes compared to v2[1]:
+collected R-b from Hans and Mika and fixed a minor comment style issue.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/pci/host/pci-dra7xx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I recommend it to be merged before the pci/pm patches[2], otherwise there is a
+window where newer Nvidia Optimus laptops might fail to runtime resume and/or
+lock up.  Once the pci/pm branch is merged I will propose another patch to
+improve reliability[3].
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index f441130..81b3949 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -181,14 +181,14 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
- 
- 	if (!pcie_intc_node) {
- 		dev_err(dev, "No PCIe Intc node found\n");
--		return PTR_ERR(pcie_intc_node);
-+		return -ENODEV;
- 	}
- 
- 	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
- 					       &intx_domain_ops, pp);
- 	if (!pp->irq_domain) {
- 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return PTR_ERR(pp->irq_domain);
-+		return -ENODEV;
- 	}
- 
- 	return 0;
+Known issue with patch 4: when a Nvidia HDMI audio function is present, the
+bridge will not suspend and hence the Nvidia card will still be powered. Fixing
+this properly will require more work[4], until then you can kill the audio
+device and make runtime PM work properly:
+
+    echo 1 > /sys/bus/pci/devices/0000:01:00.1/remove
+
+Kind regards,
+Peter
+
+ [1]: https://lists.freedesktop.org/archives/nouveau/2016-July/025519.html
+ [2]: https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/?h=pci/pm
+ [3]: http://www.spinics.net/lists/linux-pci/msg52601.html
+ [4]: https://lists.freedesktop.org/archives/dri-devel/2016-July/112759.html
+
+Peter Wu (4):
+  drm/nouveau/acpi: ensure matching ACPI handle and supported functions
+  drm/nouveau/acpi: return supported DSM functions
+  drm/nouveau/acpi: check for function 0x1B before using it
+  drm/nouveau/acpi: fix lockup with PCIe runtime PM
+
+ drivers/gpu/drm/nouveau/nouveau_acpi.c | 105 +++++++++++++++++++++------------
+ 1 file changed, 68 insertions(+), 37 deletions(-)
+
 -- 
-2.7.4
-
-
----
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
-
+2.9.0
