@@ -1,45 +1,40 @@
-Return-Path: <alexdeucher@gmail.com>
-Return-Path: <alexdeucher@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
-References: <20160715131218.2416-1-peter@lekensteyn.nl> <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Fri, 15 Jul 2016 12:27:57 -0400
-Message-ID: <CADnq5_OBjHXO4sfakK0ZJPbHPrMACqdU7J-j9sHLjod0QcuzcA@mail.gmail.com>
-Subject: Re: [Nouveau] [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
-To: Ilia Mirkin <imirkin@alum.mit.edu>
-Cc: Peter Wu <peter@lekensteyn.nl>, Linux PCI <linux-pci@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>, Dave Airlie <airlied@redhat.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 15 Jul 2016 14:53:45 -0700 (PDT)
+Message-Id: <20160715.145345.1714630247405044715.davem@davemloft.net>
+To: amir.jer.levy@intel.com
+Cc: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com
+Subject: Re: [PATCH v3 2/8] thunderbolt: Updating device IDs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <E607265CB020454880711A6F96C05A03893CE285@hasmsx107.ger.corp.intel.com>
+References: <1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
+	<20160715.114902.1149848183971707484.davem@davemloft.net>
+	<E607265CB020454880711A6F96C05A03893CE285@hasmsx107.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 15, 2016 at 12:10 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
-> On Fri, Jul 15, 2016 at 9:12 AM, Peter Wu <peter@lekensteyn.nl> wrote:
->> Hi,
->>
->> Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
->> due to unchecked function) and a more important fix to fix hanging Optimus
->> machines when runtime PM is enabled (with pm/pci patches).
->>
->> These are the final patches targeting v4.8. Changes compared to v2[1]:
->> collected R-b from Hans and Mika and fixed a minor comment style issue.
->>
->> I recommend it to be merged before the pci/pm patches[2], otherwise there is a
->> window where newer Nvidia Optimus laptops might fail to runtime resume and/or
->> lock up.  Once the pci/pm branch is merged I will propose another patch to
->> improve reliability[3].
->>
->> Known issue with patch 4: when a Nvidia HDMI audio function is present, the
->> bridge will not suspend and hence the Nvidia card will still be powered. Fixing
->
-> That's basically all optimus gpu's, right? Anything GT21x+ has a HDMI
-> audio subfunction, and prior to that, the nvidia gpu tended to be the
-> only gpu, or hard-muxed.
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+Date: Fri, 15 Jul 2016 18:56:39 +0000
 
-I'd imagine there is a strap on the asic so the audio function is only
-enabled if there is a connector actually wired to the dGPU.  It
-doesn't make much sense to expose audio if there is no way to use it.
+> On Fri, Jul 15 2016, 09:49 PM, David Miller wrote:
+>> From: Amir Levy <amir.jer.levy@intel.com>
+>> Date: Thu, 14 Jul 2016 14:28:16 +0300
+>> 
+>> > Adding the new Thunderbolt(TM) device IDs to the list.
+>> >
+>> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+>> 
+>> Unless these PCI-IDs, all of them, are going to be used in multiple spots in the
+>> kernel, it is not appropriate to add them here.
+>> 
+>> They belong as private macros in the drivers themselves, instead.
+> 
+> They might be used: http://www.spinics.net/lists/linux-pci/msg51331.html
 
-Alex
+Then move them to the common location when this "might" thing actually
+happens.
