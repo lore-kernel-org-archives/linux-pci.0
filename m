@@ -1,56 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:35488 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbcGFRxX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2016 13:53:23 -0400
-Received: by mail-wm0-f49.google.com with SMTP id z126so120718181wme.0
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2016 10:53:22 -0700 (PDT)
+Return-Path: <ibmirkin@gmail.com>
+Return-Path: <ibmirkin@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAN7O0+KWutzXSX5Y_Ud9pspzghOEMx6iFo-56n1TJ3UW1t5RwQ@mail.gmail.com>
-References: <CAN7O0+JsyQZd_BKNHYSzzyq0LePsT2U3iwC=VdJsjFW5iicHqA@mail.gmail.com>
- <CAN7O0+KWutzXSX5Y_Ud9pspzghOEMx6iFo-56n1TJ3UW1t5RwQ@mail.gmail.com>
-From: Kallol Biswas <kallol@nucleodyne.com>
-Date: Wed, 6 Jul 2016 10:53:21 -0700
-Message-ID: <CAH=XD58Y8w5y-PQipAUutLguOuSwz45TVEv67rVoEzTu-4VT+w@mail.gmail.com>
-Subject: Re: Need some help with pciehp hot-plug driver
-To: vidya sagar <sagar.tv@gmail.com>
-Cc: linux-pci@vger.kernel.org
+Sender: ibmirkin@gmail.com
+In-Reply-To: <CADnq5_OBjHXO4sfakK0ZJPbHPrMACqdU7J-j9sHLjod0QcuzcA@mail.gmail.com>
+References: <20160715131218.2416-1-peter@lekensteyn.nl> <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
+ <CADnq5_OBjHXO4sfakK0ZJPbHPrMACqdU7J-j9sHLjod0QcuzcA@mail.gmail.com>
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+Date: Fri, 15 Jul 2016 12:31:03 -0400
+Message-ID: <CAKb7Uvh8vGFZXgbt08nODo6QBP==w=LuqZ5c6UQZPFWc8675AA@mail.gmail.com>
+Subject: Re: [Nouveau] [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Peter Wu <peter@lekensteyn.nl>, Linux PCI <linux-pci@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>, Dave Airlie <airlied@redhat.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Do not know if we really need ACPI for PCIe HP to work.
-
-As long as the switch ports is capable of Hotplug operations and have
-MSI vector to interrupt Linux OS should be able to work.
-
-I have verified existing hotplug features on linux and extended for a
-switch appliance. Both control and surprise hotplug work.
-
-I used Cent 6.7 as well as Linux-3.8.1 kernel.
-
-You should take a look at:
-
-https://www.kernel.org/doc/ols/2005/ols2005v2-pages-9-18.pdf
-
-and also hot plug specs.
-
-
-On Tue, Jul 5, 2016 at 11:53 PM, vidya sagar <sagar.tv@gmail.com> wrote:
+On Fri, Jul 15, 2016 at 12:27 PM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On Fri, Jul 15, 2016 at 12:10 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
+>> On Fri, Jul 15, 2016 at 9:12 AM, Peter Wu <peter@lekensteyn.nl> wrote:
+>>> Hi,
+>>>
+>>> Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
+>>> due to unchecked function) and a more important fix to fix hanging Optimus
+>>> machines when runtime PM is enabled (with pm/pci patches).
+>>>
+>>> These are the final patches targeting v4.8. Changes compared to v2[1]:
+>>> collected R-b from Hans and Mika and fixed a minor comment style issue.
+>>>
+>>> I recommend it to be merged before the pci/pm patches[2], otherwise there is a
+>>> window where newer Nvidia Optimus laptops might fail to runtime resume and/or
+>>> lock up.  Once the pci/pm branch is merged I will propose another patch to
+>>> improve reliability[3].
+>>>
+>>> Known issue with patch 4: when a Nvidia HDMI audio function is present, the
+>>> bridge will not suspend and hence the Nvidia card will still be powered. Fixing
+>>
+>> That's basically all optimus gpu's, right? Anything GT21x+ has a HDMI
+>> audio subfunction, and prior to that, the nvidia gpu tended to be the
+>> only gpu, or hard-muxed.
 >
-> Hi,
-> I was going through the video
-> https://www.youtube.com/watch?v=oCJOkoRvsSk and at 3:00 , it is
-> mentioned that hot-plugging a switch is not supported by pciehp as of
-> that date. Would like to know if it is supported in 3.18 or 4.4
-> versions? I'm looking for pciehp support on an ARM platform and it
-> doesn't have any ACPI.
-> Also, Can you please help me with any links for the hot-plug framework
-> (particularly pciehp) documentation if any?
->
-> Thanks,
-> Vidya Sagar
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'd imagine there is a strap on the asic so the audio function is only
+> enabled if there is a connector actually wired to the dGPU.  It
+> doesn't make much sense to expose audio if there is no way to use it.
+
+A lot of the time, there actually is a connector wired up. A lot of
+the other time, there is no connector, but the display unit is still
+there. Very recently, NVIDIA gpu's have started coming out marked as
+"3d accelerator", which sometimes but not always means that there's no
+display unit, and for those, I would assume there is no audio
+subfunction.
+
+However this is a fraction of all devices using runpm.
+
+  -ilia
