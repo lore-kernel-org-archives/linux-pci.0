@@ -1,115 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37731 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750883AbcGMQMb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jul 2016 12:12:31 -0400
-Date: Wed, 13 Jul 2016 17:13:03 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Received: from mout.kundenserver.de ([217.72.192.75]:51350 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751809AbcGOG4h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2016 02:56:37 -0400
+From: Arnd Bergmann <arnd@arndb.de>
 To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
 	nofooter <nofooter@xilinx.com>,
 	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>
+	<thomas.petazzoni@free-electrons.com>,
+	Rongrong Zou <zourongrong@huawei.com>,
+	Rongrong Zou <zourongrong@gmail.com>,
+	linux-arm-kernel@lists.infradead.org
 Subject: Re: Purpose of pci_remap_iospace
-Message-ID: <20160713161303.GA29781@red-moon>
-References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
- <4235946.u1vYRsOpTR@wuerfel>
- <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
- <4264647.cRxqIJ3z77@wuerfel>
- <8520D5D51A55D047800579B094147198258B8B85@XAP-PVEXMBX01.xlnx.xilinx.com>
+Date: Fri, 15 Jul 2016 08:55:46 +0200
+Message-ID: <4711052.Qi2htfK0nU@wuerfel>
+In-Reply-To: <8520D5D51A55D047800579B094147198258B92E9@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com> <20160714145624.GB30657@red-moon> <8520D5D51A55D047800579B094147198258B92E9@XAP-PVEXMBX01.xlnx.xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B094147198258B8B85@XAP-PVEXMBX01.xlnx.xilinx.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 13, 2016 at 03:16:21PM +0000, Bharat Kumar Gogada wrote:
-> > Subject: Re: Purpose of pci_remap_iospace
+On Friday, July 15, 2016 5:21:20 AM CEST Bharat Kumar Gogada wrote:
+> > On Thu, Jul 14, 2016 at 01:32:13PM +0000, Bharat Kumar Gogada wrote:
 > >
-> > On Wednesday, July 13, 2016 12:30:44 PM CEST Bharat Kumar Gogada wrote:
-> > >  > On Wednesday, July 13, 2016 8:11:56 AM CEST Bharat Kumar Gogada
-> > wrote:
-> > > > > > Subject: Re: Purpose of pci_remap_iospace
-> > > >
-> > > > I notice you have 1MB of I/O space here
-> > > >
-> > > > > Kernel Boot log:
-> > > > > [    2.345294] nwl-pcie fd0e0000.pcie: Link is UP
-> > > > > [    2.345339] PCI host bridge /amba/pcie@fd0e0000 ranges:
-> > > > > [    2.345356]   No bus range found for /amba/pcie@fd0e0000, using
-> > [bus
-> > > > 00-ff]
-> > > > > [    2.345382]    IO 0xe0000000..0xe00fffff -> 0x00000000
-> > > > > [    2.345401]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
-> > > > > [    2.345498] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
-> > > > > [    2.345517] pci_bus 0000:00: root bus resource [bus 00-ff]
-> > > > > [    2.345533] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff]
-> > > >
-> > > > and all of it gets mapped by the PCI core. Usually you only have 64K
-> > > > of I/O space per host bridge, and the PCI core should perhaps not
-> > > > try to map all of it, though I don't think this is actually your problem here.
-> > > >
-> > > > > [    2.345550] pci_bus 0000:00: root bus resource [mem 0xe0100000-
-> > > > 0xeeffffff]
-> > > > > [    2.345770] pci 0000:00:00.0: cannot attach to SMMU, is it on the same
-> > > > bus?
-> > > > > [    2.345786] iommu: Adding device 0000:00:00.0 to group 1
-> > > > > [    2.346142] pci 0000:01:00.0: cannot attach to SMMU, is it on the same
-> > > > bus?
-> > > > > [    2.346158] iommu: Adding device 0000:01:00.0 to group 1
-> > > > > [    2.346213] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-
-> > > > 0xe02fffff]
-> > > > > [    2.346234] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-
-> > 0xe01fffff
-> > > > 64bit]
-> > > > > [    2.346268] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-
-> > 0xe02fffff
-> > > > 64bit]
-> > > > > [    2.346300] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0040]
-> > > > > [    2.346316] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0040]
-> > > > > [    2.346333] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
-> > > > > [    2.346350] pci 0000:00:00.0:   bridge window [mem 0xe0100000-
-> > > > 0xe02fffff]
-> > > > >
-> > > > > IO assignment fails.
-> > > >
-> > > > I would guess that the I/O space is not registered correctly. Is
-> > > > this drivers/pci/host/pcie-xilinx.c ? We have had problems with this
-> > > > in the past, since almost nobody uses I/O space and it requires
-> > > > several steps to all be done correctly.
-> > > >
-> > > Thanks Arnd.
+> > [...]
+> >
+> > > Hi Lorenzo,
 > > >
-> > > we are testing using drivers/pci/host/pcie-xilinx-nwl.c.
+> > > I missed something in my device tree now I corrected it.
+> > >
+> > > ranges = <0x01000000 0x00000000 0xe0000000 0x00000000 0xe0000000 0
+> > 0x00010000   //io
 > >
-> > According to Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt,
-> > this hardware does not support I/O space.
-> 
-> We received a newer IP version with IO support, so we are trying to test this feature.
+> > You have not missed anything, you changed the PCI bus address at which
+> > your host bridge responds to IO space and it must match your configuration.
+> > At what PCI bus address your host bridge maps IO space ?
 > >
-> > Is this on ARM or microblaze?
+> Our host bridge does not have dedicted address space mapped for IO transactions.
+> For generation of IO transactions it requires some register read and write operations
+> in bridge logic.
 > 
-> It is ARM 64-bit.
-> 
-> > This has neither the PCI memory nor the I/O resource, it looks like you never
-> > call pci_add_resource_offset() to start with, or maybe it fails for some
-> > reason.
-> 
-> I see that above API is used in ARM drivers, do we need to do it in
-> ARM64 also ?
+> So the above PCI address does not come in to picture also, is there alternate way to handle IO
+> Bars with our kind of hardware architecture.
 
-It is called in of_pci_get_host_bridge_resources(), since you
-are using that API there is nothing more you have to do. The problem
-with resources in /proc/iomem and /proc/ioports is that you
-do not request the host bridge apertures in your host controller
-driver, see drivers/pci/host/pci-host-common.c (devm_request_resource())
-to see how to do it.
+Hisilicon has a similar thing on one of their LPC bridges, and
+Rongrong Zou has implemented something for it in the past, but I
+think it never got merged.
 
-And as I said previously in this thread none of this is related to
-your IO BAR assignment failures IMHO.
+https://lkml.org/lkml/2015/12/29/154 has one version of his
+proposal, not sure if that was the latest one or if something
+newer exists.
 
-Lorenzo
+	Arnd
