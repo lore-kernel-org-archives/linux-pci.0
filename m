@@ -1,53 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:40654 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964778AbcG1QaL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 12:30:11 -0400
-Subject: Re: [PATCH -next] PCI: keystone: Fix error return code in
- ks_add_pcie_port()
-To: Wei Yongjun <weiyj.lk@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1469722578-14863-1-git-send-email-weiyj.lk@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <579A32FC.4070907@ti.com>
-Date: Thu, 28 Jul 2016 12:29:48 -0400
+Return-Path: <alexdeucher@gmail.com>
+Return-Path: <alexdeucher@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1469722578-14863-1-git-send-email-weiyj.lk@gmail.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
+References: <20160715131218.2416-1-peter@lekensteyn.nl> <CAKb7UvisjzPs_K1SNdDb7aZjxGQL4AOs05R8CX2xjU4uRpfcfA@mail.gmail.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Fri, 15 Jul 2016 12:27:57 -0400
+Message-ID: <CADnq5_OBjHXO4sfakK0ZJPbHPrMACqdU7J-j9sHLjod0QcuzcA@mail.gmail.com>
+Subject: Re: [Nouveau] [PATCH v3 0/4] nouveau RPM fixes for Optimus (final)
+To: Ilia Mirkin <imirkin@alum.mit.edu>
+Cc: Peter Wu <peter@lekensteyn.nl>, Linux PCI <linux-pci@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>, Dave Airlie <airlied@redhat.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/28/2016 12:16 PM, Wei Yongjun wrote:
-> Fix to return a negative error code from the request IRQ error
-> handling case instead of 0, as done elsewhere in this function.
-> 
-> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
-> ---
->  drivers/pci/host/pci-keystone.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 8ba2883..82b461b 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -334,8 +334,9 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
->  	if (ks_pcie->error_irq <= 0)
->  		dev_info(&pdev->dev, "no error IRQ defined\n");
->  	else {
-> -		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
-> -				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
-> +		ret = request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
-> +				  IRQF_SHARED, "pcie-error-irq", ks_pcie);
-> +		if (ret < 0) {
->  			dev_err(&pdev->dev, "failed to request error IRQ %d\n",
->  				ks_pcie->error_irq);
->  			return ret;
-> 
-Thanks
+On Fri, Jul 15, 2016 at 12:10 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
+> On Fri, Jul 15, 2016 at 9:12 AM, Peter Wu <peter@lekensteyn.nl> wrote:
+>> Hi,
+>>
+>> Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
+>> due to unchecked function) and a more important fix to fix hanging Optimus
+>> machines when runtime PM is enabled (with pm/pci patches).
+>>
+>> These are the final patches targeting v4.8. Changes compared to v2[1]:
+>> collected R-b from Hans and Mika and fixed a minor comment style issue.
+>>
+>> I recommend it to be merged before the pci/pm patches[2], otherwise there is a
+>> window where newer Nvidia Optimus laptops might fail to runtime resume and/or
+>> lock up.  Once the pci/pm branch is merged I will propose another patch to
+>> improve reliability[3].
+>>
+>> Known issue with patch 4: when a Nvidia HDMI audio function is present, the
+>> bridge will not suspend and hence the Nvidia card will still be powered. Fixing
+>
+> That's basically all optimus gpu's, right? Anything GT21x+ has a HDMI
+> audio subfunction, and prior to that, the nvidia gpu tended to be the
+> only gpu, or hard-muxed.
 
-Acked-By: Murali Karicheri <m-karicheri2@ti.com>
+I'd imagine there is a strap on the asic so the audio function is only
+enabled if there is a connector actually wired to the dGPU.  It
+doesn't make much sense to expose audio if there is no way to use it.
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+Alex
