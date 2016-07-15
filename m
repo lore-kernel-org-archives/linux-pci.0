@@ -1,60 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:37475 "EHLO mga04.intel.com"
+Received: from ozlabs.org ([103.22.144.67]:44169 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342AbcGaL6r convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 31 Jul 2016 07:58:47 -0400
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"corbet@lwn.net" <corbet@lwn.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	thunderbolt-linux <thunderbolt-linux@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v5 5/8] thunderbolt: Networking state machine
-Date: Sun, 31 Jul 2016 11:58:41 +0000
-Message-ID: <E607265CB020454880711A6F96C05A039710884A@hasmsx108.ger.corp.intel.com>
-References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
- <1469693721-5641-6-git-send-email-amir.jer.levy@intel.com>
- <20160728113550.GA1701@wunner.de>
-In-Reply-To: <20160728113550.GA1701@wunner.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S932187AbcGOKx2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Jul 2016 06:53:28 -0400
+In-Reply-To: <1468444634-1866-14-git-send-email-imunsie@au.ibm.com>
+To: Ian Munsie <imunsie@au1.ibm.com>,
+	Michael Neuling <mikey@neuling.org>,
+	Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
+	Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, Huy Nguyen <huyn@mellanox.com>
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Ian Munsie <imunsie@au1.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [13/15] PCI/hotplug: pnv_php: export symbols and move struct types needed by cxl
+Message-Id: <3rrTvC2V9yz9ssM@ozlabs.org>
+Date: Fri, 15 Jul 2016 20:53:27 +1000 (AEST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 28 2016, 02:35 PM, Lukas Wunner wrote:
-> On Thu, Jul 28, 2016 at 11:15:18AM +0300, Amir Levy wrote:
-> > +				nhi_ctxt->net_devices[
-> > +					port_num].medium_sts =
+On Wed, 2016-13-07 at 21:17:12 UTC, Ian Munsie wrote:
+> From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 > 
-> Looks like a carriage return slipped in here.
-
-Will be fixed.
-
+> The cxl driver will use infrastructure from pnv_php to handle device tree
+> updates when switching bi-modal CAPI cards into CAPI mode.
 > 
-> In patch [4/8], I've found it a bit puzzling that FW->SW responses and
-> FW->SW notifications are defined in icm_nhi.c, whereas SW->FW commands
-> are defined in net.h. It would perhaps be more logical to have them all in the
-> header file. The FW->SW responses and SW->FW commands are almost
-> identical, there are odd spelling differences (CONNEXION vs.
-> CONNECTION).
-
-Will move them to the header and will change to CONNECTION.
-
+> To enable this, export pnv_php_find_slot() and
+> pnv_php_set_slot_power_state(), and add corresponding declarations, as well
+> as the definition of struct pnv_php_slot, to asm/pnv-pci.h.
 > 
-> It would probably be good to explain the PDF acronym somewhere.
+> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+> Signed-off-by: Ian Munsie <imunsie@au1.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Will explain in the enum.
+Applied to powerpc next, thanks.
 
-> 
-> I've skimmed over all patches in the series, too superficial to provide a
-> Reviewed-by, it's just too much code to review thoroughly and I also lack the
-> hardware to test it, but broadly this LGTM.
+https://git.kernel.org/powerpc/c/89379f165a1be13aa9b4731a90
 
-Thank you for the review.
+cheers
