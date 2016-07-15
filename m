@@ -1,63 +1,61 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net,
-	tony.luck@intel.com
-Cc: bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com
-Subject: [PATCH 4/4] x86/ioapic: Fix ioapic failing to request resource
-Date: Wed, 27 Jul 2016 00:13:17 +0800
-Message-Id: <1469549597-19253-5-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
-References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0042.outbound.protection.outlook.com ([104.47.36.42]:14720
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750870AbcGOFV3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2016 01:21:29 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	nofooter <nofooter@xilinx.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>
+Subject: RE: Purpose of pci_remap_iospace
+Date: Fri, 15 Jul 2016 05:21:20 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258B92E9@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <3927657.6zNCtCntSU@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <4235946.u1vYRsOpTR@wuerfel>
+ <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160713134642.GA29309@red-moon>
+ <8520D5D51A55D047800579B094147198258B8F73@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160714145624.GB30657@red-moon>
+In-Reply-To: <20160714145624.GB30657@red-moon>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-handle_ioapic_add() uses request_resource() to request ACPI "_CRS"
-resources. This can fail with the following error message:
+> On Thu, Jul 14, 2016 at 01:32:13PM +0000, Bharat Kumar Gogada wrote:
+>
+> [...]
+>
+> > Hi Lorenzo,
+> >
+> > I missed something in my device tree now I corrected it.
+> >
+> > ranges = <0x01000000 0x00000000 0xe0000000 0x00000000 0xe0000000 0
+> 0x00010000   //io
+>
+> You have not missed anything, you changed the PCI bus address at which
+> your host bridge responds to IO space and it must match your configuration.
+> At what PCI bus address your host bridge maps IO space ?
+>
+Our host bridge does not have dedicted address space mapped for IO transactions.
+For generation of IO transactions it requires some register read and write operations
+in bridge logic.
 
-[  247.325693] ACPI: \_SB_.IIO1.AID1: failed to insert resource
+So the above PCI address does not come in to picture also, is there alternate way to handle IO
+Bars with our kind of hardware architecture.
 
-This happens when there are multiple ioapics and DSDT groups their
-"_CRS" resources as the children of a parent resource, as seen from
-/proc/iomem:
+Thanks & Regards,
+Bharat
 
-fec00000-fecfffff : PNP0003:00
-  fec00000-fec003ff : IOAPIC 0
-  fec01000-fec013ff : IOAPIC 1
-  fec40000-fec403ff : IOAPIC 2
 
-In this case request_resource() fails because there's a conflicting
-resource which is the parent (fec0000-fecfffff). Fix it by using
-insert_resoure() which can request resources by taking the conflicting
-resource as the parent.
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/ioapic.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index 80b0b1a..2c38ce0 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -146,10 +146,12 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
- 
- 	crs_res = &ioapic->res;
- 	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
-+	crs_res->name = type;
-+	crs_res->flags |= IORESOURCE_BUSY;
- 	if (crs_res->flags == 0) {
- 		acpi_handle_warn(handle, "failed to get resource\n");
- 		goto exit_release;
--	} else if (request_resource(&iomem_resource, crs_res)) {
-+	} else if (insert_resource(&iomem_resource, crs_res)) {
- 		acpi_handle_warn(handle, "failed to insert resource\n");
- 		goto exit_release;
- 	}
--- 
-1.8.3.1
