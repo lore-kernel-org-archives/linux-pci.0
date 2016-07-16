@@ -1,75 +1,127 @@
-Return-Path: <hdegoede@redhat.com>
-Return-Path: <hdegoede@redhat.com>
-Subject: Re: [Nouveau] [PATCH v2 0/4] nouveau RPM fixes for Optimus
-To: Peter Wu <peter@lekensteyn.nl>, nouveau@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org
-References: <20160707233827.2100-1-peter@lekensteyn.nl>
-Cc: Dave Airlie <airlied@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-From: Hans de Goede <hdegoede@redhat.com>
-Message-ID: <05318f07-8ec3-43f2-0a5f-4be87837e744@redhat.com>
-Date: Fri, 8 Jul 2016 19:31:24 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:23575 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751434AbcGPIoD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jul 2016 04:44:03 -0400
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>
+Subject: RE: [PATCH v3 5/8] thunderbolt: Communication with the ICM
+ (firmware)
+Date: Sat, 16 Jul 2016 08:43:56 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B54295BCA@hasmsx108.ger.corp.intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+ <1468495702-7467-6-git-send-email-amir.jer.levy@intel.com>
+ <5B8DA87D05A7694D9FA63FD143655C1B54294E4A@hasmsx108.ger.corp.intel.com>
+ <E607265CB020454880711A6F96C05A03893CD38E@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <E607265CB020454880711A6F96C05A03893CD38E@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160707233827.2100-1-peter@lekensteyn.nl>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 08-07-16 01:38, Peter Wu wrote:
-> Hi,
->
-> Here are two patches to fix an issue reported on kernel bugzilla (infinite loop
-> due to unchecked function) and a more important fix to fix hanging Optimus
-> machines when runtime PM is enabled (with pm/pci patches).
->
-> See the first version[1] for a background on the fixed problems. This is the
-> second revision of incorporating feedback from Emil Velikov (patch 1), Mika
-> Westerberg (patch 4). Patches 2 and 3 are unchanged.
-> The previous patchset had R-b from Hans de Goede, I think they are still valid.
->
-> Noteworthy is that the fourth patch now checks directly for _PR3. The commit
-> message is updated to emphasize that memory/disk corruption is fixed for some
-> machines.
->
->
-> This patchset can be merged before or after the pci/pm changes[2] (expected to
-> be merged for 4.8), see the original posting[1] for consequences. I have tested
-> it on top of v4.7-rc5. To make patch four work properly, Lukas' RPM refcounting
-> patches should be included. A similar (open/new) RPM refcounting issue in
-> snd-hda-intel should also be fixed. Otherwise the bridge will not really sleep.
->
-> There is another minor patch for nouveau_pr3_present, but it is not included
-> here because it depends on visibility of pci_bridge_d3_possible(). I'll send a
-> separate mail for this to linux-pci.
-
-Patches 1 - 3 are:
-
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-
-Patch 4 looks good to me too, but I'm not familiar enough with the
-pci-e pm stuff to feel comfortable acking it.
-
-Regards,
-
-Hans
 
 
+> -----Original Message-----
+> From: Levy, Amir (Jer)
+> Sent: Thursday, July 14, 2016 17:50
+> To: Winkler, Tomas <tomas.winkler@intel.com>;
+> andreas.noever@gmail.com; gregkh@linuxfoundation.org;
+> bhelgaas@google.com
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> netdev@vger.kernel.org; thunderbolt-linux <thunderbolt-linux@intel.com>;
+> Westerberg, Mika <mika.westerberg@intel.com>
+> Subject: RE: [PATCH v3 5/8] thunderbolt: Communication with the ICM
+> (firmware)
+> 
+> Hi Tomas,
+> Thanks for your comments.
+> 
+> On Thu, Jul 14 2016, 03:44 PM, Winkler, Tomas wrote:
+> > > +/* NHI genetlink commands */
+> > > +enum {
+> > > +	NHI_CMD_UNSPEC,
+> > > +	NHI_CMD_SUBSCRIBE,
+> > > +	NHI_CMD_UNSUBSCRIBE,
+> > > +	NHI_CMD_QUERY_INFORMATION,
+> > > +	NHI_CMD_MSG_TO_ICM,
+> > > +	NHI_CMD_MSG_FROM_ICM,
+> > > +	NHI_CMD_MAILBOX,
+> > > +	NHI_CMD_APPROVE_TBT_NETWORKING,
+> > > +	NHI_CMD_ICM_IN_SAFE_MODE,
+> > > +	__NHI_CMD_MAX,
+> > > +};
+> > > +#define NHI_CMD_MAX (__NHI_CMD_MAX - 1)
+> > NHI_CMD_MAX  = NHI_CMD_ICM_IN_SAFE_MODE ?
+> >
+> 
+> This template is used a lot with (generic) netlink.
+> Few examples:
+> http://lxr.free-electrons.com/source/drivers/acpi/event.c#L62
+> http://lxr.free-electrons.com/source/include/uapi/linux/irda.h#L224
+> It is easier to maintain - adding entry in the list will automatically update
+> MAX.
 
->
-> Kind regards,
-> Peter
->
->  [1]: https://lists.freedesktop.org/archives/nouveau/2016-May/025116.html
->  [2]: https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/?h=pci/pm
->
-> Peter Wu (4):
->   drm/nouveau/acpi: ensure matching ACPI handle and supported functions
->   drm/nouveau/acpi: return supported DSM functions
->   drm/nouveau/acpi: check for function 0x1B before using it
->   drm/nouveau/acpi: fix lockup with PCIe runtime PM
->
->  drivers/gpu/drm/nouveau/nouveau_acpi.c | 103 +++++++++++++++++++++------------
->  1 file changed, 66 insertions(+), 37 deletions(-)
->
+Fair enough. 
+
+> [...]
+> 
+> > > +		u32 status;
+> > > +
+> > > +		status = ioread32(nhi_ctxt->iobase + REG_FW_STS);
+> > > +
+> > > +		if (status & REG_FW_STS_NVM_AUTH_DONE)
+> > > +			break;
+> > > +		msleep(30);
+> >
+> > 30 is  big number, for polling, what is behind this?
+> >
+> 
+> The NVM authentication can take time for ICM.
+> This number comes from experiments.
+
+This deserve some comment, this look very random. 
+ 
+> [...]
+> 
+> > > +static struct tbt_nhi_ctxt *nhi_search_ctxt(u32 id) {
+> > > +	struct tbt_nhi_ctxt *nhi_ctxt;
+> > > +
+> > > +	list_for_each_entry(nhi_ctxt, &controllers_list, node)
+> > > +		if (nhi_ctxt->id == id)
+> > > +			return nhi_ctxt;
+> >
+> > Don't you need to lock this list with the controllers_list_rwsem ?
+> >
+> 
+> This is a helper function for searching the list.
+> The callers take and release the lock.
+
+Since this doesn't fit the patterns in your code, the function deserves a comment, that it should be used under lock. 
+
+> 
+> [...]
+> 
+> > > +	bool nvm_auth_on_boot : 1;
+> > Don't use bool with bit fields use u32
+> 
+> What is the concern here?
+> If it is size of bool, it doesn't matter for this struct.
+> It is more readable that the expected value is bool, and it is used a lot in
+> kernel, for example:
+> http://lxr.free-electrons.com/source/include/linux/pm.h#L558
+
+Hmm, actually a nice feature I wasn't aware of, save some space and got bool type checking. 
+
+Thanks
+
+
+
+
