@@ -1,149 +1,58 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-From: Peter Wu <peter@lekensteyn.nl>
-To: Dave Airlie <airlied@redhat.com>
-Cc: nouveau@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: [PATCH v3 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
-Date: Fri, 15 Jul 2016 15:12:18 +0200
-Message-Id: <20160715131218.2416-5-peter@lekensteyn.nl>
-In-Reply-To: <20160715131218.2416-1-peter@lekensteyn.nl>
-References: <20160715131218.2416-1-peter@lekensteyn.nl>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: "Gortmaker, Paul (Wind River)" <paul.gortmaker@windriver.com>
+CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v3 6/8] thunderbolt: Networking state machine
+Date: Sun, 17 Jul 2016 07:04:04 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03893CEE28@hasmsx107.ger.corp.intel.com>
+References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
+ <1468495702-7467-7-git-send-email-amir.jer.levy@intel.com>
+ <CAP=VYLoAUw+8B7BwzopBTeZjMYbZpOnUOE9tEnYH6718TjW_pQ@mail.gmail.com>
+In-Reply-To: <CAP=VYLoAUw+8B7BwzopBTeZjMYbZpOnUOE9tEnYH6718TjW_pQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
-can be runtime-suspended which disables power resources via ACPI. This
-is incompatible with DSM, resulting in a GPU device which is still in D3
-and locks up the kernel on resume (on a Clevo P651RA, GTX965M).
-
-Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
-debugger trace) and stop using the DSM functions for D3cold when power
-resources are available on the parent PCIe port.
-
-pci_d3cold_disable() is not used because on some machines, the old DSM
-method is broken. On a Lenovo T440p (GT 730M) memory and disk corruption
-would occur, but that is fixed with this patch[2].
-
- [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
- [2]: https://github.com/Bumblebee-Project/bbswitch/issues/78#issuecomment-223549072
-
- v2: simply check directly for _PR3. Added affected machines.
- v3: fixed block comment coding style.
-
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Peter Wu <peter@lekensteyn.nl>
----
- drivers/gpu/drm/nouveau/nouveau_acpi.c | 35 ++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index ad273ad..f2ad17a 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
- 	bool dsm_detected;
- 	bool optimus_detected;
- 	bool optimus_flags_detected;
-+	bool optimus_skip_dsm;
- 	acpi_handle dhandle;
- 	acpi_handle rom_handle;
- } nouveau_dsm_priv;
-@@ -212,9 +213,28 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
- 	.get_client_id = nouveau_dsm_get_client_id,
- };
- 
-+/*
-+ * Firmware supporting Windows 8 or later do not use _DSM to put the device into
-+ * D3cold, they instead rely on disabling power resources on the parent.
-+ */
-+static bool nouveau_pr3_present(struct pci_dev *pdev)
-+{
-+	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
-+	struct acpi_device *parent_adev;
-+
-+	if (!parent_pdev)
-+		return false;
-+
-+	parent_adev = ACPI_COMPANION(&parent_pdev->dev);
-+	if (!parent_adev)
-+		return false;
-+
-+	return acpi_has_method(parent_adev->handle, "_PR3");
-+}
-+
- static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out,
- 				  bool *has_mux, bool *has_opt,
--				  bool *has_opt_flags)
-+				  bool *has_opt_flags, bool *has_pr3)
- {
- 	acpi_handle dhandle;
- 	bool supports_mux;
-@@ -239,6 +259,7 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out
- 	*has_mux = supports_mux;
- 	*has_opt = !!optimus_funcs;
- 	*has_opt_flags = optimus_funcs & (1 << NOUVEAU_DSM_OPTIMUS_FLAGS);
-+	*has_pr3 = false;
- 
- 	if (optimus_funcs) {
- 		uint32_t result;
-@@ -248,6 +269,8 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out
- 			 (result & OPTIMUS_ENABLED) ? "enabled" : "disabled",
- 			 (result & OPTIMUS_DYNAMIC_PWR_CAP) ? "dynamic power, " : "",
- 			 (result & OPTIMUS_HDA_CODEC_MASK) ? "hda bios codec supported" : "");
-+
-+		*has_pr3 = nouveau_pr3_present(pdev);
- 	}
- }
- 
-@@ -260,6 +283,7 @@ static bool nouveau_dsm_detect(void)
- 	bool has_mux = false;
- 	bool has_optimus = false;
- 	bool has_optimus_flags = false;
-+	bool has_power_resources = false;
- 	int vga_count = 0;
- 	bool guid_valid;
- 	bool ret = false;
-@@ -275,14 +299,14 @@ static bool nouveau_dsm_detect(void)
- 		vga_count++;
- 
- 		nouveau_dsm_pci_probe(pdev, &dhandle, &has_mux, &has_optimus,
--				      &has_optimus_flags);
-+				      &has_optimus_flags, &has_power_resources);
- 	}
- 
- 	while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_3D << 8, pdev)) != NULL) {
- 		vga_count++;
- 
- 		nouveau_dsm_pci_probe(pdev, &dhandle, &has_mux, &has_optimus,
--				      &has_optimus_flags);
-+				      &has_optimus_flags, &has_power_resources);
- 	}
- 
- 	/* find the optimus DSM or the old v1 DSM */
-@@ -292,8 +316,11 @@ static bool nouveau_dsm_detect(void)
- 			&buffer);
- 		printk(KERN_INFO "VGA switcheroo: detected Optimus DSM method %s handle\n",
- 			acpi_method_name);
-+		if (has_power_resources)
-+			pr_info("nouveau: detected PR support, will not use DSM\n");
- 		nouveau_dsm_priv.optimus_detected = true;
- 		nouveau_dsm_priv.optimus_flags_detected = has_optimus_flags;
-+		nouveau_dsm_priv.optimus_skip_dsm = has_power_resources;
- 		ret = true;
- 	} else if (vga_count == 2 && has_mux && guid_valid) {
- 		nouveau_dsm_priv.dhandle = dhandle;
-@@ -324,7 +351,7 @@ void nouveau_register_dsm_handler(void)
- void nouveau_switcheroo_optimus_dsm(void)
- {
- 	u32 result = 0;
--	if (!nouveau_dsm_priv.optimus_detected)
-+	if (!nouveau_dsm_priv.optimus_detected || nouveau_dsm_priv.optimus_skip_dsm)
- 		return;
- 
- 	if (nouveau_dsm_priv.optimus_flags_detected)
--- 
-2.9.0
+T24gRnJpLCBKdWwgMTUgMjAxNiwgMDM6MjUgQU0sIFBhdWwgR29ydG1ha2VyIHdyb3RlOg0KPiA+
+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3RodW5kZXJib2x0L2ljbS9uZXQuYw0KPiA+IGIvZHJpdmVy
+cy90aHVuZGVyYm9sdC9pY20vbmV0LmMgbmV3IGZpbGUgbW9kZSAxMDA2NDQgaW5kZXgNCj4gPiAw
+MDAwMDAwLi5lOTgzZGZiDQo+ID4gLS0tIC9kZXYvbnVsbA0KPiA+ICsrKyBiL2RyaXZlcnMvdGh1
+bmRlcmJvbHQvaWNtL25ldC5jDQo+ID4gQEAgLTAsMCArMSw4MDIgQEANCj4gPg0KPiArLyoqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKg0KPiAq
+KioqKioqKioqKg0KPiA+ICsqKioqKioqKioqKg0KPiA+ICsgKg0KPiA+ICsgKiBJbnRlbCBUaHVu
+ZGVyYm9sdChUTSkgZHJpdmVyDQo+ID4gKyAqIENvcHlyaWdodChjKSAyMDE0IC0gMjAxNiBJbnRl
+bCBDb3Jwb3JhdGlvbi4NCj4gPiArICoNCj4gPiArICogVGhpcyBwcm9ncmFtIGlzIGZyZWUgc29m
+dHdhcmU7IHlvdSBjYW4gcmVkaXN0cmlidXRlIGl0IGFuZC9vcg0KPiA+ICttb2RpZnkgaXQNCj4g
+PiArICogdW5kZXIgdGhlIHRlcm1zIGFuZCBjb25kaXRpb25zIG9mIHRoZSBHTlUgR2VuZXJhbCBQ
+dWJsaWMgTGljZW5zZSwNCj4gPiArICogdmVyc2lvbiAyLCBhcyBwdWJsaXNoZWQgYnkgdGhlIEZy
+ZWUgU29mdHdhcmUgRm91bmRhdGlvbi4NCj4gPiArICoNCj4gPiArICogVGhpcyBwcm9ncmFtIGlz
+IGRpc3RyaWJ1dGVkIGluIHRoZSBob3BlIGl0IHdpbGwgYmUgdXNlZnVsLCBidXQNCj4gPiArV0lU
+SE9VVA0KPiA+ICsgKiBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZlbiB0aGUgaW1wbGllZCB3YXJy
+YW50eSBvZg0KPiBNRVJDSEFOVEFCSUxJVFkNCj4gPiArb3INCj4gPiArICogRklUTkVTUyBGT1Ig
+QSBQQVJUSUNVTEFSIFBVUlBPU0UuICBTZWUgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYw0KPiA+ICtM
+aWNlbnNlIGZvcg0KPiA+ICsgKiBtb3JlIGRldGFpbHMuDQo+ID4gKyAqDQo+ID4gKyAqIFlvdSBz
+aG91bGQgaGF2ZSByZWNlaXZlZCBhIGNvcHkgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNl
+bnNlDQo+ID4gK2Fsb25nDQo+ID4gKyAqIHdpdGggdGhpcyBwcm9ncmFtLiAgSWYgbm90LCBzZWUg
+PGh0dHA6Ly93d3cuZ251Lm9yZy9saWNlbnNlcy8+Lg0KPiA+ICsgKg0KPiA+ICsgKiBUaGUgZnVs
+bCBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZSBpcyBpbmNsdWRlZCBpbiB0aGlzDQo+ID4gK2Rp
+c3RyaWJ1dGlvbiBpbg0KPiA+ICsgKiB0aGUgZmlsZSBjYWxsZWQgIkNPUFlJTkciLg0KPiA+ICsg
+Kg0KPiA+ICsgKiBDb250YWN0IEluZm9ybWF0aW9uOg0KPiA+ICsgKiBJbnRlbCBUaHVuZGVyYm9s
+dCBNYWlsaW5nIExpc3QgPHRodW5kZXJib2x0LXNvZnR3YXJlQGxpc3RzLjAxLm9yZz4NCj4gPiAr
+ICogSW50ZWwgQ29ycG9yYXRpb24sIDUyMDAgTi5FLiBFbGFtIFlvdW5nIFBhcmt3YXksIEhpbGxz
+Ym9ybywgT1INCj4gPiArOTcxMjQtNjQ5Nw0KPiA+ICsgKg0KPiA+ICsNCj4gPg0KPiArKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqDQo+ICoq
+KioqKioqKioqKg0KPiA+ICsqKioqKioqKiovDQo+ID4gKw0KPiA+ICsjaW5jbHVkZSA8bGludXgv
+bW9kdWxlLmg+DQo+IA0KPiBJIGRpZCBub3Qgc2VlIGFueXRoaW5nIGxpa2UgbW9kdWxlX2luaXQg
+aW4gdGhpcyBkcml2ZXI7ICBJIHRoaW5rIGl0IHNlZW1zIGxpa2UgeW91DQo+IHdhbnQgbGludXgv
+bW9kdWxlcGFyYW0uaCBoZXJlLg0KPiANCg0KSGkgUGF1bCwNCkl0IGxvb2tzIGxpa2UgbGVmdG92
+ZXIgZnJvbSB0aGUgZWFybHkgZGV2ZWxvcG1lbnQgc3RhZ2VzLg0KSSdsbCByZW1vdmUgaXQuDQpU
+aGUgbW9kdWxlX2luaXQgaXMgaW4gaWNtX25oaS5jLg0KDQpUaGFua3MsDQpBbWlyDQo=
