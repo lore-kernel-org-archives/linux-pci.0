@@ -1,130 +1,188 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 21 Jul 2016 01:25:53 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
- support
-Message-ID: <20160720232553.GA8460@wunner.de>
-References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
- <3969169.CcnEsvYuly@vostro.rjw.lan>
- <20160720152340.GA8337@wunner.de>
- <1735644.0mfUjJQtul@vostro.rjw.lan>
-MIME-Version: 1.0
-In-Reply-To: <1735644.0mfUjJQtul@vostro.rjw.lan>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
- linux-samsung-soc@vger.kernel.org,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Joerg Roedel <joro@8bytes.org>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Inki Dae <inki.dae@samsung.com>,
- "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
- Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
- linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:14648 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752059AbcGRKCI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Jul 2016 06:02:08 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v4 2/7] thunderbolt: Updating the register definitions
+Date: Mon, 18 Jul 2016 13:00:35 +0300
+Message-Id: <1468836040-28043-3-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
+References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 21, 2016 at 12:51:31AM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
-> > On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
-> > > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
-> > > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
-> > > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
-> > > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
-> > > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
-> > > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> > > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
-> > > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
-> > > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
-> > > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
-> > > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
-> > > > > > > > this dependency using something like Rafael's approach instead of
-> > > > > > > > open coding it, however one detail in Rafael's patches is problematic:
-> > > > > > > >
-> > > > > > > > > New links are added by calling device_link_add() which may happen
-> > > > > > > > > either before the consumer device is probed or when probing it, in
-> > > > > > > > > which case the caller needs to ensure that the driver of the
-> > > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
-> > > > > > > > > flag should be passed to device_link_add() to reflect that.
-> > > > > > > >
-> > > > > > > > The thunderbolt driver cannot call device_link_add() before the
-> > > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
-> > > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
-> > > > > > > > if the thunderbolt driver isn't loaded.
-> > > > > > > >
-> > > > > > > > It would therefore be beneficial if device_link_add() can be
-> > > > > > > > called even *after* the consumer is bound.
-> > > > > > > 
-> > > > > > > I don't quite follow.
-> > > > > > > 
-> > > > > > > Who's the provider and who's the consumer here?
-> > > > > > 
-> > > > > > thunderbolt.ko is the supplier.
-> > > > > 
-> > > > > But it binds to the children of the ports that are supposed to be its
-> > > > > consumers?
-> > > > > 
-> > > > > Why is that even expected to work?
-> > > > 
-> > > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
-> > > > 
-> > > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
-> > > > the drawing below). The supplier is the NHI:
-> > > > 
-> > > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> > > >                                          +-- Downstream Bridge 1 --
-> > > >                                          +-- Downstream Bridge 2 --
-> > > >                                          ...
-> > > > 
-> > > > We're calling pci_power_up() and pci_restore_state() from
-> > > > pci_pm_resume_noirq(). And that will fail for devices below
-> > > > the hotplug ports if the PCI tunnels haven't been re-established
-> > > > yet by the NHI.
-> > > 
-> > > So the NHI is a PCIe device, right?
-> > > 
-> > > Does the Thunderbolt driver bind to that device?
-> > 
-> > The NHI is a PCI device but not a bridge. It has class 0x88000.
-> > Yes, thunderbolt.ko binds to the NHI.
-> > 
-> > And portdrv binds to the upstream bridge and downstream bridges.
-> > Those have class 0x60400.
-> 
-> OK, so why would there be a problem with creating links from the NHI
-> (producer) to the ports (consumers) before binding portdrv to them?
+Adding more Thunderbolt(TM) register definitions
+and some helper macros.
 
-Because the ordering in which drivers bind isn't guaranteed. At least
-on my machine (Debian), portdrv always binds before thunderbolt.
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
 
-I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
-no driver is bound to the NHI. Doesn't feel pretty to me though.
+diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+index 75cf069..b8e961f 100644
+--- a/drivers/thunderbolt/nhi_regs.h
++++ b/drivers/thunderbolt/nhi_regs.h
+@@ -9,6 +9,11 @@
+ 
+ #include <linux/types.h>
+ 
++#define NHI_MMIO_BAR 0
++
++#define TBT_RING_MIN_NUM_BUFFERS	2
++#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
++
+ enum ring_flags {
+ 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
+ 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
+@@ -39,6 +44,33 @@ struct ring_desc {
+ 	u32 time; /* write zero */
+ } __packed;
+ 
++/**
++ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
++ * This is same as struct ring_desc, but without the use of bitfields and
++ * with explicit endianity.
++ */
++struct tbt_buf_desc {
++	__le64 phys;
++	__le32 attributes;
++	__le32 time;
++};
++
++#define DESC_ATTR_LEN_SHIFT		0
++#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
++#define DESC_ATTR_EOF_SHIFT		12
++#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
++#define DESC_ATTR_SOF_SHIFT		16
++#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
++#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
++#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
++#define DESC_ATTR_DESC_DONE		BIT(21)
++#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
++#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
++#define DESC_ATTR_INT_EN		BIT(23)
++#define DESC_ATTR_OFFSET_SHIFT		24
++#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
++
++
+ /* NHI registers in bar 0 */
+ 
+ /*
+@@ -60,6 +92,30 @@ struct ring_desc {
+  */
+ #define REG_RX_RING_BASE	0x08000
+ 
++#define REG_RING_STEP			16
++#define REG_RING_PHYS_LO_OFFSET		0
++#define REG_RING_PHYS_HI_OFFSET		4
++#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
++#define REG_RING_CONS_SHIFT		0
++#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
++#define REG_RING_PROD_SHIFT		16
++#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
++#define REG_RING_SIZE_OFFSET		12
++#define REG_RING_SIZE_SHIFT		0
++#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
++#define REG_RING_BUF_SIZE_SHIFT		16
++#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
++
++#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
++			      ((iobase) + (ringbase) + \
++			      ((ringnumber) * REG_RING_STEP) + \
++			      REG_RING_CONS_PROD_OFFSET)
++
++#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
++				       REG_RING_PROD_SHIFT)
++
++#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
++				       REG_RING_CONS_SHIFT)
+ /*
+  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
+  * 00: enum_ring_flags
+@@ -77,6 +133,19 @@ struct ring_desc {
+  * ..: unknown
+  */
+ #define REG_RX_OPTIONS_BASE	0x29800
++#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
++#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
++				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
++#define REG_RX_OPTS_MASK_OFFSET		4
++#define REG_RX_OPTS_MASK_EOF_SHIFT	0
++#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
++#define REG_RX_OPTS_MASK_SOF_SHIFT	16
++#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
++
++#define REG_OPTS_STEP			32
++#define REG_OPTS_E2E_EN			BIT(28)
++#define REG_OPTS_RAW			BIT(30)
++#define REG_OPTS_VALID			BIT(31)
+ 
+ /*
+  * three bitfields: tx, rx, rx overflow
+@@ -86,6 +155,7 @@ struct ring_desc {
+  */
+ #define REG_RING_NOTIFY_BASE	0x37800
+ #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
++#define REG_RING_NOTIFY_STEP	4
+ 
+ /*
+  * two bitfields: rx, tx
+@@ -94,8 +164,47 @@ struct ring_desc {
+  */
+ #define REG_RING_INTERRUPT_BASE	0x38200
+ #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
++#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
++#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
++							    (num_paths))
++#define RING_INT_DISABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_ENABLE(base, val) iowrite32( \
++			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
++			(base) + REG_RING_INTERRUPT_BASE)
++#define RING_INT_DISABLE_TX(base, ring_num) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_ENABLE_TX(base, ring_num) \
++	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
++#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
++	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
++	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
++			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
++
++#define REG_RING_INTERRUPT_STEP	4
++
++#define REG_INT_THROTTLING_RATE	0x38c00
++#define REG_INT_THROTTLING_RATE_STEP	4
++#define NUM_INT_VECTORS			16
++
++#define REG_INT_VEC_ALLOC_BASE	0x38c40
++#define REG_INT_VEC_ALLOC_STEP		4
++#define REG_INT_VEC_ALLOC_FIELD_BITS	4
++#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
++#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
++					 REG_INT_VEC_ALLOC_FIELD_BITS)
+ 
+ /* The last 11 bits contain the number of hops supported by the NHI port. */
+ #define REG_HOP_COUNT		0x39640
++#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
++
++#define REG_HOST_INTERFACE_RST	0x39858
++
++#define REG_DMA_MISC		0x39864
++#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
+ 
+ #endif
+-- 
+2.7.4
 
-Ultimately this seems to be the same issue as with calling
-dev_pm_domain_set() for a bound device. Perhaps device_link_add()
-can likewise be allowed if a runtime PM ref is held for the devices
-and the call happens under lock_system_sleep()?
-
-Thanks,
-
-Lukas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
