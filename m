@@ -1,79 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41287 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933258AbcGJDrj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 9 Jul 2016 23:47:39 -0400
-Date: Sun, 10 Jul 2016 05:47:37 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de, axboe@fb.com,
-	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 07/13] pci: Provide sensible irq vector alloc/free
-	routines
-Message-ID: <20160710034737.GB15720@lst.de>
-References: <1467621574-8277-1-git-send-email-hch@lst.de> <1467621574-8277-8-git-send-email-hch@lst.de> <20160706080545.GA14583@dhcp-27-118.brq.redhat.com>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for system sleep
+Date: Mon, 18 Jul 2016 15:39:15 +0200
+Message-ID: <2339231.tBO8VQgPAo@vostro.rjw.lan>
+In-Reply-To: <20160617221407.GB1927@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de> <20160617210924.GA12254@localhost> <20160617221407.GB1927@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160706080545.GA14583@dhcp-27-118.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 06, 2016 at 10:05:45AM +0200, Alexander Gordeev wrote:
-> > + pci_enable_msi, pci_enable_msi_range, pci_enable_msi_exact, pci_disable_msi,
-> > + pci_msi_vec_count, pci_enable_msix_range, pci_enable_msix_exact,
-> > + pci_disable_msix, pci_msix_vec_count
+On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
+> On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
+> > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
+> > > There are devices wich are not power-managed by the platform, yet can be
+> > 
+> > s/wich/which/
 > 
-> Description of these functions can be removed when all drivers migrated
-> to the new API. Also implementation descriptions + examples would still
-> be needed AFAICT.
-
-I diagreed - if we deprecated functions the only thing that should
-be mentioned is a "don't use these". 
-
-> This function's code almost matches the existing pci_enable_msix_range()
-> so pci_enable_msix_range() should be reworked instead IMHO.
-
-That's what earlier versions of the code did.  However due to the
-fact that we want to avoid over-allocating the msix_vectors array
-(minor) and get the vectors count of the affinity mask right (major,
-as pointed out by you last time) I had to move the allocations inside
-the helpers that loop around the atctual enablement.  I didn't want
-to change the function to a different version of the algorithm just
-before removing them relatively soon.  But given that strong preference
-for changing these simple functions instead of duplicating them I've
-changed that patch to do that now.
-
-> We do not need to keep msix_entry array, since it only needed for
-> pci_irq_vector() function. But the same info could be retrieved from
-> msi_desc::irq.
-
-Indeed.  Avoiding this allocation makes these interfaces quite a bit
-simpler.  It requires a few prep patches, but I think it's definitively
-worth, so the next version will avoid the need for the msix_entry array.
-
-> > +	/* use legacy irq if allowed */
-> > +	if (min_vecs == 1)
-> > +		return 1;
-> > +	return -ENOSPC;
+> Oops.
 > 
-> The original error code (in vecs) would be overridden with -ENOSPC here.
-
-Ok, fixed.
-
-> > +	WARN_ON_ONCE(!dev->msi_enabled && nr > 0);
-> > +	return dev->irq + nr;
+> > 
+> > > runtime suspended to D3cold with some other mechanism.  When putting the
+> > > system to sleep, we currently handle such devices improperly by trying
+> > > to transition them from D3cold to D3hot (the default power state defined
+> > > at the beginning of pci_target_state()).  Avoid that.
+> > > 
+> > > An example for devices affected by this are Thunderbolt controllers
+> > > built into Macs which can be put into D3cold with nonstandard ACPI
+> > > methods.
+> > > 
+> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > 
+> > This needs an ack from Rafael.
+> > 
+> > Naive question: why is the default target_state PCI_D3hot?
 > 
-> I think this function should check irq number existence and return the
-> vector number or -EINVAL;
+> No idea. :-)
 
-Ok, fixed.
+Because D3_hot is the deepest state you can *program* the device to go into
+unless the platform can cut off power from it.
 
-> > +		unsigned int flags)
-> > +{
-> > +	if (min_vecs > 1)
-> > +		return -ENOSPC;
+> > 
+> > > ---
+> > >  drivers/pci/pci.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 791dfe7..6af9911 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
+> > >  			      && !(dev->pme_support & (1 << target_state)))
+> > >  				target_state--;
+> > >  		}
+> > > +	} else if (dev->current_state == PCI_D3cold) {
+> > > +		target_state = PCI_D3cold;
+> > >  	}
+> > 
+> > This only covers the case of !device_may_wakeup().  So I guess
+> > device_may_wakeup() is false for these Thunderbolt controllers.
 > 
-> In case CONFIG_PCI_MSI is unset min_vecs > 1 is -EINVAL;
+> Correct. device_may_wakeup() is defined in include/linux/pm_wakeup.h as:
+> dev->power.can_wakeup && !!dev->power.wakeup
+> 
+> The first one, dev->power.can_wakeup is true because PME is claimed to be
+> supported for all power states in the PMC register, so pci_pm_init() calls
+> device_set_wakeup_capable(&dev->dev, true):
+>   Capabilities: [80] Power Management version 3
+>     Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+>     Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
+> 
+> The second one, dev->power.wakeup is false because device_wakeup_enable()
+> is never called.
+> 
+> 
+> > Is there a reason you don't want to do this check for devices that
+> > may wakeup?
+> 
+> Fear of breaking things. It would mean that a device would be left in
+> D3cold even though it may not be able to signal wakeup from that power
+> state.
 
-Ok, fixed.
+Then it should not be put into D3_cold at run time too if it is wakeup-capable.
+
+> That's a change of behaviour the consequences of which I cannot
+> estimate. Intuitively, I would expect breakage from such a change.
+
+That would have been the case if the device had been capable of signaling
+wakeup from D3_cold at run time, but not from system sleep.  However, that
+can only happen when platform_pci_power_manageable() is true AFAICS.
+
+So I'd change the switch () under the platform_pci_power_manageable() check to
+return "state" in the default case and then do
+
+	return dev->current_state < target_state ? target_state : dev->current_state;
+
+at the end of the function.
+
+Thanks,
+Rafael
