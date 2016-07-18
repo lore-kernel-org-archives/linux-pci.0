@@ -1,63 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ARM: DRA7: select PCI_DOMAINS config
-To: Tony Lindgren <tony@atomide.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1469102276-14777-1-git-send-email-kishon@ti.com>
- <1469102276-14777-3-git-send-email-kishon@ti.com>
- <8047226.VhgpLo8JQu@wuerfel> <20160722071644.GZ28140@atomide.com>
-CC: <bcousson@baylibre.com>, <robh+dt@kernel.org>,
-	<mark.rutland@arm.com>, <linux@armlinux.org.uk>,
-	<linux-omap@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5791D8C7.5020303@ti.com>
-Date: Fri, 22 Jul 2016 13:56:47 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42434 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751391AbcGRCn2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Jul 2016 22:43:28 -0400
+Date: Mon, 18 Jul 2016 10:38:51 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+CC: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 2/2] PCI: designware: let dw_pcie_link_up() beware of
+ LTSSM training bit
+Message-ID: <20160718103851.7cd3984a@xhacker>
+In-Reply-To: <2e9d2b8c-f4c3-aa6d-38be-314213db7727@synopsys.com>
+References: <1467802782-3024-1-git-send-email-jszhang@marvell.com>
+	<1467802782-3024-3-git-send-email-jszhang@marvell.com>
+	<2e9d2b8c-f4c3-aa6d-38be-314213db7727@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <20160722071644.GZ28140@atomide.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Dear Joao,
 
-On Friday 22 July 2016 12:46 PM, Tony Lindgren wrote:
-> * Arnd Bergmann <arnd@arndb.de> [160721 05:08]:
->> On Thursday, July 21, 2016 5:27:56 PM CEST Kishon Vijay Abraham I wrote:
->>> diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
->>> index 1a648e9..8e6e2c0 100644
->>> --- a/arch/arm/mach-omap2/Kconfig
->>> +++ b/arch/arm/mach-omap2/Kconfig
->>> @@ -86,6 +86,7 @@ config SOC_DRA7XX
->>>         select OMAP_INTERCONNECT_BARRIER
->>>         select PM_OPP if PM
->>>         select ZONE_DMA if ARM_LPAE
->>> +       select PCI_DOMAINS if PCI
->>>  
->>>  config ARCH_OMAP2PLUS
->>>         bool
->>>
->>
->> Should we just set this unconditionally for ARCH_MULTIPLATFORM maybe?
+On Fri, 15 Jul 2016 16:10:24 +0100 Joao Pinto wrote:
+
+> Hi,
 > 
-> Makes sense to me if many SoCs need this.
+> On 7/6/2016 11:59 AM, Jisheng Zhang wrote:
+> > The link may be UP but still in link training. In this case, we can't
+> > think the link is up and operating correctly. So we need to teach
+> > dw_pcie_link_up() beware of the PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit.
+> > 
+> > This patch also rewrite PCIE_PHY_DEBUG_R1_LINK_UP definition so that
+> > it's consistent with other MACROS.
+> > 
+> > Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 9df879a..29e10dd 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -73,7 +73,8 @@
+> >  /* PCIe Port Logic registers */
+> >  #define PLR_OFFSET			0x700
+> >  #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
+> > -#define PCIE_PHY_DEBUG_R1_LINK_UP	0x00000010
+> > +#define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
+> > +#define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)  
+> 
+> According to the databook bit 29 is inside a range that is dedicated to M-PCIe.
+> Have you checked bit 29 state by experience?
 
-since it doesn't harm even if a platform has a single PCIe port, it should be
-okay to set PCI_DOMAINS. I'll resend the following as a separate patch if it's
-okay.
+bit 29 here is bit 61 of cxpl_debug_info(64bit) in databook, the debug info is
+composited by debug 0 and debug 1 registers.
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 90542db..0cccb50 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -338,6 +338,7 @@ config ARCH_MULTIPLATFORM
-        select MULTI_IRQ_HANDLER
-        select SPARSE_IRQ
-        select USE_OF
-+       select PCI_DOMAINS if PCI
+I checked databook 4.3 and 4.21, bit 29 (bit 61 in databook) isn't dedicated to
+M-PCIe. I think you may misread the bit 29 here as the bit29 in databook?
+Databook indeed mentioned that bit[31:28] is reserved for M-PCIe
 
- config ARM_SINGLE_ARMV7M
-        bool "ARMv7-M based platforms (Cortex-M0/M3/M4)"
+And after more code checking, I think this is not only marvell have this
+case(link is up but still in link training), but pci-imx6.c also has this
+case, we could check imx6_pcie_link_up() for reference.
 
-Thanks
-Kishon
+Thanks,
+Jisheng
+
+> 
+> >  
+> >  /* Parameters for the waiting for link up routine */
+> >  #define LINK_WAIT_MAX_RETRIES		10
+> > @@ -417,7 +418,8 @@ int dw_pcie_link_up(struct pcie_port *pp)
+> >  		return pp->ops->link_up(pp);
+> >  
+> >  	val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+> > -	return val & PCIE_PHY_DEBUG_R1_LINK_UP;
+> > +	return ((val & PCIE_PHY_DEBUG_R1_LINK_UP) &&
+> > +		(!(val & PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING)));
+> >  }
+> >  
+> >  static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> >   
+> 
+> Thanks,
+> Joao
+
