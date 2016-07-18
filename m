@@ -1,44 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from prv-mh.provo.novell.com ([137.65.248.74]:51540 "EHLO
-	prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030411AbcGGIKA convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:6:1>);
-	Thu, 7 Jul 2016 04:10:00 -0400
-Message-Id: <577E2A7702000078000FBF78@prv-mh.provo.novell.com>
-Date: Thu, 07 Jul 2016 02:09:59 -0600
-From: "Jan Beulich" <JBeulich@suse.com>
-To: <david.vrabel@citrix.com>, "Bjorn Helgaas" <bhelgaas@google.com>,
-	<boris.ostrovsky@oracle.com>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	"Juergen Gross" <JGross@suse.com>
-Cc: <xen-devel@lists.xenproject.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH] xen-pcifront: prefer xenbus_write() over
- xenbus_printf() where possible
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from bear.ext.ti.com ([198.47.19.11]:55102 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750923AbcGRG33 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Jul 2016 02:29:29 -0400
+Subject: Re: [PATCH] PCI: dra7xx: Fix return value in case of error
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	<bhelgaas@google.com>
+References: <1468531107-3639-1-git-send-email-christophe.jaillet@wanadoo.fr>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <578C7741.2010903@ti.com>
+Date: Mon, 18 Jul 2016 11:59:21 +0530
+MIME-Version: 1.0
+In-Reply-To: <1468531107-3639-1-git-send-email-christophe.jaillet@wanadoo.fr>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-... as being the simpler variant.
-
-Signed-off-by: Jan Beulich <jbeulich@suse.com>
----
- drivers/pci/xen-pcifront.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- 4.7-rc6-prefer-xenbus_write.orig/drivers/pci/xen-pcifront.c
-+++ 4.7-rc6-prefer-xenbus_write/drivers/pci/xen-pcifront.c
-@@ -822,8 +822,8 @@ do_publish:
- 		err = xenbus_printf(trans, pdev->xdev->nodename,
- 				    "event-channel", "%u", pdev->evtchn);
- 	if (!err)
--		err = xenbus_printf(trans, pdev->xdev->nodename,
--				    "magic", XEN_PCI_MAGIC);
-+		err = xenbus_write(trans, pdev->xdev->nodename,
-+				   "magic", XEN_PCI_MAGIC);
- 
- 	if (err) {
- 		xenbus_transaction_end(trans, 1);
 
 
+On Friday 15 July 2016 02:48 AM, Christophe JAILLET wrote:
+> In function 'dra7xx_pcie_init_irq_domain', the pattern used to check and
+> return error is:
+> 
+>    if (!var) {
+>       dev_err(...);
+>       return PTR_ERR(var);
+>    }
+> 
+> So the returned value in case of error is always 0, which means 'success'.
+> Change it to return -ENODEV instead.
+> 
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
+Reviewed-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/host/pci-dra7xx.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index f441130..81b3949 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -181,14 +181,14 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+>  
+>  	if (!pcie_intc_node) {
+>  		dev_err(dev, "No PCIe Intc node found\n");
+> -		return PTR_ERR(pcie_intc_node);
+> +		return -ENODEV;
+>  	}
+>  
+>  	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+>  					       &intx_domain_ops, pp);
+>  	if (!pp->irq_domain) {
+>  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> -		return PTR_ERR(pp->irq_domain);
+> +		return -ENODEV;
+>  	}
+>  
+>  	return 0;
+> 
