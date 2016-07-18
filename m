@@ -1,108 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35775 "EHLO foss.arm.com"
+Received: from mga11.intel.com ([192.55.52.93]:46756 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750916AbcGMJTl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jul 2016 05:19:41 -0400
-Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	id S1751908AbcGRJyR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jul 2016 05:54:17 -0400
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: 'David Miller' <davem@davemloft.net>,
+	'Lukas Wunner' <lukas@wunner.de>
+CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57835D35.1000901@arm.com>
- <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5785133A.6070908@arm.com>
- <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5785F8DC.4060100@arm.com>
- <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5785FDCB.2070208@arm.com>
- <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <5786079F.1050605@arm.com>
-Date: Wed, 13 Jul 2016 10:19:27 +0100
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v3 2/8] thunderbolt: Updating device IDs
+Date: Mon, 18 Jul 2016 09:54:10 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03893D025E@hasmsx107.ger.corp.intel.com>
+References: <1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
+	<20160715.114902.1149848183971707484.davem@davemloft.net>
+	<E607265CB020454880711A6F96C05A03893CE285@hasmsx107.ger.corp.intel.com>
+ <20160715.145345.1714630247405044715.davem@davemloft.net>
+In-Reply-To: <20160715.145345.1714630247405044715.davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258B8999@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/07/16 10:10, Bharat Kumar Gogada wrote:
->> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
->>
->> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
->>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
->>>>
->>>> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
->>>>>> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
->>>>>> call
->>>>>>
->>>>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
->>>>>>> Hi Marc,
->>>>>>>
->>>>>>> Thanks for the reply.
->>>>>>>
->>>>>>> From PCIe Spec:
->>>>>>> MSI Enable Bit:
->>>>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control register
->>>>>>> (see Section 6.8.2.3) is 0, the function is permitted to use MSI to
->>>>>>> request service and is prohibited from using its INTx# pin.
->>>>>>>
->>>>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
->>>>>> which means MSI address and data fields are available/programmed.
->>>>>>>
->>>>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
->>>>>>> latches
->>>>>> onto MSI address and MSI data values.
->>>>>>>
->>>>>>> With current MSI implementation in kernel, our SoC is latching on to
->>>>>>> incorrect address and data values, as address/data are updated much
->>>>>>> later
->>>>>> than MSI Enable bit.
->>>>>>
->>>>>> As a side question, how does setting the affinity work on this
->>>>>> end-point if this involves changing the address programmed in the MSI
->>>> registers?
->>>>>> Do you expect the enabled bit to be toggled to around the write?
->>>>>>
->>>>>
->>>>> Yes,
->>>>
->>>> Well, that's pretty annoying, as this will not work either. But maybe your
->> MSI
->>>> controller has a single doorbell? You haven't mentioned which HW that
->> is...
->>>>
->>> The MSI address/data is located in config space, in our SoC for the logic
->> behind PCIe
->>> to become aware of new address/data  MSI enable transition is used (0 to
->> 1).
->>> The logic cannot keep polling these registers in configuration space as it
->> would consume power.
->>>
->>> So the logic uses the transition in MSI enable to latch on to address/data.
->>
->> I understand the "why". I'm just wondering if your SoC needs to have
->> the MSI address changed when changing the affinity of the MSI? What MSI
->> controller are you using? Is it in mainline?
->>
-> Can you please give more information on MSI affinity ?
-> For cpu affinity for interrupts we would use MSI-X.
+On Sat, Jul 16 2016, 12:53 AM, David Miller wrote:
+> From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+> Date: Fri, 15 Jul 2016 18:56:39 +0000
 > 
-> We are using GIC 400 v2.
+> > On Fri, Jul 15 2016, 09:49 PM, David Miller wrote:
+> >> From: Amir Levy <amir.jer.levy@intel.com>
+> >> Date: Thu, 14 Jul 2016 14:28:16 +0300
+> >>
+> >> > Adding the new Thunderbolt(TM) device IDs to the list.
+> >> >
+> >> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> >>
+> >> Unless these PCI-IDs, all of them, are going to be used in multiple
+> >> spots in the kernel, it is not appropriate to add them here.
+> >>
+> >> They belong as private macros in the drivers themselves, instead.
+> >
+> > They might be used:
+> > http://www.spinics.net/lists/linux-pci/msg51331.html
+> 
+> Then move them to the common location when this "might" thing actually
+> happens.
 
-None of that is relevant. GIC400 doesn't have the faintest notion of
-what an MSI is, and MSI-X vs MSI is an end-point property.
+There are several contradicting  comments about this change (http://www.spinics.net/lists/linux-pci/msg51331.html and http://www.spinics.net/lists/linux-pci/msg51302.html)
+I've decided for now to make the new device ids private to the driver. 
+This can be changed later when updating quirks for Apple hardware.
 
-Please answer these questions: does your MSI controller have a unique
-doorbell, or multiple doorbells? Does it use wired interrupts (SPIs)
-connected to the GIC? Is the support code for this MSI controller in
-mainline or not?
-
-I'm trying to work out what I can do to help you.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Regards,
+Amir
