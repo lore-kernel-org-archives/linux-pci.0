@@ -1,102 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] rpaphp: fix slot registration for multiple slots under a
- PHB
-To: Nathan Fontenot <nfont@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-References: <1468019987-1733-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <57803DD2.601@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
-	mdroth@linux.vnet.ibm.com, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Date: Mon, 11 Jul 2016 08:15:07 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:35819 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbcGRKpG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jul 2016 06:45:06 -0400
+Received: by mail-wm0-f46.google.com with SMTP id f65so97649059wmi.0
+        for <linux-pci@vger.kernel.org>; Mon, 18 Jul 2016 03:45:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <57803DD2.601@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252
-Message-Id: <5783B7FB.1010007@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <VI1PR0401MB2624E3404F95241302CC4C9F8C360@VI1PR0401MB2624.eurprd04.prod.outlook.com>
+References: <CAO1575Vzw5=JMVW4yh6HNz730r-RtONt_+J1A4BhygVowAWLZQ@mail.gmail.com>
+ <CAO1575Wo_Qgk-YX7kZchUTEv7o3W5-b_DJQktoF2AR+OwvAxNg@mail.gmail.com>
+ <VI1PR0401MB2624BC92B13026C53D4B13198C330@VI1PR0401MB2624.eurprd04.prod.outlook.com>
+ <CAO1575VC_cVHMxnWWDHcJhrymchJM1zMmR4X2O38JdrGP4dJfA@mail.gmail.com>
+ <VI1PR0401MB26249BF2429EF9FD6DB7F7EF8C330@VI1PR0401MB2624.eurprd04.prod.outlook.com>
+ <CAO1575VjjoA3O-8big2NG7v=xCeeLjf1K0Ck7b9AUcZ=H8HL1w@mail.gmail.com> <VI1PR0401MB2624E3404F95241302CC4C9F8C360@VI1PR0401MB2624.eurprd04.prod.outlook.com>
+From: Ivan Grimaldi <grimaldi.ivan@gmail.com>
+Date: Mon, 18 Jul 2016 12:44:36 +0200
+Message-ID: <CAO1575VCk2g0KwH=hEk4bHP1t75Pd09yCNV27r7ZfhLbUhV=eA@mail.gmail.com>
+Subject: Re: PROBLEM: pcie imx6 link problem after a random number of reboot
+To: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: "r65037@freescale.com" <r65037@freescale.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/08/2016 04:57 PM, Nathan Fontenot wrote:
-> On 07/08/2016 06:19 PM, Tyrel Datwyler wrote:
->> PowerVM seems to only ever provide a single hotplug slot per PHB.
->> The under lying slot hotplug registration code assumed multiple slots,
->> but the actual implementation is broken for multiple slots. This went
->> unnoticed for years due to the nature of PowerVM as mentioned
->> previously. Under qemu/kvm the hotplug slot model aligns more with
->> x86 where multiple slots are presented under a single PHB. As seen
->> in the following each additional slot after the first fails to
->> register due to each slot always being compared against the first
->> child node of the PHB in the device tree.
->>
->> [    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
->> [    6.492569] rpaphp: Slot [Slot 0] registered
->> [    6.492577] rpaphp: pci_hp_register failed with error -16
->> [    6.493082] rpaphp: pci_hp_register failed with error -16
->> [    6.493138] rpaphp: pci_hp_register failed with error -16
->> [    6.493161] rpaphp: pci_hp_register failed with error -16
->>
->> The registration logic is fixed so that each slot is compared
->> against the existing child devices of the PHB in the device tree to
->> determine present slots vs empty slots.
->>
->> [   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
->> [   38.482004] rpaphp: Slot [C0] registered
->> [   38.482127] rpaphp: Slot [C1] registered
->> [   38.482241] rpaphp: Slot [C2] registered
->> [   38.482356] rpaphp: Slot [C3] registered
->> [   38.482495] rpaphp: Slot [C4] registered
->>
->> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
->>  1 file changed, 12 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
->> index 6937c72..c90fa8d 100644
->> --- a/drivers/pci/hotplug/rpaphp_slot.c
->> +++ b/drivers/pci/hotplug/rpaphp_slot.c
->> @@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
->>  int rpaphp_register_slot(struct slot *slot)
->>  {
->>  	struct hotplug_slot *php_slot = slot->hotplug_slot;
->> +	struct device_node *child;
->> +	u32 my_index;
->>  	int retval;
->> -	int slotno;
->> +	int slotno = -1;
->>
->>  	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
->>  		__func__, slot->dn->full_name, slot->index, slot->name,
->> @@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
->>  		return -EAGAIN;
->>  	}
->>
->> -	if (slot->dn->child)
->> -		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
->> -	else
->> -		slotno = -1;
->> +	for_each_child_of_node(slot->dn, child) {
->> +		retval = of_property_read_u32(child, "my,ibm-drc-index", &my_index);
-> 
-> Shouldn't this be reading ibm,my-drc-index? instead of my,ibm-drc-index.
+Hi,
 
-Doh, indeed it should.
+  i have enabled early printk and after a random number of restart the
+kernel hangs occurs later in the log (Below kernel log).
 
--Tyrel
+...
+imx6q-pcie 1ffc000.pcie: Link up, Gen=2
+imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci_bus 0000:00: scanning bus
+pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x4c
+pci 0000:00:00.0: supports D1
+pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+pci 0000:00:00.0: PME# disabled
+pci_bus 0000:00: fixups for bus
+PCI: bus0: Fast back to back transfers disabled
+pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
+pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
+pci_bus 0000:01: scanning bus
 
-> 
-> -Nathan
-> 
->> +		if (my_index == slot->index) {
->> +			slotno = PCI_SLOT(PCI_DN(child)->devfn);
->> +			of_node_put(child);
->> +			break;
->> +		}
->> +	}
->> +
->>  	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
->>  	if (retval) {
->>  		err("pci_hp_register failed with error %d\n", retval);
+
+
+IVan
+
+
+2016-07-18 9:38 GMT+02:00 Richard Zhu <hongxing.zhu@nxp.com>:
+> Hi Ivan:
+>
+>
+>> -----Original Message-----
+>> From: Ivan Grimaldi [mailto:grimaldi.ivan@gmail.com]
+>> Sent: Friday, July 15, 2016 9:55 PM
+>> To: Richard Zhu <hongxing.zhu@nxp.com>
+>> Cc: r65037@freescale.com; l.stach@pengutronix.de; linux-pci@vger.kernel.org;
+>> bhelgaas@google.com; linux-arm-kernel@lists.infradead.org
+>> Subject: Re: PROBLEM: pcie imx6 link problem after a random number of
+>> reboot
 >>
-> 
+>> Hi ,
+>>
+>>  i have aligned pci-imx.c file with SHA
+>> "b2d7a9cd3ff8ec561348267c2ef7d47b2b91e801" (same of kernel 4.6) and after
+>> a random number of restart the kernel hangs (below the kernel log). From log,
+>> as you see, the U-Boot haven't problem with PCI.
+> [Zhu hongxing] The link training of kernel pcie would be impacted by the the link up state of
+>  the uboot pcie.
+>>
+>> ...
+>> U-Boot 2015.01-ge2977fb-dirty (Jul 15 2016 - 11:28:42)
+>>
+>> CPU:   Freescale i.MX6DL rev1.1 at 792 MHz
+>> Reset cause: WDOG
+>>        Watchdog enabled
+>> DRAM:  1 GiB
+>> Flash: 96 MiB
+>> MMC:   FSL_SDHC: 0
+>> WARNING: Make sure the PCIe #PERST line is connected!
+>>   00:01.0     - 16c3:abcd - Bridge device
+>>    01:00.0    - 14e4:b242 - Network controller
+>> In:    serial
+>> Out:   serial
+>> Err:   serial
+>> Net:   FEC [PRIME]
+>> Hit any key to stop autoboot:  0
+>> Booting from NFS...
+>> Using FEC device
+>> TFTP from server 192.168.74.130; our IP address is 192.168.74.235 Filename
+>> 'ags20.dtb'.
+>> Load address: 0x12000000
+>> Loading: ###
+>>          3.2 MiB/s
+>> done
+>> Bytes transferred = 29921 (74e1 hex)
+>> Using FEC device
+>> TFTP from server 192.168.74.130; our IP address is 192.168.74.235 Filename
+>> 'zImage'.
+>> Load address: 0x12100000
+>> Loading:
+>> ################################################################
+>> #
+>>
+>> ################################################################
+>> #
+>>
+>> ################################################################
+>> #
+>>          ##########################################
+>>          3.9 MiB/s
+>> done
+>> Bytes transferred = 3472120 (34faf8 hex) Kernel image @ 0x12100000
+>> [ 0x000000 - 0x34faf8 ] ## Flattened Device Tree blob at 12000000
+>>    Booting using the fdt blob at 0x12000000
+>>    Loading Device Tree to 4f530000, end 4f53a4e0 ... OK
+>>
+>> Starting kernel ...
+>>
+> [Zhu hongxing] It seems that the kernel is hang.
+> Most possible reason is that pcie register is accessed, but the clks is not configured properly.
+> Can you enable the " CONFIG_EARLY_PRINTK", and debug into it?
+>
+>>
+>>
+>> Best regards
+>> IVan
+>>
+> Snip...
+>
+> Best Regards
+> hongxing zhu
+> Linux BSP team
+> Office: 86-21-28937189
+> Email: hongxing.zhu@nxp.com
+>
