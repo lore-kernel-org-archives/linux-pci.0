@@ -1,97 +1,35 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 12 Jul 2016 18:31:18 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	linux-kernel@vger.kernel.org,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v6 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-Message-ID: <20160713013117.GA130126@google.com>
-References: <1467789398-13501-1-git-send-email-shawn.lin@rock-chips.com>
- <20160707003912.GB100467@google.com>
- <59b328c9-3a21-36fa-7f28-4ba24d77fef0@rock-chips.com>
+Subject: [PATCH] pci: Add DMA alias quirk for Adaptec 3805
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Mon, 18 Jul 2016 08:32:45 -0600
+Message-ID: <20160718143209.7169.80117.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <59b328c9-3a21-36fa-7f28-4ba24d77fef0@rock-chips.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+Just like the 3405 quirk added in commit d3d2ab43ddae ("PCI: Add DMA
+alias quirk for Adaptec 3405").
 
-On Wed, Jul 13, 2016 at 09:10:15AM +0800, Shawn Lin wrote:
-> 在 2016/7/7 8:39, Brian Norris 写道:
-> >On Wed, Jul 06, 2016 at 03:16:37PM +0800, Shawn Lin wrote:
-> >>+	#interrupt-cells = <1>;
-> >>+	interrupt-map-mask = <0 0 0 7>;
-> >>+	interrupt-map = <0 0 0 1 &pcie0_intc 1>,
-> >>+			<0 0 0 2 &pcie0_intc 2>,
-> >>+			<0 0 0 3 &pcie0_intc 3>,
-> >>+			<0 0 0 4 &pcie0_intc 4>;
-> >
-> >I'm a little lost on this one, so forgive my ignorance; how did you
-> >determine the last value in each entry (i.e., the 1, 2, 3, and 4 IRQ
-> >numbers for pcie0_intc)? IIUC, those are supposed to represent indeces
-> >into the IRQ status register found in the PCIe interrupt status
-> >register, and so they should be 0-based (i.e., 0, 1, 2, 3). And then
-> >you'd have:
-> >
-> >	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
-> >			<0 0 0 2 &pcie0_intc 1>,
-> >			<0 0 0 3 &pcie0_intc 2>,
-> >			<0 0 0 4 &pcie0_intc 3>;
-> >
-> >But then, I never got this sub-node binding to work quite right, so I
-> >may be missing something.
-> >
-> >EDIT: ooh, I see what's going on! I'll comment on the driver as well,
-> >but it looks like you're translating the register status to a HW IRQ
-> >number with 'ffs(reg)', which yields a 1-based index. I think it is most
-> >sensible to use a 0-based index (i.e., 'ffs(reg) - 1'). Now, that only
-> >will work if you get the whole interrupt-map + interrupt-controller
-> >thing right (i.e., using a subnode for the interrupt controller) --
-> >otherwise, IRQ mapping might not work right. I suspect that's one reason
-> >the original driver writer might have used 1-based indexing in the first
-> >place.
-> 
-> yes, I got it but.....what's the difference?
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Link: https://www.redhat.com/archives/vfio-users/2016-July/msg00046.html
+---
+ drivers/pci/quirks.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-At some level, it's a matter of preference. But when you're talking
-about the rk3399 PCIe "interrupt controller" domain, it seems that you
-should be talking about HW bits in the controller -- i.e., you have a
-4-bit interrupt status bitfield, that we typically call [0:3]. If you
-use [1:4], then you have to remember to subtract 1 mentally when mapping
-to the actual HW bit. I believe that confusion (since bitfields normally
-count from 0) might have helped cause the infinite loop bug I noticed
-too. And I also think that counting from 0 helps clarify the fact that
-your interrupt controller indexing is an independent numbering from the
-PCI interrupt numbering, even though they happen to map 1:1.
-
-But then, PCI INTx numbering is kinda weird already, as it starts from
-1. So maybe it's just as valid to say our domain starts from 1 as well.
-
-> You still need to get the whole interrupt-map + interrupt-controller
-> things right and the code(ffs(reg) - 1)if applied your suggestion.
-
-Yes, of course. And I already sent you patches that do that.
-
-> Look at most of the docs for pcie bindings, I saw they also take
-> 0-base index, how about?
-
-I don't know which ones you're referring to. I see that altera-pcie.txt
-supports interrupt indeces counting from 1, but that's probably because
-they're using the same broken binding that was in your ~v3 patches
-(where the pcie node has both 'interrupt-controller' and
-'interrupt-map', with phandles to itself), so they had no other choice.
-
-If you still think it makes more sense to count from 1, then I won't
-stop you.
-
-Regards,
-Brian
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 98b0af0..b69321c 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3752,6 +3752,9 @@ static const struct pci_device_id fixed_dma_alias_tbl[] = {
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
+ 			 PCI_VENDOR_ID_ADAPTEC2, 0x02bb), /* Adaptec 3405 */
+ 	  .driver_data = PCI_DEVFN(1, 0) },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x0285,
++			 PCI_VENDOR_ID_ADAPTEC2, 0x02bc), /* Adaptec 3805 */
++	  .driver_data = PCI_DEVFN(1, 0) },
+ 	{ 0 }
+ };
+ 
