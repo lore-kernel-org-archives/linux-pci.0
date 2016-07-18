@@ -1,126 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:34826 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753215AbcGYQM1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jul 2016 12:12:27 -0400
-Date: Mon, 25 Jul 2016 17:12:23 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-	Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH v3 05/13] drivers: iommu: make iommu_fwspec OF
- agnostic
-Message-ID: <20160725161223.GA28870@red-moon>
-References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1469013815-24380-6-git-send-email-lorenzo.pieralisi@arm.com>
- <1499f802-5f98-b0c0-d3aa-dabcac81e84e@arm.com>
- <20160725154103.GA28507@red-moon>
- <856415fc-b9bf-ca44-cc70-85d454574e53@arm.com>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:55448 "HELO
+	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751136AbcGRNNe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jul 2016 09:13:34 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2 11/13] PM / sleep: Allow opt-out from runtime resume after direct-complete
+Date: Mon, 18 Jul 2016 15:18:25 +0200
+Message-ID: <10830072.vubE73bdx4@vostro.rjw.lan>
+In-Reply-To: <9f0713b23baf7c6139a4b476cd9637d96e18cc95.1463134232.git.lukas@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de> <9f0713b23baf7c6139a4b476cd9637d96e18cc95.1463134232.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <856415fc-b9bf-ca44-cc70-85d454574e53@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 25, 2016 at 04:51:00PM +0100, Robin Murphy wrote:
-> On 25/07/16 16:41, Lorenzo Pieralisi wrote:
-> [...]
-> >>> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
-> >>> index 308791f..2362232 100644
-> >>> --- a/include/linux/of_iommu.h
-> >>> +++ b/include/linux/of_iommu.h
-> >>> @@ -15,13 +15,8 @@ extern void of_iommu_init(void);
-> >>>  extern const struct iommu_ops *of_iommu_configure(struct device *dev,
-> >>>  					struct device_node *master_np);
-> >>>  
-> >>> -struct iommu_fwspec {
-> >>> -	const struct iommu_ops	*iommu_ops;
-> >>> -	struct device_node	*iommu_np;
-> >>> -	void			*iommu_priv;
-> >>> -	unsigned int		num_ids;
-> >>> -	u32			ids[];
-> >>> -};
-> >>> +void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
-> >>> +const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
-> >>
-> >> Is there some reason we need to retain the existing definitions of
-> >> these? I was assuming we'd be able to move the entire implementation
-> >> over to the fwspec code and leave behind nothing more than trivial
-> >> wrappers, e.g.:
-> >>
-> >> #define of_iommu_get_ops(np) iommu_fwspec_get_ops(&(np)->fwnode_handle)
-> > 
-> > Yep, that's exactly what I did but then I was bitten by config
-> > dependencies. If we implement of_iommu_get/set_ops() as wrappers,
-> > we have to compile iommu_fwspec_get/set_ops() on arches that may
-> > not have struct dev_archdata.iommu, unless we introduce yet another
-> > config symbol to avoid compiling that code (see eg iommu_fwspec_init(),
-> > we can't compile it on eg x86 even though we do need of_iommu_get_ops()
-> > on it - so iommu_fwspec_get_ops(), that lives in the same compilation
-> > unit as eg iommu_fwspec_init()).
-> > 
-> > So short answer is: there is no reason apart from dev_archdata.iommu
-> > being arch specific, if we were able to move iommu_fwspec to generic
-> > code (ie struct device, somehow) I would certainly get rid of this
-> > stupid code duplication (or as I said I can add a config entry for
-> > that, more ideas are welcome).
+On Friday, May 13, 2016 01:15:31 PM Lukas Wunner wrote:
+> Since commit aae4518b3124 ("PM / sleep: Mechanism to avoid resuming
+> runtime-suspended devices unnecessarily"), we no longer wake up devices
+> which are already runtime suspended upon entering system sleep
+> ("direct-complete").
 > 
-> OK, given Rob's comment as well, I guess breaking that dependency is to
-> everyone's benefit. Since it's quite closely related, how about if we
-> follow the arch_setup_dma_ops() pattern with an
-> arch_{get,set}_iommu_fwspec(dev) type thing?
-
-Yes we can do that too as an intermediate step, that solves the
-problem (and it makes this patch much simpler), it is cleaner
-than doing it with a(nother) Kconfig entry.
-
-Thanks,
-Lorenzo
-
-> Robin.
+> However commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might
+> have been reset by firmware") changed this to mandatorily runtime resume
+> such devices after the system is woken.  The motivation was to ensure
+> that devices do not remain in a reset-power-on state after system
+> resume, potentially preventing deep SoC-wide low-power states from being
+> entered on idle.
 > 
-> > 
-> > Thanks,
-> > Lorenzo
-> > 
-> >>
-> >> Robin.
-> >>
-> >>>  #else
-> >>>  
-> >>> @@ -39,17 +34,14 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
-> >>>  	return NULL;
-> >>>  }
-> >>>  
-> >>> -struct iommu_fwspec;
-> >>> -
-> >>> -#endif	/* CONFIG_OF_IOMMU */
-> >>> +static inline void of_iommu_set_ops(struct device_node *np,
-> >>> +				    const struct iommu_ops *ops)
-> >>> +{ }
-> >>>  
-> >>> -int iommu_fwspec_init(struct device *dev, struct device_node *iommu_np);
-> >>> -void iommu_fwspec_free(struct device *dev);
-> >>> -int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
-> >>> -struct iommu_fwspec *dev_iommu_fwspec(struct device *dev);
-> >>> +static inline const struct iommu_ops *
-> >>> +of_iommu_get_ops(struct device_node *np) { return NULL; }
-> >>>  
-> >>> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
-> >>> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
-> >>> +#endif	/* CONFIG_OF_IOMMU */
-> >>>  
-> >>>  extern struct of_device_id __iommu_of_table;
-> >>>  
-> >>>
-> >>
-> > 
+> This is counter-productive for devices of which we know that the
+> mandatory runtime resume is unnecessary.  Thunderbolt on the Mac is a
+> case in point: Runtime resume not just powers up the controller, but
+> multiple adjacent chips, including a 15V boost converter, multiplexers
+> and an eeprom.  Gratuitously powering this up after every system sleep
+> burns a not insignificant amount of energy and needlessly strains the
+> hardware.
 > 
+> Perhaps it would have been better to carry out the mandatory runtime
+> resume only for those devices that actually need it, but at least we
+> should allow an opt-out.
+> 
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+
+I don't like this patch and especially adding a new dev_pm_ops flag to
+work around something that you're seeing as an issue in the generic ops.
+
+It is sort of like saying "the generic ops don't work for me, so modify
+them as well as struct dev_pm_ops", but maybe it's better to change the
+PCI bus type to do something different from calling the generic function?
+
+Or you can add a ->complete callback to your driver that will clear
+power.direct_complete for the device in question.
+
+> ---
+>  drivers/base/power/generic_ops.c | 3 ++-
+>  include/linux/pm.h               | 1 +
+>  2 files changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/base/power/generic_ops.c b/drivers/base/power/generic_ops.c
+> index 07c3c4a..6e88f55 100644
+> --- a/drivers/base/power/generic_ops.c
+> +++ b/drivers/base/power/generic_ops.c
+> @@ -316,7 +316,8 @@ void pm_complete_with_resume_check(struct device *dev)
+>  	 * the sleep state it is going out of and it has never been resumed till
+>  	 * now, resume it in case the firmware powered it up.
+>  	 */
+> -	if (dev->power.direct_complete && pm_resume_via_firmware())
+> +	if (dev->power.direct_complete && pm_resume_via_firmware() &&
+> +	    !dev->power.direct_complete_noresume)
+>  		pm_request_resume(dev);
+>  }
+>  EXPORT_SYMBOL_GPL(pm_complete_with_resume_check);
+> diff --git a/include/linux/pm.h b/include/linux/pm.h
+> index 6a5d654..023de94 100644
+> --- a/include/linux/pm.h
+> +++ b/include/linux/pm.h
+> @@ -596,6 +596,7 @@ struct dev_pm_info {
+>  	unsigned int		use_autosuspend:1;
+>  	unsigned int		timer_autosuspends:1;
+>  	unsigned int		memalloc_noio:1;
+> +	unsigned int		direct_complete_noresume:1;
+>  	enum rpm_request	request;
+>  	enum rpm_status		runtime_status;
+>  	int			runtime_error;
+> 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
