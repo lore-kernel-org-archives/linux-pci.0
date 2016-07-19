@@ -1,76 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52280 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:54526 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754288AbcGUVGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jul 2016 17:06:47 -0400
-Date: Thu, 21 Jul 2016 16:06:42 -0500
+	id S1751720AbcGSVh4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jul 2016 17:37:56 -0400
+Date: Tue, 19 Jul 2016 16:37:51 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, agordeev@redhat.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: pci: automatic interrupt affinity for MSI/MSI-X capable devices
- V2
-Message-ID: <20160721210642.GB11888@localhost>
-References: <1468315218-20490-1-git-send-email-hch@lst.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v1 1/1] PCI / PM: check all fields in
+ pci_set_platform_pm()
+Message-ID: <20160719213751.GA18635@localhost>
+References: <1465223133-73532-1-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468315218-20490-1-git-send-email-hch@lst.de>
+In-Reply-To: <1465223133-73532-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 12, 2016 at 06:20:13PM +0900, Christoph Hellwig wrote:
-> This series adds a new set of functions that transparently use the right
-> type of interrupt (MSI-X, MSI, legacy interrupt line) for a PCI device,
-> and if multiple vectors are supported automatically spreads the irq
-> routing to different CPUs.  This will allow the block layer (and hopefully
-> other consumers in the future) to use this information for mapping
-> queues to fit the interrupt affinity.
+On Mon, Jun 06, 2016 at 05:25:33PM +0300, Andy Shevchenko wrote:
+> When assign new PCI platform PM operations check for all mandatory fields to
+> prevent NULL pointer dereference.
 > 
-> For the last patche to work you need to merge the irq/for-block branch of
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/pci/pci.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
->    https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-> 
-> first.
-> 
-> There also is a git tree available at:
-> 
->    git://git.infradead.org/users/hch/block.git pci-irq-spreading
-> 
-> Gitweb:
-> 
->    http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/pci-irq-spreading
-> 
-> Changes since V1
->  - change return values for the minmum vector check
->  - improve the documentation
-> 
-> Changes since automatic interrupt affinity for MSI/MSI-X capable devices V3:
->  - add PCI_IRQ_NOLEGACY flag
->  - various error code fixes
->  - reuse the pci_enable_msi(x)_range code instead of duplicating it
->  - don't allocate msix_entry structures for the MSI-X case
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index c8b4dbd..badbddc 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -530,8 +530,8 @@ static const struct pci_platform_pm_ops *pci_platform_pm;
+>  
+>  int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+>  {
+> -	if (!ops->is_manageable || !ops->set_state || !ops->choose_state
+> -	    || !ops->sleep_wake)
+> +	if (!ops->is_manageable || !ops->set_state || !ops->choose_state ||
+> +	    !ops->sleep_wake || !ops->run_wake || !ops->need_resume)
+>  		return -EINVAL;
 
-I merged the irq/for-block branch, applied this series, and added
-Alexander's Reviewed-by to the patches that didn't have it already.
+This looks OK to me.  platform_pci_run_wake() and
+platform_pci_need_resume() assume that if pci_platform_pm is set,
+pci_platform_pm->run_wake and pci_platform_pm->need_resume are valid
+function pointers.  This is analogous to what we already do for
+ops->is_manageable, etc.
 
-As far as the if/return/else construct:
+Rafael, do you want to take this or should I?
 
-  if (x)
-    return y;
-  else if (z)
-    ...
-
-I removed the "else" in the other occurrences so the style is
-consistently:
-
-  if (x)
-    return y;
-  if (z)
-    ...
-
-This is all on my pci/msi-affinity branch for v4.8.
-
-Thanks for all the work; I think this is a very nice change, and it's
-great that all the documentation is updated as well.
-
-Bjorn
+>  	pci_platform_pm = ops;
+>  	return 0;
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
