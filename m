@@ -1,116 +1,96 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
- support
-Date: Thu, 21 Jul 2016 00:51:31 +0200
-Message-ID: <1735644.0mfUjJQtul@vostro.rjw.lan>
-In-Reply-To: <20160720152340.GA8337@wunner.de>
-References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
- <3969169.CcnEsvYuly@vostro.rjw.lan> <20160720152340.GA8337@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54938 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751614AbcGSVmd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jul 2016 17:42:33 -0400
+Date: Tue, 19 Jul 2016 16:42:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	rjw@rjwysocki.net, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+	robert.richter@caviumnetworks.com, shijie.huang@arm.com,
+	Suravee.Suthikulpanit@amd.com, hanjun.guo@linaro.org,
+	al.stone@linaro.org, graeme.gregory@linaro.org,
+	Catalin.Marinas@arm.com, will.deacon@arm.com,
+	linux-kernel@vger.kernel.org, okaya@codeaurora.org,
+	linux-acpi@vger.kernel.org, ddaney.cavm@gmail.com,
+	linux-pci@vger.kernel.org, mw@semihalf.com,
+	andrea.gallo@linaro.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V7 3/8] PCI/MSI: Setup MSI domain on a per-device basis
+ using IORT ACPI table
+Message-ID: <20160719214227.GB18635@localhost>
+References: <1466420541-20101-1-git-send-email-tn@semihalf.com>
+ <1466420541-20101-4-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
- linux-samsung-soc@vger.kernel.org,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Joerg Roedel <joro@8bytes.org>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Inki Dae <inki.dae@samsung.com>,
- "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
- Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
- linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466420541-20101-4-git-send-email-tn@semihalf.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
-> On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
-> > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
-> > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
-> > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
-> > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
-> > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
-> > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
-> > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
-> > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
-> > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
-> > > > > > > this dependency using something like Rafael's approach instead of
-> > > > > > > open coding it, however one detail in Rafael's patches is problematic:
-> > > > > > >
-> > > > > > > > New links are added by calling device_link_add() which may happen
-> > > > > > > > either before the consumer device is probed or when probing it, in
-> > > > > > > > which case the caller needs to ensure that the driver of the
-> > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
-> > > > > > > > flag should be passed to device_link_add() to reflect that.
-> > > > > > >
-> > > > > > > The thunderbolt driver cannot call device_link_add() before the
-> > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
-> > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
-> > > > > > > if the thunderbolt driver isn't loaded.
-> > > > > > >
-> > > > > > > It would therefore be beneficial if device_link_add() can be
-> > > > > > > called even *after* the consumer is bound.
-> > > > > > 
-> > > > > > I don't quite follow.
-> > > > > > 
-> > > > > > Who's the provider and who's the consumer here?
-> > > > > 
-> > > > > thunderbolt.ko is the supplier.
-> > > > 
-> > > > But it binds to the children of the ports that are supposed to be its
-> > > > consumers?
-> > > > 
-> > > > Why is that even expected to work?
-> > > 
-> > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
-> > > 
-> > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
-> > > the drawing below). The supplier is the NHI:
-> > > 
-> > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> > >                                          +-- Downstream Bridge 1 --
-> > >                                          +-- Downstream Bridge 2 --
-> > >                                          ...
-> > > 
-> > > We're calling pci_power_up() and pci_restore_state() from
-> > > pci_pm_resume_noirq(). And that will fail for devices below
-> > > the hotplug ports if the PCI tunnels haven't been re-established
-> > > yet by the NHI.
-> > 
-> > So the NHI is a PCIe device, right?
-> > 
-> > Does the Thunderbolt driver bind to that device?
+On Mon, Jun 20, 2016 at 01:02:16PM +0200, Tomasz Nowicki wrote:
+> It is possible to provide information about which MSI controller to
+> use on a per-device basis for DT. This patch supply this with ACPI support.
 > 
-> The NHI is a PCI device but not a bridge. It has class 0x88000.
-> Yes, thunderbolt.ko binds to the NHI.
+> Currently, IORT is the only one ACPI table which can provide such mapping.
+> In order to plug IORT into MSI infrastructure we are adding ACPI
+> equivalents for finding PCI device domain and its RID translation
+> (pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
 > 
-> And portdrv binds to the upstream bridge and downstream bridges.
-> Those have class 0x60400.
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
 
-OK, so why would there be a problem with creating links from the NHI (producer)
-to the ports (consumers) before binding portdrv to them?
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks,
-Rafael
+I assume this will be merged along with the rest of the series via
+some non-PCI tree.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/msi.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a080f44..1d45e81 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/smp.h>
+>  #include <linux/errno.h>
+>  #include <linux/io.h>
+> +#include <linux/iort.h>
+>  #include <linux/slab.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/of_irq.h>
+> @@ -1364,8 +1365,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+>  
+>  	of_node = irq_domain_get_of_node(domain);
+> -	if (of_node)
+> -		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
+> +	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
+> +			iort_msi_map_rid(&pdev->dev, rid);
+>  
+>  	return rid;
+>  }
+> @@ -1381,9 +1382,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>   */
+>  struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+>  {
+> +	struct irq_domain *dom;
+>  	u32 rid = 0;
+>  
+>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+> -	return of_msi_map_get_device_domain(&pdev->dev, rid);
+> +	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
+> +	if (!dom)
+> +		dom = iort_get_device_domain(&pdev->dev, rid);
+> +	return dom;
+>  }
+>  #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
