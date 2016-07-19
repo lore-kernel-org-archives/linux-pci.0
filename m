@@ -1,195 +1,124 @@
-Return-Path: <msalter@redhat.com>
-Return-Path: <msalter@redhat.com>
-Message-ID: <1469483765.3524.7.camel@redhat.com>
-Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
-From: Mark Salter <msalter@redhat.com>
-To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org, arnd@arndb.de,
-        will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-        hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-        jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
-        ddaney@caviumnetworks.com, wangyijing@huawei.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
-        dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
-        cov@codeaurora.org, gabriele.paoloni@huawei.com, jhugo@codeaurora.org
-Date: Mon, 25 Jul 2016 17:56:05 -0400
-In-Reply-To: <1467100442-28078-4-git-send-email-tn@semihalf.com>
-References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
-	 <1467100442-28078-4-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48617 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751421AbcGSTnh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jul 2016 15:43:37 -0400
+Date: Tue, 19 Jul 2016 13:43:36 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+Cc: Haggai Eran <haggaie@mellanox.com>,
+	Ilya Lesokhin <ilyal@mellanox.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Noa Osherovich" <noaos@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	"Liran Liss" <liranl@mellanox.com>
+Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
+Message-ID: <20160719134336.79d24af9@t450s.home>
+In-Reply-To: <20160719091017.4c23244f@t450s.home>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+	<20160620113728.74ed79f3@ul30vt.home>
+	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160621094537.4416cbce@t450s.home>
+	<VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160714110341.7716c619@t450s.home>
+	<fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
+	<20160718153428.6b988539@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F90960A@SHSMSX101.ccr.corp.intel.com>
+	<20160719091017.4c23244f@t450s.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-06-28 at 09:54 +0200, Tomasz Nowicki wrote:
-> Some platforms may not be fully compliant with generic set of PCI config
-> accessors. For these cases we implement the way to overwrite accessors
-> set. Algorithm traverses available quirk list (static array),
-> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
-> returns pci_config_window structure with fancy PCI config ops.
-> oem_id, oem_table_id and rev come from MCFG table standard header.
-> 
-> It is possible to define custom init call which is responsible for
-> setting up PCI config access accordingly to quirk requirements.
-> If no custom init call defined, use standard pci_acpi_setup_ecam_mapping().
-> 
-> pci_generic_ecam_ops will be used for platforms free from quirks.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> Signed-off-by: Christopher Covington <cov@codeaurora.org>
-> ---
->  drivers/pci/host/Makefile      |  1 +
->  drivers/pci/host/mcfg-quirks.c | 88 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/host/mcfg-quirks.h | 20 ++++++++++
->  include/linux/pci-acpi.h       |  2 +
->  4 files changed, 111 insertions(+)
->  create mode 100644 drivers/pci/host/mcfg-quirks.c
->  create mode 100644 drivers/pci/host/mcfg-quirks.h
-> 
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 5bc0af2..e3d55a0 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -30,3 +30,4 @@ obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
->  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
->  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
->  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> +obj-$(CONFIG_ACPI_MCFG) += mcfg-quirks.o
-> diff --git a/drivers/pci/host/mcfg-quirks.c b/drivers/pci/host/mcfg-quirks.c
-> new file mode 100644
-> index 0000000..fb2b184
-> --- /dev/null
-> +++ b/drivers/pci/host/mcfg-quirks.c
-> @@ -0,0 +1,88 @@
-> +/*
-> + * Copyright (C) 2016 Semihalf
-> + *	Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/ioport.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci-acpi.h>
-> +#include <linux/pci-ecam.h>
-> +
-> +#include "mcfg-quirks.h"
-> +
-> +struct pci_cfg_fixup {
-> +	char *oem_id;
-> +	char *oem_table_id;
-> +	u32 oem_revision;
-> +	struct resource domain_range;
-> +	struct resource bus_range;
-> +	struct pci_ops *ops;
-> +	struct pci_config_window *(*init)(struct acpi_pci_root *root,
-> +					  struct pci_ops *ops);
-> +};
-> +
-> +#define MCFG_DOM_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
-> +						((end) - (start) + 1), NULL, 0)
-> +#define MCFG_DOM_ANY			MCFG_DOM_RANGE(0x0, 0xffff)
-> +#define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
-> +						((end) - (start) + 1),	\
-> +						NULL, IORESOURCE_BUS)
-> +#define MCFG_BUS_ANY			MCFG_BUS_RANGE(0x0, 0xff)
-> +
-> +static struct pci_cfg_fixup mcfg_qurks[] __initconst = {
-                               ^^^^^^^^^^
-mcfg_quirks
+On Tue, 19 Jul 2016 09:10:17 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-> +/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook }, */
-> +};
-> +
-> +static bool pci_mcfg_fixup_match(struct pci_cfg_fixup *f,
-> +				 struct acpi_table_header *mcfg_header)
-> +{
-> +	int olen = min_t(u8, strlen(f->oem_id), ACPI_OEM_ID_SIZE);
-> +	int tlen = min_t(u8, strlen(f->oem_table_id), ACPI_OEM_TABLE_ID_SIZE);
-> +
-> +	return (!strncmp(f->oem_id, mcfg_header->oem_id, olen) &&
-> +		!strncmp(f->oem_table_id, mcfg_header->oem_table_id, tlen) &&
-> +		f->oem_revision == mcfg_header->oem_revision);
-> +}
-> +
-> +struct pci_config_window *pci_mcfg_match_quirks(struct acpi_pci_root *root)
-> +{
-> +	struct resource dom_res = MCFG_DOM_RANGE(root->segment, root->segment);
-> +	struct resource *bus_res = &root->secondary;
-> +	struct pci_cfg_fixup *f = mcfg_qurks;
-> +	struct acpi_table_header *mcfg_header;
-> +	acpi_status status;
-> +	int i;
-> +
-> +	status = acpi_get_table(ACPI_SIG_MCFG, 0, &mcfg_header);
-> +	if (ACPI_FAILURE(status))
-> +		return NULL;
-> +
-> +	/*
-> +	 * First match against PCI topology <domain:bus> then use OEM ID, OEM
-> +	 * table ID, and OEM revision from MCFG table standard header.
-> +	 */
-> +	for (i = 0; i < ARRAY_SIZE(mcfg_qurks); i++, f++) {
-> +		if (resource_contains(&f->domain_range, &dom_res) &&
-> +		    resource_contains(&f->bus_range, bus_res) &&
-> +		    pci_mcfg_fixup_match(f, mcfg_header)) {
-> +			pr_info("Handling %s %s r%d PCI MCFG quirks\n",
-> +				f->oem_id, f->oem_table_id, f->oem_revision);
-> +			return f->init ? f->init(root, f->ops) :
-> +				pci_acpi_setup_ecam_mapping(root, f->ops);
-> +		}
-> +	}
-> +	return pci_acpi_setup_ecam_mapping(root, &pci_generic_ecam_ops.pci_ops);
-> +}
-> diff --git a/drivers/pci/host/mcfg-quirks.h b/drivers/pci/host/mcfg-quirks.h
-> new file mode 100644
-> index 0000000..45cbd16
-> --- /dev/null
-> +++ b/drivers/pci/host/mcfg-quirks.h
-> @@ -0,0 +1,20 @@
-> +/*
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +
-> +#ifndef __MCFG_QUIRKS_H__
-> +#define __MCFG_QUIRKS_H__
-> +
-> +/* MCFG quirks initialize call list */
-> +
-> +#endif /* __MCFG_QUIRKS_H__ */
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index e9bfe00..28cdce4 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -25,6 +25,8 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
->  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
->  
->  extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
-> +extern struct pci_config_window *
-> +pci_mcfg_match_quirks(struct acpi_pci_root *root);
->  
->  extern struct pci_config_window *
->  pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
+> On Tue, 19 Jul 2016 07:06:34 +0000
+> "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> 
+> > > From: Alex Williamson
+> > > Sent: Tuesday, July 19, 2016 5:34 AM
+> > > 
+> > > On Sun, 17 Jul 2016 13:05:21 +0300
+> > > Haggai Eran <haggaie@mellanox.com> wrote:
+> > >     
+> > > > On 7/14/2016 8:03 PM, Alex Williamson wrote:    
+> > > > >> 2. Add an owner_pid to struct vfio_group and make sure in    
+> > > vfio_group_get_device_fd that    
+> > > > >> > the PFs  vfio_group is owned by the same process as the one that is trying to get    
+> > > a fd for a VF.    
+> > > > > This only solves a very specific use case, it doesn't address any of
+> > > > > the issues where the VF struct device in the host kernel might get
+> > > > > bound to another driver.    
+> > > > The current patch uses driver_override to make the kernel use VFIO for
+> > > > all the new VFs. It still allows the host kernel to bind them to another
+> > > > driver, but that would require an explicit action on the part of the
+> > > > administrator. Don't you think that is enough?    
+> > > 
+> > > Binding the VFs to vfio-pci with driver_override just prevents any sort
+> > > of initial use by native host drivers, it doesn't in any way tie them to
+> > > the user that created them or prevent any normal operations on the
+> > > device.  The entire concept of a user-created device is new and
+> > > entirely separate from a user-owned device as typically used with
+> > > vfio.  We currently have an assumption with VF assignment that the PF
+> > > is trusted in the host, that's broken here and I have a hard time
+> > > blaming it on the admin or management tool for allowing such a thing
+> > > when it previously hasn't been a possibility.  If nothing else, it
+> > > seems like we're opening the system for phishing attempts where a user
+> > > of a PF creates VFs hoping they might be assigned to a victim VM, or
+> > > worse the host.
+> > >     
+> > 
+> > What about fully virtualizing the SR-IOV capability? The VM is not allowed
+> > to touch physical SR-IOV capability directly so there would not be a problem
+> > of user-created devices. Physical SR-IOV is always enabled by admin at
+> > the host side. Admin can combine any number of VFs (even cross multiple
+> > compatible devices) in the virtual SR-IOV capability on any passthrough
+> > device...
+> > 
+> > The limitation is that the VM can initially access only PF resource which is 
+> > usually less than what the entire device provides, so not that efficient
+> > when the VM doesn't want to enable SR-IOV at all.  
+> 
+> Are you suggesting a scenario where we have one PF with SR-IOV disabled
+> assigned to the user and another PF owned by the host with SR-IOV
+> enable, we virtualize SR-IOV to the user and use the VFs from the other
+> PF to act as a "pool" of VFs to be exposed to the user depending on
+> SR-IOV manipulation?  Something like that could work with existing
+> vfio, just requiring the QEMU bits to virtualize SR-IOV and mange the
+> VFs, but I expect it's not a useful model for Mellanox.  I believe it
+> was Ilya that stated the purpose in exposing SR-IOV was for
+> development, so I'm assuming they actually want to do development of
+> the PF SR-IOV enabling in a VM, not just give the illusion of SR-IOV to
+> the VM.  Thanks,
+
+
+Thinking about this further, it seems that trying to create this IOV
+enablement interface through a channel which is explicitly designed to
+interact with an untrusted and potentially malicious user is the wrong
+approach.  We already have an interface for a trusted entity to enable
+VFs, it's through pci-sysfs.  Therefore if we were to use something like
+libvirt to orchestrate the lifecycle of the VFs, I think we remove a
+lot of the problems.  In this case QEMU would virtualize the SR-IOV
+capability (maybe this is along the lines of what Kevin was thinking),
+but that virtualization would take a path out through the QEMU QMP
+interface to execute the SR-IOV change on the device rather than going
+through the vfio kernel interface.  A management tool like libvirt
+would then need to translate that into sysfs operations to create the
+VFs and do whatever we're going to do with them (device_add them back
+to the VM, make them available to a peer VM, make them available to
+the host *gasp*).  VFIO in the kernel would need to add SR-IOV
+support, but the only automatic SR-IOV path would be to disable IOV
+when the PF is released, enabling would only occur through sysfs.  We
+would probably need a new pci-sysfs interface to manage the driver for
+newly created VFs though to avoid default host drivers
+(sriov_driver_override?).  In this model QEMU is essentially just
+making requests to other userspace entities to perform actions and how
+those actions are performed can be left to userspace policy, not kernel
+policy.  I think this would still satisfy the development use case, the
+enabling path just takes a different route where privileged userspace
+is more intimately involved in the process.  Thoughts?  Thanks,
+
+Alex
