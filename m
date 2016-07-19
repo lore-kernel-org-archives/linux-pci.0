@@ -1,137 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56641 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932122AbcGDIjs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 04:39:48 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 02/13] irq: Introduce IRQD_AFFINITY_MANAGED flag
-Date: Mon,  4 Jul 2016 17:39:23 +0900
-Message-Id: <1467621574-8277-3-git-send-email-hch@lst.de>
-In-Reply-To: <1467621574-8277-1-git-send-email-hch@lst.de>
-References: <1467621574-8277-1-git-send-email-hch@lst.de>
+Received: from mga01.intel.com ([192.55.52.88]:9740 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752594AbcGSHGv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2016 03:06:51 -0400
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Haggai Eran <haggaie@mellanox.com>
+CC: Ilya Lesokhin <ilyal@mellanox.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Noa Osherovich" <noaos@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	"Liran Liss" <liranl@mellanox.com>
+Subject: RE: [PATCH v2 0/2] VFIO SRIOV support
+Date: Tue, 19 Jul 2016 07:06:34 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F90960A@SHSMSX101.ccr.corp.intel.com>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+	<20160620113728.74ed79f3@ul30vt.home>
+	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160621094537.4416cbce@t450s.home>
+	<VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160714110341.7716c619@t450s.home>
+	<fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
+ <20160718153428.6b988539@t450s.home>
+In-Reply-To: <20160718153428.6b988539@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+> From: Alex Williamson
+> Sent: Tuesday, July 19, 2016 5:34 AM
+> 
+> On Sun, 17 Jul 2016 13:05:21 +0300
+> Haggai Eran <haggaie@mellanox.com> wrote:
+> 
+> > On 7/14/2016 8:03 PM, Alex Williamson wrote:
+> > >> 2. Add an owner_pid to struct vfio_group and make sure in
+> vfio_group_get_device_fd that
+> > >> > the PFs  vfio_group is owned by the same process as the one that is trying to get
+> a fd for a VF.
+> > > This only solves a very specific use case, it doesn't address any of
+> > > the issues where the VF struct device in the host kernel might get
+> > > bound to another driver.
+> > The current patch uses driver_override to make the kernel use VFIO for
+> > all the new VFs. It still allows the host kernel to bind them to another
+> > driver, but that would require an explicit action on the part of the
+> > administrator. Don't you think that is enough?
+> 
+> Binding the VFs to vfio-pci with driver_override just prevents any sort
+> of initial use by native host drivers, it doesn't in any way tie them to
+> the user that created them or prevent any normal operations on the
+> device.  The entire concept of a user-created device is new and
+> entirely separate from a user-owned device as typically used with
+> vfio.  We currently have an assumption with VF assignment that the PF
+> is trusted in the host, that's broken here and I have a hard time
+> blaming it on the admin or management tool for allowing such a thing
+> when it previously hasn't been a possibility.  If nothing else, it
+> seems like we're opening the system for phishing attempts where a user
+> of a PF creates VFs hoping they might be assigned to a victim VM, or
+> worse the host.
+> 
 
-Interupts marked with this flag are excluded from user space interrupt
-affinity changes. Contrary to the IRQ_NO_BALANCING flag, the kernel internal
-affinity mechanism is not blocked.
+What about fully virtualizing the SR-IOV capability? The VM is not allowed
+to touch physical SR-IOV capability directly so there would not be a problem
+of user-created devices. Physical SR-IOV is always enabled by admin at
+the host side. Admin can combine any number of VFs (even cross multiple
+compatible devices) in the virtual SR-IOV capability on any passthrough
+device...
 
-This flag will be used for multi-queue device interrupts.
+The limitation is that the VM can initially access only PF resource which is 
+usually less than what the entire device provides, so not that efficient
+when the VM doesn't want to enable SR-IOV at all.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- include/linux/irq.h    |  7 +++++++
- kernel/irq/internals.h |  2 ++
- kernel/irq/manage.c    | 21 ++++++++++++++++++---
- kernel/irq/proc.c      |  2 +-
- 4 files changed, 28 insertions(+), 4 deletions(-)
-
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 4d758a7..f607481 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -197,6 +197,7 @@ struct irq_data {
-  * IRQD_IRQ_INPROGRESS		- In progress state of the interrupt
-  * IRQD_WAKEUP_ARMED		- Wakeup mode armed
-  * IRQD_FORWARDED_TO_VCPU	- The interrupt is forwarded to a VCPU
-+ * IRQD_AFFINITY_MANAGED	- Affinity is auto-managed by the kernel
-  */
- enum {
- 	IRQD_TRIGGER_MASK		= 0xf,
-@@ -212,6 +213,7 @@ enum {
- 	IRQD_IRQ_INPROGRESS		= (1 << 18),
- 	IRQD_WAKEUP_ARMED		= (1 << 19),
- 	IRQD_FORWARDED_TO_VCPU		= (1 << 20),
-+	IRQD_AFFINITY_MANAGED		= (1 << 21),
- };
- 
- #define __irqd_to_state(d) ACCESS_PRIVATE((d)->common, state_use_accessors)
-@@ -305,6 +307,11 @@ static inline void irqd_clr_forwarded_to_vcpu(struct irq_data *d)
- 	__irqd_to_state(d) &= ~IRQD_FORWARDED_TO_VCPU;
- }
- 
-+static inline bool irqd_affinity_is_managed(struct irq_data *d)
-+{
-+	return __irqd_to_state(d) & IRQD_AFFINITY_MANAGED;
-+}
-+
- #undef __irqd_to_state
- 
- static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
-diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index 09be2c9..b15aa3b 100644
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -105,6 +105,8 @@ static inline void unregister_handler_proc(unsigned int irq,
- 					   struct irqaction *action) { }
- #endif
- 
-+extern bool irq_can_set_affinity_usr(unsigned int irq);
-+
- extern int irq_select_affinity_usr(unsigned int irq, struct cpumask *mask);
- 
- extern void irq_set_thread_affinity(struct irq_desc *desc);
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index ef0bc02..30658e9 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -115,12 +115,12 @@ EXPORT_SYMBOL(synchronize_irq);
- #ifdef CONFIG_SMP
- cpumask_var_t irq_default_affinity;
- 
--static int __irq_can_set_affinity(struct irq_desc *desc)
-+static bool __irq_can_set_affinity(struct irq_desc *desc)
- {
- 	if (!desc || !irqd_can_balance(&desc->irq_data) ||
- 	    !desc->irq_data.chip || !desc->irq_data.chip->irq_set_affinity)
--		return 0;
--	return 1;
-+		return false;
-+	return true;
- }
- 
- /**
-@@ -134,6 +134,21 @@ int irq_can_set_affinity(unsigned int irq)
- }
- 
- /**
-+ * irq_can_set_affinity_usr - Check if affinity of a irq can be set from user space
-+ * @irq:	Interrupt to check
-+ *
-+ * Like irq_can_set_affinity() above, but additionally checks for the
-+ * AFFINITY_MANAGED flag.
-+ */
-+bool irq_can_set_affinity_usr(unsigned int irq)
-+{
-+	struct irq_desc *desc = irq_to_desc(irq);
-+
-+	return __irq_can_set_affinity(desc) &&
-+		!irqd_affinity_is_managed(&desc->irq_data);
-+}
-+
-+/**
-  *	irq_set_thread_affinity - Notify irq threads to adjust affinity
-  *	@desc:		irq descriptor which has affitnity changed
-  *
-diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-index 4e1b947..40bdcdc 100644
---- a/kernel/irq/proc.c
-+++ b/kernel/irq/proc.c
-@@ -96,7 +96,7 @@ static ssize_t write_irq_affinity(int type, struct file *file,
- 	cpumask_var_t new_value;
- 	int err;
- 
--	if (!irq_can_set_affinity(irq) || no_irq_affinity)
-+	if (!irq_can_set_affinity_usr(irq) || no_irq_affinity)
- 		return -EIO;
- 
- 	if (!alloc_cpumask_var(&new_value, GFP_KERNEL))
--- 
-2.1.4
-
+Thanks
+Kevin
