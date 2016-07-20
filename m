@@ -1,50 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:34557 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751633AbcGGUoQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2016 16:44:16 -0400
-Date: Thu, 7 Jul 2016 22:44:03 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>
-Subject: Re: [PATCH v3 0/3] pci: Aardvark PCIe controller driver for Marvell
- Armada 3700
-Message-ID: <20160707224403.3279d807@free-electrons.com>
-In-Reply-To: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1467279152-5717-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 20 Jul 2016 17:23:40 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
+ support
+Message-ID: <20160720152340.GA8337@wunner.de>
+References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
+ <1975118.iO8UCAENoH@vostro.rjw.lan>
+ <20160720062450.GA8066@wunner.de>
+ <3969169.CcnEsvYuly@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3969169.CcnEsvYuly@vostro.rjw.lan>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+ linux-samsung-soc@vger.kernel.org,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Inki Dae <inki.dae@samsung.com>,
+ "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
+ Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
+ linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
+> > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
+> > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
+> > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
+> > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
+> > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> > > > > > We also have such a functional dependency for Thunderbolt on Macs:
+> > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
+> > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
+> > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
+> > > > > > in drivers/pci/quirks.c. It would be good if we could represent
+> > > > > > this dependency using something like Rafael's approach instead of
+> > > > > > open coding it, however one detail in Rafael's patches is problematic:
+> > > > > >
+> > > > > > > New links are added by calling device_link_add() which may happen
+> > > > > > > either before the consumer device is probed or when probing it, in
+> > > > > > > which case the caller needs to ensure that the driver of the
+> > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
+> > > > > > > flag should be passed to device_link_add() to reflect that.
+> > > > > >
+> > > > > > The thunderbolt driver cannot call device_link_add() before the
+> > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
+> > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
+> > > > > > if the thunderbolt driver isn't loaded.
+> > > > > >
+> > > > > > It would therefore be beneficial if device_link_add() can be
+> > > > > > called even *after* the consumer is bound.
+> > > > > 
+> > > > > I don't quite follow.
+> > > > > 
+> > > > > Who's the provider and who's the consumer here?
+> > > > 
+> > > > thunderbolt.ko is the supplier.
+> > > 
+> > > But it binds to the children of the ports that are supposed to be its
+> > > consumers?
+> > > 
+> > > Why is that even expected to work?
+> > 
+> > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
+> > 
+> > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
+> > the drawing below). The supplier is the NHI:
+> > 
+> >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+> >                                          +-- Downstream Bridge 1 --
+> >                                          +-- Downstream Bridge 2 --
+> >                                          ...
+> > 
+> > We're calling pci_power_up() and pci_restore_state() from
+> > pci_pm_resume_noirq(). And that will fail for devices below
+> > the hotplug ports if the PCI tunnels haven't been re-established
+> > yet by the NHI.
+> 
+> So the NHI is a PCIe device, right?
+> 
+> Does the Thunderbolt driver bind to that device?
 
-On Thu, 30 Jun 2016 11:32:29 +0200, Thomas Petazzoni wrote:
+The NHI is a PCI device but not a bridge. It has class 0x88000.
+Yes, thunderbolt.ko binds to the NHI.
 
-> This is the third iteration of the patch series that adds a PCIe
-> controller driver for the Aardvark PCI controller, which is used on
-> Marvell Armada 3700.
+And portdrv binds to the upstream bridge and downstream bridges.
+Those have class 0x60400.
 
-Have you had the chance to look into this third iteration, which
-hopefully integrates the feedback you made during your review of the
-second version?
+Best regards,
 
-I was hoping to get this in time for 4.8, so if you have any comments,
-do not hesitate to let me know so that I can address them.
+Lukas
 
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
