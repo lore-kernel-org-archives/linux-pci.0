@@ -1,143 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
- support
-Date: Thu, 21 Jul 2016 02:25:15 +0200
-Message-ID: <4258432.JNKr9zJtMp@vostro.rjw.lan>
-In-Reply-To: <20160720232553.GA8460@wunner.de>
-References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
- <1735644.0mfUjJQtul@vostro.rjw.lan> <20160720232553.GA8460@wunner.de>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
- linux-samsung-soc@vger.kernel.org,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Joerg Roedel <joro@8bytes.org>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Inki Dae <inki.dae@samsung.com>,
- "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
- Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
- linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:41272 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753528AbcGTLXs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Jul 2016 07:23:48 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH v3 02/13] drivers: acpi: iort: introduce linker section for IORT entries probing
+Date: Wed, 20 Jul 2016 12:23:24 +0100
+Message-Id: <1469013815-24380-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
-> On Thu, Jul 21, 2016 at 12:51:31AM +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
-> > > On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
-> > > > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
-> > > > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
-> > > > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
-> > > > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
-> > > > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
-> > > > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> > > > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
-> > > > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
-> > > > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
-> > > > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
-> > > > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
-> > > > > > > > > this dependency using something like Rafael's approach instead of
-> > > > > > > > > open coding it, however one detail in Rafael's patches is problematic:
-> > > > > > > > >
-> > > > > > > > > > New links are added by calling device_link_add() which may happen
-> > > > > > > > > > either before the consumer device is probed or when probing it, in
-> > > > > > > > > > which case the caller needs to ensure that the driver of the
-> > > > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
-> > > > > > > > > > flag should be passed to device_link_add() to reflect that.
-> > > > > > > > >
-> > > > > > > > > The thunderbolt driver cannot call device_link_add() before the
-> > > > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
-> > > > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
-> > > > > > > > > if the thunderbolt driver isn't loaded.
-> > > > > > > > >
-> > > > > > > > > It would therefore be beneficial if device_link_add() can be
-> > > > > > > > > called even *after* the consumer is bound.
-> > > > > > > > 
-> > > > > > > > I don't quite follow.
-> > > > > > > > 
-> > > > > > > > Who's the provider and who's the consumer here?
-> > > > > > > 
-> > > > > > > thunderbolt.ko is the supplier.
-> > > > > > 
-> > > > > > But it binds to the children of the ports that are supposed to be its
-> > > > > > consumers?
-> > > > > > 
-> > > > > > Why is that even expected to work?
-> > > > > 
-> > > > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
-> > > > > 
-> > > > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
-> > > > > the drawing below). The supplier is the NHI:
-> > > > > 
-> > > > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> > > > >                                          +-- Downstream Bridge 1 --
-> > > > >                                          +-- Downstream Bridge 2 --
-> > > > >                                          ...
-> > > > > 
-> > > > > We're calling pci_power_up() and pci_restore_state() from
-> > > > > pci_pm_resume_noirq(). And that will fail for devices below
-> > > > > the hotplug ports if the PCI tunnels haven't been re-established
-> > > > > yet by the NHI.
-> > > > 
-> > > > So the NHI is a PCIe device, right?
-> > > > 
-> > > > Does the Thunderbolt driver bind to that device?
-> > > 
-> > > The NHI is a PCI device but not a bridge. It has class 0x88000.
-> > > Yes, thunderbolt.ko binds to the NHI.
-> > > 
-> > > And portdrv binds to the upstream bridge and downstream bridges.
-> > > Those have class 0x60400.
-> > 
-> > OK, so why would there be a problem with creating links from the NHI
-> > (producer) to the ports (consumers) before binding portdrv to them?
-> 
-> Because the ordering in which drivers bind isn't guaranteed. At least
-> on my machine (Debian), portdrv always binds before thunderbolt.
+Since commit e647b532275b ("ACPI: Add early device probing
+infrastructure") the kernel has gained the infrastructure that allows
+adding linker script section entries to execute ACPI driver callbacks
+(ie probe routines) for all subsystems that register a table entry
+in the respective kernel section (eg clocksource, irqchip).
 
-But what drivers have to do with that really?  Do you need drivers to
-know that the dependency is there?
+Since ARM IOMMU devices data is described through IORT tables when
+booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
+callback routines that are called to probe IORT entries and initialize
+the respective IOMMU devices.
 
-Just add likns *before* even probing for drivers (yes, you can do that)
-and the core will handle that for you.
+To avoid adding driver specific hooks into IORT table initialization
+code (breaking therefore code modularity - ie ACPI IORT code must be made
+aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
+that allows ARM SMMU drivers to take advantage of the ACPI early probing
+infrastructure, so that they can add linker script section entries
+containing drivers callback to be executed on IORT tables detection.
 
-> I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
-> no driver is bound to the NHI. Doesn't feel pretty to me though.
-> 
-> Ultimately this seems to be the same issue as with calling
-> dev_pm_domain_set() for a bound device. Perhaps device_link_add()
-> can likewise be allowed if a runtime PM ref is held for the devices
-> and the call happens under lock_system_sleep()?
+Since IORT nodes are differentiated by a type, the callback routines
+can easily parse the IORT table entries, check the IORT nodes and
+carry out some actions whenever the IORT node type associated with
+the driver specific callback is matched.
 
-No, the whole synchronization scheme in the links code would have had to be
-changed for that to really work.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/acpi/iort.c               | 2 ++
+ include/asm-generic/vmlinux.lds.h | 1 +
+ include/linux/iort.h              | 3 +++
+ 3 files changed, 6 insertions(+)
 
-And it really is about what is needed (at least in principle) to run your
-device.  If you think you need device X with a driver to handle device Y
-correctly, then either you need it all the time, from probe to remove, or
-you just don't really need it at all.
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 6611607..1f440d2 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -383,4 +383,6 @@ void __init iort_table_detect(void)
+ 		const char *msg = acpi_format_exception(status);
+ 		pr_err("Failed to get table, %s\n", msg);
+ 	}
++
++	acpi_probe_device_table(iort);
+ }
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 6a67ab9..b896ab2 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -538,6 +538,7 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
++	ACPI_PROBE_TABLE(iort)						\
+ 	EARLYCON_TABLE()
+ 
+ #define INIT_TEXT							\
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index d7daba1..9bb30c5 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -38,4 +38,7 @@ static inline struct irq_domain *
+ iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
+ #endif
+ 
++#define IORT_ACPI_DECLARE(name, table_id, fn)		\
++	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
++
+ #endif /* __IORT_H__ */
+-- 
+2.6.4
 
-Thanks,
-Rafael
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
