@@ -1,39 +1,116 @@
-Return-Path: <mathias.koehrer@etas.com>
-Return-Path: <mathias.koehrer@etas.com>
-From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, "gregkh@linuxfoundation.org"
-	<gregkh@linuxfoundation.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"xyjxie@linux.vnet.ibm.com" <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [PATCH resend v2] Extending kernel option pci=resource_alignment
- to be able to specify PCI device/vendor IDs
-Date: Mon, 25 Jul 2016 06:05:21 +0000
-Message-ID: <00e437fe05f54c6a9df12bf48cf28dc5@FE-MBX1012.de.bosch.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
+ support
+Date: Thu, 21 Jul 2016 00:51:31 +0200
+Message-ID: <1735644.0mfUjJQtul@vostro.rjw.lan>
+In-Reply-To: <20160720152340.GA8337@wunner.de>
+References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
+ <3969169.CcnEsvYuly@vostro.rjw.lan> <20160720152340.GA8337@wunner.de>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+ linux-samsung-soc@vger.kernel.org,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Inki Dae <inki.dae@samsung.com>,
+ "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
+ Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
+ linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
+On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
+> On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
+> > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
+> > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
+> > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
+> > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
+> > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
+> > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
+> > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
+> > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
+> > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
+> > > > > > > this dependency using something like Rafael's approach instead of
+> > > > > > > open coding it, however one detail in Rafael's patches is problematic:
+> > > > > > >
+> > > > > > > > New links are added by calling device_link_add() which may happen
+> > > > > > > > either before the consumer device is probed or when probing it, in
+> > > > > > > > which case the caller needs to ensure that the driver of the
+> > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
+> > > > > > > > flag should be passed to device_link_add() to reflect that.
+> > > > > > >
+> > > > > > > The thunderbolt driver cannot call device_link_add() before the
+> > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
+> > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
+> > > > > > > if the thunderbolt driver isn't loaded.
+> > > > > > >
+> > > > > > > It would therefore be beneficial if device_link_add() can be
+> > > > > > > called even *after* the consumer is bound.
+> > > > > > 
+> > > > > > I don't quite follow.
+> > > > > > 
+> > > > > > Who's the provider and who's the consumer here?
+> > > > > 
+> > > > > thunderbolt.ko is the supplier.
+> > > > 
+> > > > But it binds to the children of the ports that are supposed to be its
+> > > > consumers?
+> > > > 
+> > > > Why is that even expected to work?
+> > > 
+> > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
+> > > 
+> > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
+> > > the drawing below). The supplier is the NHI:
+> > > 
+> > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+> > >                                          +-- Downstream Bridge 1 --
+> > >                                          +-- Downstream Bridge 2 --
+> > >                                          ...
+> > > 
+> > > We're calling pci_power_up() and pci_restore_state() from
+> > > pci_pm_resume_noirq(). And that will fail for devices below
+> > > the hotplug ports if the PCI tunnels haven't been re-established
+> > > yet by the NHI.
+> > 
+> > So the NHI is a PCIe device, right?
+> > 
+> > Does the Thunderbolt driver bind to that device?
+> 
+> The NHI is a PCI device but not a bridge. It has class 0x88000.
+> Yes, thunderbolt.ko binds to the NHI.
+> 
+> And portdrv binds to the upstream bridge and downstream bridges.
+> Those have class 0x60400.
 
-> Mathias, The code change would conflict with Yongji's patch where the
-> wildcard introduced to identify PCI devices.
->=20
-> https://patchwork.ozlabs.org/patch/642473/
-That's true, however it is also true the other way round. The first sending=
- of my patch was =20
-22-June 2016 and thus before Yongji's patch...
-See also the comment of Bjorn Helgaas on my patch (v1):
-http://marc.info/?l=3Dlinux-pci&m=3D146654644431550&w=3D2=20
+OK, so why would there be a problem with creating links from the NHI (producer)
+to the ports (consumers) before binding portdrv to them?
 
-However it looks as if there are a couple of (conflicting) approaches for t=
-he issue with the alignment of PCI addresses flying around...
-My personal opinion is that the need to adapt the alignment of PCI addresse=
-s should be done on PCI device/vendor ids of relevant PCI devices and not o=
-n PCI addresses.
-The PCI addresses are likely to change e.g. by inserting another PCI board.=
- The device/vendor id of the devices will not change.
+Thanks,
+Rafael
 
-Regards
 
-Mathias
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
