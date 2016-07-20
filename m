@@ -1,95 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57609 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872AbcGRVe3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Jul 2016 17:34:29 -0400
-Date: Mon, 18 Jul 2016 15:34:28 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Haggai Eran <haggaie@mellanox.com>
-Cc: Ilya Lesokhin <ilyal@mellanox.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Noa Osherovich <noaos@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Liran Liss <liranl@mellanox.com>
-Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
-Message-ID: <20160718153428.6b988539@t450s.home>
-In-Reply-To: <fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
-References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
-	<20160620113728.74ed79f3@ul30vt.home>
-	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
-	<20160621094537.4416cbce@t450s.home>
-	<VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
-	<20160714110341.7716c619@t450s.home>
-	<fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:57129 "EHLO
+	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbcGTGYo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jul 2016 02:24:44 -0400
+Date: Wed, 20 Jul 2016 08:24:50 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	linux-samsung-soc@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Inki Dae <inki.dae@samsung.com>, Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Mark Brown <broonie@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
+ support
+Message-ID: <20160720062450.GA8066@wunner.de>
+References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
+ <CAJZ5v0h71xxvzex2D6s9W8Qvq3+BqOQnTJRKy32gMu=tuQLxDA@mail.gmail.com>
+ <20160617140738.GA1809@wunner.de>
+ <1975118.iO8UCAENoH@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1975118.iO8UCAENoH@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 17 Jul 2016 13:05:21 +0300
-Haggai Eran <haggaie@mellanox.com> wrote:
+On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
+> On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
+> > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
+> > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
+> > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> > > > We also have such a functional dependency for Thunderbolt on Macs:
+> > > > On resume from system sleep, the PCIe hotplug ports may not resume
+> > > > before the thunderbolt driver has reestablished the PCI tunnels.
+> > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
+> > > > in drivers/pci/quirks.c. It would be good if we could represent
+> > > > this dependency using something like Rafael's approach instead of
+> > > > open coding it, however one detail in Rafael's patches is problematic:
+> > > >
+> > > > > New links are added by calling device_link_add() which may happen
+> > > > > either before the consumer device is probed or when probing it, in
+> > > > > which case the caller needs to ensure that the driver of the
+> > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
+> > > > > flag should be passed to device_link_add() to reflect that.
+> > > >
+> > > > The thunderbolt driver cannot call device_link_add() before the
+> > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
+> > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
+> > > > if the thunderbolt driver isn't loaded.
+> > > >
+> > > > It would therefore be beneficial if device_link_add() can be
+> > > > called even *after* the consumer is bound.
+> > > 
+> > > I don't quite follow.
+> > > 
+> > > Who's the provider and who's the consumer here?
+> > 
+> > thunderbolt.ko is the supplier.
+> 
+> But it binds to the children of the ports that are supposed to be its
+> consumers?
+> 
+> Why is that even expected to work?
 
-> On 7/14/2016 8:03 PM, Alex Williamson wrote:
-> >> 2. Add an owner_pid to struct vfio_group and make sure in vfio_group_get_device_fd that  
-> >> > the PFs  vfio_group is owned by the same process as the one that is trying to get a fd for a VF.  
-> > This only solves a very specific use case, it doesn't address any of
-> > the issues where the VF struct device in the host kernel might get
-> > bound to another driver.    
-> The current patch uses driver_override to make the kernel use VFIO for
-> all the new VFs. It still allows the host kernel to bind them to another
-> driver, but that would require an explicit action on the part of the
-> administrator. Don't you think that is enough?
+No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
 
-Binding the VFs to vfio-pci with driver_override just prevents any sort
-of initial use by native host drivers, it doesn't in any way tie them to
-the user that created them or prevent any normal operations on the
-device.  The entire concept of a user-created device is new and
-entirely separate from a user-owned device as typically used with
-vfio.  We currently have an assumption with VF assignment that the PF
-is trusted in the host, that's broken here and I have a hard time
-blaming it on the admin or management tool for allowing such a thing
-when it previously hasn't been a possibility.  If nothing else, it
-seems like we're opening the system for phishing attempts where a user
-of a PF creates VFs hoping they might be assigned to a victim VM, or
-worse the host.
+The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
+the drawing below). The supplier is the NHI:
 
-> Do you think we should
-> also take a reference on the VFIO devices to prevent an administrator
-> from unbinding them?
+      (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+                                         +-- Downstream Bridge 1 --
+                                         +-- Downstream Bridge 2 --
+                                         ...
 
-Who would be taking this reference?  It would need to be the host
-kernel, we couldn't rely on the user to do it.  Wouldn't we be racing
-other users to get that reference?  How would we bestow that reference
-to a user?  How does this lead to a VF that can actually be used?
+We're calling pci_power_up() and pci_restore_state() from
+pci_pm_resume_noirq(). And that will fail for devices below
+the hotplug ports if the PCI tunnels haven't been re-established
+yet by the NHI.
 
-> > Also is the pid really what we want to attach
-> > ownership to?  What if the owner of the PF wants to assign the VF to a
-> > peer VM, not to a nested VM?  It seems like there's an entire aspect of
-> > owning and being able to grant ownership of a device to a user or group
-> > missing.  
-> In order to support assigning to a peer VM, maybe we can do something a
-> little different. What if we add a ioctl to enable SR-IOV, and the new
-> ioctl would return an open fd for the VFIO group of each VF? Other
-> attempts to open these groups by other processes would fail because the
-> groups would already be open. The process that enabled SR-IOV could
-> still pass these fds to other processes if needed, allowing other VMs to
-> use them.
+Currently we achieve that via quirk_apple_wait_for_thunderbolt() in
+drivers/pci/quirks.c. It would be more elegant if we could make this
+relationship explicit with "device links" and let the core handle it.
 
-It's a good thought, but what happens when the user simply closes the VF
-group(s)?  Are we back to a state that's any different from above?  We
-cannot base the security of the host on the assumption that our user is
-not malicious.  I'm also not sure how that enables any interesting use
-cases.  One QEMU instance cannot spawn another, so what good is it if
-QEMU has a group fd open?  Seems like that only facilitates exposing
-the VF within the same process, but without understanding how close()
-works, I don't see what that adds.
+Or am I mistaken and this particular use case is not what "device links"
+are intended for?
 
-I really don't know what the ownership model looks like for
-user-created devices and how we allow that ownership to be transferred
-to other contexts, perhaps even back to a system context, but handling
-them as just another device, perhaps only with an initial driver
-binding is a scary proposition to me.  Thanks,
+Thanks,
 
-Alex
+Lukas
