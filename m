@@ -1,45 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33410 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302AbcGJL54 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 07:57:56 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Cc: agordeev@redhat.com
-Subject: [PATCH 2/5] pci: switch msix_program_entries to use pci_msix_desc_addr
-Date: Sun, 10 Jul 2016 20:57:43 +0900
-Message-Id: <1468151866-7776-3-git-send-email-hch@lst.de>
-In-Reply-To: <1468151866-7776-1-git-send-email-hch@lst.de>
-References: <1468151866-7776-1-git-send-email-hch@lst.de>
+Received: from lb3-smtp-cloud6.xs4all.net ([194.109.24.31]:48033 "EHLO
+	lb3-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753567AbcGTNUL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jul 2016 09:20:11 -0400
+Subject: Re: [PATCH v7] [media] pci: Add tw5864 driver
+To: Andrey Utkin <andrey.utkin@corp.bluecherry.net>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kozlov Sergey <serjk@netup.ru>,
+	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	=?UTF-8?Q?Krzysztof_Ha=c5=82asa?= <khalasa@piap.pl>
+References: <20160720130712.31469-1-andrey.utkin@corp.bluecherry.net>
+Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
+	kernel-mentors@selenic.com,
+	Andrey Utkin <andrey_utkin@fastmail.com>
+From: Hans Verkuil <hverkuil@xs4all.nl>
+Message-ID: <d52da47a-7e1f-1678-4129-3401782710ee@xs4all.nl>
+Date: Wed, 20 Jul 2016 15:20:04 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160720130712.31469-1-andrey.utkin@corp.bluecherry.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of relying on the msix_entry structure for the vector number read
-it from the msi_desc.
+On 07/20/2016 03:07 PM, Andrey Utkin wrote:
+> Changes since v6:
+>  - Change tw5864_input_std_get() behaviour as suggested by Hans, and also simplify
+>  - tw5864_from_v4l2_std(): drop WARN_ON_ONCE on returning STD_INVALID
+>  - tw5864_prepare_frame_headers(): not only WARN_ON_ONCE, but also return if buffer space is too small
+>  - tw5864_frameinterval_get(): return -EINVAL instead of "1" on failure
+> 
+> Granular git log: https://github.com/bluecherrydvr/linux/commits/release/tw5864/pre_1.26/drivers/media/pci/tw5864
+> 
+> ---8<---
+> Support for boards based on Techwell TW5864 chip which provides
+> multichannel video & audio grabbing and encoding (H.264, MJPEG,
+> ADPCM G.726).
+> 
+> This submission implements only H.264 encoding of all channels at D1
+> resolution.
+> 
+> Thanks to Mark Thompson <sw@jkqxz.net> for help, and for contribution of
+> H.264 startcode emulation prevention code.
+> 
+> Signed-off-by: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> Tested-by: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/msi.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Looks good. Once we moved to v4.8-rc1 in 3 weeks time or so I'll make a pull request for this.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 0d94fbf..a385f39 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -713,11 +713,9 @@ static void msix_program_entries(struct pci_dev *dev,
- 	int i = 0;
- 
- 	for_each_pci_msi_entry(entry, dev) {
--		int offset = entries[i].entry * PCI_MSIX_ENTRY_SIZE +
--						PCI_MSIX_ENTRY_VECTOR_CTRL;
--
- 		entries[i].vector = entry->irq;
--		entry->masked = readl(entry->mask_base + offset);
-+		entry->masked = readl(pci_msix_desc_addr(entry) +
-+				PCI_MSIX_ENTRY_VECTOR_CTRL);
- 		msix_mask_irq(entry, 1);
- 		i++;
- 	}
--- 
-2.1.4
+Regards,
 
+	Hans
