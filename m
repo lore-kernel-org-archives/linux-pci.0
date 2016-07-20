@@ -1,43 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:11075 "EHLO mga03.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:62370 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751692AbcGHIZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jul 2016 04:25:08 -0400
-Date: Fri, 8 Jul 2016 11:25:03 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: export pci_bridge_d3_possible
-Message-ID: <20160708082503.GY23527@lahna.fi.intel.com>
-References: <20160707235448.2622-1-peter@lekensteyn.nl>
+	id S1751751AbcGTGDN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jul 2016 02:03:13 -0400
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+To: Joe Perches <joe@perches.com>,
+	"andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v4 0/7] thunderbolt: Introducing Thunderbolt(TM)
+ networking
+Date: Wed, 20 Jul 2016 06:02:57 +0000
+Message-ID: <E607265CB020454880711A6F96C05A03893D2493@hasmsx107.ger.corp.intel.com>
+References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
+ <1468948445.1900.53.camel@perches.com>
+In-Reply-To: <1468948445.1900.53.camel@perches.com>
+Content-Type: text/plain; charset="windows-1255"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160707235448.2622-1-peter@lekensteyn.nl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 08, 2016 at 01:54:48AM +0200, Peter Wu wrote:
-> Allow the nouveau driver to find out whether the bridge can put itself
-> in the D3cold state or whether it should use a specific DSM method to
-> achieve the same result.
+On Tue, Jul 19 2016, 08:14 PM, Joe Perches wrote:
+> On Mon, 2016-07-18 at 13:00 +0300, Amir Levy wrote:
+> > This is version 4 of Thunderbolt(TM) driver for non-Apple hardware.
+> []
+> >  Documentation/00-INDEX                   |    2 +
+> >  Documentation/thunderbolt-networking.txt |  135 ++
+> >  drivers/thunderbolt/Kconfig              |   25 +-
+> >  drivers/thunderbolt/Makefile             |    3 +-
+> >  drivers/thunderbolt/icm/Makefile         |   28 +
+> >  drivers/thunderbolt/icm/icm_nhi.c        | 1642 +++++++++++++++++++++
+> >  drivers/thunderbolt/icm/icm_nhi.h        |   93 ++
+> >  drivers/thunderbolt/icm/net.c            | 2276
+> > ++++++++++++++++++++++++++++++
+> >  drivers/thunderbolt/icm/net.h            |  274 ++++
+> >  drivers/thunderbolt/nhi_regs.h           |  115 +-
+> >  10 files changed, 4585 insertions(+), 8 deletions(-)
+> >  create mode 100644 Documentation/thunderbolt-networking.txt
+> >  create mode 100644 drivers/thunderbolt/icm/Makefile
+> >  create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
+> >  create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
+> >  create mode 100644 drivers/thunderbolt/icm/net.c
+> >  create mode 100644 drivers/thunderbolt/icm/net.h
 > 
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> ---
-> Since it is not yet merged in Linus tree, maybe the patch in pci/pm can be
-> amended? This is the follow-up patch I had in mind for nouveau:
-> 
->     --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
->     +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
->     @@ -223,6 +223,9 @@ static bool nouveau_pr3_present(struct pci_dev *pdev)
->      	if (!parent_pdev)
->      		return false;
->      
->     +	if (!pci_bridge_d3_possible(parent_pdev))
->     +		return false;
->     +
+> Is a MAINTAINERS update necessary or is Andreas going to be the
+> maintainer?
 
-Why not check bridge_d3 directly?
-
-	if (!parent_dev->bridge_d3)
-		return false;
+Now that the drivers are completely separated it make sense that 
+I'll maintain the thunderbolt/icm driver,  if there are no objections.
