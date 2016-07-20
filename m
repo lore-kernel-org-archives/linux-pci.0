@@ -1,66 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59486 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753081AbcGYRmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jul 2016 13:42:31 -0400
-Date: Mon, 25 Jul 2016 12:42:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Cc: bhelgaas@google.com, michal.simek@xilinx.com,
-	soren.brinkmann@xilinx.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	julia.lawall@lip6.fr
-Subject: Re: [PATCH] PCI: xilinx: Modify error handling
-Message-ID: <20160725174227.GE12484@localhost>
-References: <20160629151820.GA14282@amitoj-Inspiron-3542>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [RFC PATCH 0/3] ECAM quirks handling for ARM64 platforms
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1464856864-18049-1-git-send-email-tn@semihalf.com>
+ <20160719211753.GA17840@localhost>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+ rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
+ okaya@codeaurora.org, jchandra@broadcom.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com,
+ Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ cov@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <578F067C.7080509@semihalf.com>
+Date: Wed, 20 Jul 2016 07:05:00 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160629151820.GA14282@amitoj-Inspiron-3542>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160719211753.GA17840@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 08:48:20PM +0530, Amitoj Kaur Chawla wrote:
-> Failure of of_get_next_child returns NULL, not an ERR_PTR. Use
-> appropriate error code -ENODEV to be returned on failure instead.
-> 
-> The Coccinelle semantic patch used to find this issue is as follows:
-> @@
-> expression E,E1;
-> @@
-> 
-> if (
-> *   E == NULL
->    ) { <+... when != E = E1
->         PTR_ERR(E)
->        ...+> }
-> 
-> Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-> ---
->  drivers/pci/host/pcie-xilinx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index 65f0fe0..d76ea8d 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -550,7 +550,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
->  	pcie_intc_node = of_get_next_child(node, NULL);
->  	if (!pcie_intc_node) {
->  		dev_err(dev, "No PCIe Intc node found\n");
-> -		return PTR_ERR(pcie_intc_node);
-> +		return -ENODEV;
+On 19.07.2016 23:17, Bjorn Helgaas wrote:
+> On Thu, Jun 02, 2016 at 10:41:00AM +0200, Tomasz Nowicki wrote:
+>> This series bases on pending ACPI PCI support for ARM64:
+>> https://lkml.org/lkml/2016/5/30/468
+>>
+>> Quirk handling relies on an idea of matching MCFG OEM ID and OEM revision
+>> (the ones from standard header of MCFG table). Linker section is used
+>> so that quirks can be registered using special macro (see patches) and
+>> kept self contained.
+>>
+>> As an example, last patch presents above mechanism usage for ThunderX PEM driver.
+>>
+>> Tomasz Nowicki (3):
+>>    pci, acpi: Match PCI config space accessors against platfrom specific
+>>      ECAM quirks.
+>>    arm64, pci: Start using quirks handling for ACPI based PCI host
+>>      controller.
+>>    pci, pci-thunder-pem: Add ACPI support for ThunderX PEM.
+>>
+>>   arch/arm64/kernel/pci.c            |   7 +-
+>>   drivers/acpi/pci_mcfg.c            |  32 +++++++++
+>>   drivers/pci/host/pci-thunder-pem.c | 132 +++++++++++++++++++++++++++++++++----
+>>   include/asm-generic/vmlinux.lds.h  |   7 ++
+>>   include/linux/pci-acpi.h           |  19 ++++++
+>>   5 files changed, 181 insertions(+), 16 deletions(-)
+>
+> Is this series superceded by Dongdong's series of 6/13 ("[RFC,V2,1/2]
+> ACPI/PCI: Match PCI config space accessors against platfrom specific ECAM
+> quirks")?
+>
 
-This fix is included in the patch posted by Christophe JAILLET
-<christophe.jaillet@wanadoo.fr>, along with two other similar fixes.
-I applied Christophe's patch to pci/host-xilinx for v4.8.
+Yes this series had two another versions (v2,v3) posted by someone else. 
+However, I posted another v4 which is the latest one:
+[RFC PATCH v4 0/5] ECAM quirks handling for ARM64 platforms
+https://lkml.org/lkml/2016/6/28/165
 
->  	}
->  
->  	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In v4 there is one minor thing to be fixed. Do you want me to resend it 
+as v5 including mentioned fix ?
+
+Thanks,
+Tomasz
