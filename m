@@ -1,41 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33399 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbcGJL5u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 07:57:50 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Cc: agordeev@redhat.com
-Subject: pci: automatic interrupt affinity for MSI/MSI-X capable devices
-Date: Sun, 10 Jul 2016 20:57:41 +0900
-Message-Id: <1468151866-7776-1-git-send-email-hch@lst.de>
+Received: from smtprelay0028.hostedemail.com ([216.40.44.28]:46828 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751194AbcGTGck (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jul 2016 02:32:40 -0400
+Message-ID: <1468996356.1900.96.camel@perches.com>
+Subject: Re: [PATCH v4 0/7] thunderbolt: Introducing Thunderbolt(TM)
+ networking
+From: Joe Perches <joe@perches.com>
+To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
+	"andreas.noever@gmail.com" <andreas.noever@gmail.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Date: Tue, 19 Jul 2016 23:32:36 -0700
+In-Reply-To: <E607265CB020454880711A6F96C05A03893D2493@hasmsx107.ger.corp.intel.com>
+References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
+	 <1468948445.1900.53.camel@perches.com>
+	 <E607265CB020454880711A6F96C05A03893D2493@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series adds a new set of functions that transparently use the right
-type of interrupt (MSI-X, MSI, legacy interrupt line) for a PCI device,
-and if multiple vectors are supported automatically spreads the irq
-routing to different CPUs.  This will allow the block layer (and hopefully
-other consumers in the future) to use this information for mapping
-queues to fit the interrupt affinity.
+On Wed, 2016-07-20 at 06:02 +0000, Levy, Amir (Jer) wrote:
+> On Tue, Jul 19 2016, 08:14 PM, Joe Perches wrote:
+> > On Mon, 2016-07-18 at 13:00 +0300, Amir Levy wrote:
+> > > 
+> > > This is version 4 of Thunderbolt(TM) driver for non-Apple hardware.
+> > []
+> > >  Documentation/00-INDEX                   |    2 +
+> > >  Documentation/thunderbolt-networking.txt |  135 ++
+> > >  drivers/thunderbolt/Kconfig              |   25 +-
+> > >  drivers/thunderbolt/Makefile             |    3 +-
+> > >  drivers/thunderbolt/icm/Makefile         |   28 +
+> > >  drivers/thunderbolt/icm/icm_nhi.c        | 1642 +++++++++++++++++++++
+> > >  drivers/thunderbolt/icm/icm_nhi.h        |   93 ++
+> > >  drivers/thunderbolt/icm/net.c            | 2276 ++++++++++++++++++++++++++++++
+> > >  drivers/thunderbolt/icm/net.h            |  274 ++++
+> > >  drivers/thunderbolt/nhi_regs.h           |  115 +-
+> > >  10 files changed, 4585 insertions(+), 8 deletions(-)
+> > >  create mode 100644 Documentation/thunderbolt-networking.txt
+> > >  create mode 100644 drivers/thunderbolt/icm/Makefile
+> > >  create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
+> > >  create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
+> > >  create mode 100644 drivers/thunderbolt/icm/net.c
+> > >  create mode 100644 drivers/thunderbolt/icm/net.h
+> > Is a MAINTAINERS update necessary or is Andreas going to be the
+> > maintainer?
+> Now that the drivers are completely separated it make sense that 
+> I'll maintain the thunderbolt/icm driver,  if there are no objections.
 
-For the last patche to work you need to merge the irq/for-block branch of
-
-   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-
-first.
-
-There also is a git tree available at:
-
-   git://git.infradead.org/users/hch/block.git pci-irq-spreading
-
-Gitweb:
-
-   http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/pci-irq-spreading
-
-Changes since automatic interrupt affinity for MSI/MSI-X capable devices V3:
- - add PCI_IRQ_NOLEGACY flag
- - various error code fixes
- - reuse the pci_enable_msi(x)_range code instead of duplicating it
- - don't allocate msix_entry structures for the MSI-X case
-
+I think that's fine and the MAINTAINERS file should have
+a new section entry for this driver with your name too.
