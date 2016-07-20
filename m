@@ -1,81 +1,124 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>, "liudongdong (C)" <liudongdong3@huawei.com>
-CC: "helgaas@kernel.org" <helgaas@kernel.org>,
-        "rafael@kernel.org"
-	<rafael@kernel.org>,
-        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "Wangzhou (B)"
-	<wangzhou1@hisilicon.com>,
-        "pratyush.anand@gmail.com"
-	<pratyush.anand@gmail.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "Chenxin
- (Charles)" <charles.chenxin@huawei.com>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: RE: [RFC PATCH 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon
- SoCs Host Controllers
-Date: Tue, 12 Jul 2016 10:21:30 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F7D72BF@lhreml507-mbx>
-References: <1468291344-122909-1-git-send-email-liudongdong3@huawei.com>
- <1468291344-122909-4-git-send-email-liudongdong3@huawei.com>
- <3580311.QdyhSxNzVU@wuerfel>
-In-Reply-To: <3580311.QdyhSxNzVU@wuerfel>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH v3 03/13] drivers: acpi: iort: add support for IOMMU fwnode registration
+Date: Wed, 20 Jul 2016 12:23:25 +0100
+Message-Id: <1469013815-24380-4-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 12 July 2016 16:35
-> To: liudongdong (C)
-> Cc: helgaas@kernel.org; rafael@kernel.org; Lorenzo.Pieralisi@arm.com;
-> tn@semihalf.com; Wangzhou (B); pratyush.anand@gmail.com; linux-
-> pci@vger.kernel.org; linux-acpi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; jcm@redhat.com; Gabriele Paoloni; Chenxin
-> (Charles); Linuxarm
-> Subject: Re: [RFC PATCH 3/3] PCI/ACPI: hisi: Add ACPI support for
-> HiSilicon SoCs Host Controllers
->=20
-> On Tuesday, July 12, 2016 10:42:24 AM CEST Dongdong Liu wrote:
-> >  MAINTAINERS                       |   1 +
-> >  drivers/pci/host/Kconfig          |   7 ++
-> >  drivers/pci/host/Makefile         |   1 +
-> >  drivers/pci/host/mcfg-quirks.c    |   8 ++
-> >  drivers/pci/host/mcfg-quirks.h    |   8 ++
-> >  drivers/pci/host/pcie-hisi-acpi.c | 151
-> ++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/host/pcie-hisi.c      |   2 -
-> >  drivers/pci/host/pcie-hisi.h      |   2 +
-> >  8 files changed, 178 insertions(+), 2 deletions(-)
-> >  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
-> >
-> >
->=20
-> Please keep the quirks separate from the PCI host drivers.
->=20
-> The ACPI code includes its own host driver and the only thing
-> you need to override here is the config space access, so just put that
-> into drivers/acpi/
+The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+components that allow creating the kernel data structures required to
+probe and initialize the IOMMU devices.
 
-Hi Arnd, thanks for replying.
+This patch provides support in the IORT kernel code to register IOMMU
+components and their respective fwnode.
 
-Basically we just followed what Tomasz has done in
-"[RFC PATCH v4 0/5] ECAM quirks handling for ARM64 platforms"
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/iort.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
 
-In this case the ThunderX quirks have been defined in
-"drivers/pci/host/pci-thunder-pem.c".
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 1f440d2..86f6985 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -20,7 +20,9 @@
+ 
+ #include <linux/iort.h>
+ #include <linux/kernel.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -28,6 +30,69 @@ struct iort_its_msi_chip {
+ 	u32			translation_id;
+ };
+ 
++struct iort_fwnode {
++	struct list_head list;
++	struct acpi_iort_node *iort_node;
++	struct fwnode_handle *fwnode;
++};
++static LIST_HEAD(iort_fwnode_list);
++static DEFINE_SPINLOCK(iort_fwnode_lock);
++
++/**
++ * iort_set_fwnode() - Create iort_fwnode and use it to register
++ *		       iommu data in the iort_fwnode_list
++ *
++ * @node: IORT table node associated with the IOMMU
++ * @fwnode: fwnode associated with the IORT node
++ *
++ * Returns: 0 on success
++ *          -ENOMEM on failure
++ */
++static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
++				  struct fwnode_handle *fwnode)
++{
++	struct iort_fwnode *np;
++
++	np = kzalloc(sizeof(struct iort_fwnode), GFP_KERNEL);
++
++	if (WARN_ON(!np))
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&np->list);
++	np->iort_node = iort_node;
++	np->fwnode = fwnode;
++
++	spin_lock(&iort_fwnode_lock);
++	list_add_tail(&np->list, &iort_fwnode_list);
++	spin_unlock(&iort_fwnode_lock);
++
++	return 0;
++}
++
++/**
++ * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
++ *
++ * @node: IORT table node to be looked-up
++ *
++ * Returns: fwnode_handle pointer on success NULL on failure
++*/
++static inline struct fwnode_handle *
++iort_get_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr, *iommu_fwnode = NULL;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry(curr, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			iommu_fwnode = curr;
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++
++	return iommu_fwnode ? iommu_fwnode->fwnode : NULL;
++}
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+-- 
+2.6.4
 
-Cheers
-Gab
-
->=20
-> 	Arnd
