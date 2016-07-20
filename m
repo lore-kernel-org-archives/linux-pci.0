@@ -1,90 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH 09/14] PCI: rcar: make it explicitly non-modular
-Date: Sat, 2 Jul 2016 19:13:29 -0400
-Message-ID: <20160702231334.26684-10-paul.gortmaker@windriver.com>
-In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
-References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:47273 "HELO
+	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752748AbcGTMnJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jul 2016 08:43:09 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
+Date: Wed, 20 Jul 2016 14:48:02 +0200
+Message-ID: <23327309.oKKvvEl2AM@vostro.rjw.lan>
+In-Reply-To: <20160720072359.GC8066@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de> <CAJZ5v0i4TJ_nFj4x2couZqPyrjWhig5fFRfG2LNCHfG=3h1CBg@mail.gmail.com> <20160720072359.GC8066@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On Wednesday, July 20, 2016 09:23:59 AM Lukas Wunner wrote:
+> On Fri, Jul 08, 2016 at 03:28:12AM +0200, Rafael J. Wysocki wrote:
+> > On Thu, Jul 7, 2016 at 5:02 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > (1) Would it be possible to allow dev_pm_domain_set() for already
+> > >     bound devices? (It would allow me to simplify this series
+> > >     considerably.)
+> > 
+> > I don't think so, because setting a PM domain generally changes the
+> > set of PM callbacks for the device and it may not be safe to call it
+> > after the driver has been bound.
+> 
+> That sounds more like a locking problem than anything else.
+> 
+> If the system is awake and the device is active, it would seem safe
+> to change its set of PM callbacks. Am I missing something?
+> 
+> How about checking in dev_pm_domain_set() if pm_runtime_active(dev)
 
-drivers/pci/host/Kconfig:config PCI_RCAR_GEN2_PCIE
-drivers/pci/host/Kconfig:       bool "Renesas R-Car PCIe controller"
+Realistically, you'd need to disable runtime PM too or at least bump up
+the usage count.
 
-...meaning that it currently is not being built as a module by anyone.
+> and calling lock_system_sleep() / unlock_system_sleep() to ensure that?
 
-Lets remove the few trace uses of modular code and macros, so that
-when reading the driver there is no doubt it is builtin-only.
+That might work.
 
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
+Thanks,
+Rafael
 
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Simon Horman <horms@verge.net.au>
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Acked-by: Phil Edworthy <phil.edworthy@renesas.com>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-rcar.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 6546ca79f188..7e61ae41910e 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -7,6 +7,8 @@
-  *  arch/sh/drivers/pci/ops-sh7786.c
-  *  Copyright (C) 2009 - 2011  Paul Mundt
-  *
-+ * Module Author: Phil Edworthy <phil.edworthy@renesas.com>
-+ *
-  * This file is licensed under the terms of the GNU General Public
-  * License version 2.  This program is licensed "as is" without any
-  * warranty of any kind, whether express or implied.
-@@ -18,7 +20,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-@@ -936,7 +938,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
- 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
- 
- static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
- {
-@@ -1056,8 +1057,4 @@ static struct platform_driver rcar_pcie_driver = {
- 	},
- 	.probe = rcar_pcie_probe,
- };
--module_platform_driver(rcar_pcie_driver);
--
--MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
--MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(rcar_pcie_driver);
--- 
-2.8.4
