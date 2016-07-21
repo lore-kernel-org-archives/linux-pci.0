@@ -1,41 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:60787 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751368AbcG1URy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 16:17:54 -0400
-Date: Thu, 28 Jul 2016 22:17:42 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH -next] PCI: aardvark: Remove redundant dev_err call in
- advk_pcie_probe()
-Message-ID: <20160728221742.403e558b@free-electrons.com>
-In-Reply-To: <1469722634-15049-1-git-send-email-weiyj.lk@gmail.com>
-References: <1469722634-15049-1-git-send-email-weiyj.lk@gmail.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:36914 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbcGUL6p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2016 07:58:45 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bcousson@baylibre.com>, <tony@atomide.com>
+CC: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+	<linux@armlinux.org.uk>, <linux-omap@vger.kernel.org>,
+	<devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<kishon@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH 2/2] ARM: DRA7: select PCI_DOMAINS config
+Date: Thu, 21 Jul 2016 17:27:56 +0530
+Message-ID: <1469102276-14777-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1469102276-14777-1-git-send-email-kishon@ti.com>
+References: <1469102276-14777-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+PCI_DOMAINS is required for DRA7x SoCs since there are 2 PCIe
+controllers and without PCI_DOMAINS config, only one PCIe
+controller gets registered.
 
-On Thu, 28 Jul 2016 16:17:14 +0000, Wei Yongjun wrote:
-> There is a error message within devm_ioremap_resource
-> already, so remove the dev_err call to avoid redundant
-> error message.
-> 
-> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
-> ---
->  drivers/pci/host/pci-aardvark.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/mach-omap2/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-
-Thanks!
-
-Thomas
+diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
+index 1a648e9..8e6e2c0 100644
+--- a/arch/arm/mach-omap2/Kconfig
++++ b/arch/arm/mach-omap2/Kconfig
+@@ -86,6 +86,7 @@ config SOC_DRA7XX
+ 	select OMAP_INTERCONNECT_BARRIER
+ 	select PM_OPP if PM
+ 	select ZONE_DMA if ARM_LPAE
++	select PCI_DOMAINS if PCI
+ 
+ config ARCH_OMAP2PLUS
+ 	bool
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.7.9.5
+
