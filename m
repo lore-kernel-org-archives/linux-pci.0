@@ -1,100 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43720 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756172AbcGHXT6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2016 19:19:58 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u68NJI0I100253
-	for <linux-pci@vger.kernel.org>; Fri, 8 Jul 2016 19:19:57 -0400
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 2415xpddqr-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 08 Jul 2016 19:19:57 -0400
-Received: from localhost
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-	Fri, 8 Jul 2016 17:19:56 -0600
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
-	nfont@linux.vnet.ibm.com, mdroth@linux.vnet.ibm.com,
-	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH] rpaphp: fix slot registration for multiple slots under a PHB
-Date: Fri,  8 Jul 2016 18:19:47 -0500
-Message-Id: <1468019987-1733-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
+ support
+Date: Thu, 21 Jul 2016 02:25:15 +0200
+Message-ID: <4258432.JNKr9zJtMp@vostro.rjw.lan>
+In-Reply-To: <20160720232553.GA8460@wunner.de>
+References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
+ <1735644.0mfUjJQtul@vostro.rjw.lan> <20160720232553.GA8460@wunner.de>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+ linux-samsung-soc@vger.kernel.org,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Inki Dae <inki.dae@samsung.com>,
+ "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
+ Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
+ linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PowerVM seems to only ever provide a single hotplug slot per PHB.
-The under lying slot hotplug registration code assumed multiple slots,
-but the actual implementation is broken for multiple slots. This went
-unnoticed for years due to the nature of PowerVM as mentioned
-previously. Under qemu/kvm the hotplug slot model aligns more with
-x86 where multiple slots are presented under a single PHB. As seen
-in the following each additional slot after the first fails to
-register due to each slot always being compared against the first
-child node of the PHB in the device tree.
+On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
+> On Thu, Jul 21, 2016 at 12:51:31AM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
+> > > On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
+> > > > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
+> > > > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
+> > > > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
+> > > > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
+> > > > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
+> > > > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> > > > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
+> > > > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
+> > > > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
+> > > > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
+> > > > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
+> > > > > > > > > this dependency using something like Rafael's approach instead of
+> > > > > > > > > open coding it, however one detail in Rafael's patches is problematic:
+> > > > > > > > >
+> > > > > > > > > > New links are added by calling device_link_add() which may happen
+> > > > > > > > > > either before the consumer device is probed or when probing it, in
+> > > > > > > > > > which case the caller needs to ensure that the driver of the
+> > > > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
+> > > > > > > > > > flag should be passed to device_link_add() to reflect that.
+> > > > > > > > >
+> > > > > > > > > The thunderbolt driver cannot call device_link_add() before the
+> > > > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
+> > > > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
+> > > > > > > > > if the thunderbolt driver isn't loaded.
+> > > > > > > > >
+> > > > > > > > > It would therefore be beneficial if device_link_add() can be
+> > > > > > > > > called even *after* the consumer is bound.
+> > > > > > > > 
+> > > > > > > > I don't quite follow.
+> > > > > > > > 
+> > > > > > > > Who's the provider and who's the consumer here?
+> > > > > > > 
+> > > > > > > thunderbolt.ko is the supplier.
+> > > > > > 
+> > > > > > But it binds to the children of the ports that are supposed to be its
+> > > > > > consumers?
+> > > > > > 
+> > > > > > Why is that even expected to work?
+> > > > > 
+> > > > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
+> > > > > 
+> > > > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
+> > > > > the drawing below). The supplier is the NHI:
+> > > > > 
+> > > > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+> > > > >                                          +-- Downstream Bridge 1 --
+> > > > >                                          +-- Downstream Bridge 2 --
+> > > > >                                          ...
+> > > > > 
+> > > > > We're calling pci_power_up() and pci_restore_state() from
+> > > > > pci_pm_resume_noirq(). And that will fail for devices below
+> > > > > the hotplug ports if the PCI tunnels haven't been re-established
+> > > > > yet by the NHI.
+> > > > 
+> > > > So the NHI is a PCIe device, right?
+> > > > 
+> > > > Does the Thunderbolt driver bind to that device?
+> > > 
+> > > The NHI is a PCI device but not a bridge. It has class 0x88000.
+> > > Yes, thunderbolt.ko binds to the NHI.
+> > > 
+> > > And portdrv binds to the upstream bridge and downstream bridges.
+> > > Those have class 0x60400.
+> > 
+> > OK, so why would there be a problem with creating links from the NHI
+> > (producer) to the ports (consumers) before binding portdrv to them?
+> 
+> Because the ordering in which drivers bind isn't guaranteed. At least
+> on my machine (Debian), portdrv always binds before thunderbolt.
 
-[    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-[    6.492569] rpaphp: Slot [Slot 0] registered
-[    6.492577] rpaphp: pci_hp_register failed with error -16
-[    6.493082] rpaphp: pci_hp_register failed with error -16
-[    6.493138] rpaphp: pci_hp_register failed with error -16
-[    6.493161] rpaphp: pci_hp_register failed with error -16
+But what drivers have to do with that really?  Do you need drivers to
+know that the dependency is there?
 
-The registration logic is fixed so that each slot is compared
-against the existing child devices of the PHB in the device tree to
-determine present slots vs empty slots.
+Just add likns *before* even probing for drivers (yes, you can do that)
+and the core will handle that for you.
 
-[   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-[   38.482004] rpaphp: Slot [C0] registered
-[   38.482127] rpaphp: Slot [C1] registered
-[   38.482241] rpaphp: Slot [C2] registered
-[   38.482356] rpaphp: Slot [C3] registered
-[   38.482495] rpaphp: Slot [C4] registered
+> I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
+> no driver is bound to the NHI. Doesn't feel pretty to me though.
+> 
+> Ultimately this seems to be the same issue as with calling
+> dev_pm_domain_set() for a bound device. Perhaps device_link_add()
+> can likewise be allowed if a runtime PM ref is held for the devices
+> and the call happens under lock_system_sleep()?
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
----
- drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+No, the whole synchronization scheme in the links code would have had to be
+changed for that to really work.
 
-diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
-index 6937c72..c90fa8d 100644
---- a/drivers/pci/hotplug/rpaphp_slot.c
-+++ b/drivers/pci/hotplug/rpaphp_slot.c
-@@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
- int rpaphp_register_slot(struct slot *slot)
- {
- 	struct hotplug_slot *php_slot = slot->hotplug_slot;
-+	struct device_node *child;
-+	u32 my_index;
- 	int retval;
--	int slotno;
-+	int slotno = -1;
- 
- 	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
- 		__func__, slot->dn->full_name, slot->index, slot->name,
-@@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
- 		return -EAGAIN;
- 	}
- 
--	if (slot->dn->child)
--		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
--	else
--		slotno = -1;
-+	for_each_child_of_node(slot->dn, child) {
-+		retval = of_property_read_u32(child, "my,ibm-drc-index", &my_index);
-+		if (my_index == slot->index) {
-+			slotno = PCI_SLOT(PCI_DN(child)->devfn);
-+			of_node_put(child);
-+			break;
-+		}
-+	}
-+
- 	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
- 	if (retval) {
- 		err("pci_hp_register failed with error %d\n", retval);
--- 
-2.7.4
+And it really is about what is needed (at least in principle) to run your
+device.  If you think you need device X with a driver to handle device Y
+correctly, then either you need it all the time, from probe to remove, or
+you just don't really need it at all.
 
+Thanks,
+Rafael
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
