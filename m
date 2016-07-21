@@ -1,138 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0075.outbound.protection.outlook.com ([104.47.37.75]:20736
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750739AbcGNNcX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 09:32:23 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
+Received: from mga14.intel.com ([192.55.52.115]:56844 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750810AbcGUFvW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2016 01:51:22 -0400
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Haggai Eran <haggaie@mellanox.com>,
+	Ilya Lesokhin <ilyal@mellanox.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	nofooter <nofooter@xilinx.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>
-Subject: RE: Purpose of pci_remap_iospace
-Date: Thu, 14 Jul 2016 13:32:13 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258B8F73@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
- <3927657.6zNCtCntSU@wuerfel>
- <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
- <4235946.u1vYRsOpTR@wuerfel>
- <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160713134642.GA29309@red-moon>
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Noa Osherovich" <noaos@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	"Liran Liss" <liranl@mellanox.com>
+Subject: RE: [PATCH v2 0/2] VFIO SRIOV support
+Date: Thu, 21 Jul 2016 05:51:18 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F90FD25@SHSMSX101.ccr.corp.intel.com>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+	<20160620113728.74ed79f3@ul30vt.home>
+	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160621094537.4416cbce@t450s.home>
+	<VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160714110341.7716c619@t450s.home>
+	<fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
+	<20160718153428.6b988539@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F90960A@SHSMSX101.ccr.corp.intel.com>
+	<20160719091017.4c23244f@t450s.home> <20160719134336.79d24af9@t450s.home>
+In-Reply-To: <20160719134336.79d24af9@t450s.home>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > Subject: Re: Purpose of pci_remap_iospace
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Wednesday, July 20, 2016 3:44 AM
+> 
+> On Tue, 19 Jul 2016 09:10:17 -0600
+> Alex Williamson <alex.williamson@redhat.com> wrote:
+> 
+> > On Tue, 19 Jul 2016 07:06:34 +0000
+> > "Tian, Kevin" <kevin.tian@intel.com> wrote:
 > >
-> > On Wed, Jul 13, 2016 at 12:30:44PM +0000, Bharat Kumar Gogada wrote:
+> > > > From: Alex Williamson
+> > > > Sent: Tuesday, July 19, 2016 5:34 AM
+> > > >
+> > > > On Sun, 17 Jul 2016 13:05:21 +0300
+> > > > Haggai Eran <haggaie@mellanox.com> wrote:
+> > > >
+> > > > > On 7/14/2016 8:03 PM, Alex Williamson wrote:
+> > > > > >> 2. Add an owner_pid to struct vfio_group and make sure in
+> > > > vfio_group_get_device_fd that
+> > > > > >> > the PFs  vfio_group is owned by the same process as the one that is trying
+> to get
+> > > > a fd for a VF.
+> > > > > > This only solves a very specific use case, it doesn't address any of
+> > > > > > the issues where the VF struct device in the host kernel might get
+> > > > > > bound to another driver.
+> > > > > The current patch uses driver_override to make the kernel use VFIO for
+> > > > > all the new VFs. It still allows the host kernel to bind them to another
+> > > > > driver, but that would require an explicit action on the part of the
+> > > > > administrator. Don't you think that is enough?
+> > > >
+> > > > Binding the VFs to vfio-pci with driver_override just prevents any sort
+> > > > of initial use by native host drivers, it doesn't in any way tie them to
+> > > > the user that created them or prevent any normal operations on the
+> > > > device.  The entire concept of a user-created device is new and
+> > > > entirely separate from a user-owned device as typically used with
+> > > > vfio.  We currently have an assumption with VF assignment that the PF
+> > > > is trusted in the host, that's broken here and I have a hard time
+> > > > blaming it on the admin or management tool for allowing such a thing
+> > > > when it previously hasn't been a possibility.  If nothing else, it
+> > > > seems like we're opening the system for phishing attempts where a user
+> > > > of a PF creates VFs hoping they might be assigned to a victim VM, or
+> > > > worse the host.
+> > > >
+> > >
+> > > What about fully virtualizing the SR-IOV capability? The VM is not allowed
+> > > to touch physical SR-IOV capability directly so there would not be a problem
+> > > of user-created devices. Physical SR-IOV is always enabled by admin at
+> > > the host side. Admin can combine any number of VFs (even cross multiple
+> > > compatible devices) in the virtual SR-IOV capability on any passthrough
+> > > device...
+> > >
+> > > The limitation is that the VM can initially access only PF resource which is
+> > > usually less than what the entire device provides, so not that efficient
+> > > when the VM doesn't want to enable SR-IOV at all.
 > >
-> > [...]
-> >
-> > > err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
-> > >         if (err) {
-> > >                 pr_err("Getting bridge resources failed\n");
-> > >                 return err;
-> > >         }
-> > > resource_list_for_each_entry(window, &res) {            //code for io
-> resource
-> > >                 struct resource *res = window->res;
-> > >                 u64 restype = resource_type(res);
-> > >
-> > >                 switch (restype) {
-> > >                 case IORESOURCE_IO:
-> > >                         err = pci_remap_iospace(res, iobase);
-> > >                         if(err)
-> > >                                 pr_info("FAILED TO IPREMAP RESOURCE\n");
-> > >                         break;
-> > >                 default:
-> > >                         dev_err(pcie->dev, "invalid resource %pR\n",
-> > > res);
-> > >
-> > >                 }
-> > >         }
-> > >
-> > > Other than above code I haven't done any change in driver.
-> > >
-> > Here is your PCI bridge mem space window assignment. I do not see an
-> > IO window assignment which makes me think that IO cycles and relative
-> > IO window is not enabled through the bridge, that's the reason you
-> > can't assign IO space to the endpoint, because it has no parent IO window
-> enabled IIUC.
-> >
->
-> We sorted this out, enabled the IO base limit / upper 16bit registers in the
-> bridge for 32 bit decode.
-> However my IO address being assigned to EP is different than what I provide
-> in device tree.
->
+> > Are you suggesting a scenario where we have one PF with SR-IOV disabled
+> > assigned to the user and another PF owned by the host with SR-IOV
+> > enable, we virtualize SR-IOV to the user and use the VFs from the other
+> > PF to act as a "pool" of VFs to be exposed to the user depending on
+> > SR-IOV manipulation?  Something like that could work with existing
+> > vfio, just requiring the QEMU bits to virtualize SR-IOV and mange the
+> > VFs, but I expect it's not a useful model for Mellanox.  I believe it
+> > was Ilya that stated the purpose in exposing SR-IOV was for
+> > development, so I'm assuming they actually want to do development of
+> > the PF SR-IOV enabling in a VM, not just give the illusion of SR-IOV to
+> > the VM.  Thanks,
+> 
+> 
+> Thinking about this further, it seems that trying to create this IOV
+> enablement interface through a channel which is explicitly designed to
+> interact with an untrusted and potentially malicious user is the wrong
+> approach.  We already have an interface for a trusted entity to enable
+> VFs, it's through pci-sysfs.  Therefore if we were to use something like
+> libvirt to orchestrate the lifecycle of the VFs, I think we remove a
+> lot of the problems.  In this case QEMU would virtualize the SR-IOV
+> capability (maybe this is along the lines of what Kevin was thinking),
+> but that virtualization would take a path out through the QEMU QMP
+> interface to execute the SR-IOV change on the device rather than going
+> through the vfio kernel interface.  A management tool like libvirt
+> would then need to translate that into sysfs operations to create the
+> VFs and do whatever we're going to do with them (device_add them back
+> to the VM, make them available to a peer VM, make them available to
+> the host *gasp*).  VFIO in the kernel would need to add SR-IOV
+> support, but the only automatic SR-IOV path would be to disable IOV
+> when the PF is released, enabling would only occur through sysfs.  We
+> would probably need a new pci-sysfs interface to manage the driver for
+> newly created VFs though to avoid default host drivers
+> (sriov_driver_override?).  In this model QEMU is essentially just
+> making requests to other userspace entities to perform actions and how
+> those actions are performed can be left to userspace policy, not kernel
+> policy.  I think this would still satisfy the development use case, the
+> enabling path just takes a different route where privileged userspace
+> is more intimately involved in the process.  Thoughts?  Thanks,
+> 
 
-Hi Lorenzo,
-
-I missed something in my device tree now I corrected it.
-
-ranges = <0x01000000 0x00000000 0xe0000000 0x00000000 0xe0000000 0 0x00010000   //io
-                     0x02000000 0x00000000 0xe0100000 0x00000000 0xe0100000 0 0x0ef00000>; //non prefetchabe memory
-
-[    2.389498] nwl-pcie fd0e0000.pcie: Link is UP
-[    2.389541] PCI host bridge /amba/pcie@fd0e0000 ranges:
-[    2.389558]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
-[    2.389583]    IO 0xe0000000..0xe000ffff -> 0xe0000000
-[    2.389624]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
-[    2.389803] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
-[    2.389822] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    2.389839] pci_bus 0000:00: root bus resource [io  0x0000-0xffff] (bus address [0xe0000000-0xe000ffff])
-[    2.389863] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeeffffff]
-[    2.390094] pci 0000:00:00.0: cannot attach to SMMU, is it on the same bus?
-[    2.390110] iommu: Adding device 0000:00:00.0 to group 1
-[    2.390274] pci 0000:01:00.0: reg 0x20: initial BAR value 0x00000000 invalid
-[    2.390481] pci 0000:01:00.0: cannot attach to SMMU, is it on the same bus?
-[    2.390496] iommu: Adding device 0000:01:00.0 to group 1
-[    2.390533] in pci_bridge_check_ranges io 101
-[    2.390545] in pci_bridge_check_ranges io 2 101
-[    2.390575] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-0xe02fffff]
-[    2.390592] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-[    2.390609] pci 0000:00:00.0: BAR 6: assigned [mem 0xe0300000-0xe03007ff pref]
-[    2.390636] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe01fffff 64bit]
-[    2.390669] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-0xe02fffff 64bit]
-[    2.390702] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x103f]
-[    2.390721] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
-[    2.390785] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    2.390823] pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe02fffff]
-
-Lspci on bridge:
-00:00.0 PCI bridge: Xilinx Corporation Device a024 (prog-if 00 [Normal decode])
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 224
-        Bus: primary=00, secondary=01, subordinate=0c, sec-latency=0
-        I/O behind bridge: e0001000-e0001fff
-        Memory behind bridge: e0100000-e02fffff
-
-Here my IO space is showing 4k, but what I'm providing is 4k ?(In above boot log also IO space length 4k)
-
-Lspci on EP:
-01:00.0 Memory controller: Xilinx Corporation Device d024
-        Subsystem: Xilinx Corporation Device 0007
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 224
-        Region 0: Memory at e0100000 (64-bit, non-prefetchable) [disabled] [size=1M]
-        Region 2: Memory at e0200000 (64-bit, non-prefetchable) [disabled] [size=1M]
-        Region 4: I/O ports at 1000 [disabled] [size=64]
-
-On EP from where it is getting this 1000 address, it should be within I/O behind bridge range know ?
-
-
-Thanks & Regards,
-Bharat
-
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-
+A sound direction to me. Thanks
