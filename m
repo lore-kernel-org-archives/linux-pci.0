@@ -1,136 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46927 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126AbcGUJfU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jul 2016 05:35:20 -0400
-Date: Thu, 21 Jul 2016 10:35:14 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
-Message-ID: <20160721093514.GA7982@red-moon>
-References: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:35620 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbcGUOad (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2016 10:30:33 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org
+Cc: agordeev@redhat.com, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] blk-mq: only allocate a single mq_map per tag_set
+Date: Thu, 21 Jul 2016 16:30:22 +0200
+Message-Id: <1469111423-16222-3-git-send-email-hch@lst.de>
+In-Reply-To: <1469111423-16222-1-git-send-email-hch@lst.de>
+References: <1469111423-16222-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Phil,
+The mapping is identical for all queues in a tag_set, so stop wasting
+memory for building multiple.  Note that for now I've kept the mq_map
+pointer in the request_queue, but we'll need to investigate if we can
+remove it without suffering from the additional indirection.  The same
+would apply to the mq_ops pointer as well.
 
-On Fri, Jul 08, 2016 at 12:49:55PM +0100, Phil Edworthy wrote:
-> Hi Bjorn,
-> 
-> I've marked this as RFC as I guess there might be a better way to do
-> this, but I'm not sure how. I would appreciate your thoughts on this.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-mq.c         | 22 ++++++++++++++--------
+ include/linux/blk-mq.h |  1 +
+ 2 files changed, 15 insertions(+), 8 deletions(-)
 
-There is a more generic solution to this issue, that has been
-hanging in the balance for a while:
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 6e88e2c..c4adaa2 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1972,7 +1972,6 @@ void blk_mq_release(struct request_queue *q)
+ 		kfree(hctx);
+ 	}
+ 
+-	kfree(q->mq_map);
+ 	q->mq_map = NULL;
+ 
+ 	kfree(q->queue_hw_ctx);
+@@ -2071,9 +2070,7 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 	if (!q->queue_hw_ctx)
+ 		goto err_percpu;
+ 
+-	q->mq_map = blk_mq_make_queue_map(set);
+-	if (!q->mq_map)
+-		goto err_map;
++	q->mq_map = set->mq_map;
+ 
+ 	blk_mq_realloc_hw_ctxs(set, q);
+ 	if (!q->nr_hw_queues)
+@@ -2123,8 +2120,6 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 	return q;
+ 
+ err_hctxs:
+-	kfree(q->mq_map);
+-err_map:
+ 	kfree(q->queue_hw_ctx);
+ err_percpu:
+ 	free_percpu(q->queue_ctx);
+@@ -2346,14 +2341,22 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
+ 	if (!set->tags)
+ 		return -ENOMEM;
+ 
++	set->mq_map = blk_mq_make_queue_map(set);
++	if (!set->mq_map)
++		goto out_free_tags;
++
+ 	if (blk_mq_alloc_rq_maps(set))
+-		goto enomem;
++		goto out_free_mq_map;
+ 
+ 	mutex_init(&set->tag_list_lock);
+ 	INIT_LIST_HEAD(&set->tag_list);
+ 
+ 	return 0;
+-enomem:
++
++out_free_mq_map:
++	kfree(set->mq_map);
++	set->mq_map = NULL;
++out_free_tags:
+ 	kfree(set->tags);
+ 	set->tags = NULL;
+ 	return -ENOMEM;
+@@ -2369,6 +2372,9 @@ void blk_mq_free_tag_set(struct blk_mq_tag_set *set)
+ 			blk_mq_free_rq_map(set, set->tags[i], i);
+ 	}
+ 
++	kfree(set->mq_map);
++	set->mq_map = NULL;
++
+ 	kfree(set->tags);
+ 	set->tags = NULL;
+ }
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index e43bbff..a572227 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -65,6 +65,7 @@ struct blk_mq_hw_ctx {
+ };
+ 
+ struct blk_mq_tag_set {
++	unsigned int		*mq_map;
+ 	struct blk_mq_ops	*ops;
+ 	unsigned int		nr_hw_queues;
+ 	unsigned int		queue_depth;	/* max hw supported */
+-- 
+2.1.4
 
-http://marc.info/?l=linux-pci&m=144557674601373&w=2
-
-We should bring it to completion since pci_fixup_irqs() should
-really be replaced, this is just another example of the bugs
-it can trigger.
-
-Thanks,
-Lorenzo
-
-> Thanks
-> Phil
-> 
-> ---
-> pdev_fixup_irq() performs interrupt swizzling on all PCI devices,
-> no matter that the device may be on a completely unrelated PCI
-> Host controller.
-> 
-> When you have multiple PCI Host controllers, pdev_fixup_irq() can
-> clobber the dev->irq of devices it should not be changing.
-> This has been seen when performing suspend/resume on boards with
-> two R-Car PCIe Host controllers, resulting in a NULL ptr access
-> in __pci_restore_msi_state. This happens because dev->irq has been
-> overwritten with 0, and irq_get_msi_desc(dev->irq) returns NULL.
-> 
-> This patch introduces a new function, pci_fixup_irqs_local(), that
-> performs the same operation as pdev_fixup_irq(), but only changes
-> the dev->irq of device on the same domain.
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->  drivers/pci/setup-irq.c | 25 ++++++++++++++++++++++---
->  include/linux/pci.h     |  3 +++
->  2 files changed, 25 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 95c225b..90ea8fa 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -22,7 +22,8 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->  }
->  
-> -static void pdev_fixup_irq(struct pci_dev *dev,
-> +static void pdev_fixup_irq(int domain_nr,
-> +			   struct pci_dev *dev,
->  			   u8 (*swizzle)(struct pci_dev *, u8 *),
->  			   int (*map_irq)(const struct pci_dev *, u8, u8))
->  {
-> @@ -48,8 +49,15 @@ static void pdev_fixup_irq(struct pci_dev *dev,
->  		if (irq == -1)
->  			irq = 0;
->  	}
-> -	dev->irq = irq;
-> +	/* Since pci_fixup_irqs() can be called more than once due to multiple
-> +	 * host controllers, and we scan all PCI devices, not just those
-> +	 * attached to this controller, make sure we don't clobber dev->irq
-> +	 * that has nothing to do with this domain.
-> +	 */
-> +	if (domain_nr >= 0 && dev->bus->domain_nr != domain_nr)
-> +		return;
->  
-> +	dev->irq = irq;
->  	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
->  
->  	/* Always tell the device, so the driver knows what is
-> @@ -63,6 +71,17 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->  	struct pci_dev *dev = NULL;
->  
->  	for_each_pci_dev(dev)
-> -		pdev_fixup_irq(dev, swizzle, map_irq);
-> +		pdev_fixup_irq(-1, dev, swizzle, map_irq);
->  }
->  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-> +
-> +void pci_fixup_irqs_local(struct pci_bus *bus,
-> +		    u8 (*swizzle)(struct pci_dev *, u8 *),
-> +		    int (*map_irq)(const struct pci_dev *, u8, u8))
-> +{
-> +	struct pci_dev *dev = NULL;
-> +
-> +	for_each_pci_dev(dev)
-> +		pdev_fixup_irq(bus->domain_nr, dev, swizzle, map_irq);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_fixup_irqs_local);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8badb66..37a97df 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1134,6 +1134,9 @@ void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
->  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
->  		    int (*)(const struct pci_dev *, u8, u8));
-> +void pci_fixup_irqs_local(struct pci_bus *,
-> +		    u8 (*)(struct pci_dev *, u8 *),
-> +		    int (*)(const struct pci_dev *, u8, u8));
->  #define HAVE_PCI_REQ_REGIONS	2
->  int __must_check pci_request_regions(struct pci_dev *, const char *);
->  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
-> -- 
-> 2.5.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
