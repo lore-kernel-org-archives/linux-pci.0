@@ -1,77 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp04.smtpout.orange.fr ([80.12.242.126]:22846 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbcGNKMV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 06:12:21 -0400
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: bhelgaas@google.com, michal.simek@xilinx.com,
-	soren.brinkmann@xilinx.com, bharat.kumar.gogada@xilinx.com,
-	rgummal@xilinx.com, arnd@arndb.de, jiang.liu@linux.intel.com,
-	grygorii.strashko@ti.com, russell.joyce@york.ac.uk,
-	lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] PCI: xilinx: Fix return value in case of error
-Date: Thu, 14 Jul 2016 12:10:46 +0200
-Message-Id: <1468491046-1427-1-git-send-email-christophe.jaillet@wanadoo.fr>
+Return-Path: <ard.biesheuvel@linaro.org>
+Return-Path: <ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
+In-Reply-To: <20160722113809.GM25086@rric.localdomain>
+References: <1467100442-28078-1-git-send-email-tn@semihalf.com>
+ <1467100442-28078-4-git-send-email-tn@semihalf.com> <577275EA.7010002@codeaurora.org>
+ <CADaLNDkhPZuG7UJ4SK_j5v_nXbd782Q17LAcXduG0uEObaFF=g@mail.gmail.com>
+ <5773A773.8040700@semihalf.com> <5773CE49.1050802@codeaurora.org>
+ <CAKv+Gu9=0=qw70o1aYNg=tDyv4TguiG2WwXNK8RbWM1-ZcabUg@mail.gmail.com> <20160722113809.GM25086@rric.localdomain>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Fri, 22 Jul 2016 14:00:42 +0200
+Message-ID: <CAKv+Gu9jfHGF3Z=_yA2rR9v3MGWptom4x1Mm=eGxmB0xoBpqoA@mail.gmail.com>
+Subject: Re: [RFC PATCH v4 3/5] PCI: Check platform specific ECAM quirks
+To: Robert Richter <rric@kernel.org>
+Cc: Christopher Covington <cov@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, Jayachandran C <jchandra@broadcom.com>,
+	Robert Richter <robert.richter@caviumnetworks.com>, Marcin Wojtas <mw@semihalf.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, David Daney <ddaney@caviumnetworks.com>,
+	Yijing Wang <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>,
+	Andrea Gallo <andrea.gallo@linaro.org>, Jeremy Linton <jeremy.linton@arm.com>,
+	Dongdong Liu <liudongdong3@huawei.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jeffrey Hugo <jhugo@codeaurora.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In function 'xilinx_pcie_init_irq_domain', the pattern used to check and
-return error is:
+On 22 July 2016 at 13:38, Robert Richter <rric@kernel.org> wrote:
+> On 29.06.16 15:56:50, Ard Biesheuvel wrote:
+>> On 29 June 2016 at 15:34, Christopher Covington <cov@codeaurora.org> wrote:
+>> > Hi Tomasz,
+>> >
+>> > On 06/29/2016 06:48 AM, Tomasz Nowicki wrote:
+>> >> On 28.06.2016 18:12, Duc Dang wrote:
+>> >>> On Tue, Jun 28, 2016 at 6:04 AM, Christopher Covington
+>> >>> <cov@codeaurora.org> wrote:
+>> >>>> Hi Tomasz,
+>> >
+>> >>>> Ard's comments on v3 included:
+>> >>>>
+>> >>>> "... exact OEM table/rev id matches ..."
+>> >>>> "... substring match ... out of the question ..."
+>> >
+>> > Digging through the archives I see Jon Master commented earlier to "be
+>> > careful with substring match".
+>> >
+>> >>> I think having OEM Table ID as "PLAT " and then "PLAT2 " (the the
+>> >>> next version of the SoC) is common. So yes, matching full string is
+>> >>> better as we can use "PLAT2 " in MCFG table and not worry about the
+>> >>> "PLAT" sub-string match causes the quirk to be applied
+>> >>> unintentionally.
+>> >
+>> >> Note that platforms already shipped where OEM string has no padding will
+>> >
+>> > I'm confused by this statement. OEMID is defined as 6 bytes long and OEM
+>> > Table ID as 8 bytes long in the ACPI specification. As far as I can
+>> > tell, if your string isn't exactly that long, padding up to that length
+>> > is required.
+>> >
+>> >> have change the firmware or add 0 padding to our quirk array IDs.
+>> >
+>> > The fixed 6 or 8 character string compare, as used v2 of this patchset,
+>> > will be compatible with existing firmware as best I can tell. Adding
+>> > padding to the quirk array IDs is exactly what I'm suggesting, although
+>> > all the strings I've seen are space padded rather than null padded.
+>> >
+>>
+>> I don't think any interpretation of the 6 or 8 byte wide OEM fields is
+>> necessary to be able to match it against a list of known values as
+>> used by the quirky platforms. We need an exact match against whatever
+>> we know is in the table of an affected system, and whether a space
+>> qualifies as padding or as a character is irrelevant.
+>>
+>> > Matches:
+>> > {"APM   ", "XGENE   ", 1}
+>> > {"CAVIUM", "THUNDERX", 1}
+>> > {"HISI  ", "HISI-D02", 1}
+>> > {"HISI  ", "HISI-D03", 1}
+>> > {"QCOM  ", "QDF2432 ", 1}
+>> >
+>>
+>> I would not mind listing these as
+>>
+>> { { 'A','P','M',' ',' ',' ',' '}, {'X','G','E','N','E',' ',' ',' '}, 1}
+>> ...
+>>
+>> just to stress that we are not dealing with C strings (and to avoid
+>> having to deal with the implicit NUL terminator).
+>> That also means memcmp() with a fixed length is the most appropriate
+>> to perform the comparison
+>
+> I still would go with memcmp but have the char arrays null terminated
+> in addition. This first makes string handling easier, and fixes some
+> unterminated %s printfs bugs in the code.
+>
+> Thus, I would prefer to go with:
+>
+> struct pci_cfg_fixup {
+>         char oem_id[ACPI_OEM_ID_SIZE + 1];
+>         char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+>         ...
+>
+> static struct pci_cfg_quirks mcfg_qurks[] __initconst = {
+> /*      { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook }, */
+> #ifdef CONFIG_PCI_HOST_THUNDER_PEM
+>         /* Pass2.0 */
+>         { "CAVIUM", "THUNDERX", 1, ...
+>
+> This is also no "pain in the eyes". :)
+>
+> If there are zero bytes in then just use \0, e.g.:
+>
+>  { "foo\0\0\0", "foobar\0\0", ... }
+>
+> For comparisation still use memcmp accordingly:
+>
+>  memcmp(..., ACPI_OEM_ID_SIZE);
+>  memcmp(..., ACPI_OEM_TABLE_ID_SIZE);
+>
+> The following would be fixed too as strings are now null terminated:
+>
+>         pr_info("Handling %s %s r%d PCI MCFG quirks\n",
+>                 f->oem_id, f->oem_table_id, f->oem_revision);
+>
 
-   if (!var) {
-      dev_err(...);
-      return PTR_ERR(var);
-   }
+This looks like a clear improvement to me.
 
-So the returned value in case of error is always 0, which means 'success'.
-Change it to return -ENODEV instead.
+> Btw, use dev_info(&root->device->dev, ...) here for pr_info() and
+> modify message text, e.g.:
+>
+>  acpi PNP0A08:04: Applying PCI MCFG quirks for CAVIUM THUNDERX rev: 1
+>
+> And, we should support some sort of MCFG_OEM_REVISION_ANY to move the
+> rev handling optional to pci_cfg_fixup::init().
+>
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/pci/host/pcie-xilinx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+xxx_ANY implies 'wildcard', which we don't want in this code. The set
+of quirky hardware we intend to support is known, and wildcard
+matching makes it easier to circumvent our policy that from here on,
+i.e., that all ACPI/arm64 supported hardware shall adhere to the spec.
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 4703aa3..a30e016 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -550,7 +550,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 	pcie_intc_node = of_get_next_child(node, NULL);
- 	if (!pcie_intc_node) {
- 		dev_err(dev, "No PCIe Intc node found\n");
--		return PTR_ERR(pcie_intc_node);
-+		return -ENODEV;
- 	}
- 
- 	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
-@@ -558,7 +558,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 						 port);
- 	if (!port->irq_domain) {
- 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return PTR_ERR(port->irq_domain);
-+		return -ENODEV;
- 	}
- 
- 	/* Setup MSI */
-@@ -569,7 +569,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 							 &xilinx_pcie_msi_chip);
- 		if (!port->irq_domain) {
- 			dev_err(dev, "Failed to get a MSI IRQ domain\n");
--			return PTR_ERR(port->irq_domain);
-+			return -ENODEV;
- 		}
- 
- 		xilinx_pcie_enable_msi(port);
 -- 
-2.7.4
-
-
----
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
-
+Ard.
