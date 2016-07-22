@@ -1,157 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:38344 "EHLO mail5.wrs.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752722AbcGBXOf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 2 Jul 2016 19:14:35 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Daney <david.daney@cavium.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Jesper Nilsson <jesper.nilsson@axis.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Joao Pinto <jpinto@synopsys.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Niklas Cassel <niklas.cassel@axis.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Simon Horman <horms@verge.net.au>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	<linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>
-Subject: [PATCH 00/14] PCI: trivial demodularization of builtin code
-Date: Sat, 2 Jul 2016 19:13:20 -0400
-Message-ID: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+Return-Path: <adurbin@google.com>
+Return-Path: <adurbin@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2300001.Cg2EHxyMN1@vostro.rjw.lan>
+References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
+ <9194227.5BmSSJ8mhr@vostro.rjw.lan> <CAE2855uTn3EqSuUW0-QD8ES4mm4ifWg-t=JfQ5+4z0YAyUDc_g@mail.gmail.com>
+ <2300001.Cg2EHxyMN1@vostro.rjw.lan>
+From: Aaron Durbin <adurbin@google.com>
+Date: Fri, 22 Jul 2016 12:26:03 -0500
+Message-ID: <CAE2855sjXKkx+0RNYMhfqVQCs+cj8NWp6V2RZMoBjRBgcWi-ew@mail.gmail.com>
+Subject: Re: ACPI device using sub-resource of PCI device
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Firstly, this group of commits was chosen for the fact that they don't
-change anything even at a binary object file level ; they just replace
-module_platform_driver with builtin_platform_driver, and remove some
-MODULE_<blah> tags that are no-ops in code.  So the regression risk
-is zero here.
+On Thu, Jul 21, 2016 at 7:55 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, July 20, 2016 08:58:29 PM Aaron Durbin wrote:
+>> On Wed, Jul 20, 2016 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> > On Wednesday, July 20, 2016 06:02:08 PM Aaron Durbin wrote:
+>
+> [...]
+>
+>> >> > Isn't the problem a probe ordering issue, though?
+>> >>
+>> >> No. Not just ordering. There's no parent-child relationship taken into
+>> >> account when PCI devices are added to the resource tree. Deferring
+>> >> adding an ACPI device's resources would likely fail similarly because
+>> >> one doesn't take into account the proper parent. One lives in PCI land
+>> >> -- the other in ACPI land.
+>> >
+>> > What exactly do you mean by "PCI land" and "ACPI land"?
+>> >
+>> > All PCI resources are derived from the host bridge ones that come from
+>> > ACPI anyway.
+>>
+>> Except that the BARs are queried in the pci devices themselves and
+>> those resources are added w/o any communication to/from ACPI. That's
+>> all done in the pci subsystem internally. Only if
+>
+> Well, not quite.
+>
+> It gets to host bridge resources via pcibios_bus_to_resource() AFAICS and
+> those come from ACPI on ACPI-based systems.
 
-More specifically, we are doing the following to pci/host files that
-currently can only be built-in:
+>From what I can tell that's just updating resource values that have a
+translation across a bridge. For a 1:1 mapping nothing is different
+from the BAR encoded in the PCI device itself. Those windows are just
+encoded in the bridge device. The only thing adjusted on the resources
+is an offset. The BAR values are read from the device. That path is
+just adjusting resources -- it's not adding those individual resources
+into the resource tree for pci devices. See below.
 
- -- remove the include of module.h ; replace it with init.h as req'd
+>
+>> >
+>> >> Currently, the issue is manifesting that the ACPI device's resources
+>> >> are added into the resource tree. PCI devices the follow trying to add
+>> >> their own resources. Conflicts ensue without taking into account the
+>> >> proper hierarchy. To make matters worse, struct resource doesn't have
+>> >> a struct device -- only a name. That means there's no way of knowing
+>> >> who owns what resource. All that information is unavailable. That's
+>> >> why the semi-hacky proposal was to see if there is an ACPI companion
+>> >> device and see if it has children. If it's children's names match the
+>> >> conflicting resource it's a good bet that the PCI device's resources
+>> >> should be placed as the parent in the resource tree.
+>> >
+>> > That really looks like a broken hierarchy of devices somewhere.
+>>
+>> Why do you think it's a broken hierarchy? This CL has the heirarchy:
+>> https://chromium-review.googlesource.com/#/c/359432/
+>>
+>> There is a device, P2S, which would result in an ACPI companion device
+>> when the pci_dev is added to the device infrastructure by way of
+>> acpi_platform_notify() which does the ACPI companion binding.
+>> device_add() is the caller of platform_notify() which is set to
+>> acpi_platform_notify() in init_acpi_device_notify() by way of
+>> acpi_init().
+>>
+>> There are 4 children of the P2S device: GPO0, GPO1, GPO2, GPO3.
+>>
+>> Those children devices utilize a sub-resource of the P2S device which
+>> has a pci_dev companion. It's BAR0 is the resource.
+>
+> OK
+>
+>> >
+>> > And one more thing: a struct acpi_device object is not a device in general
+>> > (althogh some pieces of code in the kernel, arguably incorrectly, treat it
+>> > this way).  It is an abstract representation of a firmware entity (a node
+>> > in the ACPI namespace).
+>> >
+>> > There really should be a "physical device" thing corresponding to it and
+>> > that should be a child of the PCI device object in question.
+>>
+>> I thought I established that by the sysfs readlink I output I
+>> previously provided?
+>>
+>> # ls /sys/devices/platform/| grep INT3452
+>> INT3452:00
+>> INT3452:01
+>> INT3452:02
+>> INT3452:03
+>>
+>> # ls /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11 | grep INT3452
+>> INT3452:00
+>> INT3452:01
+>> INT3452:02
+>> INT3452:03
+>>
+>> # readlink -f /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11/INT3452:00/physical_node
+>> /sys/devices/platform/INT3452:00
+>
+> OK
+>
+> I must have missed that part.
+>
+>> >
+>> >> > Do we assign BARs for endpoints during enumeration or only when we find a
+>> >> > matching driver?
+>> >>
+>> >> BARs look to be assigned during enumeration. There's where conflicts
+>> >> are found and resources reassigned in the current failing case.
+>> >
+>> > OK
+>> >
+>> > You seem to be saying that we insert some resources for ACPI device objects
+>> > that correspond to the children of ACPI companions of PCI devices before we
+>> > assign the BARs for their parent devices.
+>>
+>> The pci_dev is the one owning the parent resource. Even if there is a
+>> companion ACPI device with a resource it doesn't matter because there
+>> will still be a conflict because there is no checking against the
+>> companion. There are 2 parallel entities without any communication
+>> between the PCI subsystem and the ACPI subsystem when resources are
+>> being added.
+>>
+>> >
+>> > To me, that sounds very suspicious.
+>> >
+>> > Where in the code are the ACPI resources inserted, exactly?
+>>
+>> I believe it's through this mechanism:
+>> acpi_bus_attach() -> acpi_default_enumeration() ->
+>> acpi_create_platform_device() -> platform_device_register_full()
+>
+> I still would like to understand how and why that is called for child devices
+> before the (physical) parent is enumerated.
+>
+> The theory is that when the PCI host bridge is found in the ACPI namespace,
+> it will be enumerated along with the entire PCI bus below it before enumerating
+> any _HID devices in the ACPI namespace below the host bridge object.
+>
+> Therefore all PCI devices should be enumerated before any children of any of
+> them that aren't PCI devices themselves.  If BARs are assigned during
+> enumeration, they all should be assigned before inserting any resources
+> for any non-PCI children of any PCI devices.
+>
+> If that doesn't happen, the practice doesn't match the theory and that very
+> well may be the source of the problem you're seeing.
+>
 
- -- drop instances of MODULE_DEVICE_TABLE which is a no-op built-in.
+I'll sprinkle some WARN_ON()s in the resource code to track down when
+things are being added to provide a definitive answer to when these
+resources are being inserted. The current issue is still stands:
+there is nothing properly tying the 2 sources of resource information
+together. And ACPI resources are added prior to PCI resources.
 
- -- replace module_platform_driver with builtin_platform_driver, which
-    is functionally identical once CPP has processed the source.
+PCI devices might be enumerated, but that doesn't mean their
+*resources* are added.  Back to the subsys_initcall topic:
 
- -- drop instances of MODULE_LICENSE, MODULE_AUTHOR, MODULE_DESCRIPTION
-    while ensuring the contained info is present in the file comments.
+pci_subsys_init() is called *after* acpi_init().
 
-After considering the inital version of demodularization PCI host
-commits[1], we did consider striving for tristate[2] on another
-subset of PCI host files in order to keep bzImage sizes lower on
-multi-platform builds, but that proved to have technical challenges
-well outside the scope of what we are trying to achieve here, given
-PCI is infrastructure code and not a case of simple endpoint
-drivers.
+pci_subsys_init() -> pcibios_init() -> pcibios_resource_survey() ->
+pcibios_allocate_resources() -> pcibios_allocate_dev_resources() ->
+pci_claim_resource()
 
-In the meantime more new code copies the existing examples of bool
-Kconfig using modular references; further expanding the problem
-space.  So we are just going to proceed with the demodularization
-as originally planned.  Nothing removed here is rocket science, and
-can easily be restored if someone has the hardware to test on and
-the desire to expand functionality into the tristate realm.
 
-A more complete description of why we are doing this can be found
-in the original posting[1] for those that haven't seen it yet.
-
-This represents just over 1/2 the PCI drivers that have their Kconfig
-as bool but needlessly use modular references.  The remainder do not
-deliver exact binary equivalence, since they delete unused __exit
-functions and/or unused ".remove" functions.  So they are more
-appropriate for submission earlier in the next development window.
-
-Build tested for allmodconfig on several arch, including ARM and
-ARM-64 on the most recent linux-next baseline.
-
-Paul.
-
-[1] https://lkml.kernel.org/r/1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com
-[2] https://lkml.kernel.org/r/1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com
-
----
-
-[vs v1 in [1] above, I tweaked the subjects slightly to match the
- format used by most PCI commits, i.e drop the "driver/" prefix. ]
-
-Cc: Alexandre Courbot <gnurou@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Daney <david.daney@cavium.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <jpinto@synopsys.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-tegra@vger.kernel.org
-
-Paul Gortmaker (14):
-  PCI: armada8k: make it explicitly non-modular
-  PCI: artpec6: make it explicitly non-modular
-  PCI: designware-plat: make it explicitly non-modular
-  PCI: generic: make it explicitly non-modular
-  PCI: hisi: make it explicitly non-modular
-  PCI: keystone: make it explicitly non-modular
-  PCI: layerscape: make it explicitly non-modular
-  PCI: mvebu: make it explicitly non-modular
-  PCI: rcar: make it explicitly non-modular
-  PCI: rcar-gen2: make it explicitly non-modular
-  PCI: tegra: make it explicitly non-modular
-  PCI: thunder-ecam: make it explicitly non-modular
-  PCI: thunder-pem: make it explicitly non-modular
-  PCI: xgene: make it explicitly non-modular
-
- drivers/pci/host/pci-host-generic.c     | 10 ++--------
- drivers/pci/host/pci-keystone.c         | 10 ++--------
- drivers/pci/host/pci-layerscape.c       | 10 ++--------
- drivers/pci/host/pci-mvebu.c            | 11 ++++-------
- drivers/pci/host/pci-rcar-gen2.c        | 12 +++---------
- drivers/pci/host/pci-tegra.c            | 11 ++++-------
- drivers/pci/host/pci-thunder-ecam.c     |  8 ++------
- drivers/pci/host/pci-thunder-pem.c      |  8 ++------
- drivers/pci/host/pci-xgene.c            |  8 ++------
- drivers/pci/host/pcie-armada8k.c        | 14 +++++---------
- drivers/pci/host/pcie-artpec6.c         | 10 ++--------
- drivers/pci/host/pcie-designware-plat.c | 10 ++--------
- drivers/pci/host/pcie-hisi.c            | 13 ++-----------
- drivers/pci/host/pcie-rcar.c            | 11 ++++-------
- 14 files changed, 38 insertions(+), 108 deletions(-)
-
--- 
-2.8.4
-
+> Thanks,
+> Rafael
+>
