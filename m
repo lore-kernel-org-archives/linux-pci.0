@@ -1,74 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v4 3/7] thunderbolt: Kconfig for Thunderbolt(TM) networking
-Date: Mon, 18 Jul 2016 13:00:36 +0300
-Message-Id: <1468836040-28043-4-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
-References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:36314 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968AbcGVWBo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jul 2016 18:01:44 -0400
+Received: by mail-wm0-f41.google.com with SMTP id q128so71538902wma.1
+        for <linux-pci@vger.kernel.org>; Fri, 22 Jul 2016 15:01:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXQNZPiWzL=hMsnQjkR7HSfbOxptFeLXWoEj30ucLSBMA@mail.gmail.com>
+References: <CAH=XD5-6QXxA42ukxJ40sOzGXqScS7u3QZAwCaCYT2r3pJxdCA@mail.gmail.com>
+ <CAE9FiQXQNZPiWzL=hMsnQjkR7HSfbOxptFeLXWoEj30ucLSBMA@mail.gmail.com>
+From: Kallol Biswas <kallol@nucleodyne.com>
+Date: Fri, 22 Jul 2016 15:01:41 -0700
+Message-ID: <CAH=XD59KK7H2jSoie4xPMXQkezJDacXVphYJkAi6_TqXi=g4zg@mail.gmail.com>
+Subject: Re: No bus number available for hot-added bridge
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updating the Kconfig Thunderbolt(TM) description.
+Thank you very much for response.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  2 +-
- 2 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..d34b0f5 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,30 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt(TM) support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt(TM) Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt(TM) Networking"
-+	help
-+	  This driver is required if you want Thunderbolt(TM) Networking on
-+	  non-Apple hardware.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..7a85bd1 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
--- 
-2.7.4
+I have worked around the failure by manually allocating bus number,
+and memory bar window for a specific downstream port.
+
+
+I will send you the logs when I get back to this issue again.
+Thank you very much for response.
+
+
+
+On Fri, Jul 22, 2016 at 2:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Jul 15, 2016 at 1:33 PM, Kallol Biswas <kallol@nucleodyne.com> wrote:
+>> Hi,
+>>    I have been trying to hot-add a PCIe bridge and getting the
+>> following message in dmesg:
+>>
+>> No bus number available for hot-added bridge 0000:06:00.
+>>
+>> The kernel is 4.4. Do we have any patch for this?  I tried Yinghai's
+>> for-pci-busn-alloc patch. Did not work. Not sure I picked up the right
+>> changes.
+>>
+>> Any input...
+>>
+>> [  794.085909] pci 0000:06:00.0: [10b5:9797] type 01 class 0x060400
+>> [  794.086232] pci 0000:06:00.0: Max Payload Size set to 256 (was 128, max 512)
+>> [  794.086563] pci 0000:06:00.0: PME# supported from D0 D3hot D3cold
+>> [  794.086884] iommu: Adding device 0000:06:00.0 to group 47
+>> [  794.093797] No bus number available for hot-added bridge 0000:06:00.0
+>
+>
+> Can you please send out the whole boot log with
+> CONFIG_PCI_DEBUG=y ?
+>
+> also output for lspci -tv and lspci -vvxxx.
+>
+> Thanks
+>
+> Yinghai
