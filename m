@@ -1,34 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:51390 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbcGOStD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2016 14:49:03 -0400
-Date: Fri, 15 Jul 2016 11:49:02 -0700 (PDT)
-Message-Id: <20160715.114902.1149848183971707484.davem@davemloft.net>
-To: amir.jer.levy@intel.com
-Cc: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-	tomas.winkler@intel.com
-Subject: Re: [PATCH v3 2/8] thunderbolt: Updating device IDs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
-References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
-	<1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <bharat.kumar.gogada@xilinx.com>
+Return-Path: <bharat.kumar.gogada@xilinx.com>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>, nofooter <nofooter@xilinx.com>, nofooter2
+	<nofooter2@xilinx.com>
+Subject: RE: Why does BIOS assign memory to 16 byte BAR
+Date: Fri, 22 Jul 2016 16:39:04 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258BB7FE@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258BB59B@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160722151546.GA20646@localhost> <20160722155133.GB20646@localhost>
+In-Reply-To: <20160722155133.GB20646@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Amir Levy <amir.jer.levy@intel.com>
-Date: Thu, 14 Jul 2016 14:28:16 +0300
+> Subject: Re: Why does BIOS assign memory to 16 byte BAR
+>=20
+> On Fri, Jul 22, 2016 at 10:15:46AM -0500, Bjorn Helgaas wrote:
+> > Hi Bharat,
+> >
+> > On Fri, Jul 22, 2016 at 09:24:22AM +0000, Bharat Kumar Gogada wrote:
+> > > Hi,
+> > >
+> > > I'm observing that on x86 BIOS successfully assigns memory if an End
+> > > point requests BAR of size 16byte.
+> > >
+> > > But as per Spec:
+> > > The minimum memory address range requested by a BAR is 128 bytes.
+> >
+> > Can you provide the spec reference for this?  I don't see it in PCI
+> > r3.0.
+> >
+> > PCI r3.0, sec 6.2.5.1, shows bits 4-31 of a memory BAR as writable,
+> > which would correspond to a minimum size of 16 bytes.
+>=20
+> The reference above is to the conventional PCI spec.  I happened to trip =
+over
+> a note in PCIe r3.0, sec 1.3.2.2, that for a PCI Express endpoint, "the m=
+inimum
+> memory address range requested by a BAR is 128 bytes."
+>=20
+> I don't think linux currently enforces this minimum.
+>=20
 
-> Adding the new Thunderbolt(TM) device IDs to the list.
-> 
-> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+Hi Bjorn Thanks for the reply.
 
-Unless these PCI-IDs, all of them, are going to be used in multiple
-spots in the kernel, it is not appropriate to add them here.
+Here is what the issue we are seeing.
 
-They belong as private macros in the drivers themselves, instead.
+We have total memory for BAR's on our SoC of 256 MB.
+When an End Point request individually 16 byte BAR's our root port assigns =
+memory to BAR's successfully.
+
+But if I have an End point which has 4 BAR's each 32 bit and request as fol=
+lowing:
+When 1st BAR requests 1GB BAR it fails due to lack of memory. (We are runni=
+ng this as part of SIG compliance test case)
+2nd BAR requests 1MB and other 2 BAR's request 16byte, but these are not ge=
+tting BAR's assigned. (Even though BAR space is available, since 1GB failed=
+,
+We have 256 MB still)
+
+We have only one End point connected to our root port.
+
+Here is the log:
+[    2.319289] nwl-pcie fd0e0000.pcie: Link is UP
+[    2.319332] PCI host bridge /amba/pcie@fd0e0000 ranges:
+[    2.319349]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-=
+ff]
+[    2.319374]    IO 0xe0000000..0xe000ffff -> 0x00000000
+[    2.319415]   MEM 0xe0100000..0xefffffff -> 0xe0100000
+[    2.319431]   MEM 0x600000000..0x7ffffffff -> 0x600000000
+[    2.319539] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
+[    2.319557] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    2.319573] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    2.319589] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeffffff=
+f]
+[    2.319606] pci_bus 0000:00: root bus resource [mem 0x600000000-0x7fffff=
+fff pref]
+[    2.319845] pci 0000:00:00.0: cannot attach to SMMU, is it on the same b=
+us?
+[    2.319861] iommu: Adding device 0000:00:00.0 to group 1
+[    2.320243] pci 0000:01:00.0: cannot attach to SMMU, is it on the same b=
+us?
+[    2.320258] iommu: Adding device 0000:01:00.0 to group 1
+[    2.320313] pci 0000:00:00.0: BAR 8: no space for [mem size 0x60000000]
+[    2.320331] pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x600000=
+00]
+[    2.320349] pci 0000:00:00.0: BAR 6: assigned [mem 0xe0100000-0xe01007ff=
+ pref]
+[    2.320374] pci 0000:01:00.0: BAR 0: no space for [mem size 0x40000000]
+[    2.320390] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x400000=
+00]
+[    2.320407] pci 0000:01:00.0: BAR 4: no space for [mem size 0x00100000 6=
+4bit]
+[    2.320423] pci 0000:01:00.0: BAR 4: failed to assign [mem size 0x001000=
+00 64bit]
+[    2.320446] pci 0000:01:00.0: BAR 2: no space for [mem size 0x00000010]
+[    2.320461] pci 0000:01:00.0: BAR 2: failed to assign [mem size 0x000000=
+10]
+[    2.320477] pci 0000:01:00.0: BAR 3: no space for [mem size 0x00000010]
+[    2.320493] pci 0000:01:00.0: BAR 3: failed to assign [mem size 0x000000=
+10]
+[    2.320509] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
+
+Please let me know, what might might be the issue.
+
+Thanks & Regards,
+Bharat
