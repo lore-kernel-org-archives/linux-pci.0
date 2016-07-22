@@ -1,38 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50500 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752313AbcGVVHJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jul 2016 17:07:09 -0400
-Date: Fri, 22 Jul 2016 16:07:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Ley Foon Tan <lftan.linux@gmail.com>
-Subject: Re: [PATCH 0/2] PCI: altera: fix link retrain
-Message-ID: <20160722210705.GA32142@localhost>
-References: <1466499193-1987-1-git-send-email-lftan@altera.com>
+Received: from mout.kundenserver.de ([217.72.192.74]:63727 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754156AbcGVNaF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jul 2016 09:30:05 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Tony Lindgren <tony@atomide.com>, bcousson@baylibre.com,
+	robh+dt@kernel.org, mark.rutland@arm.com, linux@armlinux.org.uk,
+	linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, nsekhar@ti.com
+Subject: Re: [PATCH 2/2] ARM: DRA7: select PCI_DOMAINS config
+Date: Fri, 22 Jul 2016 15:29:26 +0200
+Message-ID: <5655227.Z3Bo3vTPGH@wuerfel>
+In-Reply-To: <5791D8C7.5020303@ti.com>
+References: <1469102276-14777-1-git-send-email-kishon@ti.com> <20160722071644.GZ28140@atomide.com> <5791D8C7.5020303@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466499193-1987-1-git-send-email-lftan@altera.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 21, 2016 at 04:53:11PM +0800, Ley Foon Tan wrote:
-> This 2 patches fix the issue before and after retrain link.
+On Friday, July 22, 2016 1:56:47 PM CEST Kishon Vijay Abraham I wrote:
 > 
-> Ley Foon Tan (2):
->   PCI: altera: check link status before retrain link
->   PCI: altera: Polling for link up status after retrain the link
+> since it doesn't harm even if a platform has a single PCIe port, it should be
+> okay to set PCI_DOMAINS. I'll resend the following as a separate patch if it's
+> okay.
 > 
->  drivers/pci/host/pcie-altera.c | 48 +++++++++++++++++++++++++++---------------
->  1 file changed, 31 insertions(+), 17 deletions(-)
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 90542db..0cccb50 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -338,6 +338,7 @@ config ARCH_MULTIPLATFORM
+>         select MULTI_IRQ_HANDLER
+>         select SPARSE_IRQ
+>         select USE_OF
+> +       select PCI_DOMAINS if PCI
+> 
 
-I applied these to pci/host-altera for v4.8, thanks!
+Sounds good, but please remove all other 'select PCI_DOMAINS if PCI'
+statements in arch/arm then in the same patch.
 
-I split the code move into its own patch so the bug fix is clearly
-visible.  I also fixed these whitespace errors:
+I have checked that all of them are for ARCH_MULTIPLATFORM based machines.
 
-  if(!altera_pcie_link_is_up(pcie))
-  while(!altera_pcie_link_is_up(pcie)) {
-
-A space is required after "if" and "while".
+	Arnd
