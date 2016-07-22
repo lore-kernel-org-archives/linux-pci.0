@@ -1,104 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:32405 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750904AbcGKWQo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jul 2016 18:16:44 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6BM9N1U139433
-	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 18:16:43 -0400
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 243enrb493-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 11 Jul 2016 18:16:43 -0400
-Received: from localhost
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-	Mon, 11 Jul 2016 16:16:42 -0600
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
-	nfont@linux.vnet.ibm.com, mdroth@linux.vnet.ibm.com,
-	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [Patch v2] rpaphp: fix slot registration for multiple slots under a PHB
-Date: Mon, 11 Jul 2016 17:16:27 -0500
-Message-Id: <1468275387-22392-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Received: from muru.com ([72.249.23.125]:44546 "EHLO muru.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751790AbcGVHQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Jul 2016 03:16:48 -0400
+Date: Fri, 22 Jul 2016 00:16:44 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, bcousson@baylibre.com,
+	robh+dt@kernel.org, mark.rutland@arm.com, linux@armlinux.org.uk,
+	linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, nsekhar@ti.com
+Subject: Re: [PATCH 2/2] ARM: DRA7: select PCI_DOMAINS config
+Message-ID: <20160722071644.GZ28140@atomide.com>
+References: <1469102276-14777-1-git-send-email-kishon@ti.com>
+ <1469102276-14777-3-git-send-email-kishon@ti.com>
+ <8047226.VhgpLo8JQu@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8047226.VhgpLo8JQu@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PowerVM seems to only ever provide a single hotplug slot per PHB.
-The under lying slot hotplug registration code assumed multiple slots,
-but the actual implementation is broken for multiple slots. This went
-unnoticed for years due to the nature of PowerVM as mentioned
-previously. Under qemu/kvm the hotplug slot model aligns more with
-x86 where multiple slots are presented under a single PHB. As seen
-in the following each additional slot after the first fails to
-register due to each slot always being compared against the first
-child node of the PHB in the device tree.
+* Arnd Bergmann <arnd@arndb.de> [160721 05:08]:
+> On Thursday, July 21, 2016 5:27:56 PM CEST Kishon Vijay Abraham I wrote:
+> > diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
+> > index 1a648e9..8e6e2c0 100644
+> > --- a/arch/arm/mach-omap2/Kconfig
+> > +++ b/arch/arm/mach-omap2/Kconfig
+> > @@ -86,6 +86,7 @@ config SOC_DRA7XX
+> >         select OMAP_INTERCONNECT_BARRIER
+> >         select PM_OPP if PM
+> >         select ZONE_DMA if ARM_LPAE
+> > +       select PCI_DOMAINS if PCI
+> >  
+> >  config ARCH_OMAP2PLUS
+> >         bool
+> > 
+> 
+> Should we just set this unconditionally for ARCH_MULTIPLATFORM maybe?
 
-[    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-[    6.492569] rpaphp: Slot [Slot 0] registered
-[    6.492577] rpaphp: pci_hp_register failed with error -16
-[    6.493082] rpaphp: pci_hp_register failed with error -16
-[    6.493138] rpaphp: pci_hp_register failed with error -16
-[    6.493161] rpaphp: pci_hp_register failed with error -16
+Makes sense to me if many SoCs need this.
 
-The registration logic is fixed so that each slot is compared
-against the existing child devices of the PHB in the device tree to
-determine present slots vs empty slots.
+Regards,
 
-[   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-[   38.482004] rpaphp: Slot [C0] registered
-[   38.482127] rpaphp: Slot [C1] registered
-[   38.482241] rpaphp: Slot [C2] registered
-[   38.482356] rpaphp: Slot [C3] registered
-[   38.482495] rpaphp: Slot [C4] registered
-
-Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
----
-
-Changes in v2: corrected ibm,my-drc-index property name
-
----
- drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
-index 6937c72..388c4d8 100644
---- a/drivers/pci/hotplug/rpaphp_slot.c
-+++ b/drivers/pci/hotplug/rpaphp_slot.c
-@@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
- int rpaphp_register_slot(struct slot *slot)
- {
- 	struct hotplug_slot *php_slot = slot->hotplug_slot;
-+	struct device_node *child;
-+	u32 my_index;
- 	int retval;
--	int slotno;
-+	int slotno = -1;
- 
- 	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
- 		__func__, slot->dn->full_name, slot->index, slot->name,
-@@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
- 		return -EAGAIN;
- 	}
- 
--	if (slot->dn->child)
--		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
--	else
--		slotno = -1;
-+	for_each_child_of_node(slot->dn, child) {
-+		retval = of_property_read_u32(child, "ibm,my-drc-index", &my_index);
-+		if (my_index == slot->index) {
-+			slotno = PCI_SLOT(PCI_DN(child)->devfn);
-+			of_node_put(child);
-+			break;
-+		}
-+	}
-+
- 	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
- 	if (retval) {
- 		err("pci_hp_register failed with error %d\n", retval);
--- 
-2.7.4
-
+Tony
