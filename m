@@ -1,67 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:17763 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752043AbcGAHER (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 03:04:17 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6173bfl125729
-	for <linux-pci@vger.kernel.org>; Fri, 1 Jul 2016 03:04:16 -0400
-Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23wbbbdftw-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 01 Jul 2016 03:04:16 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Fri, 1 Jul 2016 17:04:13 +1000
-Subject: Re: [PATCH v3 5/7] PCI: Do not use IORESOURCE_STARTALIGN to identify
- bridge resources
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1467283993-3185-6-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160701023423.GB6739@gwshan>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Fri, 1 Jul 2016 15:04:10 +0800
+Return-Path: <munisekharrms@gmail.com>
+Return-Path: <munisekharrms@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160701023423.GB6739@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <c97584a0-b5b1-8660-1e16-04c43570eca6@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160722161406.GC20646@localhost>
+References: <CAHhAz+j4TK7s9FFqPow40Ve=ZHc+tv8-R8yvfgt5Qxe23PrgAQ@mail.gmail.com>
+	<20160722161406.GC20646@localhost>
+Date: Sat, 23 Jul 2016 21:12:16 +0530
+Message-ID: <CAHhAz+iMcBrAVd-ZP8fJQx8negVE50OHS2ey+zPn=BPwOLMujw@mail.gmail.com>
+Subject: Re: Test throughput on PCIe interface
+From: Muni Sekhar <munisekharrms@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>, linux-kernel@vger.kernel.org,
+	Stephane Eranian <eranian@google.com>, Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>
+Content-Type: multipart/alternative; boundary=94eb2c05541847e8b705384f6554
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
+--94eb2c05541847e8b705384f6554
+Content-Type: text/plain; charset=UTF-8
 
-On 2016/7/1 10:34, Gavin Shan wrote:
-
-> On Thu, Jun 30, 2016 at 06:53:11PM +0800, Yongji Xie wrote:
->> Now we use the IORESOURCE_STARTALIGN to identify bridge resources
->> in __assign_resources_sorted(). That's quite fragile. We may also
->> set flag IORESOURCE_STARTALIGN for SR-IOV resources in some cases,
->> for example, using the option "noresize" of parameter
->> "pci=resource_alignment".
->>
->> In this patch, we try to use a more robust way to identify
->> bridge resources.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On 22 Jul 2016 21:44, "Bjorn Helgaas" <helgaas@kernel.org> wrote:
 >
-> Yongji, I think this doesn't have to be part of this series, meaning
-> it can be sent or merged separately.
+> [+cc perf folks]
 >
+> On Fri, Jul 22, 2016 at 05:59:51PM +0530, Muni Sekhar wrote:
+> > Hi All,
+> >
+> >
+> > We have xilinx PCIe endpoint with DMA reference block.
+> >
+> >
+> > The DMA-REF block provides a mechanism to DMA(also supports
+> > Scatter-Gather DMA) transfer data at the maximum rate between host
+> > (CPU) memory and a FIFO in the DMA-REF block.
+> >
+> >
+> > DMA-REF block provides the loopback. The intention is to use this
+> > block in production and self-test, to check that the PCIe bus is
+> > operating at the expected maximum transfer speed.
+> >
+> >
+> > Does kernel has any standard utilities to test throughput on PCIe
+interface?
+>
+> I know some PCIe controllers devices do have performance monitors, and
+> perf might support some of them, but I don't know any details.
+>
+Hi Bjorn,
+Thanks for the reply. I will check the perf code.
 
-Seems like I give a wrong example in my changelog.  The
-parameter "pci=resource_alignment" would not set flag
-IORESOURCE_STARTALIGN for SR-IOV resources as I replied
-to you in previous patch. So this patch has nothing to do
-with this series now, I will remove it as you suggested.
+Also I am looking for the sample kernel driver code which does DMA and
+Scatter-Gather DMA transfers on PCIe endpoint. Reference to any example
+kernel code is greatly appreciated.
 
-Thanks,
-Yongji
+> Bjorn
 
+--94eb2c05541847e8b705384f6554
+Content-Type: text/html; charset=UTF-8
+
+<p dir="ltr"><br>
+On 22 Jul 2016 21:44, &quot;Bjorn Helgaas&quot; &lt;<a href="mailto:helgaas@kernel.org">helgaas@kernel.org</a>&gt; wrote:<br>
+&gt;<br>
+&gt; [+cc perf folks]<br>
+&gt;<br>
+&gt; On Fri, Jul 22, 2016 at 05:59:51PM +0530, Muni Sekhar wrote:<br>
+&gt; &gt; Hi All,<br>
+&gt; &gt;<br>
+&gt; &gt;<br>
+&gt; &gt; We have xilinx PCIe endpoint with DMA reference block.<br>
+&gt; &gt;<br>
+&gt; &gt;<br>
+&gt; &gt; The DMA-REF block provides a mechanism to DMA(also supports<br>
+&gt; &gt; Scatter-Gather DMA) transfer data at the maximum rate between host<br>
+&gt; &gt; (CPU) memory and a FIFO in the DMA-REF block.<br>
+&gt; &gt;<br>
+&gt; &gt;<br>
+&gt; &gt; DMA-REF block provides the loopback. The intention is to use this<br>
+&gt; &gt; block in production and self-test, to check that the PCIe bus is<br>
+&gt; &gt; operating at the expected maximum transfer speed.<br>
+&gt; &gt;<br>
+&gt; &gt;<br>
+&gt; &gt; Does kernel has any standard utilities to test throughput on PCIe interface?<br>
+&gt;<br>
+&gt; I know some PCIe controllers devices do have performance monitors, and<br>
+&gt; perf might support some of them, but I don&#39;t know any details.<br>
+&gt;<br>
+Hi Bjorn,<br>
+Thanks for the reply. I will check the perf code.</p>
+<p dir="ltr">Also I am looking for the sample kernel driver code which does DMA and Scatter-Gather DMA transfers on PCIe endpoint. Reference to any example kernel code is greatly appreciated.</p>
+<p dir="ltr">&gt; Bjorn<br>
+</p>
+
+--94eb2c05541847e8b705384f6554--
