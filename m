@@ -1,38 +1,153 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: David Miller <davem@davemloft.net>
-CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	thunderbolt-linux <thunderbolt-linux@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v3 2/8] thunderbolt: Updating device IDs
-Date: Fri, 15 Jul 2016 18:56:39 +0000
-Message-ID: <E607265CB020454880711A6F96C05A03893CE285@hasmsx107.ger.corp.intel.com>
-References: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
-	<1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
- <20160715.114902.1149848183971707484.davem@davemloft.net>
-In-Reply-To: <20160715.114902.1149848183971707484.davem@davemloft.net>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:33589 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039AbcGXWsU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Jul 2016 18:48:20 -0400
+Date: Mon, 25 Jul 2016 00:48:32 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	linux-samsung-soc@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Inki Dae <inki.dae@samsung.com>, Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Mark Brown <broonie@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
+ support
+Message-ID: <20160724224832.GB9516@wunner.de>
+References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
+ <1735644.0mfUjJQtul@vostro.rjw.lan>
+ <20160720232553.GA8460@wunner.de>
+ <4258432.JNKr9zJtMp@vostro.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4258432.JNKr9zJtMp@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 15 2016, 09:49 PM, David Miller wrote:
-> From: Amir Levy <amir.jer.levy@intel.com>
-> Date: Thu, 14 Jul 2016 14:28:16 +0300
+On Thu, Jul 21, 2016 at 02:25:15AM +0200, Rafael J. Wysocki wrote:
+> On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
+> > On Thu, Jul 21, 2016 at 12:51:31AM +0200, Rafael J. Wysocki wrote:
+> > > On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
+> > > > On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
+> > > > > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
+> > > > > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
+> > > > > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
+> > > > > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
+> > > > > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > > > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
+> > > > > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> > > > > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
+> > > > > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
+> > > > > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
+> > > > > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
+> > > > > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
+> > > > > > > > > > this dependency using something like Rafael's approach instead of
+> > > > > > > > > > open coding it, however one detail in Rafael's patches is problematic:
+> > > > > > > > > >
+> > > > > > > > > > > New links are added by calling device_link_add() which may happen
+> > > > > > > > > > > either before the consumer device is probed or when probing it, in
+> > > > > > > > > > > which case the caller needs to ensure that the driver of the
+> > > > > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
+> > > > > > > > > > > flag should be passed to device_link_add() to reflect that.
+> > > > > > > > > >
+> > > > > > > > > > The thunderbolt driver cannot call device_link_add() before the
+> > > > > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
+> > > > > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
+> > > > > > > > > > if the thunderbolt driver isn't loaded.
+> > > > > > > > > >
+> > > > > > > > > > It would therefore be beneficial if device_link_add() can be
+> > > > > > > > > > called even *after* the consumer is bound.
+> > > > > > > > > 
+> > > > > > > > > I don't quite follow.
+> > > > > > > > > 
+> > > > > > > > > Who's the provider and who's the consumer here?
+> > > > > > > > 
+> > > > > > > > thunderbolt.ko is the supplier.
+> > > > > > > 
+> > > > > > > But it binds to the children of the ports that are supposed to be its
+> > > > > > > consumers?
+> > > > > > > 
+> > > > > > > Why is that even expected to work?
+> > > > > > 
+> > > > > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
+> > > > > > 
+> > > > > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
+> > > > > > the drawing below). The supplier is the NHI:
+> > > > > > 
+> > > > > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+> > > > > >                                          +-- Downstream Bridge 1 --
+> > > > > >                                          +-- Downstream Bridge 2 --
+> > > > > >                                          ...
+> > > > > > 
+> > > > > > We're calling pci_power_up() and pci_restore_state() from
+> > > > > > pci_pm_resume_noirq(). And that will fail for devices below
+> > > > > > the hotplug ports if the PCI tunnels haven't been re-established
+> > > > > > yet by the NHI.
+> > > > > 
+> > > > > So the NHI is a PCIe device, right?
+> > > > > 
+> > > > > Does the Thunderbolt driver bind to that device?
+> > > > 
+> > > > The NHI is a PCI device but not a bridge. It has class 0x88000.
+> > > > Yes, thunderbolt.ko binds to the NHI.
+> > > > 
+> > > > And portdrv binds to the upstream bridge and downstream bridges.
+> > > > Those have class 0x60400.
+> > > 
+> > > OK, so why would there be a problem with creating links from the NHI
+> > > (producer) to the ports (consumers) before binding portdrv to them?
+> > 
+> > Because the ordering in which drivers bind isn't guaranteed. At least
+> > on my machine (Debian), portdrv always binds before thunderbolt.
 > 
-> > Adding the new Thunderbolt(TM) device IDs to the list.
-> >
-> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> But what drivers have to do with that really?  Do you need drivers to
+> know that the dependency is there?
 > 
-> Unless these PCI-IDs, all of them, are going to be used in multiple spots in the
-> kernel, it is not appropriate to add them here.
-> 
-> They belong as private macros in the drivers themselves, instead.
+> Just add likns *before* even probing for drivers (yes, you can do that)
+> and the core will handle that for you.
 
-They might be used: http://www.spinics.net/lists/linux-pci/msg51331.html
+Forgive me for being dense: How do you suggest to add links before
+probing drivers? Only way I could think of is with a PCI quirk.
+
+Which is what we're already doing right now (see drivers/pci/quirk.c:
+quirk_apple_wait_for_thunderbolt()). And it ain't pretty.
+
+
+> > I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
+> > no driver is bound to the NHI. Doesn't feel pretty to me though.
+> > 
+> > Ultimately this seems to be the same issue as with calling
+> > dev_pm_domain_set() for a bound device. Perhaps device_link_add()
+> > can likewise be allowed if a runtime PM ref is held for the devices
+> > and the call happens under lock_system_sleep()?
+> 
+> No, the whole synchronization scheme in the links code would have had to be
+> changed for that to really work.
+> 
+> And it really is about what is needed (at least in principle) to run your
+> device.  If you think you need device X with a driver to handle device Y
+> correctly, then either you need it all the time, from probe to remove, or
+> you just don't really need it at all.
+
+Real life isn't as simple as that.
+
+In this case, we have consumers (hotplug ports) which are doing fine
+if the driver for the supplier (NHI) is not loaded. But once it loads,
+the links must be in place. Seems only logical to put the links in
+place when they're needed, i.e. at load time of the supplier's driver.
+Which the patch set doesn't allow right now.
+
+Best regards,
+
+Lukas
