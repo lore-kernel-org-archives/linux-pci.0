@@ -1,112 +1,141 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Wed, 20 Jul 2016 08:59:19 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v2 03/13] PCI: Add Thunderbolt portdrv service type
-Message-ID: <20160720065919.GB8066@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
- <3e694101e5fa1551e07b5ecf92157087922e952f.1463134231.git.lukas@wunner.de>
- <20160617225152.GD12254@localhost>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH] PCI: release pci_host_bridge resource after remove root
+ bus
+To: <bhelgaas@google.com>
+References: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
+CC: <rjw@rjwysocki.net>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+From: wangyijing <wangyijing@huawei.com>
+Message-ID: <579568E3.6010601@huawei.com>
+Date: Mon, 25 Jul 2016 09:18:27 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160617225152.GD12254@localhost>
+In-Reply-To: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 17, 2016 at 05:51:52PM -0500, Bjorn Helgaas wrote:
-> On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> > A Thunderbolt controller is a PCIe switch which, as defined in the PCIe
-> > spec, appears to the OS "as a collection of virtual PCI-to-PCI bridges".
-> > 
-> > We're about to add support for Apple's nonstandard ACPI methods to power
-> > Thunderbolt controllers up and down.  To facilitate that, allocate a
-> > port service for every PCI bridge belonging to a Thunderbolt controller.
-> > 
-> > This port service might come in handy for other use cases, e.g. device
-> > initialization of Thunderbolt controllers.
-> > 
-> > To understand when and how this port service will be allocated, consider
-> > the PCI devices exposed by a Thunderbolt host controller:
-> > 
-> >   (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> >                                      +-- Downstream Bridge 1 --
-> >                                      +-- Downstream Bridge 2 --
-> >                                      ...
-> > 
-> > The upstream and downstream bridges represent the PCIe switch and a
-> > Thunderbolt port service will be allocated for each of them.  Hotplugged
-> > devices will appear behind the downstream bridges.  The NHI (Native Host
-> > Interface) is a virtual PCI device to manage the switch fabric and is
-> > not relevant here.  It uses class 0x88000, so it is not a PCIe port.
-> > 
-> > Next, consider the PCI devices exposed by Thunderbolt controllers built
-> > into hotplugged devices:
-> > 
-> >   -- Upstream Bridge ---- Downstream Bridge ---- Hotplugged device
-> > 
-> > Again, Thunderbolt port services will be allocated for the upstream and
-> > downstream bridge, but not for the hotplugged device, which might use
-> > e.g. class 0x20000 if it's a Thunderbolt Ethernet adapter.
+ping..
+
+在 2016/6/23 19:42, Yijing Wang 写道:
+> pci_host_bridge holds the top resources(IO port/Mem/bus),
+> now we release pci_host_bridge resources in
+> acpi_pci_root_release_info() which would be called when
+> pci_host_bridge device refcount reach 0. In some cases,
+> pci_host_bridge refcount cannot reach 0 after we remove
+> pci root bus in pci_remove_root_bus(). Then if we want to
+> hot add pci root bus, we cannot use pci_host_bridge
+> resources because of conflicts with old resources which are
+> still in system. I think this is not reasonable.
 > 
-> I don't really *like* the portdrv infrastructure, even though we're
-> sort of stuck with it now.  It seems like all it really does is allow
-> multiple sub-drivers to attach to a single device and share interrupts
-> between them.  And we get some extra devices in sysfs that don't fit
-> the regular PCI model.  We used to support loadable sub-drivers
-> (pciehp, aer, etc.), but we decided that didn't really make sense
-> (though I notice you do support thunderbolt as a module).
+> 1. For pci devices, we would release their resources in
+>    pci_destroy_dev() regardless of pci device refcount.
+> 2. When we try to remove pci root bus, there is no devices
+>    need to use the pci_host_bridge resources again, release
+>    pci_host_bridge resources is safe.
+> 3. In some cases, users woule make mistake, for example,
+>    user get a pci device(increase refcount), but forget to
+>    put this device, then if we do hotplug pci root bus,
+>    it would make all pci devices cannot work after hot add.
 > 
-> I think we would be better off if the PCIe services (hotplug, AER,
-> etc.) were directly integrated into the PCI core without the portdrv
-> abstraction in the middle.  But anyway, we do have portdrv, and the
-> only question here is whether extending it for Thunderbolt is the
-> right thing.
+> I found this issue in the following case:
+> 1. I have a raid pci device in my system;
+> 2. I mount a disk which connect to this raid.
+> 3. hot remove the pci root bus.
+> 4. hot add the pci root bus.
+> 5. found the resource conflicts for the children pci devices under this root bus.
 > 
-> So the question for Thunderbolt is what benefit you get from being a
-> portdrv sub-driver.  It seems like basically a way for you to hook on
-> to PCI bridges that happen to be Thunderbolt controllers.  I don't
-> think you really use any portdrv services (other than forwarding the
-> PM ops down to you, which a regular PCI device driver would get for
-> free).
+> pci_root_bus increase a refcount at pci_host_bridge.
+> pci_root_bus decrease a refcount at pci_host_bridge in
+>   release_pcibus_dev() when pci_root_bus device refcount reach 0.
+> 
+> pci_dev increase a refcount at pci_bus in pci_alloc_dev().
+> pci_dev decrease a refcount at pci_bus in pci_release_dev()
+> when pci_dev refcount reach 0.
+> 
+> If any pci device refcount cannot reach 0, then its pci_bus
+> refcount cannot reach 0 too, the result is pci_host_bridge
+> refcount cannot reach 0.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/acpi/pci_root.c   |   11 -----------
+>  drivers/pci/host-bridge.c |   15 +++++++++++++++
+>  drivers/pci/pci.h         |    2 +-
+>  drivers/pci/remove.c      |    1 +
+>  4 files changed, 17 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index d144168..c5142d0 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -839,17 +839,6 @@ static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
+>  
+>  static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+>  {
+> -	struct resource *res;
+> -	struct resource_entry *entry;
+> -
+> -	resource_list_for_each_entry(entry, &bridge->windows) {
+> -		res = entry->res;
+> -		if (res->flags & IORESOURCE_IO)
+> -			pci_unmap_iospace(res);
+> -		if (res->parent &&
+> -		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> -			release_resource(res);
+> -	}
+>  	__acpi_pci_root_release_info(bridge->release_data);
+>  }
+>  
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index 5f4a2e0..3594967 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -8,6 +8,21 @@
+>  
+>  #include "pci.h"
+>  
+> +void release_host_bridge_resources(struct pci_host_bridge *bridge)
+> +{
+> +	struct resource *res;
+> +	struct resource_entry *entry;
+> +
+> +	resource_list_for_each_entry(entry, &bridge->windows) {
+> +		res = entry->res;
+> +		if (res->flags & IORESOURCE_IO)
+> +			pci_unmap_iospace(res);
+> +		if (res->parent &&
+> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> +			release_resource(res);
+> +	}
+> +}
+> +
+>  static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>  {
+>  	while (bus->parent)
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 9730c47..46725d9 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -11,7 +11,7 @@ extern const unsigned char pcie_link_speed[];
+>  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+>  
+>  /* Functions internal to the PCI core code */
+> -
+> +void release_host_bridge_resources(struct pci_host_bridge *bridge);
+>  int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+>  void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
+>  #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index d1ef7ac..a42b396 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -161,6 +161,7 @@ void pci_remove_root_bus(struct pci_bus *bus)
+>  	pci_remove_bus(bus);
+>  	host_bridge->bus = NULL;
+>  
+> +	release_host_bridge_resources(host_bridge);
+>  	/* remove the host bridge */
+>  	device_unregister(&host_bridge->dev);
+>  }
+> 
 
-The assessment above is entirely correct, I'm sort of abusing the
-portdrv infrastructure as a way to bind to the upstream bridge.
-
-For comparison, Optimus GPUs are also suspended to D3cold with a
-non-standard method (i.e., not by the ACPI platform). The way we
-handle that is to assign a dev_pm_domain to the device using
-dev_pm_domain_set(). You can just think of "dev_pm_domain" as a
-fancy name for overriding the callbacks in pci_dev_pm_ops:
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/vga/vga_switcheroo.c#n1014
-
-I cannot use that method with Thunderbolt because dev_pm_domain_set()
-can only be called for unbound devices. And the upstream bridge will
-already have been bound (to portdrv) when thunderbolt.ko loads.
-
-I'm waiting for Rafael to weigh in if the dev_pm_domain_set() method
-is the right thing to do for devices which are suspended to D3cold
-in a non-standard way, and whether the "device not bound" restriction
-on dev_pm_domain_set() can be lifted. If so, I could rework this
-series to use that instead of binding to portdrv.
-
-
-> upstream.c does a lot of ACPI stuff; I can't tell whether it has more
-> affinity with ACPI or with PCI.  I don't see any PNP IDs though, so I
-> guess you just look for the magic method names in the ACPI device
-> associated with some PCI device.  That seems a little bit "back-door"
-> to me; from an ASL point of view, I would think you'd want to start
-> from a _HID and interpret the device based on that.
-
-Apple's ACPI methods to power the controller up/down are located
-below the NHI device in the namespace. I just use the ACPI_HANDLE()
-macro to get from the NHI's PCI device to its ACPI companion's
-handle, then find the methods below that. This avoids the need to
-search the namespace for a _HID or _ADR:
-https://github.com/l1k/linux/commit/65f56e6c8446#diff-66575f0946b607aa866a23518687f8b1R281
-
-Best regards,
-
-Lukas
