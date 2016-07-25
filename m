@@ -1,78 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 03/14] PCI: designware-plat: make it explicitly
- non-modular
-To: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	<linux-kernel@vger.kernel.org>
-References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
- <20160702231334.26684-4-paul.gortmaker@windriver.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <8c2d52da-8bfc-026c-cde6-e8cb61cb8a1b@synopsys.com>
-Date: Mon, 4 Jul 2016 10:09:44 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0044.outbound.protection.outlook.com ([104.47.36.44]:50688
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750793AbcGYFYF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jul 2016 01:24:05 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>, nofooter <nofooter@xilinx.com>
+Subject: RE: Why does BIOS assign memory to 16 byte BAR
+Date: Mon, 25 Jul 2016 05:23:58 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258BBC40@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258BB59B@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160722151546.GA20646@localhost> <20160722155133.GB20646@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160702231334.26684-4-paul.gortmaker@windriver.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Paul,
-
-On 7/3/2016 12:13 AM, Paul Gortmaker wrote:
-> The Kconfig currently controlling compilation of this code is:
+> Subject: RE: Why does BIOS assign memory to 16 byte BAR
 > 
-> drivers/pci/host/Kconfig:config PCIE_DW_PLAT
-> drivers/pci/host/Kconfig:       bool "Platform bus based DesignWare PCIe Controller"
+> > Subject: Re: Why does BIOS assign memory to 16 byte BAR
+> >
+> > On Fri, Jul 22, 2016 at 10:15:46AM -0500, Bjorn Helgaas wrote:
+> > > Hi Bharat,
+> > >
+> > > On Fri, Jul 22, 2016 at 09:24:22AM +0000, Bharat Kumar Gogada wrote:
+> > > > Hi,
+> > > >
+> > > > I'm observing that on x86 BIOS successfully assigns memory if an End
+> > > > point requests BAR of size 16byte.
+> > > >
+> > > > But as per Spec:
+> > > > The minimum memory address range requested by a BAR is 128 bytes.
+> > >
+> > > Can you provide the spec reference for this?  I don't see it in PCI
+> > > r3.0.
+> > >
+> > > PCI r3.0, sec 6.2.5.1, shows bits 4-31 of a memory BAR as writable,
+> > > which would correspond to a minimum size of 16 bytes.
+> >
+> > The reference above is to the conventional PCI spec.  I happened to trip
+> over
+> > a note in PCIe r3.0, sec 1.3.2.2, that for a PCI Express endpoint, "the
+> minimum
+> > memory address range requested by a BAR is 128 bytes."
+> >
+> > I don't think linux currently enforces this minimum.
+> >
+> 
+> Hi Bjorn Thanks for the reply.
+> 
+> Here is what the issue we are seeing.
+> 
+> We have total memory for BAR's on our SoC of 256 MB.
+> When an End Point request individually 16 byte BAR's our root port assigns
+> memory to BAR's successfully.
+> 
+> But if I have an End point which has 4 BAR's each 32 bit and request as
+> following:
+> When 1st BAR requests 1GB BAR it fails due to lack of memory. (We are
+> running this as part of SIG compliance test case)
+> 2nd BAR requests 1MB and other 2 BAR's request 16byte, but these are not
+> getting BAR's assigned. (Even though BAR space is available, since 1GB failed,
+> We have 256 MB still)
+> 
+> We have only one End point connected to our root port.
+> 
+> Here is the log:
+> [    2.319289] nwl-pcie fd0e0000.pcie: Link is UP
+> [    2.319332] PCI host bridge /amba/pcie@fd0e0000 ranges:
+> [    2.319349]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-
+> ff]
+> [    2.319374]    IO 0xe0000000..0xe000ffff -> 0x00000000
+> [    2.319415]   MEM 0xe0100000..0xefffffff -> 0xe0100000
+> [    2.319431]   MEM 0x600000000..0x7ffffffff -> 0x600000000
+> [    2.319539] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
+> [    2.319557] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    2.319573] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> [    2.319589] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xefffffff]
+> [    2.319606] pci_bus 0000:00: root bus resource [mem 0x600000000-
+> 0x7ffffffff pref]
+> [    2.319845] pci 0000:00:00.0: cannot attach to SMMU, is it on the same bus?
+> [    2.319861] iommu: Adding device 0000:00:00.0 to group 1
+> [    2.320243] pci 0000:01:00.0: cannot attach to SMMU, is it on the same bus?
+> [    2.320258] iommu: Adding device 0000:01:00.0 to group 1
+> [    2.320313] pci 0000:00:00.0: BAR 8: no space for [mem size 0x60000000]
+> [    2.320331] pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x60000000]
+> [    2.320349] pci 0000:00:00.0: BAR 6: assigned [mem 0xe0100000-0xe01007ff
+> pref]
+> [    2.320374] pci 0000:01:00.0: BAR 0: no space for [mem size 0x40000000]
+> [    2.320390] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x40000000]
+> [    2.320407] pci 0000:01:00.0: BAR 4: no space for [mem size 0x00100000
+> 64bit]
+> [    2.320423] pci 0000:01:00.0: BAR 4: failed to assign [mem size 0x00100000
+> 64bit]
+> [    2.320446] pci 0000:01:00.0: BAR 2: no space for [mem size 0x00000010]
+> [    2.320461] pci 0000:01:00.0: BAR 2: failed to assign [mem size 0x00000010]
+> [    2.320477] pci 0000:01:00.0: BAR 3: no space for [mem size 0x00000010]
+> [    2.320493] pci 0000:01:00.0: BAR 3: failed to assign [mem size 0x00000010]
+> [    2.320509] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
+> 
+> Please let me know, what might might be the issue.
 > 
 
-(snip...)
+Adding to the above will kernel allocate other memory BARs to an End Point if 
+one BAR assignment fails ?
 
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Joao Pinto <jpinto@synopsys.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> ---
->  drivers/pci/host/pcie-designware-plat.c | 10 ++--------
->  1 file changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-> index b3500994d08a..c8079dc81c10 100644
-> --- a/drivers/pci/host/pcie-designware-plat.c
-> +++ b/drivers/pci/host/pcie-designware-plat.c
-> @@ -14,7 +14,7 @@
->  #include <linux/gpio.h>
->  #include <linux/interrupt.h>
->  #include <linux/kernel.h>
-> -#include <linux/module.h>
-> +#include <linux/init.h>
->  #include <linux/of_gpio.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
-> @@ -121,7 +121,6 @@ static const struct of_device_id dw_plat_pcie_of_match[] = {
->  	{ .compatible = "snps,dw-pcie", },
->  	{},
->  };
-> -MODULE_DEVICE_TABLE(of, dw_plat_pcie_of_match);
->  
->  static struct platform_driver dw_plat_pcie_driver = {
->  	.driver = {
-> @@ -130,9 +129,4 @@ static struct platform_driver dw_plat_pcie_driver = {
->  	},
->  	.probe = dw_plat_pcie_probe,
->  };
-> -
-> -module_platform_driver(dw_plat_pcie_driver);
-> -
-> -MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
-> -MODULE_DESCRIPTION("Synopsys PCIe host controller glue platform driver");
-> -MODULE_LICENSE("GPL v2");
-> +builtin_platform_driver(dw_plat_pcie_driver);
-> 
+What if the End Point has multiple function and say first function BAR assignment failed,
+will the kernel assign BAR's to second function on same bus and device ?  
 
-Makes totally sense! Thanks!
-
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+Thanks & Regards,
+Bharat
