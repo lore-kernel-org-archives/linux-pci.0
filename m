@@ -1,67 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 14/14] PCI: xgene: make it explicitly non-modular
-Date: Sat, 2 Jul 2016 19:13:34 -0400
-Message-ID: <20160702231334.26684-15-paul.gortmaker@windriver.com>
-In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
-References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0050.outbound.protection.outlook.com ([104.47.2.50]:22611
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752562AbcGYIJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jul 2016 04:09:23 -0400
+Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
+To: Alex Williamson <alex.williamson@redhat.com>,
+	"Tian, Kevin" <kevin.tian@intel.com>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+ <20160620113728.74ed79f3@ul30vt.home>
+ <VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+ <20160621094537.4416cbce@t450s.home>
+ <VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+ <20160714110341.7716c619@t450s.home>
+ <fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
+ <20160718153428.6b988539@t450s.home>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F90960A@SHSMSX101.ccr.corp.intel.com>
+ <20160719091017.4c23244f@t450s.home> <20160719134336.79d24af9@t450s.home>
+CC: Ilya Lesokhin <ilyal@mellanox.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Noa Osherovich <noaos@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Liran Liss <liranl@mellanox.com>
+From: Haggai Eran <haggaie@mellanox.com>
+Message-ID: <613c4470-d899-2698-dfe5-9dbb2388787e@mellanox.com>
+Date: Mon, 25 Jul 2016 10:53:56 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160719134336.79d24af9@t450s.home>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On 7/19/2016 10:43 PM, Alex Williamson wrote:
+> Thinking about this further, it seems that trying to create this IOV
+> enablement interface through a channel which is explicitly designed to
+> interact with an untrusted and potentially malicious user is the wrong
+> approach.  We already have an interface for a trusted entity to enable
+> VFs, it's through pci-sysfs.  Therefore if we were to use something like
+> libvirt to orchestrate the lifecycle of the VFs, I think we remove a
+> lot of the problems.  In this case QEMU would virtualize the SR-IOV
+> capability (maybe this is along the lines of what Kevin was thinking),
+> but that virtualization would take a path out through the QEMU QMP
+> interface to execute the SR-IOV change on the device rather than going
+> through the vfio kernel interface.  A management tool like libvirt
+> would then need to translate that into sysfs operations to create the
+> VFs and do whatever we're going to do with them (device_add them back
+> to the VM, make them available to a peer VM, make them available to
+> the host *gasp*).  VFIO in the kernel would need to add SR-IOV
+> support, but the only automatic SR-IOV path would be to disable IOV
+> when the PF is released, enabling would only occur through sysfs.  We
+> would probably need a new pci-sysfs interface to manage the driver for
+> newly created VFs though to avoid default host drivers
+> (sriov_driver_override?).  In this model QEMU is essentially just
+> making requests to other userspace entities to perform actions and how
+> those actions are performed can be left to userspace policy, not kernel
+> policy.  I think this would still satisfy the development use case, the
+> enabling path just takes a different route where privileged userspace
+> is more intimately involved in the process.  Thoughts?  Thanks,
 
-drivers/pci/host/Kconfig:config PCI_XGENE
-drivers/pci/host/Kconfig:       bool "X-Gene PCIe controller"
+I understand the desire to use a different interface such as sysfs for
+the trusted user-space component. I'm not sure though how using
+sriov_driver_override solves the issues we have been discussing. After
+SR-IOV is enabled by libvirt, it is still possible for the administrator
+(or another trusted daemon racing with libvirt) to open the VFs with
+VFIO before libvirt had a chance to open them and send them to QEMU.
 
-...meaning that it currently is not being built as a module by anyone.
+Are you okay with that?
 
-Lets remove the few trace uses of modular code and macros, so that
-when reading the driver there is no doubt it is builtin-only.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pci-xgene.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 7eb20cc76dd3..a81273c23341 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -21,7 +21,7 @@
- #include <linux/io.h>
- #include <linux/jiffies.h>
- #include <linux/memblock.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-@@ -579,8 +579,4 @@ static struct platform_driver xgene_pcie_driver = {
- 	},
- 	.probe = xgene_pcie_probe_bridge,
- };
--module_platform_driver(xgene_pcie_driver);
--
--MODULE_AUTHOR("Tanmay Inamdar <tinamdar@apm.com>");
--MODULE_DESCRIPTION("APM X-Gene PCIe driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(xgene_pcie_driver);
--- 
-2.8.4
+Thanks,
+Haggai
