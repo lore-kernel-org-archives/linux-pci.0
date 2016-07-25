@@ -1,74 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: Rockchip: Add Rockchip PCIe controller
- support
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1467336290-11282-1-git-send-email-shawn.lin@rock-chips.com>
- <1467336290-11282-2-git-send-email-shawn.lin@rock-chips.com>
-Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <577646D3.7040207@arm.com>
-Date: Fri, 1 Jul 2016 11:32:51 +0100
+Return-Path: <mathias.koehrer@etas.com>
+Return-Path: <mathias.koehrer@etas.com>
+From: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, "gregkh@linuxfoundation.org"
+	<gregkh@linuxfoundation.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"xyjxie@linux.vnet.ibm.com" <xyjxie@linux.vnet.ibm.com>
+Subject: Re: [PATCH resend v2] Extending kernel option pci=resource_alignment
+ to be able to specify PCI device/vendor IDs
+Date: Mon, 25 Jul 2016 06:05:21 +0000
+Message-ID: <00e437fe05f54c6a9df12bf48cf28dc5@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1467336290-11282-2-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/07/16 02:24, Shawn Lin wrote:
-> This patch adds Rockchip PCIe controller support found
-> on RK3399 Soc platform.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
+Hi Gavin,
 
-[...]
+> Mathias, The code change would conflict with Yongji's patch where the
+> wildcard introduced to identify PCI devices.
+>=20
+> https://patchwork.ozlabs.org/patch/642473/
+That's true, however it is also true the other way round. The first sending=
+ of my patch was =20
+22-June 2016 and thus before Yongji's patch...
+See also the comment of Bjorn Helgaas on my patch (v1):
+http://marc.info/?l=3Dlinux-pci&m=3D146654644431550&w=3D2=20
 
-> +static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
-> +{
-> +	struct irq_chip *chip = irq_desc_get_chip(desc);
-> +	struct rockchip_pcie_port *port;
-> +	u32 reg;
-> +
-> +	chained_irq_enter(chip, desc);
-> +	port = irq_desc_get_handler_data(desc);
-> +
-> +	reg = pcie_read(port, PCIE_CLIENT_INT_STATUS);
-> +	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
-> +	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
-> +	if (reg)
-> +		generic_handle_irq(irq_find_mapping(port->irq_domain,
-> +						    ffs(reg)));
+However it looks as if there are a couple of (conflicting) approaches for t=
+he issue with the alignment of PCI addresses flying around...
+My personal opinion is that the need to adapt the alignment of PCI addresse=
+s should be done on PCI device/vendor ids of relevant PCI devices and not o=
+n PCI addresses.
+The PCI addresses are likely to change e.g. by inserting another PCI board.=
+ The device/vendor id of the devices will not change.
 
-Can't you get multiple pending interrupts at the same time? Here, you
-seem to only process one interrupt at a time, which is going to be
-pretty inefficient.
+Regards
 
-How about something like:
-
-	while (reg) {
-		int hwirq = ffs(reg);
-		int irq;
-		
-		reg &= ~BIT(hwirq);
-		irq = irq_find_mapping(port->irq_domain, hwirq);
-		if (irq)
-			generic_handle_irq(irq);
-	}
-
-> +	chained_irq_exit(chip, desc);
-> +}
-> +
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Mathias
