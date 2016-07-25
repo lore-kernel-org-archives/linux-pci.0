@@ -1,134 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:57733 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbcGLVN3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 17:13:29 -0400
-Date: Tue, 12 Jul 2016 23:13:24 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Xavier Gnata <xavier.gnata@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C
- controller
-Message-ID: <20160712211324.GA5488@wunner.de>
-References: <5785474B.6070608@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 25 Jul 2016 09:36:41 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dennis Chen <dennis.chen@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, nd@arm.com
+Subject: Re: [RFC PATCH v3 00/13] ACPI IORT ARM SMMU v3 support
+Message-ID: <20160725083641.GA20044@red-moon>
+References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160725055330.GA21004@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5785474B.6070608@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160725055330.GA21004@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 12, 2016 at 09:38:51PM +0200, Xavier Gnata wrote:
-> Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk to
-> support suspend/resume.
-> Tested against 4.7 master on a MacBook Air 11" 2015
+On Mon, Jul 25, 2016 at 01:53:32PM +0800, Dennis Chen wrote:
+> Hi
+> On Wed, Jul 20, 2016 at 12:23:22PM +0100, Lorenzo Pieralisi wrote:
+> > This RFC patch series is v3 of a previous posting:
+> > 
+> > https://lkml.org/lkml/2016/6/7/523
+> > 
+> > v2 -> v3
+> > 	- Rebased on top of dependencies series [1][2][3](v4.7-rc3)
+> > 	- Added back reliance on ACPI early probing infrastructure
+> > 	- Patch[1-3] merged through other dependent series
+> > 	- Added back IOMMU fwnode generalization
+> > 	- Move SMMU v3 static functions configuration to IORT code
+> > 	- Implemented generic IOMMU fwspec API
+> > 	- Added code to implement fwnode platform device look-up
+> > 
+> > v1 -> v2:
+> > 	- Rebased on top of dependencies series [1][2][3](v4.7-rc1)
+> > 	- Removed IOMMU fwnode generalization
+> > 	- Implemented ARM SMMU v3 ACPI probing instead of ARM SMMU v2
+> > 	  owing to patch series dependencies [1]
+> > 	- Moved platform device creation logic to IORT code to
+> > 	  generalize its usage for ARM SMMU v1-v2-v3 components
+> > 	- Removed reliance on ACPI early device probing
+> > 	- Created IORT specific iommu_xlate() translation hook leaving
+> > 	  OF code unchanged according to v1 reviews
+> > 
+> > The ACPI IORT table provides information that allows instantiating
+> > ARM SMMU devices and carrying out id mappings between components on
+> > ARM based systems (devices, IOMMUs, interrupt controllers).
+> > 
+> > http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+> > 
+> > Building on basic IORT support, available through [2]:
+> > 
+> > this patchset enables ARM SMMU v3 support on ACPI systems.
+> > 
+> > Most of the code is aimed at building the required generic ACPI
+> > infrastructure to create and enable IOMMU components and to bring
+> > the IOMMU infrastructure for ACPI on par with DT, which is going to
+> > make future ARM SMMU components easier to integrate.
+> > 
+> > PATCH (1) adds a FWNODE_IOMMU type to the struct fwnode_handle type.
+> >           It is required to attach a fwnode identifier to platform
+> >           devices allocated/detected through IORT tables entries;
+> >           IOMMU devices have to have an identifier to look them up
+> >           eg IOMMU core layer carrying out id translation. This can be
+> >           done through a fwnode_handle (ie IOMMU platform devices created
+> >           out of IORT tables are not ACPI devices hence they can't be
+> >           allocated as such, otherwise they would have a fwnode_handle of
+> >           type FWNODE_ACPI). This patch requires discussion and it is key
+> >           to the RFC.
+> > 
+> > PATCH (2) makes use of the ACPI early probing API to add a linker script
+> >           section for probing devices via IORT ACPI kernel code.
+> > 
+> > PATCH (3) provides IORT support for registering IOMMU IORT node through
+> >           their fwnode handle.
+> > 
+> > PATCH (4) implements core code fwnode based platform devices look-up.
+> > 
+> > PATCH (5) extends iommu_fwspec so that it can be used on ACPI based
+> >           system by creating a generic IOMMU fwspec kernel layer.
+> > 
+> > PATCH (6) implements the of_dma_configure() API in ACPI world -
+> >           acpi_dma_configure() - and patches PCI and ACPI core code to
+> >           start making use of it.
+> > 
+> > PATCH (7) provides an IORT function to detect existence of specific type
+> >           of IORT components.
+> > 
+> > PATCH (8) creates the kernel infrastructure required to create ARM SMMU
+> >           platform devices for IORT nodes.
+> > 
+> > PATCH (9) refactors the ARM SMMU v3 driver so that the init functions are
+> >           split in a way that groups together code that probes through DT
+> >           and code that carries out HW registers FW agnostic probing, in
+> >           preparation for adding the ACPI probing path.
+> > 
+> > PATCH (10) rework ARM SMMU v3 platform driver registration to make it work
+> >            on ACPI systems.
+> > 
+> > PATCH (11) Building on patch (8), it adds ARM SMMU v3 IORT IOMMU
+> >            operations to create and probe ARM SMMU v3 components.
+> > 
+> > PATCH (12) Extend the IORT iort_node_map_rid() to work on a type mask
+> >            instead of a single type so that the translation API can
+> >            be used on a range of components.
+> > 
+> > PATCH (13) provides IORT infrastructure to carry out IOMMU configuration
+> >            for devices and hook it up to the previously introduced ACPI
+> >            DMA configure API.
+> > 
+> > This patchset is built on top and depends on these three patch series:
+> > 
+> > [1] R.Murphy "Generic DT bindings for PCI and ARM SMMU v3" v4
+> >     https://marc.info/?l=devicetree&m=146739193215518&w=2
+> > 
+> > [2] T.Nowicki "Introduce ACPI world to ITS irqchip" v7
+> >     https://marc.info/?l=linux-arm-kernel&m=146642080022289&w=2
+> > 
+> > [3] T.Nowicki "Support for ARM64 ACPI based PCI host controller" v8
+> >     http://marc.info/?l=linux-acpi&m=146462129816292&w=2
+> > 
+> > and is provided for early review/testing purposes here:
+> > 
+> > git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v3i
+> >
+> I thought I can got all the 13 patches applied with the above git
+> tree, but I can't find any ACPI related stuff after I cloned the git
+> repos to my local machine, am I missing something here?
 
-Nice, thanks for doing this. See below for some comments.
-
-
-> 
-> ---
-> drivers/thunderbolt/nhi.c | 6 ++++++
-> 1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-> index 9c15344..b3d55ec 100644
-> --- a/drivers/thunderbolt/nhi.c
-> +++ b/drivers/thunderbolt/nhi.c
-> @@ -654,6 +654,12 @@ static struct pci_device_id nhi_ids[] = {
-> .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
-> .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
-> },
-> + {
-> + .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
-> + .vendor = PCI_VENDOR_ID_INTEL,
-> + .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
-> + .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
-> + },
-> { 0,}
-> };
-> 
-> -- 
-> 2.7.4
-> 
-
-It looks like the indentation got mangled here, perhaps a Thunderbird
-issue or copy-pasta.
-
-
-> 
-> ---
->  drivers/pci/quirks.c | 23 +++++++++++++++--------
->  1 file changed, 15 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ee72ebe..e280351 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3320,15 +3320,19 @@ static void quirk_apple_wait_for_thunderbolt(struct
-> pci_dev *dev)
->         if (!sibling || !sibling->subordinate)
->                 goto out;
->         nhi = pci_get_slot(sibling->subordinate, 0x0);
-> -       if (!nhi)
-> -               goto out;
-> -       if (nhi->vendor != PCI_VENDOR_ID_INTEL
-> -                   || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
-> -                       nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
-> &&
-> -                       nhi->device !=
-> PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
-> -                   || nhi->subsystem_vendor != 0x2222
-> -                   || nhi->subsystem_device != 0x1111)
-> +       if (!nhi || nhi->vendor != PCI_VENDOR_ID_INTEL)
->                 goto out;
-> +       if (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
-> +               nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
-> +               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI &&
-> +               nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI)
-> +        goto out;
-> +       if((nhi->device == PCI_DEVICE_ID_INTEL_LIGHT_RIDGE ||
-> +               nhi->device == PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C ||
-> +               nhi->device == PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
-> +               && (nhi->subsystem_vendor != 0x222
-                                                    ^
-You're missing a 2 here ----------------------------+
-
-The subsystem vendor/device should also not be checked on Falcon Ridge 4C,
-commit a42fb351ca1f ("thunderbolt: Allow loading of module on recent Apple
-MacBooks with thunderbolt 2 controller") removed that from the pci_device_id
-list but forgot to amend the quirk.
-
-Actually I'm wondering if we need to check the subsystem vendor/device id
-at all. If the motivation is to execute the quirk only for host controllers,
-this should probably be achieved by checking if the parent of the parent
-of the NHI has PCI_EXP_TYPE_ROOT_PORT set.
-
-
-Please also add PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI to tb_switch_alloc()
-so that the message "unsupported switch device id" is not printed for this
-controller.
+Have you pulled the acpi/iort-smmu-v3 branch ?
 
 Thanks,
-
-Lukas
-
-> +               || nhi->subsystem_device != 0x1111))
-> +        goto out;
->         dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish
-> PCI tunnels...\n");
->         device_pm_wait_for_dev(&dev->dev, &nhi->dev);
->  out:
-> @@ -3344,6 +3348,9 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
->  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
->                                PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
->                                quirk_apple_wait_for_thunderbolt);
-> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
-> +                              PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
-> +                              quirk_apple_wait_for_thunderbolt);
->  #endif
-> 
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
-> -- 
-> 2.7.4
+Lorenzo
