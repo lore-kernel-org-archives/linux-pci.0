@@ -1,101 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0059.outbound.protection.outlook.com ([104.47.36.59]:2304
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753432AbcG0LOY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jul 2016 07:14:24 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: RE: PCIe MSI address is not written at pci_enable_msi_range call
-Date: Wed, 27 Jul 2016 11:14:17 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258BC6C4@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57835D35.1000901@arm.com>
- <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5785133A.6070908@arm.com>
- <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5785F8DC.4060100@arm.com>
- <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
- <578F6C56.2090805@arm.com>
-In-Reply-To: <578F6C56.2090805@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from foss.arm.com ([217.140.101.70]:34826 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753215AbcGYQM1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jul 2016 12:12:27 -0400
+Date: Mon, 25 Jul 2016 17:12:23 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+	Will Deacon <will.deacon@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH v3 05/13] drivers: iommu: make iommu_fwspec OF
+ agnostic
+Message-ID: <20160725161223.GA28870@red-moon>
+References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1469013815-24380-6-git-send-email-lorenzo.pieralisi@arm.com>
+ <1499f802-5f98-b0c0-d3aa-dabcac81e84e@arm.com>
+ <20160725154103.GA28507@red-moon>
+ <856415fc-b9bf-ca44-cc70-85d454574e53@arm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <856415fc-b9bf-ca44-cc70-85d454574e53@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
->
-> +tglx
->
-> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
-> >> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
-> >> call
+On Mon, Jul 25, 2016 at 04:51:00PM +0100, Robin Murphy wrote:
+> On 25/07/16 16:41, Lorenzo Pieralisi wrote:
+> [...]
+> >>> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+> >>> index 308791f..2362232 100644
+> >>> --- a/include/linux/of_iommu.h
+> >>> +++ b/include/linux/of_iommu.h
+> >>> @@ -15,13 +15,8 @@ extern void of_iommu_init(void);
+> >>>  extern const struct iommu_ops *of_iommu_configure(struct device *dev,
+> >>>  					struct device_node *master_np);
+> >>>  
+> >>> -struct iommu_fwspec {
+> >>> -	const struct iommu_ops	*iommu_ops;
+> >>> -	struct device_node	*iommu_np;
+> >>> -	void			*iommu_priv;
+> >>> -	unsigned int		num_ids;
+> >>> -	u32			ids[];
+> >>> -};
+> >>> +void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+> >>> +const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
 > >>
-> >> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
-> >>>> Subject: Re: PCIe MSI address is not written at
-> >>>> pci_enable_msi_range call
-> >>>>
-> >>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
-> >>>>> Hi Marc,
-> >>>>>
-> >>>>> Thanks for the reply.
-> >>>>>
-> >>>>> From PCIe Spec:
-> >>>>> MSI Enable Bit:
-> >>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control
-> >>>>> register (see Section 6.8.2.3) is 0, the function is permitted to
-> >>>>> use MSI to request service and is prohibited from using its INTx# pin.
-> >>>>>
-> >>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be
-> >>>>> used
-> >>>> which means MSI address and data fields are available/programmed.
-> >>>>>
-> >>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
-> >>>>> latches
-> >>>> onto MSI address and MSI data values.
-> >>>>>
-> >>>>> With current MSI implementation in kernel, our SoC is latching on
-> >>>>> to incorrect address and data values, as address/data are updated
-> >>>>> much later
-> >>>> than MSI Enable bit.
-> >>>>
-> >>>> As a side question, how does setting the affinity work on this
-> >>>> end-point if this involves changing the address programmed in the
-> >>>> MSI
-> >> registers?
-> >>>> Do you expect the enabled bit to be toggled to around the write?
-> >>>>
+> >> Is there some reason we need to retain the existing definitions of
+> >> these? I was assuming we'd be able to move the entire implementation
+> >> over to the fwspec code and leave behind nothing more than trivial
+> >> wrappers, e.g.:
+> >>
+> >> #define of_iommu_get_ops(np) iommu_fwspec_get_ops(&(np)->fwnode_handle)
+> > 
+> > Yep, that's exactly what I did but then I was bitten by config
+> > dependencies. If we implement of_iommu_get/set_ops() as wrappers,
+> > we have to compile iommu_fwspec_get/set_ops() on arches that may
+> > not have struct dev_archdata.iommu, unless we introduce yet another
+> > config symbol to avoid compiling that code (see eg iommu_fwspec_init(),
+> > we can't compile it on eg x86 even though we do need of_iommu_get_ops()
+> > on it - so iommu_fwspec_get_ops(), that lives in the same compilation
+> > unit as eg iommu_fwspec_init()).
+> > 
+> > So short answer is: there is no reason apart from dev_archdata.iommu
+> > being arch specific, if we were able to move iommu_fwspec to generic
+> > code (ie struct device, somehow) I would certainly get rid of this
+> > stupid code duplication (or as I said I can add a config entry for
+> > that, more ideas are welcome).
+> 
+> OK, given Rob's comment as well, I guess breaking that dependency is to
+> everyone's benefit. Since it's quite closely related, how about if we
+> follow the arch_setup_dma_ops() pattern with an
+> arch_{get,set}_iommu_fwspec(dev) type thing?
+
+Yes we can do that too as an intermediate step, that solves the
+problem (and it makes this patch much simpler), it is cleaner
+than doing it with a(nother) Kconfig entry.
+
+Thanks,
+Lorenzo
+
+> Robin.
+> 
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> >>
+> >> Robin.
+> >>
+> >>>  #else
+> >>>  
+> >>> @@ -39,17 +34,14 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
+> >>>  	return NULL;
+> >>>  }
+> >>>  
+> >>> -struct iommu_fwspec;
+> >>> -
+> >>> -#endif	/* CONFIG_OF_IOMMU */
+> >>> +static inline void of_iommu_set_ops(struct device_node *np,
+> >>> +				    const struct iommu_ops *ops)
+> >>> +{ }
+> >>>  
+> >>> -int iommu_fwspec_init(struct device *dev, struct device_node *iommu_np);
+> >>> -void iommu_fwspec_free(struct device *dev);
+> >>> -int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+> >>> -struct iommu_fwspec *dev_iommu_fwspec(struct device *dev);
+> >>> +static inline const struct iommu_ops *
+> >>> +of_iommu_get_ops(struct device_node *np) { return NULL; }
+> >>>  
+> >>> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+> >>> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
+> >>> +#endif	/* CONFIG_OF_IOMMU */
+> >>>  
+> >>>  extern struct of_device_id __iommu_of_table;
+> >>>  
 > >>>
-> >>> Yes,
 > >>
-> >> Well, that's pretty annoying, as this will not work either. But maybe
-> >> your MSI controller has a single doorbell? You haven't mentioned which
-> HW that is...
-> >>
-> > The MSI address/data is located in config space, in our SoC for the
-> > logic behind PCIe to become aware of new address/data  MSI enable
-> transition is used (0 to 1).
-> > The logic cannot keep polling these registers in configuration space as it
-> would consume power.
-> >
-> > So the logic uses the transition in MSI enable to latch on to address/data.
->
-> A couple of additional questions:
->
-> Does your HW support MSI masking? And if it does, does it resample the
-> address/data on unmask?
->
-No we do not support masking.
-
-Regards,
-Bharat
-
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-
+> > 
+> 
