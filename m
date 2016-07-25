@@ -1,115 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:56191 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbcGMIbU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2016 04:31:20 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	nofooter <nofooter@xilinx.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>
-Subject: Re: Purpose of pci_remap_iospace
-Date: Wed, 13 Jul 2016 10:30:57 +0200
-Message-ID: <4235946.u1vYRsOpTR@wuerfel>
-In-Reply-To: <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com> <3927657.6zNCtCntSU@wuerfel> <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
+Return-Path: <adurbin@google.com>
+Return-Path: <adurbin@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3103060.86QBTjSLk3@vostro.rjw.lan>
+References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
+ <2300001.Cg2EHxyMN1@vostro.rjw.lan> <CAE2855sjXKkx+0RNYMhfqVQCs+cj8NWp6V2RZMoBjRBgcWi-ew@mail.gmail.com>
+ <3103060.86QBTjSLk3@vostro.rjw.lan>
+From: Aaron Durbin <adurbin@google.com>
+Date: Mon, 25 Jul 2016 14:11:12 -0500
+Message-ID: <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
+Subject: Re: ACPI device using sub-resource of PCI device
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 13, 2016 8:11:56 AM CEST Bharat Kumar Gogada wrote:
-> > Subject: Re: Purpose of pci_remap_iospace
-> >
-> > On Tuesday, July 12, 2016 6:57:10 AM CEST Bharat Kumar Gogada wrote:
-> > > Hi,
-> > >
-> > > I have a query.
-> > >
-> > > Can any once explain the purpose of pci_remap_iospace function in root
-> > port driver.
-> > >
-> > > What is its dependency with architecture ?
-> > >
-> > > Here is my understanding, the above API takes PCIe IO resource and its
-> > > to be mapped CPU address from ranges property and remaps into virtual
-> > address space.
-> > >
-> > > So my question is who uses this virtual addresses ?
-> >
-> > The inb()/outb() functions declared in asm/io.h
-> >
-> > > When End Point requests for IO BARs doesn't it get from the above
-> > > resource range (first parameter of API) and do ioremap to access this
-> > > region ?
-> >
-> > Device drivers generally do not ioremap() the I/O BARs but they use
-> > inb()/outb() directly. They can also call pci_iomap() and do
-> > ioread8()/iowrite8() on the pointer returned from that function, but
-> > generally the call to pci_iomap() then returns a pointer into the virtual
-> > address that is already mapped.
-> >
-> > > But why root complex driver is mapping this address region ?
-> >
-> > The PCI core does not know that the I/O space is memory mapped.
-> > On x86 and a few others, I/O space is not memory mapped but requires the
-> > use of special CPU instructions.
-> >
-> Thanks Arnd.
-> 
-> I'm facing issue in testing IO bars on our SoC.
-> 
-> I added following ranges in our device tree :
-> ranges = <0x01000000 0x00000000 0x00000000 0x00000000 0xe0000000 0 0x00100000   //io
->              0x02000000 0x00000000 0xe0100000 0x00000000 0xe0100000 0 0x0ef00000>;   //non prefetchabe memory
-> 
-> And I'm using above API to map the res and cpu physical address in my driver.
+On Fri, Jul 22, 2016 at 4:04 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Friday, July 22, 2016 12:26:03 PM Aaron Durbin wrote:
+>> On Thu, Jul 21, 2016 at 7:55 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> > On Wednesday, July 20, 2016 08:58:29 PM Aaron Durbin wrote:
+>> >> On Wed, Jul 20, 2016 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> >> > On Wednesday, July 20, 2016 06:02:08 PM Aaron Durbin wrote:
+>> >
+>> > [...]
+>> >
+>> >> >> > Isn't the problem a probe ordering issue, though?
+>> >> >>
+>> >> >> No. Not just ordering. There's no parent-child relationship taken into
+>> >> >> account when PCI devices are added to the resource tree. Deferring
+>> >> >> adding an ACPI device's resources would likely fail similarly because
+>> >> >> one doesn't take into account the proper parent. One lives in PCI land
+>> >> >> -- the other in ACPI land.
+>> >> >
+>> >> > What exactly do you mean by "PCI land" and "ACPI land"?
+>> >> >
+>> >> > All PCI resources are derived from the host bridge ones that come from
+>> >> > ACPI anyway.
+>> >>
+>> >> Except that the BARs are queried in the pci devices themselves and
+>> >> those resources are added w/o any communication to/from ACPI. That's
+>> >> all done in the pci subsystem internally. Only if
+>> >
+>> > Well, not quite.
+>> >
+>> > It gets to host bridge resources via pcibios_bus_to_resource() AFAICS and
+>> > those come from ACPI on ACPI-based systems.
+>>
+>> From what I can tell that's just updating resource values that have a
+>> translation across a bridge. For a 1:1 mapping nothing is different
+>> from the BAR encoded in the PCI device itself. Those windows are just
+>> encoded in the bridge device. The only thing adjusted on the resources
+>> is an offset. The BAR values are read from the device. That path is
+>> just adjusting resources -- it's not adding those individual resources
+>> into the resource tree for pci devices. See below.
+>>
+>> >
+>> >> >
+>> >> >> Currently, the issue is manifesting that the ACPI device's resources
+>> >> >> are added into the resource tree. PCI devices the follow trying to add
+>> >> >> their own resources. Conflicts ensue without taking into account the
+>> >> >> proper hierarchy. To make matters worse, struct resource doesn't have
+>> >> >> a struct device -- only a name. That means there's no way of knowing
+>> >> >> who owns what resource. All that information is unavailable. That's
+>> >> >> why the semi-hacky proposal was to see if there is an ACPI companion
+>> >> >> device and see if it has children. If it's children's names match the
+>> >> >> conflicting resource it's a good bet that the PCI device's resources
+>> >> >> should be placed as the parent in the resource tree.
+>> >> >
+>> >> > That really looks like a broken hierarchy of devices somewhere.
+>> >>
+>> >> Why do you think it's a broken hierarchy? This CL has the heirarchy:
+>> >> https://chromium-review.googlesource.com/#/c/359432/
+>> >>
+>> >> There is a device, P2S, which would result in an ACPI companion device
+>> >> when the pci_dev is added to the device infrastructure by way of
+>> >> acpi_platform_notify() which does the ACPI companion binding.
+>> >> device_add() is the caller of platform_notify() which is set to
+>> >> acpi_platform_notify() in init_acpi_device_notify() by way of
+>> >> acpi_init().
+>> >>
+>> >> There are 4 children of the P2S device: GPO0, GPO1, GPO2, GPO3.
+>> >>
+>> >> Those children devices utilize a sub-resource of the P2S device which
+>> >> has a pci_dev companion. It's BAR0 is the resource.
+>> >
+>> > OK
+>> >
+>> >> >
+>> >> > And one more thing: a struct acpi_device object is not a device in general
+>> >> > (althogh some pieces of code in the kernel, arguably incorrectly, treat it
+>> >> > this way).  It is an abstract representation of a firmware entity (a node
+>> >> > in the ACPI namespace).
+>> >> >
+>> >> > There really should be a "physical device" thing corresponding to it and
+>> >> > that should be a child of the PCI device object in question.
+>> >>
+>> >> I thought I established that by the sysfs readlink I output I
+>> >> previously provided?
+>> >>
+>> >> # ls /sys/devices/platform/| grep INT3452
+>> >> INT3452:00
+>> >> INT3452:01
+>> >> INT3452:02
+>> >> INT3452:03
+>> >>
+>> >> # ls /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11 | grep INT3452
+>> >> INT3452:00
+>> >> INT3452:01
+>> >> INT3452:02
+>> >> INT3452:03
+>> >>
+>> >> # readlink -f /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11/INT3452:00/physical_node
+>> >> /sys/devices/platform/INT3452:00
+>> >
+>> > OK
+>> >
+>> > I must have missed that part.
+>> >
+>> >> >
+>> >> >> > Do we assign BARs for endpoints during enumeration or only when we find a
+>> >> >> > matching driver?
+>> >> >>
+>> >> >> BARs look to be assigned during enumeration. There's where conflicts
+>> >> >> are found and resources reassigned in the current failing case.
+>> >> >
+>> >> > OK
+>> >> >
+>> >> > You seem to be saying that we insert some resources for ACPI device objects
+>> >> > that correspond to the children of ACPI companions of PCI devices before we
+>> >> > assign the BARs for their parent devices.
+>> >>
+>> >> The pci_dev is the one owning the parent resource. Even if there is a
+>> >> companion ACPI device with a resource it doesn't matter because there
+>> >> will still be a conflict because there is no checking against the
+>> >> companion. There are 2 parallel entities without any communication
+>> >> between the PCI subsystem and the ACPI subsystem when resources are
+>> >> being added.
+>> >>
+>> >> >
+>> >> > To me, that sounds very suspicious.
+>> >> >
+>> >> > Where in the code are the ACPI resources inserted, exactly?
+>> >>
+>> >> I believe it's through this mechanism:
+>> >> acpi_bus_attach() -> acpi_default_enumeration() ->
+>> >> acpi_create_platform_device() -> platform_device_register_full()
+>> >
+>> > I still would like to understand how and why that is called for child devices
+>> > before the (physical) parent is enumerated.
+>> >
+>> > The theory is that when the PCI host bridge is found in the ACPI namespace,
+>> > it will be enumerated along with the entire PCI bus below it before enumerating
+>> > any _HID devices in the ACPI namespace below the host bridge object.
+>> >
+>> > Therefore all PCI devices should be enumerated before any children of any of
+>> > them that aren't PCI devices themselves.  If BARs are assigned during
+>> > enumeration, they all should be assigned before inserting any resources
+>> > for any non-PCI children of any PCI devices.
+>> >
+>> > If that doesn't happen, the practice doesn't match the theory and that very
+>> > well may be the source of the problem you're seeing.
+>> >
+>>
+>> I'll sprinkle some WARN_ON()s in the resource code to track down when
+>> things are being added to provide a definitive answer to when these
+>> resources are being inserted. The current issue is still stands:
+>> there is nothing properly tying the 2 sources of resource information
+>> together. And ACPI resources are added prior to PCI resources.
+>
+> OK, I see what's going on.
+>
+>> PCI devices might be enumerated, but that doesn't mean their
+>> *resources* are added.
+>
+> Right.
+>
+>> Back to the subsys_initcall topic:
+>>
+>> pci_subsys_init() is called *after* acpi_init().
+>>
+>> pci_subsys_init() -> pcibios_init() -> pcibios_resource_survey() ->
+>> pcibios_allocate_resources() -> pcibios_allocate_dev_resources() ->
+>> pci_claim_resource()
+>
+> So first, the PCI resources are allocated in an additional pass after bus
+> enumeration and after enumerating platform devices based on the ACPI namespace.
+> That causes resources of the (non-PCI) children to be inserted before the
+> resources of the (PCI) parents.
 
-I notice you have 1MB of I/O space here
+What is the proposal for fixing this issue?
 
-> Kernel Boot log:
-> [    2.345294] nwl-pcie fd0e0000.pcie: Link is UP
-> [    2.345339] PCI host bridge /amba/pcie@fd0e0000 ranges:
-> [    2.345356]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
-> [    2.345382]    IO 0xe0000000..0xe00fffff -> 0x00000000
-> [    2.345401]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
-> [    2.345498] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
-> [    2.345517] pci_bus 0000:00: root bus resource [bus 00-ff]
-> [    2.345533] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff]
+>
+> But the problem seems to be that acpi_create_platform_device() doesn't
+> check parent resources at all.  Namely, when pdevinfo.parent is set, the
+> function should look at the resources of the parent and possibly populate
+> the parent field of the new device's resources before passing them to
+> platform_device_register_full().
 
-and all of it gets mapped by the PCI core. Usually you only have 64K of I/O
-space per host bridge, and the PCI core should perhaps not try to map
-all of it, though I don't think this is actually your problem here.
-
-> [    2.345550] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeeffffff]
-> [    2.345770] pci 0000:00:00.0: cannot attach to SMMU, is it on the same bus?
-> [    2.345786] iommu: Adding device 0000:00:00.0 to group 1
-> [    2.346142] pci 0000:01:00.0: cannot attach to SMMU, is it on the same bus?
-> [    2.346158] iommu: Adding device 0000:01:00.0 to group 1
-> [    2.346213] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-0xe02fffff]
-> [    2.346234] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe01fffff 64bit]
-> [    2.346268] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-0xe02fffff 64bit]
-> [    2.346300] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0040]
-> [    2.346316] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0040]
-> [    2.346333] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
-> [    2.346350] pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe02fffff]
-> 
-> IO assignment fails.
-
-I would guess that the I/O space is not registered correctly. Is this
-drivers/pci/host/pcie-xilinx.c ? We have had problems with this in the
-past, since almost nobody uses I/O space and it requires several
-steps to all be done correctly.
-
-The line "  IO 0xe0000000..0xe00fffff -> 0x00000000" from your log actually
-comes from the driver parsing the DT, and that seems to be correct.
-
-Can you add a printk to pci_add_resource_offset() to show which resources
-actually get added and what the offset is? Also, please show the contents
-of /proc/ioport and /proc/iomem.
-
-	Arnd
+In the particular issue I reported how would the parent device have
+any resources if it's a PCI device?
