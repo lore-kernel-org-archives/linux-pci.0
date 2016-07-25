@@ -1,186 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:62704 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59918 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752333AbcG1IQ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Jul 2016 04:16:57 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, corbet@lwn.net
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v5 7/8] thunderbolt: Networking doc
-Date: Thu, 28 Jul 2016 11:15:20 +0300
-Message-Id: <1469693721-5641-8-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
-References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+	id S1752867AbcGYPHw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jul 2016 11:07:52 -0400
+Date: Mon, 25 Jul 2016 09:07:50 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Haggai Eran <haggaie@mellanox.com>
+Cc: "Tian, Kevin" <kevin.tian@intel.com>,
+	Ilya Lesokhin <ilyal@mellanox.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Noa Osherovich <noaos@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Liran Liss <liranl@mellanox.com>
+Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
+Message-ID: <20160725090750.2786ab5f@t450s.home>
+In-Reply-To: <613c4470-d899-2698-dfe5-9dbb2388787e@mellanox.com>
+References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
+	<20160620113728.74ed79f3@ul30vt.home>
+	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160621094537.4416cbce@t450s.home>
+	<VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	<20160714110341.7716c619@t450s.home>
+	<fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
+	<20160718153428.6b988539@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F90960A@SHSMSX101.ccr.corp.intel.com>
+	<20160719091017.4c23244f@t450s.home>
+	<20160719134336.79d24af9@t450s.home>
+	<613c4470-d899-2698-dfe5-9dbb2388787e@mellanox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding Thunderbolt(TM) networking documentation.
+On Mon, 25 Jul 2016 10:53:56 +0300
+Haggai Eran <haggaie@mellanox.com> wrote:
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- Documentation/00-INDEX                   |   2 +
- Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
- 2 files changed, 137 insertions(+)
- create mode 100644 Documentation/thunderbolt-networking.txt
+> On 7/19/2016 10:43 PM, Alex Williamson wrote:
+> > Thinking about this further, it seems that trying to create this IOV
+> > enablement interface through a channel which is explicitly designed to
+> > interact with an untrusted and potentially malicious user is the wrong
+> > approach.  We already have an interface for a trusted entity to enable
+> > VFs, it's through pci-sysfs.  Therefore if we were to use something like
+> > libvirt to orchestrate the lifecycle of the VFs, I think we remove a
+> > lot of the problems.  In this case QEMU would virtualize the SR-IOV
+> > capability (maybe this is along the lines of what Kevin was thinking),
+> > but that virtualization would take a path out through the QEMU QMP
+> > interface to execute the SR-IOV change on the device rather than going
+> > through the vfio kernel interface.  A management tool like libvirt
+> > would then need to translate that into sysfs operations to create the
+> > VFs and do whatever we're going to do with them (device_add them back
+> > to the VM, make them available to a peer VM, make them available to
+> > the host *gasp*).  VFIO in the kernel would need to add SR-IOV
+> > support, but the only automatic SR-IOV path would be to disable IOV
+> > when the PF is released, enabling would only occur through sysfs.  We
+> > would probably need a new pci-sysfs interface to manage the driver for
+> > newly created VFs though to avoid default host drivers
+> > (sriov_driver_override?).  In this model QEMU is essentially just
+> > making requests to other userspace entities to perform actions and how
+> > those actions are performed can be left to userspace policy, not kernel
+> > policy.  I think this would still satisfy the development use case, the
+> > enabling path just takes a different route where privileged userspace
+> > is more intimately involved in the process.  Thoughts?  Thanks,  
+> 
+> I understand the desire to use a different interface such as sysfs for
+> the trusted user-space component. I'm not sure though how using
+> sriov_driver_override solves the issues we have been discussing. After
+> SR-IOV is enabled by libvirt, it is still possible for the administrator
+> (or another trusted daemon racing with libvirt) to open the VFs with
+> VFIO before libvirt had a chance to open them and send them to QEMU.
+> 
+> Are you okay with that?
 
-diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
-index cb9a6c6..80a6706 100644
---- a/Documentation/00-INDEX
-+++ b/Documentation/00-INDEX
-@@ -439,6 +439,8 @@ this_cpu_ops.txt
- 	- List rationale behind and the way to use this_cpu operations.
- thermal/
- 	- directory with information on managing thermal issues (CPU/temp)
-+thunderbolt-networking.txt
-+	- Thunderbolt(TM) Networking driver description.
- trace/
- 	- directory with info on tracing technologies within linux
- unaligned-memory-access.txt
-diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
-new file mode 100644
-index 0000000..b7714cf
---- /dev/null
-+++ b/Documentation/thunderbolt-networking.txt
-@@ -0,0 +1,135 @@
-+Intel Thunderbolt(TM) Linux driver
-+==================================
-+
-+Copyright(c) 2013 - 2016 Intel Corporation.
-+
-+Contact Information:
-+Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
-+Edited by Michael Jamet <michael.jamet@intel.com>
-+
-+Overview
-+========
-+
-+Thunderbolt(TM) Networking mode is introduced with this driver.
-+This kernel code creates an ethernet device utilized in computer to computer
-+communication over a Thunderbolt cable.
-+This driver has been added on the top of the existing thunderbolt driver
-+for systems with firwmare (FW) based Thunderbolt controllers supporting
-+Thunderbolt Networking.
-+
-+Files
-+=====
-+
-+- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
-+		In addition, they create an interface for netlink communication with
-+		a user space daemon.
-+
-+- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
-+		networking.
-+
-+Interface to user space
-+=======================
-+
-+The interface to the user space module is implemented through a Generic Netlink.
-+In order to be accessed by the user space module, both kernel and user space
-+modules have to register with the same GENL_NAME. In our case, this is
-+simply "thunderbolt".
-+The registration is done at driver initialization time for all instances of
-+the Thunderbolt controllers.
-+The communication is then carried through pre-defined Thunderbolt messages.
-+Each specific message has a callback function that is called when
-+the related message is received.
-+
-+The messages are defined as follows:
-+* NHI_CMD_UNSPEC: Not used.
-+* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
-+  communication channel.
-+* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
-+  to close communication channel.
-+* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
-+  driver version, FW version offset, number of ports in the controller
-+  and DMA port.
-+* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
-+* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
-+* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
-+  changes or disconnect path.
-+* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
-+  module to FW to establish path.
-+* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
-+
-+Communication with ICM (Firmware)
-+=================================
-+
-+The communication with ICM is principally achieved through
-+a DMA mechanism on Ring 0.
-+The driver allocates a shared memory that is physically mapped onto
-+the DMA physical space at Ring 0.
-+
-+Interrupts
-+==========
-+
-+Thunderbolt relies on MSI-X interrupts.
-+The MSI-X vector is allocated as follows:
-+ICM
-+     - Tx: MSI-X vector index 0
-+     - Rx: MSI-X vector index 1
-+
-+Port 0
-+     - Tx: MSI-X vector index 2
-+     - Rx: MSI-X vector index 3
-+
-+Port 1
-+     - Tx: MSI-X vector index 4
-+     - Rx: MSI-X vector index 5
-+
-+ICM interrupts are used for communication with ICM only.
-+Port 0 and Port 1 interrupts are used for Thunderbolt Networking
-+communications.
-+In case MSI-X is not available, the driver requests to enable MSI only.
-+
-+Mutexes, semaphores and spinlocks
-+=================================
-+
-+The driver should be able to operate in an environment where hardware
-+is asynchronously accessed by multiple entities such as netlink,
-+multiple controllers etc.
-+
-+* send_sem: This semaphore enforces unique sender (one sender at a time)
-+  to avoid wrong impairing with responses. FW may process one message
-+  at the time.
-+* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
-+  to avoid continuing to send messages to FW.
-+* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
-+  avoid continuing to send commands to mailbox.
-+* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
-+  for the mailbox command.
-+  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
-+  to get the command response.
-+* lock: This spinlock protects from simultaneous changes during
-+  disable/enable interrupts.
-+* state_lock: This mutex comes to protect changes during net device state
-+  changes and net_device operations.
-+* controllers_list_rwsem: This read/write sempahore syncs the access to
-+  the controllers list when there are multiple controllers in the system.
-+
-+FW path enablement
-+==================
-+
-+In order to SW to communicate with the FW, the driver needs to send to FW
-+the PDF driver ready command and receive response from FW.
-+The driver ready command PDF value is 12 and the response is 13.
-+Once the exchange is completed, the user space module should be able to send
-+messages through the driver to the FW and FW starts to send notifications
-+about HW/FW events.
-+
-+Information
-+===========
-+
-+Mailing list:
-+	thunderbolt-software@lists.01.org
-+	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
-+	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
-+
-+For additional information about Thunderbolt technology visit:
-+	https://01.org/thunderbolt-sw
-+	https://thunderbolttechnology.net/
--- 
-2.7.4
+If a privileged entity like libvirt is creating VFs on behalf of a
+user, it's going to be that entity's responsibility to claim ownership
+of all those created VFs.  sriov_driver_override is just one suggestion
+that might help facilitate that.  Others might be necessary, but
+ultimately it's not the kernel's problem to work out which entity gets
+to take ownership of those devices, that's a userspace problem, just as
+it is already today.  Thanks,
 
+Alex
