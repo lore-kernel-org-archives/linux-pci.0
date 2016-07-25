@@ -1,132 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 06/13] irq: add a helper spread an affinity mask for MSI/MSI-X vectors
-Date: Mon,  4 Jul 2016 17:39:27 +0900
-Message-Id: <1467621574-8277-7-git-send-email-hch@lst.de>
-In-Reply-To: <1467621574-8277-1-git-send-email-hch@lst.de>
-References: <1467621574-8277-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59486 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753081AbcGYRmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jul 2016 13:42:31 -0400
+Date: Mon, 25 Jul 2016 12:42:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+Cc: bhelgaas@google.com, michal.simek@xilinx.com,
+	soren.brinkmann@xilinx.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	julia.lawall@lip6.fr
+Subject: Re: [PATCH] PCI: xilinx: Modify error handling
+Message-ID: <20160725174227.GE12484@localhost>
+References: <20160629151820.GA14282@amitoj-Inspiron-3542>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160629151820.GA14282@amitoj-Inspiron-3542>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is lifted from the blk-mq code and adopted to use the affinity mask
-concept just introduced in the irq handling code.  It tries to keep the
-algorithm the same as the one current used by blk-mq, but improvements
-like assining vectors on a per-node basis instead of just per sibling
-are possible on of this simple move and refactoring.
+On Wed, Jun 29, 2016 at 08:48:20PM +0530, Amitoj Kaur Chawla wrote:
+> Failure of of_get_next_child returns NULL, not an ERR_PTR. Use
+> appropriate error code -ENODEV to be returned on failure instead.
+> 
+> The Coccinelle semantic patch used to find this issue is as follows:
+> @@
+> expression E,E1;
+> @@
+> 
+> if (
+> *   E == NULL
+>    ) { <+... when != E = E1
+>         PTR_ERR(E)
+>        ...+> }
+> 
+> Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+> ---
+>  drivers/pci/host/pcie-xilinx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index 65f0fe0..d76ea8d 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -550,7 +550,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  	pcie_intc_node = of_get_next_child(node, NULL);
+>  	if (!pcie_intc_node) {
+>  		dev_err(dev, "No PCIe Intc node found\n");
+> -		return PTR_ERR(pcie_intc_node);
+> +		return -ENODEV;
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/interrupt.h |  8 +++++++
- kernel/irq/Makefile       |  1 +
- kernel/irq/affinity.c     | 61 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 70 insertions(+)
- create mode 100644 kernel/irq/affinity.c
+This fix is included in the patch posted by Christophe JAILLET
+<christophe.jaillet@wanadoo.fr>, along with two other similar fixes.
+I applied Christophe's patch to pci/host-xilinx for v4.8.
 
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 9fcabeb..b6683f0 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -278,6 +278,8 @@ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
- extern int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
- 
-+struct cpumask *irq_create_affinity_mask(unsigned int *nr_vecs);
-+
- #else /* CONFIG_SMP */
- 
- static inline int irq_set_affinity(unsigned int irq, const struct cpumask *m)
-@@ -308,6 +310,12 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
- {
- 	return 0;
- }
-+
-+static inline struct cpumask *irq_create_affinity_mask(unsigned int *nr_vecs)
-+{
-+	*nr_vecs = 1;
-+	return NULL;
-+}
- #endif /* CONFIG_SMP */
- 
- /*
-diff --git a/kernel/irq/Makefile b/kernel/irq/Makefile
-index 2ee42e9..1d3ee31 100644
---- a/kernel/irq/Makefile
-+++ b/kernel/irq/Makefile
-@@ -9,3 +9,4 @@ obj-$(CONFIG_GENERIC_IRQ_MIGRATION) += cpuhotplug.o
- obj-$(CONFIG_PM_SLEEP) += pm.o
- obj-$(CONFIG_GENERIC_MSI_IRQ) += msi.o
- obj-$(CONFIG_GENERIC_IRQ_IPI) += ipi.o
-+obj-$(CONFIG_SMP) += affinity.o
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-new file mode 100644
-index 0000000..f689593
---- /dev/null
-+++ b/kernel/irq/affinity.c
-@@ -0,0 +1,61 @@
-+
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/slab.h>
-+#include <linux/cpu.h>
-+
-+static int get_first_sibling(unsigned int cpu)
-+{
-+	unsigned int ret;
-+
-+	ret = cpumask_first(topology_sibling_cpumask(cpu));
-+	if (ret < nr_cpu_ids)
-+		return ret;
-+	return cpu;
-+}
-+
-+/*
-+ * Take a map of online CPUs and the number of available interrupt vectors
-+ * and generate an output cpumask suitable for spreading MSI/MSI-X vectors
-+ * so that they are distributed as good as possible around the CPUs.  If
-+ * more vectors than CPUs are available we'll map one to each CPU,
-+ * otherwise we map one to the first sibling of each socket.
-+ *
-+ * If there are more vectors than CPUs we will still only have one bit
-+ * set per CPU, but interrupt code will keep on assigning the vectors from
-+ * the start of the bitmap until we run out of vectors.
-+ */
-+struct cpumask *irq_create_affinity_mask(unsigned int *nr_vecs)
-+{
-+	struct cpumask *affinity_mask;
-+	unsigned int max_vecs = *nr_vecs;
-+
-+	if (max_vecs == 1)
-+		return NULL;
-+
-+	affinity_mask = kzalloc(cpumask_size(), GFP_KERNEL);
-+	if (!affinity_mask) {
-+		*nr_vecs = 1;
-+		return NULL;
-+	}
-+
-+	if (max_vecs >= num_online_cpus()) {
-+		cpumask_copy(affinity_mask, cpu_online_mask);
-+		*nr_vecs = num_online_cpus();
-+	} else {
-+		unsigned int vecs = 0, cpu;
-+
-+		for_each_online_cpu(cpu) {
-+			if (cpu == get_first_sibling(cpu)) {
-+				cpumask_set_cpu(cpu, affinity_mask);
-+				vecs++;
-+			}
-+
-+			if (--max_vecs == 0)
-+				break;
-+		}
-+		*nr_vecs = vecs;
-+	}
-+
-+	return affinity_mask;
-+}
--- 
-2.1.4
+>  	}
+>  
+>  	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
