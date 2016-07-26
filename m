@@ -1,221 +1,139 @@
-Return-Path: <adurbin@google.com>
-Return-Path: <adurbin@google.com>
-MIME-Version: 1.0
-In-Reply-To: <3861743.KWBechkp08@vostro.rjw.lan>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
- <3103060.86QBTjSLk3@vostro.rjw.lan> <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
- <3861743.KWBechkp08@vostro.rjw.lan>
-From: Aaron Durbin <adurbin@google.com>
-Date: Wed, 27 Jul 2016 23:02:22 -0500
-Message-ID: <CAE2855sk2M_77W7dPUb-G43zaDgiNvH2fwpEUvZKOZCBZ-1UpQ@mail.gmail.com>
-Subject: Re: ACPI device using sub-resource of PCI device
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com
+Cc: bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: [PATCH 1/4] x86/ioapic: Support hot-removal of IOAPICs present during boot
+Date: Wed, 27 Jul 2016 00:13:14 +0800
+Message-Id: <1469549597-19253-2-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
+References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 27, 2016 at 7:09 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Monday, July 25, 2016 02:11:12 PM Aaron Durbin wrote:
->> On Fri, Jul 22, 2016 at 4:04 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> > On Friday, July 22, 2016 12:26:03 PM Aaron Durbin wrote:
->> >> On Thu, Jul 21, 2016 at 7:55 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> >> > On Wednesday, July 20, 2016 08:58:29 PM Aaron Durbin wrote:
->> >> >> On Wed, Jul 20, 2016 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> >> >> > On Wednesday, July 20, 2016 06:02:08 PM Aaron Durbin wrote:
->> >> >
->> >> > [...]
->> >> >
->> >> >> >> > Isn't the problem a probe ordering issue, though?
->> >> >> >>
->> >> >> >> No. Not just ordering. There's no parent-child relationship taken into
->> >> >> >> account when PCI devices are added to the resource tree. Deferring
->> >> >> >> adding an ACPI device's resources would likely fail similarly because
->> >> >> >> one doesn't take into account the proper parent. One lives in PCI land
->> >> >> >> -- the other in ACPI land.
->> >> >> >
->> >> >> > What exactly do you mean by "PCI land" and "ACPI land"?
->> >> >> >
->> >> >> > All PCI resources are derived from the host bridge ones that come from
->> >> >> > ACPI anyway.
->> >> >>
->> >> >> Except that the BARs are queried in the pci devices themselves and
->> >> >> those resources are added w/o any communication to/from ACPI. That's
->> >> >> all done in the pci subsystem internally. Only if
->> >> >
->> >> > Well, not quite.
->> >> >
->> >> > It gets to host bridge resources via pcibios_bus_to_resource() AFAICS and
->> >> > those come from ACPI on ACPI-based systems.
->> >>
->> >> From what I can tell that's just updating resource values that have a
->> >> translation across a bridge. For a 1:1 mapping nothing is different
->> >> from the BAR encoded in the PCI device itself. Those windows are just
->> >> encoded in the bridge device. The only thing adjusted on the resources
->> >> is an offset. The BAR values are read from the device. That path is
->> >> just adjusting resources -- it's not adding those individual resources
->> >> into the resource tree for pci devices. See below.
->> >>
->> >> >
->> >> >> >
->> >> >> >> Currently, the issue is manifesting that the ACPI device's resources
->> >> >> >> are added into the resource tree. PCI devices the follow trying to add
->> >> >> >> their own resources. Conflicts ensue without taking into account the
->> >> >> >> proper hierarchy. To make matters worse, struct resource doesn't have
->> >> >> >> a struct device -- only a name. That means there's no way of knowing
->> >> >> >> who owns what resource. All that information is unavailable. That's
->> >> >> >> why the semi-hacky proposal was to see if there is an ACPI companion
->> >> >> >> device and see if it has children. If it's children's names match the
->> >> >> >> conflicting resource it's a good bet that the PCI device's resources
->> >> >> >> should be placed as the parent in the resource tree.
->> >> >> >
->> >> >> > That really looks like a broken hierarchy of devices somewhere.
->> >> >>
->> >> >> Why do you think it's a broken hierarchy? This CL has the heirarchy:
->> >> >> https://chromium-review.googlesource.com/#/c/359432/
->> >> >>
->> >> >> There is a device, P2S, which would result in an ACPI companion device
->> >> >> when the pci_dev is added to the device infrastructure by way of
->> >> >> acpi_platform_notify() which does the ACPI companion binding.
->> >> >> device_add() is the caller of platform_notify() which is set to
->> >> >> acpi_platform_notify() in init_acpi_device_notify() by way of
->> >> >> acpi_init().
->> >> >>
->> >> >> There are 4 children of the P2S device: GPO0, GPO1, GPO2, GPO3.
->> >> >>
->> >> >> Those children devices utilize a sub-resource of the P2S device which
->> >> >> has a pci_dev companion. It's BAR0 is the resource.
->> >> >
->> >> > OK
->> >> >
->> >> >> >
->> >> >> > And one more thing: a struct acpi_device object is not a device in general
->> >> >> > (althogh some pieces of code in the kernel, arguably incorrectly, treat it
->> >> >> > this way).  It is an abstract representation of a firmware entity (a node
->> >> >> > in the ACPI namespace).
->> >> >> >
->> >> >> > There really should be a "physical device" thing corresponding to it and
->> >> >> > that should be a child of the PCI device object in question.
->> >> >>
->> >> >> I thought I established that by the sysfs readlink I output I
->> >> >> previously provided?
->> >> >>
->> >> >> # ls /sys/devices/platform/| grep INT3452
->> >> >> INT3452:00
->> >> >> INT3452:01
->> >> >> INT3452:02
->> >> >> INT3452:03
->> >> >>
->> >> >> # ls /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11 | grep INT3452
->> >> >> INT3452:00
->> >> >> INT3452:01
->> >> >> INT3452:02
->> >> >> INT3452:03
->> >> >>
->> >> >> # readlink -f /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11/INT3452:00/physical_node
->> >> >> /sys/devices/platform/INT3452:00
->> >> >
->> >> > OK
->> >> >
->> >> > I must have missed that part.
->> >> >
->> >> >> >
->> >> >> >> > Do we assign BARs for endpoints during enumeration or only when we find a
->> >> >> >> > matching driver?
->> >> >> >>
->> >> >> >> BARs look to be assigned during enumeration. There's where conflicts
->> >> >> >> are found and resources reassigned in the current failing case.
->> >> >> >
->> >> >> > OK
->> >> >> >
->> >> >> > You seem to be saying that we insert some resources for ACPI device objects
->> >> >> > that correspond to the children of ACPI companions of PCI devices before we
->> >> >> > assign the BARs for their parent devices.
->> >> >>
->> >> >> The pci_dev is the one owning the parent resource. Even if there is a
->> >> >> companion ACPI device with a resource it doesn't matter because there
->> >> >> will still be a conflict because there is no checking against the
->> >> >> companion. There are 2 parallel entities without any communication
->> >> >> between the PCI subsystem and the ACPI subsystem when resources are
->> >> >> being added.
->> >> >>
->> >> >> >
->> >> >> > To me, that sounds very suspicious.
->> >> >> >
->> >> >> > Where in the code are the ACPI resources inserted, exactly?
->> >> >>
->> >> >> I believe it's through this mechanism:
->> >> >> acpi_bus_attach() -> acpi_default_enumeration() ->
->> >> >> acpi_create_platform_device() -> platform_device_register_full()
->> >> >
->> >> > I still would like to understand how and why that is called for child devices
->> >> > before the (physical) parent is enumerated.
->> >> >
->> >> > The theory is that when the PCI host bridge is found in the ACPI namespace,
->> >> > it will be enumerated along with the entire PCI bus below it before enumerating
->> >> > any _HID devices in the ACPI namespace below the host bridge object.
->> >> >
->> >> > Therefore all PCI devices should be enumerated before any children of any of
->> >> > them that aren't PCI devices themselves.  If BARs are assigned during
->> >> > enumeration, they all should be assigned before inserting any resources
->> >> > for any non-PCI children of any PCI devices.
->> >> >
->> >> > If that doesn't happen, the practice doesn't match the theory and that very
->> >> > well may be the source of the problem you're seeing.
->> >> >
->> >>
->> >> I'll sprinkle some WARN_ON()s in the resource code to track down when
->> >> things are being added to provide a definitive answer to when these
->> >> resources are being inserted. The current issue is still stands:
->> >> there is nothing properly tying the 2 sources of resource information
->> >> together. And ACPI resources are added prior to PCI resources.
->> >
->> > OK, I see what's going on.
->> >
->> >> PCI devices might be enumerated, but that doesn't mean their
->> >> *resources* are added.
->> >
->> > Right.
->> >
->> >> Back to the subsys_initcall topic:
->> >>
->> >> pci_subsys_init() is called *after* acpi_init().
->> >>
->> >> pci_subsys_init() -> pcibios_init() -> pcibios_resource_survey() ->
->> >> pcibios_allocate_resources() -> pcibios_allocate_dev_resources() ->
->> >> pci_claim_resource()
->> >
->> > So first, the PCI resources are allocated in an additional pass after bus
->> > enumeration and after enumerating platform devices based on the ACPI namespace.
->> > That causes resources of the (non-PCI) children to be inserted before the
->> > resources of the (PCI) parents.
->>
->> What is the proposal for fixing this issue?
->
-> I can think about a couple of ways, but I'm not sure which one is the best
-> candidate from the regression risk perspective etc.
->
-> I need to talk about that to some people who are on vacation ATM.
->
->> > But the problem seems to be that acpi_create_platform_device() doesn't
->> > check parent resources at all.  Namely, when pdevinfo.parent is set, the
->> > function should look at the resources of the parent and possibly populate
->> > the parent field of the new device's resources before passing them to
->> > platform_device_register_full().
->>
->> In the particular issue I reported how would the parent device have
->> any resources if it's a PCI device?
->
-> If we can fix the ordering (so that the resources of parents are always
-> inserted before the resources of their children), then it shouldn't
-> matter whether or not it is a PCI device.
->
-> In any case, though, its ACPI companion will have information on the
-> resources the device is using.
+IOAPICs present during system boot aren't added to ioapic_list,
+thus are unable to be hot-removed. Fix it by calling
+acpi_ioapic_add() during root bus enumeration.
 
-Thanks. Let me know if you want me to do anything.. validate
-something. Take a stab at something, etc.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/internal.h |  2 --
+ drivers/acpi/ioapic.c   |  7 ++++---
+ drivers/acpi/pci_root.c | 13 ++++++++++++-
+ drivers/pci/setup-bus.c |  5 ++++-
+ include/linux/acpi.h    |  6 ++++++
+ 5 files changed, 26 insertions(+), 7 deletions(-)
 
--Aaron
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 27cc7fe..6d8e67e 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -40,10 +40,8 @@ int acpi_sysfs_init(void);
+ void acpi_container_init(void);
+ void acpi_memory_hotplug_init(void);
+ #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
+-int acpi_ioapic_add(struct acpi_pci_root *root);
+ int acpi_ioapic_remove(struct acpi_pci_root *root);
+ #else
+-static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
+ static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
+ #endif
+ #ifdef CONFIG_ACPI_DOCK
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index ccdc8db..0f272e2 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -189,16 +189,17 @@ exit:
+ 	return AE_OK;
+ }
+ 
+-int acpi_ioapic_add(struct acpi_pci_root *root)
++int acpi_ioapic_add(acpi_handle root_handle)
+ {
+ 	acpi_status status, retval = AE_OK;
+ 
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root_handle,
+ 				     UINT_MAX, handle_ioapic_add, NULL,
+-				     root->device->handle, (void **)&retval);
++				     root_handle, (void **)&retval);
+ 
+ 	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
+ }
++EXPORT_SYMBOL_GPL(acpi_ioapic_add);
+ 
+ int acpi_ioapic_remove(struct acpi_pci_root *root)
+ {
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..d818c61 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -614,7 +614,18 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
+-		acpi_ioapic_add(root);
++
++		/*
++		 * This is only called for the hotadd case. For the boot-time
++		 * case, we need to wait until after PCI initialization in
++		 * order to deal with IOAPICs mapped in on a PCI BAR.
++		 *
++		 * This is currently x86-specific, because acpi_ioapic_add()
++		 * is an empty function without CONFIG_ACPI_HOTPLUG_IOAPIC.
++		 * And CONFIG_ACPI_HOTPLUG_IOAPIC depends on CONFIG_X86_IO_APIC
++		 * (see drivers/acpi/Kconfig).
++		 */
++		acpi_ioapic_add(root->device->handle);
+ 	}
+ 
+ 	pci_lock_rescan_remove();
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..e32c356 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -25,6 +25,7 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <linux/acpi.h>
+ #include "pci.h"
+ 
+ unsigned int pci_flags;
+@@ -1779,8 +1780,10 @@ void __init pci_assign_unassigned_resources(void)
+ {
+ 	struct pci_bus *root_bus;
+ 
+-	list_for_each_entry(root_bus, &pci_root_buses, node)
++	list_for_each_entry(root_bus, &pci_root_buses, node) {
+ 		pci_assign_unassigned_root_bus_resources(root_bus);
++		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
++	}
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 288fac5..f5114dc 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -680,6 +680,12 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+ 
+ #endif	/* !CONFIG_ACPI */
+ 
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_ioapic_add(acpi_handle root);
++#else
++static inline int acpi_ioapic_add(acpi_handle root) { return 0; }
++#endif
++
+ #ifdef CONFIG_ACPI
+ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
+ 			       u32 pm1a_ctrl,  u32 pm1b_ctrl));
+-- 
+1.8.3.1
