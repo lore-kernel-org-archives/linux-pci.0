@@ -1,58 +1,66 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
+Return-Path: <andreas.noever@gmail.com>
+Return-Path: <andreas.noever@gmail.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20160719213751.GA18635@localhost>
-References: <1465223133-73532-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <20160719213751.GA18635@localhost>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 20 Jul 2016 00:04:19 +0200
-Message-ID: <CAJZ5v0heN60WdN3QWCg85nUq+Rv8QGRMMNbq6ZvWWPf0By-xPA@mail.gmail.com>
-Subject: Re: [PATCH v1 1/1] PCI / PM: check all fields in pci_set_platform_pm()
+In-Reply-To: <20160719220236.GC18635@localhost>
+References: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com> <20160719220236.GC18635@localhost>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Tue, 26 Jul 2016 09:35:01 +0200
+Message-ID: <CAMxnaaW6O9rcEyDiqR7mMb4iS6hfhg9Zq=Ep2NaOhTCg34em0g@mail.gmail.com>
+Subject: Re: [PATCH v4 0/7] thunderbolt: Introducing Thunderbolt(TM) networking
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PM <linux-pm@vger.kernel.org>
+Cc: Amir Levy <amir.jer.levy@intel.com>, Greg KH <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
+	thunderbolt-linux <thunderbolt-linux@intel.com>,
+	"Westerberg, Mika" <mika.westerberg@intel.com>, "Winkler, Tomas" <tomas.winkler@intel.com>
 Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 19, 2016 at 11:37 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Jun 06, 2016 at 05:25:33PM +0300, Andy Shevchenko wrote:
->> When assign new PCI platform PM operations check for all mandatory fields to
->> prevent NULL pointer dereference.
+On Wed, Jul 20, 2016 at 12:02 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Mon, Jul 18, 2016 at 01:00:33PM +0300, Amir Levy wrote:
+>> This is version 4 of Thunderbolt(TM) driver for non-Apple hardware.
 >>
->> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->> ---
->>  drivers/pci/pci.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
+>> Changes since v3:
+>>  - Moved new Thunderbolt device IDs from pci_ids.h to icm_nhi.h.
+>>  - Cleanup and added some comments in code.
 >>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index c8b4dbd..badbddc 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -530,8 +530,8 @@ static const struct pci_platform_pm_ops *pci_platform_pm;
+>> These patches were pushed to GitHub where they can be reviewed more
+>> comfortably with green/red highlighting:
+>>       https://github.com/01org/thunderbolt-software-kernel-tree
 >>
->>  int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
->>  {
->> -     if (!ops->is_manageable || !ops->set_state || !ops->choose_state
->> -         || !ops->sleep_wake)
->> +     if (!ops->is_manageable || !ops->set_state || !ops->choose_state ||
->> +         !ops->sleep_wake || !ops->run_wake || !ops->need_resume)
->>               return -EINVAL;
+>> Daemon code:
+>>       https://github.com/01org/thunderbolt-software-daemon
+>>
+>> For reference, here's a link to version 3:
+>> [v3]: https://lkml.org/lkml/2016/7/14/311
+>>
+>> Amir Levy (7):
+>>   thunderbolt: Macro rename
+>>   thunderbolt: Updating the register definitions
+>>   thunderbolt: Kconfig for Thunderbolt(TM) networking
+>>   thunderbolt: Communication with the ICM (firmware)
+>>   thunderbolt: Networking state machine
+>>   thunderbolt: Networking transmit and receive
+>>   thunderbolt: Networking doc
+>>
+>>  Documentation/00-INDEX                   |    2 +
+>>  Documentation/thunderbolt-networking.txt |  135 ++
+>>  drivers/thunderbolt/Kconfig              |   25 +-
+>>  drivers/thunderbolt/Makefile             |    3 +-
+>>  drivers/thunderbolt/icm/Makefile         |   28 +
+>>  drivers/thunderbolt/icm/icm_nhi.c        | 1642 +++++++++++++++++++++
+>>  drivers/thunderbolt/icm/icm_nhi.h        |   93 ++
+>>  drivers/thunderbolt/icm/net.c            | 2276 ++++++++++++++++++++++++++++++
+>>  drivers/thunderbolt/icm/net.h            |  274 ++++
+>>  drivers/thunderbolt/nhi_regs.h           |  115 +-
+>>  10 files changed, 4585 insertions(+), 8 deletions(-)
+>>  create mode 100644 Documentation/thunderbolt-networking.txt
+>>  create mode 100644 drivers/thunderbolt/icm/Makefile
+>>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
+>>  create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
+>>  create mode 100644 drivers/thunderbolt/icm/net.c
+>>  create mode 100644 drivers/thunderbolt/icm/net.h
 >
-> This looks OK to me.  platform_pci_run_wake() and
-> platform_pci_need_resume() assume that if pci_platform_pm is set,
-> pci_platform_pm->run_wake and pci_platform_pm->need_resume are valid
-> function pointers.  This is analogous to what we already do for
-> ops->is_manageable, etc.
->
-> Rafael, do you want to take this or should I?
->
->>       pci_platform_pm = ops;
->>       return 0;
->> --
-
-I can take it.
-
-Thanks,
-Rafael
+> Andreas, I assume you'll handle this.
+No, this is a separate driver.
