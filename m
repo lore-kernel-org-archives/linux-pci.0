@@ -1,185 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:36198 "EHLO
-	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751197AbcHAG6o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Aug 2016 02:58:44 -0400
-From: Haggai Eran <haggaie@mellanox.com>
-To: linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: linux-pci@vger.kernel.org,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	Liran Liss <liranl@mellanox.com>,
-	Leon Romanovsky <leonro@mellanox.com>,
-	Artemy Kovalyov <artemyko@mellanox.com>,
-	Jerome Glisse <j.glisse@gmail.com>,
-	Yishai Hadas <yishaih@mellanox.com>,
-	Haggai Eran <haggaie@mellanox.com>
-Subject: [RFC 6/7] NVMe: Use genalloc to allocate CMB regions
-Date: Mon,  1 Aug 2016 09:57:32 +0300
-Message-Id: <1470034653-9097-7-git-send-email-haggaie@mellanox.com>
-In-Reply-To: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <andreas.noever@gmail.com>
+Return-Path: <andreas.noever@gmail.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	xavier.gnata@gmail.com,
+	gregkh@linuxfoundation.org
+Cc: lukas@wunner.de,
+	helgaas@kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH 2/2] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C controller.
+Date: Tue, 26 Jul 2016 18:40:38 +0200
+Message-Id: <20160726164038.1481-2-andreas.noever@gmail.com>
+In-Reply-To: <20160726164038.1481-1-andreas.noever@gmail.com>
+References: <20160726164038.1481-1-andreas.noever@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Register the CMB in a gen_pool dedicated to manage CMB regions. Use the
-pool to allocate the SQs to make sure they are registered.
+From: Xavier Gnata <xavier.gnata@gmail.com>
 
-Signed-off-by: Haggai Eran <haggaie@mellanox.com>
+From: Xavier Gnata <xavier.gnata@gmail.com>
+
+Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk
+to support suspend/resume.
+Tested against 4.7 master on a MacBook Air 11" 2015.
+
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/nvme/host/nvme-pci.h | 24 ++++++++++++++++++++
- drivers/nvme/host/pci.c      | 54 ++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 74 insertions(+), 4 deletions(-)
- create mode 100644 drivers/nvme/host/nvme-pci.h
+ drivers/pci/quirks.c      | 4 ++++
+ drivers/thunderbolt/nhi.c | 6 ++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/nvme/host/nvme-pci.h b/drivers/nvme/host/nvme-pci.h
-new file mode 100644
-index 000000000000..5b29508dc182
---- /dev/null
-+++ b/drivers/nvme/host/nvme-pci.h
-@@ -0,0 +1,24 @@
-+/*
-+ * Copyright © 2016 Mellanox Technlogies. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ */
-+
-+#ifndef _NVME_PCI_H
-+#define _NVME_PCI_H
-+
-+#include "nvme.h"
-+
-+struct nvme_dev;
-+
-+void *nvme_alloc_cmb(struct nvme_dev *dev, size_t size, dma_addr_t *dma_addr);
-+void nvme_free_cmb(struct nvme_dev *dev, void *addr, size_t size);
-+
-+#endif
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index befac5b19490..d3da5d9552dd 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -42,8 +42,10 @@
- #include <linux/types.h>
- #include <linux/io-64-nonatomic-lo-hi.h>
- #include <asm/unaligned.h>
-+#include <linux/genalloc.h>
- 
- #include "nvme.h"
-+#include "nvme-pci.h"
- 
- #define NVME_Q_DEPTH		1024
- #define NVME_AQ_DEPTH		256
-@@ -99,6 +101,7 @@ struct nvme_dev {
- 	dma_addr_t cmb_dma_addr;
- 	u64 cmb_size;
- 	u32 cmbsz;
-+	struct gen_pool *cmb_pool;
- 	struct nvme_ctrl ctrl;
- 	struct completion ioq_wait;
- };
-@@ -937,11 +940,17 @@ static void nvme_cancel_io(struct request *req, void *data, bool reserved)
- 
- static void nvme_free_queue(struct nvme_queue *nvmeq)
- {
-+	struct nvme_dev *dev = nvmeq->dev;
-+
- 	dma_free_coherent(nvmeq->q_dmadev, CQ_SIZE(nvmeq->q_depth),
- 				(void *)nvmeq->cqes, nvmeq->cq_dma_addr);
- 	if (nvmeq->sq_cmds)
- 		dma_free_coherent(nvmeq->q_dmadev, SQ_SIZE(nvmeq->q_depth),
- 					nvmeq->sq_cmds, nvmeq->sq_dma_addr);
-+	if (nvmeq->sq_cmds_io)
-+		nvme_free_cmb(dev, nvmeq->sq_cmds_io,
-+			      roundup(SQ_SIZE(nvmeq->q_depth),
-+				      dev->ctrl.page_size));
- 	kfree(nvmeq);
- }
- 
-@@ -1032,10 +1041,12 @@ static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
- 				int qid, int depth)
- {
- 	if (qid && dev->cmb && use_cmb_sqes && NVME_CMB_SQS(dev->cmbsz)) {
--		unsigned offset = (qid - 1) * roundup(SQ_SIZE(depth),
--						      dev->ctrl.page_size);
--		nvmeq->sq_dma_addr = dev->cmb_dma_addr + offset;
--		nvmeq->sq_cmds_io = dev->cmb + offset;
-+		nvmeq->sq_cmds_io =
-+			nvme_alloc_cmb(dev, roundup(SQ_SIZE(depth),
-+						    dev->ctrl.page_size),
-+				       &nvmeq->sq_dma_addr);
-+		if (!nvmeq->sq_cmds_io)
-+			return -ENOMEM;
- 	} else {
- 		nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
- 					&nvmeq->sq_dma_addr, GFP_KERNEL);
-@@ -1339,6 +1350,7 @@ static void __iomem *nvme_map_cmb(struct nvme_dev *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
- 	void __iomem *cmb;
- 	dma_addr_t dma_addr;
-+	int ret;
- 
- 	if (!use_cmb_sqes)
- 		return NULL;
-@@ -1372,17 +1384,51 @@ static void __iomem *nvme_map_cmb(struct nvme_dev *dev)
- 
- 	dev->cmb_dma_addr = dma_addr;
- 	dev->cmb_size = size;
-+
-+	dev->cmb_pool = gen_pool_create(PAGE_SHIFT, -1);
-+	if (!dev->cmb_pool)
-+		goto unmap;
-+
-+	ret = gen_pool_add_virt(dev->cmb_pool, (unsigned long)(uintptr_t)cmb,
-+				dma_addr, size, -1);
-+	if (ret)
-+		goto destroy_pool;
-+
- 	return cmb;
-+
-+destroy_pool:
-+	gen_pool_destroy(dev->cmb_pool);
-+	dev->cmb_pool = NULL;
-+unmap:
-+	iounmap(cmb);
-+	return NULL;
- }
- 
- static inline void nvme_release_cmb(struct nvme_dev *dev)
- {
- 	if (dev->cmb) {
-+		gen_pool_destroy(dev->cmb_pool);
- 		iounmap(dev->cmb);
- 		dev->cmb = NULL;
- 	}
- }
- 
-+void *nvme_alloc_cmb(struct nvme_dev *dev, size_t size, dma_addr_t *dma_addr)
-+{
-+	if (!dev->cmb_pool)
-+		return NULL;
-+
-+	return gen_pool_dma_alloc(dev->cmb_pool, size, dma_addr);
-+}
-+
-+void nvme_free_cmb(struct nvme_dev *dev, void *addr, size_t size)
-+{
-+	if (WARN_ON(!dev->cmb_pool))
-+		return;
-+
-+	gen_pool_free(dev->cmb_pool, (unsigned long)(uintptr_t)addr, size);
-+}
-+
- static size_t db_bar_size(struct nvme_dev *dev, unsigned nr_io_queues)
- {
- 	return 4096 + ((nr_io_queues + 1) * 8 * dev->db_stride);
+Rebased version of Xavier's patch.
+
+Xavier, could you verify that this still works on your system?
+
+Thanks,
+Andreas
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 75b2105..981f17d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3325,6 +3325,7 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
+ 	if (nhi->vendor != PCI_VENDOR_ID_INTEL
+ 		    || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
+ 			nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
++			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI &&
+ 			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+ 		    || nhi->class != PCI_CLASS_SYSTEM_OTHER << 8)
+ 		goto out;
+@@ -3341,6 +3342,9 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+ 			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+ 			       quirk_apple_wait_for_thunderbolt);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
++			       PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
++			       quirk_apple_wait_for_thunderbolt);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+ 			       PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
+ 			       quirk_apple_wait_for_thunderbolt);
+ #endif
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 9c15344..a8c2041 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -651,6 +651,12 @@ static struct pci_device_id nhi_ids[] = {
+ 	{
+ 		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+ 		.vendor = PCI_VENDOR_ID_INTEL,
++		.device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
++		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
++	},
++	{
++		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
++		.vendor = PCI_VENDOR_ID_INTEL,
+ 		.device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
+ 		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+ 	},
 -- 
-1.7.11.2
-
+2.9.0
