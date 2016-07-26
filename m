@@ -1,38 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0064.outbound.protection.outlook.com ([104.47.37.64]:37094
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757302AbcGKCsK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jul 2016 22:48:10 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: PCIe MSI address is not written at pci_enable_msi_range call
-Date: Mon, 11 Jul 2016 02:32:04 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com
+Cc: bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: [PATCH 3/4] x86/ioapic: Fix lost ioapic resource after hot-removal and hotadd
+Date: Wed, 27 Jul 2016 00:13:16 +0800
+Message-Id: <1469549597-19253-4-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
+References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+ioapic resource at 0xfecxxxxx gets lost from /proc/iomem after
+hot-removing and then hot-adding the ioapic devices.
 
-I have a query.
-I see that when we use PCI_MSI_IRQ_DOMAIN to handle MSI's, MSI address is not being
-written in to end point's PCI_MSI_ADDRESS_LO/HI at the call pci_enable_msi_range.
+After system boot, in /proc/iomem:
+fec00000-fecfffff : PNP0003:00
+  fec00000-fec003ff : IOAPIC 0
+  fec01000-fec013ff : IOAPIC 1
+  fec40000-fec403ff : IOAPIC 2
+  fec80000-fec803ff : IOAPIC 3
+  fecc0000-fecc03ff : IOAPIC 4
 
-Instead it is being written at the time end point requests irq.
+Then hot-remove IOAPIC 2 and hot-add it again:
+fec00000-fecfffff : PNP0003:00
+  fec00000-fec003ff : IOAPIC 0
+  fec01000-fec013ff : IOAPIC 1
+  fec80000-fec803ff : IOAPIC 3
+  fecc0000-fecc03ff : IOAPIC 4
 
-Can any one tell the reason why is it handled in this manner ?
+The range at 0xfec40000 is lost from /proc/iomem. It is because
+handle_ioapic_add() requests resource from either PCI config BAR or
+acpi _CRS, not both. But Intel platforms map the IOxAPIC registers
+at both the PCI config BAR (called MBAR) and the 0xfecX_YZ00 to
+0xfecX_Y2FF range (called ABAR). Both of the ranges should be claimed
+from /proc/iomem for exclusive use.
 
-Correct me If my observation is wrong.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/ioapic.c | 36 ++++++++++++++++++++----------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
 
-Thanks & Regards,
-Bharat
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index daf4a40..80b0b1a 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -97,7 +97,7 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
+ 	unsigned long long gsi_base;
+ 	struct acpi_pci_ioapic *ioapic;
+ 	struct pci_dev *dev = NULL;
+-	struct resource *res = NULL;
++	struct resource *res = NULL, *pci_res, *crs_res;
+ 	char *type = NULL;
+ 
+ 	if (!acpi_is_ioapic(handle, &type))
+@@ -137,23 +137,28 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
+ 		pci_set_master(dev);
+ 		if (pci_request_region(dev, 0, type))
+ 			goto exit_disable;
+-		res = &dev->resource[0];
++		pci_res = &dev->resource[0];
+ 		ioapic->pdev = dev;
+ 	} else {
+ 		pci_dev_put(dev);
+ 		dev = NULL;
++	}
+ 
+-		res = &ioapic->res;
+-		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
+-		if (res->flags == 0) {
+-			acpi_handle_warn(handle, "failed to get resource\n");
+-			goto exit_free;
+-		} else if (request_resource(&iomem_resource, res)) {
+-			acpi_handle_warn(handle, "failed to insert resource\n");
+-			goto exit_free;
+-		}
++	crs_res = &ioapic->res;
++	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
++	if (crs_res->flags == 0) {
++		acpi_handle_warn(handle, "failed to get resource\n");
++		goto exit_release;
++	} else if (request_resource(&iomem_resource, crs_res)) {
++		acpi_handle_warn(handle, "failed to insert resource\n");
++		goto exit_release;
+ 	}
+ 
++	/* try pci resource first, then "_CRS" resource */
++	res = pci_res;
++	if (!res || !res->flags)
++		res = crs_res;
++
+ 	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
+ 		acpi_handle_warn(handle, "failed to register IOAPIC\n");
+ 		goto exit_release;
+@@ -174,14 +179,13 @@ done:
+ exit_release:
+ 	if (dev)
+ 		pci_release_region(dev, 0);
+-	else
+-		release_resource(res);
++	if (ioapic->res.flags && ioapic->res.parent)
++		release_resource(&ioapic->res);
+ exit_disable:
+ 	if (dev)
+ 		pci_disable_device(dev);
+ exit_put:
+ 	pci_dev_put(dev);
+-exit_free:
+ 	kfree(ioapic);
+ exit:
+ 	mutex_unlock(&ioapic_list_lock);
+@@ -218,9 +222,9 @@ int acpi_ioapic_remove(struct acpi_pci_root *root)
+ 			pci_release_region(ioapic->pdev, 0);
+ 			pci_disable_device(ioapic->pdev);
+ 			pci_dev_put(ioapic->pdev);
+-		} else if (ioapic->res.flags && ioapic->res.parent) {
+-			release_resource(&ioapic->res);
+ 		}
++		if (ioapic->res.flags && ioapic->res.parent)
++			release_resource(&ioapic->res);
+ 		list_del(&ioapic->list);
+ 		kfree(ioapic);
+ 	}
+-- 
+1.8.3.1
