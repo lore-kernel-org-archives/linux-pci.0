@@ -1,52 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51888 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757921AbcGKKVv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jul 2016 06:21:51 -0400
-Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57835D35.1000901@arm.com>
- <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <5783733C.70702@arm.com>
-Date: Mon, 11 Jul 2016 11:21:48 +0100
-MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com
+Cc: bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: [PATCH 2/4] x86/ioapic: Fix setup_res() failing to get resource
+Date: Wed, 27 Jul 2016 00:13:15 +0800
+Message-Id: <1469549597-19253-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
+References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[Please don't top-post]
+setup_res() doesn't actually get any resoure because it mistakenly
+checks the return value of acpi_dev_filter_resource_type(), which
+returns 0 on success, and 1 on failure. Fix it by taking the return
+value of non-zero as failing to match the specified resource type.
 
-On 11/07/16 10:33, Bharat Kumar Gogada wrote:
-> Hi Marc,
-> 
-> Thanks for the reply.
-> 
-> From PCIe Spec:
-> MSI Enable Bit:
-> If 1 and the MSI-X Enable bit in the MSI-X Message
-> Control register (see Section 6.8.2.3) is 0, the
-> function is permitted to use MSI to request service
-> and is prohibited from using its INTx# pin.
-> 
-> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used which means MSI address and data fields are available/programmed.
-> 
-> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware latches onto MSI address and MSI data values.
-> 
-> With current MSI implementation in kernel, our SoC is latching on to incorrect address and data values, as address/data
-> are updated much later than MSI Enable bit.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/ioapic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Interesting. It looks like we're doing something wrong in the MSI flow.
-Can you confirm that this is limited to MSI and doesn't affect MSI-X?
-
-Thanks,
-
-	M.
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index 0f272e2..daf4a40 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -46,7 +46,7 @@ static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
+ 	struct resource_win win;
+ 
+ 	res->flags = 0;
+-	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
++	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM))
+ 		return AE_OK;
+ 
+ 	if (!acpi_dev_resource_memory(acpi_res, res)) {
 -- 
-Jazz is not dead. It just smells funny...
+1.8.3.1
