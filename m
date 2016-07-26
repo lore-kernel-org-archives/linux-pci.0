@@ -1,76 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	David Daney <david.daney@cavium.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 12/14] PCI: thunder-ecam: make it explicitly non-modular
-Date: Sat, 2 Jul 2016 19:13:32 -0400
-Message-ID: <20160702231334.26684-13-paul.gortmaker@windriver.com>
-In-Reply-To: <20160702231334.26684-1-paul.gortmaker@windriver.com>
-References: <20160702231334.26684-1-paul.gortmaker@windriver.com>
+Return-Path: <thierry.reding@gmail.com>
+Return-Path: <thierry.reding@gmail.com>
+Date: Tue, 26 Jul 2016 11:54:15 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: tegra: Stop setting pcibios_min_mem
+Message-ID: <20160726095415.GD2433@ulmo.ba.sec>
+References: <20160630131430.32096-1-thierry.reding@gmail.com>
+ <20160630131430.32096-3-thierry.reding@gmail.com>
+ <20160725212850.GA24485@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="MAH+hnPXVZWQ5cD/"
+In-Reply-To: <20160725212850.GA24485@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
 
-drivers/pci/host/Kconfig:config PCI_HOST_THUNDER_ECAM
-drivers/pci/host/Kconfig:       bool "Cavium Thunder ECAM controller to on-chip devices on pass-1.x silicon"
+--MAH+hnPXVZWQ5cD/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-...meaning that it currently is not being built as a module by anyone.
+On Mon, Jul 25, 2016 at 04:28:50PM -0500, Bjorn Helgaas wrote:
+> On Thu, Jun 30, 2016 at 03:14:30PM +0200, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > In practice this value will never be used and it hinders portability of
+> > the driver, so remove it.
+> >=20
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+> > ---
+> >  drivers/pci/host/pci-tegra.c | 2 --
+> >  1 file changed, 2 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > index f04b062e8c67..bbf77a49517d 100644
+> > --- a/drivers/pci/host/pci-tegra.c
+> > +++ b/drivers/pci/host/pci-tegra.c
+> > @@ -2249,8 +2249,6 @@ static int tegra_pcie_probe(struct platform_devic=
+e *pdev)
+> >  	if (err < 0)
+> >  		return err;
+> > =20
+> > -	pcibios_min_mem =3D 0;
+>=20
+> unsigned long pcibios_min_mem =3D 0x01000000;   # arch/arm/mm/iomap.c
+> #define PCIBIOS_MIN_MEM pcibios_min_mem       # arch/arm/include/asm/pci.h
+>=20
+> PCIBIOS_MIN_MEM is used in __pci_assign_resource().
+>=20
+> It looks to me like we still use pcibios_min_mem; am I missing something?
 
-Lets remove the few trace uses of modular code and macros, so that
-when reading the driver there is no doubt it is builtin-only.
+The problem is that pcibios_min_mem is only defined on 32-bit ARM, so
+we'd need to conditionalize (with a preprocessor macro) the usage.
+However it turns out that it's not necessary because PCIBIOS_MIN_MEM
+only serves as a lower bound during resource assignment.
 
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
+pci_bus_alloc_resource() will eventually end up assigning from one of
+the regions defined in device tree and the lowest we'll ever start any
+of the memory regions is 0x12000000 (Tegra124).
 
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+So instead of conditionalizing I've simply dropped the assignment
+because the default works fine for Tegra.
 
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
+Thierry
 
-Cc: David Daney <david.daney@cavium.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pci-thunder-ecam.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+--MAH+hnPXVZWQ5cD/
+Content-Type: application/pgp-signature; name="signature.asc"
 
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-index a9fc1c9105fd..d50a3dc2d8db 100644
---- a/drivers/pci/host/pci-thunder-ecam.c
-+++ b/drivers/pci/host/pci-thunder-ecam.c
-@@ -7,7 +7,7 @@
-  */
- 
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/ioport.h>
- #include <linux/of_pci.h>
- #include <linux/of.h>
-@@ -359,7 +359,6 @@ static const struct of_device_id thunder_ecam_of_match[] = {
- 	{ .compatible = "cavium,pci-host-thunder-ecam" },
- 	{ },
- };
--MODULE_DEVICE_TABLE(of, thunder_ecam_of_match);
- 
- static int thunder_ecam_probe(struct platform_device *pdev)
- {
-@@ -373,7 +372,4 @@ static struct platform_driver thunder_ecam_driver = {
- 	},
- 	.probe = thunder_ecam_probe,
- };
--module_platform_driver(thunder_ecam_driver);
--
--MODULE_DESCRIPTION("Thunder ECAM PCI host driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(thunder_ecam_driver);
--- 
-2.8.4
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJXlzNFAAoJEN0jrNd/PrOhOmsP/22j+5nUhtMaSDqSMt5uxsCv
+8IS09F9bNj6MZ93Ox+3TE46fZP+7uBY4miTvlG8gKVcM5R0slvgEm2Z+0cdHNz4P
+6BBDXSlqX8qllbEzSl+yOcRyix2fuVDu9EIMmIAL5L5rsoSBzXDhbrS9CUS1KARF
+tN+EqcO2pCIb4l+SEnSTPMTwK/ccPqGQpZvwjCGsbLgARBhI4xBivv5pwCtVo3zJ
+kmqFejYPv1zw8NqMyN8MZOcP7YYN23+KhlLyenCOznROClGK4sSt7Zzv/IXJhi9K
+4wgl3kT11Om9b3gY72Q1n4qzRLqlE1/HfvkmlPTZHyM4Juzly0t//Y9fY24ZAc6c
+tLR6Q7csP4o2iBEuxhN/a/3eZORaz6509DTjn7r2uwT8qYbxGbptMmtuAfB5Oo00
+iG7wO8CEiV+/TAgLwTSlN5emQeXJsmo7ZiZyCMLdKQbQx/dYQAFJsf8lP58RY0NY
+gASUY+zDgYrqZZmJTz8U1cyisD/DsoSQ20mQ0nXkS76+peTXufZo8dLLuwRo0lSU
+JRlmqr/o+4dJp9TpDPLUIM43BoYXY5SdjYGkevM1QFqa8SSJE27MutX5GxDC+h35
+6FXIQTTeNKvcB6du1MAL3359cUOML+bn5uW+vudkO0yRJqUwfcbfIORn8Zwg5h4L
+hbRGhtPXTPlynz4NCiPX
+=c8pk
+-----END PGP SIGNATURE-----
+
+--MAH+hnPXVZWQ5cD/--
