@@ -1,53 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57969 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753111AbcGDIKg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Jul 2016 04:10:36 -0400
-Date: Mon, 4 Jul 2016 10:15:41 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: tglx@linutronix.de, axboe@fb.com, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 11/13] blk-mq: allow the driver to pass in an affinity
- mask
-Message-ID: <20160704081540.GA2783@agordeev.lab.eng.brq.redhat.com>
-References: <1465934346-20648-1-git-send-email-hch@lst.de>
- <1465934346-20648-12-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1465934346-20648-12-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <andreas.noever@gmail.com>
+Return-Path: <andreas.noever@gmail.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	xavier.gnata@gmail.com,
+	gregkh@linuxfoundation.org
+Cc: lukas@wunner.de,
+	helgaas@kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH 1/2] thunderbolt: Fix resume quirk for Falcon Ridge 4C.
+Date: Tue, 26 Jul 2016 18:40:37 +0200
+Message-Id: <20160726164038.1481-1-andreas.noever@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 14, 2016 at 09:59:04PM +0200, Christoph Hellwig wrote:
-> +static int blk_mq_create_mq_map(struct blk_mq_tag_set *set,
-> +		const struct cpumask *affinity_mask)
-> +{
-> +	int queue = -1, cpu = 0;
-> +
-> +	set->mq_map = kzalloc_node(sizeof(*set->mq_map) * nr_cpu_ids,
-> +			GFP_KERNEL, set->numa_node);
-> +	if (!set->mq_map)
-> +		return -ENOMEM;
-> +
-> +	if (!affinity_mask)
-> +		return 0;	/* map all cpus to queue 0 */
-> +
-> +	/* If cpus are offline, map them to first hctx */
-> +	for_each_online_cpu(cpu) {
-> +		if (cpumask_test_cpu(cpu, affinity_mask))
-> +			queue++;
+The quirk 'quirk_apple_wait_for_thunderbolt' did not fire on Falcon
+Ridge 4C controllers with subdevice/subvendor set to zero. This lead
+to lost pci devices on system resume.
 
-CPUs missing in an affinity mask are mapped to hctxs. Is that intended?
+Older thunderbolt controllers (pre Falcon Ridge) used the same device id
+for bridges and for the controller. On Apple hardware the subvendor- &
+subdevice-ids were set for the controller, but not for bridges. So that
+is what was used to differentiate between the two. Starting with Falcon
+Ridge bridges and controllers received different device ids.
+Additionally on some MacBookPro models (but not all) the
+subvendor/subdevice was zeroed.
 
-> +		if (queue > 0)
+Starting with a42fb351c (thunderbolt: Allow loading of module on recent
+Apple MacBooks with thunderbolt 2 controller) the thunderbolt driver
+binds to all Falcon Ridge 4C controllers (irregardless of
+subvendor/subdevice). The corresponding quirk was not updated.
 
-Why this check?
+This commit changes the quirk to check the device class instead of its
+subvendor-/subdeviceids. This works for all generations of Thunderbolt
+controllers.
 
-> +			set->mq_map[cpu] = queue;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+---
+ drivers/pci/quirks.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ee72ebe..75b2105 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3326,8 +3326,7 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
+ 		    || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
+ 			nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+ 			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+-		    || nhi->subsystem_vendor != 0x2222
+-		    || nhi->subsystem_device != 0x1111)
++		    || nhi->class != PCI_CLASS_SYSTEM_OTHER << 8)
+ 		goto out;
+ 	dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish PCI tunnels...\n");
+ 	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
+-- 
+2.9.0
