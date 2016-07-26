@@ -1,203 +1,322 @@
-Return-Path: <adurbin@google.com>
-Return-Path: <adurbin@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34177 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753616AbcGZU6x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jul 2016 16:58:53 -0400
 MIME-Version: 1.0
-In-Reply-To: <3103060.86QBTjSLk3@vostro.rjw.lan>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
- <2300001.Cg2EHxyMN1@vostro.rjw.lan> <CAE2855sjXKkx+0RNYMhfqVQCs+cj8NWp6V2RZMoBjRBgcWi-ew@mail.gmail.com>
- <3103060.86QBTjSLk3@vostro.rjw.lan>
-From: Aaron Durbin <adurbin@google.com>
-Date: Mon, 25 Jul 2016 14:11:12 -0500
-Message-ID: <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
-Subject: Re: ACPI device using sub-resource of PCI device
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 26 Jul 2016 22:58:50 +0200
+Message-ID: <CAJZ5v0hEnbf2YeL4moe_Yy+XWq5WrnxJ9Gx=cb_BNQYdHvHpOg@mail.gmail.com>
+Subject: [GIT PULL] ACPI changes for v4.8-rc1
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 22, 2016 at 4:04 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Friday, July 22, 2016 12:26:03 PM Aaron Durbin wrote:
->> On Thu, Jul 21, 2016 at 7:55 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> > On Wednesday, July 20, 2016 08:58:29 PM Aaron Durbin wrote:
->> >> On Wed, Jul 20, 2016 at 7:40 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> >> > On Wednesday, July 20, 2016 06:02:08 PM Aaron Durbin wrote:
->> >
->> > [...]
->> >
->> >> >> > Isn't the problem a probe ordering issue, though?
->> >> >>
->> >> >> No. Not just ordering. There's no parent-child relationship taken into
->> >> >> account when PCI devices are added to the resource tree. Deferring
->> >> >> adding an ACPI device's resources would likely fail similarly because
->> >> >> one doesn't take into account the proper parent. One lives in PCI land
->> >> >> -- the other in ACPI land.
->> >> >
->> >> > What exactly do you mean by "PCI land" and "ACPI land"?
->> >> >
->> >> > All PCI resources are derived from the host bridge ones that come from
->> >> > ACPI anyway.
->> >>
->> >> Except that the BARs are queried in the pci devices themselves and
->> >> those resources are added w/o any communication to/from ACPI. That's
->> >> all done in the pci subsystem internally. Only if
->> >
->> > Well, not quite.
->> >
->> > It gets to host bridge resources via pcibios_bus_to_resource() AFAICS and
->> > those come from ACPI on ACPI-based systems.
->>
->> From what I can tell that's just updating resource values that have a
->> translation across a bridge. For a 1:1 mapping nothing is different
->> from the BAR encoded in the PCI device itself. Those windows are just
->> encoded in the bridge device. The only thing adjusted on the resources
->> is an offset. The BAR values are read from the device. That path is
->> just adjusting resources -- it's not adding those individual resources
->> into the resource tree for pci devices. See below.
->>
->> >
->> >> >
->> >> >> Currently, the issue is manifesting that the ACPI device's resources
->> >> >> are added into the resource tree. PCI devices the follow trying to add
->> >> >> their own resources. Conflicts ensue without taking into account the
->> >> >> proper hierarchy. To make matters worse, struct resource doesn't have
->> >> >> a struct device -- only a name. That means there's no way of knowing
->> >> >> who owns what resource. All that information is unavailable. That's
->> >> >> why the semi-hacky proposal was to see if there is an ACPI companion
->> >> >> device and see if it has children. If it's children's names match the
->> >> >> conflicting resource it's a good bet that the PCI device's resources
->> >> >> should be placed as the parent in the resource tree.
->> >> >
->> >> > That really looks like a broken hierarchy of devices somewhere.
->> >>
->> >> Why do you think it's a broken hierarchy? This CL has the heirarchy:
->> >> https://chromium-review.googlesource.com/#/c/359432/
->> >>
->> >> There is a device, P2S, which would result in an ACPI companion device
->> >> when the pci_dev is added to the device infrastructure by way of
->> >> acpi_platform_notify() which does the ACPI companion binding.
->> >> device_add() is the caller of platform_notify() which is set to
->> >> acpi_platform_notify() in init_acpi_device_notify() by way of
->> >> acpi_init().
->> >>
->> >> There are 4 children of the P2S device: GPO0, GPO1, GPO2, GPO3.
->> >>
->> >> Those children devices utilize a sub-resource of the P2S device which
->> >> has a pci_dev companion. It's BAR0 is the resource.
->> >
->> > OK
->> >
->> >> >
->> >> > And one more thing: a struct acpi_device object is not a device in general
->> >> > (althogh some pieces of code in the kernel, arguably incorrectly, treat it
->> >> > this way).  It is an abstract representation of a firmware entity (a node
->> >> > in the ACPI namespace).
->> >> >
->> >> > There really should be a "physical device" thing corresponding to it and
->> >> > that should be a child of the PCI device object in question.
->> >>
->> >> I thought I established that by the sysfs readlink I output I
->> >> previously provided?
->> >>
->> >> # ls /sys/devices/platform/| grep INT3452
->> >> INT3452:00
->> >> INT3452:01
->> >> INT3452:02
->> >> INT3452:03
->> >>
->> >> # ls /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11 | grep INT3452
->> >> INT3452:00
->> >> INT3452:01
->> >> INT3452:02
->> >> INT3452:03
->> >>
->> >> # readlink -f /sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:11/INT3452:00/physical_node
->> >> /sys/devices/platform/INT3452:00
->> >
->> > OK
->> >
->> > I must have missed that part.
->> >
->> >> >
->> >> >> > Do we assign BARs for endpoints during enumeration or only when we find a
->> >> >> > matching driver?
->> >> >>
->> >> >> BARs look to be assigned during enumeration. There's where conflicts
->> >> >> are found and resources reassigned in the current failing case.
->> >> >
->> >> > OK
->> >> >
->> >> > You seem to be saying that we insert some resources for ACPI device objects
->> >> > that correspond to the children of ACPI companions of PCI devices before we
->> >> > assign the BARs for their parent devices.
->> >>
->> >> The pci_dev is the one owning the parent resource. Even if there is a
->> >> companion ACPI device with a resource it doesn't matter because there
->> >> will still be a conflict because there is no checking against the
->> >> companion. There are 2 parallel entities without any communication
->> >> between the PCI subsystem and the ACPI subsystem when resources are
->> >> being added.
->> >>
->> >> >
->> >> > To me, that sounds very suspicious.
->> >> >
->> >> > Where in the code are the ACPI resources inserted, exactly?
->> >>
->> >> I believe it's through this mechanism:
->> >> acpi_bus_attach() -> acpi_default_enumeration() ->
->> >> acpi_create_platform_device() -> platform_device_register_full()
->> >
->> > I still would like to understand how and why that is called for child devices
->> > before the (physical) parent is enumerated.
->> >
->> > The theory is that when the PCI host bridge is found in the ACPI namespace,
->> > it will be enumerated along with the entire PCI bus below it before enumerating
->> > any _HID devices in the ACPI namespace below the host bridge object.
->> >
->> > Therefore all PCI devices should be enumerated before any children of any of
->> > them that aren't PCI devices themselves.  If BARs are assigned during
->> > enumeration, they all should be assigned before inserting any resources
->> > for any non-PCI children of any PCI devices.
->> >
->> > If that doesn't happen, the practice doesn't match the theory and that very
->> > well may be the source of the problem you're seeing.
->> >
->>
->> I'll sprinkle some WARN_ON()s in the resource code to track down when
->> things are being added to provide a definitive answer to when these
->> resources are being inserted. The current issue is still stands:
->> there is nothing properly tying the 2 sources of resource information
->> together. And ACPI resources are added prior to PCI resources.
->
-> OK, I see what's going on.
->
->> PCI devices might be enumerated, but that doesn't mean their
->> *resources* are added.
->
-> Right.
->
->> Back to the subsys_initcall topic:
->>
->> pci_subsys_init() is called *after* acpi_init().
->>
->> pci_subsys_init() -> pcibios_init() -> pcibios_resource_survey() ->
->> pcibios_allocate_resources() -> pcibios_allocate_dev_resources() ->
->> pci_claim_resource()
->
-> So first, the PCI resources are allocated in an additional pass after bus
-> enumeration and after enumerating platform devices based on the ACPI namespace.
-> That causes resources of the (non-PCI) children to be inserted before the
-> resources of the (PCI) parents.
+Hi Linus,
 
-What is the proposal for fixing this issue?
+Please pull from
 
->
-> But the problem seems to be that acpi_create_platform_device() doesn't
-> check parent resources at all.  Namely, when pdevinfo.parent is set, the
-> function should look at the resources of the parent and possibly populate
-> the parent field of the new device's resources before passing them to
-> platform_device_register_full().
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ acpi-4.8-rc1
 
-In the particular issue I reported how would the parent device have
-any resources if it's a PCI device?
+to receive core ACPI code updates for v4.8-rc1 with top-most commit
+54d0b14ad7cc4ff3c710f092a93638f359c1b14b
+
+ Merge branches 'acpi-drivers', 'acpi-misc' and 'acpi-tools'
+
+on top of commit 523d939ef98fd712632d93a5a2b588e477a7565e
+
+ Linux 4.7
+
+The new feaures here are the support for ACPI overlays (allowing
+ACPI tables to be loaded at any time from EFI variables or via
+configfs) and the LPI (Low-Power Idle) support.  Also notable
+is the ACPI-based NUMA support for ARM64.
+
+Apart from that we have two new drivers, for the DPTF (Dynamic
+Power and Thermal Framework) power participant device and for the
+Intel Broxton WhiskeyCove PMIC, some more PMIC-related changes,
+support for the Boot Error Record Table (BERT) in APEI and support
+for platform-initiated graceful shutdown.
+
+Plus two new pieces of documentation and usual assorted fixes and
+cleanups in quite a few places.
+
+Specifics:
+
+ - Support for ACPI SSDT overlays allowing Secondary System
+   Description Tables (SSDTs) to be loaded at any time from EFI
+   variables or via configfs (Octavian Purdila, Mika Westerberg).
+
+ - Support for the ACPI LPI (Low-Power Idle) feature introduced in
+   ACPI 6.0 and allowing processor idle states to be represented in
+   ACPI tables in a hierarchical way (with the help of Processor
+   Container objects) and support for ACPI idle states management
+   on ARM64, based on LPI (Sudeep Holla).
+
+ - General improvements of ACPI support for NUMA and ARM64 support
+   for ACPI-based NUMA (Hanjun Guo, David Daney, Robert Richter).
+
+ - General improvements of the ACPI table upgrade mechanism and
+   ARM64 support for that feature (Aleksey Makarov, Jon Masters).
+
+ - Support for the Boot Error Record Table (BERT) in APEI and
+   improvements of kernel messages printed by the error injection
+   code (Huang Ying, Borislav Petkov).
+
+ - New driver for the Intel Broxton WhiskeyCove PMIC operation
+   region and support for the REGS operation region on Broxton,
+   PMIC code cleanups (Bin Gao, Felipe Balbi, Paul Gortmaker).
+
+ - New driver for the power participant device which is part of the
+   Dynamic Power and Thermal Framework (DPTF) and DPTF-related code
+   reorganization (Srinivas Pandruvada).
+
+ - Support for the platform-initiated graceful shutdown feature
+   introduced in ACPI 6.1 (Prashanth Prakash).
+
+ - ACPI button driver update related to lid input events generated
+   automatically on initialization and system resume that have been
+   problematic for some time (Lv Zheng).
+
+ - ACPI EC driver cleanups (Lv Zheng).
+
+ - Documentation of the ACPICA release automation process and the
+   in-kernel ACPI AML debugger (Lv Zheng).
+
+ - New blacklist entry and two fixes for the ACPI backlight driver
+   (Alex Hung, Arvind Yadav, Ralf Gerbig).
+
+ - Cleanups of the ACPI pci_slot driver (Joe Perches, Paul Gortmaker).
+
+ - ACPI CPPC code changes to make it more robust against possible
+   defects in ACPI tables and new symbol definitions for PCC (Hoan
+   Tran).
+
+ - System reboot code modification to execute the ACPI _PTS (Prepare
+   To Sleep) method in addition to _TTS (Ocean He).
+
+ - ACPICA-related change to carry out lock ordering checks in ACPICA
+   if ACPICA debug is enabled in the kernel (Lv Zheng).
+
+ - Assorted minor fixes and cleanups (Andy Shevchenko, Baoquan He,
+   Bhaktipriya Shridhar, Paul Gortmaker, Rafael Wysocki).
+
+Thanks!
+
+---------------
+
+Aleksey Makarov (4):
+      ACPI / tables: table upgrade: use cacheable map for tables
+      ACPI / tables: table upgrade: refactor function definitions
+      ACPI / tables: move arch-specific symbol to asm/acpi.h
+      ACPI / tables: introduce ARCH_HAS_ACPI_TABLE_UPGRADE
+
+Alex Hung (1):
+      ACPI / video: skip evaluating _DOD when it does not exist
+
+Andy Shevchenko (1):
+      tools/acpi: use CROSS_COMPILE to define prefix
+
+Arvind Yadav (1):
+      ACPI / video: Dummy acpi_video_register should return error code
+
+Baoquan He (1):
+      ACPI / bus: Correct the comments about acpi_subsystem_init()
+
+Bhaktipriya Shridhar (1):
+      ACPI / thermal: Remove create_workqueue()
+
+Bin Gao (2):
+      ACPI / PMIC: modify the pen function signature to take bit field
+      ACPI / PMIC: Add opregion driver for Intel BXT WhiskeyCove PMIC
+
+Borislav Petkov (2):
+      ACPI / einj: Convert EINJ_PFX to proper pr_fmt
+      ACPI / einj: Make error paths more talkative
+
+David Daney (4):
+      arm64, NUMA: Cleanup NUMA disabled messages
+      ACPI / NUMA: move bad_srat() and srat_disabled() to drivers/acpi/numa.c
+      ACPI / NUMA: Improve SRAT error detection and add messages
+      ACPI / processor: Add acpi_map_madt_entry()
+
+Felipe Balbi (2):
+      ACPI / PMIC: intel: add REGS operation region support
+      ACPI / PMIC: intel: initialize result to 0
+
+Hanjun Guo (10):
+      ACPI / NUMA: Use pr_fmt() instead of printk
+      ACPI / NUMA: Replace ACPI_DEBUG_PRINT() with pr_debug()
+      ACPI / NUMA: remove duplicate NULL check
+      ACPI / NUMA: move acpi_numa_slit_init() to drivers/acpi/numa.c
+      arm64, NUMA: rework numa_add_memblk()
+      x86 / ACPI / NUMA: cleanup acpi_numa_processor_affinity_init()
+      ACPI / NUMA: remove unneeded acpi_numa=1
+      ACPI / NUMA: Move acpi_numa_memory_affinity_init() to drivers/acpi/numa.c
+      arm64, ACPI, NUMA: NUMA support based on SRAT and SLIT
+      ACPI / NUMA: Enable ACPI based NUMA on ARM64
+
+Hoan Tran (3):
+      ACPI: CPPC: Return error if _CPC is invalid on a CPU
+      ACPI / CPPC: Prevent cpc_desc_ptr points to the invalid data
+      mailbox: pcc: Add PCC request and free channel declarations
+
+Huang Ying (1):
+      ACPI / APEI: Add Boot Error Record Table (BERT) support
+
+Joe Perches (2):
+      ACPI / PCI: pci_slot: Use more common logging style
+      ACPI / PCI: pci_slot: Use generic pr_debug utility
+
+Jon Masters (1):
+      ACPI: ARM64: support for ACPI_TABLE_UPGRADE
+
+Lv Zheng (8):
+      ACPI / button: Remove initial lid state notification
+      ACPI / button: Refactor functions to eliminate redundant code
+      ACPI / button: Add quirks for initial lid state notification
+      ACPI / EC: Cleanup boot EC code using acpi_ec_alloc()
+      ACPI / EC: Remove wrong ECDT correction quirks
+      ACPI: Add documentation describing ACPICA release automation
+      ACPI / debugger: Add AML debugger documentation
+      ACPICA: Linux: Enable ACPI_MUTEX_DEBUG for Linux kernel
+
+Mika Westerberg (1):
+      ACPI: Rename configfs.c to acpi_configfs.c to prevent link error
+
+Ocean He (1):
+      ACPI: Execute _PTS before system reboot
+
+Octavian Purdila (8):
+      ACPI / documentation: add SSDT overlays documentation
+      ACPI / scan: fix enumeration (visited) flags for bus rescans
+      ACPI: add support for ACPI reconfiguration notifiers
+      i2c / ACPI: add support for ACPI reconfigure notifications
+      spi / ACPI: add support for ACPI reconfigure notifications
+      efi / ACPI: load SSTDs from EFI variables
+      ACPI: add support for configfs
+      ACPI: add support for loading SSDTs via configfs
+
+Paul Gortmaker (4):
+      ACPI / PMIC: remove modular references from non-modular code
+      ACPI / PCI: make pci_slot explicitly non-modular
+      ACPI / dock: make dock explicitly non-modular
+      ACPI / lpat: make it explicitly non-modular
+
+Prakash, Prashanth (1):
+      ACPI / bus: Support for platform initiated graceful shutdown
+
+Rafael J. Wysocki (1):
+      ACPI / bus: Use acpi_handle_debug() in acpi_print_osc_error()
+
+Ralf Gerbig (1):
+      ACPI / video: Thinkpad X201 Tablet needs video_detect_force_video
+
+Robert Richter (1):
+      ACPI / NUMA: Move acpi_numa_arch_fixup() to ia64 only
+
+Srinivas Pandruvada (2):
+      ACPI / DPTF: Add DPTF power participant driver
+      ACPI / DPTF: move int340x_thermal.c to the DPTF folder
+
+Sudeep Holla (7):
+      ACPI / processor_idle: introduce ACPI_PROCESSOR_CSTATE
+      ACPI / processor_idle: Add support for Low Power Idle(LPI) states
+      arm64: cpuidle: drop __init section marker to arm_cpuidle_init
+      cpuidle: introduce CPU_PM_CPU_IDLE_ENTER macro for ARM{32, 64}
+      drivers: firmware: psci: initialise idle states using ACPI LPI
+      arm64: add support for ACPI Low Power Idle(LPI)
+      ACPI: enable ACPI_PROCESSOR_IDLE on ARM64
+
+---------------
+
+ Documentation/ABI/testing/configfs-acpi        |  36 ++
+ Documentation/acpi/aml-debugger.txt            |  66 +++
+ Documentation/acpi/linuxized-acpica.txt        | 262 ++++++++++++
+ Documentation/acpi/ssdt-overlays.txt           | 172 ++++++++
+ Documentation/kernel-parameters.txt            |  10 +
+ MAINTAINERS                                    |   1 +
+ arch/arm64/Kconfig                             |   1 +
+ arch/arm64/include/asm/acpi.h                  |  10 +
+ arch/arm64/include/asm/numa.h                  |   2 +
+ arch/arm64/kernel/Makefile                     |   1 +
+ arch/arm64/kernel/acpi_numa.c                  | 112 +++++
+ arch/arm64/kernel/cpuidle.c                    |  20 +-
+ arch/arm64/kernel/setup.c                      |   6 +-
+ arch/arm64/kernel/smp.c                        |   2 +
+ arch/arm64/mm/numa.c                           |  28 +-
+ arch/ia64/include/asm/acpi.h                   |   3 +
+ arch/ia64/kernel/acpi.c                        |   2 +-
+ arch/ia64/kernel/setup.c                       |   1 +
+ arch/x86/Kconfig                               |   1 +
+ arch/x86/include/asm/acpi.h                    |   3 +-
+ arch/x86/include/asm/topology.h                |  12 +-
+ arch/x86/kernel/cpu/intel.c                    |   7 +-
+ arch/x86/kernel/setup.c                        |   9 +-
+ arch/x86/mm/numa.c                             |   2 +-
+ arch/x86/mm/srat.c                             | 116 +-----
+ arch/x86/platform/atom/punit_atom_debug.c      |   5 +-
+ drivers/acpi/Kconfig                           |  30 +-
+ drivers/acpi/Makefile                          |   5 +-
+ drivers/acpi/acpi_configfs.c                   | 267 ++++++++++++
+ drivers/acpi/acpi_lpat.c                       |   4 +-
+ drivers/acpi/acpi_lpss.c                       |   5 +-
+ drivers/acpi/acpi_video.c                      |   3 +
+ drivers/acpi/apei/Makefile                     |   2 +-
+ drivers/acpi/apei/apei-internal.h              |   2 +-
+ drivers/acpi/apei/bert.c                       | 150 +++++++
+ drivers/acpi/apei/einj.c                       |  57 ++-
+ drivers/acpi/bus.c                             |  99 ++++-
+ drivers/acpi/button.c                          | 149 +++++--
+ drivers/acpi/cppc_acpi.c                       |  24 +-
+ drivers/acpi/dock.c                            |   7 +-
+ drivers/acpi/dptf/Kconfig                      |  15 +
+ drivers/acpi/dptf/Makefile                     |   4 +
+ drivers/acpi/dptf/dptf_power.c                 | 128 ++++++
+ drivers/acpi/{ => dptf}/int340x_thermal.c      |   0
+ drivers/acpi/ec.c                              | 106 ++---
+ drivers/acpi/internal.h                        |   3 +
+ drivers/acpi/numa.c                            | 226 ++++++++---
+ drivers/acpi/pci_slot.c                        |  43 +-
+ drivers/acpi/pmic/intel_pmic.c                 |  84 +++-
+ drivers/acpi/pmic/intel_pmic.h                 |   4 +-
+ drivers/acpi/pmic/intel_pmic_bxtwc.c           | 420 +++++++++++++++++++
+ drivers/acpi/pmic/intel_pmic_crc.c             |   5 +-
+ drivers/acpi/pmic/intel_pmic_xpower.c          |   7 +-
+ drivers/acpi/processor_core.c                  |  26 +-
+ drivers/acpi/processor_driver.c                |   2 +-
+ drivers/acpi/processor_idle.c                  | 542 +++++++++++++++++++++----
+ drivers/acpi/scan.c                            |  81 +++-
+ drivers/acpi/sleep.c                           |  29 +-
+ drivers/acpi/sysfs.c                           |   6 +-
+ drivers/acpi/tables.c                          |  23 +-
+ drivers/acpi/thermal.c                         |   3 +-
+ drivers/acpi/video_detect.c                    |   8 +
+ drivers/cpufreq/intel_pstate.c                 |  37 +-
+ drivers/cpuidle/cpuidle-arm.c                  |  26 +-
+ drivers/firmware/efi/efi.c                     |  96 +++++
+ drivers/firmware/psci.c                        |  66 ++-
+ drivers/i2c/i2c-core.c                         | 175 ++++++--
+ drivers/idle/intel_idle.c                      |  71 ++--
+ drivers/mmc/host/sdhci-acpi.c                  |   3 +-
+ drivers/of/of_numa.c                           |   4 +-
+ drivers/platform/x86/intel_telemetry_debugfs.c |   3 +-
+ drivers/platform/x86/intel_telemetry_pltdrv.c  |   3 +-
+ drivers/powercap/intel_rapl.c                  |  50 +--
+ drivers/spi/spi.c                              | 100 ++++-
+ drivers/thermal/intel_soc_dts_thermal.c        |   4 +-
+ include/acpi/acpi_numa.h                       |   4 +
+ include/acpi/cppc_acpi.h                       |   7 +-
+ include/acpi/pcc.h                             |  29 ++
+ include/acpi/platform/aclinux.h                |   4 +
+ include/acpi/processor.h                       |  27 +-
+ include/acpi/video.h                           |   2 +-
+ include/linux/acpi.h                           |  66 ++-
+ include/linux/cpuidle.h                        |  18 +
+ tools/power/acpi/Makefile.config               |   7 +-
+ 84 files changed, 3551 insertions(+), 710 deletions(-)
