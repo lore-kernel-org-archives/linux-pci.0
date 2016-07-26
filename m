@@ -1,145 +1,47 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v3 05/13] drivers: iommu: make iommu_fwspec OF
- agnostic
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	iommu@lists.linux-foundation.org
-References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1469013815-24380-6-git-send-email-lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <1499f802-5f98-b0c0-d3aa-dabcac81e84e@arm.com>
-Date: Mon, 25 Jul 2016 16:09:55 +0100
+Date: Tue, 26 Jul 2016 15:21:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
+	bhelgaas@google.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/4] x86/ioapic: Fix setup_res() failing to get resource
+Message-ID: <20160726202134.GE15037@localhost>
+References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
+ <1469549597-19253-3-git-send-email-rui.y.wang@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1469013815-24380-6-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1469549597-19253-3-git-send-email-rui.y.wang@intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+On Wed, Jul 27, 2016 at 12:13:15AM +0800, Rui Wang wrote:
+> setup_res() doesn't actually get any resoure because it mistakenly
 
-On 20/07/16 12:23, Lorenzo Pieralisi wrote:
-> The iommu_fwspec structure, used to hold per device iommu configuration
-> data is not OF specific and therefore can be moved to a generic
-> and OF independent compilation unit.
+s/resoure/resource/
+
+> checks the return value of acpi_dev_filter_resource_type(), which
+> returns 0 on success, and 1 on failure. Fix it by taking the return
+> value of non-zero as failing to match the specified resource type.
 > 
-> In particular, the iommu_fwspec handling hinges on the device_node
-> pointer to identify the IOMMU device associated with the iommu_fwspec
-> structure, that is easily converted to a more generic fwnode_handle
-> pointer that can cater for OF and non-OF (ie ACPI) systems.
-> 
-> Create the files and related Kconfig entry to decouple iommu_fwspec
-> structure from the OF iommu kernel layer.
-> 
-> Given that the current iommu_fwspec implementation relies on
-> the arch specific struct device.archdata.iommu field in its
-> implementation, by making the code standalone and independent
-> of the OF layer this patch makes sure that the iommu_fwspec
-> kernel code can be selected only on arches implementing the
-> struct device.archdata.iommu field by adding an explicit
-> arch dependency in its config entry.
-> 
-> Current drivers using the iommu_fwspec for streamid translation
-> are converted to the new iommu_fwspec API by simply converting
-> the device_node to its fwnode_handle pointer.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
+> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 > ---
->  drivers/iommu/Kconfig        |   4 ++
->  drivers/iommu/Makefile       |   1 +
->  drivers/iommu/arm-smmu-v3.c  |  13 +++--
->  drivers/iommu/iommu-fwspec.c | 114 +++++++++++++++++++++++++++++++++++++++++++
->  drivers/iommu/of_iommu.c     |  52 --------------------
->  include/linux/iommu-fwspec.h |  60 +++++++++++++++++++++++
->  include/linux/of_iommu.h     |  24 +++------
->  7 files changed, 196 insertions(+), 72 deletions(-)
->  create mode 100644 drivers/iommu/iommu-fwspec.c
->  create mode 100644 include/linux/iommu-fwspec.h
+>  drivers/acpi/ioapic.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-> index d1c66af..2b26bfb 100644
-> --- a/drivers/iommu/Kconfig
-> +++ b/drivers/iommu/Kconfig
-> @@ -67,6 +67,10 @@ config OF_IOMMU
->         def_bool y
->         depends on OF && IOMMU_API
+> diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+> index 0f272e2..daf4a40 100644
+> --- a/drivers/acpi/ioapic.c
+> +++ b/drivers/acpi/ioapic.c
+> @@ -46,7 +46,7 @@ static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
+>  	struct resource_win win;
 >  
-> +config IOMMU_FWSPEC
-> +       def_bool y
-> +       depends on ARM64 && IOMMU_API
-
-I think that could be at least (ARM || ARM64).
-
-> +
->  # IOMMU-agnostic DMA-mapping layer
->  config IOMMU_DMA
->  	bool
-
-[...]
-
-> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
-> index 308791f..2362232 100644
-> --- a/include/linux/of_iommu.h
-> +++ b/include/linux/of_iommu.h
-> @@ -15,13 +15,8 @@ extern void of_iommu_init(void);
->  extern const struct iommu_ops *of_iommu_configure(struct device *dev,
->  					struct device_node *master_np);
+>  	res->flags = 0;
+> -	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
+> +	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM))
+>  		return AE_OK;
 >  
-> -struct iommu_fwspec {
-> -	const struct iommu_ops	*iommu_ops;
-> -	struct device_node	*iommu_np;
-> -	void			*iommu_priv;
-> -	unsigned int		num_ids;
-> -	u32			ids[];
-> -};
-> +void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
-> +const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
-
-Is there some reason we need to retain the existing definitions of
-these? I was assuming we'd be able to move the entire implementation
-over to the fwspec code and leave behind nothing more than trivial
-wrappers, e.g.:
-
-#define of_iommu_get_ops(np) iommu_fwspec_get_ops(&(np)->fwnode_handle)
-
-Robin.
-
->  #else
->  
-> @@ -39,17 +34,14 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
->  	return NULL;
->  }
->  
-> -struct iommu_fwspec;
-> -
-> -#endif	/* CONFIG_OF_IOMMU */
-> +static inline void of_iommu_set_ops(struct device_node *np,
-> +				    const struct iommu_ops *ops)
-> +{ }
->  
-> -int iommu_fwspec_init(struct device *dev, struct device_node *iommu_np);
-> -void iommu_fwspec_free(struct device *dev);
-> -int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
-> -struct iommu_fwspec *dev_iommu_fwspec(struct device *dev);
-> +static inline const struct iommu_ops *
-> +of_iommu_get_ops(struct device_node *np) { return NULL; }
->  
-> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
-> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
-> +#endif	/* CONFIG_OF_IOMMU */
->  
->  extern struct of_device_id __iommu_of_table;
->  
+>  	if (!acpi_dev_resource_memory(acpi_res, res)) {
+> -- 
+> 1.8.3.1
 > 
-
