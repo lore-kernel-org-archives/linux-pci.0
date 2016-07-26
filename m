@@ -1,60 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v3 0/8] thunderbolt: Introducing Thunderbolt(TM) networking
-Date: Thu, 14 Jul 2016 14:28:14 +0300
-Message-Id: <1468495702-7467-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tglx@linutronix.de>
+Return-Path: <tglx@linutronix.de>
+Date: Tue, 26 Jul 2016 15:05:59 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+    Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+    linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] genirq/msi: Make sure PCI MSIs are activated early
+In-Reply-To: <alpine.DEB.2.11.1607261307180.19896@nanos>
+Message-ID: <alpine.DEB.2.11.1607261503120.19896@nanos>
+References: <1468426713-31431-1-git-send-email-marc.zyngier@arm.com> <20160722220440.GC32142@localhost> <alpine.DEB.2.11.1607250928370.5629@nanos> <20160725144702.GA12484@localhost> <alpine.DEB.2.11.1607261307180.19896@nanos>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-This is version 3 of Thunderbolt(TM) driver for non-Apple hardware.
+On Tue, 26 Jul 2016, Thomas Gleixner wrote:
+> On Mon, 25 Jul 2016, Bjorn Helgaas wrote:
+> > On Mon, Jul 25, 2016 at 09:45:13AM +0200, Thomas Gleixner wrote:
+> > I thought the original issue [1] was that PCI_MSI_FLAGS_ENABLE was being
+> > written before PCI_MSI_ADDRESS_LO.  That doesn't sound like a good
+> > idea to me.
+> 
+> Well. That's only a problem if the PCI device does not support masking. But
+> yes, we missed that case back then.
+>  
+> > That does seem like a problem.  Maybe it would be better to delay
+> > setting PCI_MSI_FLAGS_ENABLE until after the MSI address & data bits
+> > have been set?
+> 
+> I thought about that, but that gets ugly pretty fast. Here is an alternative
+> solution.
+> 
+> I think that's the proper place to do it _AFTER_ the hierarchical allocation
+> took place. On x86 Marc's ACTIVATE_EARLY flag would not work because the
+> message is not yet ready to be assembled.
 
-Changes since v2:
- - Moved ICM code to subdirectory - thunderbolt/icm
+Actually it works, because the MSI domain is the last one which is running the
+allocation function. So everything else is initialized already.
 
-These patches were pushed to GitHub where they can be reviewed more
-comfortably with green/red highlighting:
-	https://github.com/01org/thunderbolt-software-kernel-tree
+I'll take Marc's patch with some additional commentry as it turned out to be a
+workaround for the reported VMware issues with PCI/MSI-X pass through.
 
-Daemon code:
-	https://github.com/01org/thunderbolt-software-daemon
+Thanks,
 
-For reference, here's a link to version 2:
-[v2]:	https://lkml.org/lkml/2016/6/29/160
-
-Amir Levy (8):
-  thunderbolt: Macro rename
-  thunderbolt: Updating device IDs
-  thunderbolt: Updating the register definitions
-  thunderbolt: Kconfig for Thunderbolt(TM) networking
-  thunderbolt: Communication with the ICM (firmware)
-  thunderbolt: Networking state machine
-  thunderbolt: Networking transmit and receive
-  thunderbolt: Networking doc
-
- Documentation/00-INDEX                   |    2 +
- Documentation/thunderbolt-networking.txt |  135 ++
- drivers/thunderbolt/Kconfig              |   25 +-
- drivers/thunderbolt/Makefile             |    3 +-
- drivers/thunderbolt/icm/Makefile         |   28 +
- drivers/thunderbolt/icm/icm_nhi.c        | 1631 +++++++++++++++++++++
- drivers/thunderbolt/icm/icm_nhi.h        |   84 ++
- drivers/thunderbolt/icm/net.c            | 2277 ++++++++++++++++++++++++++++++
- drivers/thunderbolt/icm/net.h            |  274 ++++
- drivers/thunderbolt/nhi_regs.h           |  115 +-
- include/linux/pci_ids.h                  |   44 +-
- 11 files changed, 4592 insertions(+), 26 deletions(-)
- create mode 100644 Documentation/thunderbolt-networking.txt
- create mode 100644 drivers/thunderbolt/icm/Makefile
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
- create mode 100644 drivers/thunderbolt/icm/net.c
- create mode 100644 drivers/thunderbolt/icm/net.h
-
--- 
-2.7.4
+	tglx
