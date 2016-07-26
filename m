@@ -1,124 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43063 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:44892 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753394AbcGYP67 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Jul 2016 11:58:59 -0400
-Date: Mon, 25 Jul 2016 09:58:57 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ilya Lesokhin <ilyal@mellanox.com>
-Cc: "Tian, Kevin" <kevin.tian@intel.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Noa Osherovich" <noaos@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	"Liran Liss" <liranl@mellanox.com>,
-	Haggai Eran <haggaie@mellanox.com>
-Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
-Message-ID: <20160725095857.30f7d92e@t450s.home>
-In-Reply-To: <VI1PR0501MB196895DE941D34A5ECC966F8D40D0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
-References: <1466338617-43027-1-git-send-email-ilyal@mellanox.com>
-	<20160620113728.74ed79f3@ul30vt.home>
-	<VI1PR0501MB19680B7AF4C02D4FFC5874A9D42B0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
-	<20160621094537.4416cbce@t450s.home>
-	<VI1PR0501MB1968544B2529B96832DC673CD4320@VI1PR0501MB1968.eurprd05.prod.outlook.com>
-	<20160714110341.7716c619@t450s.home>
-	<fad4625f-9507-388d-910c-295578e34f33@mellanox.com>
-	<20160718153428.6b988539@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F90960A@SHSMSX101.ccr.corp.intel.com>
-	<20160719091017.4c23244f@t450s.home>
-	<20160719134336.79d24af9@t450s.home>
-	<613c4470-d899-2698-dfe5-9dbb2388787e@mellanox.com>
-	<20160725090750.2786ab5f@t450s.home>
-	<VI1PR0501MB196895DE941D34A5ECC966F8D40D0@VI1PR0501MB1968.eurprd05.prod.outlook.com>
+	id S1753004AbcGZT77 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jul 2016 15:59:59 -0400
+Date: Tue, 26 Jul 2016 14:59:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: tegra: Stop setting pcibios_min_mem
+Message-ID: <20160726195954.GA15037@localhost>
+References: <20160630131430.32096-1-thierry.reding@gmail.com>
+ <20160630131430.32096-3-thierry.reding@gmail.com>
+ <20160725212850.GA24485@localhost>
+ <20160726095415.GD2433@ulmo.ba.sec>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160726095415.GD2433@ulmo.ba.sec>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 25 Jul 2016 15:34:34 +0000
-Ilya Lesokhin <ilyal@mellanox.com> wrote:
-
-> Hi Alex,
-> It seems that I'm missing something because I fail to see how the sysfs interface solves
-> any of the problems you've pointed out in the current code.
-
-If the kernel allows a user who owns a PF to spawn VFs then it becomes
-the kernel's problem how to define and enforce the policy around those
-devices (ie. who is allowed to use them, how does ownership get
-transferred, what do we consider secure vs insecure, etc).  On the
-other hand if we do not allow a user that direct path and they need to
-interact through a trusted channel to create those VFs, then it becomes
-the problem of the entity creating them how to address those policy
-questions.  That's a big difference.  In general I think it's a bad
-idea to implement policy in the kernel, the kernel should provide the
-tools to allow userspace to manage the policy.
- 
-> Can you please clarify what you want us to do on the kernel side besides moving to the sysfs interface?
-> How do we prevent the administrator from unbinding the VFs from vfio and binding them to the default driver?
-> How does the new model prevent the administrator from assigning the VFs to other VM?
-
-In both cases the answer is "we don't".  Those are questions that would
-need to be addressed if the kernel was implementing the policy.  The
-kernel already has an interface for creating SRIOV VFs and it's up to
-userspace how to manage that in a secure way.  If someone has a use
-case where a user owned PF spawns a host kernel owned VF, that's for
-userspace to determine whether it's valid.  sriov_driver_override is
-only a suggestion towards facilitating user managed VFs, allowing the
-creator of the VFs to more concisely control the driver binding for
-those VFs.  Thanks,
-
-Alex
-
-> -----Original Message-----
-> From: Alex Williamson [mailto:alex.williamson@redhat.com] 
-> Sent: Monday, July 25, 2016 6:08 PM
-> To: Haggai Eran <haggaie@mellanox.com>
-> Cc: Tian, Kevin <kevin.tian@intel.com>; Ilya Lesokhin <ilyal@mellanox.com>; kvm@vger.kernel.org; linux-pci@vger.kernel.org; bhelgaas@google.com; Noa Osherovich <noaos@mellanox.com>; Or Gerlitz <ogerlitz@mellanox.com>; Liran Liss <liranl@mellanox.com>
-> Subject: Re: [PATCH v2 0/2] VFIO SRIOV support
-> 
-> On Mon, 25 Jul 2016 10:53:56 +0300
-> Haggai Eran <haggaie@mellanox.com> wrote:
-> 
-> > On 7/19/2016 10:43 PM, Alex Williamson wrote:  
-> > > Thinking about this further, it seems that trying to create this IOV 
-> > > enablement interface through a channel which is explicitly designed 
-> > > to interact with an untrusted and potentially malicious user is the 
-> > > wrong approach.  We already have an interface for a trusted entity 
-> > > to enable VFs, it's through pci-sysfs.  Therefore if we were to use 
-> > > something like libvirt to orchestrate the lifecycle of the VFs, I 
-> > > think we remove a lot of the problems.  In this case QEMU would 
-> > > virtualize the SR-IOV capability (maybe this is along the lines of 
-> > > what Kevin was thinking), but that virtualization would take a path 
-> > > out through the QEMU QMP interface to execute the SR-IOV change on 
-> > > the device rather than going through the vfio kernel interface.  A 
-> > > management tool like libvirt would then need to translate that into 
-> > > sysfs operations to create the VFs and do whatever we're going to do 
-> > > with them (device_add them back to the VM, make them available to a 
-> > > peer VM, make them available to the host *gasp*).  VFIO in the 
-> > > kernel would need to add SR-IOV support, but the only automatic 
-> > > SR-IOV path would be to disable IOV when the PF is released, 
-> > > enabling would only occur through sysfs.  We would probably need a 
-> > > new pci-sysfs interface to manage the driver for newly created VFs 
-> > > though to avoid default host drivers (sriov_driver_override?).  In 
-> > > this model QEMU is essentially just making requests to other 
-> > > userspace entities to perform actions and how those actions are 
-> > > performed can be left to userspace policy, not kernel policy.  I 
-> > > think this would still satisfy the development use case, the 
-> > > enabling path just takes a different route where privileged 
-> > > userspace is more intimately involved in the process.  Thoughts?  
-> > > Thanks,  
+On Tue, Jul 26, 2016 at 11:54:15AM +0200, Thierry Reding wrote:
+> On Mon, Jul 25, 2016 at 04:28:50PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Jun 30, 2016 at 03:14:30PM +0200, Thierry Reding wrote:
+> > > From: Thierry Reding <treding@nvidia.com>
+> > > 
+> > > In practice this value will never be used and it hinders portability of
+> > > the driver, so remove it.
+> > > 
+> > > Signed-off-by: Thierry Reding <treding@nvidia.com>
+> > > ---
+> > >  drivers/pci/host/pci-tegra.c | 2 --
+> > >  1 file changed, 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > > index f04b062e8c67..bbf77a49517d 100644
+> > > --- a/drivers/pci/host/pci-tegra.c
+> > > +++ b/drivers/pci/host/pci-tegra.c
+> > > @@ -2249,8 +2249,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+> > >  	if (err < 0)
+> > >  		return err;
+> > >  
+> > > -	pcibios_min_mem = 0;
 > > 
-> > I understand the desire to use a different interface such as sysfs for 
-> > the trusted user-space component. I'm not sure though how using 
-> > sriov_driver_override solves the issues we have been discussing. After 
-> > SR-IOV is enabled by libvirt, it is still possible for the 
-> > administrator (or another trusted daemon racing with libvirt) to open 
-> > the VFs with VFIO before libvirt had a chance to open them and send them to QEMU.
+> > unsigned long pcibios_min_mem = 0x01000000;   # arch/arm/mm/iomap.c
+> > #define PCIBIOS_MIN_MEM pcibios_min_mem       # arch/arm/include/asm/pci.h
 > > 
-> > Are you okay with that?  
+> > PCIBIOS_MIN_MEM is used in __pci_assign_resource().
+> > 
+> > It looks to me like we still use pcibios_min_mem; am I missing something?
 > 
-> If a privileged entity like libvirt is creating VFs on behalf of a user, it's going to be that entity's responsibility to claim ownership of all those created VFs.  sriov_driver_override is just one suggestion that might help facilitate that.  Others might be necessary, but ultimately it's not the kernel's problem to work out which entity gets to take ownership of those devices, that's a userspace problem, just as it is already today.  Thanks,
+> The problem is that pcibios_min_mem is only defined on 32-bit ARM, so
+> we'd need to conditionalize (with a preprocessor macro) the usage.
+> However it turns out that it's not necessary because PCIBIOS_MIN_MEM
+> only serves as a lower bound during resource assignment.
 > 
-> Alex
+> pci_bus_alloc_resource() will eventually end up assigning from one of
+> the regions defined in device tree and the lowest we'll ever start any
+> of the memory regions is 0x12000000 (Tegra124).
+> 
+> So instead of conditionalizing I've simply dropped the assignment
+> because the default works fine for Tegra.
 
+Oh, I see, yep, that makes sense now.  I merged this with the
+following changelog:
+
+    PCI: tegra: Stop setting pcibios_min_mem
+    
+    pcibios_min_mem only exists on 32-bit ARM, so using it in pci-tegra.c
+    prevents the driver from being used on other arches.
+    
+    In __pci_assign_resource(), we clip the available area based on
+    PCIBIOS_MIN_MEM.  On 32-bit ARM, this is pcibios_min_mem, with a default
+    value of 0x01000000.  For Tegra, we discover the space available for PCI
+    resource allocation from the device tree, and the lowest address that will
+    ever be available is 0x12000000 (on Tegra124).
+    
+    The Tegra windows are always higher than the default pcibios_min_mem, so
+    the __pci_assign_resource() has no effect, so there's no need to adjust
+    pcibios_min_mem here.
+
+Bjorn
