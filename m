@@ -1,186 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:20303 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750745AbcGCFrk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jul 2016 01:47:40 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u635i0ff042536
-	for <linux-pci@vger.kernel.org>; Sun, 3 Jul 2016 01:47:39 -0400
-Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 23x9pnqf8c-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sun, 03 Jul 2016 01:47:39 -0400
-Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Sun, 3 Jul 2016 15:47:37 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 60DCB2CE8054
-	for <linux-pci@vger.kernel.org>; Sun,  3 Jul 2016 15:47:34 +1000 (EST)
-Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u635lYnD10289284
-	for <linux-pci@vger.kernel.org>; Sun, 3 Jul 2016 15:47:34 +1000
-Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
-	by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u635lXUc018425
-	for <linux-pci@vger.kernel.org>; Sun, 3 Jul 2016 15:47:34 +1000
-Date: Sun, 3 Jul 2016 15:47:32 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
-	benh@kernel.crashing.org, imunsie@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	paulus@samba.org, mikey@neuling.org, andrew.donnellan@au1.ibm.com,
-	bhelgaas@google.com, frederic.barrat@fr.ibm.com,
-	mrochs@linux.vnet.ibm.com
-Subject: Re: [PATCH v7] powerpc/pci: Assign fixed PHB number based on
- device-tree properties
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467224062-9173-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Subject: Re: [PATCH resend v2] Extending kernel option pci=resource_alignment
+ to be able to specify PCI device/vendor IDs
+To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+References: <00e437fe05f54c6a9df12bf48cf28dc5@FE-MBX1012.de.bosch.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Bjorn Helgaas
+ <helgaas@kernel.org>,
+        "gregkh@linuxfoundation.org"
+ <gregkh@linuxfoundation.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Tue, 26 Jul 2016 18:11:06 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1467224062-9173-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Message-Id: <20160703054732.GA20271@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <00e437fe05f54c6a9df12bf48cf28dc5@FE-MBX1012.de.bosch.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <75813d7d-cadd-828f-737e-4113da3427d9@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 03:14:22PM -0300, Guilherme G. Piccoli wrote:
->The domain/PHB field of PCI addresses has its value obtained from a
->global variable, incremented each time a new domain (represented by
->struct pci_controller) is added on the system. The domain addition
->process happens during boot or due to PHB hotplug add.
->
->As recent kernels are using predictable naming for network interfaces,
->the network stack is more tied to PCI naming. This can be a problem in
->hotplug scenarios, because PCI addresses will change if devices are
->removed and then re-added. This situation seems unusual, but it can
->happen if a user wants to replace a NIC without rebooting the machine,
->for example.
->
->This patch changes the way PCI domain values are generated: now, we use
->device-tree properties to assign fixed PHB numbers to PCI addresses
->when available (meaning pSeries and PowerNV cases). We also use a bitmap
->to allow dynamic PHB numbering when device-tree properties are not
->used. This bitmap keeps track of used PHB numbers and if a PHB is
->released (by hotplug operations for example), it allows the reuse of
->this PHB number, avoiding PCI address to change in case of device remove
->and re-add soon after. No functional changes were introduced.
->
->Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
->Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
+Hi Mathias,
 
-Guilherme, thanks for keeping improving it. If Michael needs:
 
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On 2016/7/25 14:05, Koehrer Mathias (ETAS/ESW5) wrote:
+> Hi Gavin,
+>
+>> Mathias, The code change would conflict with Yongji's patch where the
+>> wildcard introduced to identify PCI devices.
+>>
+>> https://patchwork.ozlabs.org/patch/642473/
+> That's true, however it is also true the other way round. The first sending of my patch was
+> 22-June 2016 and thus before Yongji's patch...
+> See also the comment of Bjorn Helgaas on my patch (v1):
+> http://marc.info/?l=linux-pci&m=146654644431550&w=2
+>
+> However it looks as if there are a couple of (conflicting) approaches for the issue with the alignment of PCI addresses flying around...
+> My personal opinion is that the need to adapt the alignment of PCI addresses should be done on PCI device/vendor ids of relevant PCI devices and not on PCI addresses.
+> The PCI addresses are likely to change e.g. by inserting another PCI board. The device/vendor id of the devices will not change.
 
->---
->v7:
->    * Removed the goto as per Michael's suggestion;
->
->    * Changed of_property_read_u32_array() to of_property_read_u32_index(),
->as per Gavin's suggestion. This way, we end up using buid_low as the index
->of PHB in pSeries, which is expected but was not being achieved in v6,
->as per my mistake.
->
->    * Didn't remove machine check for pSeries on "reg" property lookup.
->It's worthy to keep it, since almost every platform (if not all of them)
->contain the "reg" property on PHB node in device-tree, but only in
->pSeries we're 100% sure it can be used as the PHB unique identifier.
->Since the patch has a dynamic PHB numbering mechanism, the other platforms
->won't have trouble with it.
->
-> arch/powerpc/kernel/pci-common.c | 53 +++++++++++++++++++++++++++++++++++++---
-> 1 file changed, 50 insertions(+), 3 deletions(-)
->
->diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->index 0f7a60f..c87545b 100644
->--- a/arch/powerpc/kernel/pci-common.c
->+++ b/arch/powerpc/kernel/pci-common.c
->@@ -41,11 +41,18 @@
-> #include <asm/ppc-pci.h>
-> #include <asm/eeh.h>
->
->+/* hose_spinlock protects accesses to the the phb_bitmap. */
-> static DEFINE_SPINLOCK(hose_spinlock);
-> LIST_HEAD(hose_list);
->
->-/* XXX kill that some day ... */
->-static int global_phb_number;		/* Global phb counter */
->+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
->+#define MAX_PHBS 0x10000
->+
->+/*
->+ * For dynamic PHB numbering: used/free PHBs tracking bitmap.
->+ * Accesses to this bitmap should be protected by hose_spinlock.
->+ */
->+static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
->
-> /* ISA Memory physical address */
-> resource_size_t isa_mem_base;
->@@ -64,6 +71,41 @@ struct dma_map_ops *get_pci_dma_ops(void)
-> }
-> EXPORT_SYMBOL(get_pci_dma_ops);
->
->+/*
->+ * This function should run under locking protection, specifically
->+ * hose_spinlock.
->+ */
->+static int get_phb_number(struct device_node *dn)
->+{
->+	u64 prop;
->+	int ret, phb_id = -1;
->+
->+	/*
->+	 * Try fixed PHB numbering first, by checking archs and reading
->+	 * the respective device-tree properties. Firstly, try PowerNV by
->+	 * reading "ibm,opal-phbid", only present in OPAL environment.
->+	 */
->+	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
->+	if (ret && machine_is(pseries))
->+		ret = of_property_read_u32_index(dn, "reg", 1, (u32 *)&prop);
->+	if (!ret)
->+		phb_id = (int)(prop & (MAX_PHBS - 1));
->+
->+	/* We need to be sure to not use the same PHB number twice. */
->+	if ((phb_id >= 0) && !test_and_set_bit(phb_id, phb_bitmap))
->+		return phb_id;
->+
->+	/*
->+	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
->+	 * the same PHB number twice, then fallback to dynamic PHB numbering.
->+	 */
->+	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
->+	BUG_ON(phb_id >= MAX_PHBS);
->+	set_bit(phb_id, phb_bitmap);
->+
->+	return phb_id;
->+}
->+
-> struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
-> {
-> 	struct pci_controller *phb;
->@@ -72,7 +114,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
-> 	if (phb == NULL)
-> 		return NULL;
-> 	spin_lock(&hose_spinlock);
->-	phb->global_number = global_phb_number++;
->+	phb->global_number = get_phb_number(dev);
-> 	list_add_tail(&phb->list_node, &hose_list);
-> 	spin_unlock(&hose_spinlock);
-> 	phb->dn = dev;
->@@ -94,6 +136,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
-> void pcibios_free_controller(struct pci_controller *phb)
-> {
-> 	spin_lock(&hose_spinlock);
->+
->+	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
->+	if (phb->global_number < MAX_PHBS)
->+		clear_bit(phb->global_number, phb_bitmap);
->+
-> 	list_del(&phb->list_node);
-> 	spin_unlock(&hose_spinlock);
->
->-- 
->2.1.0
->
+Yes, your opinion is right. I think I will update my patches based on 
+your change.
 
+With your patch, seems like we can specify alignment for all PCI devices 
+by using something like: pci=resource_alignment=4096@pci:0:0.
+We'd better document it.
+
+Thanks,
+Yongji
