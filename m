@@ -1,112 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:19429 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753564AbcGSNlt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2016 09:41:49 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6JDYg8v012874
-	for <linux-pci@vger.kernel.org>; Tue, 19 Jul 2016 09:41:48 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 2495r9mgn9-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 19 Jul 2016 09:41:48 -0400
-Received: from localhost
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <nfont@linux.vnet.ibm.com>;
-	Tue, 19 Jul 2016 07:41:47 -0600
-Subject: Re: [Patch v2] rpaphp: fix slot registration for multiple slots under
- a PHB
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-References: <1468275387-22392-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, mpe@ellerman.id.au, benh@kernel.crashing.org,
-	mdroth@linux.vnet.ibm.com, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-From: Nathan Fontenot <nfont@linux.vnet.ibm.com>
-Date: Tue, 19 Jul 2016 08:41:40 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:52682 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754776AbcG0SX2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jul 2016 14:23:28 -0400
+To: Bjorn Helgaas <bhelgaas@google.com>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: [Regression][3.18-rc1 -> mainline] PCI: Configure *all* devices, not
+ just hot-added ones
+Cc: Yinghai Lu <yinghai@kernel.or>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, john_mazzie@dell.com,
+	Mark Wenning <mark.wenning@canonical.com>
+Message-ID: <5798FC1C.40405@canonical.com>
+Date: Wed, 27 Jul 2016 14:23:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <1468275387-22392-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252
-Message-Id: <578E2E14.2070606@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/11/2016 05:16 PM, Tyrel Datwyler wrote:
-> PowerVM seems to only ever provide a single hotplug slot per PHB.
-> The under lying slot hotplug registration code assumed multiple slots,
-> but the actual implementation is broken for multiple slots. This went
-> unnoticed for years due to the nature of PowerVM as mentioned
-> previously. Under qemu/kvm the hotplug slot model aligns more with
-> x86 where multiple slots are presented under a single PHB. As seen
-> in the following each additional slot after the first fails to
-> register due to each slot always being compared against the first
-> child node of the PHB in the device tree.
-> 
-> [    6.492291] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-> [    6.492569] rpaphp: Slot [Slot 0] registered
-> [    6.492577] rpaphp: pci_hp_register failed with error -16
-> [    6.493082] rpaphp: pci_hp_register failed with error -16
-> [    6.493138] rpaphp: pci_hp_register failed with error -16
-> [    6.493161] rpaphp: pci_hp_register failed with error -16
-> 
-> The registration logic is fixed so that each slot is compared
-> against the existing child devices of the PHB in the device tree to
-> determine present slots vs empty slots.
-> 
-> [   38.481750] rpaphp: RPA HOT Plug PCI Controller Driver version: 0.1
-> [   38.482004] rpaphp: Slot [C0] registered
-> [   38.482127] rpaphp: Slot [C1] registered
-> [   38.482241] rpaphp: Slot [C2] registered
-> [   38.482356] rpaphp: Slot [C3] registered
-> [   38.482495] rpaphp: Slot [C4] registered
-> 
-> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Hi Bjorn,
 
-Reviewed-by: Nathan Fontenot <nfont@linux.vnet.ibm.com>
+A kernel bug report was opened against Ubuntu [0].  After a kernel
+bisect, it was found that reverting the following commit resolved this bug:
 
-> ---
-> 
-> Changes in v2: corrected ibm,my-drc-index property name
-> 
-> ---
->  drivers/pci/hotplug/rpaphp_slot.c | 17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
-> index 6937c72..388c4d8 100644
-> --- a/drivers/pci/hotplug/rpaphp_slot.c
-> +++ b/drivers/pci/hotplug/rpaphp_slot.c
-> @@ -117,8 +117,10 @@ EXPORT_SYMBOL_GPL(rpaphp_deregister_slot);
->  int rpaphp_register_slot(struct slot *slot)
->  {
->  	struct hotplug_slot *php_slot = slot->hotplug_slot;
-> +	struct device_node *child;
-> +	u32 my_index;
->  	int retval;
-> -	int slotno;
-> +	int slotno = -1;
-> 
->  	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
->  		__func__, slot->dn->full_name, slot->index, slot->name,
-> @@ -130,10 +132,15 @@ int rpaphp_register_slot(struct slot *slot)
->  		return -EAGAIN;
->  	}
-> 
-> -	if (slot->dn->child)
-> -		slotno = PCI_SLOT(PCI_DN(slot->dn->child)->devfn);
-> -	else
-> -		slotno = -1;
-> +	for_each_child_of_node(slot->dn, child) {
-> +		retval = of_property_read_u32(child, "ibm,my-drc-index", &my_index);
-> +		if (my_index == slot->index) {
-> +			slotno = PCI_SLOT(PCI_DN(child)->devfn);
-> +			of_node_put(child);
-> +			break;
-> +		}
-> +	}
-> +
->  	retval = pci_hp_register(php_slot, slot->bus, slotno, slot->name);
->  	if (retval) {
->  		err("pci_hp_register failed with error %d\n", retval);
-> 
+commit 1302fcf0d03e6ea74846c7fee14736306ab2ce4b
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat Aug 30 07:23:01 2014 -0600
+
+    PCI: Configure *all* devices, not just hot-added ones
+
+The regression was introduced as of v3.18-rc1 and the bug still exists
+in current mainline.
+
+I was hoping to get your feedback, since you are the patch author.  Do
+you think gathering any additional data will help diagnose this issue,
+or would it be best to submit a revert request?
+
+    
+Thanks,
+
+Joe
+
+[0] http://pad.lv/1571798
 
