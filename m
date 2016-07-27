@@ -1,127 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0080.outbound.protection.outlook.com ([104.47.36.80]:62969
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751239AbcGNGDv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2016 02:03:51 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	nofooter <nofooter@xilinx.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>
-Subject: RE: Purpose of pci_remap_iospace
-Date: Thu, 14 Jul 2016 06:03:44 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258B8E24@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
- <3927657.6zNCtCntSU@wuerfel>
- <8520D5D51A55D047800579B094147198258B8952@XAP-PVEXMBX01.xlnx.xilinx.com>
- <4235946.u1vYRsOpTR@wuerfel>
- <8520D5D51A55D047800579B094147198258B8B06@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160713134642.GA29309@red-moon>
-In-Reply-To: <20160713134642.GA29309@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <andreas.noever@gmail.com>
+Return-Path: <andreas.noever@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ed33043d-fe00-9478-80fa-bdca311a52f1@gmail.com>
+References: <20160726164038.1481-1-andreas.noever@gmail.com>
+ <20160726164038.1481-2-andreas.noever@gmail.com> <ed33043d-fe00-9478-80fa-bdca311a52f1@gmail.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Thu, 28 Jul 2016 00:08:42 +0200
+Message-ID: <CAMxnaaULYgu00dNzbu3LLNkdnAFz0bkke3vVt19yfHT=Y0_dkw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] thunderbolt: Add support for INTEL_FALCON_RIDGE_2C controller.
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Xavier Gnata <xavier.gnata@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	Bjorn Helgaas <helgaas@kernel.org>, Andreas Noever <andreas.noever@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: Purpose of pci_remap_iospace
+On Wed, Jul 27, 2016 at 10:11 AM, Xavier Gnata <xavier.gnata@gmail.com> wrote:
 >
-> On Wed, Jul 13, 2016 at 12:30:44PM +0000, Bharat Kumar Gogada wrote:
 >
-> [...]
+> On 26/07/2016 18:40, Andreas Noever wrote:
+>>
+>> From: Xavier Gnata <xavier.gnata@gmail.com>
+>>
+>> From: Xavier Gnata <xavier.gnata@gmail.com>
+>>
+>> Add support to INTEL_FALCON_RIDGE_2C controller and corresponding quirk
+>> to support suspend/resume.
+>> Tested against 4.7 master on a MacBook Air 11" 2015.
+>>
+>> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+>> ---
+>>  drivers/pci/quirks.c      | 4 ++++
+>>  drivers/thunderbolt/nhi.c | 6 ++++++
+>>  2 files changed, 10 insertions(+)
+>>
+>> Rebased version of Xavier's patch.
+>>
+>> Xavier, could you verify that this still works on your system?
+>>
+> It does work on my system.
 >
-> > err = of_pci_get_host_bridge_resources(node, 0, 0xff, &res, &iobase);
-> >         if (err) {
-> >                 pr_err("Getting bridge resources failed\n");
-> >                 return err;
-> >         }
-> > resource_list_for_each_entry(window, &res) {            //code for io resource
-> >                 struct resource *res = window->res;
-> >                 u64 restype = resource_type(res);
-> >
-> >                 switch (restype) {
-> >                 case IORESOURCE_IO:
-> >                         err = pci_remap_iospace(res, iobase);
-> >                         if(err)
-> >                                 pr_info("FAILED TO IPREMAP RESOURCE\n");
-> >                         break;
-> >                 default:
-> >                         dev_err(pcie->dev, "invalid resource %pR\n",
-> > res);
-> >
-> >                 }
-> >         }
-> >
-> > Other than above code I haven't done any change in driver.
-> >
-> Here is your PCI bridge mem space window assignment. I do not see an IO
-> window assignment which makes me think that IO cycles and relative IO
-> window is not enabled through the bridge, that's the reason you can't assign
-> IO space to the endpoint, because it has no parent IO window enabled IIUC.
+> Thanks,
+> Xavier
+
+Cool.
+
+Greg, can we still get these into the current merge window?
+
+Andreas
+
 >
-
-We sorted this out, enabled the IO base limit / upper 16bit registers in the bridge for 32 bit decode.
-However my IO address being assigned to EP is different than what I provide in device tree.
-
-Device tree property:
-ranges = <0x01000000 0x00000000 0x00000000 0x00000000 0xe0000000 0 0x00010000   //io
-                      0x02000000 0x00000000 0xe0100000 0x00000000 0xe0100000 0 0x0ef00000>; //non prefetchabe memory
-
-Here is the boot log:
-[    2.312504] nwl-pcie fd0e0000.pcie: Link is UP
-[    2.312548] PCI host bridge /amba/pcie@fd0e0000 ranges:
-[    2.312565]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
-[    2.312591]    IO 0xe0000000..0xe000ffff -> 0x00000000
-[    2.312610]   MEM 0xe0100000..0xeeffffff -> 0xe0100000
-[    2.312711] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
-[    2.312729] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    2.312745] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    2.312761] pci_bus 0000:00: root bus resource [mem 0xe0100000-0xeeffffff]
-[    2.312993] pci 0000:00:00.0: cannot attach to SMMU, is it on the same bus?
-[    2.313009] iommu: Adding device 0000:00:00.0 to group 1
-[    2.313363] pci 0000:01:00.0: cannot attach to SMMU, is it on the same bus?
-[    2.313379] iommu: Adding device 0000:01:00.0 to group 1
-[    2.313434] pci 0000:00:00.0: BAR 8: assigned [mem 0xe0100000-0xe02fffff]
-[    2.313452] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-[    2.313469] pci 0000:00:00.0: BAR 6: assigned [mem 0xe0300000-0xe03007ff pref]
-[    2.313495] pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe01fffff 64bit]
-[    2.313529] pci 0000:01:00.0: BAR 2: assigned [mem 0xe0200000-0xe02fffff 64bit]
-[    2.313561] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x103f]
-[    2.313581] pci 0000:00:00.0: PCI bridge to [bus 01-0c]
-[    2.313597] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    2.313614] pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe02fffff]
-
-If we are mapping our IO space to 0xe0000000 and 64k size, why kernel is showing 0x1000-0x1fff which is 4k ?
-
-Lspci of bridge :
-00:00.0 PCI bridge: Xilinx Corporation Device a024 (prog-if 00 [Normal decode])
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 224
-        Bus: primary=00, secondary=01, subordinate=0c, sec-latency=0
-        I/O behind bridge: 00001000-00001fff
-        Memory behind bridge: e0100000-e02fffff
-
-Lspci ofEP:
-01:00.0 Memory controller: Xilinx Corporation Device d024
-        Subsystem: Xilinx Corporation Device 0007
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 224
-        Region 0: Memory at e0100000 (64-bit, non-prefetchable) [disabled] [size=1M]
-        Region 2: Memory at e0200000 (64-bit, non-prefetchable) [disabled] [size=1M]
-        Region 4: I/O ports at 1000 [disabled] [size=64]
-
-I'm yet to try with the other API's you have pointed out (devm_request_resource()).
-
-Thanks & Regards,
-Bharat
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-
+>> Thanks,
+>> Andreas
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 75b2105..981f17d 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3325,6 +3325,7 @@ static void quirk_apple_wait_for_thunderbolt(struct
+>> pci_dev *dev)
+>>         if (nhi->vendor != PCI_VENDOR_ID_INTEL
+>>                     || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
+>>                         nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+>> &&
+>> +                       nhi->device !=
+>> PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI &&
+>>                         nhi->device !=
+>> PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+>>                     || nhi->class != PCI_CLASS_SYSTEM_OTHER << 8)
+>>                 goto out;
+>> @@ -3341,6 +3342,9 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+>>                                PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>>                                quirk_apple_wait_for_thunderbolt);
+>>  DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+>> +                              PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
+>> +                              quirk_apple_wait_for_thunderbolt);
+>> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+>>                                PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
+>>                                quirk_apple_wait_for_thunderbolt);
+>>  #endif
+>> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+>> index 9c15344..a8c2041 100644
+>> --- a/drivers/thunderbolt/nhi.c
+>> +++ b/drivers/thunderbolt/nhi.c
+>> @@ -651,6 +651,12 @@ static struct pci_device_id nhi_ids[] = {
+>>         {
+>>                 .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+>>                 .vendor = PCI_VENDOR_ID_INTEL,
+>> +               .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
+>> +               .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+>> +       },
+>> +       {
+>> +               .class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+>> +               .vendor = PCI_VENDOR_ID_INTEL,
+>>                 .device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
+>>                 .subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+>>         },
+>>
+>
