@@ -1,64 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32064 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751971AbcGRKBz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Jul 2016 06:01:55 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, thunderbolt-linux@intel.com,
-	mika.westerberg@intel.com, tomas.winkler@intel.com,
-	Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v4 0/7] thunderbolt: Introducing Thunderbolt(TM) networking
-Date: Mon, 18 Jul 2016 13:00:33 +0300
-Message-Id: <1468836040-28043-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org
+Cc: tglx@linutronix.de,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: Re: [PATCH 3/4] x86/ioapic: Fix lost ioapic resource after hot-removal and hotadd
+Date: Wed, 27 Jul 2016 10:35:12 +0800
+Message-Id: <1469586912-21693-1-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <20160726202422.GF15037@localhost>
+References: <20160726202422.GF15037@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-This is version 4 of Thunderbolt(TM) driver for non-Apple hardware.
+On Wed, July 27, 2016 4:24 AM, Bjorn Helgaas wrote:
+> On Wed, Jul 27, 2016 at 12:13:16AM +0800, Rui Wang wrote:
+> > ioapic resource at 0xfecxxxxx gets lost from /proc/iomem after
+> > hot-removing and then hot-adding the ioapic devices.
+> >
+> > After system boot, in /proc/iomem:
+> > fec00000-fecfffff : PNP0003:00
+> >   fec00000-fec003ff : IOAPIC 0
+> >   fec01000-fec013ff : IOAPIC 1
+> >   fec40000-fec403ff : IOAPIC 2
+> >   fec80000-fec803ff : IOAPIC 3
+> >   fecc0000-fecc03ff : IOAPIC 4
+> >
+> > Then hot-remove IOAPIC 2 and hot-add it again:
+> > fec00000-fecfffff : PNP0003:00
+> >   fec00000-fec003ff : IOAPIC 0
+> >   fec01000-fec013ff : IOAPIC 1
+> >   fec80000-fec803ff : IOAPIC 3
+> >   fecc0000-fecc03ff : IOAPIC 4
+> >
+> > The range at 0xfec40000 is lost from /proc/iomem. It is because
+> > handle_ioapic_add() requests resource from either PCI config BAR or
+> > acpi _CRS, not both. But Intel platforms map the IOxAPIC registers
+> 
+> s/acpi/ACPI/
+> s/ioapic/IOAPIC/ throughout
+> 
+> > at both the PCI config BAR (called MBAR) and the 0xfecX_YZ00 to
+> > 0xfecX_Y2FF range (called ABAR). Both of the ranges should be claimed
+> 
+> I guess you mean the 0xfecX_YZ00-0xfecX_Y2FF range appears in _CRS?
 
-Changes since v3:
- - Moved new Thunderbolt device IDs from pci_ids.h to icm_nhi.h.
- - Cleanup and added some comments in code.
+Yes. That range appears in _CRS for each IOAPIC. I'll make it cleaner in
+the commit message.
 
-These patches were pushed to GitHub where they can be reviewed more
-comfortably with green/red highlighting:
-	https://github.com/01org/thunderbolt-software-kernel-tree
-
-Daemon code:
-	https://github.com/01org/thunderbolt-software-daemon
-
-For reference, here's a link to version 3:
-[v3]:	https://lkml.org/lkml/2016/7/14/311
-
-Amir Levy (7):
-  thunderbolt: Macro rename
-  thunderbolt: Updating the register definitions
-  thunderbolt: Kconfig for Thunderbolt(TM) networking
-  thunderbolt: Communication with the ICM (firmware)
-  thunderbolt: Networking state machine
-  thunderbolt: Networking transmit and receive
-  thunderbolt: Networking doc
-
- Documentation/00-INDEX                   |    2 +
- Documentation/thunderbolt-networking.txt |  135 ++
- drivers/thunderbolt/Kconfig              |   25 +-
- drivers/thunderbolt/Makefile             |    3 +-
- drivers/thunderbolt/icm/Makefile         |   28 +
- drivers/thunderbolt/icm/icm_nhi.c        | 1642 +++++++++++++++++++++
- drivers/thunderbolt/icm/icm_nhi.h        |   93 ++
- drivers/thunderbolt/icm/net.c            | 2276 ++++++++++++++++++++++++++++++
- drivers/thunderbolt/icm/net.h            |  274 ++++
- drivers/thunderbolt/nhi_regs.h           |  115 +-
- 10 files changed, 4585 insertions(+), 8 deletions(-)
- create mode 100644 Documentation/thunderbolt-networking.txt
- create mode 100644 drivers/thunderbolt/icm/Makefile
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
- create mode 100644 drivers/thunderbolt/icm/net.c
- create mode 100644 drivers/thunderbolt/icm/net.h
-
--- 
-2.7.4
-
+Thanks
+Rui
