@@ -1,56 +1,64 @@
 Return-Path: <rui.y.wang@intel.com>
 Return-Path: <rui.y.wang@intel.com>
 From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org
-Cc: tglx@linutronix.de,
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
 	rjw@rjwysocki.net,
-	tony.luck@intel.com,
-	bhelgaas@google.com,
+	tony.luck@intel.com
+Cc: bhelgaas@google.com,
 	linux-acpi@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	rui.y.wang@intel.com
-Subject: Re: [PATCH 3/4] x86/ioapic: Fix lost ioapic resource after hot-removal and hotadd
-Date: Wed, 27 Jul 2016 10:35:12 +0800
-Message-Id: <1469586912-21693-1-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <20160726202422.GF15037@localhost>
-References: <20160726202422.GF15037@localhost>
+Subject: [PATCH v2 5/5] x86/ioapic: Fix ioapic failing to request resource
+Date: Wed, 27 Jul 2016 23:44:15 +0800
+Message-Id: <1469634255-24101-6-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1469634255-24101-1-git-send-email-rui.y.wang@intel.com>
+References: <20160726204640.GA17664@localhost>
+ <1469634255-24101-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, July 27, 2016 4:24 AM, Bjorn Helgaas wrote:
-> On Wed, Jul 27, 2016 at 12:13:16AM +0800, Rui Wang wrote:
-> > ioapic resource at 0xfecxxxxx gets lost from /proc/iomem after
-> > hot-removing and then hot-adding the ioapic devices.
-> >
-> > After system boot, in /proc/iomem:
-> > fec00000-fecfffff : PNP0003:00
-> >   fec00000-fec003ff : IOAPIC 0
-> >   fec01000-fec013ff : IOAPIC 1
-> >   fec40000-fec403ff : IOAPIC 2
-> >   fec80000-fec803ff : IOAPIC 3
-> >   fecc0000-fecc03ff : IOAPIC 4
-> >
-> > Then hot-remove IOAPIC 2 and hot-add it again:
-> > fec00000-fecfffff : PNP0003:00
-> >   fec00000-fec003ff : IOAPIC 0
-> >   fec01000-fec013ff : IOAPIC 1
-> >   fec80000-fec803ff : IOAPIC 3
-> >   fecc0000-fecc03ff : IOAPIC 4
-> >
-> > The range at 0xfec40000 is lost from /proc/iomem. It is because
-> > handle_ioapic_add() requests resource from either PCI config BAR or
-> > acpi _CRS, not both. But Intel platforms map the IOxAPIC registers
-> 
-> s/acpi/ACPI/
-> s/ioapic/IOAPIC/ throughout
-> 
-> > at both the PCI config BAR (called MBAR) and the 0xfecX_YZ00 to
-> > 0xfecX_Y2FF range (called ABAR). Both of the ranges should be claimed
-> 
-> I guess you mean the 0xfecX_YZ00-0xfecX_Y2FF range appears in _CRS?
+handle_ioapic_add() uses request_resource() to request ACPI "_CRS"
+resources. This can fail with the following error message:
 
-Yes. That range appears in _CRS for each IOAPIC. I'll make it cleaner in
-the commit message.
+[  247.325693] ACPI: \_SB_.IIO1.AID1: failed to insert resource
 
-Thanks
-Rui
+This happens when there are multiple IOAPICs and DSDT groups their
+"_CRS" resources as the children of a parent resource, as seen from
+/proc/iomem:
+
+fec00000-fecfffff : PNP0003:00
+  fec00000-fec003ff : IOAPIC 0
+  fec01000-fec013ff : IOAPIC 1
+  fec40000-fec403ff : IOAPIC 2
+
+In this case request_resource() fails because there's a conflicting
+resource which is the parent (fec0000-fecfffff). Fix it by using
+insert_resource() which can request resources by taking the conflicting
+resource as the parent.
+
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/ioapic.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index ee20111..6d7ce6e 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -146,10 +146,12 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
+ 
+ 	crs_res = &ioapic->res;
+ 	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
++	crs_res->name = type;
++	crs_res->flags |= IORESOURCE_BUSY;
+ 	if (crs_res->flags == 0) {
+ 		acpi_handle_warn(handle, "failed to get resource\n");
+ 		goto exit_release;
+-	} else if (request_resource(&iomem_resource, crs_res)) {
++	} else if (insert_resource(&iomem_resource, crs_res)) {
+ 		acpi_handle_warn(handle, "failed to insert resource\n");
+ 		goto exit_release;
+ 	}
+-- 
+1.8.3.1
