@@ -1,101 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46446 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932681AbcGDJ4a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Jul 2016 05:56:30 -0400
-Date: Mon, 4 Jul 2016 10:56:27 +0100
-From: Liviu Dudau <liviu.dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tn@semihalf.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Add new method for registering PCI hosts
-Message-ID: <20160704095627.GG8609@e106497-lin.cambridge.arm.com>
-References: <20160630151931.29216-1-thierry.reding@gmail.com>
- <4061641.rLdO1g8OBR@wuerfel>
- <20160701160923.GF8609@e106497-lin.cambridge.arm.com>
- <3872522.jdXcQClxV5@wuerfel>
+Received: from mail-sn1nam02on0059.outbound.protection.outlook.com ([104.47.36.59]:2304
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753432AbcG0LOY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jul 2016 07:14:24 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	nofooter <nofooter@xilinx.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: RE: PCIe MSI address is not written at pci_enable_msi_range call
+Date: Wed, 27 Jul 2016 11:14:17 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258BC6C4@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57835D35.1000901@arm.com>
+ <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785133A.6070908@arm.com>
+ <8520D5D51A55D047800579B094147198258B8909@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <5785F8DC.4060100@arm.com>
+ <8520D5D51A55D047800579B094147198258B896E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <578F6C56.2090805@arm.com>
+In-Reply-To: <578F6C56.2090805@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <3872522.jdXcQClxV5@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 01, 2016 at 06:30:24PM +0200, Arnd Bergmann wrote:
-> On Friday, July 1, 2016 5:09:23 PM CEST Liviu Dudau wrote:
-> > > > > 
-> > > > > The main idea is to pull the allocation of 'struct pci_host_bridge' out
-> > > > > of the registration, and let individual host drivers and architecture
-> > > > > code fill the members before calling the registration function.
-> > > > 
-> > > > That's how we got into the arch/arm mess that we currently have. The host driver
-> > > > should not drive the instantiation of the pci_host_bridge structure because it
-> > > > will prevent you from having two drivers running at the same time.
-> > > 
-> > > Can you clarify that? I don't see what prevents two drivers from each
-> > > creating a pci_host_bridge structure and passing it into
-> > > pci_host_bridge_register().
-> > 
-> > Maybe I'm exagerating a bit, but I always disliked the pci_common_init() function and
-> > the way it is creating a pci_host_bridge while relying on hw_pci hooks to get
-> > things ready. I'm pretty sure there are still issues around the fact that a lot of
-> > platform drivers have a subsys_initcall() function that calls pci_common_init(). I
-> > don't want us to go down that path again.
-> 
-> I see what you mean now, and I agree we don't want to do this like
-> pci_common_init(), but the patch here does a number of things very
-> differently:
-> 
-> - it's not architecture specific
-> - it is not tied into architecture specific pcibios_* functions
-> - it does not create multiple bridges at once
-> - it does not have three levels of callbacks going back and forth,
->   the idea is to eventually end up with one structure for the
->   callback pointers including those that today are done as __weak
->   functions.
-> 
-> Today we only have four callers of pci_common_init_dev that probe the
-> PCI host from DT: cns3xxx, versatile, mvebu and rcar-gen2. I hope
-> we can replace all of them with the new method here directly and
-> not take any intermediate steps.
-> 
-> The users of pci_common_init() (not _dev) are limited to board files
-> on really old platforms that are either not getting updated (ixp, iop,
-> footbridge, ks8695, mv78xx0, sa1100) or that have DT based replacement
-> code coming (dove, orion5x, cns3xxx, integrator).
-> 
-> > Don't get me wrong, clearly someone needs to create an instance of pci_host_bridge.
-> > What I want people to accept is that in the PCI(e) architecture there is nothing that
-> > stops a piece of HW that used to be the bridge between host and underlying bus into
-> > becoming the bridge between a higher PCI(e) bus and the bus underneath. If the writes
-> > to the configuration registers happens somehow, the Host Bridge doesn't even know if
-> > it is talking to the actual host. Can the driver in that case make sure it did not made
-> > assumptions that were tied to a specific SoC implementation?
-> 
-> Sorry, I'm not really following what you mean with that, or what the
-> consequence is for the Linux implementation. Can you try to rephrase this?
+> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
+>
+> +tglx
+>
+> On 13/07/16 09:33, Bharat Kumar Gogada wrote:
+> >> Subject: Re: PCIe MSI address is not written at pci_enable_msi_range
+> >> call
+> >>
+> >> On 13/07/16 07:22, Bharat Kumar Gogada wrote:
+> >>>> Subject: Re: PCIe MSI address is not written at
+> >>>> pci_enable_msi_range call
+> >>>>
+> >>>> On 11/07/16 10:33, Bharat Kumar Gogada wrote:
+> >>>>> Hi Marc,
+> >>>>>
+> >>>>> Thanks for the reply.
+> >>>>>
+> >>>>> From PCIe Spec:
+> >>>>> MSI Enable Bit:
+> >>>>> If 1 and the MSI-X Enable bit in the MSI-X Message Control
+> >>>>> register (see Section 6.8.2.3) is 0, the function is permitted to
+> >>>>> use MSI to request service and is prohibited from using its INTx# pin.
+> >>>>>
+> >>>>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be
+> >>>>> used
+> >>>> which means MSI address and data fields are available/programmed.
+> >>>>>
+> >>>>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware
+> >>>>> latches
+> >>>> onto MSI address and MSI data values.
+> >>>>>
+> >>>>> With current MSI implementation in kernel, our SoC is latching on
+> >>>>> to incorrect address and data values, as address/data are updated
+> >>>>> much later
+> >>>> than MSI Enable bit.
+> >>>>
+> >>>> As a side question, how does setting the affinity work on this
+> >>>> end-point if this involves changing the address programmed in the
+> >>>> MSI
+> >> registers?
+> >>>> Do you expect the enabled bit to be toggled to around the write?
+> >>>>
+> >>>
+> >>> Yes,
+> >>
+> >> Well, that's pretty annoying, as this will not work either. But maybe
+> >> your MSI controller has a single doorbell? You haven't mentioned which
+> HW that is...
+> >>
+> > The MSI address/data is located in config space, in our SoC for the
+> > logic behind PCIe to become aware of new address/data  MSI enable
+> transition is used (0 to 1).
+> > The logic cannot keep polling these registers in configuration space as it
+> would consume power.
+> >
+> > So the logic uses the transition in MSI enable to latch on to address/data.
+>
+> A couple of additional questions:
+>
+> Does your HW support MSI masking? And if it does, does it resample the
+> address/data on unmask?
+>
+No we do not support masking.
 
-I'm thinking drivers expecting to drive the bridge between the host and the PCI bus.
-When that HW is used to bridge between another bus (PCI or PCIe) because the
-functionality was there all the time in terms of signals, the driver's assumptions
-break down. But maybe I'm being too theoretical and such beasts don't exist? (I remember
-seeing a network card that had native PCI chip plus an added PCIe-to-PCI bridge and
-the driver was tripping badly, but I can't remember the exact details.
+Regards,
+Bharat
 
-Best regards,
-Liviu
 
-> 
-> 	Arnd
-> 
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+
