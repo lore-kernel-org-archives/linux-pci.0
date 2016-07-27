@@ -1,56 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 5 Jul 2016 09:53:46 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: AceLan Kao <acelan@gmail.com>
-Cc: Mathias Nyman <mathias.nyman@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	USB <linux-usb@vger.kernel.org>
-Subject: Re: kmem_cache_alloc fail with unable to handle paging request after
- pci hotplug remove.
-Message-ID: <20160705075346.GA2918@wunner.de>
-References: <577A7203.9010305@linux.intel.com>
- <CAJZ5v0ji9pVgAZZJT+RG83RNE4-GgJAp88Mw2ddVt3H6eHG72g@mail.gmail.com>
- <577A7B0A.4090107@linux.intel.com>
- <20160704152131.GA2766@wunner.de>
- <577A84B4.8020505@linux.intel.com>
- <CAMz9Wg9wEhjH9izB_11xoNe954urJcRhrjbbyk9b45+42Vx6bg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMz9Wg9wEhjH9izB_11xoNe954urJcRhrjbbyk9b45+42Vx6bg@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com
+Cc: bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: [PATCH v2 3/5] x86/ioapic: Fix setup_res() failing to get resource
+Date: Wed, 27 Jul 2016 23:44:13 +0800
+Message-Id: <1469634255-24101-4-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1469634255-24101-1-git-send-email-rui.y.wang@intel.com>
+References: <20160726204640.GA17664@localhost>
+ <1469634255-24101-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 05, 2016 at 11:00:21AM +0800, AceLan Kao wrote:
-> These are logs from my machine.
-> 
-> *** Before plug-in the USB key
-> 
-> u@u-XPS-13-9xxx:~$ sudo lspci -vvvv -s 00:1c.0
-> 00:1c.0 PCI bridge: Intel Corporation Device 9d10 (rev f1) (prog-if 00
-> [Normal decode])
-[...]
->                 LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+setup_res() doesn't actually get any resource because it mistakenly
+checks the return value of acpi_dev_filter_resource_type(), which
+returns 0 on success, and 1 on failure. Fix it by taking the return
+value of non-zero as failing to match the specified resource type.
 
-The link is down (DLActive-), but the root port is a hotplug port,
-so apparently with Alpine Ridge the controller is powered down if
-nothing is plugged in and this results in the controller being
-"unplugged" from the root port.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/ioapic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This looks less fishy than I originally thought, it's just very
-different from the power management of pre Alpine Ridge controllers
-on Macs (which is the only thing I'm really familiar with), where
-the root port is not a hotplug port and the controller does not
-disappear from the system when powered down. (It's config space
-just becomes inaccessible.)
-
-Best regards,
-
-Lukas
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index 2449377..8ab6d42 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -46,7 +46,7 @@ static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
+ 	struct resource_win win;
+ 
+ 	res->flags = 0;
+-	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
++	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM))
+ 		return AE_OK;
+ 
+ 	if (!acpi_dev_resource_memory(acpi_res, res)) {
+-- 
+1.8.3.1
