@@ -1,121 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23745 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789AbcGDPim (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Jul 2016 11:38:42 -0400
-Subject: Re: kmem_cache_alloc fail with unable to handle paging request after
- pci hotplug remove.
-To: Lukas Wunner <lukas@wunner.de>
-References: <577A7203.9010305@linux.intel.com>
- <CAJZ5v0ji9pVgAZZJT+RG83RNE4-GgJAp88Mw2ddVt3H6eHG72g@mail.gmail.com>
- <577A7B0A.4090107@linux.intel.com> <20160704152131.GA2766@wunner.de>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+Return-Path: <briannorris@chromium.org>
+Return-Path: <briannorris@chromium.org>
+Date: Wed, 27 Jul 2016 13:04:44 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	USB <linux-usb@vger.kernel.org>, acelan@gmail.com
-From: Mathias Nyman <mathias.nyman@linux.intel.com>
-Message-ID: <577A84B4.8020505@linux.intel.com>
-Date: Mon, 4 Jul 2016 18:45:56 +0300
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>,
+	linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH v7 2/2] PCI: Rockchip: Add Rockchip PCIe controller
+ support
+Message-ID: <20160727200443.GA30281@google.com>
+References: <1468802533-17699-1-git-send-email-shawn.lin@rock-chips.com>
+ <1468802533-17699-2-git-send-email-shawn.lin@rock-chips.com>
+ <20160727182233.GB8901@localhost>
+ <CAP=VYLqPj=81Q_8kV1wi=FHP-CB6arrXFAC0ktJrLqR-1TSCjw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160704152131.GA2766@wunner.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAP=VYLqPj=81Q_8kV1wi=FHP-CB6arrXFAC0ktJrLqR-1TSCjw@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04.07.2016 18:21, Lukas Wunner wrote:
-> On Mon, Jul 04, 2016 at 06:04:42PM +0300, Mathias Nyman wrote:
->> On 04.07.2016 17:25, Rafael J. Wysocki wrote:
->>> On Mon, Jul 4, 2016 at 4:26 PM, Mathias Nyman <mathias.nyman@linux.intel.com> wrote:
->>>> AceLan Kao can get his DELL XPS 13 laptop to hang by plugging/un-plugging
->>>> a USB 3.1 key via thunderbolt port.
->>>>
->>>> Allocating memory fails after this, always pointing to NULL pointer or
->>>> page request failing in get_freepointer() called by
->>>> kmalloc/kmem_cache_alloc.
->>>>
->>>> Unplugging a usb type-c device from the thunderbolt port on Alpine Ridge
->>>> based systems like this one will hotplug remove PCI bridges together
->>>> with the USB xhci controller behind them.
->
-> Yes, that matches with the lspci output you've posted, the whole
-> Thunderbolt controller is gone after unplug. Perhaps it's powered
-> down? What does "lspci -vvvv -s 00:1d.6" say? (Does the root port
-> still have a link to the Thunderbolt controller?)
->
++ Guenter
 
+Hi,
 
-"lspci -vvvv -s 00:1d.6" after unplug (on my working DELL XPS)
+On Wed, Jul 27, 2016 at 03:56:36PM -0400, Paul Gortmaker wrote:
+> On Wed, Jul 27, 2016 at 2:22 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Mon, Jul 18, 2016 at 08:42:13AM +0800, Shawn Lin wrote:
+> >> This patch adds Rockchip PCIe controller support found
+> >> on RK3399 Soc platform.
+> >>
+> >> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >>
+> >> ---
+> >>
+> >> Changes in v7:
+> >> - make it as a build-in driver
+> 
+> [...]
+> 
 
+...
 
-00:1d.6 PCI bridge: Intel Corporation Sunrise Point-H PCI Express Root Port #15 (rev f1) (prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Interrupt: pin C routed to IRQ 18
-	Bus: primary=00, secondary=06, subordinate=3e, sec-latency=0
-	I/O behind bridge: 00002000-00002fff
-	Memory behind bridge: c4000000-da0fffff
-	Prefetchable memory behind bridge: 0000000080000000-00000000a1ffffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-			ExtTag- RBE+
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 128 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-		LnkCap:	Port #15, Speed 8GT/s, Width x2, ASPM L0s L1, Exit Latency L0s <1us, L1 <16us
-			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
-		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
-			Slot #18, PowerLimit 25.000W; Interlock- NoCompl+
-		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt- HPIrq- LinkChg-
-			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-			Changed: MRL- PresDet- LinkState+
-		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-		RootCap: CRSVisible-
-		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR+, OBFF Not Supported ARIFwd+
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
-		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
-		Address: 00000000  Data: 0000
-	Capabilities: [90] Subsystem: Dell Sunrise Point-H PCI Express Root Port
-	Capabilities: [a0] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO+ CmpltAbrt- UnxCmplt+ RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr+ BadTLP- BadDLLP- Rollover+ Timeout+ NonFatalErr+
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-	Capabilities: [140 v1] Access Control Services
-		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-	Capabilities: [200 v1] L1 PM Substates
-		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-			  PortCommonModeRestoreTime=40us PortTPowerOnTime=10us
-	Capabilities: [220 v1] #19
-	Kernel driver in use: pcieport
-	Kernel modules: shpchp
+> [...]
+> 
+> >> +static struct platform_driver rockchip_pcie_driver = {
+> >> +     .driver = {
+> >> +             .name = "rockchip-pcie",
+> >> +             .of_match_table = rockchip_pcie_of_match,
+> >> +     },
+> >> +     .probe = rockchip_pcie_probe,
+> >> +
+> >> +};
+> >> +module_platform_driver(rockchip_pcie_driver);
+> >> +
+> >> +MODULE_AUTHOR("Rockchip Inc");
+> >> +MODULE_DESCRIPTION("Rockchip AXI PCIe driver");
+> >> +MODULE_LICENSE("GPL v2");
+> >
+> > Per your Kconfig, this driver cannot be a module, so remove these MODULE_*
+> > annotations.  This is to follow Paul Gortmaker's recent "Make explicitly
+> > non-modular" work.  Also change the include of <linux/module.h> to
+> > <linux/init.h>.
+> 
+> Thanks!  You beat me to it.    I didn't see any EXPORT_SYMBOL so it doesn't
+> look like we need export.h  added here.   Also, at the risk of stating
+> the obvious,
+> the module_platform_driver becomes builtin_platform_driver.
 
+Just for reference (not to necessarily disagree here): we've kinda
+ping-ponged on this one. I suggested it could be built as a module, so
+Shawn added it, but apparently we're missing an export:
 
-AceLan Kao, can you confirm your lspci output looks similar on the failing DELL XPS?
+https://lkml.org/lkml/2016/7/8/704
 
--Mathias
+so he reverted back. It's probably best to just leave this built-in and
+resolve the comments Paul and Bjorn made, to avoid too much more
+flip-flopping. If we still want to patch up the __weak
+pci_remap_iospace(), then we can make this a module at a later time.
+
+Regards,
+Brian
