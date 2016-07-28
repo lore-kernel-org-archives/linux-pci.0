@@ -1,85 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lb3-smtp-cloud6.xs4all.net ([194.109.24.31]:43643 "EHLO
-	lb3-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752302AbcGTHah (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jul 2016 03:30:37 -0400
-Subject: Re: [PATCH v6] [media] pci: Add tw5864 driver
-To: Andrey Utkin <andrey.utkin@corp.bluecherry.net>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Kozlov Sergey <serjk@netup.ru>,
-	Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	=?UTF-8?Q?Krzysztof_Ha=c5=82asa?= <khalasa@piap.pl>
-References: <20160720014205.15521-1-andrey.utkin@corp.bluecherry.net>
-Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
-	kernel-mentors@selenic.com,
-	Andrey Utkin <andrey_utkin@fastmail.com>
-From: Hans Verkuil <hverkuil@xs4all.nl>
-Message-ID: <6be09f83-7fd0-2c1b-8e8e-fa19f6d52751@xs4all.nl>
-Date: Wed, 20 Jul 2016 09:30:23 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 28 Jul 2016 16:29:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular
+Message-ID: <20160728202859.GA2420@localhost.localdomain>
+References: <20160728193303.12945-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-In-Reply-To: <20160720014205.15521-1-andrey.utkin@corp.bluecherry.net>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160728193303.12945-1-paul.gortmaker@windriver.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/20/2016 03:42 AM, Andrey Utkin wrote:
-> Changes since v5:
->  - Rework known issues notice as suggested by Hans Verkuil (and previously Joe Perches)
+On Thu, Jul 28, 2016 at 03:33:03PM -0400, Paul Gortmaker wrote:
+> The Kconfig currently controlling compilation of this code is:
 > 
-> I am leaving for a vacation in a day and won't respond before 3rd of August.
-> I wish to all of you to enjoy your time, too.
+> drivers/pci/pcie/Kconfig:config PCIE_DPC
+> drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
 > 
-> Thanks to all the reviewers for their efforts.
+> ...meaning that it currently is not being built as a module by anyone.
 > 
+> Lets remove the modular code that is essentially orphaned, so that
+> when reading the driver there is no doubt it is builtin-only.
+> 
+> Since module_init translates to device_initcall in the non-modular
+> case, the init ordering remains unchanged with this commit.
+> 
+> We also delete the MODULE_LICENSE tag etc. since all that information
+> was (or is now) contained at the top of the file in the comments.
 
-<snip>
+Thanks for cleaning this up.
 
-> +static int tw5864_input_std_get(struct tw5864_input *input,
-> +				enum tw5864_vid_std *std_arg)
-> +{
-> +	struct tw5864_dev *dev = input->root;
-> +	enum tw5864_vid_std std;
-> +	u8 std_reg = tw_indir_readb(TW5864_INDIR_VIN_E(input->nr));
-> +
-> +	std = (std_reg & 0x70) >> 4;
-> +
-> +	if (std_reg & 0x80) {
-> +		dev_err(&dev->pci->dev,
-> +			"Video format detection is in progress, please wait\n");
+FWIW, all of the other pcie service drivers look like they could use
+the same cleanup.
 
-Use dev_dbg instead of dev_err.
-
-> +		return -EAGAIN;
-> +	}
-> +
-> +	if (std == STD_INVALID) {
-> +		dev_err(&dev->pci->dev, "No valid video format detected\n");
-> +		return -EPERM;
-
-This is still wrong. From my v5 review:
-
-"In this case set *std_arg to V4L2_STD_UNKNOWN and just return 0. As per the QUERYSTD spec."
-
-Also, don't use dev_err here. There is nothing wrong with not being able to detect
-a valid format. I'd just drop the message.
-
-> +	}
-> +
-> +	*std_arg = std;
-> +	return 0;
-> +}
-
-Regards,
-
-	Hans
+Reviewed-by: Keith Busch <keith.busch@intel.com>
