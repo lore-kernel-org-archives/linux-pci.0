@@ -1,112 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57426 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751916AbcGVWEp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jul 2016 18:04:45 -0400
-Date: Fri, 22 Jul 2016 17:04:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] genirq/msi: Make sure PCI MSIs are activated early
-Message-ID: <20160722220440.GC32142@localhost>
-References: <1468426713-31431-1-git-send-email-marc.zyngier@arm.com>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:51779 "HELO
+	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1162468AbcG1AZ2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jul 2016 20:25:28 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	linux-samsung-soc@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Inki Dae <inki.dae@samsung.com>, Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Mark Brown <broonie@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking support
+Date: Thu, 28 Jul 2016 02:30:31 +0200
+Message-ID: <2841548.NIYVpJFBcH@vostro.rjw.lan>
+In-Reply-To: <20160724224832.GB9516@wunner.de>
+References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com> <4258432.JNKr9zJtMp@vostro.rjw.lan> <20160724224832.GB9516@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468426713-31431-1-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 13, 2016 at 05:18:33PM +0100, Marc Zyngier wrote:
-> Bharat Kumar Gogada reported issues with the generic MSI code,
-> where the end-point ended up with garbage in its MSI configuration
-> (both for the vector and the message).
+On Monday, July 25, 2016 12:48:32 AM Lukas Wunner wrote:
+> On Thu, Jul 21, 2016 at 02:25:15AM +0200, Rafael J. Wysocki wrote:
+> > On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
+> > > On Thu, Jul 21, 2016 at 12:51:31AM +0200, Rafael J. Wysocki wrote:
+> > > > On Wednesday, July 20, 2016 05:23:40 PM Lukas Wunner wrote:
+> > > > > On Wed, Jul 20, 2016 at 02:52:42PM +0200, Rafael J. Wysocki wrote:
+> > > > > > On Wednesday, July 20, 2016 08:24:50 AM Lukas Wunner wrote:
+> > > > > > > On Wed, Jul 20, 2016 at 02:33:18AM +0200, Rafael J. Wysocki wrote:
+> > > > > > > > On Friday, June 17, 2016 04:07:38 PM Lukas Wunner wrote:
+> > > > > > > > > On Fri, Jun 17, 2016 at 02:54:56PM +0200, Rafael J. Wysocki wrote:
+> > > > > > > > > > On Fri, Jun 17, 2016 at 12:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > > > > > > > > > On Fri, Jun 17, 2016 at 08:26:52AM +0200, Marek Szyprowski wrote:
+> > > > > > > > > > > > From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> > > > > > > > > > > We also have such a functional dependency for Thunderbolt on Macs:
+> > > > > > > > > > > On resume from system sleep, the PCIe hotplug ports may not resume
+> > > > > > > > > > > before the thunderbolt driver has reestablished the PCI tunnels.
+> > > > > > > > > > > Currently this is enforced by quirk_apple_wait_for_thunderbolt()
+> > > > > > > > > > > in drivers/pci/quirks.c. It would be good if we could represent
+> > > > > > > > > > > this dependency using something like Rafael's approach instead of
+> > > > > > > > > > > open coding it, however one detail in Rafael's patches is problematic:
+> > > > > > > > > > >
+> > > > > > > > > > > > New links are added by calling device_link_add() which may happen
+> > > > > > > > > > > > either before the consumer device is probed or when probing it, in
+> > > > > > > > > > > > which case the caller needs to ensure that the driver of the
+> > > > > > > > > > > > supplier device is present and functional and the DEVICE_LINK_PROBE_TIME
+> > > > > > > > > > > > flag should be passed to device_link_add() to reflect that.
+> > > > > > > > > > >
+> > > > > > > > > > > The thunderbolt driver cannot call device_link_add() before the
+> > > > > > > > > > > PCIe hotplug ports are bound to a driver unless we amend portdrv
+> > > > > > > > > > > to return -EPROBE_DEFER for Thunderbolt hotplug ports on Macs
+> > > > > > > > > > > if the thunderbolt driver isn't loaded.
+> > > > > > > > > > >
+> > > > > > > > > > > It would therefore be beneficial if device_link_add() can be
+> > > > > > > > > > > called even *after* the consumer is bound.
+> > > > > > > > > > 
+> > > > > > > > > > I don't quite follow.
+> > > > > > > > > > 
+> > > > > > > > > > Who's the provider and who's the consumer here?
+> > > > > > > > > 
+> > > > > > > > > thunderbolt.ko is the supplier.
+> > > > > > > > 
+> > > > > > > > But it binds to the children of the ports that are supposed to be its
+> > > > > > > > consumers?
+> > > > > > > > 
+> > > > > > > > Why is that even expected to work?
+> > > > > > > 
+> > > > > > > No, the consumers are aunts (or uncles) of the supplier, if you will. :-)
+> > > > > > > 
+> > > > > > > The consumers are the hotplug ports (named "Downstream Bridge 1 / 2" in
+> > > > > > > the drawing below). The supplier is the NHI:
+> > > > > > > 
+> > > > > > >       (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+> > > > > > >                                          +-- Downstream Bridge 1 --
+> > > > > > >                                          +-- Downstream Bridge 2 --
+> > > > > > >                                          ...
+> > > > > > > 
+> > > > > > > We're calling pci_power_up() and pci_restore_state() from
+> > > > > > > pci_pm_resume_noirq(). And that will fail for devices below
+> > > > > > > the hotplug ports if the PCI tunnels haven't been re-established
+> > > > > > > yet by the NHI.
+> > > > > > 
+> > > > > > So the NHI is a PCIe device, right?
+> > > > > > 
+> > > > > > Does the Thunderbolt driver bind to that device?
+> > > > > 
+> > > > > The NHI is a PCI device but not a bridge. It has class 0x88000.
+> > > > > Yes, thunderbolt.ko binds to the NHI.
+> > > > > 
+> > > > > And portdrv binds to the upstream bridge and downstream bridges.
+> > > > > Those have class 0x60400.
+> > > > 
+> > > > OK, so why would there be a problem with creating links from the NHI
+> > > > (producer) to the ports (consumers) before binding portdrv to them?
+> > > 
+> > > Because the ordering in which drivers bind isn't guaranteed. At least
+> > > on my machine (Debian), portdrv always binds before thunderbolt.
+> > 
+> > But what drivers have to do with that really?  Do you need drivers to
+> > know that the dependency is there?
+> > 
+> > Just add likns *before* even probing for drivers (yes, you can do that)
+> > and the core will handle that for you.
 > 
-> It turns out that the two MSI paths in the kernel are doing slightly
-> different things:
+> Forgive me for being dense: How do you suggest to add links before
+> probing drivers? Only way I could think of is with a PCI quirk.
 > 
-> generic MSI: disable MSI -> allocate MSI -> enable MSI -> setup EP
-> PCI MSI: disable MSI -> allocate MSI -> setup EP -> enable MSI
-> 
-> and it turns out that end-points are allowed to latch the content
-> of the MSI configuration registers as soon as MSIs are enabled.
-> In Bharat's case, the end-point ends up using whatever was there
-> already, which is not what you want.
-> 
-> In order to make things converge, we introduce a new MSI domain
-> flag (MSI_FLAG_ACTIVATE_EARLY) that is unconditionally set for
-> PCI/MSI. When set, this flag forces the programming of the end-point
-> as soon as the MSIs are allocated.
-> 
-> A consequence of this is that we have an extra activate in
-> irq_startup, but that should be without much consequence.
-> 
-> Reported-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> Tested-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> Which is what we're already doing right now (see drivers/pci/quirk.c:
+> quirk_apple_wait_for_thunderbolt()). And it ain't pretty.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Well, maybe not, but doing it once during enumeration would be better than
+on every resume.
 
-Thomas, let me know if you'd like me to take this.  It looks like the
-real smarts here are in kernel/irq, so I assume you'll take it unless
-I hear otherwise.
+Plus there is runtime PM to cover.
 
-> ---
->  drivers/pci/msi.c   | 2 ++
->  include/linux/msi.h | 2 ++
->  kernel/irq/msi.c    | 7 +++++++
->  3 files changed, 11 insertions(+)
+> > > I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
+> > > no driver is bound to the NHI. Doesn't feel pretty to me though.
+> > > 
+> > > Ultimately this seems to be the same issue as with calling
+> > > dev_pm_domain_set() for a bound device. Perhaps device_link_add()
+> > > can likewise be allowed if a runtime PM ref is held for the devices
+> > > and the call happens under lock_system_sleep()?
+> > 
+> > No, the whole synchronization scheme in the links code would have had to be
+> > changed for that to really work.
+> > 
+> > And it really is about what is needed (at least in principle) to run your
+> > device.  If you think you need device X with a driver to handle device Y
+> > correctly, then either you need it all the time, from probe to remove, or
+> > you just don't really need it at all.
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a080f44..565e2a4 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1277,6 +1277,8 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
->  	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
->  		pci_msi_domain_update_chip_ops(info);
->  
-> +	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
-> +
->  	domain = msi_create_irq_domain(fwnode, info, parent);
->  	if (!domain)
->  		return NULL;
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 8b425c6..513b7c7 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -270,6 +270,8 @@ enum {
->  	MSI_FLAG_MULTI_PCI_MSI		= (1 << 3),
->  	/* Support PCI MSIX interrupts */
->  	MSI_FLAG_PCI_MSIX		= (1 << 4),
-> +	/* Needs early activate, required for PCI */
-> +	MSI_FLAG_ACTIVATE_EARLY		= (1 << 5),
->  };
->  
->  int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
-> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-> index 38e89ce..4ed2cca 100644
-> --- a/kernel/irq/msi.c
-> +++ b/kernel/irq/msi.c
-> @@ -361,6 +361,13 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
->  		else
->  			dev_dbg(dev, "irq [%d-%d] for MSI\n",
->  				virq, virq + desc->nvec_used - 1);
-> +
-> +		if (info->flags & MSI_FLAG_ACTIVATE_EARLY) {
-> +			struct irq_data *irq_data;
-> +
-> +			irq_data = irq_domain_get_irq_data(domain, desc->irq);
-> +			irq_domain_activate_irq(irq_data);
-> +		}
->  	}
->  
->  	return 0;
-> -- 
-> 2.1.4
+> Real life isn't as simple as that.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> In this case, we have consumers (hotplug ports) which are doing fine
+> if the driver for the supplier (NHI) is not loaded. But once it loads,
+> the links must be in place.
+
+Hmm.
+
+What if it is not loaded and the system suspends.  Will everything work
+as expected after the subsequent resume?
+
+Thanks,
+Rafael
+
