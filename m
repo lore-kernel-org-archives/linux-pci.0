@@ -1,40 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Cc: agordeev@redhat.com, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/5] pci: switch msix_program_entries to use pci_msix_desc_addr
-Date: Tue, 12 Jul 2016 18:20:15 +0900
-Message-Id: <1468315218-20490-3-git-send-email-hch@lst.de>
-In-Reply-To: <1468315218-20490-1-git-send-email-hch@lst.de>
-References: <1468315218-20490-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:62704 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752333AbcG1IQ0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jul 2016 04:16:26 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, corbet@lwn.net
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v5 1/8] thunderbolt: Macro rename
+Date: Thu, 28 Jul 2016 11:15:14 +0300
+Message-Id: <1469693721-5641-2-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of relying on the msix_entry structure for the vector number read
-it from the msi_desc.
+This first patch updates the registers file to
+reflect that it isn't only for Cactus Ridge.
+No functional change intended.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
 ---
- drivers/pci/msi.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/thunderbolt/nhi_regs.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 0d94fbf..a385f39 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -713,11 +713,9 @@ static void msix_program_entries(struct pci_dev *dev,
- 	int i = 0;
+diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+index 86b996c..75cf069 100644
+--- a/drivers/thunderbolt/nhi_regs.h
++++ b/drivers/thunderbolt/nhi_regs.h
+@@ -1,11 +1,11 @@
+ /*
+- * Thunderbolt Cactus Ridge driver - NHI registers
++ * Thunderbolt driver - NHI registers
+  *
+  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
+  */
  
- 	for_each_pci_msi_entry(entry, dev) {
--		int offset = entries[i].entry * PCI_MSIX_ENTRY_SIZE +
--						PCI_MSIX_ENTRY_VECTOR_CTRL;
--
- 		entries[i].vector = entry->irq;
--		entry->masked = readl(entry->mask_base + offset);
-+		entry->masked = readl(pci_msix_desc_addr(entry) +
-+				PCI_MSIX_ENTRY_VECTOR_CTRL);
- 		msix_mask_irq(entry, 1);
- 		i++;
- 	}
+-#ifndef DSL3510_REGS_H_
+-#define DSL3510_REGS_H_
++#ifndef NHI_REGS_H_
++#define NHI_REGS_H_
+ 
+ #include <linux/types.h>
+ 
 -- 
-2.1.4
+2.7.4
+
