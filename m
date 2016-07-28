@@ -1,126 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:38579 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750779AbcGKIj0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jul 2016 04:39:26 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>
-Subject: RE: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
-Date: Mon, 11 Jul 2016 08:39:20 +0000
-Message-ID: <HK2PR0601MB139310D5AF6ECA1817FA4ADBF53F0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:62704 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752333AbcG1IQ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jul 2016 04:16:57 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, corbet@lwn.net
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v5 7/8] thunderbolt: Networking doc
+Date: Thu, 28 Jul 2016 11:15:20 +0300
+Message-Id: <1469693721-5641-8-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Note that kbuild test failed because domain_nr is only available when we
-have CONFIG_PCI_DOMAINS_GENERIC defined, so the patch will definitely
-have to change.
+Adding Thunderbolt(TM) networking documentation.
 
-Phil
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ Documentation/00-INDEX                   |   2 +
+ Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
+ 2 files changed, 137 insertions(+)
+ create mode 100644 Documentation/thunderbolt-networking.txt
 
-On 08 July 2016 12:50, Phil Edworthy wrote:
-> Hi Bjorn,
-> 
-> I've marked this as RFC as I guess there might be a better way to do
-> this, but I'm not sure how. I would appreciate your thoughts on this.
-> 
-> Thanks
-> Phil
-> 
-> ---
-> pdev_fixup_irq() performs interrupt swizzling on all PCI devices,
-> no matter that the device may be on a completely unrelated PCI
-> Host controller.
-> 
-> When you have multiple PCI Host controllers, pdev_fixup_irq() can
-> clobber the dev->irq of devices it should not be changing.
-> This has been seen when performing suspend/resume on boards with
-> two R-Car PCIe Host controllers, resulting in a NULL ptr access
-> in __pci_restore_msi_state. This happens because dev->irq has been
-> overwritten with 0, and irq_get_msi_desc(dev->irq) returns NULL.
-> 
-> This patch introduces a new function, pci_fixup_irqs_local(), that
-> performs the same operation as pdev_fixup_irq(), but only changes
-> the dev->irq of device on the same domain.
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> ---
->  drivers/pci/setup-irq.c | 25 ++++++++++++++++++++++---
->  include/linux/pci.h     |  3 +++
->  2 files changed, 25 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 95c225b..90ea8fa 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -22,7 +22,8 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int
-> irq)
->  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
->  }
-> 
-> -static void pdev_fixup_irq(struct pci_dev *dev,
-> +static void pdev_fixup_irq(int domain_nr,
-> +			   struct pci_dev *dev,
->  			   u8 (*swizzle)(struct pci_dev *, u8 *),
->  			   int (*map_irq)(const struct pci_dev *, u8, u8))
->  {
-> @@ -48,8 +49,15 @@ static void pdev_fixup_irq(struct pci_dev *dev,
->  		if (irq == -1)
->  			irq = 0;
->  	}
-> -	dev->irq = irq;
-> +	/* Since pci_fixup_irqs() can be called more than once due to multiple
-> +	 * host controllers, and we scan all PCI devices, not just those
-> +	 * attached to this controller, make sure we don't clobber dev->irq
-> +	 * that has nothing to do with this domain.
-> +	 */
-> +	if (domain_nr >= 0 && dev->bus->domain_nr != domain_nr)
-> +		return;
-> 
-> +	dev->irq = irq;
->  	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
-> 
->  	/* Always tell the device, so the driver knows what is
-> @@ -63,6 +71,17 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->  	struct pci_dev *dev = NULL;
-> 
->  	for_each_pci_dev(dev)
-> -		pdev_fixup_irq(dev, swizzle, map_irq);
-> +		pdev_fixup_irq(-1, dev, swizzle, map_irq);
->  }
->  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-> +
-> +void pci_fixup_irqs_local(struct pci_bus *bus,
-> +		    u8 (*swizzle)(struct pci_dev *, u8 *),
-> +		    int (*map_irq)(const struct pci_dev *, u8, u8))
-> +{
-> +	struct pci_dev *dev = NULL;
-> +
-> +	for_each_pci_dev(dev)
-> +		pdev_fixup_irq(bus->domain_nr, dev, swizzle, map_irq);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_fixup_irqs_local);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8badb66..37a97df 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1134,6 +1134,9 @@ void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
->  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
->  		    int (*)(const struct pci_dev *, u8, u8));
-> +void pci_fixup_irqs_local(struct pci_bus *,
-> +		    u8 (*)(struct pci_dev *, u8 *),
-> +		    int (*)(const struct pci_dev *, u8, u8));
->  #define HAVE_PCI_REQ_REGIONS	2
->  int __must_check pci_request_regions(struct pci_dev *, const char *);
->  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
-> --
-> 2.5.0
+diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
+index cb9a6c6..80a6706 100644
+--- a/Documentation/00-INDEX
++++ b/Documentation/00-INDEX
+@@ -439,6 +439,8 @@ this_cpu_ops.txt
+ 	- List rationale behind and the way to use this_cpu operations.
+ thermal/
+ 	- directory with information on managing thermal issues (CPU/temp)
++thunderbolt-networking.txt
++	- Thunderbolt(TM) Networking driver description.
+ trace/
+ 	- directory with info on tracing technologies within linux
+ unaligned-memory-access.txt
+diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
+new file mode 100644
+index 0000000..b7714cf
+--- /dev/null
++++ b/Documentation/thunderbolt-networking.txt
+@@ -0,0 +1,135 @@
++Intel Thunderbolt(TM) Linux driver
++==================================
++
++Copyright(c) 2013 - 2016 Intel Corporation.
++
++Contact Information:
++Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
++Edited by Michael Jamet <michael.jamet@intel.com>
++
++Overview
++========
++
++Thunderbolt(TM) Networking mode is introduced with this driver.
++This kernel code creates an ethernet device utilized in computer to computer
++communication over a Thunderbolt cable.
++This driver has been added on the top of the existing thunderbolt driver
++for systems with firwmare (FW) based Thunderbolt controllers supporting
++Thunderbolt Networking.
++
++Files
++=====
++
++- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
++		In addition, they create an interface for netlink communication with
++		a user space daemon.
++
++- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
++		networking.
++
++Interface to user space
++=======================
++
++The interface to the user space module is implemented through a Generic Netlink.
++In order to be accessed by the user space module, both kernel and user space
++modules have to register with the same GENL_NAME. In our case, this is
++simply "thunderbolt".
++The registration is done at driver initialization time for all instances of
++the Thunderbolt controllers.
++The communication is then carried through pre-defined Thunderbolt messages.
++Each specific message has a callback function that is called when
++the related message is received.
++
++The messages are defined as follows:
++* NHI_CMD_UNSPEC: Not used.
++* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
++  communication channel.
++* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
++  to close communication channel.
++* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
++  driver version, FW version offset, number of ports in the controller
++  and DMA port.
++* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
++* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
++* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
++  changes or disconnect path.
++* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
++  module to FW to establish path.
++* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
++
++Communication with ICM (Firmware)
++=================================
++
++The communication with ICM is principally achieved through
++a DMA mechanism on Ring 0.
++The driver allocates a shared memory that is physically mapped onto
++the DMA physical space at Ring 0.
++
++Interrupts
++==========
++
++Thunderbolt relies on MSI-X interrupts.
++The MSI-X vector is allocated as follows:
++ICM
++     - Tx: MSI-X vector index 0
++     - Rx: MSI-X vector index 1
++
++Port 0
++     - Tx: MSI-X vector index 2
++     - Rx: MSI-X vector index 3
++
++Port 1
++     - Tx: MSI-X vector index 4
++     - Rx: MSI-X vector index 5
++
++ICM interrupts are used for communication with ICM only.
++Port 0 and Port 1 interrupts are used for Thunderbolt Networking
++communications.
++In case MSI-X is not available, the driver requests to enable MSI only.
++
++Mutexes, semaphores and spinlocks
++=================================
++
++The driver should be able to operate in an environment where hardware
++is asynchronously accessed by multiple entities such as netlink,
++multiple controllers etc.
++
++* send_sem: This semaphore enforces unique sender (one sender at a time)
++  to avoid wrong impairing with responses. FW may process one message
++  at the time.
++* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
++  to avoid continuing to send messages to FW.
++* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
++  avoid continuing to send commands to mailbox.
++* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
++  for the mailbox command.
++  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
++  to get the command response.
++* lock: This spinlock protects from simultaneous changes during
++  disable/enable interrupts.
++* state_lock: This mutex comes to protect changes during net device state
++  changes and net_device operations.
++* controllers_list_rwsem: This read/write sempahore syncs the access to
++  the controllers list when there are multiple controllers in the system.
++
++FW path enablement
++==================
++
++In order to SW to communicate with the FW, the driver needs to send to FW
++the PDF driver ready command and receive response from FW.
++The driver ready command PDF value is 12 and the response is 13.
++Once the exchange is completed, the user space module should be able to send
++messages through the driver to the FW and FW starts to send notifications
++about HW/FW events.
++
++Information
++===========
++
++Mailing list:
++	thunderbolt-software@lists.01.org
++	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
++	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
++
++For additional information about Thunderbolt technology visit:
++	https://01.org/thunderbolt-sw
++	https://thunderbolttechnology.net/
+-- 
+2.7.4
 
