@@ -1,58 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:56197 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520AbcGHUI3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2016 16:08:29 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+Received: from mail.windriver.com ([147.11.1.11]:42376 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756905AbcG1TeJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 15:34:09 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-Subject: Re: [v6,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
-Date: Fri, 08 Jul 2016 22:10:14 +0200
-Message-ID: <2013221.obfd8Z8cde@wuerfel>
-In-Reply-To: <20160708163511.GA23348@roeck-us.net>
-References: <1467789398-13501-2-git-send-email-shawn.lin@rock-chips.com> <20160708163511.GA23348@roeck-us.net>
+	Keith Busch <keith.busch@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular
+Date: Thu, 28 Jul 2016 15:33:03 -0400
+Message-ID: <20160728193303.12945-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 8, 2016 9:35:11 AM CEST Guenter Roeck wrote:
-> On Wed, Jul 06, 2016 at 03:16:38PM +0800, Shawn Lin wrote:
-> > This patch adds Rockchip PCIe controller support found
-> > on RK3399 Soc platform.
-> > 
-> > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > ---
-> 
-> [ ... ]
-> 
-> > +     /* Get the I/O and memory ranges from DT */
-> > +     resource_list_for_each_entry(win, &res) {
-> > +             switch (resource_type(win->res)) {
-> > +             case IORESOURCE_IO:
-> > +                     io = win->res;
-> > +                     io->name = "I/O";
-> > +                     io_size = resource_size(io);
-> > +                     io_bus_addr = io->start - win->offset;
-> > +                     err = pci_remap_iospace(io, io_base);
-> 
-> This function is not exported. Either it will have to be exported
-> (which may be difficult since it is declared as __weak), or the
-> driver must only be built into the kernel, or the function can
-> not be used.
-> 
+The Kconfig currently controlling compilation of this code is:
 
-I think we can simply drop the __weak annotation, there is no other
-implementation of this, and I doubt there will ever be. Even if it
-was needed, we could do it in a different way.
+drivers/pci/pcie/Kconfig:config PCIE_DPC
+drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
 
-	Arnd
+...meaning that it currently is not being built as a module by anyone.
+
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.
+
+Since module_init translates to device_initcall in the non-modular
+case, the init ordering remains unchanged with this commit.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+was (or is now) contained at the top of the file in the comments.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+
+[This mismatch just appeared in Thursday's linux-next; doesn't matter
+ to me if we update it now or I batch it in with other pending PCI
+ changes for-4.9 -- either one is fine; choice is up to you folks.]
+
+ drivers/pci/pcie/pcie-dpc.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 250f87861786..9811b14d9ad8 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -1,5 +1,7 @@
+ /*
+  * PCI Express Downstream Port Containment services driver
++ * Author: Keith Busch <keith.busch@intel.com>
++ *
+  * Copyright (C) 2016 Intel Corp.
+  *
+  * This file is subject to the terms and conditions of the GNU General Public
+@@ -9,7 +11,7 @@
+ 
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/pcieport_if.h>
+ 
+@@ -143,16 +145,4 @@ static int __init dpc_service_init(void)
+ {
+ 	return pcie_port_service_register(&dpcdriver);
+ }
+-
+-static void __exit dpc_service_exit(void)
+-{
+-	pcie_port_service_unregister(&dpcdriver);
+-}
+-
+-MODULE_DESCRIPTION("PCI Express Downstream Port Containment driver");
+-MODULE_AUTHOR("Keith Busch <keith.busch@intel.com>");
+-MODULE_LICENSE("GPL");
+-MODULE_VERSION("0.1");
+-
+-module_init(dpc_service_init);
+-module_exit(dpc_service_exit);
++device_initcall(dpc_service_init);
+-- 
+2.8.4
 
