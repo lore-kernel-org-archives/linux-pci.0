@@ -1,63 +1,71 @@
-Return-Path: <tglx@linutronix.de>
-Return-Path: <tglx@linutronix.de>
-Date: Mon, 25 Jul 2016 09:45:13 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-    Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-    linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] genirq/msi: Make sure PCI MSIs are activated early
-In-Reply-To: <20160722220440.GC32142@localhost>
-Message-ID: <alpine.DEB.2.11.1607250928370.5629@nanos>
-References: <1468426713-31431-1-git-send-email-marc.zyngier@arm.com> <20160722220440.GC32142@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.windriver.com ([147.11.146.13]:56276 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375AbcG1V2I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 17:28:08 -0400
+Date: Thu, 28 Jul 2016 17:28:02 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Keith Busch <keith.busch@intel.com>
+CC: <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Mika Westerberg" <mika.westerberg@linux.intel.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular
+Message-ID: <20160728212801.GY11410@windriver.com>
+References: <20160728193303.12945-1-paul.gortmaker@windriver.com>
+ <20160728202859.GA2420@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20160728202859.GA2420@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 22 Jul 2016, Bjorn Helgaas wrote:
-> On Wed, Jul 13, 2016 at 05:18:33PM +0100, Marc Zyngier wrote:
-> > and it turns out that end-points are allowed to latch the content
-> > of the MSI configuration registers as soon as MSIs are enabled.
-> > In Bharat's case, the end-point ends up using whatever was there
-> > already, which is not what you want.
+[Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular] On 28/07/2016 (Thu 16:29) Keith Busch wrote:
+
+> On Thu, Jul 28, 2016 at 03:33:03PM -0400, Paul Gortmaker wrote:
+> > The Kconfig currently controlling compilation of this code is:
 > > 
-> > In order to make things converge, we introduce a new MSI domain
-> > flag (MSI_FLAG_ACTIVATE_EARLY) that is unconditionally set for
-> > PCI/MSI. When set, this flag forces the programming of the end-point
-> > as soon as the MSIs are allocated.
+> > drivers/pci/pcie/Kconfig:config PCIE_DPC
+> > drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
 > > 
-> > A consequence of this is that we have an extra activate in
-> > irq_startup, but that should be without much consequence.
+> > ...meaning that it currently is not being built as a module by anyone.
 > > 
-> > Reported-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> > Tested-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> > Lets remove the modular code that is essentially orphaned, so that
+> > when reading the driver there is no doubt it is builtin-only.
+> > 
+> > Since module_init translates to device_initcall in the non-modular
+> > case, the init ordering remains unchanged with this commit.
+> > 
+> > We also delete the MODULE_LICENSE tag etc. since all that information
+> > was (or is now) contained at the top of the file in the comments.
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Thanks for cleaning this up.
 > 
-> Thomas, let me know if you'd like me to take this.  It looks like the
-> real smarts here are in kernel/irq, so I assume you'll take it unless
-> I hear otherwise.
+> FWIW, all of the other pcie service drivers look like they could use
+> the same cleanup.
 
-I'll take it. Though I have second thoughts about the whole issue.
+Yep, not to worry, I've still got the following patches pending for-4.9:
 
-We deliberately made the allocation sequence of interrupts in a way that we
-can easily rollback in case of failure.
+$ grep PCI series 
+# PCI
+PCI-aerdrv-make-it-explicitly-non-modular.patch
+PCI-altera-make-it-explicitly-non-modular.patch
+PCI-dra7xx-make-it-explicitly-non-modular.patch
+PCI-imx6-make-it-explicitly-non-modular.patch
+PCI-pme-make-it-explicitly-non-modular.patch
+PCI-qcom-make-it-explicitly-non-modular.patch
+PCI-spear13xx-make-it-explicitly-non-modular.patch
+PCI-xilinx-make-it-explicitly-non-modular.patch
+PCI-xilinx-nwl-make-it-eplicitly-non-modular.patch
+PCI-portdrv-make-it-explicitly-non-modular.patch
+PCI-PCIe-make-dpc-explicitly-non-modular.patch
+PCI-generic-make-host-common-explicitly-non-modular.patch
+PCI-hotplug_core-make-it-explicitly-non-modular.patch
+PCI-hotplug-make-core-code-explicitly-non-modular.patch
 
-We achieved that by activating the interrupts only at request time and not
-somewhere in the middle of the allocation sequence. That makes the whole
-hierarchical allocation more robust and avoids complex rollbacks.
+Thanks,
+Paul.
+--
 
-Now that new flag is basically torpedoing that approach.
-
-What I really wonder is why that is only an issue with that particular xilinx
-hardware/IP block. I'm aware that up to PCI 2.3 the mask bit for MSI
-interrupts is optional or in really old versions not even specified. So only
-if that mask bit is missing the above described issue can happen.
-
-If not, then we might have a general issue that we don't mask the entry before
-we call pci_msi_set_enable().
-
-Thoughts?
-
-	tglx
+> 
+> Reviewed-by: Keith Busch <keith.busch@intel.com>
