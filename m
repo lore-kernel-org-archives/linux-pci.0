@@ -1,88 +1,79 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 03/13] PCI: Add Thunderbolt portdrv service type
-Date: Wed, 20 Jul 2016 02:30:14 +0200
-Message-ID: <1492431.vTkZItZy2q@vostro.rjw.lan>
-In-Reply-To: <20160617225152.GD12254@localhost>
-References: <cover.1463134231.git.lukas@wunner.de> <3e694101e5fa1551e07b5ecf92157087922e952f.1463134231.git.lukas@wunner.de> <20160617225152.GD12254@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:50824 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753251AbcG1IQe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jul 2016 04:16:34 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, corbet@lwn.net
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v5 3/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
+Date: Thu, 28 Jul 2016 11:15:16 +0300
+Message-Id: <1469693721-5641-4-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 17, 2016 05:51:52 PM Bjorn Helgaas wrote:
-> On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> > A Thunderbolt controller is a PCIe switch which, as defined in the PCIe
-> > spec, appears to the OS "as a collection of virtual PCI-to-PCI bridges".
-> > 
-> > We're about to add support for Apple's nonstandard ACPI methods to power
-> > Thunderbolt controllers up and down.  To facilitate that, allocate a
-> > port service for every PCI bridge belonging to a Thunderbolt controller.
-> > 
-> > This port service might come in handy for other use cases, e.g. device
-> > initialization of Thunderbolt controllers.
-> > 
-> > To understand when and how this port service will be allocated, consider
-> > the PCI devices exposed by a Thunderbolt host controller:
-> > 
-> >   (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> >                                      +-- Downstream Bridge 1 --
-> >                                      +-- Downstream Bridge 2 --
-> >                                      ...
-> > 
-> > The upstream and downstream bridges represent the PCIe switch and a
-> > Thunderbolt port service will be allocated for each of them.  Hotplugged
-> > devices will appear behind the downstream bridges.  The NHI (Native Host
-> > Interface) is a virtual PCI device to manage the switch fabric and is
-> > not relevant here.  It uses class 0x88000, so it is not a PCIe port.
-> > 
-> > Next, consider the PCI devices exposed by Thunderbolt controllers built
-> > into hotplugged devices:
-> > 
-> >   -- Upstream Bridge ---- Downstream Bridge ---- Hotplugged device
-> > 
-> > Again, Thunderbolt port services will be allocated for the upstream and
-> > downstream bridge, but not for the hotplugged device, which might use
-> > e.g. class 0x20000 if it's a Thunderbolt Ethernet adapter.
-> 
-> I don't really *like* the portdrv infrastructure, even though we're
-> sort of stuck with it now.  It seems like all it really does is allow
-> multiple sub-drivers to attach to a single device and share interrupts
-> between them.  And we get some extra devices in sysfs that don't fit
-> the regular PCI model.  We used to support loadable sub-drivers
-> (pciehp, aer, etc.), but we decided that didn't really make sense
-> (though I notice you do support thunderbolt as a module).
-> 
-> I think we would be better off if the PCIe services (hotplug, AER,
-> etc.) were directly integrated into the PCI core without the portdrv
-> abstraction in the middle.  But anyway, we do have portdrv, and the
-> only question here is whether extending it for Thunderbolt is the
-> right thing.
-> 
-> So the question for Thunderbolt is what benefit you get from being a
-> portdrv sub-driver.  It seems like basically a way for you to hook on
-> to PCI bridges that happen to be Thunderbolt controllers.  I don't
-> think you really use any portdrv services (other than forwarding the
-> PM ops down to you, which a regular PCI device driver would get for
-> free).
+Updating the Kconfig Thunderbolt(TM) description.
 
-Moreover, this approach creates sort of a priority inversion between
-the Thunderbolt driver and the ports, because the driver, which really
-is a superior entity (as it corresponds to the switch as a whole) is
-caused to bind to children of the ports (ie. PCIe service devices).
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
+ drivers/thunderbolt/Makefile |  2 +-
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-That leads to ordering issues in probe and then suspend/resume etc.
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+index c121acc..d34b0f5 100644
+--- a/drivers/thunderbolt/Kconfig
++++ b/drivers/thunderbolt/Kconfig
+@@ -1,13 +1,30 @@
+-menuconfig THUNDERBOLT
+-	tristate "Thunderbolt support for Apple devices"
++config THUNDERBOLT
++	tristate "Thunderbolt(TM) support"
+ 	depends on PCI
+ 	select CRC32
+ 	help
+-	  Cactus Ridge Thunderbolt Controller driver
++	  Thunderbolt(TM) Controller driver
++
++if THUNDERBOLT
++
++config THUNDERBOLT_APPLE
++	tristate "Apple hardware support"
++	help
+ 	  This driver is required if you want to hotplug Thunderbolt devices on
+ 	  Apple hardware.
+ 
+ 	  Device chaining is currently not supported.
+ 
+-	  To compile this driver a module, choose M here. The module will be
++	  To compile this driver as a module, choose M here. The module will be
+ 	  called thunderbolt.
++
++config THUNDERBOLT_ICM
++	tristate "Thunderbolt(TM) Networking"
++	help
++	  This driver is required if you want Thunderbolt(TM) Networking on
++	  non-Apple hardware.
++
++	  To compile this driver as a module, choose M here. The module will be
++	  called thunderbolt_icm.
++
++endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..7a85bd1 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+-obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
+ thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
+-- 
+2.7.4
 
-> upstream.c does a lot of ACPI stuff; I can't tell whether it has more
-> affinity with ACPI or with PCI.  I don't see any PNP IDs though, so I
-> guess you just look for the magic method names in the ACPI device
-> associated with some PCI device.  That seems a little bit "back-door"
-> to me; from an ASL point of view, I would think you'd want to start
-> from a _HID and interpret the device based on that.
-
-Or from _ADR if the device object in question maps to a PCI device.
-
-Thanks,
-Rafael
