@@ -1,50 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0066.outbound.protection.outlook.com ([104.47.38.66]:14131
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750853AbcGLG5Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jul 2016 02:57:16 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	nofooter <nofooter@xilinx.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>
-Subject: Purpose of pci_remap_iospace
-Date: Tue, 12 Jul 2016 06:57:10 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258B85DC@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:50824 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754228AbcG1IRO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jul 2016 04:17:14 -0400
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, corbet@lwn.net
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v5 8/8] thunderbolt: Adding maintainer entry
+Date: Thu, 28 Jul 2016 11:15:21 +0300
+Message-Id: <1469693721-5641-9-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add Amir Levy as maintainer for Thunderbolt(TM) ICM driver
 
-I have a query.
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+---
+ MAINTAINERS | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Can any once explain the purpose of pci_remap_iospace function in root port driver.
-
-What is its dependency with architecture ?
-
-Here is my understanding, the above API takes PCIe IO resource and its to be mapped CPU address from
-ranges property and remaps into virtual address space.
-
-So my question is who uses this virtual addresses ?
-
-When End Point requests for IO BARs doesn't it get from the above resource range (first parameter of API) and
-do ioremap to access this region ?
-
-But why root complex driver is mapping this address region ?
-
-Please correct me if my understanding is wrong.
-
-Regards,
-Bharat
-
-
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 771c31c..5f24eb2 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10141,7 +10141,13 @@ F:	include/uapi/linux/stm.h
+ THUNDERBOLT DRIVER
+ M:	Andreas Noever <andreas.noever@gmail.com>
+ S:	Maintained
+-F:	drivers/thunderbolt/
++F:	drivers/thunderbolt/*
++
++THUNDERBOLT ICM DRIVER
++M:	Amir Levy <amir.jer.levy@intel.com>
++S:	Maintained
++F:	drivers/thunderbolt/icm/
++F:	Documentation/thunderbolt-networking.txt
+ 
+ TI BQ27XXX POWER SUPPLY DRIVER
+ R:	Andrew F. Davis <afd@ti.com>
+-- 
+2.7.4
 
