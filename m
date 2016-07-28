@@ -1,55 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53076 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753863AbcG2WeU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jul 2016 18:34:20 -0400
-Date: Fri, 29 Jul 2016 17:34:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Niklas Cassel <niklas.cassel@axis.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: artpec: add PCI_MSI_IRQ_DOMAIN dependency
-Message-ID: <20160729223415.GB13632@localhost>
-References: <20160706124640.1521466-1-arnd@arndb.de>
+Received: from nbfkord-smmo02.seg.att.com ([209.65.160.78]:25437 "EHLO
+	nbfkord-smmo02.seg.att.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161010AbcG1Rbc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 13:31:32 -0400
+From: Edward Cree <ecree@solarflare.com>
+Subject: [PATCH] pci: quirks: Add ACS quirk to Solarflare SFC9220
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
+CC: <linux-net-drivers@solarflare.com>
+Message-ID: <df310014-18d6-0f65-e902-107b04577090@solarflare.com>
+Date: Thu, 28 Jul 2016 18:13:56 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160706124640.1521466-1-arnd@arndb.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 06, 2016 at 02:46:04PM +0200, Arnd Bergmann wrote:
-> The designware PCIe driver requires MSI support, so we get a warning
-> for the artpec6 glue driver if that is not enabled:
-> 
-> warning: (PCIE_ARTPEC6) selects PCIE_DW which has unmet direct dependencies (PCI && PCI_MSI_IRQ_DOMAIN)
-> 
-> This adds the same dependency that all other such drivers have.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Device does not perform peer-to-peer between functions.
 
-Applied to pci/host-artpec with Niklas's ack for v4.8.
+Signed-off-by: Edward Cree <ecree@solarflare.com>
+---
+ drivers/pci/quirks.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> ---
->  drivers/pci/host/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index c917e2fede05..a1ef0c06dbb4 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -258,6 +258,7 @@ config PCIE_ARMADA_8K
->  config PCIE_ARTPEC6
->  	bool "Axis ARTPEC-6 PCIe controller"
->  	depends on MACH_ARTPEC6
-> +	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIE_DW
->  	select PCIEPORTBUS
->  	help
-> -- 
-> 2.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b69321c..37ff015 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4095,6 +4095,7 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_AMD, 0x7809, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_SOLARFLARE, 0x0903, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_SOLARFLARE, 0x0923, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_SOLARFLARE, 0x0A03, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x10C6, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x10DB, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x10DD, pci_quirk_mf_endpoint_acs },
