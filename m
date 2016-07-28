@@ -1,40 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:34636 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932187AbcGOKxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Jul 2016 06:53:30 -0400
-In-Reply-To: <1468444634-1866-15-git-send-email-imunsie@au.ibm.com>
-To: Ian Munsie <imunsie@au1.ibm.com>,
-	Michael Neuling <mikey@neuling.org>,
-	Frederic Barrat <fbarrat@linux.vnet.ibm.com>,
-	Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, Huy Nguyen <huyn@mellanox.com>
-From: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Ian Munsie <imunsie@au1.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [14/15] PCI/hotplug: pnv_php: handle OPAL_PCI_SLOT_OFFLINE power state
-Message-Id: <3rrTvD2DB5z9sBg@ozlabs.org>
-Date: Fri, 15 Jul 2016 20:53:28 +1000 (AEST)
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:35394 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759075AbcG1QQY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 12:16:24 -0400
+Received: by mail-pa0-f67.google.com with SMTP id cf3so3765003pad.2
+        for <linux-pci@vger.kernel.org>; Thu, 28 Jul 2016 09:16:23 -0700 (PDT)
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yongjun <weiyj.lk@gmail.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH -next] PCI: keystone: Fix error return code in ks_add_pcie_port()
+Date: Thu, 28 Jul 2016 16:16:18 +0000
+Message-Id: <1469722578-14863-1-git-send-email-weiyj.lk@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-13-07 at 21:17:13 UTC, Ian Munsie wrote:
-> From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-> 
-> When calling pnv_php_set_slot_power_state() with state ==
-> OPAL_PCI_SLOT_OFFLINE, remove devices from the device tree as if we're
-> dealing with OPAL_PCI_SLOT_POWER_OFF.
-> 
-> Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-> Signed-off-by: Ian Munsie <imunsie@au1.ibm.com>
-> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Fix to return a negative error code from the request IRQ error
+handling case instead of 0, as done elsewhere in this function.
 
-Applied to powerpc next, thanks.
+Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+---
+ drivers/pci/host/pci-keystone.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-https://git.kernel.org/powerpc/c/5473a6bf635d35d5c1d12d0e13
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 8ba2883..82b461b 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -334,8 +334,9 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 	if (ks_pcie->error_irq <= 0)
+ 		dev_info(&pdev->dev, "no error IRQ defined\n");
+ 	else {
+-		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
+-				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
++		ret = request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
++				  IRQF_SHARED, "pcie-error-irq", ks_pcie);
++		if (ret < 0) {
+ 			dev_err(&pdev->dev, "failed to request error IRQ %d\n",
+ 				ks_pcie->error_irq);
+ 			return ret;
 
-cheers
