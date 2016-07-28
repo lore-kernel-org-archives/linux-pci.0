@@ -1,119 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:50075 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830AbcG1P2O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 11:28:14 -0400
-Date: Thu, 28 Jul 2016 17:28:31 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	linux-samsung-soc@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Inki Dae <inki.dae@samsung.com>, Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Mark Brown <broonie@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
- support
-Message-ID: <20160728152831.GA1929@wunner.de>
-References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
- <4258432.JNKr9zJtMp@vostro.rjw.lan>
- <20160724224832.GB9516@wunner.de>
- <2841548.NIYVpJFBcH@vostro.rjw.lan>
+Return-Path: <thierry.reding@gmail.com>
+Return-Path: <thierry.reding@gmail.com>
+Date: Thu, 28 Jul 2016 16:18:04 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [GIT PULL] PCI: tegra: Changes for v4.8-rc1
+Message-ID: <20160728141804.GD28342@ulmo.ba.sec>
+References: <20160701150056.26537-3-thierry.reding@gmail.com>
+ <20160726200641.GB15037@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2841548.NIYVpJFBcH@vostro.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="FFoLq8A0u+X9iRU8"
+In-Reply-To: <20160726200641.GB15037@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 28, 2016 at 02:30:31AM +0200, Rafael J. Wysocki wrote:
-> On Monday, July 25, 2016 12:48:32 AM Lukas Wunner wrote:
-> > On Thu, Jul 21, 2016 at 02:25:15AM +0200, Rafael J. Wysocki wrote:
-> > > On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
-> > > > I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
-> > > > no driver is bound to the NHI. Doesn't feel pretty to me though.
-> > > > 
-> > > > Ultimately this seems to be the same issue as with calling
-> > > > dev_pm_domain_set() for a bound device. Perhaps device_link_add()
-> > > > can likewise be allowed if a runtime PM ref is held for the devices
-> > > > and the call happens under lock_system_sleep()?
-> > > 
-> > > No, the whole synchronization scheme in the links code would have had to be
-> > > changed for that to really work.
-> > > 
-> > > And it really is about what is needed (at least in principle) to run your
-> > > device.  If you think you need device X with a driver to handle device Y
-> > > correctly, then either you need it all the time, from probe to remove, or
-> > > you just don't really need it at all.
-> > 
-> > Real life isn't as simple as that.
-> > 
-> > In this case, we have consumers (hotplug ports) which are doing fine
-> > if the driver for the supplier (NHI) is not loaded. But once it loads,
-> > the links must be in place.
-> 
-> Hmm.
-> 
-> What if it is not loaded and the system suspends.  Will everything work
-> as expected after the subsequent resume?
 
-The short answer is yes.
+--FFoLq8A0u+X9iRU8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Long answer:
+On Tue, Jul 26, 2016 at 03:06:41PM -0500, Bjorn Helgaas wrote:
+> On Fri, Jul 01, 2016 at 05:00:56PM +0200, Thierry Reding wrote:
+> > Hi Bjorn,
+> >=20
+> > The following changes since commit 1a695a905c18548062509178b98bc91e6751=
+0864:
+> >=20
+> >   Linux 4.7-rc1 (2016-05-29 09:29:24 -0700)
+> >=20
+> > are available in the git repository at:
+> >=20
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git tags/te=
+gra-for-4.8-pci
+> >=20
+> > for you to fetch changes up to 0f32700faed919946e21e9d1dc4d74ae8f1b1226:
+> >=20
+> >   PCI: tegra: Correctly program PADS_REFCLK_CFG* registers (2016-06-30 =
+15:30:16 +0200)
+> >=20
+> > There's a minor conflict between this and your pci/host-request-windows
+> > branch, let me know if you'd like me to rebase on top of that.
+> >=20
+> > Thierry
+> >=20
+> > ----------------------------------------------------------------
+> > PCI: tegra: Changes for v4.8-rc1
+> >=20
+> > A couple of cleanups and preparation work for 64-bit ARM support, as
+> > well as fixes for writing the PADS_REFCLK_CFG* registers.
+> >=20
+> > ----------------------------------------------------------------
+> > Stephen Warren (2):
+> >       PCI: tegra: Actually program PADS_REFCLK_CFG* on recent SoCs
+>=20
+> I don't see this patch on the list.  I'll attach it below for
+> completeness.
+>=20
+> I don't think the original changelog is quite right; I don't see
+> tegra_xusb_phy_enable() being involved at all.  I replaced it with the
+> following:
+>=20
+>     PCI: tegra: Program PADS_REFCLK_CFG* always, not just on legacy SoCs
+>    =20
+>     tegra_pcie_phy_power_on() calls tegra_pcie_phy_enable() only for lega=
+cy
+>     SoCs.  However, part of tegra_pcie_phy_enable() needs to happen in all
+>     cases.  Move that code up one level into tegra_pcie_phy_power_on().
+>=20
+>=20
+> Here's the original commit from your git tree:
+>=20
+> commit 0ad9be61b5af
+> Author: Stephen Warren <swarren@nvidia.com>
+> Date:   Fri Jun 24 08:37:03 2016 -0600
+>=20
+>     PCI: tegra: Actually program PADS_REFCLK_CFG* on recent SoCs
+>    =20
+>     On recent SoCs, tegra_pcie_phy_enable() isn't called; but instead
+>     tegra_pcie_enable_controller() calls tegra_xusb_phy_enable(). However,
+>     part of tegra_pcie_phy_enable() needs to happen in all cases. Move th=
+at
+>     code up one level into tegra_pcie_phy_power_on().
+>    =20
+>     Signed-off-by: Stephen Warren <swarren@nvidia.com>
+>     Reviewed-by: Simon Glass <sjg@chromium.org>
+>     Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-With Thunderbolt, the switch fabric is told to set up PCI tunnels
-through the NHI (Native Host Interface). Once set up, the tunnels
-stay as they are and attached devices are reachable. However after
-a power cycle of the controller (suspend/resume), the tunnels are
-gone and need to be re-established.
+Yeah, that's fine. Thanks. FWIW, the reason why you don't see this on
+the list is probably because it is the same patch that was merged into
+U-Boot a few days earlier, which is also the reason why the commit
+message isn't quite right. I thought I had sanitized it, but evidently
+had missed the function name change.
 
-On Macs, there are two software components communicating with the
-NHI: The first one is an EFI driver which sets up tunnels to all
-devices present on boot and lights up all attached DP-over-Thunderbolt
-displays. Once ExitBootServices is called, the EFI driver is shut
-down but the configured tunnels stay as they are. The kernel is thus
-able to enumerate attached PCI devices.
+Thanks for picking this up anyway,
+Thierry
 
-The second component is the OS driver, thunderbolt.ko. It is needed
-to set up tunnels to hot-plugged devices (i.e., not present at boot).
-It is also needed to re-establish tunnels after suspend/resume.
+--FFoLq8A0u+X9iRU8
+Content-Type: application/pgp-signature; name="signature.asc"
 
-The necessity of quirk_apple_wait_for_thunderbolt() arises because
-we walk the entire PCI hierarchy during ->resume_noirq and call
-pci_power_up() and pci_restore_state() for each device. Now remember,
-the PCI tunnels are gone after a power cycle, so the attached devices
-aren't reachable. Waking them and restoring their state will fail
-unless the thunderbolt driver reconfigures the switch fabric first.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-=> So if there are no devices attached and thunderbolt.ko isn't loaded,
-   everything is fine. No device link needed.
+iQIcBAABCAAGBQJXmhQcAAoJEN0jrNd/PrOh1JsQAIUdGEg9jMmk3N+mq4tbPxA5
+C2zJjpz8j8rcpakqY4yDKU7opwcin/gjS2Q8XnE1oBmr6o9mCCmXfFrYYgzRG1r6
+tSLDU4YVYiCYXdIfAfxlu3yoc3WVk847YNzik+xkuPeTNHEKfFLT5Wc8GlnS69si
+6qpGyJU0+SC2pHjnOk201Cfza8zfOJ63rs3ntASq+AhbUv5xuZSBnW89MBtMsMg9
+u/78wOmOUeJU3aL+OzMfhnWbH7iv1ij2UULu9sO6oGJEGWNBFi/UzzqwdQy/CQv2
+v0LcIi+pWFtThwjLF/7xmfYPu/3CO+sLSkxcoCD6R9DTRBFcTF4NCikXNgFCBPoS
+63mk6uF5wUdx2YOWMraWTHt33wzeqT0DLPxw51XGfvOIvPYlRpA2bIuRZpha/PNF
+Mt34FQBJZPGs8gVeQ6Hq40ID7Rv3G/v57WY6NLYdBB5J7ZZ2vceAxGrKKeXKdFdl
+QVLQXQU7UH2qP1c0raGTBxUJJ66fKqrjGsdttWSyDsREiw+YPLkmBOlnHzVMp+HL
+QdKrvn7gBEHEhe3NYyG1nQQsjS5GgbFQ6Ha2opQFDUcZgH02TVCNq8VlVPrRnOzb
+GoJnx48ed28mMEOCxo53pDVXrIiN3tyQ4VTuNkDt0+KA0DNgmvZtGRF9A8waQKSD
+mknRqH1KPeTMTrVX0nHi
+=X1Mo
+-----END PGP SIGNATURE-----
 
-=> If devices are attached and thunderbolt.ko is loaded, then the hotplug
-   ports need to wait for re-establishment of the PCI tunnels.
-   Device link is needed.
-
-=> If devices were attached on boot and thunderbolt.ko isn't loaded, they
-   will be unreachable after resume. Nothing we can do about that.
-   No device link needed.
-
-So this is a case of a "weak" device link, "weak" referring to the fact
-that it's only needed if the supplier is bound.
-
-All that said, I don't know if this case exists often enough that it's
-worth making allowances for it in the driver core.
-
-Sorry for the wall of text, just want to make sure we're on the same page
-and all possible use cases of device links are discussed and considered.
-
-Thanks,
-
-Lukas
+--FFoLq8A0u+X9iRU8--
