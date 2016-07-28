@@ -1,43 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:56840 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbcGFMne (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2016 08:43:34 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklas.cassel@axis.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: artpec: add PCI_MSI_IRQ_DOMAIN dependency
-Date: Wed,  6 Jul 2016 14:46:04 +0200
-Message-Id: <20160706124640.1521466-1-arnd@arndb.de>
+Received: from devils.ext.ti.com ([198.47.26.153]:40654 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964778AbcG1QaL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 12:30:11 -0400
+Subject: Re: [PATCH -next] PCI: keystone: Fix error return code in
+ ks_add_pcie_port()
+To: Wei Yongjun <weiyj.lk@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1469722578-14863-1-git-send-email-weiyj.lk@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <579A32FC.4070907@ti.com>
+Date: Thu, 28 Jul 2016 12:29:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <1469722578-14863-1-git-send-email-weiyj.lk@gmail.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The designware PCIe driver requires MSI support, so we get a warning
-for the artpec6 glue driver if that is not enabled:
+On 07/28/2016 12:16 PM, Wei Yongjun wrote:
+> Fix to return a negative error code from the request IRQ error
+> handling case instead of 0, as done elsewhere in this function.
+> 
+> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+> ---
+>  drivers/pci/host/pci-keystone.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 8ba2883..82b461b 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -334,8 +334,9 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+>  	if (ks_pcie->error_irq <= 0)
+>  		dev_info(&pdev->dev, "no error IRQ defined\n");
+>  	else {
+> -		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
+> -				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
+> +		ret = request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
+> +				  IRQF_SHARED, "pcie-error-irq", ks_pcie);
+> +		if (ret < 0) {
+>  			dev_err(&pdev->dev, "failed to request error IRQ %d\n",
+>  				ks_pcie->error_irq);
+>  			return ret;
+> 
+Thanks
 
-warning: (PCIE_ARTPEC6) selects PCIE_DW which has unmet direct dependencies (PCI && PCI_MSI_IRQ_DOMAIN)
+Acked-By: Murali Karicheri <m-karicheri2@ti.com>
 
-This adds the same dependency that all other such drivers have.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index c917e2fede05..a1ef0c06dbb4 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -258,6 +258,7 @@ config PCIE_ARMADA_8K
- config PCIE_ARTPEC6
- 	bool "Axis ARTPEC-6 PCIe controller"
- 	depends on MACH_ARTPEC6
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW
- 	select PCIEPORTBUS
- 	help
 -- 
-2.9.0
-
+Murali Karicheri
+Linux Kernel, Keystone
