@@ -1,89 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 1/8] ACPI: I/O Remapping Table (IORT) initial support
-To: Marc Zyngier <marc.zyngier@arm.com>
-References: <1466420541-20101-2-git-send-email-tn@semihalf.com>
- <1466598909-27504-1-git-send-email-tn@semihalf.com>
- <576A91CC.3000101@arm.com> <576A9824.1060400@semihalf.com>
- <576AA603.3080505@arm.com> <576B3CBD.60309@huawei.com>
-From: Christopher Covington <cov@codeaurora.org>
-Message-ID: <57976353.7080500@codeaurora.org>
-Date: Tue, 26 Jul 2016 09:19:15 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34318 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751168AbcG2MlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Jul 2016 08:41:10 -0400
+Date: Fri, 29 Jul 2016 07:41:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: wangyijing <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, jianghong011@huawei.com
+Subject: Re: Question about cacheline size in PCIe SAS card
+Message-ID: <20160729124101.GA23928@localhost>
+References: <5799BF23.2020902@huawei.com>
+ <20160728184306.GA12187@localhost>
+ <579AC545.2030306@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <576B3CBD.60309@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin.Marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- Hanjun Guo <guohanjun@huawei.com>, andrea.gallo@linaro.org,
- lorenzo.pieralisi@arm.com, al.stone@linaro.org,
- Tomasz Nowicki <tn@semihalf.com>, linux-acpi@vger.kernel.org,
- robert.richter@caviumnetworks.com, linux-pci@vger.kernel.org,
- shijie.huang@arm.com, jason@lakedaemon.net, ddaney.cavm@gmail.com,
- bhelgaas@google.com, tglx@linutronix.de, mw@semihalf.com,
- linux-arm-kernel@lists.infradead.org, graeme.gregory@linaro.org,
- rjw@rjwysocki.net, linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
- Suravee.Suthikulpanit@amd.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <579AC545.2030306@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+On Fri, Jul 29, 2016 at 10:53:57AM +0800, wangyijing wrote:
+> Hi Bjorn, thanks for your comment!
+> 
+> 在 2016/7/29 2:43, Bjorn Helgaas 写道:
+> > On Thu, Jul 28, 2016 at 04:15:31PM +0800, wangyijing wrote:
+> >> Hi all, we found a question about PCIe cacheline, the cacheline here is mean the
+> >> configure space register at offset 0x0C in type 0 and type 1 configure space header.
+> >>
+> >> We did a hotplug in our platform for PCIe SAS controller, this sas controller has
+> >> SSD disks and the disk sector is 520 bytes. Defaultly, BIOS set cacheline size to
+> >> 64bytes, we test the IO read(io size is 128k/256k), the bandwith is 6G.
+> >> After hotplug, the cacheline size in SAS controller changes to 0(default after #RST),
+> >> and we test the IO read again, the bandwith changes to 5.2G.
+> >>
+> >> We Tested other SAS controller which is not 520 bytes sector, we didn't found this issue,
+> >> and I grep the PCI_CACHE_LINE_SIZE in kernel, I found most of code change the PCI_CACHE_LINE_SIZE
+> >> are device driver, like net, ata, and some arm pci controller.
+> >>
+> >> In PCI 3.0 spec, I found there are descriptions about cacheline size releated to performance,
+> >> but in PCIe 3.0 spec, there is nothing related to cacheline size.
+> > 
+> > Not quite true: sec 7.5.1.3 of PCIe r3.0 says:
+> > 
+> >   This field [Cache Line Size] is implemented by PCI Express devices
+> >   as a read-write field for legacy compatibility purposes but has no
+> >   effect on any PCI Express device behavior.
+> 
+> Oh, sorry, I searched the key word "cacheline" in PCIe spec, according
+> to this description, there is no effect on any PCIe device.
+> 
+> > 
+> > Unless your SAS controller is doing something wrong, I suspect
+> > something other than Cache Line Size is responsible for the difference
+> > in performance.
+> > 
+> > After hot-add of your controller, Cache Line Size is probably zero
+> > because Linux doesn't set it.  What happens if you set it manually
+> > using "setpci"?  Does that affect the performance?
+> 
+> Yes, after hotplug, the cacheline size is reset to 0, linux doesn't
+> touch it, and we tried to change cacheline size to 64 bytes by setpci,
+> if we test the IO at this time, the IO bandwith is still 5.2G,
+> but if we reset the firmware after change the cacheline size to 64 bytes,
+> then test IO bandwith again, the IO bandwith would reach the 6G again.
 
-On 06/22/2016 09:34 PM, Hanjun Guo wrote:
-> On 2016/6/22 22:51, Marc Zyngier wrote:
->> On 22/06/16 14:52, Tomasz Nowicki wrote:
->>> On 22.06.2016 15:25, Marc Zyngier wrote:
->>>> On 22/06/16 13:35, Tomasz Nowicki wrote:
->>>>> IORT shows representation of IO topology for ARM based systems.
->>>>> It describes how various components are connected together on
->>>>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
->>>>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>>>>
->>>>> Initial support allows to detect IORT table presence and save its
->>>>> root pointer obtained through acpi_get_table(). The pointer validity
->>>>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
->>>>> is not set while using IORT nodes we would dereference unmapped pointers.
->>>>>
->>>>> For the aforementioned reason call iort_table_detect() from acpi_init()
->>>>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->>>>>
->>>>> Add generic helpers which are helpful for scanning and retrieving
->>>>> information from IORT table content. List of the most important helpers:
->>>>> - iort_find_dev_node() finds IORT node for a given device
->>>>> - iort_node_map_rid() maps device RID and returns IORT node which provides
->>>>>    final translation
->>>>>
->>>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->>>>> ---
->>>>>   drivers/acpi/Kconfig  |   3 +
->>>>>   drivers/acpi/Makefile |   1 +
->>>>>   drivers/acpi/bus.c    |   2 +
->>>>>   drivers/acpi/iort.c   | 217 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>>>>   include/linux/iort.h  |  30 +++++++
->>>>>   5 files changed, 253 insertions(+)
->>>>>   create mode 100644 drivers/acpi/iort.c
->>>>>   create mode 100644 include/linux/iort.h
+OK, that sounds like the category of "your controller doing something
+wrong," namely, it is somehow dependent on the Cache Line Size when it
+shouldn't be.
 
-> I tracked Marc's tree on git.kernel.org, it's  acpi_os_free(buffer.pointer) there so
-> my worry is gone :)
+If you change Linux to set the Cache Line Size during hot-add, does
+that fix it?  I assume you might still need to reset the firmware to
+make the card notice the change?
 
-Do you plan on submitting this during the 4.8 merge window?
+I wonder how this works in the non-hotplug case.  Does the BIOS reset
+the firmware somehow after setting Cache Line Size?  Is there an
+option ROM that might do this?
 
-Thanks,
-Cov
+Maybe the quark driver needs a quirk in its probe routine that sets
+the Cache Line Size and resets the firmware?
 
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
-Technologies, Inc. Qualcomm Technologies, Inc. is a member of the Code
-Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
