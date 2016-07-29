@@ -1,59 +1,31 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46756 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751908AbcGRJyR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jul 2016 05:54:17 -0400
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: 'David Miller' <davem@davemloft.net>,
-	'Lukas Wunner' <lukas@wunner.de>
-CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	thunderbolt-linux <thunderbolt-linux@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v3 2/8] thunderbolt: Updating device IDs
-Date: Mon, 18 Jul 2016 09:54:10 +0000
-Message-ID: <E607265CB020454880711A6F96C05A03893D025E@hasmsx107.ger.corp.intel.com>
-References: <1468495702-7467-3-git-send-email-amir.jer.levy@intel.com>
-	<20160715.114902.1149848183971707484.davem@davemloft.net>
-	<E607265CB020454880711A6F96C05A03893CE285@hasmsx107.ger.corp.intel.com>
- <20160715.145345.1714630247405044715.davem@davemloft.net>
-In-Reply-To: <20160715.145345.1714630247405044715.davem@davemloft.net>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 29 Jul 2016 14:48:38 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: Amir Levy <amir.jer.levy@intel.com>, andreas.noever@gmail.com,
+	bhelgaas@google.com, corbet@lwn.net, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-doc@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com
+Subject: Re: [PATCH v5 4/8] thunderbolt: Communication with the ICM (firmware)
+Message-ID: <20160729214838.GA14827@kroah.com>
+References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+ <1469693721-5641-5-git-send-email-amir.jer.levy@intel.com>
+ <20160729140224.137dbaac@xeon-e3>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160729140224.137dbaac@xeon-e3>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 16 2016, 12:53 AM, David Miller wrote:
-> From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-> Date: Fri, 15 Jul 2016 18:56:39 +0000
+On Fri, Jul 29, 2016 at 02:02:24PM -0700, Stephen Hemminger wrote:
+> On Thu, 28 Jul 2016 11:15:17 +0300
+> Amir Levy <amir.jer.levy@intel.com> wrote:
 > 
-> > On Fri, Jul 15 2016, 09:49 PM, David Miller wrote:
-> >> From: Amir Levy <amir.jer.levy@intel.com>
-> >> Date: Thu, 14 Jul 2016 14:28:16 +0300
-> >>
-> >> > Adding the new Thunderbolt(TM) device IDs to the list.
-> >> >
-> >> > Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-> >>
-> >> Unless these PCI-IDs, all of them, are going to be used in multiple
-> >> spots in the kernel, it is not appropriate to add them here.
-> >>
-> >> They belong as private macros in the drivers themselves, instead.
-> >
-> > They might be used:
-> > http://www.spinics.net/lists/linux-pci/msg51331.html
+> > +static LIST_HEAD(controllers_list);
+> > +static DECLARE_RWSEM(controllers_list_rwsem);
 > 
-> Then move them to the common location when this "might" thing actually
-> happens.
+> Why use a semaphore when simple spinlock or mutex would be better?
 
-There are several contradicting  comments about this change (http://www.spinics.net/lists/linux-pci/msg51331.html and http://www.spinics.net/lists/linux-pci/msg51302.html)
-I've decided for now to make the new device ids private to the driver. 
-This can be changed later when updating quirks for Apple hardware.
-
-Regards,
-Amir
+And never use a RW semaphore unless you can benchmark the difference
+from a normal lock.  If you can't benchmark it, then don't use it...
