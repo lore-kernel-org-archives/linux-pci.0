@@ -1,58 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57196 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932476AbcGDIkG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2016 04:40:06 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, axboe@fb.com
-Cc: agordeev@redhat.com, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 09/13] blk-mq: don't redistribute hardware queues on a CPU hotplug event
-Date: Mon,  4 Jul 2016 17:39:30 +0900
-Message-Id: <1467621574-8277-10-git-send-email-hch@lst.de>
-In-Reply-To: <1467621574-8277-1-git-send-email-hch@lst.de>
-References: <1467621574-8277-1-git-send-email-hch@lst.de>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36244 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbcG2VCO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jul 2016 17:02:14 -0400
+Received: by mail-pf0-f172.google.com with SMTP id h186so35763983pfg.3
+        for <linux-pci@vger.kernel.org>; Fri, 29 Jul 2016 14:02:13 -0700 (PDT)
+Date: Fri, 29 Jul 2016 14:02:24 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, corbet@lwn.net, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	linux-doc@vger.kernel.org, thunderbolt-linux@intel.com,
+	mika.westerberg@intel.com, tomas.winkler@intel.com
+Subject: Re: [PATCH v5 4/8] thunderbolt: Communication with the ICM
+ (firmware)
+Message-ID: <20160729140224.137dbaac@xeon-e3>
+In-Reply-To: <1469693721-5641-5-git-send-email-amir.jer.levy@intel.com>
+References: <1469693721-5641-1-git-send-email-amir.jer.levy@intel.com>
+	<1469693721-5641-5-git-send-email-amir.jer.levy@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently blk-mq will totally remap hardware context when a CPU hotplug
-even happened, which causes major havoc for drivers, as they are never
-told about this remapping.  E.g. any carefully sorted out CPU affinity
-will just be completely messed up.
+On Thu, 28 Jul 2016 11:15:17 +0300
+Amir Levy <amir.jer.levy@intel.com> wrote:
 
-The rebuild also doesn't really help for the common case of cpu
-hotplug, which is soft onlining / offlining of cpus - in this case we
-should just leave the queue and irq mapping as is.  If it actually
-worked it would have helped in the case of physical cpu hotplug,
-although for that we'd need a way to actually notify the driver.
-Note that drivers may already be able to accommodate such a topology
-change on their own, e.g. using the reset_controller sysfs file in NVMe
-will cause the driver to get things right for this case.
+> +static LIST_HEAD(controllers_list);
+> +static DECLARE_RWSEM(controllers_list_rwsem);
 
-With the rebuild removed we will simplify retain the queue mapping for
-a soft offlined CPU that will work when it comes back online, and will
-map any newly onlined CPU to queue NULL until the driver initiates
-a rebuild of the queue map.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-mq.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index bc7166d..f972d32 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2114,8 +2114,6 @@ static void blk_mq_queue_reinit(struct request_queue *q,
- 
- 	blk_mq_sysfs_unregister(q);
- 
--	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues, online_mask);
--
- 	/*
- 	 * redo blk_mq_init_cpu_queues and blk_mq_init_hw_queues. FIXME: maybe
- 	 * we should change hctx numa_node according to new topology (this
--- 
-2.1.4
-
+Why use a semaphore when simple spinlock or mutex would be better?
