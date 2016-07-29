@@ -1,148 +1,180 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Jul 2016 15:19:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rui Wang <rui.y.wang@intel.com>
-Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-	bhelgaas@google.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] x86/ioapic: Support hot-removal of IOAPICs present
- during boot
-Message-ID: <20160726201932.GD15037@localhost>
-References: <1469549597-19253-1-git-send-email-rui.y.wang@intel.com>
- <1469549597-19253-2-git-send-email-rui.y.wang@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1469549597-19253-2-git-send-email-rui.y.wang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:44427 "EHLO
+	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805AbcG2CvN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2016 22:51:13 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v8 1/2] Documentation: bindings: add dt doc for Rockchip PCIe controller
+Date: Fri, 29 Jul 2016 10:48:12 +0800
+Message-Id: <1469760493-25821-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 27, 2016 at 12:13:14AM +0800, Rui Wang wrote:
-> IOAPICs present during system boot aren't added to ioapic_list,
-> thus are unable to be hot-removed. Fix it by calling
-> acpi_ioapic_add() during root bus enumeration.
-> 
-> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
-> ---
->  drivers/acpi/internal.h |  2 --
->  drivers/acpi/ioapic.c   |  7 ++++---
->  drivers/acpi/pci_root.c | 13 ++++++++++++-
->  drivers/pci/setup-bus.c |  5 ++++-
->  include/linux/acpi.h    |  6 ++++++
->  5 files changed, 26 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-> index 27cc7fe..6d8e67e 100644
-> --- a/drivers/acpi/internal.h
-> +++ b/drivers/acpi/internal.h
-> @@ -40,10 +40,8 @@ int acpi_sysfs_init(void);
->  void acpi_container_init(void);
->  void acpi_memory_hotplug_init(void);
->  #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
-> -int acpi_ioapic_add(struct acpi_pci_root *root);
->  int acpi_ioapic_remove(struct acpi_pci_root *root);
->  #else
-> -static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
+This patch adds a binding that describes the Rockchip PCIe controller
+found on Rockchip SoCs PCIe interface.
 
-It would be nicer if the interface change and header file munging
-were in a separate patch so they wouldn't obscure the meat of the
-change, i.e., the addition of calls to acpi_ioapic_add().
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
->  static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
->  #endif
->  #ifdef CONFIG_ACPI_DOCK
-> diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-> index ccdc8db..0f272e2 100644
-> --- a/drivers/acpi/ioapic.c
-> +++ b/drivers/acpi/ioapic.c
-> @@ -189,16 +189,17 @@ exit:
->  	return AE_OK;
->  }
->  
-> -int acpi_ioapic_add(struct acpi_pci_root *root)
-> +int acpi_ioapic_add(acpi_handle root_handle)
->  {
->  	acpi_status status, retval = AE_OK;
->  
-> -	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
-> +	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root_handle,
->  				     UINT_MAX, handle_ioapic_add, NULL,
-> -				     root->device->handle, (void **)&retval);
-> +				     root_handle, (void **)&retval);
->  
->  	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
->  }
-> +EXPORT_SYMBOL_GPL(acpi_ioapic_add);
+Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
 
-What loadable module needs to call this?  It shouldn't be exported
-unless there is such a module.
+Changes in v8:
+- add Brian's review-tag
 
->  int acpi_ioapic_remove(struct acpi_pci_root *root)
->  {
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index ae3fe4e..d818c61 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -614,7 +614,18 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	if (hotadd) {
->  		pcibios_resource_survey_bus(root->bus);
->  		pci_assign_unassigned_root_bus_resources(root->bus);
-> -		acpi_ioapic_add(root);
-> +
-> +		/*
-> +		 * This is only called for the hotadd case. For the boot-time
-> +		 * case, we need to wait until after PCI initialization in
-> +		 * order to deal with IOAPICs mapped in on a PCI BAR.
-> +		 *
-> +		 * This is currently x86-specific, because acpi_ioapic_add()
-> +		 * is an empty function without CONFIG_ACPI_HOTPLUG_IOAPIC.
-> +		 * And CONFIG_ACPI_HOTPLUG_IOAPIC depends on CONFIG_X86_IO_APIC
-> +		 * (see drivers/acpi/Kconfig).
-> +		 */
-> +		acpi_ioapic_add(root->device->handle);
->  	}
->  
->  	pci_lock_rescan_remove();
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 55641a3..e32c356 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -25,6 +25,7 @@
->  #include <linux/ioport.h>
->  #include <linux/cache.h>
->  #include <linux/slab.h>
-> +#include <linux/acpi.h>
->  #include "pci.h"
->  
->  unsigned int pci_flags;
-> @@ -1779,8 +1780,10 @@ void __init pci_assign_unassigned_resources(void)
->  {
->  	struct pci_bus *root_bus;
->  
-> -	list_for_each_entry(root_bus, &pci_root_buses, node)
-> +	list_for_each_entry(root_bus, &pci_root_buses, node) {
->  		pci_assign_unassigned_root_bus_resources(root_bus);
-> +		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
-> +	}
->  }
->  
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 288fac5..f5114dc 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -680,6 +680,12 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->  
->  #endif	/* !CONFIG_ACPI */
->  
-> +#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-> +int acpi_ioapic_add(acpi_handle root);
-> +#else
-> +static inline int acpi_ioapic_add(acpi_handle root) { return 0; }
-> +#endif
-> +
->  #ifdef CONFIG_ACPI
->  void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
->  			       u32 pm1a_ctrl,  u32 pm1b_ctrl));
-> -- 
-> 1.8.3.1
-> 
+Changes in v7:
+- move optional properties ahead of interrupt subnode
+- use 0-base index for INTx
+
+Changes in v6:
+- add ack tag from Rob
+
+Changes in v5:
+- fix wrong example reported by Marc
+- add seperate section to describe the interrupt controller child
+  node
+
+Changes in v4:
+- fix example of adding intermediate interrupt controller for pcie
+  legacy interrrupt
+
+Changes in v3:
+- fix example dts code suggested by Rob and Marc
+- remove driver's behaviour of regulator
+
+Changes in v2:
+- fix lots clk/reset stuff suggested by Heiko
+- remove msi-parent and add msi-map suggested by Marc
+- drop phy related stuff
+- some others minor fixes
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt      | 106 +++++++++++++++++++++
+ 1 file changed, 106 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+new file mode 100644
+index 0000000..3f74c87
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -0,0 +1,106 @@
++* Rockchip AXI PCIe Root Port Bridge DT description
++
++Required properties:
++- #address-cells: Address representation for root ports, set to <3>
++- #size-cells: Size representation for root ports, set to <2>
++- #interrupt-cells: specifies the number of cells needed to encode an
++		interrupt source. The value must be 1.
++- compatible: Should contain "rockchip,rk3399-pcie"
++- reg: Two register ranges as listed in the reg-names property
++- reg-names: Must include the following names
++	- "axi-base"
++	- "apb-base"
++- clocks: Must contain an entry for each entry in clock-names.
++		See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++	- "aclk"
++	- "aclk-perf"
++	- "hclk"
++	- "pm"
++- msi-map: Maps a Requester ID to an MSI controller and associated.
++		See ./pci-msi.txt
++- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
++- phy-names:  MUST be "pcie-phy".
++- interrupts: Three interrupt entries must be specified.
++- interrupt-names: Must include the following names
++	- "sys"
++	- "legacy"
++	- "client"
++- resets: Must contain five entries for each entry in reset-names.
++	   See ../reset/reset.txt for details.
++- reset-names: Must include the following names
++	- "core"
++	- "mgmt"
++	- "mgmt-sticky"
++	- "pipe"
++- pinctrl-names : The pin control state names
++- pinctrl-0: The "default" pinctrl state
++- #interrupt-cells: specifies the number of cells needed to encode an
++	interrupt source. The value must be 1.
++- interrupt-map-mask and interrupt-map: standard PCI properties
++
++Optional Property:
++- ep-gpios: contain the entry for pre-reset gpio
++- num-lanes: number of lanes to use
++- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
++- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
++- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
++
++*Interrupt controller child node*
++The core controller provides a single interrupt for legacy INTx. The pcie node
++should contain an interrupt controller node as a target for the PCI
++'interrupt-map' property. This node represents the domain at which the four
++INTx interrupts are decoded and routed.
++
++
++Required properties for Interrupt controller child node:
++- interrupt-controller: identifies the node as an interrupt controller
++- #address-cells: specifies the number of cells needed to encode an
++	address. The value must be 0.
++- #interrupt-cells: specifies the number of cells needed to encode an
++	interrupt source. The value must be 1.
++
++Example:
++
++pcie0: pcie@f8000000 {
++	compatible = "rockchip,rk3399-pcie";
++	#address-cells = <3>;
++	#size-cells = <2>;
++	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
++		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
++	clock-names = "aclk", "aclk-perf",
++		      "hclk", "pm";
++	bus-range = <0x0 0x1>;
++	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
++		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
++		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
++	interrupt-names = "sys", "legacy", "client";
++	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
++	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
++	assigned-clock-rates = <100000000>;
++	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
++	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
++		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
++	num-lanes = <4>;
++	msi-map = <0x0 &its 0x0 0x1000>;
++	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0xfd000000 0x0 0x1000000>;
++	reg-names = "axi-base", "apb-base";
++	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
++		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
++	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
++	phys = <&pcie_phy>;
++	phy-names = "pcie-phy";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_clkreq>;
++	#interrupt-cells = <1>;
++	interrupt-map-mask = <0 0 0 7>;
++	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
++			<0 0 0 2 &pcie0_intc 1>,
++			<0 0 0 3 &pcie0_intc 2>,
++			<0 0 0 4 &pcie0_intc 3>;
++	pcie0_intc: interrupt-controller {
++		interrupt-controller;
++		#address-cells = <0>;
++		#interrupt-cells = <1>;
++	};
++};
+-- 
+2.3.7
+
+
