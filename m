@@ -1,75 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:9446 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752540AbcGBAiD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2016 20:38:03 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u620XiE9091512
-	for <linux-pci@vger.kernel.org>; Fri, 1 Jul 2016 20:38:02 -0400
-Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
-	by mx0b-001b2d01.pphosted.com with ESMTP id 23wpmfex7y-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 01 Jul 2016 20:38:02 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Sat, 2 Jul 2016 10:37:59 +1000
-Date: Sat, 2 Jul 2016 10:37:54 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+Received: from shards.monkeyblade.net ([184.105.139.130]:32800 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752016AbcGaSpR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 31 Jul 2016 14:45:17 -0400
+Date: Sun, 31 Jul 2016 11:45:13 -0700 (PDT)
+Message-Id: <20160731.114513.2022660088754330528.davem@davemloft.net>
+To: amir.jer.levy@intel.com
+Cc: stephen@networkplumber.org, andreas.noever@gmail.com,
+	gregkh@linuxfoundation.org, bhelgaas@google.com, corbet@lwn.net,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org,
-	bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-Subject: Re: [PATCH v3 5/7] PCI: Do not use IORESOURCE_STARTALIGN to identify
- bridge resources
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1467283993-3185-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1467283993-3185-6-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160701023423.GB6739@gwshan>
- <c97584a0-b5b1-8660-1e16-04c43570eca6@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c97584a0-b5b1-8660-1e16-04c43570eca6@linux.vnet.ibm.com>
-Message-Id: <20160702003754.GB7582@gwshan>
+	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com
+Subject: Re: [PATCH v5 6/8] thunderbolt: Networking transmit and receive
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <E607265CB020454880711A6F96C05A039710868B@hasmsx108.ger.corp.intel.com>
+References: <1469693721-5641-7-git-send-email-amir.jer.levy@intel.com>
+	<20160729140741.18ca3e35@xeon-e3>
+	<E607265CB020454880711A6F96C05A039710868B@hasmsx108.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 01, 2016 at 03:04:10PM +0800, Yongji Xie wrote:
->Hi Gavin,
->
->On 2016/7/1 10:34, Gavin Shan wrote:
->
->>On Thu, Jun 30, 2016 at 06:53:11PM +0800, Yongji Xie wrote:
->>>Now we use the IORESOURCE_STARTALIGN to identify bridge resources
->>>in __assign_resources_sorted(). That's quite fragile. We may also
->>>set flag IORESOURCE_STARTALIGN for SR-IOV resources in some cases,
->>>for example, using the option "noresize" of parameter
->>>"pci=resource_alignment".
->>>
->>>In this patch, we try to use a more robust way to identify
->>>bridge resources.
->>>
->>>Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->>Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>
->>Yongji, I think this doesn't have to be part of this series, meaning
->>it can be sent or merged separately.
->>
->
->Seems like I give a wrong example in my changelog.  The
->parameter "pci=resource_alignment" would not set flag
->IORESOURCE_STARTALIGN for SR-IOV resources as I replied
->to you in previous patch. So this patch has nothing to do
->with this series now, I will remove it as you suggested.
->
+From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
+Date: Sun, 31 Jul 2016 10:15:52 +0000
 
-Thanks, please refine the changelog as it's not related to the
-enforced alignment as you claimed when resending it separately.
+> The network stack thinks it is Ethernet, it might not accept Runt
+> frames, so the driver pads the frame in receive.
 
-Thanks,
-Gavin
+The network stack doesn't care about this at all.  It's wasted effort
+on your part.
 
