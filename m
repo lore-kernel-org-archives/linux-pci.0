@@ -1,53 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:51360 "EHLO
-	bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932436AbcHPBmZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Aug 2016 21:42:25 -0400
-From: Helen Koike <helen.koike@collabora.co.uk>
-To: hch@infradead.org, mlin@kernel.org, fes@google.com,
-	keith.busch@intel.com, rlnelson@google.com, axboe@fb.com,
-	digitaleric@google.com, tytso@mit.edu, mikew@google.com,
-	monish@google.com
-Cc: Helen Koike <helen.koike@collabora.co.uk>,
-	Helen Koike <helen.koike@collabora.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 RFC 1/2] PCI: Add Google device ID
-Date: Mon, 15 Aug 2016 22:41:19 -0300
-Message-Id: <69910419c3745269604fcb052ad9b08d1b601590.1471308889.git.helen.koike@collabora.co.uk>
-In-Reply-To: <cover.1471308889.git.helen.koike@collabora.co.uk>
-References: <1460657059-21214-1-git-send-email-helen.koike@collabora.co.uk>
- <cover.1471308889.git.helen.koike@collabora.co.uk>
-In-Reply-To: <cover.1471308889.git.helen.koike@collabora.co.uk>
-References: <cover.1471308889.git.helen.koike@collabora.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, corbet@lwn.net
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v6 7/8] thunderbolt: Networking doc
+Date: Mon,  1 Aug 2016 15:23:52 +0300
+Message-Id: <1470054233-4309-8-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
+References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device ID for the local SSDs (NVMe) in Google Clound Engine
+Adding Thunderbolt(TM) networking documentation.
 
-Signed-off-by: Helen Koike <helen.koike@collabora.com>
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
 ---
+ Documentation/00-INDEX                   |   2 +
+ Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
+ 2 files changed, 137 insertions(+)
+ create mode 100644 Documentation/thunderbolt-networking.txt
 
-Changes since v2:
-- This is a new patch in the serie
-
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c58752f..d422afc 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -948,6 +948,8 @@
- #define PCI_DEVICE_ID_APPLE_IPID2_GMAC	0x006b
- #define PCI_DEVICE_ID_APPLE_TIGON3	0x1645
- 
-+#define PCI_VENDOR_ID_GOOGLE		0x1AE0
+diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
+index cb9a6c6..80a6706 100644
+--- a/Documentation/00-INDEX
++++ b/Documentation/00-INDEX
+@@ -439,6 +439,8 @@ this_cpu_ops.txt
+ 	- List rationale behind and the way to use this_cpu operations.
+ thermal/
+ 	- directory with information on managing thermal issues (CPU/temp)
++thunderbolt-networking.txt
++	- Thunderbolt(TM) Networking driver description.
+ trace/
+ 	- directory with info on tracing technologies within linux
+ unaligned-memory-access.txt
+diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
+new file mode 100644
+index 0000000..e112313
+--- /dev/null
++++ b/Documentation/thunderbolt-networking.txt
+@@ -0,0 +1,135 @@
++Intel Thunderbolt(TM) Linux driver
++==================================
 +
- #define PCI_VENDOR_ID_YAMAHA		0x1073
- #define PCI_DEVICE_ID_YAMAHA_724	0x0004
- #define PCI_DEVICE_ID_YAMAHA_724F	0x000d
++Copyright(c) 2013 - 2016 Intel Corporation.
++
++Contact Information:
++Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
++Edited by Michael Jamet <michael.jamet@intel.com>
++
++Overview
++========
++
++Thunderbolt(TM) Networking mode is introduced with this driver.
++This kernel code creates an ethernet device utilized in computer to computer
++communication over a Thunderbolt cable.
++This driver has been added on the top of the existing thunderbolt driver
++for systems with firwmare (FW) based Thunderbolt controllers supporting
++Thunderbolt Networking.
++
++Files
++=====
++
++- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
++		In addition, they create an interface for netlink communication with
++		a user space daemon.
++
++- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
++		networking.
++
++Interface to user space
++=======================
++
++The interface to the user space module is implemented through a Generic Netlink.
++In order to be accessed by the user space module, both kernel and user space
++modules have to register with the same GENL_NAME. In our case, this is
++simply "thunderbolt".
++The registration is done at driver initialization time for all instances of
++the Thunderbolt controllers.
++The communication is then carried through pre-defined Thunderbolt messages.
++Each specific message has a callback function that is called when
++the related message is received.
++
++The messages are defined as follows:
++* NHI_CMD_UNSPEC: Not used.
++* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
++  communication channel.
++* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
++  to close communication channel.
++* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
++  driver version, FW version offset, number of ports in the controller
++  and DMA port.
++* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
++* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
++* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
++  changes or disconnect path.
++* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
++  module to FW to establish path.
++* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
++
++Communication with ICM (Firmware)
++=================================
++
++The communication with ICM is principally achieved through
++a DMA mechanism on Ring 0.
++The driver allocates a shared memory that is physically mapped onto
++the DMA physical space at Ring 0.
++
++Interrupts
++==========
++
++Thunderbolt relies on MSI-X interrupts.
++The MSI-X vector is allocated as follows:
++ICM
++     - Tx: MSI-X vector index 0
++     - Rx: MSI-X vector index 1
++
++Port 0
++     - Tx: MSI-X vector index 2
++     - Rx: MSI-X vector index 3
++
++Port 1
++     - Tx: MSI-X vector index 4
++     - Rx: MSI-X vector index 5
++
++ICM interrupts are used for communication with ICM only.
++Port 0 and Port 1 interrupts are used for Thunderbolt Networking
++communications.
++In case MSI-X is not available, the driver requests to enable MSI only.
++
++Mutexes, semaphores and spinlocks
++=================================
++
++The driver should be able to operate in an environment where hardware
++is asynchronously accessed by multiple entities such as netlink,
++multiple controllers etc.
++
++* send_sem: This semaphore enforces unique sender (one sender at a time)
++  to avoid wrong impairing with responses. FW may process one message
++  at the time.
++* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
++  to avoid continuing to send messages to FW.
++* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
++  avoid continuing to send commands to mailbox.
++* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
++  for the mailbox command.
++  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
++  to get the command response.
++* lock: This spinlock protects from simultaneous changes during
++  disable/enable interrupts.
++* state_lock: This mutex comes to protect changes during net device state
++  changes and net_device operations.
++* controllers_list_mutex: This mutex syncs the access to the controllers
++  list when there are multiple controllers in the system.
++
++FW path enablement
++==================
++
++In order to SW to communicate with the FW, the driver needs to send to FW
++the PDF driver ready command and receive response from FW.
++The driver ready command PDF value is 12 and the response is 13.
++Once the exchange is completed, the user space module should be able to send
++messages through the driver to the FW and FW starts to send notifications
++about HW/FW events.
++
++Information
++===========
++
++Mailing list:
++	thunderbolt-software@lists.01.org
++	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
++	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
++
++For additional information about Thunderbolt technology visit:
++	https://01.org/thunderbolt-sw
++	https://thunderbolttechnology.net/
 -- 
-1.9.1
-
+2.7.4
