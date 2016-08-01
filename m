@@ -1,73 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <57BE28AD.5080607@gmail.com>
-Date: Wed, 24 Aug 2016 16:07:25 -0700
-From: David Daney <ddaney.cavm@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:38107 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755112AbcHAS7L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Aug 2016 14:59:11 -0400
+Received: by mail-wm0-f53.google.com with SMTP id o80so257791669wme.1
+        for <linux-pci@vger.kernel.org>; Mon, 01 Aug 2016 11:59:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Corentin LABBE <clabbe.montjoie@gmail.com>
-Subject: Re: [PATCH v2 2/2] HWRNG: thunderx: Add Cavium HWRNG driver for
- ThunderX SoC.
-References: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
- <1471994835-2423-3-git-send-email-okhaliq@caviumnetworks.com>
- <874d0bce-cf9b-8772-5af4-ec3844b3b255@gmail.com>
-In-Reply-To: <874d0bce-cf9b-8772-5af4-ec3844b3b255@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: herbert@gondor.apana.org.au, David.Daney@cavium.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ananth.Jasty@cavium.com, linux-crypto@vger.kernel.org,
- Omer Khaliq <okhaliq@caviumnetworks.com>, mpm@selenic.com, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20160801125448.4bff0200@t450s.home>
+References: <CAH=XD5_0RV_o0vpx1v3dXEadzdNTwFYhevH70XNFBG-1jBnYzQ@mail.gmail.com>
+ <20160801125448.4bff0200@t450s.home>
+From: Kallol Biswas <kallol@nucleodyne.com>
+Date: Mon, 1 Aug 2016 11:59:01 -0700
+Message-ID: <CAH=XD58ubyVJ=VoSb34yM0m5VgL9=m5rm_iqXU5x+LkqKhnLMw@mail.gmail.com>
+Subject: Re: how to initialize a PCI device via specific B:D.F
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/23/2016 10:46 PM, Corentin LABBE wrote:
-> Hello
->
->> +/* Read data from the RNG unit */
->> +static int cavium_rng_read(struct hwrng *rng, void *dat, size_t max, bool wait)
->> +{
->> +	struct cavium_rng *p = container_of(rng, struct cavium_rng, ops);
->> +	unsigned int size = max;
->> +
->> +	while (size >= 8) {
->> +		*((u64 *)dat) = readq(p->result);
->> +		size -= 8;
->> +		dat += 8;
->> +	}
->
-> I think you could use readsq()
-> This will increase throughput
+Just experimenting with PCIe Fabric and running into unkown issues.
 
-If you look at the implementation of readsq(), you will see that it is a 
-similar loop.  Since the overhead is primarily I/O latency from the RNG 
-hardware, the throughput cannot really be changed with micro 
-optimizations to this simple loop.
-
-Also, on big-endian kernels, it appears that a loop of readq() and 
-readsq() will give different results as readq will byte swap the result 
-and readsq does not.  Since this is a RNG, the byte swapping is not 
-important, but it is a difference.
-
-Because of this, I think it should be acceptable to stick with the loop 
-we currently have.
-
-If the hwrng maintainers want to change the loop, to a readsq(), we 
-might investigate this more.
+Thanks for feedback, I will update when I find a good way to solve this.
 
 Thanks,
-David Daney
+Kallol
 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Mon, Aug 1, 2016 at 11:54 AM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Mon, 1 Aug 2016 11:29:58 -0700
+> Kallol Biswas <kallol@nucleodyne.com> wrote:
+>
+>> Hi,
+>>     I have exposed a realtek PF via an additional switch to a host CPU.
+>>
+>> The host CPU can now view the device via two paths. One, in regular
+>> path and another via the additional switch. The device has two B:D.Fs
+>> assigned to it.
+>>
+>> How can I tell the Realtek driver to configure the device only via new path?
+>>
+>> Bind/unbind may not work, as I do not want to initialize the device
+>> via the regular path.
+>
+> In general this sounds like a horrible idea, how can the OS know that
+> these two paths reach the same device?  What about the BAR resources of
+> the device, can they be valid for both paths?  The kernel is going
+> to try to allocate separate resources for each path.  Even if you make
+> the rtl driver only attach once, you better try to pick the BDF that the
+> kernel scanned and programmed resources for most recently.
+>
+> If I had to hack something together for this, my first thought would be
+> to use pci-stub to claim both devices via the vendor:device IDs.  Then
+> use a boot script that would "echo 1 > remove" for both devices in
+> sysfs, then hopefully find a "rescan" in sysfs far enough downstream
+> via the path you want that you can rediscover only the desired BDF,
+> then bind that device to the rtl driver.  (I hope you don't intend to
+> ship any products this way).  Thanks,
+>
+> Alex
