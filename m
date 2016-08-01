@@ -1,46 +1,138 @@
-Return-Path: <tglx@linutronix.de>
-Return-Path: <tglx@linutronix.de>
-Date: Tue, 26 Jul 2016 15:05:59 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-    Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-    linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] genirq/msi: Make sure PCI MSIs are activated early
-In-Reply-To: <alpine.DEB.2.11.1607261307180.19896@nanos>
-Message-ID: <alpine.DEB.2.11.1607261503120.19896@nanos>
-References: <1468426713-31431-1-git-send-email-marc.zyngier@arm.com> <20160722220440.GC32142@localhost> <alpine.DEB.2.11.1607250928370.5629@nanos> <20160725144702.GA12484@localhost> <alpine.DEB.2.11.1607261307180.19896@nanos>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:36166 "EHLO
+	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751027AbcHAG6k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Aug 2016 02:58:40 -0400
+From: Haggai Eran <haggaie@mellanox.com>
+To: linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: linux-pci@vger.kernel.org,
+	Stephen Bates <stephen.bates@microsemi.com>,
+	Liran Liss <liranl@mellanox.com>,
+	Leon Romanovsky <leonro@mellanox.com>,
+	Artemy Kovalyov <artemyko@mellanox.com>,
+	Jerome Glisse <j.glisse@gmail.com>,
+	Yishai Hadas <yishaih@mellanox.com>,
+	Haggai Eran <haggaie@mellanox.com>
+Subject: [RFC 3/7] IB/core: Helpers for mapping DMA-BUF in MRs
+Date: Mon,  1 Aug 2016 09:57:29 +0300
+Message-Id: <1470034653-9097-4-git-send-email-haggaie@mellanox.com>
+In-Reply-To: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 26 Jul 2016, Thomas Gleixner wrote:
-> On Mon, 25 Jul 2016, Bjorn Helgaas wrote:
-> > On Mon, Jul 25, 2016 at 09:45:13AM +0200, Thomas Gleixner wrote:
-> > I thought the original issue [1] was that PCI_MSI_FLAGS_ENABLE was being
-> > written before PCI_MSI_ADDRESS_LO.  That doesn't sound like a good
-> > idea to me.
-> 
-> Well. That's only a problem if the PCI device does not support masking. But
-> yes, we missed that case back then.
->  
-> > That does seem like a problem.  Maybe it would be better to delay
-> > setting PCI_MSI_FLAGS_ENABLE until after the MSI address & data bits
-> > have been set?
-> 
-> I thought about that, but that gets ugly pretty fast. Here is an alternative
-> solution.
-> 
-> I think that's the proper place to do it _AFTER_ the hierarchical allocation
-> took place. On x86 Marc's ACTIVATE_EARLY flag would not work because the
-> message is not yet ready to be assembled.
+DMA-BUF API allows devices to export buffers for other devices to
+access. This can provide a means to implement peer to peer communication
+for RDMA. A device with internal memory would expose its memory to the
+PCIe BAR, and export that region as a DMA-BUF object. Then, the user or
+ULP would register a memory region that is backed by the DMA-BUF object.
 
-Actually it works, because the MSI domain is the last one which is running the
-allocation function. So everything else is initialized already.
+Signed-off-by: Haggai Eran <haggaie@mellanox.com>
+---
+ drivers/infiniband/core/verbs.c | 60 +++++++++++++++++++++++++++++++++++++++++
+ include/rdma/ib_verbs.h         |  9 +++++++
+ 2 files changed, 69 insertions(+)
 
-I'll take Marc's patch with some additional commentry as it turned out to be a
-workaround for the reported VMware issues with PCI/MSI-X pass through.
+diff --git a/drivers/infiniband/core/verbs.c b/drivers/infiniband/core/verbs.c
+index 6298f54b4137..633831e77a62 100644
+--- a/drivers/infiniband/core/verbs.c
++++ b/drivers/infiniband/core/verbs.c
+@@ -44,6 +44,7 @@
+ #include <linux/in.h>
+ #include <linux/in6.h>
+ #include <net/addrconf.h>
++#include <linux/dma-buf.h>
+ 
+ #include <rdma/ib_verbs.h>
+ #include <rdma/ib_cache.h>
+@@ -1922,3 +1923,62 @@ void ib_drain_qp(struct ib_qp *qp)
+ 		ib_drain_rq(qp);
+ }
+ EXPORT_SYMBOL(ib_drain_qp);
++
++int ib_mr_attach_dmabuf(struct ib_mr *mr, struct dma_buf *dmabuf, int access)
++{
++	struct device *dev = mr->device->dma_device;
++	struct dma_buf_attachment *attach;
++	struct sg_table *sg;
++	int err;
++	int n;
++
++	get_dma_buf(dmabuf);
++
++	attach = dma_buf_attach(dmabuf, dev);
++	if (IS_ERR(attach)) {
++		dev_err(dev, "unable to attach to DMA-BUF object (from %s): %ld",
++			dmabuf->exp_name, PTR_ERR(attach));
++		err = PTR_ERR(attach);
++		goto put_dma_buf;
++	}
++
++	sg = dma_buf_map_attachment(attach, DMA_BIDIRECTIONAL);
++	if (IS_ERR(sg)) {
++		dev_err(dev, "unable to map a DMA-BUF object (from %s): %ld",
++			dmabuf->exp_name, PTR_ERR(sg));
++		err = PTR_ERR(sg);
++		goto detach;
++	}
++
++	n = ib_map_mr_sg_zbva(mr, sg->sgl, sg->nents, NULL, PAGE_SIZE);
++	if (unlikely(n != sg->nents)) {
++		dev_err(dev, "failed to map sg (%d/%d) of DMA-BUF object (from %s)\n",
++			n, sg->nents, dmabuf->exp_name);
++		err = n < 0 ? n : -EINVAL;
++		goto unmap;
++	}
++
++	mr->attach = attach;
++	mr->sg = sg;
++	return 0;
++
++unmap:
++	dma_buf_unmap_attachment(attach, sg, DMA_BIDIRECTIONAL);
++detach:
++	dma_buf_detach(dmabuf, attach);
++put_dma_buf:
++	dma_buf_put(dmabuf);
++	return err;
++}
++EXPORT_SYMBOL(ib_mr_attach_dmabuf);
++
++void ib_mr_detach_dmabuf(struct dma_buf_attachment *attach,
++			 struct sg_table *sg)
++{
++	struct dma_buf *dmabuf = attach->dmabuf;
++
++	dma_buf_unmap_attachment(attach, sg, DMA_BIDIRECTIONAL);
++	dma_buf_detach(dmabuf, attach);
++	dma_buf_put(dmabuf);
++}
++EXPORT_SYMBOL(ib_mr_detach_dmabuf);
+diff --git a/include/rdma/ib_verbs.h b/include/rdma/ib_verbs.h
+index 7e440d41487a..da23ec0a06d7 100644
+--- a/include/rdma/ib_verbs.h
++++ b/include/rdma/ib_verbs.h
+@@ -1465,6 +1465,9 @@ struct ib_mr {
+ 		struct ib_uobject	*uobject;	/* user */
+ 		struct list_head	qp_entry;	/* FR */
+ 	};
++	/* For MRs that expose a DMA-BUF */
++	struct dma_buf_attachment *attach;
++	struct sg_table *sg;
+ };
+ 
+ struct ib_mw {
+@@ -3189,4 +3192,10 @@ int ib_sg_to_pages(struct ib_mr *mr, struct scatterlist *sgl, int sg_nents,
+ void ib_drain_rq(struct ib_qp *qp);
+ void ib_drain_sq(struct ib_qp *qp);
+ void ib_drain_qp(struct ib_qp *qp);
++
++struct dma_buf;
++int ib_mr_attach_dmabuf(struct ib_mr *mr, struct dma_buf *dmabuf, int access);
++void ib_mr_detach_dmabuf(struct dma_buf_attachment *attach,
++			 struct sg_table *sg);
++
+ #endif /* IB_VERBS_H */
+-- 
+1.7.11.2
 
-Thanks,
-
-	tglx
