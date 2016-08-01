@@ -1,115 +1,220 @@
-Return-Path: <lftan.linux@gmail.com>
-Return-Path: <lftan.linux@gmail.com>
+Return-Path: <Nicolas.FERRE@atmel.com>
+Return-Path: <Nicolas.FERRE@atmel.com>
+Subject: Re: [RFT PATCH v2 2/3] ARM: Fix *MIGHT_HAVE_PCI* config from being
+ selected redundantly
+To: Kishon Vijay Abraham I <kishon@ti.com>, Tony Lindgren <tony@atomide.com>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>, "Jean-Christophe
+ Plagniol-Villard" <plagnioj@jcrosoft.com>, Krzysztof Halasa
+	<khalasa@piap.pl>, Kukjin Kim <kgene@kernel.org>, Krzysztof Kozlowski
+	<k.kozlowski@samsung.com>, Shawn Guo <shawnguo@kernel.org>, Sascha Hauer
+	<kernel@pengutronix.de>, Santosh Shilimkar <ssantosh@kernel.org>, Daniel Mack
+	<daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert
+ Jarzmik <robert.jarzmik@free.fr>, Simon Horman <horms@verge.net.au>, Magnus
+ Damm <magnus.damm@gmail.com>, Viresh Kumar <vireshk@kernel.org>, Shiraz
+ Hashim <shiraz.linux.kernel@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+References: <1470049950-4697-1-git-send-email-kishon@ti.com>
+ <1470049950-4697-3-git-send-email-kishon@ti.com>
+CC: <helgaas@kernel.org>, Benoit Cousson <bcousson@baylibre.com>, Rob Herring
+	<robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King
+	<linux@armlinux.org.uk>, Fabio Estevam <fabio.estevam@nxp.com>, Greg Ungerer
+	<gerg@uclinux.org>, <linux-samsung-soc@vger.kernel.org>,
+	<linux-renesas-soc@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, <nsekhar@ti.com>
+From: Nicolas Ferre <nicolas.ferre@atmel.com>
+Message-ID: <579F6FAF.7010001@atmel.com>
+Date: Mon, 1 Aug 2016 17:50:07 +0200
 MIME-Version: 1.0
-Sender: lftan.linux@gmail.com
-In-Reply-To: <20160818201900.GJ27353@localhost>
-References: <1471241162-23021-1-git-send-email-lftan@altera.com> <20160818201900.GJ27353@localhost>
-From: Ley Foon Tan <lftan@altera.com>
-Date: Fri, 19 Aug 2016 15:55:35 +0800
-Message-ID: <CAFiDJ58j--v3B+YtpkzQAw6xPfogdsR9OEcY=hsavqNv+Mh5iw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: altera: Poll for link training status after
- retraining the link
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1470049950-4697-3-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 19, 2016 at 4:19 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Aug 15, 2016 at 02:06:02PM +0800, Ley Foon Tan wrote:
->> Poll for link training status is cleared before poll for link up status.
->> This can help to get the reliable link up status, especially when PCIe
->> is in Gen 3 speed.
->>
->> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->
-> Applied to pci/host-altera for v4.9, thanks!
+Le 01/08/2016 13:12, Kishon Vijay Abraham I a écrit :
+> *MIGHT_HAVE_PCI* config is already selected in ARCH_MULTIPLATFORM.
+> Fix it from getting redundantly selected in all
+> ARCH_MULTIPLATFORM based machines.
 
-Thanks, Bjorn.
+And what happens if we select just one platform independently?
 
->
->> ---
->>  drivers/pci/host/pcie-altera.c | 45 ++++++++++++++++++++++++++++++++++--------
->>  1 file changed, 37 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
->> index 2b78376..58eef99 100644
->> --- a/drivers/pci/host/pcie-altera.c
->> +++ b/drivers/pci/host/pcie-altera.c
->> @@ -61,7 +61,8 @@
->>  #define TLP_LOOP                     500
->>  #define RP_DEVFN                     0
->>
->> -#define LINK_UP_TIMEOUT                      5000
->> +#define LINK_UP_TIMEOUT                      HZ
->> +#define LINK_RETRAIN_TIMEOUT         HZ
->>
->>  #define INTX_NUM                     4
->>
->> @@ -99,11 +100,44 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
->>       return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
->>  }
->>
->> +static void altera_wait_link_retrain(struct pci_dev *dev)
->> +{
->> +     u16 reg16;
->> +     unsigned long start_jiffies;
->> +     struct altera_pcie *pcie = dev->bus->sysdata;
->> +
->> +     /* Wait for link training end. */
->> +     start_jiffies = jiffies;
->> +     for (;;) {
->> +             pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
->> +             if (!(reg16 & PCI_EXP_LNKSTA_LT))
->> +                     break;
->> +
->> +             if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
->> +                     dev_err(&pcie->pdev->dev, "link retrain timeout\n");
->> +                     break;
->> +             }
->> +             udelay(100);
->> +     }
->> +
->> +     /* Wait for link is up */
->> +     start_jiffies = jiffies;
->> +     for (;;) {
->> +             if (altera_pcie_link_is_up(pcie))
->> +                     break;
->> +
->> +             if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
->> +                     dev_err(&pcie->pdev->dev, "link up timeout\n");
->> +                     break;
->> +             }
->> +             udelay(100);
->> +     }
->> +}
->> +
->>  static void altera_pcie_retrain(struct pci_dev *dev)
->>  {
->>       u16 linkcap, linkstat;
->>       struct altera_pcie *pcie = dev->bus->sysdata;
->> -     int timeout =  0;
->>
->>       if (!altera_pcie_link_is_up(pcie))
->>               return;
->> @@ -121,12 +155,7 @@ static void altera_pcie_retrain(struct pci_dev *dev)
->>       if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
->>               pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
->>                                        PCI_EXP_LNKCTL_RL);
->> -             while (!altera_pcie_link_is_up(pcie)) {
->> -                     timeout++;
->> -                     if (timeout > LINK_UP_TIMEOUT)
->> -                             break;
->> -                     udelay(5);
->> -             }
->> +             altera_wait_link_retrain(dev);
->>       }
->>  }
->>  DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
->> --
->> 1.8.2.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bye,
+
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  arch/arm/Kconfig                 |    2 --
+>  arch/arm/mach-at91/Kconfig       |    1 -
+>  arch/arm/mach-axxia/Kconfig      |    1 -
+>  arch/arm/mach-exynos/Kconfig     |    1 -
+>  arch/arm/mach-integrator/Kconfig |    1 -
+>  arch/arm/mach-keystone/Kconfig   |    1 -
+>  arch/arm/mach-ks8695/Kconfig     |    5 -----
+>  arch/arm/mach-pxa/Kconfig        |    1 -
+>  arch/arm/mach-spear/Kconfig      |    1 -
+>  arch/arm/mach-versatile/Kconfig  |    1 -
+>  10 files changed, 15 deletions(-)
+> 
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 90542db..538b032 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -474,7 +474,6 @@ config ARCH_IXP4XX
+>  	select CPU_XSCALE
+>  	select DMABOUNCE if PCI
+>  	select GENERIC_CLOCKEVENTS
+> -	select MIGHT_HAVE_PCI
+>  	select NEED_MACH_IO_H
+>  	select USB_EHCI_BIG_ENDIAN_DESC
+>  	select USB_EHCI_BIG_ENDIAN_MMIO
+> @@ -486,7 +485,6 @@ config ARCH_DOVE
+>  	select ARCH_REQUIRE_GPIOLIB
+>  	select CPU_PJ4
+>  	select GENERIC_CLOCKEVENTS
+> -	select MIGHT_HAVE_PCI
+>  	select MULTI_IRQ_HANDLER
+>  	select MVEBU_MBUS
+>  	select PINCTRL
+> diff --git a/arch/arm/mach-at91/Kconfig b/arch/arm/mach-at91/Kconfig
+> index 08047af..4013427 100644
+> --- a/arch/arm/mach-at91/Kconfig
+> +++ b/arch/arm/mach-at91/Kconfig
+> @@ -55,7 +55,6 @@ config SOC_AT91RM9200
+>  	select ATMEL_ST
+>  	select CPU_ARM920T
+>  	select HAVE_AT91_USB_CLK
+> -	select MIGHT_HAVE_PCI
+>  	select PINCTRL_AT91
+>  	select SOC_SAM_V4_V5
+>  	select SRAM if PM
+> diff --git a/arch/arm/mach-axxia/Kconfig b/arch/arm/mach-axxia/Kconfig
+> index 6c6d5e7..ee2e131 100644
+> --- a/arch/arm/mach-axxia/Kconfig
+> +++ b/arch/arm/mach-axxia/Kconfig
+> @@ -7,7 +7,6 @@ config ARCH_AXXIA
+>  	select ARM_TIMER_SP804
+>  	select HAVE_ARM_ARCH_TIMER
+>  	select MFD_SYSCON
+> -	select MIGHT_HAVE_PCI
+>  	select PCI_DOMAINS if PCI
+>  	select ZONE_DMA
+>  	help
+> diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
+> index 20dcf6e..a03daf5 100644
+> --- a/arch/arm/mach-exynos/Kconfig
+> +++ b/arch/arm/mach-exynos/Kconfig
+> @@ -125,7 +125,6 @@ config SOC_EXYNOS5440
+>  	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
+>  	select HAVE_ARM_ARCH_TIMER
+>  	select AUTO_ZRELADDR
+> -	select MIGHT_HAVE_PCI
+>  	select PCI_DOMAINS if PCI
+>  	select PINCTRL_EXYNOS5440
+>  	select PM_OPP
+> diff --git a/arch/arm/mach-integrator/Kconfig b/arch/arm/mach-integrator/Kconfig
+> index b2a85ba..4ed202c 100644
+> --- a/arch/arm/mach-integrator/Kconfig
+> +++ b/arch/arm/mach-integrator/Kconfig
+> @@ -21,7 +21,6 @@ if ARCH_INTEGRATOR
+>  config ARCH_INTEGRATOR_AP
+>  	bool "Support Integrator/AP and Integrator/PP2 platforms"
+>  	select CLKSRC_MMIO
+> -	select MIGHT_HAVE_PCI
+>  	select SERIAL_AMBA_PL010 if TTY
+>  	select SERIAL_AMBA_PL010_CONSOLE if TTY
+>  	select SOC_BUS
+> diff --git a/arch/arm/mach-keystone/Kconfig b/arch/arm/mach-keystone/Kconfig
+> index ea955f6db..6bd14da 100644
+> --- a/arch/arm/mach-keystone/Kconfig
+> +++ b/arch/arm/mach-keystone/Kconfig
+> @@ -9,7 +9,6 @@ config ARCH_KEYSTONE
+>  	select COMMON_CLK_KEYSTONE
+>  	select ARCH_SUPPORTS_BIG_ENDIAN
+>  	select ZONE_DMA if ARM_LPAE
+> -	select MIGHT_HAVE_PCI
+>  	select PCI_DOMAINS if PCI
+>  	help
+>  	  Support for boards based on the Texas Instruments Keystone family of
+> diff --git a/arch/arm/mach-ks8695/Kconfig b/arch/arm/mach-ks8695/Kconfig
+> index a545976..4ef06bc 100644
+> --- a/arch/arm/mach-ks8695/Kconfig
+> +++ b/arch/arm/mach-ks8695/Kconfig
+> @@ -4,7 +4,6 @@ menu "Kendin/Micrel KS8695 Implementations"
+>  
+>  config MACH_KS8695
+>  	bool "KS8695 development board"
+> -	select MIGHT_HAVE_PCI
+>  	help
+>  	  Say 'Y' here if you want your kernel to run on the original
+>  	  Kendin-Micrel KS8695 development board.
+> @@ -52,7 +51,6 @@ config MACH_CM4002
+>  
+>  config MACH_CM4008
+>  	bool "OpenGear CM4008"
+> -	select MIGHT_HAVE_PCI
+>  	help
+>  	  Say 'Y' here if you want your kernel to support the OpenGear
+>  	  CM4008 Console Server. See http://www.opengear.com for more
+> @@ -60,7 +58,6 @@ config MACH_CM4008
+>  
+>  config MACH_CM41xx
+>  	bool "OpenGear CM41xx"
+> -	select MIGHT_HAVE_PCI
+>  	help
+>  	  Say 'Y' here if you want your kernel to support the OpenGear
+>  	  CM4016 or CM4048 Console Servers. See http://www.opengear.com for
+> @@ -68,7 +65,6 @@ config MACH_CM41xx
+>  
+>  config MACH_IM4004
+>  	bool "OpenGear IM4004"
+> -	select MIGHT_HAVE_PCI
+>  	help
+>  	  Say 'Y' here if you want your kernel to support the OpenGear
+>  	  IM4004 Secure Access Server. See http://www.opengear.com for
+> @@ -76,7 +72,6 @@ config MACH_IM4004
+>  
+>  config MACH_IM42xx
+>  	bool "OpenGear IM42xx"
+> -	select MIGHT_HAVE_PCI
+>  	help
+>  	  Say 'Y' here if you want your kernel to support the OpenGear
+>  	  IM4216 or IM4248 Console Servers. See http://www.opengear.com for
+> diff --git a/arch/arm/mach-pxa/Kconfig b/arch/arm/mach-pxa/Kconfig
+> index cd894d6..39f7755 100644
+> --- a/arch/arm/mach-pxa/Kconfig
+> +++ b/arch/arm/mach-pxa/Kconfig
+> @@ -113,7 +113,6 @@ config MACH_ARMCORE
+>  	bool "CompuLab CM-X255/CM-X270 modules"
+>  	select ARCH_HAS_DMA_SET_COHERENT_MASK if PCI
+>  	select IWMMXT
+> -	select MIGHT_HAVE_PCI
+>  	select NEED_MACH_IO_H if PCI
+>  	select PXA25x
+>  	select PXA27x
+> diff --git a/arch/arm/mach-spear/Kconfig b/arch/arm/mach-spear/Kconfig
+> index ea9ea95..f8af720 100644
+> --- a/arch/arm/mach-spear/Kconfig
+> +++ b/arch/arm/mach-spear/Kconfig
+> @@ -20,7 +20,6 @@ config ARCH_SPEAR13XX
+>  	select HAVE_ARM_TWD if SMP
+>  	select PINCTRL
+>  	select MFD_SYSCON
+> -	select MIGHT_HAVE_PCI
+>  	help
+>  	  Supports for ARM's SPEAR13XX family
+>  
+> diff --git a/arch/arm/mach-versatile/Kconfig b/arch/arm/mach-versatile/Kconfig
+> index b0cc262..c257d40 100644
+> --- a/arch/arm/mach-versatile/Kconfig
+> +++ b/arch/arm/mach-versatile/Kconfig
+> @@ -9,7 +9,6 @@ config ARCH_VERSATILE
+>  	select CPU_ARM926T
+>  	select ICST
+>  	select MFD_SYSCON
+> -	select MIGHT_HAVE_PCI
+>  	select PLAT_VERSATILE
+>  	select POWER_RESET
+>  	select POWER_RESET_VERSATILE
+> 
+
+
+-- 
+Nicolas Ferre
