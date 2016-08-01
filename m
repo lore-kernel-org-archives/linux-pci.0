@@ -1,59 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:34058 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752721AbcHYWIo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Aug 2016 18:08:44 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: <bhelgaas@google.com>
-CC: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, Niklas Cassel <niklass@axis.com>
-Subject: [PATCH RESEND] bindings: PCI: artpec: correct pci binding example
-Date: Fri, 26 Aug 2016 00:01:56 +0200
-Message-ID: <1472162516-8966-1-git-send-email-niklass@axis.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Amir Levy <amir.jer.levy@intel.com>
+To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, corbet@lwn.net
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
+Subject: [PATCH v6 3/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
+Date: Mon,  1 Aug 2016 15:23:48 +0300
+Message-Id: <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
+In-Reply-To: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
+References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Niklas Cassel <niklas.cassel@axis.com>
+Updating the Kconfig Thunderbolt(TM) description.
 
- - Increase config size. When using a PCIe switch,
-   the previous config size only had room for one device.
- - Add bus range. Inherited optional property.
- - Map downstream I/O to PCI address 0. We can map it to any
-   address, but let's be consistent with other drivers.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
 ---
- Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
+ drivers/thunderbolt/Makefile |  2 +-
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-index 330a45b..5ecaea1 100644
---- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-@@ -24,16 +24,17 @@ Example:
- 		compatible = "axis,artpec6-pcie", "snps,dw-pcie";
- 		reg = <0xf8050000 0x2000
- 		       0xf8040000 0x1000
--		       0xc0000000 0x1000>;
-+		       0xc0000000 0x2000>;
- 		reg-names = "dbi", "phy", "config";
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		device_type = "pci";
- 			  /* downstream I/O */
--		ranges = <0x81000000 0 0x00010000 0xc0010000 0 0x00010000
-+		ranges = <0x81000000 0 0 0xc0002000 0 0x00010000
- 			  /* non-prefetchable memory */
--			  0x82000000 0 0xc0020000 0xc0020000 0 0x1ffe0000>;
-+			  0x82000000 0 0xc0012000 0xc0012000 0 0x1ffee000>;
- 		num-lanes = <2>;
-+		bus-range = <0x00 0xff>;
- 		interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
- 		interrupt-names = "msi";
- 		#interrupt-cells = <1>;
+diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+index c121acc..d34b0f5 100644
+--- a/drivers/thunderbolt/Kconfig
++++ b/drivers/thunderbolt/Kconfig
+@@ -1,13 +1,30 @@
+-menuconfig THUNDERBOLT
+-	tristate "Thunderbolt support for Apple devices"
++config THUNDERBOLT
++	tristate "Thunderbolt(TM) support"
+ 	depends on PCI
+ 	select CRC32
+ 	help
+-	  Cactus Ridge Thunderbolt Controller driver
++	  Thunderbolt(TM) Controller driver
++
++if THUNDERBOLT
++
++config THUNDERBOLT_APPLE
++	tristate "Apple hardware support"
++	help
+ 	  This driver is required if you want to hotplug Thunderbolt devices on
+ 	  Apple hardware.
+ 
+ 	  Device chaining is currently not supported.
+ 
+-	  To compile this driver a module, choose M here. The module will be
++	  To compile this driver as a module, choose M here. The module will be
+ 	  called thunderbolt.
++
++config THUNDERBOLT_ICM
++	tristate "Thunderbolt(TM) Networking"
++	help
++	  This driver is required if you want Thunderbolt(TM) Networking on
++	  non-Apple hardware.
++
++	  To compile this driver as a module, choose M here. The module will be
++	  called thunderbolt_icm.
++
++endif
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..7a85bd1 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,3 @@
+-obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
++obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
+ thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+ 
 -- 
-2.1.4
-
+2.7.4
