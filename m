@@ -1,35 +1,42 @@
-Return-Path: <hch@lst.de>
-Return-Path: <hch@lst.de>
-Date: Wed, 17 Aug 2016 02:48:50 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
-	agordeev@redhat.com, linux-kernel@vger.kernel.org
-Subject: Re: two pci_alloc_irq_vectors improvements
-Message-ID: <20160817004850.GB21992@lst.de>
-References: <1470924665-25860-1-git-send-email-hch@lst.de> <20160816193418.GA10555@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:8949 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754245AbcHAQsE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Aug 2016 12:48:04 -0400
+Date: Mon, 1 Aug 2016 10:20:58 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Haggai Eran <haggaie@mellanox.com>, linux-rdma@vger.kernel.org,
+	linux-nvme@lists.infradead.org, Liran Liss <liranl@mellanox.com>,
+	linux-pci@vger.kernel.org, Yishai Hadas <yishaih@mellanox.com>,
+	Stephen Bates <stephen.bates@microsemi.com>,
+	Leon Romanovsky <leonro@mellanox.com>,
+	Artemy Kovalyov <artemyko@mellanox.com>,
+	Jerome Glisse <j.glisse@gmail.com>, Jon Derrick:;
+Subject: Re: [RFC 6/7] NVMe: Use genalloc to allocate CMB regions
+Message-ID: <20160801162057.GA11476@localhost.localdomain>
+References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+ <1470034653-9097-7-git-send-email-haggaie@mellanox.com>
+ <20160801155348.GB23224@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160816193418.GA10555@localhost>
+In-Reply-To: <20160801155348.GB23224@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 16, 2016 at 02:34:18PM -0500, Bjorn Helgaas wrote:
-> Speaking of affinity, the original documentation said "By default this
-> function will spread the interrupts around the available CPUs".  After
-> these patches, you have to pass PCI_IRQ_AFFINITY to get that behavior.
-> Are you planning to have drivers use
+On Mon, Aug 01, 2016 at 08:53:49AM -0700, Christoph Hellwig wrote:
+> On Mon, Aug 01, 2016 at 09:57:32AM +0300, Haggai Eran wrote:
+> > Register the CMB in a gen_pool dedicated to manage CMB regions. Use the
+> > pool to allocate the SQs to make sure they are registered.
 > 
->   pci_alloc_irq_vectors(dev, 1, nvec, PCI_IRQ_ALL_TYPES | PCI_IRQ_AFFINITY)
+> And why would the NVMe driver care if "they are registered"?
 > 
-> to explicitly ask for affinity?
+> Once we start allowing diverse CMB uses (what happened to Jon's patches
+> btw?) genalloc might be a good backend allocator, but without that
+> it's entirely pointless.  Also please don't introduce useless header
+> files.
+My concern is using CMB as a generic memory space could lead to invalid uses and untested paths in broken firmware (leading to bricked drives...). The spec defines what it's allowed to be used for, but doesn't really leave it open for general purpose usage outside of that. Because of that I think it needs more hand-holding by the kernel to prevent invalid usage.
 
-Yes, at least for now.  During my mass conversion attempts I found
-enough drivers that don't use MSI-X for spreading queues over CPUs
-but instead for different kinds of interrupts.  I'd been to much in
-my NVMe and RDMA world earlier to assume everyone else would do something
-that sensible..
+What I would like to see is a set of knobs controlling the 'chunks' of memory's usages (controlled through sysfs/configfs?) and the kernel takes care of allocation. My set was going to expose a resource file for WDS/RDS but everything else was unhandled except for its current sqes usage. I think the genalloc could fit into this scheme quite well.
 
-> I applied these to for-linus with the intent of merging them for v4.8.
-> I fixed a couple typos in the first one as shown below.
-
-Thanks.
+Thoughts?
