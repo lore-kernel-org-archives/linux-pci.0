@@ -1,67 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53872 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754142AbcGKPuK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jul 2016 11:50:10 -0400
-Subject: Re: PCIe MSI address is not written at pci_enable_msi_range call
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <8520D5D51A55D047800579B094147198258B80DE@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57835D35.1000901@arm.com>
- <8520D5D51A55D047800579B094147198258B81DF@XAP-PVEXMBX01.xlnx.xilinx.com>
- <5783733C.70702@arm.com>
- <8520D5D51A55D047800579B094147198258B823D@XAP-PVEXMBX01.xlnx.xilinx.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	nofooter <nofooter@xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <5783C02F.7030901@arm.com>
-Date: Mon, 11 Jul 2016 16:50:07 +0100
-MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258B823D@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:36117 "EHLO
+	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750716AbcHAG6K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Aug 2016 02:58:10 -0400
+From: Haggai Eran <haggaie@mellanox.com>
+To: linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: linux-pci@vger.kernel.org,
+	Stephen Bates <stephen.bates@microsemi.com>,
+	Liran Liss <liranl@mellanox.com>,
+	Leon Romanovsky <leonro@mellanox.com>,
+	Artemy Kovalyov <artemyko@mellanox.com>,
+	Jerome Glisse <j.glisse@gmail.com>,
+	Yishai Hadas <yishaih@mellanox.com>,
+	Haggai Eran <haggaie@mellanox.com>
+Subject: [RFC 1/7] IB/mlx5: Helper for posting work-requests on the UMR QP
+Date: Mon,  1 Aug 2016 09:57:27 +0300
+Message-Id: <1470034653-9097-2-git-send-email-haggaie@mellanox.com>
+In-Reply-To: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/07/16 11:51, Bharat Kumar Gogada wrote:
->>> Hi Marc,
->>>
->>> Thanks for the reply.
->>>
->>> From PCIe Spec:
->>> MSI Enable Bit:
->>> If 1 and the MSI-X Enable bit in the MSI-X Message
->>> Control register (see Section 6.8.2.3) is 0, the
->>> function is permitted to use MSI to request service
->>> and is prohibited from using its INTx# pin.
->>>
->>> From Endpoint perspective, MSI Enable = 1 indicates MSI can be used
->> which means MSI address and data fields are available/programmed.
->>>
->>> In our SoC whenever MSI Enable goes from 0 --> 1 the hardware latches
->> onto MSI address and MSI data values.
->>>
->>> With current MSI implementation in kernel, our SoC is latching on to
->> incorrect address and data values, as address/data
->>> are updated much later than MSI Enable bit.
->>
->> Interesting. It looks like we're doing something wrong in the MSI flow.
->> Can you confirm that this is limited to MSI and doesn't affect MSI-X?
->>
-> I think it's the same issue irrespective of MSI or MSI-X as we are
-> enabling these interrupts before providing the  vectors.
-> 
-> So we always have a hole when MSI/MSI-X is 1, and software driver has
-> not registered the irq, and End Point may raise an interrupt (may be
-> due to error) in this point of time.
+Add mlx5_ib_post_umr_sync(), a helper function that posts work-requests
+on the UMR QP, waits for their completion, and returns the result.
+Modify several functions to use the new helper.
 
-Looking at the MSI-X part of the code, there is this:
+Signed-off-by: Haggai Eran <haggaie@mellanox.com>
+---
+ drivers/infiniband/hw/mlx5/mr.c | 98 ++++++++++++++---------------------------
+ 1 file changed, 32 insertions(+), 66 deletions(-)
 
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/msi.c#n764
-
-which hints that it may not be possible to do otherwise. Damned if you
-do, damned if you don't.
-
-	M.
+diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5/mr.c
+index 8cf2ce50511f..fb2bb25c6cf0 100644
+--- a/drivers/infiniband/hw/mlx5/mr.c
++++ b/drivers/infiniband/hw/mlx5/mr.c
+@@ -852,16 +852,41 @@ static inline void mlx5_ib_init_umr_context(struct mlx5_ib_umr_context *context)
+ 	init_completion(&context->done);
+ }
+ 
++static int mlx5_ib_post_umr_sync(struct mlx5_ib_dev *dev, struct ib_send_wr *wr)
++{
++	struct umr_common *umrc = &dev->umrc;
++	struct mlx5_ib_umr_context umr_context;
++	struct ib_send_wr *bad;
++	int err;
++
++	mlx5_ib_init_umr_context(&umr_context);
++	wr->wr_cqe = &umr_context.cqe;
++
++	down(&umrc->sem);
++	err = ib_post_send(umrc->qp, wr, &bad);
++	if (err) {
++		mlx5_ib_warn(dev, "post send failed, err %d\n", err);
++		goto out;
++	} else {
++		wait_for_completion(&umr_context.done);
++		if (umr_context.status != IB_WC_SUCCESS) {
++			mlx5_ib_warn(dev, "umr failed\n");
++			err = -EFAULT;
++			goto out;
++		}
++	}
++out:
++	up(&umrc->sem);
++	return err;
++}
++
+ static struct mlx5_ib_mr *reg_umr(struct ib_pd *pd, struct ib_umem *umem,
+ 				  u64 virt_addr, u64 len, int npages,
+ 				  int page_shift, int order, int access_flags)
+ {
+ 	struct mlx5_ib_dev *dev = to_mdev(pd->device);
+ 	struct device *ddev = dev->ib_dev.dma_device;
+-	struct umr_common *umrc = &dev->umrc;
+-	struct mlx5_ib_umr_context umr_context;
+ 	struct mlx5_umr_wr umrwr = {};
+-	struct ib_send_wr *bad;
+ 	struct mlx5_ib_mr *mr;
+ 	struct ib_sge sg;
+ 	int size;
+@@ -890,24 +915,12 @@ static struct mlx5_ib_mr *reg_umr(struct ib_pd *pd, struct ib_umem *umem,
+ 	if (err)
+ 		goto free_mr;
+ 
+-	mlx5_ib_init_umr_context(&umr_context);
+-
+-	umrwr.wr.wr_cqe = &umr_context.cqe;
+ 	prep_umr_reg_wqe(pd, &umrwr.wr, &sg, dma, npages, mr->mmkey.key,
+ 			 page_shift, virt_addr, len, access_flags);
+ 
+-	down(&umrc->sem);
+-	err = ib_post_send(umrc->qp, &umrwr.wr, &bad);
+-	if (err) {
+-		mlx5_ib_warn(dev, "post send failed, err %d\n", err);
++	err = mlx5_ib_post_umr_sync(dev, &umrwr.wr);
++	if (err)
+ 		goto unmap_dma;
+-	} else {
+-		wait_for_completion(&umr_context.done);
+-		if (umr_context.status != IB_WC_SUCCESS) {
+-			mlx5_ib_warn(dev, "reg umr failed\n");
+-			err = -EFAULT;
+-		}
+-	}
+ 
+ 	mr->mmkey.iova = virt_addr;
+ 	mr->mmkey.size = len;
+@@ -916,7 +929,6 @@ static struct mlx5_ib_mr *reg_umr(struct ib_pd *pd, struct ib_umem *umem,
+ 	mr->live = 1;
+ 
+ unmap_dma:
+-	up(&umrc->sem);
+ 	dma_unmap_single(ddev, dma, size, DMA_TO_DEVICE);
+ 
+ 	kfree(mr_pas);
+@@ -1193,36 +1205,10 @@ error:
+ 
+ static int unreg_umr(struct mlx5_ib_dev *dev, struct mlx5_ib_mr *mr)
+ {
+-	struct umr_common *umrc = &dev->umrc;
+-	struct mlx5_ib_umr_context umr_context;
+ 	struct mlx5_umr_wr umrwr = {};
+-	struct ib_send_wr *bad;
+-	int err;
+-
+-	mlx5_ib_init_umr_context(&umr_context);
+ 
+-	umrwr.wr.wr_cqe = &umr_context.cqe;
+ 	prep_umr_unreg_wqe(dev, &umrwr.wr, mr->mmkey.key);
+-
+-	down(&umrc->sem);
+-	err = ib_post_send(umrc->qp, &umrwr.wr, &bad);
+-	if (err) {
+-		up(&umrc->sem);
+-		mlx5_ib_dbg(dev, "err %d\n", err);
+-		goto error;
+-	} else {
+-		wait_for_completion(&umr_context.done);
+-		up(&umrc->sem);
+-	}
+-	if (umr_context.status != IB_WC_SUCCESS) {
+-		mlx5_ib_warn(dev, "unreg umr failed\n");
+-		err = -EFAULT;
+-		goto error;
+-	}
+-	return 0;
+-
+-error:
+-	return err;
++	return mlx5_ib_post_umr_sync(dev, &umrwr.wr);
+ }
+ 
+ static int rereg_umr(struct ib_pd *pd, struct mlx5_ib_mr *mr, u64 virt_addr,
+@@ -1231,19 +1217,13 @@ static int rereg_umr(struct ib_pd *pd, struct mlx5_ib_mr *mr, u64 virt_addr,
+ {
+ 	struct mlx5_ib_dev *dev = to_mdev(pd->device);
+ 	struct device *ddev = dev->ib_dev.dma_device;
+-	struct mlx5_ib_umr_context umr_context;
+-	struct ib_send_wr *bad;
+ 	struct mlx5_umr_wr umrwr = {};
+ 	struct ib_sge sg;
+-	struct umr_common *umrc = &dev->umrc;
+ 	dma_addr_t dma = 0;
+ 	__be64 *mr_pas = NULL;
+ 	int size;
+ 	int err;
+ 
+-	mlx5_ib_init_umr_context(&umr_context);
+-
+-	umrwr.wr.wr_cqe = &umr_context.cqe;
+ 	umrwr.wr.send_flags = MLX5_IB_SEND_UMR_FAIL_IF_FREE;
+ 
+ 	if (flags & IB_MR_REREG_TRANS) {
+@@ -1271,21 +1251,7 @@ static int rereg_umr(struct ib_pd *pd, struct mlx5_ib_mr *mr, u64 virt_addr,
+ 	}
+ 
+ 	/* post send request to UMR QP */
+-	down(&umrc->sem);
+-	err = ib_post_send(umrc->qp, &umrwr.wr, &bad);
+-
+-	if (err) {
+-		mlx5_ib_warn(dev, "post send failed, err %d\n", err);
+-	} else {
+-		wait_for_completion(&umr_context.done);
+-		if (umr_context.status != IB_WC_SUCCESS) {
+-			mlx5_ib_warn(dev, "reg umr failed (%u)\n",
+-				     umr_context.status);
+-			err = -EFAULT;
+-		}
+-	}
+-
+-	up(&umrc->sem);
++	err = mlx5_ib_post_umr_sync(dev, &umrwr.wr);
+ 	if (flags & IB_MR_REREG_TRANS) {
+ 		dma_unmap_single(ddev, dma, size, DMA_TO_DEVICE);
+ 		kfree(mr_pas);
 -- 
-Jazz is not dead. It just smells funny...
+1.7.11.2
+
