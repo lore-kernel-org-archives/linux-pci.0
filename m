@@ -1,70 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60916 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755719AbcHXTLa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Aug 2016 15:11:30 -0400
-Date: Wed, 24 Aug 2016 14:10:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vikram Sethi <vikrams@codeaurora.org>
-Subject: Re: PCI CRS Support
-Message-ID: <20160824191007.GD23914@localhost>
-References: <f114c582-8e55-ee1a-a72d-864483077fd0@codeaurora.org>
+Return-Path: <linux+helgaas=kernel.org@armlinux.org.uk>
+Return-Path: <linux+helgaas=kernel.org@armlinux.org.uk>
+Date: Mon, 1 Aug 2016 16:24:30 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Tony Lindgren <tony@atomide.com>,
+	Nicolas Ferre <nicolas.ferre@atmel.com>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Krzysztof Halasa <khalasa@piap.pl>, Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	Daniel Mack <daniel@zonque.org>,
+	Haojian Zhuang <haojian.zhuang@gmail.com>,
+	Robert Jarzmik <robert.jarzmik@free.fr>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Viresh Kumar <vireshk@kernel.org>,
+	Shiraz Hashim <shiraz.linux.kernel@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, helgaas@kernel.org,
+	Benoit Cousson <bcousson@baylibre.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Fabio Estevam <fabio.estevam@nxp.com>,
+	Greg Ungerer <gerg@uclinux.org>, linux-samsung-soc@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-omap@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	nsekhar@ti.com
+Subject: Re: [RFT PATCH v2 2/3] ARM: Fix *MIGHT_HAVE_PCI* config from being
+ selected redundantly
+Message-ID: <20160801152430.GM5783@n2100.arm.linux.org.uk>
+References: <1470049950-4697-1-git-send-email-kishon@ti.com>
+ <1470049950-4697-3-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <f114c582-8e55-ee1a-a72d-864483077fd0@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470049950-4697-3-git-send-email-kishon@ti.com>
+Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+On Mon, Aug 01, 2016 at 04:42:29PM +0530, Kishon Vijay Abraham I wrote:
+> *MIGHT_HAVE_PCI* config is already selected in ARCH_MULTIPLATFORM.
+> Fix it from getting redundantly selected in all
+> ARCH_MULTIPLATFORM based machines.
 
-On Wed, Aug 24, 2016 at 11:56:18AM -0400, Sinan Kaya wrote:
-> Hi Bjorn,
-> I see that the kernel has support for Configuration Request Retry Status (CRS) visibility
-> support and it gets discovered and enabled as part of the probe function.
-> 
-> Let's assume a system with CRS capability and have its visibility set as above.
-> I do not see any code in the failure/reset path to support the CRS requests
-> returned by the endpoint.
-> 
-> An endpoint is allowed to return CRS after several reset types. I'm pasting the part of
-> the spec for you at 2.3.1 Request Handling Rules of 3.1 spec.
-> 
-> "For Configuration Requests only, following reset it is possible for a device to terminate the request 
-> but indicate that it is temporarily unable to process the Request, but will be able to process the Request 
-> in the future – in this case, the Configuration Request Retry 10 Status (CRS) Completion Status is used 
-> (see Section 6.6). Valid reset conditions after which a device is permitted to return CRS are:
-> 
-> - Cold, Warm, and Hot Resets
-> - FLRs
-> - A reset initiated in response to a D3hot to D0uninitialized device state transition."
-> 
-> I have identified the following functions that have problems for warm and hot resets.
-> 
-> Some callers of pci_reset_bridge_secondary_bus such as pciehp_reset_slot, aer_root_reset.
-> Other higher level callers such as pci_bus_reset, pci_try_reset_bus and their callers from VFIO.
-> All these places are impacted by a CRS call. They do the secondary bus reset but do not wait for the
-> endpoint to respond. Waiting for 1 second is not a guarantee that the endpoint will start responding
-> immediately. A CRS capable OS needs to interpret the incoming CRS response and poll longer
-> since CRS visibility is et.
-> 
-> All of this was warm and hot reset.
-> 
-> I also see another problem in the FLR path too. There is some best effort wait up to 1 second in
-> pci_flr_wait.
-> 
-> Where do we go from here? I was thinking of putting something deep down into the reset secondary
-> bus function but I'm afraid it will break things especially when we wait up to 60 seconds.
+You're changing more than just platforms that are part of
+ARCH_MULTIPLATFORM.  Eg, ARCH_DOVE and ARCH_IXP4XX.  So, these will
+probably end up losing PCI support as a result of this change.
 
-I agree CRS handling after reset is probably all broken.
-
-I hate the fact that we reset devices without re-enumerating them.  We
-have no assurance that the device is the same after reset (it could
-have loaded new firmware and been completely reconfigured).
-
-I don't have any good suggestions for you, so if you have some ideas
-and want to fix it, please go ahead.
-
-Bjorn
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
