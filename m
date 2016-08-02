@@ -1,73 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Chen Yu <yu.c.chen@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        Chen Yu <yu.c.chen@intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Subject: [PATCH][RFC v2] PCI: Workaround to enable poweroff on Mac Pro 11
-Date: Fri, 19 Aug 2016 01:44:52 +0800
-Message-Id: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0077.outbound.protection.outlook.com ([104.47.2.77]:33820
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934612AbcHBP5A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Aug 2016 11:57:00 -0400
+From: Haggai Eran <haggaie@mellanox.com>
+To: "hch@infradead.org" <hch@infradead.org>,
+	"jonathan.derrick@intel.com" <jonathan.derrick@intel.com>
+CC: Leon Romanovsky <leonro@mellanox.com>,
+	Kovalyov Artemy <artemyko@mellanox.com>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	Yishai Hadas <yishaih@mellanox.com>,
+	"stephen.bates@microsemi.com" <stephen.bates@microsemi.com>,
+	"j.glisse@gmail.com" <j.glisse@gmail.com>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	Liran Liss <liranl@mellanox.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [RFC 6/7] NVMe: Use genalloc to allocate CMB regions
+Date: Tue, 2 Aug 2016 07:15:26 +0000
+Message-ID: <1470122126.20129.11.camel@mellanox.com>
+References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+	 <1470034653-9097-7-git-send-email-haggaie@mellanox.com>
+	 <20160801155348.GB23224@infradead.org>
+	 <20160801162057.GA11476@localhost.localdomain>
+In-Reply-To: <20160801162057.GA11476@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-People reported that they can not do a poweroff nor a
-suspend to memory on their Mac Pro 11. After some investigations
-it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
-mm windows([mem 0x7fa00000-0x7fbfffff] and
-[mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-io resource 0x1804 becomes unaccessible immediately, where the
-ACPI Sleep register is located, as a result neither poweroff(S5)
-nor suspend to memory(S3) works.
-
-As suggested by Bjorn, further testing shows that, there is an
-unreported device may be (using) conflict with above aperture,
-so if we reassign the memory aperture to other place, the poweroff
-works again.
-
-As we did not find any resource declared in _CRS which contain above
-memory aperture, thus we choose a simple workaround to clear the hotplug
-flag(suggested by Yinghai Lu), thus do not allocate any resource for
-this pci bridge.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rafael J. Wysocki <rafael@kernel.org>
-Signed-off-by: Chen Yu <yu.c.chen@intel.com>
----
- drivers/pci/quirks.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 37ff015..47b303a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2776,6 +2776,27 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
- 
- /*
-+ * Apple: Avoid programming the memory/io aperture of 00:1c.0
-+ *
-+ * BIOS does not declare any resource for 00:1c.0, but with
-+ * hotplug flag set, thus OS allocate:
-+ * [mem 0x7fa00000 - 0x7fbfffff]
-+ * [mem 0x7fc00000-0x7fdfffff 64bit pref]
-+ * which is conflict with an unreported device, which
-+ * causes unpredictable result such as accessing io port.
-+ * So clear the hotplug flag to work around it.
-+ */
-+static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
-+{
-+	if (dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") &&
-+	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
-+	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
-+		dev->is_hotplug_bridge = 0;
-+}
-+
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-+
-+/*
-  * This is a quirk for the Ricoh MMC controller found as a part of
-  * some mulifunction chips.
- 
--- 
-2.7.4
+T24g15EnLCAyMDE2LTA4LTAxIGF0IDEwOjIwIC0wNjAwLCBKb24gRGVycmljayB3cm90ZToNCj4g
+T24gTW9uLCBBdWcgMDEsIDIwMTYgYXQgMDg6NTM6NDlBTSAtMDcwMCwgQ2hyaXN0b3BoIEhlbGx3
+aWcgd3JvdGU6DQo+ID4gDQo+ID4gT24gTW9uLCBBdWcgMDEsIDIwMTYgYXQgMDk6NTc6MzJBTSAr
+MDMwMCwgSGFnZ2FpIEVyYW4gd3JvdGU6DQo+ID4gPiANCj4gPiA+IFJlZ2lzdGVyIHRoZSBDTUIg
+aW4gYSBnZW5fcG9vbCBkZWRpY2F0ZWQgdG8gbWFuYWdlIENNQiByZWdpb25zLg0KPiA+ID4gVXNl
+IHRoZQ0KPiA+ID4gcG9vbCB0byBhbGxvY2F0ZSB0aGUgU1FzIHRvIG1ha2Ugc3VyZSB0aGV5IGFy
+ZSByZWdpc3RlcmVkLg0KPiA+IEFuZCB3aHkgd291bGQgdGhlIE5WTWUgZHJpdmVyIGNhcmUgaWYg
+InRoZXkgYXJlIHJlZ2lzdGVyZWQiPw0KPiA+IA0KPiA+IE9uY2Ugd2Ugc3RhcnQgYWxsb3dpbmcg
+ZGl2ZXJzZSBDTUIgdXNlcyAod2hhdCBoYXBwZW5lZCB0byBKb24ncw0KPiA+IHBhdGNoZXMNCj4g
+PiBidHc/KSBnZW5hbGxvYyBtaWdodCBiZSBhIGdvb2QgYmFja2VuZCBhbGxvY2F0b3IsIGJ1dCB3
+aXRob3V0IHRoYXQNCj4gPiBpdCdzIGVudGlyZWx5IHBvaW50bGVzcy7CoMKgQWxzbyBwbGVhc2Ug
+ZG9uJ3QgaW50cm9kdWNlIHVzZWxlc3MNCj4gPiBoZWFkZXINCj4gPiBmaWxlcy4NCj4gTXkgY29u
+Y2VybiBpcyB1c2luZyBDTUIgYXMgYSBnZW5lcmljIG1lbW9yeSBzcGFjZSBjb3VsZCBsZWFkIHRv
+DQo+IGludmFsaWQgdXNlcyBhbmQgdW50ZXN0ZWQgcGF0aHMgaW4gYnJva2VuIGZpcm13YXJlIChs
+ZWFkaW5nIHRvDQo+IGJyaWNrZWQgZHJpdmVzLi4uKS4gVGhlIHNwZWMgZGVmaW5lcyB3aGF0IGl0
+J3MgYWxsb3dlZCB0byBiZSB1c2VkDQo+IGZvciwgYnV0IGRvZXNuJ3QgcmVhbGx5IGxlYXZlIGl0
+IG9wZW4gZm9yIGdlbmVyYWwgcHVycG9zZSB1c2FnZQ0KPiBvdXRzaWRlIG9mIHRoYXQuIEJlY2F1
+c2Ugb2YgdGhhdCBJIHRoaW5rIGl0IG5lZWRzIG1vcmUgaGFuZC1ob2xkaW5nDQo+IGJ5IHRoZSBr
+ZXJuZWwgdG8gcHJldmVudCBpbnZhbGlkIHVzYWdlLg0KSSB1bmRlcnN0YW5kLiBEaWQgeW91IGhh
+cHBlbiB0byB0aGluayBvZiBob3cgdGhlIGtlcm5lbCB3b3VsZCBleHBvc2UNCml0Pw0KDQo+IFdo
+YXQgSSB3b3VsZCBsaWtlIHRvIHNlZSBpcyBhIHNldCBvZiBrbm9icyBjb250cm9sbGluZyB0aGUg
+J2NodW5rcycNCj4gb2YgbWVtb3J5J3MgdXNhZ2VzIChjb250cm9sbGVkIHRocm91Z2ggc3lzZnMv
+Y29uZmlnZnM/KSBhbmQgdGhlDQo+IGtlcm5lbCB0YWtlcyBjYXJlIG9mIGFsbG9jYXRpb24uIE15
+IHNldCB3YXMgZ29pbmcgdG8gZXhwb3NlIGENCj4gcmVzb3VyY2UgZmlsZSBmb3IgV0RTL1JEUyBi
+dXQgZXZlcnl0aGluZyBlbHNlIHdhcyB1bmhhbmRsZWQgZXhjZXB0DQo+IGZvciBpdHMgY3VycmVu
+dCBzcWVzIHVzYWdlLiBJIHRoaW5rIHRoZSBnZW5hbGxvYyBjb3VsZCBmaXQgaW50byB0aGlzDQo+
+IHNjaGVtZSBxdWl0ZSB3ZWxsLg0KV2hhdCBkbyB5b3UgbWVhbiBieSBhIHJlc291cmNlIGZpbGU/
+IEFyZSB5b3UgcmVmZXJyaW5nIHRvIHRoZQ0Kc3lzZnMvY29uZmlnZnMga25vYiBvciB0byBhIGZp
+bGUgdGhhdCBleHBvc2VzIHRoZSByZXNvdXJjZSB0byB1c2VyLQ0Kc3BhY2U/DQoNClRoYW5rcywN
+CkhhZ2dhaQ==
