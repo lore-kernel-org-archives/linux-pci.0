@@ -1,179 +1,235 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41476 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932094AbcHIReB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Aug 2016 13:34:01 -0400
-Date: Tue, 9 Aug 2016 12:33:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 3/3] pcie/aer: Cache capability position
-Message-ID: <20160809173350.GE27301@localhost>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
- <1470683667-28418-4-git-send-email-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470683667-28418-4-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <Joao.Pinto@synopsys.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: helgaas@kernel.org,
+	jingoohan1@gmail.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jszhang@marvell.com, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v3 2/3] pcie-designware: add iATU Unroll feature
+Date: Tue,  2 Aug 2016 18:36:22 +0100
+Message-Id: <24e35d8579ef42ad35a3fba9567f2ea93865d1e8.1470158164.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470158164.git.jpinto@synopsys.com>
+References: <cover.1470158164.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470158164.git.jpinto@synopsys.com>
+References: <cover.1470158164.git.jpinto@synopsys.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+This patch adds the support to the new iATU mechanism that will be used
+from Core version 4.80, which is called iATU Unroll.
+The new Cores can support the iATU Unroll or support the "old" iATU 
+method now called Legacy Mode. The driver is perfectly capable of
+performing well for both.
 
-On Mon, Aug 08, 2016 at 01:14:27PM -0600, Keith Busch wrote:
-> This saves the postition of the error reporting capability so that it
-> doesn't need to be rediscovered during error handling.
+In order to make sure that the iATU is really enabled a for loop was
+introduced in dw_pcie_prog_outbound_atu() to improve reliability.
 
-I like the idea of this, and I wonder if we should go even further,
-and cache aer_pos in the pci_dev.  There are a zillion places that
-look for PCI_EXT_CAP_ID_ERR, and several of them are outside the AER
-driver, where it would be inconvenient to look up the aer_rpc.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+changes v2->v3 (Bjorn Helgaas):
+- Unused *CTRL3 and *UPPR iATU Unroll registers were removed
+- Inbound addr builder macro was removed to simplifiy the code
+- *readl_unroll and *writel_unroll functions were simplified. Now the
+scope is always outbound.
+- dw_pcie_get_atu_mode changed to return the status
+- iATU enable check routine was improved in dw_pcie_prog_outbound_atu()
+changes v1->v2:
+- Patch was breaking kernel build due to bad definition in macro funtion.
+- Rebased on top of pci/next.
 
-That would probably mean adding a hook to pci_init_capabilities(),
-which would be kind of nice anyway because we already have a call to
-pci_cleanup_aer_error_status_regs() there, which is sort of dangling
-and not parallel to the other calls.
+ drivers/pci/host/pcie-designware.c | 131 ++++++++++++++++++++++++++++++++-----
+ drivers/pci/host/pcie-designware.h |   1 +
+ 2 files changed, 116 insertions(+), 16 deletions(-)
 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv.c | 38 +++++++++++++++++---------------------
->  drivers/pci/pcie/aer/aerdrv.h |  1 +
->  2 files changed, 18 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 48d21e0..d05c864 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -122,7 +122,6 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
->  static void aer_enable_rootport(struct aer_rpc *rpc)
->  {
->  	struct pci_dev *pdev = rpc->rpd->port;
-
-What if you did this instead:
-
- -	int aer_pos;
- +	int aer_pos = rpc->pos;
-
-Then all the config accesses wouldn't have to change.
-
->  	u16 reg16;
->  	u32 reg32;
->  
-> @@ -134,14 +133,13 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
->  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
->  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
->  
-> -	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
->  	/* Clear error status */
-> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
-> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
-> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, &reg32);
-> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, reg32);
-> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, &reg32);
-> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, reg32);
-> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
-> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
-> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, &reg32);
-> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, reg32);
-> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, &reg32);
-> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, reg32);
->  
->  	/*
->  	 * Enable error reporting for the root port device and downstream port
-> @@ -150,9 +148,9 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
->  	set_downstream_devices_error_reporting(pdev, true);
->  
->  	/* Enable Root Port's interrupt in response to error messages */
-> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
->  	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
-> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, reg32);
-> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
->  }
->  
->  /**
-> @@ -165,7 +163,6 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
->  {
->  	struct pci_dev *pdev = rpc->rpd->port;
->  	u32 reg32;
-> -	int pos;
->  
->  	/*
->  	 * Disable error reporting for the root port device and downstream port
-> @@ -173,15 +170,14 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
->  	 */
->  	set_downstream_devices_error_reporting(pdev, false);
->  
-> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
->  	/* Disable Root's interrupt in response to error messages */
-> -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
->  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-> -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, reg32);
-> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
->  
->  	/* Clear Root's error status reg */
-> -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, &reg32);
-> -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, reg32);
-> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
-> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
->  }
->  
->  /**
-> @@ -198,9 +194,7 @@ irqreturn_t aer_irq(int irq, void *context)
->  	struct aer_rpc *rpc = get_service_data(pdev);
->  	int next_prod_idx;
->  	unsigned long flags;
-> -	int pos;
->  
-> -	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
->  	/*
->  	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
->  	 * and Root error producer/consumer index
-> @@ -208,15 +202,15 @@ irqreturn_t aer_irq(int irq, void *context)
->  	spin_lock_irqsave(&rpc->e_lock, flags);
->  
->  	/* Read error status */
-> -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, &status);
-> +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, &status);
->  	if (!(status & (PCI_ERR_ROOT_UNCOR_RCV|PCI_ERR_ROOT_COR_RCV))) {
->  		spin_unlock_irqrestore(&rpc->e_lock, flags);
->  		return IRQ_NONE;
->  	}
->  
->  	/* Read error source and clear error status */
-> -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_ERR_SRC, &id);
-> -	pci_write_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, status);
-> +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_ERR_SRC, &id);
-> +	pci_write_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, status);
->  
->  	/* Store error source for later DPC handler */
->  	next_prod_idx = rpc->prod_idx + 1;
-> @@ -317,6 +311,8 @@ static int aer_probe(struct pcie_device *dev)
->  		return -ENOMEM;
->  	}
->  
-> +	rpc->pos = pci_find_ext_capability(dev->port, PCI_EXT_CAP_ID_ERR);
-> +
->  	/* Request IRQ ISR */
->  	status = request_irq(dev->irq, aer_irq, IRQF_SHARED, "aerdrv", dev);
->  	if (status) {
-> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> index 945c939..d7c586e 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.h
-> +++ b/drivers/pci/pcie/aer/aerdrv.h
-> @@ -72,6 +72,7 @@ struct aer_rpc {
->  					 * recovery on the same
->  					 * root port hierarchy
->  					 */
-> +	int pos;			/* position of AER capability */
->  };
->  
->  struct aer_broadcast_data {
-> -- 
-> 2.7.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 6fb88de..3fb9036 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -31,6 +31,11 @@
+ #define LINK_WAIT_USLEEP_MIN		90000
+ #define LINK_WAIT_USLEEP_MAX		100000
+ 
++/* Parameters for the waiting for iATU enabled routine */
++#define LINK_WAIT_MAX_IATU_RETRIES	5
++#define LINK_WAIT_IATU_MIN		9000
++#define LINK_WAIT_IATU_MAX		10000
++
+ /* Synopsis specific PCIE configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+ #define PORT_LINK_MODE_MASK		(0x3f << 16)
+@@ -75,6 +80,26 @@
+ #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
++/*
++ * iATU unroll specific registers and definitions
++ * from 4.80 core version the address translation will be made by unroll
++ */
++
++/* Registers */
++#define PCIE_ATU_UNR_REGION_CTRL1	0x00
++#define PCIE_ATU_UNR_REGION_CTRL2	0x01
++#define PCIE_ATU_UNR_LOWER_BASE		0x02
++#define PCIE_ATU_UNR_UPPER_BASE		0x03
++#define PCIE_ATU_UNR_LIMIT		0x04
++#define PCIE_ATU_UNR_LOWER_TARGET	0x05
++#define PCIE_ATU_UNR_UPPER_TARGET	0x06
++
++/* Register address builder */
++#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
++					((0x3 << 20) | (region << 9) |	\
++					(register << 2))
++/* End of Unroll specific */
++
+ /* PCIe Port Logic registers */
+ #define PLR_OFFSET			0x700
+ #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
+@@ -136,6 +161,28 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
+ 		writel(val, pp->dbi_base + reg);
+ }
+ 
++static inline void dw_pcie_readl_unroll(struct pcie_port *pp,
++						u32 index, u32 reg, u32 *val)
++{
++	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
++
++	if (pp->ops->readl_rc)
++		pp->ops->readl_rc(pp, pp->dbi_base + reg_addr, val);
++	else
++		*val = readl(pp->dbi_base + reg_addr);
++}
++
++static inline void dw_pcie_writel_unroll(struct pcie_port *pp,
++						u32 index, u32 val, u32 reg)
++{
++	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
++
++	if (pp->ops->writel_rc)
++		pp->ops->writel_rc(pp, val, pp->dbi_base + reg_addr);
++	else
++		writel(val, pp->dbi_base + reg_addr);
++}
++
+ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 			       u32 *val)
+ {
+@@ -157,24 +204,61 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+ 		int type, u64 cpu_addr, u64 pci_addr, u32 size)
+ {
+-	u32 val;
+-
+-	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
+-			  PCIE_ATU_VIEWPORT);
+-	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
+-			  PCIE_ATU_LIMIT);
+-	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
+-	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+-	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
++	u32 val = 0;
++	u32 retries = 0;
++
++	if (pp->iatu_unroll_status) {
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
++		dw_pcie_writel_unroll(pp, index,
++			upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
++		dw_pcie_writel_unroll(pp, index,
++			upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
++		dw_pcie_writel_unroll(pp, index,
++			type, PCIE_ATU_UNR_REGION_CTRL1);
++		dw_pcie_writel_unroll(pp, index,
++			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
++	} else {
++		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
++						PCIE_ATU_VIEWPORT);
++		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
++						PCIE_ATU_LOWER_BASE);
++		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
++						PCIE_ATU_UPPER_BASE);
++		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
++						PCIE_ATU_LIMIT);
++		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
++						PCIE_ATU_LOWER_TARGET);
++		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
++						PCIE_ATU_UPPER_TARGET);
++		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
++		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
++	}
+ 
+ 	/*
+-	 * Make sure ATU enable takes effect before any subsequent config
+-	 * and I/O accesses.
+-	 */
+-	dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
++	 * Make sure ATU enable takes effect before any subsequent config
++	 * and I/O accesses.
++	 */
++	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
++
++		if (pp->iatu_unroll_status) {
++			dw_pcie_readl_unroll(pp, index,
++					PCIE_ATU_UNR_REGION_CTRL2, &val);
++		} else {
++			dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
++		}
++
++		if (val == PCIE_ATU_ENABLE)
++			break;
++
++		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++	}
++
++	dev_dbg(pp->dev, "iATU is not being enabled\n");
+ }
+ 
+ static struct irq_chip dw_msi_irq_chip = {
+@@ -433,6 +517,19 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = dw_pcie_msi_map,
+ };
+ 
++static u8 dw_pcie_get_atu_mode(struct pcie_port *pp)
++{
++	u32 val = 0;
++
++	/* Check if the iATU unroll is enabled or not */
++	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
++
++	if (val == 0xFFFFFFFF)
++		return 1; /* enabled */
++
++	return 0; /* disabled */
++}
++
+ int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+@@ -552,6 +649,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
+ 
++	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
++
+ 	pp->root_bus_nr = pp->busn->start;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 384e79b..354a981 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -48,6 +48,7 @@ struct pcie_port {
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+ 	unsigned long		msi_data;
++	u8			iatu_unroll_status;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
+-- 
+1.8.1.5
