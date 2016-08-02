@@ -1,67 +1,84 @@
-Return-Path: <lftan.linux@gmail.com>
-Return-Path: <lftan.linux@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 2 Aug 2016 07:53:35 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jszhang@marvell.com,
+	CARLOS.PALMINHA@synopsys.com, MiguelFalcao.Sousa@synopsys.com
+Subject: Re: [PATCH v2 1/2] pcie-designware: add iATU Unroll feature
+Message-ID: <20160802125335.GA31847@localhost>
+References: <cover.1469193895.git.jpinto@synopsys.com>
+ <0ce5678ac78d082afa3df7ad284111afcc03b2a1.1469193895.git.jpinto@synopsys.com>
+ <20160725204443.GB15939@localhost>
+ <e00f4953-eb9f-8b6c-0c16-f6fd1abcb717@synopsys.com>
 MIME-Version: 1.0
-Sender: lftan.linux@gmail.com
-In-Reply-To: <20160822154738.GB18628@localhost>
-References: <1471595078-26297-1-git-send-email-lftan@altera.com> <20160822154738.GB18628@localhost>
-From: Ley Foon Tan <lftan@altera.com>
-Date: Wed, 24 Aug 2016 15:07:52 +0800
-Message-ID: <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e00f4953-eb9f-8b6c-0c16-f6fd1abcb717@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
->> Altera PCIe IP can be configured as rootport or device and they might have
->> same vendor ID. It will cause the system hang issue if Altera PCIe is in
->> endpoint mode and work with other PCIe rootport that from other vendors.
->> So, add the rootport mode checking in link retrain fixup function.
->>
->> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->> ---
->> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
->> ---
->>  drivers/pci/host/pcie-altera.c | 3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
->> index 58eef99..33b6968 100644
->> --- a/drivers/pci/host/pcie-altera.c
->> +++ b/drivers/pci/host/pcie-altera.c
->> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
->>       u16 linkcap, linkstat;
->>       struct altera_pcie *pcie = dev->bus->sysdata;
->>
->> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
->> +             return;
->> +
->>       if (!altera_pcie_link_is_up(pcie))
->>               return;
->
-> Instead of making this a PCI fixup, can you make an
-> altera_pcie_host_init() function, call it from altera_pcie_probe(),
-> and do the link retrain there?  Then you wouldn't need to worry about
-> whether this is a Root Port or an Endpoint, plus it would make the
-> altera driver structure more like the other drivers.
->
-> You would call altera_pcie_host_init() before pci_scan_root_bus(), so
-> you wouldn't have a pci_dev yet, so you wouldn't be able to use
-> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
-> assume there's some device-dependent way to access it using
-> cra_writel()?
-We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit. We can use
-pci_bus_find_capability() and pci_bus_read_config_word() with struct
-pci_bus instead.
-But this only can be called after pci_scan_root_bus(). Found
-iproc_pcie_check_link() have similar implementation.
-Tested this method is working. Do you think it is okay? If yes, then I
-will send in next revision.
+On Tue, Aug 02, 2016 at 11:27:45AM +0100, Joao Pinto wrote:
+> On 7/25/2016 9:44 PM, Bjorn Helgaas wrote:
+> > On Fri, Jul 22, 2016 at 02:29:38PM +0100, Joao Pinto wrote:
+> >> This patch adds the support to the new iATU mechanism that will be used
+> >> from Core version 4.80, which is called iATU Unroll.
+> >> The new Cores can support the iATU Unroll or support the "old" iATU 
+> >> method now called Legacy Mode. The driver is perfectly capable of
+> >> performing well for both.
+> >>
+> >> In order to make sure that the iATU is really enabled a for loop was
+> >> introduced in dw_pcie_prog_outbound_atu() to improve reliability.
+> >>
+> >> This patch also moves the sleep definitions to the *.c file like
+> >> suggested by Jisheng Zhang in a previous patch.
+> >>
+> >> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> ...
 
-Thanks.
+> >> +/* Registers */
+> >> +#define PCIE_ATU_UNR_REGION_CTRL1	0x00
+> >> +#define PCIE_ATU_UNR_REGION_CTRL2	0x01
+> >> +#define PCIE_ATU_UNR_LOWER_BASE		0x02
+> >> +#define PCIE_ATU_UNR_UPPER_BASE		0x03
+> >> +#define PCIE_ATU_UNR_LIMIT		0x04
+> >> +#define PCIE_ATU_UNR_LOWER_TARGET	0x05
+> >> +#define PCIE_ATU_UNR_UPPER_TARGET	0x06
+> >> +#define PCIE_ATU_UNR_REGION_CTRL3	0x07
+> >> +#define PCIE_ATU_UNR_UPPR_LIMIT		0x08
+> > 
+> > Last two items aren't used.
+> 
+> I can take them off, but don't you think it is useful to include them for future
+> applications?
 
-Regards
-Ley Foon
+This isn't a huge deal either way.  Personally I wouldn't include them
+because if they're not used, they haven't been tested, and there's
+always the possibility of transcription errors.  If you need to use
+them in the future, it makes perfect sense to add the register
+definition in the same patch that uses the register.
+
+> ...
+> >> +static inline void dw_pcie_readl_unroll(struct pcie_port *pp, u32 type,
+> >> +						u32 index, u32 reg, u32 *val)
+> >> +{
+> >> +	u32 reg_addr = 0;
+> >> +
+> >> +	if (type == PCIE_TRANSL_OUTB)
+> >> +		reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
+> >> +	else if  (type == PCIE_TRANSL_INB)
+> >> +		reg_addr = PCIE_GET_ATU_INB_UNR_REG_ADDR(index, reg);
+> > 
+> > PCIE_TRANSL_INB is never used.  In fact, dw_pcie_readl_unroll() is
+> > *always* called with PCIE_TRANSL_OUTB, so it's not clear what the
+> > value of passing it as an argument is.
+> 
+> I included The Inbound translation mechanism because you can have Inbound or
+> Outbound translation in the iATU. The old mechanism also had Inbound properties
+> that are not used in the code. I suggest we keep the Inbound mechanism to avoid
+> future rework. Agree?
+
+Again, not a huge deal, but since PCIE_TRANSL_INB is not used, it
+makes life harder for the reader, and the related code is not tested.
+So personally, I would remove it and add it back if/when it is needed.
+
+Bjorn
