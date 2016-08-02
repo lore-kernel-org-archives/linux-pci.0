@@ -1,96 +1,60 @@
-Return-Path: <guohanjun@huawei.com>
-Return-Path: <guohanjun@huawei.com>
-Subject: Re: [PATCH V8 5/8] irqchip/gicv3-its: Refactor ITS DT init code to
- prepare for ACPI
-To: Tomasz Nowicki <tn@semihalf.com>, <marc.zyngier@arm.com>,
-        <tglx@linutronix.de>, <jason@lakedaemon.net>, <rjw@rjwysocki.net>,
-        <helgaas@kernel.org>, <rafael@kernel.org>, <Lorenzo.Pieralisi@arm.com>
-References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
- <1470909998-16710-6-git-send-email-tn@semihalf.com>
-CC: <will.deacon@arm.com>, <catalin.marinas@arm.com>, <hanjun.guo@linaro.org>,
-        <shijie.huang@arm.com>, <robert.richter@caviumnetworks.com>,
-        <mw@semihalf.com>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <linaro-acpi@lists.linaro.org>,
-        <andrea.gallo@linaro.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <al.stone@linaro.org>,
-        <graeme.gregory@linaro.org>, <ddaney.cavm@gmail.com>,
-        <okaya@codeaurora.org>
-From: Hanjun Guo <guohanjun@huawei.com>
-Message-ID: <57B4213E.3060201@huawei.com>
-Date: Wed, 17 Aug 2016 16:33:02 +0800
+Return-Path: <kishon@ti.com>
+Return-Path: <kishon@ti.com>
+Subject: Re: [RFT PATCH v2 2/3] ARM: Fix *MIGHT_HAVE_PCI* config from being
+ selected redundantly
+To: Robert Jarzmik <robert.jarzmik@free.fr>
+References: <1470049950-4697-1-git-send-email-kishon@ti.com>
+ <1470049950-4697-3-git-send-email-kishon@ti.com>
+ <87oa5cxq3l.fsf@belgarion.home>
+CC: Tony Lindgren <tony@atomide.com>, Nicolas Ferre <nicolas.ferre@atmel.com>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jean-Christophe
+ Plagniol-Villard <plagnioj@jcrosoft.com>,
+        Krzysztof Halasa <khalasa@piap.pl>, Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+        Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <kernel@pengutronix.de>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Shiraz Hashim <shiraz.linux.kernel@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>, <helgaas@kernel.org>,
+        Benoit Cousson <bcousson@baylibre.com>,
+        Rob Herring
+	<robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+        Russell King
+	<linux@armlinux.org.uk>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Greg Ungerer
+	<gerg@uclinux.org>, <linux-samsung-soc@vger.kernel.org>,
+        <linux-renesas-soc@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57A03A6E.3010905@ti.com>
+Date: Tue, 2 Aug 2016 11:45:10 +0530
 MIME-Version: 1.0
-In-Reply-To: <1470909998-16710-6-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <87oa5cxq3l.fsf@belgarion.home>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/8/11 18:06, Tomasz Nowicki wrote:
-> In order to add ACPI support we need to isolate ACPI&DT common code and
-> move DT logic to corresponding functions. To achieve this we are using
-> firmware agnostic handle which can be unpacked to either DT or ACPI node.
->
-> No functional changes other than a very minor one:
-> 1. Terminate its_init call with -ENODEV for non-DT case which allows
-> to remove hack from its-gic-v3.c.
-> 2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
-> as a bonus we get nice string formatting.
-> 3. Since there is only one of ITS parent domain convert it to static global
-> variable and drop the parameter from its_probe_one. Users can refer to it
-> in more convenient way then.
-[...]
-> -static int __init its_probe(struct device_node *node,
-> -			    struct irq_domain *parent)
-> +static int __init its_probe_one(struct resource *res,
-> +				struct fwnode_handle *handle, int numa_node)
->  {
-> -	struct resource res;
->  	struct its_node *its;
->  	void __iomem *its_base;
->  	u32 val;
->  	u64 baser, tmp;
->  	int err;
->  
-> -	err = of_address_to_resource(node, 0, &res);
-> -	if (err) {
-> -		pr_warn("%s: no regs?\n", node->full_name);
-> -		return -ENXIO;
-> -	}
-> -
-> -	its_base = ioremap(res.start, resource_size(&res));
-> +	its_base = ioremap(res->start, resource_size(res));
->  	if (!its_base) {
-> -		pr_warn("%s: unable to map registers\n", node->full_name);
-> +		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
->  		return -ENOMEM;
->  	}
->  
->  	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
->  	if (val != 0x30 && val != 0x40) {
-> -		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
-> +		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
->  		err = -ENODEV;
->  		goto out_unmap;
->  	}
->  
->  	err = its_force_quiescent(its_base);
->  	if (err) {
-> -		pr_warn("%s: failed to quiesce, giving up\n",
-> -			node->full_name);
-> +		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
->  		goto out_unmap;
->  	}
->  
-> -	pr_info("ITS: %s\n", node->full_name);
-> +	pr_info("ITS@%pa\n", &res->start);
-                ^^
 
-When I was testing this patch set I found message printed as below:
 
-[    0.000000] ITS@0x00000000c6000000
-[    0.000000] ITS@0x00000000c6000000: allocated 524288 Devices @27dc400000 (flat, esz 8, psz 16K, shr 1)
-[    0.000000] ITS@0x00000000c6000000: allocated 2048 Virtual CPUs @27dc820000 (flat, esz 8, psz 4K, shr 1)
-[    0.000000] ITS@0x00000000c6000000: allocated 512 Interrupt Collections @27dc80f000 (flat, esz 8, psz 4K, shr 1)
+On Tuesday 02 August 2016 12:40 AM, Robert Jarzmik wrote:
+> Kishon Vijay Abraham I <kishon@ti.com> writes:
+> 
+>> *MIGHT_HAVE_PCI* config is already selected in ARCH_MULTIPLATFORM.
+>> Fix it from getting redundantly selected in all
+>> ARCH_MULTIPLATFORM based machines.
+> 
+> If that's the purpose, then CM-X255 and CM-X270 don't fall in that category, as
+> they are not part of ARCH_MULTIPLATFORM nor ready for it AFAIK. So the change
+> below shouldn't be done according to the commit message.
 
-Seems this print is redundant, can we remove it?
+yeah, got that now. Looks like ARCH_PXA is not converted to multiplatform. Will
+fix and repost the series.
 
 Thanks
-Hanjun
+Kishon
