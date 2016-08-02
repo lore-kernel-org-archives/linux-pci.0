@@ -1,36 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20160822192728.5055.58901.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160822192728.5055.58901.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 23 Aug 2016 08:49:21 +0200
-Message-ID: <CAMuHMdXxynFuw6UQTpGsyy7RHVuo+xZL_eYvsLdxh2My9dmejQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar: Consolidate register space lookup and ioremap
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms@verge.net.au>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <Joao.Pinto@synopsys.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: helgaas@kernel.org,
+	jingoohan1@gmail.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jszhang@marvell.com, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v3 1/3] pcie-designware: move definitions
+Date: Tue,  2 Aug 2016 18:36:21 +0100
+Message-Id: <fe7e06c25a022d49a17ece0a1ce0c7d94b338f5c.1470158164.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470158164.git.jpinto@synopsys.com>
+References: <cover.1470158164.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470158164.git.jpinto@synopsys.com>
+References: <cover.1470158164.git.jpinto@synopsys.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 22, 2016 at 9:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Move the devm_ioremap_resource() of R-Car register space next to the
-> of_address_to_resource() that extracts the resource.  No functional change
-> intended.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+This patch moves the sleep definitions to the *.c file like suggested
+by Jisheng Zhang in a previous patch.
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+CC: Jisheng Zhang <jszhang@marvell.com>
+---
+changes v2->v3 (Bjorn Helgaas):
+- Separated from the new iATU unroll mechanism patch
 
-Gr{oetje,eeting}s,
+ drivers/pci/host/pcie-designware.c | 5 +++++
+ drivers/pci/host/pcie-designware.h | 5 -----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12afce1..6fb88de 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -26,6 +26,11 @@
+ 
+ #include "pcie-designware.h"
+ 
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES		10
++#define LINK_WAIT_USLEEP_MIN		90000
++#define LINK_WAIT_USLEEP_MAX		100000
++
+ /* Synopsis specific PCIE configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+ #define PORT_LINK_MODE_MASK		(0x3f << 16)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index f437f9b..384e79b 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,11 +22,6 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
+-/* Parameters for the waiting for link up routine */
+-#define LINK_WAIT_MAX_RETRIES		10
+-#define LINK_WAIT_USLEEP_MIN		90000
+-#define LINK_WAIT_USLEEP_MAX		100000
+-
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+-- 
+1.8.1.5
