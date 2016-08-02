@@ -1,55 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:14863 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:39817 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758515AbcHDXMI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Aug 2016 19:12:08 -0400
-From: "Derrick, Jonathan" <jonathan.derrick@intel.com>
-To: Myron Stowe <myron.stowe@gmail.com>,
-	"Busch, Keith" <keith.busch@intel.com>
-CC: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: [PATCH 1/2] vmd: Fix infinite loop executing irq's
-Date: Thu, 4 Aug 2016 23:12:05 +0000
-Message-ID: <8D943B239464E04C9184454D8B3F5CFF0ADC4304@ORSMSX101.amr.corp.intel.com>
-References: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
- <CAL-B5D2H96XyvXUYxq23BVvHeb-UMi3hYzw6u_mRNPR_S5xYXQ@mail.gmail.com>
-In-Reply-To: <CAL-B5D2H96XyvXUYxq23BVvHeb-UMi3hYzw6u_mRNPR_S5xYXQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S965095AbcHBMnK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:43:10 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: bhelgaas@google.com, paulus@samba.org, mpe@ellerman.id.au,
+	sbranden@broadcom.com, m.chehab@samsung.com, pawel@osciak.com,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	luto@kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
+Subject: [PATCH 0827/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:50:16 +0800
+Message-Id: <20160802115016.5112-1-baolex.ni@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-WWVzIHRoYXQncyB0aGUgb25lIGl0IGZpeGVzDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQpGcm9tOiBNeXJvbiBTdG93ZSBbbWFpbHRvOm15cm9uLnN0b3dlQGdtYWlsLmNvbV0gDQpTZW50
-OiBUaHVyc2RheSwgQXVndXN0IDQsIDIwMTYgNDo0OCBQTQ0KVG86IEJ1c2NoLCBLZWl0aCA8a2Vp
-dGguYnVzY2hAaW50ZWwuY29tPg0KQ2M6IGxpbnV4LXBjaSA8bGludXgtcGNpQHZnZXIua2VybmVs
-Lm9yZz47IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+OyBEZXJyaWNrLCBKb25h
-dGhhbiA8am9uYXRoYW4uZGVycmlja0BpbnRlbC5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIIDEv
-Ml0gdm1kOiBGaXggaW5maW5pdGUgbG9vcCBleGVjdXRpbmcgaXJxJ3MNCg0KT24gVGh1LCBBdWcg
-NCwgMjAxNiBhdCA0OjA5IFBNLCBLZWl0aCBCdXNjaCA8a2VpdGguYnVzY2hAaW50ZWwuY29tPiB3
-cm90ZToNCj4gV2UgY2FuJ3QgaW5pdGlhbGl6ZSB0aGUgbGlzdCBoZWFkIG9uIGRlbGV0aW9uIGFz
-IHRoaXMgY2F1c2VzIHRoZSBub2RlIA0KPiB0byBwb2ludCB0byBpdHNlbGYsIGxvb3BpbmcgaW5m
-aW5pdGVseSBpZiB0aGUgdm1kIElSUSBoYW5kbGVyIGhhcHBlbnMgDQo+IHRvIGJlIHNlcnZpY2lu
-ZyB0aGF0IG5vZGUuDQo+DQo+IFRoZSBsaXN0IGluaXRpYWxpemF0aW9uIHN1cHBvc2VkIHRvIGZp
-eCBhIGJ1ZyBmcm9tIG11bHRpcGxlIGNhbGxzIHRvIA0KPiBkaXNhYmxlIHRoZSBzYW1lIElSUS4g
-V2UgY2FuIGZpeCB0aGlzIGluc3RlYWQganVzdCBjaGVja2luZyBpZiB0aGUgDQo+IHByZXZpb3Vz
-IHBvaW50ZXIgaW5kaWNhdGVzIGl0IHdhcyBhbHJlYWR5IGRlbGV0ZWQuDQo+DQoNClNob3VsZCB0
-aGlzIGhhdmUgb25lIG9yIHBvc3NpYmx5IG1vcmUiZml4ZXMiIGxpbmVzIGhlcmU/DQoNCj8/P0Zp
-eGVzOiA5N2U5MjMwICgieDg2L1BDSTogVk1EOiBJbml0aWFsaXplIGxpc3QgaXRlbSBpbiBJUlEg
-ZGlzYWJsZSIpPz8/DQoNCj4gU2lnbmVkLW9mZi1ieTogS2VpdGggQnVzY2ggPGtlaXRoLmJ1c2No
-QGludGVsLmNvbT4NCj4gLS0tDQo+ICBhcmNoL3g4Ni9wY2kvdm1kLmMgfCA0ICsrLS0NCj4gIDEg
-ZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQo+DQo+IGRpZmYg
-LS1naXQgYS9hcmNoL3g4Ni9wY2kvdm1kLmMgYi9hcmNoL3g4Ni9wY2kvdm1kLmMgaW5kZXggDQo+
-IGU4OGI0MTcuLjIyOTQ5MDcgMTAwNjQ0DQo+IC0tLSBhL2FyY2gveDg2L3BjaS92bWQuYw0KPiAr
-KysgYi9hcmNoL3g4Ni9wY2kvdm1kLmMNCj4gQEAgLTEzNiw4ICsxMzYsOCBAQCBzdGF0aWMgdm9p
-ZCB2bWRfaXJxX2Rpc2FibGUoc3RydWN0IGlycV9kYXRhICpkYXRhKQ0KPiAgICAgICAgIGRhdGEt
-PmNoaXAtPmlycV9tYXNrKGRhdGEpOw0KPg0KPiAgICAgICAgIHJhd19zcGluX2xvY2tfaXJxc2F2
-ZSgmbGlzdF9sb2NrLCBmbGFncyk7DQo+IC0gICAgICAgbGlzdF9kZWxfcmN1KCZ2bWRpcnEtPm5v
-ZGUpOw0KPiAtICAgICAgIElOSVRfTElTVF9IRUFEX1JDVSgmdm1kaXJxLT5ub2RlKTsNCj4gKyAg
-ICAgICBpZiAodm1kaXJxLT5ub2RlLnByZXYgIT0gTElTVF9QT0lTT04yKQ0KPiArICAgICAgICAg
-ICAgICAgbGlzdF9kZWxfcmN1KCZ2bWRpcnEtPm5vZGUpOw0KPiAgICAgICAgIHJhd19zcGluX3Vu
-bG9ja19pcnFyZXN0b3JlKCZsaXN0X2xvY2ssIGZsYWdzKTsgIH0NCj4NCj4gLS0NCj4gMi43LjIN
-Cj4NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
-InVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgDQo+IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIA0KPiBpbmZvIGF0ICBodHRw
-Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
+
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/pci/pcie/aspm.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 2dfe7fd..920df3f 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -814,7 +814,7 @@ static int pcie_aspm_get_policy(char *buffer, struct kernel_param *kp)
+ }
+ 
+ module_param_call(policy, pcie_aspm_set_policy, pcie_aspm_get_policy,
+-	NULL, 0644);
++	NULL, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+ #ifdef CONFIG_PCIEASPM_DEBUG
+ static ssize_t link_state_show(struct device *dev,
+@@ -886,8 +886,8 @@ static ssize_t clk_ctl_store(struct device *dev,
+ 	return n;
+ }
+ 
+-static DEVICE_ATTR(link_state, 0644, link_state_show, link_state_store);
+-static DEVICE_ATTR(clk_ctl, 0644, clk_ctl_show, clk_ctl_store);
++static DEVICE_ATTR(link_state, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, link_state_show, link_state_store);
++static DEVICE_ATTR(clk_ctl, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, clk_ctl_show, clk_ctl_store);
+ 
+ static char power_group[] = "power";
+ void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
+-- 
+2.9.2
+
