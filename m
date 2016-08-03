@@ -1,110 +1,255 @@
-Return-Path: <aik@ozlabs.ru>
-Return-Path: <aik@ozlabs.ru>
-Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
-To: Alexander Duyck <alexander.duyck@gmail.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
- <1452684335-46107-4-git-send-email-hare@suse.de>
- <20160209210458.GB32530@localhost>
- <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
- <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
- <1470787409.3015.81.camel@kernel.crashing.org>
- <CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
- <1470873296.3015.117.camel@kernel.crashing.org>
- <CAKgT0UcPh2RZazDL-cJbJkZFUJ03kTocn5H7WA=Kk_+S-CV_HA@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Hannes Reinecke <hare@suse.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Babu Moger <babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
- Alex Williamson <alex.williamson@redhat.com>, santosh@chelsio.com,
- Netdev <netdev@vger.kernel.org>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <434b1ad9-50ba-6021-ad6b-e4660cb43a61@ozlabs.ru>
-Date: Tue, 16 Aug 2016 11:40:52 +1000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKgT0UcPh2RZazDL-cJbJkZFUJ03kTocn5H7WA=Kk_+S-CV_HA@mail.gmail.com>
-Content-Type: text/plain; charset=koi8-r
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 03 Aug 2016 10:19:43 -0400
+From: nwatters@codeaurora.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH v3 13/13] drivers: acpi: iort: introduce
+ iort_iommu_configure
+In-Reply-To: <1469013815-24380-14-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1469013815-24380-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1469013815-24380-14-git-send-email-lorenzo.pieralisi@arm.com>
+Message-ID: <016fb1080595ef61ec7a91da15ef2430@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/08/16 04:52, Alexander Duyck wrote:
-> On Wed, Aug 10, 2016 at 4:54 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
->> On Wed, 2016-08-10 at 08:47 -0700, Alexander Duyck wrote:
->>>
->>> The problem is if we don't do this it becomes possible for a guest to
->>> essentially cripple a device on the host by just accessing VPD
->>> regions that aren't actually viable on many devices.
->>
->> And ? We already can cripple the device in so many different ways
->> simpy because we have pretty much full BAR access to it...
->>
->>>  We are much better off
->>> in terms of security and stability if we restrict access to what
->>> should be accessible.
->>
->> Bollox. I've heard that argument over and over again, it never stood
->> and still doesn't.
->>
->> We have full BAR access for god sake. We can already destroy the device
->> in many cases (think: reflashing microcode, internal debug bus access
->> with a route to the config space, voltage/freq control ....).
->>
->> We aren't protecting anything more here, we are just adding layers of
->> bloat, complication and bugs.
+On 2016-07-20 07:23, Lorenzo Pieralisi wrote:
+> DT based systems have a generic kernel API to configure IOMMUs
+> for devices (ie of_iommu_configure()).
 > 
-> To some extent I can agree with you.  I don't know if we should be
-> restricting the VFIO based interface the same way we restrict systemd
-> from accessing this region.  In the case of VFIO maybe we need to look
-> at a different approach for accessing this.  Perhaps we need a
-> privileged version of the VPD accessors that could be used by things
-> like VFIO and the cxgb3 driver since they are assumed to be a bit
-> smarter than those interfaces that were just trying to slurp up
-> something like 4K of VPD data.
+> On ARM based ACPI systems, the of_iommu_configure() equivalent can
+> be implemented atop ACPI IORT kernel API, with the corresponding
+> functions to map device identifiers to IOMMUs and retrieve the
+> corresponding IOMMU operations necessary for DMA operations set-up.
 > 
->>>  In this case what has happened is that the
->>> vendor threw in an extra out-of-spec block and just expected it to
->>> work.
->>
->> Like vendors do all the time in all sort of places
->>
->> I still completely fail to see the point in acting as a filtering
->> middle man.
+> By relying on the iommu_fwspec generic kernel infrastructure,
+> implement the IORT based IOMMU configuration for ARM ACPI systems
+> and hook it up in the ACPI kernel layer that implements DMA
+> configuration for a device.
 > 
-> The problem is we are having to do some filtering because things like
-> systemd were using dumb accessors that were trying to suck down 4K of
-> VPD data instead of trying to parse through and read it a field at a
-> time.
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>  drivers/acpi/iort.c  | 64 
+> ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/acpi/scan.c  |  7 +++++-
+>  include/linux/iort.h |  4 ++++
+>  3 files changed, 74 insertions(+), 1 deletion(-)
 > 
->>> In order to work around it we just need to add a small function
->>> to drivers/pci/quirks.c that would update the VPD size reported so
->>> that it matches what the hardware is actually providing instead of
->>> what we can determine based on the VPD layout.
->>>
->>> Really working around something like this is not much different than
->>> what we would have to do if the vendor had stuffed the data in some
->>> reserved section of their PCI configuration space.
->>
->> It is, in both cases we shouldn't have VFIO or the host involved. We
->> should just let the guest config space accesses go through.
->>
->>>   We end up needing
->>> to add special quirks any time a vendor goes out-of-spec for some
->>> one-off configuration interface that only they are ever going to use.
->>
->> Cheers,
->> Ben.
+> diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+> index c116b68..a12a4ff 100644
+> --- a/drivers/acpi/iort.c
+> +++ b/drivers/acpi/iort.c
+> @@ -18,6 +18,7 @@
 > 
-> If you have a suggestion on how to resolve this patches are always
-> welcome.  Otherwise I think the simpler approach to fixing this
-> without re-introducing the existing bugs is to just add the quirk.  I
-> will try to get to it sometime this weekend if nobody else does.  It
-> should be pretty straight foward, but I just don't have the time to
-> pull up a kernel and generate a patch right now.
+>  #define pr_fmt(fmt)	"ACPI: IORT: " fmt
+> 
+> +#include <linux/iommu-fwspec.h>
+>  #include <linux/iort.h>
+>  #include <linux/kernel.h>
+>  #include <linux/list.h>
+> @@ -27,6 +28,8 @@
+> 
+>  #define IORT_TYPE_MASK(type)	(1 << (type))
+>  #define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
+> +#define IORT_IOMMU_TYPE		((1 << ACPI_IORT_NODE_SMMU) |	\
+> +				(1 << ACPI_IORT_NODE_SMMU_V3))
+> 
+>  struct iort_its_msi_chip {
+>  	struct list_head	list;
+> @@ -458,6 +461,67 @@ iort_get_device_domain(struct device *dev, u32 
+> req_id)
+>  	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+>  }
+> 
+> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+> +{
+> +	u32 *rid = data;
+> +
+> +	*rid = alias;
+> +	return 0;
+> +}
+> +
+> +static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
+> +			       struct fwnode_handle *fwnode)
+> +{
+> +	int ret = iommu_fwspec_init(dev, fwnode);
+> +
+> +	if (!ret)
+> +		ret = iommu_fwspec_add_ids(dev, &streamid, 1);
+> +
+> +	return 0;
 
+Are you intentionally returning 0 instead of ret? How about doing this 
+instead?
 
-How exactly is mine - https://lkml.org/lkml/2016/8/11/200 - bad (except
-missing rb/ab from Chelsio folks)? Thanks.
+	return ret ? ret : iommu_fwspec_add_ids(dev, &streamid, 1);
 
+> +}
+> +
+> +/**
+> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
+> + *
+> + * @dev: device to configure
+> + *
+> + * Returns: iommu_ops pointer on configuration success
+> + *          NULL on configuration failure
+> + */
+> +const struct iommu_ops *iort_iommu_configure(struct device *dev)
+> +{
+> +	struct acpi_iort_node *node, *parent;
+> +	struct fwnode_handle *iort_fwnode;
+> +	u32 rid = 0, devid = 0;
+
+Since this routine maps the RID space of a device to the StreamID space 
+of its
+parent smmu, would you consider renaming the devid variable to some form 
+of sid
+or streamid?
+
+> +
+> +	if (dev_is_pci(dev)) {
+> +		struct pci_bus *bus = to_pci_dev(dev)->bus;
+> +
+> +		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
+> +				       &rid);
+> +
+> +		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> +				      iort_match_node_callback, &bus->dev);
+> +	} else {
+> +		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> +				      iort_match_node_callback, dev);
+> +	}
+> +
+> +	if (!node)
+> +		return NULL;
+> +
+> +	parent = iort_node_map_rid(node, rid, &devid, IORT_IOMMU_TYPE);
+> +	if (parent) {
+> +		iort_fwnode = iort_get_fwnode(parent);
+> +		if (iort_fwnode) {
+> +			arm_smmu_iort_xlate(dev, devid, iort_fwnode);
+
+What about named components with multiple stream ids? Since establishing 
+the
+relationship between a named component and its parent smmu is already 
+dependent
+on there being an appropriate mapping of rid 0, it stands to reason that 
+all of
+the stream ids for a named component could be enumerated by mapping 
+increasing
+rid values until the output parent no longer matches that returned for 
+rid 0.
+
+> +			return fwspec_iommu_get_ops(iort_fwnode);
+> +		}
+> +	}
+> +
+> +	return NULL;
+> +}
+
+It should be noted that while trying out the approach described above, I 
+noticed
+that each of the smmu attached named components described in my iort 
+were ending
+up with an extra stream id. The culprit appears to be that the range 
+checking in
+iort_id_map() is overly permissive on the upper bounds. For example, 
+mappings
+with input_base=N and id_count=1 were matching both N and N+1. The 
+following
+change fixed the issue.
+
+@@ -296,7 +296,7 @@ iort_id_map(struct acpi_iort_id_mapping *map, u8 
+type, u32 rid_in, u32 *rid_out)
+         }
+
+         if (rid_in < map->input_base ||
+-           (rid_in > map->input_base + map->id_count))
++           (rid_in >= map->input_base + map->id_count))
+                 return -ENXIO;
+
+         *rid_out = map->output_base + (rid_in - map->input_base);
+
+> +
+>  static void acpi_smmu_v3_register_irq(int hwirq, const char *name,
+>  				      struct resource *res)
+>  {
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index b4b9064..de28825 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -7,6 +7,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/kernel.h>
+>  #include <linux/acpi.h>
+> +#include <linux/iort.h>
+>  #include <linux/signal.h>
+>  #include <linux/kthread.h>
+>  #include <linux/dmi.h>
+> @@ -1365,11 +1366,15 @@ enum dev_dma_attr acpi_get_dma_attr(struct
+> acpi_device *adev)
+>   */
+>  void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+>  {
+> +	const struct iommu_ops *iommu;
+> +
+> +	iommu = iort_iommu_configure(dev);
+> +
+>  	/*
+>  	 * Assume dma valid range starts at 0 and covers the whole
+>  	 * coherent_dma_mask.
+>  	 */
+> -	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
+> +	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+>  			   attr == DEV_DMA_COHERENT);
+
+If dev has a matching named component iort entry with a non-zero value 
+for
+memory_address_limit, why not use that as the size input to 
+arch_setup_dma_ops?
+
+>  }
+> 
+> diff --git a/include/linux/iort.h b/include/linux/iort.h
+> index 18e6836..bbe08ef 100644
+> --- a/include/linux/iort.h
+> +++ b/include/linux/iort.h
+> @@ -34,6 +34,8 @@ struct irq_domain *iort_get_device_domain(struct
+> device *dev, u32 req_id);
+>  /* IOMMU interface */
+>  int iort_add_smmu_platform_device(struct fwnode_handle *fwnode,
+>  				  struct acpi_iort_node *node);
+> +
+> +const struct iommu_ops *iort_iommu_configure(struct device *dev);
+>  #else
+>  static inline bool iort_node_match(u8 type) { return false; }
+>  static inline void iort_table_detect(void) { }
+> @@ -48,6 +50,8 @@ iort_add_smmu_platform_device(struct fwnode_handle 
+> *fwnode,
+>  {
+>  	return -ENODEV;
+>  }
+> +static inline const struct iommu_ops *
+> +iort_iommu_configure(struct device *dev) { return NULL; }
+>  #endif
+> 
+>  #define IORT_ACPI_DECLARE(name, table_id, fn)		\
 
 -- 
-Alexey
+Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
+Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+Linux Foundation Collaborative Project.
