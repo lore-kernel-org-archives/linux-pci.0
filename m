@@ -1,90 +1,45 @@
-Return-Path: <wangyijing@huawei.com>
-Return-Path: <wangyijing@huawei.com>
-Subject: Re: [PATCH] PCI: release pci_host_bridge resource after remove root
- bus
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
- <20160822172821.GG18628@localhost>
-CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <linux-acpi@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-From: wangyijing <wangyijing@huawei.com>
-Message-ID: <57BBB383.50503@huawei.com>
-Date: Tue, 23 Aug 2016 10:22:59 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37671 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682AbcHCK6M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Aug 2016 06:58:12 -0400
+Subject: Re: [RFC 7/7] NVMe: CMB on DMA-BUF
+To: Christoph Hellwig <hch@infradead.org>,
+	Haggai Eran <haggaie@mellanox.com>
+References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+ <1470034653-9097-8-git-send-email-haggaie@mellanox.com>
+ <20160801155206.GA23224@infradead.org>
+Cc: linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org,
+	Liran Liss <liranl@mellanox.com>, linux-pci@vger.kernel.org,
+	Yishai Hadas <yishaih@mellanox.com>,
+	Stephen Bates <stephen.bates@microsemi.com>,
+	Leon Romanovsky <leonro@mellanox.com>,
+	Artemy Kovalyov <artemyko@mellanox.com>,
+	Jerome Glisse <j.glisse@gmail.com>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <0c87a1be-96e0-6aa2-920c-53203b5ad9dc@grimberg.me>
+Date: Wed, 3 Aug 2016 13:02:07 +0300
 MIME-Version: 1.0
-In-Reply-To: <20160822172821.GG18628@localhost>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20160801155206.GA23224@infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hey Christoph, Haggai,
 
+>> Allocate a CMB region to user-space as a DMA-BUF object.
+>
+> NACK.  Absolutely no way we're going to export a low-level device
+> specific feature to userspace like that.  If you want to DMA to
+> the CMB do it from the kernel, and for that we'll need a proper
+> block device level API.
 
-在 2016/8/23 1:28, Bjorn Helgaas 写道:
-> On Thu, Jun 23, 2016 at 07:42:18PM +0800, Yijing Wang wrote:
->> pci_host_bridge holds the top resources(IO port/Mem/bus),
->> now we release pci_host_bridge resources in
->> acpi_pci_root_release_info() which would be called when
->> pci_host_bridge device refcount reach 0. In some cases,
->> pci_host_bridge refcount cannot reach 0 after we remove
->> pci root bus in pci_remove_root_bus(). 
-> 
-> Did you figure out *why* the host bridge refcount is non-zero?
-> That seems like it could be part of the problem.
+I think that in this patch, Haggai was aiming to demonstrate the use
+of dma_buf for peer2peer transactions with an RDMA device. I agree
+that the CMB example can/should be exposed in the block device level,
+but I also think we'd like to generalize the way we expose a bar space
+of any peer device to another peer device.
 
-1. pci_create_root_bus()  //root bus get a refcount of hostbridge， put the
-   refcount when root bus release(bus dev refcount == 0);
-2. pci_alloc_dev()  //pci dev get a refcount of pci_bus, put the refcount
-   when pci_dev release(pci_dev refcount == 0)
-3. some upper driver could get the pci dev refcount(e.g. we found if we mount a fs in mptsas disk, the mptsas pci dev refcount would be added)
-
-4. if we start remove the root bus before umount, in this case, the mptsas pci dev refcount won't reach 0, so as the step 1 and 2 show,
-   the root bus and host bridge refcount won't reach 0 too.
-
-
-> 
-> You're moving some release_resource() calls from pci_root.c to
-> host-bridge.c.  Where are the corresponding insert or request resource
-> calls?  It's more maintainable if we keep the insert and remove paths
-> close in the code.
-> 
->> Then if we want to
->> hot add pci root bus, we cannot use pci_host_bridge
->> resources because of conflicts with old resources which are
->> still in system. I think this is not reasonable.
->>
->> 1. For pci devices, we would release their resources in
->>    pci_destroy_dev() regardless of pci device refcount.
->> 2. When we try to remove pci root bus, there is no devices
->>    need to use the pci_host_bridge resources again, release
->>    pci_host_bridge resources is safe.
->> 3. In some cases, users woule make mistake, for example,
->>    user get a pci device(increase refcount), but forget to
->>    put this device, then if we do hotplug pci root bus,
->>    it would make all pci devices cannot work after hot add.
-> 
-> Can you explain this a little more?  Are you talking about a *driver*
-> that forgets to put the device?
-
-Yes, may some pci drivers make a mistake, the refcount control the device object
-release is fine, but I think move the mem resource release out is better.
-
-> 
->> I found this issue in the following case:
->> 1. I have a raid pci device in my system;
->> 2. I mount a disk which connect to this raid.
->> 3. hot remove the pci root bus.
->> 4. hot add the pci root bus.
->> 5. found the resource conflicts for the children pci devices under this root bus.
->>
->> pci_root_bus increase a refcount at pci_host_bridge.
->> pci_root_bus decrease a refcount at pci_host_bridge in
->>   release_pcibus_dev() when pci_root_bus device refcount reach 0.
->>
->> pci_dev increase a refcount at pci_bus in pci_alloc_dev().
->> pci_dev decrease a refcount at pci_bus in pci_release_dev()
->> when pci_dev refcount reach 0.
->>
->> If any pci device refcount cannot reach 0, then its pci_bus
->> refcount cannot reach 0 too, the result is pci_host_bridge
->> refcount cannot reach 0.
-> 
-> .
-> 
+How would you suggest we do that? I think Haggai's proposal is pretty
+solid (considering the fact that the vast majority of RDMA applications
+live in user-space).
