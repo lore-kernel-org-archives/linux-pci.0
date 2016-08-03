@@ -1,72 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43040 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755386AbcHYNmQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Aug 2016 09:42:16 -0400
-Date: Thu, 25 Aug 2016 08:41:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH 1/2] PCI: rockchip: fix broken ASPM due to incorrect
- L1PwrOnSc/Val
-Message-ID: <20160825134144.GA11257@localhost>
-References: <1472112214-31550-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 3 Aug 2016 02:47:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: Support for configurable PCIe endpoint
+Message-ID: <20160803094747.GA10170@infradead.org>
+References: <57A18927.9070003@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472112214-31550-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <57A18927.9070003@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Daney <david.daney@cavium.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Joao Pinto <jpinto@synopsys.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Jason Cooper <jason@lakedaemon.net>,
+ "arnd@arndb.de" <arnd@arndb.de>, Simon Horman <horms@verge.net.au>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Richard Zhu <Richard.Zhu@freescale.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Ley Foon Tan <lftan@altera.com>,
+ Roy Zang <tie-fei.zang@freescale.com>, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 25, 2016 at 04:03:34PM +0800, Shawn Lin wrote:
-> This is a bug of controller found recently which makes the
-> default values of L1PwrOnSc and L1PwrOnVal unreliable when
-> enabling ASPM. We could work around this by reading L1 substate
-> control 2 register and then write back the value again.
+On Wed, Aug 03, 2016 at 11:33:19AM +0530, Kishon Vijay Abraham I wrote:
+> Hi,
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> The PCIe controller present in TI's DRA7 SoC is capable of operating either in
+> Root Complex mode or Endpoint mode. (It uses Synopsys Designware Core).I'd
+> assume most of the PCIe controllers on other platforms that use Designware core
+> should also be capable to operate in endpoint mode. But linux kernel right now
+> supports only RC mode.
+> 
+> PCIe endpoint support discussion came up briefly before [1] but it was felt the
+> practical use case will find firmware more suitable and endpoint support in
+> kernel can be used only for validation or demo.
 
-My pci/host-rockchip branch hasn't been merged anywhere, so I just folded
-both these patches into the original commits.
+I disagree.  It's highly useful for rapid prototyping of hardware
+interfaces, and I've been looking into PCIe EP drivers for exactly
+that reason recently.  Going a little offtopic: any good DRA7 eval
+boards you'd recommend to try for this purpose?
 
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 1671d02..ed782b51 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -40,6 +40,7 @@
->  #define PCIE_CLIENT_BASE			0x0
->  #define PCIE_RC_CONFIG_NORMAL_BASE		0x800000
->  #define PCIE_RC_CONFIG_BASE			0xa00000
-> +#define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2	0x90c
->  #define PCIE_RC_CONFIG_LCSR			0xd0
->  #define  PCIE_RC_CONFIG_LCSR_LBMIE		BIT(10)
->  #define  PCIE_RC_CONFIG_LCSR_LABIE		BIT(11)
-> @@ -477,6 +478,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
->  		return err;
->  	}
->  
-> +	/*
-> +	 * We need to read/write PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2
-> +	 * before enabling ASPM. Otherwise L1PwrOnSc and L1PwrOnVal isn't
-> +	 * reliable which makes the controller in broken state when
-> +	 * enabling ASPM. This is a controller's bug we need to work
-> +	 * around.
-> +	 */
-> +	status = pcie_read(port,  PCIE_RC_CONFIG_BASE +
-> +				  PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
-> +	pcie_write(port, status,  PCIE_RC_CONFIG_BASE +
-> +				  PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
-> +
->  	/* Enable Gen1 training */
->  	pcie_write(port,
->  		   HIWORD_UPDATE(PCIE_CLIENT_LINK_TRAIN_ENABLE,
-> -- 
-> 2.3.7
-> 
-> 
+We already have a EP driver in the tree:
+
+drivers/misc/spear13xx_pcie_gadget.c
+
+but as far as I can tell it doesn't really work at the moment.
+
+> Validation or demo is itself a valid use case in my opinion (consider something
+> similar to gadget zero for USB). There can be other use cases as well. The RC
+> can use the SoC with EP mode support as an accelerator to accomplish specific
+> task. Here RC gives data to the EP. The EP processes the data. The processing
+> can be done either in ARM itself or it can use other hardware accelerators
+> (like DSP, IVA-HD etc..) present in the EP system. If HW accelerator is used,
+> the linux kernel running in ARM can be used to accomplish other tasks. Once EP
+> mode support is added, I think more use cases will be added.
+
+That sounds useful as well.
+
+> >From the high level this should look _similar_ to the gadget framework of USB.
+> One difference from USB would be this should allow HW components (like DSP, PRU
+> etc.. and maybe even some peripheral) in the EP system to be used by RC system.
+
+Indeed.
+
+> So these are the high-level steps that I thought would be needed to add EP
+> support in linux.
+> *) move pcie-designware.c out of drivers/pci/host (maybe create a
+> drivers/pci/designware/ folder?). All users of pcie-designware.c should be
+> moved here.
+> This is in preparation for adding EP mode support to designware.
+
+I'd use a new drivers/pci/controller.  Or maybe just skip the rename
+for now and see how this evolves.
+
+The rest of the plan sounds fine to me.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
