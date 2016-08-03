@@ -1,75 +1,117 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Thu, 18 Aug 2016 12:05:16 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 0/3] Limiting pci access requests
-Message-ID: <20160818160516.GB27538@localhost.localdomain>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
- <20160809173633.GF27301@localhost>
- <20160809185654.GA32692@localhost.localdomain>
- <20160809185628.GA6729@wunner.de>
- <20160817210539.GA25146@localhost.localdomain>
- <20160818140213.GA10631@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: Support for configurable PCIe endpoint
+Date: Wed, 03 Aug 2016 09:42:39 +0200
+Message-ID: <2795776.a946dnWVV6@wuerfel>
+In-Reply-To: <57A18927.9070003@ti.com>
+References: <57A18927.9070003@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160818140213.GA10631@wunner.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Daney <david.daney@cavium.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Joao Pinto <jpinto@synopsys.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Kishon Vijay Abraham I <kishon@ti.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Jason Cooper <jason@lakedaemon.net>, Simon Horman <horms@verge.net.au>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Richard Zhu <Richard.Zhu@freescale.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Jon Mason <jdmason@kudzu.us>,
+ Ley Foon Tan <lftan@altera.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 18, 2016 at 04:02:13PM +0200, Lukas Wunner wrote:
-> TBH I don't understand exactly how you trigger these errors. Re-reading
-> patch [1/3], I can only guess that pci_find_next_ext_capability() might
-> be called from aerdrv via pci_find_ext_capability(). The other patches
-> concern aerdrv, so that guess seems plausible. Explaining the call stack
-> would be helpful.
+On Wednesday, August 3, 2016 11:33:19 AM CEST Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> The PCIe controller present in TI's DRA7 SoC is capable of operating either in
+> Root Complex mode or Endpoint mode. (It uses Synopsys Designware Core).I'd
+> assume most of the PCIe controllers on other platforms that use Designware core
+> should also be capable to operate in endpoint mode. But linux kernel right now
+> supports only RC mode.
+> 
+> PCIe endpoint support discussion came up briefly before [1] but it was felt the
+> practical use case will find firmware more suitable and endpoint support in
+> kernel can be used only for validation or demo.
+> 
+> Validation or demo is itself a valid use case in my opinion (consider something
+> similar to gadget zero for USB). There can be other use cases as well. The RC
+> can use the SoC with EP mode support as an accelerator to accomplish specific
+> task. Here RC gives data to the EP. The EP processes the data. The processing
+> can be done either in ARM itself or it can use other hardware accelerators
+> (like DSP, IVA-HD etc..) present in the EP system. If HW accelerator is used,
+> the linux kernel running in ARM can be used to accomplish other tasks. Once EP
+> mode support is added, I think more use cases will be added.
+> 
+> From the high level this should look _similar_ to the gadget framework of USB.
+> One difference from USB would be this should allow HW components (like DSP, PRU
+> etc.. and maybe even some peripheral) in the EP system to be used by RC system.
 
-Yes, I believe the majority of what we observed in protocol traces did
-originate from the aer driver.
+(Adding Jon Mason)
 
-pci_find_capability already breaks early on an all 1's, so patch 1/3
-just provides the same benefit to searching the extended capabilities.
+We have the drivers/ntb framework, which in theory should be able to handle
+this, but in practice is only used for a very small number of bridge
+implementations, and is also limited in the way it can be configured
+(compared to USB gadget)
 
-Caching the AER capability may obviate the immediate benefit of 1/3,
-but I think it's still a good change.
- 
-> How is it possible that a device is accessed that no longer exists?
+> So these are the high-level steps that I thought would be needed to add EP
+> support in linux.
+> *) move pcie-designware.c out of drivers/pci/host (maybe create a
+> drivers/pci/designware/ folder?). All users of pcie-designware.c should be
+> moved here.
+> This is in preparation for adding EP mode support to designware.
 
-Surprise hot removal.
+A lot of the other drivers in drivers/pci/host support endpoint mode too,
+I don't think moving them all elsewhere is helpful or necessary here.
 
-> Are these (native) pciehp ports and the attached pci_dev isn't torn
-> down quickly enough? Do we need some kind of locking or an atomic flag
-> that prevents accesses to devices until they're torn down completely?
+> *) Add library functions in pcie-designware.c specific to EP mode like
+> initializing general ecam registers, BAR registers etc.. These functions should
+> be invoked from a *function* driver (function driver should determine the use
+> of a particular EP).
+> 
+> *) Add a sample *function* driver that can be used just for validation. This
+> function driver will invoke the previously added functions in PCIe controller
+> to initialize ecam, BAR etc.. This will invoke the PCIe controller functions
+> through *ep-core* layer. That way the same function driver can be made to work
+> with different PCIe controllers. (A PCIe driver corresponding to this function
+> driver should also be implemented in RC side)
+> 
+> *) Add *ep-core* layer to bind the function driver to the controller driver and
+> using which the function driver will invoke controller driver callbacks (to
+> initialize ecam, BAR registers etc..)
 
-Tearing down a device and unbinding it from a driver generates lots of
-additional accesses. Patch 2/3 removes MSI-x teardown which was one of
-the larger sources of config and MMIO access to a non-existent device.
+I think we should first have a rough idea what the framework should look like,
+and how it handles having multiple hardware implementation and multiple
+protocol implementations, before we modify a particular driver.
 
-There are others, too. Heck, even checking if the device is present
-(pci_device_is_present) generates config access to the removed device. :)
+So this step here should come a bit earlier than the others.
 
-What do you think about adding a state to the pci_dev to say that it is
-removed? The state can be set by pciehp or pcie-dpc if either detects
-removal or link down, or on the first ~0 completion. Then have the
-teardown check for the removal state before doing orderly device removal.
+> *) Modify platform driver to support EP mode (in my case pci-dra7xx.c).
+> 
+> *) dt binding specific to EP mode should be created.
 
-> Since your patches pertain to aerdrv, do we need synchronization between
-> the pciehp and aer drivers so that aer doesn't touch a device for which
-> pciehp has sensed removal? (Is the interrupt shared between pciehp and
-> aerdrv?)
+Right.
 
-pciehp and aerdrv can share an interrupt on root ports, but that's it.
-The aer driver, though, does access every device in its sub-tree.
-There's also pciehp and pcie-dpc that could benifit from coordination.
+	Arnd
 
-I can look into these, but it's much less trivial than these incremental
-improvements. I'm hoping we can clean up these biggest offenders first
-before attempting a more risky synchronization among the different
-services.
-
-I have a v2 series ready that addresses Bjorn's comment on caching AER cap
-position, but that's the only difference I've accumulated so far from v1.
-
-Thanks,
- Keith
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
