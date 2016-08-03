@@ -1,81 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:50238 "EHLO
-        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756610AbcHVWAd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2016 18:00:33 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        <linux-pci@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>
-Subject: [PATCH 7/8] PCI: exynos: make host support explicitly non-modular
-Date: Mon, 22 Aug 2016 17:59:47 -0400
-Message-ID: <20160822215948.27251-8-paul.gortmaker@windriver.com>
-In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 3 Aug 2016 10:43:54 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xavier.gnata@gmail.com, gregkh@linuxfoundation.org
+Subject: Re: [PATCH 1/2] thunderbolt: Fix resume quirk for Falcon Ridge 4C.
+Message-ID: <20160803084354.GA4360@wunner.de>
+References: <20160726164038.1481-1-andreas.noever@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160726164038.1481-1-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On Tue, Jul 26, 2016 at 06:40:37PM +0200, Andreas Noever wrote:
+> The quirk 'quirk_apple_wait_for_thunderbolt' did not fire on Falcon
+> Ridge 4C controllers with subdevice/subvendor set to zero. This lead
+> to lost pci devices on system resume.
+> 
+> Older thunderbolt controllers (pre Falcon Ridge) used the same device id
+> for bridges and for the controller. On Apple hardware the subvendor- &
+> subdevice-ids were set for the controller, but not for bridges. So that
+> is what was used to differentiate between the two. Starting with Falcon
+> Ridge bridges and controllers received different device ids.
+> Additionally on some MacBookPro models (but not all) the
+> subvendor/subdevice was zeroed.
+> 
+> Starting with a42fb351c (thunderbolt: Allow loading of module on recent
+> Apple MacBooks with thunderbolt 2 controller) the thunderbolt driver
+> binds to all Falcon Ridge 4C controllers (irregardless of
+> subvendor/subdevice). The corresponding quirk was not updated.
+> 
+> This commit changes the quirk to check the device class instead of its
+> subvendor-/subdeviceids. This works for all generations of Thunderbolt
+> controllers.
+> 
+> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 
-drivers/pci/host/Kconfig:config PCI_EXYNOS
-drivers/pci/host/Kconfig:       bool "Samsung Exynos PCIe controller"
+FWIW, this is
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
 
-...meaning that it currently is not being built as a module by anyone.
+I also tested it successfully on Light Ridge. I'm sending a follow-up
+patch separately so that Falcon Ridge chips are no longer declared
+unsupported.
 
-Lets remove the couple traces of modular infrastructure use, so that
-when reading the driver there is no doubt it is builtin-only.
+Thanks,
 
-Note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+Lukas
 
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kukjin Kim <kgene@kernel.org>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-samsung-soc@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pci-exynos.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 219976103efc..c3ae9c7a6e33 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -16,7 +16,7 @@
- #include <linux/gpio.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
-@@ -624,7 +624,6 @@ static const struct of_device_id exynos_pcie_of_match[] = {
- 	{ .compatible = "samsung,exynos5440-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, exynos_pcie_of_match);
- 
- static struct platform_driver exynos_pcie_driver = {
- 	.remove		= __exit_p(exynos_pcie_remove),
-@@ -641,7 +640,3 @@ static int __init exynos_pcie_init(void)
- 	return platform_driver_probe(&exynos_pcie_driver, exynos_pcie_probe);
- }
- subsys_initcall(exynos_pcie_init);
--
--MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
--MODULE_DESCRIPTION("Samsung PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
--- 
-2.8.4
-
+> ---
+>  drivers/pci/quirks.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ee72ebe..75b2105 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3326,8 +3326,7 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
+>  		    || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
+>  			nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+>  			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+> -		    || nhi->subsystem_vendor != 0x2222
+> -		    || nhi->subsystem_device != 0x1111)
+> +		    || nhi->class != PCI_CLASS_SYSTEM_OTHER << 8)
+>  		goto out;
+>  	dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish PCI tunnels...\n");
+>  	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
+> -- 
+> 2.9.0
