@@ -1,67 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39722 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752342AbcHAMZD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Aug 2016 08:25:03 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, corbet@lwn.net
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v6 0/8] thunderbolt: Introducing Thunderbolt(TM) networking
-Date: Mon,  1 Aug 2016 15:23:45 +0300
-Message-Id: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Support for configurable PCIe endpoint
+Date: Wed, 03 Aug 2016 18:03:54 +0200
+Message-ID: <2460140.yVuTYYqBTX@wuerfel>
+In-Reply-To: <20160803094747.GA10170@infradead.org>
+References: <57A18927.9070003@ti.com> <20160803094747.GA10170@infradead.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Daney <david.daney@cavium.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Joao Pinto <jpinto@synopsys.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Kishon Vijay Abraham I <kishon@ti.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Jason Cooper <jason@lakedaemon.net>, Simon Horman <horms@verge.net.au>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Richard Zhu <Richard.Zhu@freescale.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, jdmason@kudzu.us,
+ Ley Foon Tan <lftan@altera.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is version 6 of Thunderbolt(TM) driver for non-Apple hardware.
+On Wednesday, August 3, 2016 2:47:47 AM CEST Christoph Hellwig wrote:
+> On Wed, Aug 03, 2016 at 11:33:19AM +0530, Kishon Vijay Abraham I wrote:
+> > Hi,
+> > 
+> > The PCIe controller present in TI's DRA7 SoC is capable of operating either in
+> > Root Complex mode or Endpoint mode. (It uses Synopsys Designware Core).I'd
+> > assume most of the PCIe controllers on other platforms that use Designware core
+> > should also be capable to operate in endpoint mode. But linux kernel right now
+> > supports only RC mode.
+> > 
+> > PCIe endpoint support discussion came up briefly before [1] but it was felt the
+> > practical use case will find firmware more suitable and endpoint support in
+> > kernel can be used only for validation or demo.
+> 
+> I disagree.  It's highly useful for rapid prototyping of hardware
+> interfaces, and I've been looking into PCIe EP drivers for exactly
+> that reason recently.  Going a little offtopic: any good DRA7 eval
+> boards you'd recommend to try for this purpose?
+> 
+> We already have a EP driver in the tree:
+> 
+> drivers/misc/spear13xx_pcie_gadget.c
+> 
+> but as far as I can tell it doesn't really work at the moment.
+> 
 
-Changes since v5:
- - Removed the padding of short packets in receive
- - Replaced RW semaphore with mutex
- - Cleanup
+This is indeed for the designware pcie hardware, but it never worked
+in a mainline kernel, and I marked it 'depends on BROKEN' after it
+had not correctly compiled for a long time. It's also lacking because
+it neither abstracts the hardware nor the protocol, and I think we
+want both.
 
-These patches were pushed to GitHub where they can be reviewed more
-comfortably with green/red highlighting:
-	https://github.com/01org/thunderbolt-software-kernel-tree
+drivers/ntb seems like a reasonable start, while an alternative
+approach that we have discussed in the past would be based on top
+of virtio, so we could use the existing front-end drivers (net, block,
+v9fs, console, ...).
 
-Daemon code:
-	https://github.com/01org/thunderbolt-software-daemon
+	Arnd
 
-For reference, here's a link to version 5:
-[v5]:	https://lkml.org/lkml/2016/7/28/85
-
-Amir Levy (8):
-  thunderbolt: Macro rename
-  thunderbolt: Updating the register definitions
-  thunderbolt: Kconfig for Thunderbolt(TM) networking
-  thunderbolt: Communication with the ICM (firmware)
-  thunderbolt: Networking state machine
-  thunderbolt: Networking transmit and receive
-  thunderbolt: Networking doc
-  thunderbolt: Adding maintainer entry
-
- Documentation/00-INDEX                   |    2 +
- Documentation/thunderbolt-networking.txt |  135 ++
- MAINTAINERS                              |    8 +-
- drivers/thunderbolt/Kconfig              |   25 +-
- drivers/thunderbolt/Makefile             |    3 +-
- drivers/thunderbolt/icm/Makefile         |   28 +
- drivers/thunderbolt/icm/icm_nhi.c        | 1622 +++++++++++++++++++++
- drivers/thunderbolt/icm/icm_nhi.h        |   93 ++
- drivers/thunderbolt/icm/net.c            | 2264 ++++++++++++++++++++++++++++++
- drivers/thunderbolt/icm/net.h            |  297 ++++
- drivers/thunderbolt/nhi_regs.h           |  115 +-
- 11 files changed, 4583 insertions(+), 9 deletions(-)
- create mode 100644 Documentation/thunderbolt-networking.txt
- create mode 100644 drivers/thunderbolt/icm/Makefile
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.c
- create mode 100644 drivers/thunderbolt/icm/icm_nhi.h
- create mode 100644 drivers/thunderbolt/icm/net.c
- create mode 100644 drivers/thunderbolt/icm/net.h
-
--- 
-2.7.4
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
