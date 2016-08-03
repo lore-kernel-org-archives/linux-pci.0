@@ -1,57 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0063.outbound.protection.outlook.com ([104.47.2.63]:14144
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750715AbcHGFYa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 7 Aug 2016 01:24:30 -0400
-Subject: Re: [RFC 7/7] NVMe: CMB on DMA-BUF
-To: "hch@infradead.org" <hch@infradead.org>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
- <1470034653-9097-8-git-send-email-haggaie@mellanox.com>
- <20160801155206.GA23224@infradead.org>
- <1470121814.20129.8.camel@mellanox.com>
- <20160804115624.GA12004@infradead.org>
-CC: Liran Liss <liranl@mellanox.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yishai Hadas <yishaih@mellanox.com>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"stephen.bates@microsemi.com" <stephen.bates@microsemi.com>,
-	Leon Romanovsky <leonro@mellanox.com>,
-	Kovalyov Artemy <artemyko@mellanox.com>,
-	"j.glisse@gmail.com" <j.glisse@gmail.com>,
-	William Davis <wdavis@nvidia.com>
-From: Haggai Eran <haggaie@mellanox.com>
-Message-ID: <666d2c1e-77cb-c2b3-963f-cd0502ee5335@mellanox.com>
-Date: Sun, 7 Aug 2016 08:24:16 +0300
+Received: from mailout3.hostsharing.net ([176.9.242.54]:50009 "EHLO
+	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755841AbcHCM2Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Aug 2016 08:28:25 -0400
+Date: Wed, 3 Aug 2016 14:28:48 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
+ system sleep
+Message-ID: <20160803122848.GA4415@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <20160617210924.GA12254@localhost>
+ <20160617221407.GB1927@wunner.de>
+ <2339231.tBO8VQgPAo@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20160804115624.GA12004@infradead.org>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2339231.tBO8VQgPAo@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/4/2016 2:56 PM, hch@infradead.org wrote:
->> Anyway, I understand exposing the CMB directly might be a little too
->> low level. What do you think would work better? Something like
->> direct_access that returns bus addresses instead of pfns?
+On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
+> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
+> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
+> > > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
+> > > > There are devices wich are not power-managed by the platform, yet can be
+> > > > runtime suspended to D3cold with some other mechanism.  When putting the
+> > > > system to sleep, we currently handle such devices improperly by trying
+> > > > to transition them from D3cold to D3hot (the default power state defined
+> > > > at the beginning of pci_target_state()).  Avoid that.
+> > > > 
+> > > > An example for devices affected by this are Thunderbolt controllers
+> > > > built into Macs which can be put into D3cold with nonstandard ACPI
+> > > > methods.
+> > > > 
+> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > > 
+> > > This needs an ack from Rafael.
+> > > 
+> > > > ---
+> > > >  drivers/pci/pci.c | 2 ++
+> > > >  1 file changed, 2 insertions(+)
+> > > > 
+> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > index 791dfe7..6af9911 100644
+> > > > --- a/drivers/pci/pci.c
+> > > > +++ b/drivers/pci/pci.c
+> > > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
+> > > >  			      && !(dev->pme_support & (1 << target_state)))
+> > > >  				target_state--;
+> > > >  		}
+> > > > +	} else if (dev->current_state == PCI_D3cold) {
+> > > > +		target_state = PCI_D3cold;
+> > > >  	}
+> > > 
+> > > This only covers the case of !device_may_wakeup().  So I guess
+> > > device_may_wakeup() is false for these Thunderbolt controllers.
+> > > Is there a reason you don't want to do this check for devices that
+> > > may wakeup?
+> > 
+> > Fear of breaking things. It would mean that a device would be left in
+> > D3cold even though it may not be able to signal wakeup from that power
+> > state.
 > 
-> This would be my primary choicse.  We'll really need to built an
-> in-kernel framework for a) PCI P2P access involving drivers for the PCI
-> switches etc, 
-I was thinking perhaps the dma_map_resource patches by Will Davis [1]
-could be used (adding him to the thread).
+> Then it should not be put into D3_cold at run time too if it is wakeup-
+> capable.
+> 
+> > That's a change of behaviour the consequences of which I cannot
+> > estimate. Intuitively, I would expect breakage from such a change.
+> 
+> That would have been the case if the device had been capable of signaling
+> wakeup from D3_cold at run time, but not from system sleep.  However, that
+> can only happen when platform_pci_power_manageable() is true AFAICS.
+> 
+> So I'd change the switch () under the platform_pci_power_manageable() check
+> to return "state" in the default case and then do
+> 
+> 	return dev->current_state < target_state ? target_state : dev->current_state;
+> 
+> at the end of the function.
 
-> and then on top of that build something speicifly for
-> block drivers.  Which will be a bit complicated because both have the
-> case of directly memory mapped device as well as indirect devices like
-> the CMB.  I'm pretty sure we won't get it right at the first attempt,
-> so exposing it to userspace is an absolute no-go as that will lock us
-> into the first ABI forever.
-I understand. I'll try to think of something for kernel usage only for
-the next attempt.
+That suggestion doesn't seem to be correct because there's another
+value besides PCI_D3cold which is also greater than PCI_D3hot,
+namely PCI_UNKNOWN. (If the device is in that state, e.g. after
+pci_device_remove() has been called, and the system goes to sleep,
+we'd leave the device as is and not put it into D3hot as we do now.)
+
+I will update this patch with Bjorn's suggestion to also leave the
+device in D3cold if it is wakeup-capable. The idea is to just change
+the default state in the first line of the function like this:
+
+-	pci_power_t target_state = PCI_D3hot;
++	pci_power_t target_state =
++		dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
 
 Thanks,
-Haggai
 
-[1]
-https://lists.linuxfoundation.org/pipermail/iommu/2015-August/014106.html
+Lukas
