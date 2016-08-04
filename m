@@ -1,93 +1,154 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
+Return-Path: <rjwysocki@gmail.com>
+Return-Path: <rjwysocki@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 26 Aug 2016 07:04:32 -0400
-From: okaya@codeaurora.org
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Duc Dang <dhdang@apm.com>, Bjorn
- Helgaas <helgaas@kernel.org>, Rafael Wysocki <rafael@kernel.org>,
- linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, patches
- <patches@apm.com>, Bjorn Helgaas <bhelgaas@google.com>, Punit Agrawal
- <punit.agrawal@arm.com>
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-In-Reply-To: <20160826090813.GA1038@red-moon>
-References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
- <20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost>
- <20160824213005.1a9300ef@arm.com>
- <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
- <20160825121825.322d8450@arm.com>
- <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
- <20160825195917.0e75a8db@arm.com> <20160826090813.GA1038@red-moon>
-Message-ID: <38d7a30f5acfbb96f9d1567194209216@codeaurora.org>
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20160804081446.GA4576@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de> <20160617210924.GA12254@localhost>
+ <20160617221407.GB1927@wunner.de> <2339231.tBO8VQgPAo@vostro.rjw.lan>
+ <20160803122848.GA4415@wunner.de> <CAJZ5v0jxQHM=uuvFrpPw0vLbVjF0EQsm=XEZNdtQeYsO0ZobtQ@mail.gmail.com>
+ <20160804004538.GA4564@wunner.de> <CAJZ5v0h55MCiSzJz_weEGX7nUsy_TLumssyoXz=f2_b0h_BkQQ@mail.gmail.com>
+ <20160804081446.GA4576@wunner.de>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 4 Aug 2016 17:30:47 +0200
+Message-ID: <CAJZ5v0hPbeaUotiFxg_BbkS86HEz=u0ThkdwJju5WyXOuDgd6A@mail.gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for system sleep
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>, Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-08-26 05:08, Lorenzo Pieralisi wrote:
-> [ +Sinan ]
-> 
-> On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
-> 
-> [...]
-> 
->> > Thanks, Marc! It works, I tested on current X-Gene platforms that uses
->> > GICv2 and GICv2m.
+On Thu, Aug 4, 2016 at 10:14 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Thu, Aug 04, 2016 at 03:07:56AM +0200, Rafael J. Wysocki wrote:
+>> On Thu, Aug 4, 2016 at 2:45 AM, Lukas Wunner <lukas@wunner.de> wrote:
+>> > On Thu, Aug 04, 2016 at 01:50:39AM +0200, Rafael J. Wysocki wrote:
+>> >> On Wed, Aug 3, 2016 at 2:28 PM, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> > On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
+>> >> >> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
+>> >> >> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
+>> >> >> > > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
+>> >> >> > > > There are devices wich are not power-managed by the platform, yet can be
+>> >> >> > > > runtime suspended to D3cold with some other mechanism.  When putting the
+>> >> >> > > > system to sleep, we currently handle such devices improperly by trying
+>> >> >> > > > to transition them from D3cold to D3hot (the default power state defined
+>> >> >> > > > at the beginning of pci_target_state()).  Avoid that.
+>> >> >> > > >
+>> >> >> > > > An example for devices affected by this are Thunderbolt controllers
+>> >> >> > > > built into Macs which can be put into D3cold with nonstandard ACPI
+>> >> >> > > > methods.
+>> >> >> > > >
+>> >> >> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+>> >> >> > > > ---
+>> >> >> > > >  drivers/pci/pci.c | 2 ++
+>> >> >> > > >  1 file changed, 2 insertions(+)
+>> >> >> > > >
+>> >> >> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> >> >> > > > index 791dfe7..6af9911 100644
+>> >> >> > > > --- a/drivers/pci/pci.c
+>> >> >> > > > +++ b/drivers/pci/pci.c
+>> >> >> > > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
+>> >> >> > > >                               && !(dev->pme_support & (1 << target_state)))
+>> >> >> > > >                                 target_state--;
+>> >> >> > > >                 }
+>> >> >> > > > +       } else if (dev->current_state == PCI_D3cold) {
+>> >> >> > > > +               target_state = PCI_D3cold;
+>> >> >> > > >         }
+>> >> >> > >
+>> >> > I will update this patch with Bjorn's suggestion to also leave the
+>> >> > device in D3cold if it is wakeup-capable. The idea is to just change
+>> >> > the default state in the first line of the function like this:
+>> >> >
+>> >> > -       pci_power_t target_state = PCI_D3hot;
+>> >> > +       pci_power_t target_state =
+>> >> > +               dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
+>> >>
+>> >> That should work (even though it is a little clumsy IMO).
 >> >
->> > Will you commit this change? It will be a huge help as going with
->> > interrupt link will require firmware change.
->> 
->> Not for the time being. We now have an understanding of *why* things 
->> do
->> not work, but Lorenzo seems to have a good grasp on what we can do to
->> address it correctly, and we should explore this first. If (and only 
->> if)
->> there is a consensus that firmware already does all it should, then
->> I'll turn this hack into a proper series.
-> 
-> For the records, it is a discussion that already took place:
-> 
-> https://lkml.org/lkml/2016/3/14/923
-> 
-> As I have said there are already ARM64 systems with ACPI tables
-> out there using PCI interrupt links; I doubt that Qualcomm systems
-> allow to reconfigure the GIC interrupt pin allocated to legacy PCI
-> IRQs through interrupt links _SRS (hey it is *empty* :)),
-> therefore:
-> 
-> a) Some (the above is just an example from the mailing lists I am not
->    picking on anyone it is just for the sake of this discussion, I have
->    not dumped all ARM partners _PRT from their ACPI tables to check)
->    ACPI tables must be rewritten because they are not FW compliant
-> 
-> OR
-> 
-> b) We allow PCI interrupt links to be used for static interrupt
->    configurations
-> 
-> OR
-> 
-> c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
->    how GIC code can detect from which part of the kernel the interrupt
->    request is coming, unless we implement an 
-> ACPI-PCI-legacy-IRQ-special
->    gem)
-> 
-> Comments ?
-> 
-> Lorenzo
+>> > Not sure why that is clumsy but happy to use something else if you
+>> > have a suggestion?
+>>
+>> The clumsy thing is that we'd take the target_state as D3cold only if
+>> the device already was in that state.
+>>
+>> Otherwise, we'd take D3hot as the target state for the same device,
+>> which doesn't seem particularly consistent to me.
+>>
+>> Not that I have better ideas ATM, but then the current code works for
+>> my use cases. :-)
+>
+> The goal is to afford direct-complete to devices which are not power-
+> manageable by the platform but can still be runtime suspended to D3cold.
 
-I complained about active low assumption before when reviewing the 
-series from Tomasz too. The above discussion took place when refactoring 
-the pci link code.
+Well, this is a bit misleading.
 
- From Acpi spec perspective, both types of declarations are valid.
+According to the PCI spec there are two ways to put a device into
+D3cold: either by putting its bus into B3 (which for PCIe means
+turning the link off IIRC) which happens when the bridge goes into
+D3hot, or through the platform.
 
-It is just one syntax doesn't work on arm64. The other syntax is more 
-expressive and it works. That is the reason why link objects are used in 
-QCOM platforms.
+You aren't talking about any of those cases, though, so we go outside
+of the spec here.
 
-I think we need to fix the code by either changing the active low 
-assumption or the gic code.
+> Right now we wake those devices up from D3cold to D3hot before going to
+> sleep, which is a waste of energy and prolongs the suspend sequence
+> (waking up the Thunderbolt controller takes 2 seconds).
 
-Changing it at the gic level opens door for bugs that wouldn't be 
-otherwise caught. I would make this change in pci code.
+Understood.
+
+> The de facto standard to power manage such devices seems to be with
+> dev_pm_domain_set(). That's what vga_switcheroo does and I'll move
+> to that as well for v3 of this series.
+
+OK
+
+> I could add a "bool can_power_off" to struct dev_pm_domain.
+
+I'm not sure if dev_pm_domain is the right level.  The "can_power_off"
+thing would be sort of specific to your particular use case.
+
+Say you have something like
+
+struct pci_pm_domain {
+        struct dev_pm_domain pd;
+        ...
+};
+
+> Then I could change pci_target_state() like this:
+>
+>         pci_power_t target_state = PCI_D3hot;
+>
+>         if (platform_pci_power_manageable(dev)) {
+>                 [...]
+> +       } else if (dev->dev.pm_domain && dev->dev.pm_domain.can_power_off) {
+
+so you can do something like
+
+          } else if (dev->dev.pm_domain) {
+                    struct pci_pm_domain *pci_pd =
+to_pci_pm_domain(dev->dev.pm_domain);
+
+                    ....
+          } else if [...]
+
+and it may be a bit more PCI-oriented without expanding generic data types.
+
+> +               target_state = PCI_D3cold;
+>         } else if [...]
+>
+> Another idea would be to add a ->choose_state hook to dev_pm_domain,
+> but that would have to return a PCI-specific power state, so we'd be
+> in clumsy territory again.
+
+Right.
+
+> Thoughts?
+
+Essentially, the PCI PM code needs to be told that there is a way to
+put the device into D3cold by non-standard means.  There are a couple
+of ways to do that (a new flag in struct pci_dev, the above, probably
+more), but in any case it needs to be clear that this is non-standard
+IMO.
+
+Thanks,
+Rafael
