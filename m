@@ -1,56 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34974 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752419AbcHIQ5X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Aug 2016 12:57:23 -0400
-Date: Tue, 9 Aug 2016 11:57:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Drop CONFIG_KEXEC_CORE ifdeffery
-Message-ID: <20160809165717.GC27301@localhost>
-References: <0be33af4eef7e2ef328360c3622bb0581e69f437.1470735088.git.lukas@wunner.de>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33077 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759179AbcHDWsv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Aug 2016 18:48:51 -0400
+Received: by mail-qk0-f196.google.com with SMTP id x189so14009621qkd.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Aug 2016 15:48:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0be33af4eef7e2ef328360c3622bb0581e69f437.1470735088.git.lukas@wunner.de>
+In-Reply-To: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
+References: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
+From: Myron Stowe <myron.stowe@gmail.com>
+Date: Thu, 4 Aug 2016 16:48:29 -0600
+Message-ID: <CAL-B5D2H96XyvXUYxq23BVvHeb-UMi3hYzw6u_mRNPR_S5xYXQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] vmd: Fix infinite loop executing irq's
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 09, 2016 at 11:53:11AM +0200, Lukas Wunner wrote:
-> Commit 2b94ed245861 ("kexec: define kexec_in_progress in !CONFIG_KEXEC
-> case") has made this unnecessary.
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+On Thu, Aug 4, 2016 at 4:09 PM, Keith Busch <keith.busch@intel.com> wrote:
+> We can't initialize the list head on deletion as this causes the node
+> to point to itself, looping infinitely if the vmd IRQ handler happens
+> to be servicing that node.
+>
+> The list initialization supposed to fix a bug from multiple calls to
+> disable the same IRQ. We can fix this instead just checking if the
+> previous pointer indicates it was already deleted.
+>
 
-Applied to pci/misc for v4.9, thanks, Lukas!
+Should this have one or possibly more"fixes" lines here?
 
+???Fixes: 97e9230 ("x86/PCI: VMD: Initialize list item in IRQ disable")???
+
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 > ---
->  drivers/pci/pci-driver.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index e39a67c..edd78e0 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -466,7 +466,6 @@ static void pci_device_shutdown(struct device *dev)
->  	pci_msi_shutdown(pci_dev);
->  	pci_msix_shutdown(pci_dev);
->  
-> -#ifdef CONFIG_KEXEC_CORE
->  	/*
->  	 * If this is a kexec reboot, turn off Bus Master bit on the
->  	 * device to tell it to not continue to do DMA. Don't touch
-> @@ -476,7 +475,6 @@ static void pci_device_shutdown(struct device *dev)
->  	 */
->  	if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
->  		pci_clear_master(pci_dev);
-> -#endif
+>  arch/x86/pci/vmd.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index e88b417..2294907 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -136,8 +136,8 @@ static void vmd_irq_disable(struct irq_data *data)
+>         data->chip->irq_mask(data);
+>
+>         raw_spin_lock_irqsave(&list_lock, flags);
+> -       list_del_rcu(&vmdirq->node);
+> -       INIT_LIST_HEAD_RCU(&vmdirq->node);
+> +       if (vmdirq->node.prev != LIST_POISON2)
+> +               list_del_rcu(&vmdirq->node);
+>         raw_spin_unlock_irqrestore(&list_lock, flags);
 >  }
->  
->  #ifdef CONFIG_PM
-> -- 
-> 2.8.1
-> 
+>
+> --
+> 2.7.2
+>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
