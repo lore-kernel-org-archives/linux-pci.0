@@ -1,112 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0042.outbound.protection.outlook.com ([104.47.36.42]:10464
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753882AbcHVPEe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 11:04:34 -0400
-Message-ID: <57BB10E5.1050506@caviumnetworks.com>
-Date: Mon, 22 Aug 2016 07:49:09 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:57085 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755234AbcHDApu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Aug 2016 20:45:50 -0400
+Date: Thu, 4 Aug 2016 02:45:38 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
+ system sleep
+Message-ID: <20160804004538.GA4564@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <20160617210924.GA12254@localhost>
+ <20160617221407.GB1927@wunner.de>
+ <2339231.tBO8VQgPAo@vostro.rjw.lan>
+ <20160803122848.GA4415@wunner.de>
+ <CAJZ5v0jxQHM=uuvFrpPw0vLbVjF0EQsm=XEZNdtQeYsO0ZobtQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Omer Khaliq <okhaliq@caviumnetworks.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-crypto@vger.kernel.org>, <linux-arm-kernel@vger.kernel.org>,
-        <bhelgaas@google.com>, <mpm@selenic.com>,
-        <herbert@gondor.apana.org.au>, <Ananth.Jasty@cavium.com>,
-        <david.daney@cavium.com>
-Subject: Re: [PATCH 1/2] PCI/IOV: Add function to allow Function Dependency
- Link override.
-References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com> <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com> <20160822143637.GA18628@localhost>
-In-Reply-To: <20160822143637.GA18628@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0jxQHM=uuvFrpPw0vLbVjF0EQsm=XEZNdtQeYsO0ZobtQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/22/2016 07:36 AM, Bjorn Helgaas wrote:
-> Hi David & Omer,
->
-> On Fri, Aug 19, 2016 at 03:32:12PM -0700, Omer Khaliq wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> Some hardware presents an incorrect SR-IOV Function Dependency Link,
->> add a function to allow this to be overridden in the PF driver for
->> such devices.
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
->> ---
->>   drivers/pci/iov.c   | 14 ++++++++++++++
->>   include/linux/pci.h |  1 +
->>   2 files changed, 15 insertions(+)
->>
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index 2194b44..81f0672 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -640,6 +640,20 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->>   EXPORT_SYMBOL_GPL(pci_enable_sriov);
->>
->>   /**
->> + * pci_sriov_fdl_override - fix incorrect Function Dependency Link
->> + * @dev: the PCI device
->> + * @fdl: the corrected Function Dependency Link value
->> + *
->> + * For hardware presenting an incorrect Function Dependency Link in
->> + * the SR-IOV Extended Capability, allow a driver to override it.
->> + */
->> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl)
->> +{
->> +	dev->sriov->link = fdl;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_sriov_fdl_override);
->
-> We usually use quirks to work around problems in config space.  That's
-> a nice mechanism because we don't have to add new PCI core interfaces
-> and it makes it clear that we're working around a hardware problem.
->
-> Can you use a quirk here?  We allocate dev->sriov in the
-> pci_init_capabilities() path, so it looks like a pci_fixup_final quirk
-> should work.
->
+On Thu, Aug 04, 2016 at 01:50:39AM +0200, Rafael J. Wysocki wrote:
+> On Wed, Aug 3, 2016 at 2:28 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
+> >> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
+> >> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
+> >> > > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
+> >> > > > There are devices wich are not power-managed by the platform, yet can be
+> >> > > > runtime suspended to D3cold with some other mechanism.  When putting the
+> >> > > > system to sleep, we currently handle such devices improperly by trying
+> >> > > > to transition them from D3cold to D3hot (the default power state defined
+> >> > > > at the beginning of pci_target_state()).  Avoid that.
+> >> > > >
+> >> > > > An example for devices affected by this are Thunderbolt controllers
+> >> > > > built into Macs which can be put into D3cold with nonstandard ACPI
+> >> > > > methods.
+> >> > > >
+> >> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> >> > >
+> >> > > This needs an ack from Rafael.
+> >> > >
+> >> > > > ---
+> >> > > >  drivers/pci/pci.c | 2 ++
+> >> > > >  1 file changed, 2 insertions(+)
+> >> > > >
+> >> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> > > > index 791dfe7..6af9911 100644
+> >> > > > --- a/drivers/pci/pci.c
+> >> > > > +++ b/drivers/pci/pci.c
+> >> > > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
+> >> > > >                               && !(dev->pme_support & (1 << target_state)))
+> >> > > >                                 target_state--;
+> >> > > >                 }
+> >> > > > +       } else if (dev->current_state == PCI_D3cold) {
+> >> > > > +               target_state = PCI_D3cold;
+> >> > > >         }
+> >> > >
+> >> > > This only covers the case of !device_may_wakeup().  So I guess
+> >> > > device_may_wakeup() is false for these Thunderbolt controllers.
+> >> > > Is there a reason you don't want to do this check for devices that
+> >> > > may wakeup?
+> >> >
+> >> > Fear of breaking things. It would mean that a device would be left in
+> >> > D3cold even though it may not be able to signal wakeup from that power
+> >> > state.
+> >>
+> >> Then it should not be put into D3_cold at run time too if it is wakeup-
+> >> capable.
+> >>
+> >> > That's a change of behaviour the consequences of which I cannot
+> >> > estimate. Intuitively, I would expect breakage from such a change.
+> >>
+> >> That would have been the case if the device had been capable of signaling
+> >> wakeup from D3_cold at run time, but not from system sleep.  However, that
+> >> can only happen when platform_pci_power_manageable() is true AFAICS.
+> >>
+> >> So I'd change the switch () under the platform_pci_power_manageable() check
+> >> to return "state" in the default case and then do
+> >>
+> >>       return dev->current_state < target_state ? target_state : dev->current_state;
+> >>
+> >> at the end of the function.
+> >
+> > That suggestion doesn't seem to be correct because there's another
+> > value besides PCI_D3cold which is also greater than PCI_D3hot,
+> > namely PCI_UNKNOWN. (If the device is in that state, e.g. after
+> > pci_device_remove() has been called, and the system goes to sleep,
+> > we'd leave the device as is and not put it into D3hot as we do now.)
+> 
+> Right, I obviously forgot about PCI_UNKNOWN.
+> 
+> > I will update this patch with Bjorn's suggestion to also leave the
+> > device in D3cold if it is wakeup-capable. The idea is to just change
+> > the default state in the first line of the function like this:
+> >
+> > -       pci_power_t target_state = PCI_D3hot;
+> > +       pci_power_t target_state =
+> > +               dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
+> 
+> That should work (even though it is a little clumsy IMO).
 
-The struct pci_sriov definition is private to drivers/pci, so in order 
-to use a quirk to fix this, we would have to put it in 
-drivers/pci/quirks.c.  I was trying to keep this very device specific 
-code in the driver, which requires an accessor to be able to manipulate 
-the dev->sriov->link field.
+Not sure why that is clumsy but happy to use something else if you
+have a suggestion?
 
-If you prefer a quirk in drivers/pci/quirks.c, we can certainly do that 
-instead.
+Thanks,
 
-Thanks for taking the time to look at this,
-David Daney
-
-
-
-
->> +
->> +/**
->>    * pci_disable_sriov - disable the SR-IOV capability
->>    * @dev: the PCI device
->>    */
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 2599a98..da8a5b3 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1823,6 +1823,7 @@ int pci_num_vf(struct pci_dev *dev);
->>   int pci_vfs_assigned(struct pci_dev *dev);
->>   int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->>   int pci_sriov_get_totalvfs(struct pci_dev *dev);
->> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl);
->>   resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
->>   #else
->>   static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
->> --
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Lukas
