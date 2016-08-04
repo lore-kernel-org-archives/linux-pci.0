@@ -1,54 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44588 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755731AbcHVTgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 15:36:25 -0400
-Date: Mon, 22 Aug 2016 14:36:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: hv: Use list_move_tail instead of
- list_del/list_add_tail
-Message-ID: <20160822193618.GK18628@localhost>
-References: <1469722608-14956-1-git-send-email-weiyj.lk@gmail.com>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Thu, 4 Aug 2016 10:14:46 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
+ system sleep
+Message-ID: <20160804081446.GA4576@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <20160617210924.GA12254@localhost>
+ <20160617221407.GB1927@wunner.de>
+ <2339231.tBO8VQgPAo@vostro.rjw.lan>
+ <20160803122848.GA4415@wunner.de>
+ <CAJZ5v0jxQHM=uuvFrpPw0vLbVjF0EQsm=XEZNdtQeYsO0ZobtQ@mail.gmail.com>
+ <20160804004538.GA4564@wunner.de>
+ <CAJZ5v0h55MCiSzJz_weEGX7nUsy_TLumssyoXz=f2_b0h_BkQQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1469722608-14956-1-git-send-email-weiyj.lk@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0h55MCiSzJz_weEGX7nUsy_TLumssyoXz=f2_b0h_BkQQ@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 28, 2016 at 04:16:48PM +0000, Wei Yongjun wrote:
-> Using list_move_tail() instead of list_del() + list_add_tail().
+On Thu, Aug 04, 2016 at 03:07:56AM +0200, Rafael J. Wysocki wrote:
+> On Thu, Aug 4, 2016 at 2:45 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Thu, Aug 04, 2016 at 01:50:39AM +0200, Rafael J. Wysocki wrote:
+> >> On Wed, Aug 3, 2016 at 2:28 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> >> > On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
+> >> >> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
+> >> >> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
+> >> >> > > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
+> >> >> > > > There are devices wich are not power-managed by the platform, yet can be
+> >> >> > > > runtime suspended to D3cold with some other mechanism.  When putting the
+> >> >> > > > system to sleep, we currently handle such devices improperly by trying
+> >> >> > > > to transition them from D3cold to D3hot (the default power state defined
+> >> >> > > > at the beginning of pci_target_state()).  Avoid that.
+> >> >> > > >
+> >> >> > > > An example for devices affected by this are Thunderbolt controllers
+> >> >> > > > built into Macs which can be put into D3cold with nonstandard ACPI
+> >> >> > > > methods.
+> >> >> > > >
+> >> >> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> >> >> > > > ---
+> >> >> > > >  drivers/pci/pci.c | 2 ++
+> >> >> > > >  1 file changed, 2 insertions(+)
+> >> >> > > >
+> >> >> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> >> > > > index 791dfe7..6af9911 100644
+> >> >> > > > --- a/drivers/pci/pci.c
+> >> >> > > > +++ b/drivers/pci/pci.c
+> >> >> > > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
+> >> >> > > >                               && !(dev->pme_support & (1 << target_state)))
+> >> >> > > >                                 target_state--;
+> >> >> > > >                 }
+> >> >> > > > +       } else if (dev->current_state == PCI_D3cold) {
+> >> >> > > > +               target_state = PCI_D3cold;
+> >> >> > > >         }
+> >> >> > >
+> >> > I will update this patch with Bjorn's suggestion to also leave the
+> >> > device in D3cold if it is wakeup-capable. The idea is to just change
+> >> > the default state in the first line of the function like this:
+> >> >
+> >> > -       pci_power_t target_state = PCI_D3hot;
+> >> > +       pci_power_t target_state =
+> >> > +               dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
+> >>
+> >> That should work (even though it is a little clumsy IMO).
+> >
+> > Not sure why that is clumsy but happy to use something else if you
+> > have a suggestion?
 > 
-> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+> The clumsy thing is that we'd take the target_state as D3cold only if
+> the device already was in that state.
+> 
+> Otherwise, we'd take D3hot as the target state for the same device,
+> which doesn't seem particularly consistent to me.
+> 
+> Not that I have better ideas ATM, but then the current code works for
+> my use cases. :-)
 
-Applied to pci/host-hv for v4.9, thanks!
+The goal is to afford direct-complete to devices which are not power-
+manageable by the platform but can still be runtime suspended to D3cold.
+Right now we wake those devices up from D3cold to D3hot before going to
+sleep, which is a waste of energy and prolongs the suspend sequence
+(waking up the Thunderbolt controller takes 2 seconds).
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 6955ffdb..a8deeca 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1466,8 +1466,7 @@ static void pci_devices_present_work(struct work_struct *work)
->  			if (hpdev->reported_missing) {
->  				found = true;
->  				put_pcichild(hpdev, hv_pcidev_ref_childlist);
-> -				list_del(&hpdev->list_entry);
-> -				list_add_tail(&hpdev->list_entry, &removed);
-> +				list_move_tail(&hpdev->list_entry, &removed);
->  				break;
->  			}
->  		}
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The de facto standard to power manage such devices seems to be with
+dev_pm_domain_set(). That's what vga_switcheroo does and I'll move
+to that as well for v3 of this series.
+
+I could add a "bool can_power_off" to struct dev_pm_domain.
+
+Then I could change pci_target_state() like this:
+
+ 	pci_power_t target_state = PCI_D3hot;
+ 
+ 	if (platform_pci_power_manageable(dev)) {
+ 		[...]
++	} else if (dev->dev.pm_domain && dev->dev.pm_domain.can_power_off) {
++		target_state = PCI_D3cold;
+ 	} else if [...]
+
+Another idea would be to add a ->choose_state hook to dev_pm_domain,
+but that would have to return a PCI-specific power state, so we'd be
+in clumsy territory again.
+
+Thoughts?
+
+Lukas
