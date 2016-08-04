@@ -1,107 +1,118 @@
-Return-Path: <roland.singer@desertbit.com>
-Return-Path: <roland.singer@desertbit.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Emil Velikov <emil.l.velikov@gmail.com>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost>
- <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost>
- <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
- <20160829235403.GA14177@localhost>
- <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
- <20160830130634.GA16426@localhost>
- <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
- <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
- <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
- ML dri-devel <dri-devel@lists.freedesktop.org>, linux-acpi@vger.kernel.org,
- imirkin@alum.mit.edu
-From: Roland Singer <roland.singer@desertbit.com>
-Message-ID: <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
-Date: Tue, 30 Aug 2016 19:37:22 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: Support for configurable PCIe endpoint
+To: Christoph Hellwig <hch@infradead.org>
+References: <57A18927.9070003@ti.com> <20160803094747.GA10170@infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57A30183.2060800@ti.com>
+Date: Thu, 4 Aug 2016 14:19:07 +0530
 MIME-Version: 1.0
-In-Reply-To: <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160803094747.GA10170@infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Daney <david.daney@cavium.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Joao Pinto <jpinto@synopsys.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Jason Cooper <jason@lakedaemon.net>,
+ "arnd@arndb.de" <arnd@arndb.de>, Simon Horman <horms@verge.net.au>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Richard Zhu <Richard.Zhu@freescale.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Ley Foon Tan <lftan@altera.com>,
+ Roy Zang <tie-fei.zang@freescale.com>, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am running 4.7.2, but I also just tried the 4.8.0-rc4 mainline kernel.
-The result is the same. There is no difference if bbswitch of acpi_call
-is used. However I noticed following:
+Hi,
 
-1. The nouveau driver is broken in both kernel version and is responsible
-   for the freezes while gathering power state information with bbswitch.
-   Sometimes while shutting the system down, everything except the LCD
-   screen is switched off. This only happens with nouveau.
-   I noticed following error log messages:
-
-   kernel: nouveau 0000:01:00.0: fb: 6144 MiB GDDR5
-   kernel: nouveau 0000:01:00.0: priv: HUB0: 10ecc0 ffffffff (1e40822c)
-   kernel: nouveau 0000:01:00.0: DRM: VRAM: 6144 MiB
-   kernel: nouveau 0000:01:00.0: DRM: GART: 1048576 MiB
-   kernel: nouveau 0000:01:00.0: DRM: Pointer to TMDS table invalid
-   kernel: nouveau 0000:01:00.0: DRM: DCB version 4.1
-   kernel: nouveau 0000:01:00.0: DRM: Pointer to flat panel table invalid
-
-2. -> Boot with nouveau module loaded
-   -> switch off the discrete GPU with bbswitch or acpi_call
-   -> start X11
-   -> obtaining power state with bbswitch freezes the system
-   -> or working with the system for some minutes freezes the system
-
-3. -> Boot with nouveau module blacklisted
-   -> switch off the discrete GPU
-   -> start X11
-   -> system immediately freezes
-
-4. -> Boot with nouveau module blacklisted
-   -> switch off the discrete GPU
-   -> start Wayland
-   -> system runs - Note: I tried this for couple of days with 4.6 and 4.7 mainline
-                          and the system freezed randomly after some time.
-                          However I have to test if this is still present with 4.7.2
-                          and 4.8 mainline. Right now it seams to be fine.
-   -> running Xwayland (does not depend on the GPU power state) kills performance!
-      the system freezes for several seconds...
-      So working with Wayland is also no solution.
-
-My conclusion:
-
-1. Nouveau has couple of problems with GTX 9** M Nvidia GPUs.
-   I would love to help here.
-
-2. X11 is just broken and is not capable to start the graphical session
-   if the nvidia GPU is not handled by any video driver (kernel module).
-   Even forcing X11 to ignore the discrete GPU doesn't help.
-
-   Setting the command line arguments to:
-
-     acpi_osi=! acpi_osi="Windows 2009"
-
-   fixes the issues with X11 but other things break...
-   What the hell is going on?! :/
-
-Am 30.08.2016 um 17:48 schrieb Emil Velikov:
-> On 30 August 2016 at 16:25, Roland Singer <roland.singer@desertbit.com> wrote:
->> I tried these scenarios:
+On Wednesday 03 August 2016 03:17 PM, Christoph Hellwig wrote:
+> On Wed, Aug 03, 2016 at 11:33:19AM +0530, Kishon Vijay Abraham I wrote:
+>> Hi,
 >>
->> 1. Booted the system without the bbswitch module. The nouveau module
->>    was loaded and is responsible for the power management of the GPU.
->>    The graphical session freezes after some minutes...
+>> The PCIe controller present in TI's DRA7 SoC is capable of operating either in
+>> Root Complex mode or Endpoint mode. (It uses Synopsys Designware Core).I'd
+>> assume most of the PCIe controllers on other platforms that use Designware core
+>> should also be capable to operate in endpoint mode. But linux kernel right now
+>> supports only RC mode.
 >>
->> 2. Booted the system without bbswitch and with nouveau blacklisted.
->>    Manually loaded bbswitch to switch off the discrete GPU.
->>    Same freeze after a while or by explicitly obtaining the GPU state.
->>
->> Is there a possibility to switch off the discrete card without bbswitch?
->> If this is possible, then I could test this without nouveau and bbswitch
->> at all. If the system hangs, then it is not the video driver nor bbswitch.
->>
-> As Ilia mentioned acpi_call should do it. You can also check with the
-> nouveau/bbwswitch code to see which ones they use in your case and
-> bash it manually. It might be that the 'wrong one' gets used thus
-> things going horribly wrong.
+>> PCIe endpoint support discussion came up briefly before [1] but it was felt the
+>> practical use case will find firmware more suitable and endpoint support in
+>> kernel can be used only for validation or demo.
 > 
-> Regards,
-> Emil
+> I disagree.  It's highly useful for rapid prototyping of hardware
+> interfaces, and I've been looking into PCIe EP drivers for exactly
+> that reason recently.  Going a little offtopic: any good DRA7 eval
+> boards you'd recommend to try for this purpose?
+
+I think the only publicly available DRA7 based board with PCIe (mPCIe slot) is
+AM572x EVM (http://www.ti.com/tool/TMDSEVM572X). The board comes only with a
+female PCIe slot. So a special cable would be required to connect it to a PCIe
+host.
+
+However for my development I'm planning to use dra7-evm which has standard
+female PCIe connector and I'll use a cable like PE-FLEX1 male-to-male (in
+http://www.adexelec.com/pciexp.htm) to connect back-to-back boards.
 > 
+> We already have a EP driver in the tree:
+> 
+> drivers/misc/spear13xx_pcie_gadget.c
+> 
+> but as far as I can tell it doesn't really work at the moment.
+
+Okay. I wasn't aware of that. I'll take a look at that one.
+> 
+>> Validation or demo is itself a valid use case in my opinion (consider something
+>> similar to gadget zero for USB). There can be other use cases as well. The RC
+>> can use the SoC with EP mode support as an accelerator to accomplish specific
+>> task. Here RC gives data to the EP. The EP processes the data. The processing
+>> can be done either in ARM itself or it can use other hardware accelerators
+>> (like DSP, IVA-HD etc..) present in the EP system. If HW accelerator is used,
+>> the linux kernel running in ARM can be used to accomplish other tasks. Once EP
+>> mode support is added, I think more use cases will be added.
+> 
+> That sounds useful as well.
+> 
+>> >From the high level this should look _similar_ to the gadget framework of USB.
+>> One difference from USB would be this should allow HW components (like DSP, PRU
+>> etc.. and maybe even some peripheral) in the EP system to be used by RC system.
+> 
+> Indeed.
+> 
+>> So these are the high-level steps that I thought would be needed to add EP
+>> support in linux.
+>> *) move pcie-designware.c out of drivers/pci/host (maybe create a
+>> drivers/pci/designware/ folder?). All users of pcie-designware.c should be
+>> moved here.
+>> This is in preparation for adding EP mode support to designware.
+> 
+> I'd use a new drivers/pci/controller.  Or maybe just skip the rename
+> for now and see how this evolves.
+
+Sure. That makes more sense.
+> 
+> The rest of the plan sounds fine to me.
+
+cool.
+
+Thanks
+Kishon
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
