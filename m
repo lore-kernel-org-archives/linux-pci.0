@@ -1,96 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <kristen.c.accardi@intel.com>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 9/9] PCI: hotplug: make PCIe core code explicitly non-modular
-Date: Wed, 24 Aug 2016 16:57:52 -0400
-Message-ID: <20160824205752.12024-10-paul.gortmaker@windriver.com>
-In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:42827 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965241AbcHDWJd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Aug 2016 18:09:33 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 1/2] vmd: Fix infinite loop executing irq's
+Date: Thu,  4 Aug 2016 16:09:08 -0600
+Message-Id: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Makefile fragments currently controlling compilation of this code are:
+We can't initialize the list head on deletion as this causes the node
+to point to itself, looping infinitely if the vmd IRQ handler happens
+to be servicing that node.
 
-obj-$(CONFIG_HOTPLUG_PCI_PCIE)          += pciehp.o
- [...]
-pciehp-objs                             := pciehp_core.o   \
+The list initialization supposed to fix a bug from multiple calls to
+disable the same IRQ. We can fix this instead just checking if the
+previous pointer indicates it was already deleted.
 
-The Kconfig currently controlling compilation of this code is:
-
-drivers/pci/pcie/Kconfig:config HOTPLUG_PCI_PCIE
-drivers/pci/pcie/Kconfig:       bool "PCI Express Hotplug driver"
-
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.  However
-one could argue that we should use subsys_initcall() here, but for
-now we stick with runtime equivalence.
-
-We delete module.h but we keep the moduleparam.h include, since we are
-keeping the module_param() that the file has as-is for now.
-
-We also delete the MODULE_LICENSE tag etc since all that information
-is still contained higher up in the file via the DEFINE lines which
-now serve as documentation only.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: kristen.c.accardi@intel.com
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/hotplug/pciehp_core.c | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
+ arch/x86/pci/vmd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ac531e674a05..fb0f86335158 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -27,7 +27,6 @@
-  *
-  */
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+index e88b417..2294907 100644
+--- a/arch/x86/pci/vmd.c
++++ b/arch/x86/pci/vmd.c
+@@ -136,8 +136,8 @@ static void vmd_irq_disable(struct irq_data *data)
+ 	data->chip->irq_mask(data);
  
--#include <linux/module.h>
- #include <linux/moduleparam.h>
- #include <linux/kernel.h>
- #include <linux/slab.h>
-@@ -47,10 +46,10 @@ static bool pciehp_force;
- #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
- #define DRIVER_DESC	"PCI Express Hot Plug Controller Driver"
- 
--MODULE_AUTHOR(DRIVER_AUTHOR);
--MODULE_DESCRIPTION(DRIVER_DESC);
--MODULE_LICENSE("GPL");
--
-+/*
-+ * not really modular, but the easiest way to keep compat with existing
-+ * bootargs behaviour is to continue using module_param here.
-+ */
- module_param(pciehp_debug, bool, 0644);
- module_param(pciehp_poll_mode, bool, 0644);
- module_param(pciehp_poll_time, int, 0644);
-@@ -337,13 +336,4 @@ static int __init pcied_init(void)
- 
- 	return retval;
+ 	raw_spin_lock_irqsave(&list_lock, flags);
+-	list_del_rcu(&vmdirq->node);
+-	INIT_LIST_HEAD_RCU(&vmdirq->node);
++	if (vmdirq->node.prev != LIST_POISON2)
++		list_del_rcu(&vmdirq->node);
+ 	raw_spin_unlock_irqrestore(&list_lock, flags);
  }
--
--static void __exit pcied_cleanup(void)
--{
--	dbg("unload_pciehpd()\n");
--	pcie_port_service_unregister(&hpdriver_portdrv);
--	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
--}
--
--module_init(pcied_init);
--module_exit(pcied_cleanup);
-+device_initcall(pcied_init);
+ 
 -- 
-2.8.4
+2.7.2
+
