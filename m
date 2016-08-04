@@ -1,93 +1,67 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>, Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v2 07/13] PCI: pciehp: Ignore interrupts during D3cold
-Date: Fri, 05 Aug 2016 02:29:33 +0200
-Message-ID: <2207683.SCJbZF619B@vostro.rjw.lan>
-In-Reply-To: <20160802162740.GA4036@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de> <20160617225204.GC10416@localhost> <20160802162740.GA4036@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Rob Herring <robh@kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	David Daney <david.daney@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
+Subject: Re: Support for configurable PCIe endpoint
+Date: Thu, 04 Aug 2016 13:13:06 +0200
+Message-ID: <2422602.ltmdGR0pWX@wuerfel>
+In-Reply-To: <57A31299.2040805@ti.com>
+References: <57A18927.9070003@ti.com> <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com> <57A31299.2040805@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, August 02, 2016 06:27:40 PM Lukas Wunner wrote:
-> On Fri, Jun 17, 2016 at 05:52:04PM -0500, Bjorn Helgaas wrote:
-> > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> > > If a hotplug port is suspended to D3cold, its slot status register
-> > > cannot be read.  If that hotplug port happens to share its IRQ with
-> > > other devices, then whenever an interrupt occurs for one of these
-> > > devices, a "no response from device" message is logged with level
-> > > KERN_INFO.  Apart from this annoyance, CPU time is needlessly spent
-> > > trying to read the slot status register even though we know in advance
-> > > that it will fail.
+On Thursday, August 4, 2016 3:32:01 PM CEST Kishon Vijay Abraham I wrote:
+> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
 > > 
-> > I guess this is a pretty generic problem that could affect any device
-> > that shares an IRQ.
+> > You are rising a topic that we are also addressing in Synopsys.
 > > 
-> > I think I'll queue this on my pci/pm branch, since it seems closely
-> > related to Mika's "PCI: Add runtime PM support for PCIe ports".
+> > For the PCIe RC hardware validation we are currently using the standard
+> > pcie-designware and pcie-designware-plat drivers.
 > > 
-> > Did you check for the same issue in other likely places, e.g., AER,
-> > PME, etc.?
+> > For the Endpoint we have to use an internal software package. Its main purpose
+> > is to initialize the IP registers, eDMA channels and make data transfer to prove
+> > that the everything is working properly. This is done in 2 levels, a custom
+> > driver built and loaded and an application that makes some ioctl to the driver
+> > executing some interesting functions to check the Endpoint status and make some
+> > data exchange.
 > 
-> Apologies for the delay, I've checked all other port services now:
-> 
-> - Our AER and PME drivers bind only to root ports and I can't imagine
->   how those could go to D3cold, they're part of the root complex or
->   PCH and I'm not aware of a chipset that would allow turning off the
->   power well for individual PCIe ports.
+> hmm.. the platform I have doesn't have a DMA in PCIe IP
+> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does the
+> EP access RC memory? i.e the driver in the RC allocates memory from it's DDR
+> and gives it's DDR address to the EP. The EP then transfers data to this
+> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
+> simple with configurable EPs. I'd like to know more about your testing though.
 
-No, they don't go into D3cold.  They can go into D3hot, however.
 
-> - DPC on the other hand also binds to downstream ports. I do have
->   downstream ports in my machine (as part of the Thunderbolt switch)
->   but they do not have the DPC capability. I've never seen devices
->   with that capability and cannot estimate what the chances are of them
->   going to D3cold and sharing an IRQ with other devices. It's probably
->   not worth preparing for such a situation without knowing its likelihood.
-> 
-> - VC: We allocate a port service for this but do not have a driver.
-> 
-> Bottom line is that the patch for the PCIe hotplug driver seems to be
-> sufficient.
-> 
-> FWIW, on my machine I see numerous devices with AER, PME and VC
-> capabilities. The Nvidia GPU as well as network, Firewire and
-> Thunderbolt controllers all have those. AFAICS we ignore them
-> because their specific drivers do not care for the capabilities
-> and portdrv only binds to root ports.
-> 
-> This seems to support your argument that the PCIe capabilities
-> should be handled by the core rather than portdrv, as we could
-> then make use of the capabilities on endpoint devices in a
-> universal manner.
+What's the difference between using the EDMA on that chip or a DMA engine
+that is part of the PCIe bridge?
 
-PME, for one, is not an endpoint capability.  It very specifically is
-defined as a port capability AFAICS, and the whole idea here is that
-endpoints will not use their in-band interrupts to signal PME.  That
-is supposed to be done by ports.
-
-> On the other hand, I think we cannot use a separate MSI for
-> AER, PME et al, can we?
-
-We can, at least in principle.
-
-More precisely, the spec requires PME and hotplug to use the same interrupt
-(please see the comment in pcie_port_enable_msix() on that), but AER can use
-a different one.
-
-> If we cannot, then AER and PME would
-> share the IRQ with an endpoint device's regular interrupt handler,
-> and that might ruin performance. E.g. the Broadcom wireless card
-> generates millions of interrupts on a sufficiently active WiFi.
-> Accessing the device's config space on every interrupt just to
-> check for AER or PME seems like a bad idea. So at the very least
-> we'd need some kind of opt-out.
-
-That is why AER, PME and hotplug are all supposed to be signaled by ports,
-possibly among other things.
-
-Thanks,
-Rafael
+	Arnd
