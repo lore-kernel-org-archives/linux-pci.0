@@ -1,49 +1,168 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Tue, 23 Aug 2016 16:44:21 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160823204421.GA10993@localhost.localdomain>
-References: <20160817230951.GD25146@localhost.localdomain>
- <20160818195656.GH27353@localhost>
- <20160818224610.GA28276@localhost.localdomain>
- <20160822165524.GC18628@localhost>
- <20160822211536.GE28276@localhost.localdomain>
- <20160823133913.GN18628@localhost>
- <20160823171018.GB10224@localhost.localdomain>
- <eed69a47-633b-0c0c-e5c1-663bf37a9ec3@codeaurora.org>
- <20160823192330.GA10866@localhost.localdomain>
- <20160823195221.GA3725@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160823195221.GA3725@localhost>
+In-Reply-To: <CAD8Lp44x0-KQEVQQ1p8bOScN5Gs7SPMeZek_SGR5BO0EPL5NYA@mail.gmail.com>
+References: <CAD8Lp44cpj0Z3aadOzW=Lc=m88AbQpaW3g=GCgtpvbpGATT7uw@mail.gmail.com>
+ <CAErSpo6tMJYqiynS-+svvMB2mskMBrTpWNBxR7OLPSxGxKbBvw@mail.gmail.com>
+ <55E7A90A.5080406@gmail.com> <CAD8Lp4534o9+=MSSt5Rf_9HgxpoNJdA=gRsFAG8w-U8Eh5Otng@mail.gmail.com>
+ <55E88C07.3090503@gmail.com> <CAD8Lp44x0-KQEVQQ1p8bOScN5Gs7SPMeZek_SGR5BO0EPL5NYA@mail.gmail.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Fri, 5 Aug 2016 12:04:01 -0700
+Message-ID: <CAKgT0Uds1oTZv1rcHQceB9rVomM09XL+dUr9LYNv0+Fe1O3+Lg@mail.gmail.com>
+Subject: Re: pcieport AER error spam on Intel Skylake
+To: Daniel Drake <drake@endlessm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Carlo Caione <carlo@endlessm.com>,
+	Linux Upstreaming Team <linux@endlessm.com>,
+	Chris Chiu <chiu@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 23, 2016 at 02:52:21PM -0500, Bjorn Helgaas wrote:
-> Everybody probably knows this, but the problem is not with LED control
-> per se.  The problem is multiple writers to the Slot Control register.
-> Each write to Slot Control is a "command", and software is responsible
-> for waiting for one command to complete before writing another (see
-> PCIe r3.0, sec 6.7.3.2).
-> 
-> It's no problem to make pciehp keep its mitts off the LEDs; the
-> problem is if ledmon writes Slot Control for the indicators, and
-> pciehp writes Slot Control for some other reason at about the same
-> time.
-> 
-> Sinan has a very interesting idea...  Maybe we can work with that.
-> Hmm, it looks like if we have an attention indicator, we already put
-> an "attention" file in sysfs (see attention_write_file()).  That
-> should eventually call into pciehp_set_attention_status(), where we
-> currently only support off/on/blink states.
-> 
-> What if you made a quirk that replaced pciehp_set_attention_status()
-> with a special version that supported the extra states you need and
-> made ledmon use that sysfs file instead of writing Slot Control
-> directly?  Would everything just work?
+On Fri, Aug 5, 2016 at 11:15 AM, Daniel Drake <drake@endlessm.com> wrote:
+> Hi Alexander,
+>
+> Reviving an old topic here...
+>
+> We are seeing this "problem" on an increasing number of units from the
+> vendor, and searching around it can also be seen on Dell and HP
+> products. Always with the same Realtek b723 wifi device. e.g.
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1521173
+>
+> The amount of error spam is problematic in that it slows down boot
+> really significantly, while printing lots of scary messages for the
+> user.
+> We tried doing a PCI MSI blacklist for affected laptops but we are
+> struggling to keep that blacklist updated with the increasing number
+> of affected models.
+>
+> Enough hacks, I am wondering what we can do to solve this problem in
+> the mainline kernel...
+>
+> On Thu, Sep 3, 2015 at 12:05 PM, Alexander Duyck
+> <alexander.duyck@gmail.com> wrote:
+>> On 09/03/2015 06:32 AM, Daniel Drake wrote:
+>>>
+>>> On Wed, Sep 2, 2015 at 7:57 PM, Alexander Duyck
+>>> <alexander.duyck@gmail.com> wrote:
+>>>>
+>>>> Since it is correctable errors it is likely some sort of signalling
+>>>> issue.
+>>>> Could we get the output of something like an lspci -vt? Then you would be
+>>>> able to tell what the device is on the other side of the link from
+>>>> 00:1c.5
+>>>> and then we could probably check to see if there has been any changes for
+>>>> the device driver on the other end of the link.
+>>>
+>>> "lspci -vt" reliably causes one occurance of the message, which is
+>>> logged by the kernel before lspci has written anything to stdout.
+>>>   pcieport 0000:00:1c.5: AER: Corrected error received: id=00e5
+>>>   pcieport 0000:00:1c.5: PCIe Bus Error: severity=Corrected,
+>>> type=Physical Layer, id=00e5(Receiver ID)
+>>>   pcieport 0000:00:1c.5:   device [8086:9d15] error
+>>> status/mask=00000001/00002000
+>>>   pcieport 0000:00:1c.5:    [ 0] Receiver Error
+>>>
+>>> -[0000:00]-+-00.0  Intel Corporation Device 1904
+>>>             +-02.0  Intel Corporation Device 1916
+>>>             +-04.0  Intel Corporation Device 1903
+>>>             +-08.0  Intel Corporation Device 1911
+>>>             +-14.0  Intel Corporation Device 9d2f
+>>>             +-14.2  Intel Corporation Device 9d31
+>>>             +-15.0  Intel Corporation Device 9d60
+>>>             +-15.1  Intel Corporation Device 9d61
+>>>             +-16.0  Intel Corporation Device 9d3a
+>>>             +-17.0  Intel Corporation Device 9d03
+>>>             +-1c.0-[01]--
+>>>             +-1c.4-[02]----00.0  Realtek Semiconductor Co., Ltd.
+>>> RTL8111/8168 PCI Express Gigabit Ethernet controller
+>>>             +-1c.5-[03]----00.0  Realtek Semiconductor Co., Ltd. Device
+>>> b723
+>>>             +-1f.0  Intel Corporation Device 9d48
+>>>             +-1f.2  Intel Corporation Device 9d21
+>>>             +-1f.3  Intel Corporation Device 9d70
+>>>             \-1f.4  Intel Corporation Device 9d23
+>>>
+>>> Does this mean these messages are somehow related to the Realtek b723
+>>> device? That is the wifi card.
+>>> Using x86_64_defconfig there is not even any driver loaded for this
+>>> device, yet the messages appear quite a bit.
+>>> If I use a full config with all the relevant drivers including
+>>> rtlwifi, the frequency of these messages goes up a lot though.
+>>
+>>
+>> The correctable errors are likely a result of some sort of link error
+>> between the root port 00:1c.5 and the wireless adapter at 3:00.0.  What is
+>> likely happening is that when the device is unused it transitions down to a
+>> lower power link state like L0s or L1, and when it comes out of that state
+>> it is likely triggering the PCIe error most likely as a result of something
+>> during the PCIe link training sequence.
+>>
+>> You might want to notify the manufacturer of the laptop as they may need to
+>> address an issue in their hardware, firmware, or possibly add  a workaround
+>> to mask off Receiver Error reporting for their part via either a PCIe quirk
+>> or driver fix.
+>>
+>>>> My suspicion since this is a laptop is that something like a power
+>>>> management change might be responsible if this is a regression as I have
+>>>> seen messages like this pop up as a result of ASPM being enabled before.
+>>>
+>>> It's likely not a regression, this is brand new hardware and this
+>>> message is seen on all kernels that we have tried (4.1, 4.2, master).
+>>> pcie_aspm=off also makes these messages go away.
+>>
+>>
+>> Correctable errors are considered a sign of the PCIe link health. In theory
+>> they can be ignored since by definition they can be corrected by the
+>> hardware.  One thing you could do if you aren't using the wireless card
+>> would be to simply switch off the correctable error reporting by setting the
+>> mask bit for it in configuration space using setpci.
+>>
+>> To do that what you could do is find the offset for the PCIe AER
+>> configuration register for your port by doing a "lspci -vvv -s 0:1c.5" and
+>> what you should get will be a dump listing the capabilities and their
+>> current settings.  In there you should find a line like:
+>>     Capabilities: [148 v1] Advanced Error Reporting
+>>
+>> The 148 is the hex offset of the configuration space.  The Correctable Error
+>> mask is located at a hex offset of 0x14 from there.  So adding the hex
+>> values 0x148 and 0x14 gives us 0x15C.  To disable reporting correctable
+>> receiver errors you would just want to add a 1 to whatever value you get
+>> from "setpci -s 0:1c.5 0x15C.l" and then write that value back.  So for
+>> example on my system I ended up with something like "setpci -s 0:1c.5
+>> 0x15C.l=2001" where the output from the first command was 2000.
+>
+> I guess this is the most concrete suggestion for how to avoid the
+> issue - perhaps we can do that in rtl8723be driver probe. However, you
+> mentioned above that we should only do it if we aren't using the
+> wireless card. In this case we are using it... should we look for
+> another approach instead?
 
-I'm on board with this idea. I'll get some testing started and send a
-new version if/when successful.
+I honestly don't recall the reason why I used the wording about "using
+the wireless card".  The only reason why I can think of is that
+correctable errors are supposed to be used to determine link health,
+but in this case you know there are issues since you are being spammed
+about them constantly.
+
+So if you are wanting to do this in code am I correct in assuming that
+this worked to actually solve the problem for you?
+
+The flood of correctable errors is probably a link training problem
+that is being triggered by the fact that the device is running with
+ASPM enabled.  The best way to describe ASPM is that it is meant to
+save power on the system by essentially turning off the link between
+the CPU and/or chipset and the device.  What can happen is that if the
+wiring isn't the best quality it can sometimes fail and cause some
+noise on the wire resulting in a correctable error.
+
+What you should probably look at doing is seeing if you could add
+something to drivers/pci/quirks.c for this specific device in this
+specific platform with ASPM and AER enabled.  Then you wouldn't see
+the errors even if the driver for the device isn't loaded.  If we
+could get someone from RealTek involved in this it would be preferred
+as they might have a better idea of what might exactly be going on so
+that we could fix the root cause instead of just having to squelch the
+symptom of the problem.
+
+- Alex
