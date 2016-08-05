@@ -1,110 +1,93 @@
-Return-Path: <scott.branden@broadcom.com>
-Return-Path: <scott.branden@broadcom.com>
-Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
-To: Bjorn Helgaas <helgaas@kernel.org>, Ley Foon Tan <lftan@altera.com>
-References: <1471595078-26297-1-git-send-email-lftan@altera.com>
- <20160822154738.GB18628@localhost>
- <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
- <20160824175431.GC23914@localhost>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- bcm-kernel-feedback-list@broadcom.com
-From: Scott Branden <scott.branden@broadcom.com>
-Message-ID: <4975a3ff-e04e-a1ac-e6cb-6d1b3e87f377@broadcom.com>
-Date: Wed, 24 Aug 2016 11:40:16 -0700
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v2 07/13] PCI: pciehp: Ignore interrupts during D3cold
+Date: Fri, 05 Aug 2016 02:29:33 +0200
+Message-ID: <2207683.SCJbZF619B@vostro.rjw.lan>
+In-Reply-To: <20160802162740.GA4036@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de> <20160617225204.GC10416@localhost> <20160802162740.GA4036@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20160824175431.GC23914@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tuesday, August 02, 2016 06:27:40 PM Lukas Wunner wrote:
+> On Fri, Jun 17, 2016 at 05:52:04PM -0500, Bjorn Helgaas wrote:
+> > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
+> > > If a hotplug port is suspended to D3cold, its slot status register
+> > > cannot be read.  If that hotplug port happens to share its IRQ with
+> > > other devices, then whenever an interrupt occurs for one of these
+> > > devices, a "no response from device" message is logged with level
+> > > KERN_INFO.  Apart from this annoyance, CPU time is needlessly spent
+> > > trying to read the slot status register even though we know in advance
+> > > that it will fail.
+> > 
+> > I guess this is a pretty generic problem that could affect any device
+> > that shares an IRQ.
+> > 
+> > I think I'll queue this on my pci/pm branch, since it seems closely
+> > related to Mika's "PCI: Add runtime PM support for PCIe ports".
+> > 
+> > Did you check for the same issue in other likely places, e.g., AER,
+> > PME, etc.?
+> 
+> Apologies for the delay, I've checked all other port services now:
+> 
+> - Our AER and PME drivers bind only to root ports and I can't imagine
+>   how those could go to D3cold, they're part of the root complex or
+>   PCH and I'm not aware of a chipset that would allow turning off the
+>   power well for individual PCIe ports.
 
-Ray is off this week and will likely have some comments next week.
+No, they don't go into D3cold.  They can go into D3hot, however.
 
-On 16-08-24 10:54 AM, Bjorn Helgaas wrote:
-> [+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
->
-> On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
->> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
->>>> Altera PCIe IP can be configured as rootport or device and they might have
->>>> same vendor ID. It will cause the system hang issue if Altera PCIe is in
->>>> endpoint mode and work with other PCIe rootport that from other vendors.
->>>> So, add the rootport mode checking in link retrain fixup function.
->>>>
->>>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->>>> ---
->>>> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
->>>> ---
->>>>  drivers/pci/host/pcie-altera.c | 3 +++
->>>>  1 file changed, 3 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
->>>> index 58eef99..33b6968 100644
->>>> --- a/drivers/pci/host/pcie-altera.c
->>>> +++ b/drivers/pci/host/pcie-altera.c
->>>> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
->>>>       u16 linkcap, linkstat;
->>>>       struct altera_pcie *pcie = dev->bus->sysdata;
->>>>
->>>> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
->>>> +             return;
->>>> +
->>>>       if (!altera_pcie_link_is_up(pcie))
->>>>               return;
->>>
->>> Instead of making this a PCI fixup, can you make an
->>> altera_pcie_host_init() function, call it from altera_pcie_probe(),
->>> and do the link retrain there?  Then you wouldn't need to worry about
->>> whether this is a Root Port or an Endpoint, plus it would make the
->>> altera driver structure more like the other drivers.
->>>
->>> You would call altera_pcie_host_init() before pci_scan_root_bus(), so
->>> you wouldn't have a pci_dev yet, so you wouldn't be able to use
->>> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
->>> assume there's some device-dependent way to access it using
->>> cra_writel()?
->> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
->
-> Why not?  I don't mean it has to be cra_write(), but isn't there some
-> way you can write that bit before we scan the root bus?  It doesn't
-> make sense that we have to scan the bus before we can train the link.
->
-> We want to be able to tell the PCI core "all the device-specific root
-> complex initialization has been done, here are the config accessors
-> you need, please scan for devices."  I want to keep device-specific
-> things like this quirk directly in the driver and out of the
-> enumeration process.
->
->> We can use
->> pci_bus_find_capability() and pci_bus_read_config_word() with struct
->> pci_bus instead.
->> But this only can be called after pci_scan_root_bus().
->
->> Found
->> iproc_pcie_check_link() have similar implementation.
->
-> You're right, and I don't like iproc_pcie_check_link() either, for the
-> same reasons.
->
-> The iproc_pcie_check_link() is a little better because it's called
-> before enumeration:
->
->   pci_create_root_bus()
->   iproc_pcie_check_link()
->   pci_scan_child_bus()
->
-> But it would be a lot better if iproc_pcie_check_link() were done
-> first, before pci_create_root_bus().  Then it would be more like the
-> structure of other drivers, and we could use pci_scan_root_bus()
-> instead.
->
-> Comments, iproc folks?
->
-> Bjorn
->
+> - DPC on the other hand also binds to downstream ports. I do have
+>   downstream ports in my machine (as part of the Thunderbolt switch)
+>   but they do not have the DPC capability. I've never seen devices
+>   with that capability and cannot estimate what the chances are of them
+>   going to D3cold and sharing an IRQ with other devices. It's probably
+>   not worth preparing for such a situation without knowing its likelihood.
+> 
+> - VC: We allocate a port service for this but do not have a driver.
+> 
+> Bottom line is that the patch for the PCIe hotplug driver seems to be
+> sufficient.
+> 
+> FWIW, on my machine I see numerous devices with AER, PME and VC
+> capabilities. The Nvidia GPU as well as network, Firewire and
+> Thunderbolt controllers all have those. AFAICS we ignore them
+> because their specific drivers do not care for the capabilities
+> and portdrv only binds to root ports.
+> 
+> This seems to support your argument that the PCIe capabilities
+> should be handled by the core rather than portdrv, as we could
+> then make use of the capabilities on endpoint devices in a
+> universal manner.
 
-Regards,
-  Scott
+PME, for one, is not an endpoint capability.  It very specifically is
+defined as a port capability AFAICS, and the whole idea here is that
+endpoints will not use their in-band interrupts to signal PME.  That
+is supposed to be done by ports.
+
+> On the other hand, I think we cannot use a separate MSI for
+> AER, PME et al, can we?
+
+We can, at least in principle.
+
+More precisely, the spec requires PME and hotplug to use the same interrupt
+(please see the comment in pcie_port_enable_msix() on that), but AER can use
+a different one.
+
+> If we cannot, then AER and PME would
+> share the IRQ with an endpoint device's regular interrupt handler,
+> and that might ruin performance. E.g. the Broadcom wireless card
+> generates millions of interrupts on a sufficiently active WiFi.
+> Accessing the device's config space on every interrupt just to
+> check for AER or PME seems like a bad idea. So at the very least
+> we'd need some kind of opt-out.
+
+That is why AER, PME and hotplug are all supposed to be signaled by ports,
+possibly among other things.
+
+Thanks,
+Rafael
