@@ -1,66 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45286 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:36142 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753749AbcHQUAK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Aug 2016 16:00:10 -0400
-Subject: [PATCH v6 2/4] PCI: designware: Move link wait definitions to .c
- file
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: jszhang@marvell.com, jingoohan1@gmail.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Wed, 17 Aug 2016 14:59:58 -0500
-Message-ID: <20160817195958.10418.30303.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	id S1752141AbcHERDM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Aug 2016 13:03:12 -0400
+Date: Fri, 5 Aug 2016 12:03:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH 1/2] vmd: Fix infinite loop executing irq's
+Message-ID: <20160805170302.GA432@localhost>
+References: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joao Pinto <Joao.Pinto@synopsys.com>
+Hi Keith,
 
-Move the link wait sleep definitions to the .c file as suggested by
-Jisheng Zhang in a previous patch.
+On Thu, Aug 04, 2016 at 04:09:08PM -0600, Keith Busch wrote:
+> We can't initialize the list head on deletion as this causes the node
+> to point to itself, looping infinitely if the vmd IRQ handler happens
+> to be servicing that node.
+> 
+> The list initialization supposed to fix a bug from multiple calls to
+> disable the same IRQ. We can fix this instead just checking if the
+> previous pointer indicates it was already deleted.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  arch/x86/pci/vmd.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index e88b417..2294907 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -136,8 +136,8 @@ static void vmd_irq_disable(struct irq_data *data)
+>  	data->chip->irq_mask(data);
+>  
+>  	raw_spin_lock_irqsave(&list_lock, flags);
+> -	list_del_rcu(&vmdirq->node);
+> -	INIT_LIST_HEAD_RCU(&vmdirq->node);
+> +	if (vmdirq->node.prev != LIST_POISON2)
+> +		list_del_rcu(&vmdirq->node);
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jisheng Zhang <jszhang@marvell.com>
----
- drivers/pci/host/pcie-designware.c |    5 +++++
- drivers/pci/host/pcie-designware.h |    5 -----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+It doesn't seem quite right to test for LIST_POISON2.  It seems like a
+little too much knowledge of list internals.  There are no other
+similar tests in the kernel.  Surely this isn't the only case where we
+need to remove from a list that another thread might be traversing.  I
+would look for other similar situations and copy the way they handle
+it.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 1f6bd6d..e99f56e 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -26,6 +26,11 @@
- 
- #include "pcie-designware.h"
- 
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
-+
- /* Synopsis specific PCIE configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_MODE_MASK		(0x3f << 16)
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 74a8fc6..285e1ed 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,11 +22,6 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES		10
--#define LINK_WAIT_USLEEP_MIN		90000
--#define LINK_WAIT_USLEEP_MAX		100000
--
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
+I think I saw a Fixes: tag later, so I assume you'll pick that up for
+v2.  Should this also be tagged for stable?  Are there any bug reports
+we should reference?
 
+>  	raw_spin_unlock_irqrestore(&list_lock, flags);
+>  }
+>  
