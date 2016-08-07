@@ -1,56 +1,150 @@
-Return-Path: <ibmirkin@gmail.com>
-Return-Path: <ibmirkin@gmail.com>
-MIME-Version: 1.0
-Sender: ibmirkin@gmail.com
-In-Reply-To: <1c761bab-f82b-3f43-c4f0-c7a8eff94f25@desertbit.com>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost> <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost> <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
- <20160829235403.GA14177@localhost> <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
- <20160830130634.GA16426@localhost> <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
- <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com> <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
- <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com> <CAKb7UviZ0qKp3PRR+iHr+KiOU9Sadeeb6PyydWN-FUL0RzyCPA@mail.gmail.com>
- <1c761bab-f82b-3f43-c4f0-c7a8eff94f25@desertbit.com>
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Date: Tue, 30 Aug 2016 14:13:46 -0400
-Message-ID: <CAKb7Uvjzhog27TUPTn5OOqXviyD_z3UV0qvskZDEO8CAB2-i2w@mail.gmail.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Roland Singer <roland.singer@desertbit.com>
-Cc: Emil Velikov <emil.l.velikov@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Sun, 7 Aug 2016 11:03:47 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	ML dri-devel <dri-devel@lists.freedesktop.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, Peter Wu <peter@lekensteyn.nl>
-Content-Type: text/plain; charset=UTF-8
+	Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
+ system sleep
+Message-ID: <20160807090347.GA5679@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <20160617210924.GA12254@localhost>
+ <20160617221407.GB1927@wunner.de>
+ <2339231.tBO8VQgPAo@vostro.rjw.lan>
+ <20160803122848.GA4415@wunner.de>
+ <CAJZ5v0jxQHM=uuvFrpPw0vLbVjF0EQsm=XEZNdtQeYsO0ZobtQ@mail.gmail.com>
+ <20160804004538.GA4564@wunner.de>
+ <CAJZ5v0h55MCiSzJz_weEGX7nUsy_TLumssyoXz=f2_b0h_BkQQ@mail.gmail.com>
+ <20160804081446.GA4576@wunner.de>
+ <CAJZ5v0hPbeaUotiFxg_BbkS86HEz=u0ThkdwJju5WyXOuDgd6A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0hPbeaUotiFxg_BbkS86HEz=u0ThkdwJju5WyXOuDgd6A@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 2:02 PM, Roland Singer
-<roland.singer@desertbit.com> wrote:
-> I configured bbswitch to not set any states automatically...
-> So it's possible to obtain and verify the GPU power state.
->
-> However I removed the bbswitch module and booted with nouveau.
->
-> Kernel 4.7.2: nouveau switches the discrete GPU off.
->               I can't trigger the freeze, because bbswitch is missing.
->               I'll work with the system and see if it will freeze.
->
-> Kernel 4.8-rc4: nouveau does not care about the power state and
->                 the discrete GPU is never switched off. I will notice
->                 this, because the second cooling FAN will stop...
->                 Same log messages as send before.
+On Thu, Aug 04, 2016 at 05:30:47PM +0200, Rafael J. Wysocki wrote:
+> On Thu, Aug 4, 2016 at 10:14 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Thu, Aug 04, 2016 at 03:07:56AM +0200, Rafael J. Wysocki wrote:
+> >> On Thu, Aug 4, 2016 at 2:45 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> >> > On Thu, Aug 04, 2016 at 01:50:39AM +0200, Rafael J. Wysocki wrote:
+> >> >> On Wed, Aug 3, 2016 at 2:28 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> >> >> > I will update this patch with Bjorn's suggestion to also leave the
+> >> >> > device in D3cold if it is wakeup-capable. The idea is to just change
+> >> >> > the default state in the first line of the function like this:
+> >> >> >
+> >> >> > -       pci_power_t target_state = PCI_D3hot;
+> >> >> > +       pci_power_t target_state =
+> >> >> > +               dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
+> >> >>
+> >> >> That should work (even though it is a little clumsy IMO).
+> >> >
+> >> > Not sure why that is clumsy but happy to use something else if you
+> >> > have a suggestion?
+> >>
+> >> The clumsy thing is that we'd take the target_state as D3cold only if
+> >> the device already was in that state.
+> >>
+> >> Otherwise, we'd take D3hot as the target state for the same device,
+> >> which doesn't seem particularly consistent to me.
+> >>
+> >> Not that I have better ideas ATM, but then the current code works for
+> >> my use cases. :-)
+> >
+> > The goal is to afford direct-complete to devices which are not power-
+> > manageable by the platform but can still be runtime suspended to D3cold.
+> 
+> Well, this is a bit misleading.
+> 
+> According to the PCI spec there are two ways to put a device into
+> D3cold: either by putting its bus into B3 (which for PCIe means
+> turning the link off IIRC) which happens when the bridge goes into
+> D3hot, or through the platform.
+> 
+> You aren't talking about any of those cases, though, so we go outside
+> of the spec here.
 
-That's surprising. I believe there's an issue with the new logic when
-there's an HDMI audio subdevice. However that only appears if there's
-a cable plugged in, at least in the systems Peter tested. You should
-be able to see whether it's there or not with 'lspci'.
+Yes. With Nvidia Optimus / AMD PowerXpress hybrid graphics on non-Macs
+and Thunderbolt on Macs, it could still be argued that D3cold is
+facilitated by the platform, albeit with custom methods instead of _PS3.
 
-You can check for sure by looking in the vgaswitcheroo state. It
-should say DynOff when it's powered off.
+With hybrid graphics on Macs, the discrete GPU is turned off by
+a gmux controller on the LPC bus which is controlled via I/O ports.
+So the ACPI platform isn't involved at all and at least then we're
+in completely nonstandard territory.
 
-Either way, I think using bbswitch + nouveau isn't supported by
-anyone, so if you want to use it that way, you're on your own. (You
-may want to load nouveau with runpm=0 so that nouveau doesn't try to
-manage the GPU suspend stuff.)
+> > Right now we wake those devices up from D3cold to D3hot before going to
+> > sleep, which is a waste of energy and prolongs the suspend sequence
+> > (waking up the Thunderbolt controller takes 2 seconds).
+> 
+> Understood.
+> 
+> > The de facto standard to power manage such devices seems to be with
+> > dev_pm_domain_set(). That's what vga_switcheroo does and I'll move
+> > to that as well for v3 of this series.
+> 
+> OK
+> 
+> > I could add a "bool can_power_off" to struct dev_pm_domain.
+> 
+> I'm not sure if dev_pm_domain is the right level.  The "can_power_off"
+> thing would be sort of specific to your particular use case.
+> 
+> Say you have something like
+> 
+> struct pci_pm_domain {
+>         struct dev_pm_domain pd;
+>         ...
+> };
+> 
+> > Then I could change pci_target_state() like this:
+> >
+> >         pci_power_t target_state = PCI_D3hot;
+> >
+> >         if (platform_pci_power_manageable(dev)) {
+> >                 [...]
+> > +       } else if (dev->dev.pm_domain && dev->dev.pm_domain.can_power_off) {
+> 
+> so you can do something like
+> 
+>           } else if (dev->dev.pm_domain) {
+>                     struct pci_pm_domain *pci_pd =
+> to_pci_pm_domain(dev->dev.pm_domain);
+> 
+>                     ....
+>           } else if [...]
+> 
+> and it may be a bit more PCI-oriented without expanding generic data types.
+> 
+> > +               target_state = PCI_D3cold;
+> >         } else if [...]
+> >
+> > Another idea would be to add a ->choose_state hook to dev_pm_domain,
+> > but that would have to return a PCI-specific power state, so we'd be
+> > in clumsy territory again.
+> 
+> Right.
+> 
+> > Thoughts?
+> 
+> Essentially, the PCI PM code needs to be told that there is a way to
+> put the device into D3cold by non-standard means.  There are a couple
+> of ways to do that (a new flag in struct pci_dev, the above, probably
+> more), but in any case it needs to be clear that this is non-standard
+> IMO.
 
-  -ilia
+The more I think about it, the more I lean towards the one-line change
+at the top of this e-mail, even though you found it clumsy. It's small
+and simple and fixes the problem without overengineering things.
+
+The reasoning is that going from D3cold to D3hot before system sleep
+just never makes sense, no matter if the device got there by standard
+or nonstandard means. So the default target state should be D3cold if
+the device is already there, and D3hot otherwise. I could perhaps try
+to make this clearer by adding a comment.
+
+Thanks,
+
+Lukas
