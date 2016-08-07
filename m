@@ -1,50 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7899 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751036AbcHHUTU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Aug 2016 16:19:20 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Date: Mon,  8 Aug 2016 14:19:02 -0600
-Message-Id: <1470687542-30155-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+Received: from mail-db5eur01on0063.outbound.protection.outlook.com ([104.47.2.63]:14144
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750715AbcHGFYa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 7 Aug 2016 01:24:30 -0400
+Subject: Re: [RFC 7/7] NVMe: CMB on DMA-BUF
+To: "hch@infradead.org" <hch@infradead.org>
+References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
+ <1470034653-9097-8-git-send-email-haggaie@mellanox.com>
+ <20160801155206.GA23224@infradead.org>
+ <1470121814.20129.8.camel@mellanox.com>
+ <20160804115624.GA12004@infradead.org>
+CC: Liran Liss <liranl@mellanox.com>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yishai Hadas <yishaih@mellanox.com>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"stephen.bates@microsemi.com" <stephen.bates@microsemi.com>,
+	Leon Romanovsky <leonro@mellanox.com>,
+	Kovalyov Artemy <artemyko@mellanox.com>,
+	"j.glisse@gmail.com" <j.glisse@gmail.com>,
+	William Davis <wdavis@nvidia.com>
+From: Haggai Eran <haggaie@mellanox.com>
+Message-ID: <666d2c1e-77cb-c2b3-963f-cd0502ee5335@mellanox.com>
+Date: Sun, 7 Aug 2016 08:24:16 +0300
+MIME-Version: 1.0
+In-Reply-To: <20160804115624.GA12004@infradead.org>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a quirk for certain devices that require ignoring attention
-and power indicators.
+On 8/4/2016 2:56 PM, hch@infradead.org wrote:
+>> Anyway, I understand exposing the CMB directly might be a little too
+>> low level. What do you think would work better? Something like
+>> direct_access that returns bus addresses instead of pfns?
+> 
+> This would be my primary choicse.  We'll really need to built an
+> in-kernel framework for a) PCI P2P access involving drivers for the PCI
+> switches etc, 
+I was thinking perhaps the dma_map_resource patches by Will Davis [1]
+could be used (adding him to the thread).
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/quirks.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+> and then on top of that build something speicifly for
+> block drivers.  Which will be a bit complicated because both have the
+> case of directly memory mapped device as well as indirect devices like
+> the CMB.  I'm pretty sure we won't get it right at the first attempt,
+> so exposing it to userspace is an absolute no-go as that will lock us
+> into the first ABI forever.
+I understand. I'll try to think of something for kernel usage only for
+the next attempt.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b69321c..b5bd7a0 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4427,3 +4427,18 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 	}
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-+
-+/*
-+ * The PCIe slot capabilities for Intel compatible Hot-swap backplane advertise
-+ * attention and power indicators, but will do the wrong thing if used in a
-+ * standard way. Ignore these.
-+ */
-+static void quirk_hsbp(struct pci_dev *pdev)
-+{
-+	pdev->ignore_aip = 1;
-+	pdev->ignore_pip = 1;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_hsbp);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_hsbp);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_hsbp);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_hsbp);
--- 
-2.7.2
+Thanks,
+Haggai
 
+[1]
+https://lists.linuxfoundation.org/pipermail/iommu/2015-August/014106.html
