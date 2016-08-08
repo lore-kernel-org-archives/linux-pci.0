@@ -1,77 +1,177 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 19 Aug 2016 16:01:59 +0800
-From: Chen Yu <yu.c.chen@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH][RFC v2] PCI: Workaround to enable poweroff on Mac Pro 11
-Message-ID: <20160819080159.GA28999@sharon>
-References: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
- <20160819072140.GA10854@wunner.de>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
+	Andy Lutomirski <luto@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Brian Gerst <brgerst@gmail.com>,
+	Denys Vlasenko <dvlasenk@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Josh Poimboeuf <jpoimboe@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [PATCH 4.4 03/68] x86/quirks: Reintroduce scanning of secondary buses
+Date: Mon,  8 Aug 2016 21:10:38 +0200
+Message-Id: <20160808180209.841511551@linuxfoundation.org>
+In-Reply-To: <20160808180209.697765393@linuxfoundation.org>
+References: <20160808180209.697765393@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160819072140.GA10854@wunner.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 19, 2016 at 09:21:40AM +0200, Lukas Wunner wrote:
-> On Fri, Aug 19, 2016 at 01:44:52AM +0800, Chen Yu wrote:
-> > People reported that they can not do a poweroff nor a
-> > suspend to memory on their Mac Pro 11. After some investigations
-> > it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
-> > mm windows([mem 0x7fa00000-0x7fbfffff] and
-> > [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-> > io resource 0x1804 becomes unaccessible immediately, where the
-> > ACPI Sleep register is located, as a result neither poweroff(S5)
-> > nor suspend to memory(S3) works.
-> > 
-> > As suggested by Bjorn, further testing shows that, there is an
-> > unreported device may be (using) conflict with above aperture,
-> > so if we reassign the memory aperture to other place, the poweroff
-> > works again.
-> > 
-> > As we did not find any resource declared in _CRS which contain above
-> > memory aperture, thus we choose a simple workaround to clear the hotplug
-> > flag(suggested by Yinghai Lu), thus do not allocate any resource for
-> > this pci bridge.
-> > 
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rafael J. Wysocki <rafael@kernel.org>
-> > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> > ---
-> >  drivers/pci/quirks.c | 21 +++++++++++++++++++++
-> >  1 file changed, 21 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 37ff015..47b303a 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -2776,6 +2776,27 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
-> >  
-> >  /*
-> > + * Apple: Avoid programming the memory/io aperture of 00:1c.0
-> > + *
-> > + * BIOS does not declare any resource for 00:1c.0, but with
-> > + * hotplug flag set, thus OS allocate:
-> > + * [mem 0x7fa00000 - 0x7fbfffff]
-> > + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
-> > + * which is conflict with an unreported device, which
-> > + * causes unpredictable result such as accessing io port.
-> > + * So clear the hotplug flag to work around it.
-> > + */
-> > +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
-> > +{
-> > +	if (dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") &&
-> > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
-> > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
-> 
-> && has higher precedence than ||, so you would need parentheses here.
-> However I don't think there's another vendor using those product names,
-> so it's probably safe to drop the check for the vendor altogether.
->
-You are right, will send another version. thanks!
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
-Yu 
+------------------
+
+From: Lukas Wunner <lukas@wunner.de>
+
+commit 850c321027c2e31d0afc71588974719a4b565550 upstream.
+
+We used to scan secondary buses until the following commit that
+was applied in 2009:
+
+  8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
+
+which commit constrained early quirks to the root bus only. Its
+motivation was to prevent application of the nvidia_bugs quirk
+on secondary buses.
+
+We're about to add a quirk to reset the Broadcom 4331 wireless card on
+2011/2012 Macs, which is located on a secondary bus behind a PCIe root
+port. To facilitate that, reintroduce scanning of secondary buses.
+
+The commit message of 8659c406ade3 notes that scanning only the root bus
+"saves quite some unnecessary scanning work". The algorithm used prior
+to 8659c406ade3 was particularly time consuming because it scanned
+buses 0 to 31 brute force. To avoid lengthening boot time, employ a
+recursive strategy which only scans buses that are actually reachable
+from the root bus.
+
+Yinghai Lu pointed out that the secondary bus number read from a
+bridge's config space may be invalid, in particular a value of 0 would
+cause an infinite loop. The PCI core goes beyond that and recurses to a
+child bus only if its bus number is greater than the parent bus number
+(see pci_scan_bridge()). Since the root bus is numbered 0, this implies
+that secondary buses may not be 0. Do the same on early scanning.
+
+If this algorithm is found to significantly impact boot time or cause
+infinite loops on broken hardware, it would be possible to limit its
+recursion depth: The Broadcom 4331 quirk applies at depth 1, all others
+at depth 0, so the bus need not be scanned deeper than that for now. An
+alternative approach would be to revert to scanning only the root bus,
+and apply the Broadcom 4331 quirk to the root ports 8086:1c12, 8086:1e12
+and 8086:1e16. Apple always positioned the card behind either of these
+three ports. The quirk would then check presence of the card in slot 0
+below the root port and do its deed.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Link: http://lkml.kernel.org/r/f0daa70dac1a9b2483abdb31887173eb6ab77bdf.1465690253.git.lukas@wunner.de
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ arch/x86/kernel/early-quirks.c |   34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
+
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -609,12 +609,6 @@ struct chipset {
+ 	void (*f)(int num, int slot, int func);
+ };
+ 
+-/*
+- * Only works for devices on the root bus. If you add any devices
+- * not on bus 0 readd another loop level in early_quirks(). But
+- * be careful because at least the Nvidia quirk here relies on
+- * only matching on bus 0.
+- */
+ static struct chipset early_qrk[] __initdata = {
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
+@@ -647,6 +641,8 @@ static struct chipset early_qrk[] __init
+ 	{}
+ };
+ 
++static void __init early_pci_scan_bus(int bus);
++
+ /**
+  * check_dev_quirk - apply early quirks to a given PCI device
+  * @num: bus number
+@@ -655,7 +651,7 @@ static struct chipset early_qrk[] __init
+  *
+  * Check the vendor & device ID against the early quirks table.
+  *
+- * If the device is single function, let early_quirks() know so we don't
++ * If the device is single function, let early_pci_scan_bus() know so we don't
+  * poke at this device again.
+  */
+ static int __init check_dev_quirk(int num, int slot, int func)
+@@ -664,6 +660,7 @@ static int __init check_dev_quirk(int nu
+ 	u16 vendor;
+ 	u16 device;
+ 	u8 type;
++	u8 sec;
+ 	int i;
+ 
+ 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
+@@ -691,25 +688,36 @@ static int __init check_dev_quirk(int nu
+ 
+ 	type = read_pci_config_byte(num, slot, func,
+ 				    PCI_HEADER_TYPE);
++
++	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
++		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
++		if (sec > num)
++			early_pci_scan_bus(sec);
++	}
++
+ 	if (!(type & 0x80))
+ 		return -1;
+ 
+ 	return 0;
+ }
+ 
+-void __init early_quirks(void)
++static void __init early_pci_scan_bus(int bus)
+ {
+ 	int slot, func;
+ 
+-	if (!early_pci_allowed())
+-		return;
+-
+ 	/* Poor man's PCI discovery */
+-	/* Only scan the root bus */
+ 	for (slot = 0; slot < 32; slot++)
+ 		for (func = 0; func < 8; func++) {
+ 			/* Only probe function 0 on single fn devices */
+-			if (check_dev_quirk(0, slot, func))
++			if (check_dev_quirk(bus, slot, func))
+ 				break;
+ 		}
+ }
++
++void __init early_quirks(void)
++{
++	if (!early_pci_allowed())
++		return;
++
++	early_pci_scan_bus(0);
++}
