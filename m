@@ -1,65 +1,36 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: helgaas@kernel.org
-Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jszhang@marvell.com,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v5 1/3] pcie-designware: move definitions
-Date: Wed, 10 Aug 2016 11:00:28 +0100
-Message-Id: <fe7e06c25a022d49a17ece0a1ce0c7d94b338f5c.1470822461.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
-References: <cover.1470822461.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
-References: <cover.1470822461.git.jpinto@synopsys.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 8 Aug 2016 15:22:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
+	bhelgaas@google.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V5 1/3] x86/ioapic: Support hot-removal of IOAPICs
+ present during boot
+Message-ID: <20160808202251.GB6129@localhost>
+References: <20160623173445.GF17987@localhost>
+ <1466912697-3498-1-git-send-email-rui.y.wang@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466912697-3498-1-git-send-email-rui.y.wang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves the sleep definitions to the *.c file like suggested
-by Jisheng Zhang in a previous patch.
+On Sun, Jun 26, 2016 at 11:44:57AM +0800, Rui Wang wrote:
+> v5: Remove #ifdef CONFIG_X86 from setup-bus.c, making it neutral to archs.
+> v4: Add comments explaining when to call acpi_ioapic_add().
+> v3: Previous versions break mips. This version fixes it.
+> 
+> IOAPICs present during system boot aren't added to ioapic_list,
+> thus are unable to be hot-removed. Fix it by calling
+> acpi_ioapic_add() during root bus enumeration.
+> 
+> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-CC: Jisheng Zhang <jszhang@marvell.com>
----
-changes v3->v5:
-- Just to keep up with the patch version
-changes v2->v3 (Bjorn Helgaas):
-- Separated from the new iATU unroll mechanism patch
+Hi Rui,
 
- drivers/pci/host/pcie-designware.c | 5 +++++
- drivers/pci/host/pcie-designware.h | 5 -----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Where are we at with this?  If there's anything that still needs to be
+merged, can you rebase it to v4.8-rc1 and post a new, complete,
+series?
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12afce1..6fb88de 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -26,6 +26,11 @@
- 
- #include "pcie-designware.h"
- 
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
-+
- /* Synopsis specific PCIE configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_MODE_MASK		(0x3f << 16)
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index f437f9b..384e79b 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,11 +22,6 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES		10
--#define LINK_WAIT_USLEEP_MIN		90000
--#define LINK_WAIT_USLEEP_MAX		100000
--
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
--- 
-1.8.1.5
+Bjorn
