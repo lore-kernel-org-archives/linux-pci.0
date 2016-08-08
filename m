@@ -1,71 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>, <bhelgaas@google.com>,
- <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 2/2] PCI: designware: let dw_pcie_link_up() beware of LTSSM
- training bit
-Date: Wed, 10 Aug 2016 13:31:19 +0800
-Message-ID: <1470807079-366-3-git-send-email-jszhang@marvell.com>
-In-Reply-To: <1470807079-366-1-git-send-email-jszhang@marvell.com>
-References: <1470807079-366-1-git-send-email-jszhang@marvell.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39566 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752295AbcHHOBk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Aug 2016 10:01:40 -0400
+Date: Mon, 8 Aug 2016 09:01:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
+Subject: Re: [PATCH] Extending kernel option pci=resource_alignment to be
+ able to specify PCI device/vendor IDs
+Message-ID: <20160808140127.GA14630@localhost>
+References: <9224b5d57cf14c5da4979251742b838b@FE-MBX1012.de.bosch.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jisheng Zhang <jszhang@marvell.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9224b5d57cf14c5da4979251742b838b@FE-MBX1012.de.bosch.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The link may be UP but still in link training. In this case, we can't
-think the link is up and operating correctly. So we need to teach
-dw_pcie_link_up() beware of the PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit.
+On Mon, Aug 08, 2016 at 07:39:01AM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
+> Hi Bjorn,
+> 
+> > On Tue, Jun 07, 2016 at 02:24:17PM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
+> > > Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned
+> > > PCI memory resources are not page aligned.
+> > > By using the kernel option "pci=resource_alignment" it is possible to
+> > > force single PCI boards to use page alignment for their memory resources.
+> > > However, this is fairly cumbersome if multiple of these boards are in
+> > > use as the specification of the cards has to be done via PCI
+> > > bus/slot/function number which might change e.g. by adding another board.
+> > > This patch extends the kernel option "pci=resource_alignment" to allow
+> > > to specify the relevant boards via PCI device/vendor (and subdevice/subvendor)
+> > ids.
+> > > The specification of the devices via device/vendor is indicated by a
+> > > leading string "pci:" as argument to "pci=resource_alignment".
+> > > The format of the specification is
+> > >   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+> > >
+> > > Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
+> > >
+> > > ---
+> > >  Documentation/kernel-parameters.txt |    2 +
+> > >  drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
+> > >  2 files changed, 49 insertions(+), 19 deletions(-)
+> > >
+> > > Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
+> > >
+> > ============================================================
+> > =======
+> > > --- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
+> > > +++ linux-4.7-rc1/Documentation/kernel-parameters.txt
+> > > @@ -2998,6 +2998,8 @@ bytes respectively. Such letter suffixes
+> > >  		resource_alignment=
+> > >  				Format:
+> > >  				[<order of
+> > align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+> > > +				[<order of align>@]pci:<vendor>:<device>\
+> > > +						[:<subvendor>:<subdevice>][; ...]
+> > 
+> > Can you include a little example here so we know whether to use "pci:8086:1234" or
+> > "pci:0x8086:0x1234"?
+> > 
+> > Bjorn
+> 
+> I have provided an example and extended the docu (sent in  http://marc.info/?l=linux-pci&m=146657769505684&w=2 and http://marc.info/?l=linux-pci&m=146918412704107&w=2 ).
+> It would be great if you could comment on the modified patch...
 
-This patch also rewrite PCIE_PHY_DEBUG_R1_LINK_UP definition so that
-it's consistent with other MACROS.
+It looks like I applied the patch, but I forgot to include the updated
+documentation.  Can you confirm that?  If you send a documentation
+patch to add the example, I can add that.
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
----
- drivers/pci/host/pcie-designware.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 24a16dd..6cc21bb 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -73,7 +73,8 @@
- /* PCIe Port Logic registers */
- #define PLR_OFFSET			0x700
- #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
--#define PCIE_PHY_DEBUG_R1_LINK_UP	0x00000010
-+#define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
-+#define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
- 
- /* Parameters for the waiting for link up routine */
- #define LINK_WAIT_MAX_RETRIES		10
-@@ -417,7 +418,8 @@ int dw_pcie_link_up(struct pcie_port *pp)
- 		return pp->ops->link_up(pp);
- 
- 	val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
--	return val & PCIE_PHY_DEBUG_R1_LINK_UP;
-+	return ((val & PCIE_PHY_DEBUG_R1_LINK_UP) &&
-+		(!(val & PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING)));
- }
- 
- static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
--- 
-2.8.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
