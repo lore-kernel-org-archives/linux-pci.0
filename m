@@ -1,42 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Baole Ni <baolex.ni@intel.com>
-To: konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, jgross@suse.com, bhelgaas@google.com,
-	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0828/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:50:20 +0800
-Message-Id: <20160802115020.5178-1-baolex.ni@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:31699 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752640AbcHHTOb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Aug 2016 15:14:31 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 0/3] Limiting pci access requests
+Date: Mon,  8 Aug 2016 13:14:24 -0600
+Message-Id: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+We observe that error handling and device hot removal creates many
+unnecessary config and memory accesses to devices, some of which are not
+even present. While we expect command processing to proceed, we observe
+on various platforms that the unnecessary accesses create instability
+with hardware performing completion synthesis, and slows down handling
+of such error events as well as normal IO processing.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/pci/xen-pcifront.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch series aims to reduce unnecessary accesses.
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 5f70fee..4008d5f 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -77,7 +77,7 @@ static DEFINE_SPINLOCK(pcifront_dev_lock);
- static struct pcifront_device *pcifront_dev;
- 
- static int verbose_request;
--module_param(verbose_request, int, 0644);
-+module_param(verbose_request, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- 
- static int errno_to_pcibios_err(int errno)
- {
+Keith Busch (3):
+  pcie: Don't search capabilities on removed devices
+  pci/msix: Skip disabling removed devices
+  pcie/aer: Cache capability position
+
+ drivers/pci/msi.c             |  5 +++++
+ drivers/pci/pci.c             |  2 +-
+ drivers/pci/pcie/aer/aerdrv.c | 38 +++++++++++++++++---------------------
+ drivers/pci/pcie/aer/aerdrv.h |  1 +
+ 4 files changed, 24 insertions(+), 22 deletions(-)
+
 -- 
-2.9.2
+2.7.2
+
