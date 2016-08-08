@@ -1,100 +1,85 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com,
-	x86@kernel.org
-Subject: [PATCH v4 1/5] x86/ioapic: Change prototype of acpi_ioapic_add()
-Date: Wed, 17 Aug 2016 16:00:33 +0800
-Message-Id: <1471420837-31003-2-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
-References: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:22536 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752125AbcHHPr6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Aug 2016 11:47:58 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCH v2] vmd: Fix infinite loop executing irq's
+Date: Mon,  8 Aug 2016 09:47:51 -0600
+Message-Id: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change the argument of acpi_ioapic_add() to a generic ACPI handle, and
-move its prototype from drivers/acpi/internal.h to include/linux/acpi.h
-so that it can be called from outside the pci_root driver.
+We can't initialize the list head on deletion as this causes the node
+to point to itself, looping infinitely if the vmd IRQ handler happened
+to be servicing that node.
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+The list initialization was trying fix a bug from multiple calls to
+disable the same IRQ. We can fix this instead by having the vmd driver
+track if the interrupt is enabled.
+
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Cc: Jon Derrick <jonathan.derrick@intel.com>
+Reported-by: Grzegorz Koczot <grzegorz.koczot@intel.com>
+Tested-by: Miroslaw Drost <miroslaw.drost@intel.com>
 ---
- drivers/acpi/internal.h | 2 --
- drivers/acpi/ioapic.c   | 6 +++---
- drivers/acpi/pci_root.c | 2 +-
- include/linux/acpi.h    | 6 ++++++
- 4 files changed, 10 insertions(+), 6 deletions(-)
+v1 -> v2:
 
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 940218f..f26fc1d 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -40,10 +40,8 @@ int acpi_sysfs_init(void);
- void acpi_container_init(void);
- void acpi_memory_hotplug_init(void);
- #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
--int acpi_ioapic_add(struct acpi_pci_root *root);
- int acpi_ioapic_remove(struct acpi_pci_root *root);
- #else
--static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
- static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
- #endif
- #ifdef CONFIG_ACPI_DOCK
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index ccdc8db..2449377 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -189,13 +189,13 @@ exit:
- 	return AE_OK;
+  Removed check for poisioned list pointer. This is abusing knowledge
+  internal to the list api, so we need another way to know if the child
+  irq is enabled. This patch uses a driver controlled boolean for this.
+
+  Added tags for the bug reporter and tester.
+
+ arch/x86/pci/vmd.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+index e88b417..4b85837 100644
+--- a/arch/x86/pci/vmd.c
++++ b/arch/x86/pci/vmd.c
+@@ -41,6 +41,7 @@ static DEFINE_RAW_SPINLOCK(list_lock);
+  * @node:	list item for parent traversal.
+  * @rcu:	RCU callback item for freeing.
+  * @irq:	back pointer to parent.
++ * @enabled:	true if driver enabled irq
+  * @virq:	the virtual IRQ value provided to the requesting driver.
+  *
+  * Every MSI/MSI-X IRQ requested for a device in a VMD domain will be mapped to
+@@ -50,6 +51,7 @@ struct vmd_irq {
+ 	struct list_head	node;
+ 	struct rcu_head		rcu;
+ 	struct vmd_irq_list	*irq;
++	bool			enabled;
+ 	unsigned int		virq;
+ };
+ 
+@@ -122,7 +124,9 @@ static void vmd_irq_enable(struct irq_data *data)
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&list_lock, flags);
++	WARN_ON(vmdirq->enabled);
+ 	list_add_tail_rcu(&vmdirq->node, &vmdirq->irq->irq_list);
++	vmdirq->enabled = true;
+ 	raw_spin_unlock_irqrestore(&list_lock, flags);
+ 
+ 	data->chip->irq_unmask(data);
+@@ -136,8 +140,10 @@ static void vmd_irq_disable(struct irq_data *data)
+ 	data->chip->irq_mask(data);
+ 
+ 	raw_spin_lock_irqsave(&list_lock, flags);
+-	list_del_rcu(&vmdirq->node);
+-	INIT_LIST_HEAD_RCU(&vmdirq->node);
++	if (vmdirq->enabled) {
++		list_del_rcu(&vmdirq->node);
++		vmdirq->enabled = false;
++	}
+ 	raw_spin_unlock_irqrestore(&list_lock, flags);
  }
  
--int acpi_ioapic_add(struct acpi_pci_root *root)
-+int acpi_ioapic_add(acpi_handle root_handle)
- {
- 	acpi_status status, retval = AE_OK;
- 
--	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root_handle,
- 				     UINT_MAX, handle_ioapic_add, NULL,
--				     root->device->handle, (void **)&retval);
-+				     root_handle, (void **)&retval);
- 
- 	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
- }
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index d144168..b07eda1 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -614,7 +614,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (hotadd) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
--		acpi_ioapic_add(root);
-+		acpi_ioapic_add(root->device->handle);
- 	}
- 
- 	pci_lock_rescan_remove();
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 4d8452c..c9a596b 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -751,6 +751,12 @@ static inline int acpi_reconfig_notifier_unregister(struct notifier_block *nb)
- 
- #endif	/* !CONFIG_ACPI */
- 
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+int acpi_ioapic_add(acpi_handle root);
-+#else
-+static inline int acpi_ioapic_add(acpi_handle root) { return 0; }
-+#endif
-+
- #ifdef CONFIG_ACPI
- void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
- 			       u32 pm1a_ctrl,  u32 pm1b_ctrl));
 -- 
-1.8.3.1
+2.7.2
+
