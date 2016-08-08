@@ -1,61 +1,185 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50402 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754719AbcHSBlT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:41:19 -0400
-Date: Thu, 18 Aug 2016 15:55:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Casey Leedom <leedom@chelsio.com>
-Cc: Hariprasad S <hariprasad@chelsio.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        SWise OGC <swise@opengridcomputing.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] pci: Use same logic in pci_vpd_read as that of
- pci_vpd_write
-Message-ID: <20160818205524.GO27353@localhost>
-References: <1466827722-17287-1-git-send-email-hariprasad@chelsio.com>
- <20160808210858.GC6129@localhost>
- <DM5PR12MB17864DB8AA81CBA21EBB7AA8C81B0@DM5PR12MB1786.namprd12.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <DM5PR12MB17864DB8AA81CBA21EBB7AA8C81B0@DM5PR12MB1786.namprd12.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH V5 2/5] PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
+Date: Mon,  8 Aug 2016 14:56:39 +0200
+Message-Id: <1470661002-26213-3-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470661002-26213-1-git-send-email-tn@semihalf.com>
+References: <1470661002-26213-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Casey,
+pci_acpi_setup_ecam_mapping() is not really ARM64 specific so move it out
+of arch/arm64/ directory. In preparation for adding MCFG quirk handling
+extend pci_acpi_setup_ecam_mapping() functionality to accept custom
+PCI config accessors (function's argument).
 
-Sorry for the delay in responding.
+For ARM64 ACPI based PCI host controller we still use pci_generic_ecam_ops.
 
-On Mon, Aug 08, 2016 at 09:20:22PM +0000, Casey Leedom wrote:
-> | From: Bjorn Helgaas <helgaas@kernel.org>
-> | Sent: Monday, August 8, 2016 2:08 PM
-> | 
-> | I think the existing semantics are the same as for the read(2)
-> | syscall: we return the number of bytes read, which may be less than
-> | the size requested, and callers may use random garbage if they don't
-> | check for short reads.
-> 
-> read(2) is a generic I/O system call, which maintains a read pointer with
-> lseek(2) semantics, etc.  This seems like an Apples and Oranges
-> comparison.
-> 
-> | If we make pci_read_vpd() return error instead of a short read, how do
-> | callers figure out how much to request?
-> 
-> The same question could be asked of the pci_write_vpd() call which
-> currently throws an error is any portion of the requested write is beyond
-> the recorded VPD area.  Also, isn't this what (struct pci_dev *)->vpd.len
-> is for?  Although I think we'd want an API to retrieve that rather than have
-> callers simply access the potentially uninitialized field which is lazily
-> initialized.  On the other hand, we don't seem to have any current callers
-> with this issue.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ arch/arm64/kernel/pci.c  | 41 ++---------------------------------------
+ drivers/acpi/pci_mcfg.c  | 40 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  3 +++
+ 3 files changed, 45 insertions(+), 39 deletions(-)
 
-Drivers that read VPD probably can figure out how much to read.  The
-place I'm worried about is read_vpd_attr(), the hook for reading VPD
-via sysfs.  If we do something like "cat /sys/.../vpd", I think cat
-will try to read a large chunk and it will currently get a short read.
-If we return an error instead of the short read, I think the sysfs
-file will be much harder to use.
-
-Bjorn
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 981e828..2e7bed4 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -114,44 +114,6 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 	return 0;
+ }
+ 
+-/*
+- * Lookup the bus range for the domain in MCFG, and set up config space
+- * mapping.
+- */
+-static struct pci_config_window *
+-pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+-{
+-	struct resource *bus_res = &root->secondary;
+-	u16 seg = root->segment;
+-	struct pci_config_window *cfg;
+-	struct resource cfgres;
+-	unsigned int bsz;
+-
+-	/* Use address from _CBA if present, otherwise lookup MCFG */
+-	if (!root->mcfg_addr)
+-		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+-
+-	if (!root->mcfg_addr) {
+-		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
+-			seg, bus_res);
+-		return NULL;
+-	}
+-
+-	bsz = 1 << pci_generic_ecam_ops.bus_shift;
+-	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+-	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+-	cfgres.flags = IORESOURCE_MEM;
+-	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+-			      &pci_generic_ecam_ops);
+-	if (IS_ERR(cfg)) {
+-		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+-			seg, bus_res, PTR_ERR(cfg));
+-		return NULL;
+-	}
+-
+-	return cfg;
+-}
+-
+ /* release_info: free resources allocated by init_info */
+ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
+ {
+@@ -177,7 +139,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (!ri)
+ 		return NULL;
+ 
+-	ri->cfg = pci_acpi_setup_ecam_mapping(root);
++	ri->cfg = pci_acpi_setup_ecam_mapping(root,
++					      &pci_generic_ecam_ops.pci_ops);
+ 	if (!ri->cfg) {
+ 		kfree(ri);
+ 		return NULL;
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index b5b376e..331b560 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -22,6 +22,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
++#include <linux/pci-ecam.h>
+ 
+ /* Structure to hold entries from the MCFG table */
+ struct mcfg_entry {
+@@ -52,6 +53,45 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
+ 	return 0;
+ }
+ 
++/*
++ * Lookup the bus range for the domain in MCFG, and set up config space
++ * mapping.
++ */
++struct pci_config_window *
++pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops)
++{
++	struct resource *bus_res = &root->secondary;
++	u16 seg = root->segment;
++	struct pci_config_window *cfg;
++	struct resource cfgres;
++	struct pci_ecam_ops ecam_ops = {
++			.bus_shift = 20,
++			.pci_ops = *ops,
++	};
++
++	/* Use address from _CBA if present, otherwise lookup MCFG */
++	if (!root->mcfg_addr)
++		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
++
++	if (!root->mcfg_addr) {
++		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
++			seg, bus_res);
++		return NULL;
++	}
++
++	cfgres.start = root->mcfg_addr + (bus_res->start << 20);
++	cfgres.end = cfgres.start + (resource_size(bus_res) << 20) - 1;
++	cfgres.flags = IORESOURCE_MEM;
++	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, &ecam_ops);
++	if (IS_ERR(cfg)) {
++		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
++			seg, bus_res, PTR_ERR(cfg));
++		return NULL;
++	}
++
++	return cfg;
++}
++
+ static __init int pci_mcfg_parse(struct acpi_table_header *header)
+ {
+ 	struct acpi_table_mcfg *mcfg;
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 7d63a66..e9bfe00 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -26,6 +26,9 @@ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+ extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
+ 
++extern struct pci_config_window *
++pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
++
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
+ 	struct pci_bus *pbus = pdev->bus;
+-- 
+1.9.1
