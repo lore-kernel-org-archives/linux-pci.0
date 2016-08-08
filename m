@@ -1,114 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41150 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753000AbcHOPXt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 11:23:49 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Nate Watterson <nwatters@codeaurora.org>,
-	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 01/15] drivers: iommu: add FWNODE_IOMMU fwnode type
-Date: Mon, 15 Aug 2016 16:23:26 +0100
-Message-Id: <1471274620-20754-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH V5 4/5] ARM64/PCI: Start using quirks handling for ACPI based PCI host controller
+Date: Mon,  8 Aug 2016 15:05:40 +0200
+Message-Id: <1470661541-26270-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On systems booting with a device tree, every struct device is
-associated with a struct device_node, that represents its DT
-representation. The device node can be used in generic kernel
-contexts (eg IRQ translation, IOMMU streamid mapping), to
-retrieve the properties associated with the device and carry
-out kernel operation accordingly. Owing to the 1:1 relationship
-between the device and its device_node, the device_node can also
-be used as a look-up token for the device (eg looking up a device
-through its device_node), to retrieve the device in kernel paths
-where the device_node is available.
+Since there are platforms which have non-compliant ECAM space we need to
+override these accessors prior to PCI buses enumeration. In order to do
+that we call pci_mcfg_match_quirks() to retrieve custom
+pci_config_window structure. If no correlated quirk on list, use
+fully ECAM compliant generic PCI config accessors.
 
-On systems booting with ACPI, the same abstraction provided by
-the device_node is required to provide look-up functionality.
-
-Therefore, mirroring the approach implemented in the IRQ domain
-kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
-
-This patch also implements a glue kernel layer that allows to
-allocate/free FWNODE_IOMMU fwnode_handle structures and associate
-them with IOMMU devices.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- include/linux/fwnode.h |  1 +
- include/linux/iommu.h  | 25 +++++++++++++++++++++++++
- 2 files changed, 26 insertions(+)
+ arch/arm64/kernel/pci.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
-index 8516717..6e10050 100644
---- a/include/linux/fwnode.h
-+++ b/include/linux/fwnode.h
-@@ -19,6 +19,7 @@ enum fwnode_type {
- 	FWNODE_ACPI_DATA,
- 	FWNODE_PDATA,
- 	FWNODE_IRQCHIP,
-+	FWNODE_IOMMU,
- };
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 2e7bed4..aa734bd 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -139,8 +139,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (!ri)
+ 		return NULL;
  
- struct fwnode_handle {
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index a35fb8b..6f703cb 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -38,6 +38,7 @@ struct bus_type;
- struct device;
- struct iommu_domain;
- struct notifier_block;
-+struct fwnode_handle;
- 
- /* iommu fault flags */
- #define IOMMU_FAULT_READ	0x0
-@@ -543,4 +544,28 @@ static inline void iommu_device_unlink(struct device *dev, struct device *link)
- 
- #endif /* CONFIG_IOMMU_API */
- 
-+/* IOMMU fwnode handling */
-+static inline bool is_fwnode_iommu(struct fwnode_handle *fwnode)
-+{
-+	return fwnode && fwnode->type == FWNODE_IOMMU;
-+}
-+
-+static inline struct fwnode_handle *iommu_alloc_fwnode(void)
-+{
-+	struct fwnode_handle *fwnode;
-+
-+	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_ATOMIC);
-+	fwnode->type = FWNODE_IOMMU;
-+
-+	return fwnode;
-+}
-+
-+static inline void iommu_free_fwnode(struct fwnode_handle *fwnode)
-+{
-+	if (WARN_ON(!is_fwnode_iommu(fwnode)))
-+		return;
-+
-+	kfree(fwnode);
-+}
-+
- #endif /* __LINUX_IOMMU_H */
+-	ri->cfg = pci_acpi_setup_ecam_mapping(root,
+-					      &pci_generic_ecam_ops.pci_ops);
++	ri->cfg = pci_mcfg_match_quirks(root);
+ 	if (!ri->cfg) {
+ 		kfree(ri);
+ 		return NULL;
 -- 
-2.6.4
-
+1.9.1
