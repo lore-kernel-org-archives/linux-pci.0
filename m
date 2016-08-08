@@ -1,142 +1,221 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:34176 "EHLO
-        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932622AbcHXU6f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 16:58:35 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 7/9] PCI: PCIe xilinx-nwl: make host code explicitly non-modular
-Date: Wed, 24 Aug 2016 16:57:50 -0400
-Message-ID: <20160824205752.12024-8-paul.gortmaker@windriver.com>
-In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH V5 5/5] PCI: thunder-pem: Support quirky configuration space access for ACPI based PCI host controller
+Date: Mon,  8 Aug 2016 14:56:42 +0200
+Message-Id: <1470661002-26213-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470661002-26213-1-git-send-email-tn@semihalf.com>
+References: <1470661002-26213-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+Add infrastructure to support ThunderX PEM specific PCI configuration space
+access for ACPI based PCI host controller. This involves:
+1. New initialization call thunder_pem_cfg_init() to create configuration
+space mapping based on hardcoded range addresses
+2. thunder_pem_init() ACPI extension to obtain hardcoded addresses for
+PEM specific register ranges
+3. New quirk entry (for common quirk array) which identifies platform and
+calls thunder_pem_cfg_init() from [1]
 
-drivers/pci/host/Kconfig:config PCIE_XILINX_NWL
-drivers/pci/host/Kconfig:       bool "NWL PCIe Core"
-
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-We explicitly disallow a driver unbind, since that doesn't have a
-sensible use case anyway, and it allows us to drop the ".remove"
-code for non-modular drivers.  Several functions only used by the
-remove function are also deleted here.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- drivers/pci/host/pcie-xilinx-nwl.c | 53 +++-----------------------------------
- 1 file changed, 3 insertions(+), 50 deletions(-)
+ drivers/pci/host/mcfg-quirks.c     |  7 +++
+ drivers/pci/host/mcfg-quirks.h     |  4 ++
+ drivers/pci/host/pci-thunder-pem.c | 96 ++++++++++++++++++++++++++++++++------
+ 3 files changed, 94 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 0b597d9190b4..df7fb8b69658 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -15,7 +15,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
+diff --git a/drivers/pci/host/mcfg-quirks.c b/drivers/pci/host/mcfg-quirks.c
+index aa9907b..2993a72 100644
+--- a/drivers/pci/host/mcfg-quirks.c
++++ b/drivers/pci/host/mcfg-quirks.c
+@@ -44,6 +44,13 @@ struct pci_cfg_fixup {
+ 
+ static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
+ /*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook }, */
++#ifdef CONFIG_PCI_HOST_THUNDER_PEM
++	/* Pass2.0 */
++	{ "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(4, 9), MCFG_BUS_ANY, NULL,
++	  thunder_pem_cfg_init },
++	{ "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(14, 19), MCFG_BUS_ANY, NULL,
++	  thunder_pem_cfg_init },
++#endif
+ };
+ 
+ static bool pci_mcfg_fixup_match(struct pci_cfg_fixup *f,
+diff --git a/drivers/pci/host/mcfg-quirks.h b/drivers/pci/host/mcfg-quirks.h
+index 45cbd16..411c667 100644
+--- a/drivers/pci/host/mcfg-quirks.h
++++ b/drivers/pci/host/mcfg-quirks.h
+@@ -16,5 +16,9 @@
+ #define __MCFG_QUIRKS_H__
+ 
+ /* MCFG quirks initialize call list */
++#ifdef CONFIG_PCI_HOST_THUNDER_PEM
++struct pci_config_window *
++thunder_pem_cfg_init(struct acpi_pci_root *root, struct pci_ops *ops);
++#endif
+ 
+ #endif /* __MCFG_QUIRKS_H__ */
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index 6abaf80..3f06e49 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -18,9 +18,12 @@
+ #include <linux/init.h>
  #include <linux/of_address.h>
  #include <linux/of_pci.h>
-@@ -459,40 +459,6 @@ static const struct irq_domain_ops dev_msi_domain_ops = {
- 	.free   = nwl_irq_domain_free,
- };
++#include <linux/pci-acpi.h>
+ #include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
  
--static void nwl_msi_free_irq_domain(struct nwl_pcie *pcie)
--{
--	struct nwl_msi *msi = &pcie->msi;
--
--	if (msi->irq_msi0)
--		irq_set_chained_handler_and_data(msi->irq_msi0, NULL, NULL);
--	if (msi->irq_msi1)
--		irq_set_chained_handler_and_data(msi->irq_msi1, NULL, NULL);
--
--	if (msi->msi_domain)
--		irq_domain_remove(msi->msi_domain);
--	if (msi->dev_domain)
--		irq_domain_remove(msi->dev_domain);
--
--	kfree(msi->bitmap);
--	msi->bitmap = NULL;
--}
--
--static void nwl_pcie_free_irq_domain(struct nwl_pcie *pcie)
--{
--	int i;
--	u32 irq;
--
--	for (i = 0; i < INTX_NUM; i++) {
--		irq = irq_find_mapping(pcie->legacy_irq_domain, i + 1);
--		if (irq > 0)
--			irq_dispose_mapping(irq);
--	}
--	if (pcie->legacy_irq_domain)
--		irq_domain_remove(pcie->legacy_irq_domain);
--
--	nwl_msi_free_irq_domain(pcie);
--}
--
- static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
- {
- #ifdef CONFIG_PCI_MSI
-@@ -867,25 +833,12 @@ error:
- 	return err;
++#include "mcfg-quirks.h"
++
+ #define PEM_CFG_WR 0x28
+ #define PEM_CFG_RD 0x30
+ 
+@@ -284,6 +287,37 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+ 	return pci_generic_config_write(bus, devfn, where, size, val);
  }
  
--static int nwl_pcie_remove(struct platform_device *pdev)
--{
--	struct nwl_pcie *pcie = platform_get_drvdata(pdev);
++#ifdef CONFIG_ACPI
++
++static struct resource thunder_pem_reg_res[] = {
++	[4] = DEFINE_RES_MEM(0x87e0c0000000UL, SZ_16M),
++	[5] = DEFINE_RES_MEM(0x87e0c1000000UL, SZ_16M),
++	[6] = DEFINE_RES_MEM(0x87e0c2000000UL, SZ_16M),
++	[7] = DEFINE_RES_MEM(0x87e0c3000000UL, SZ_16M),
++	[8] = DEFINE_RES_MEM(0x87e0c4000000UL, SZ_16M),
++	[9] = DEFINE_RES_MEM(0x87e0c5000000UL, SZ_16M),
++	[14] = DEFINE_RES_MEM(0x97e0c0000000UL, SZ_16M),
++	[15] = DEFINE_RES_MEM(0x97e0c1000000UL, SZ_16M),
++	[16] = DEFINE_RES_MEM(0x97e0c2000000UL, SZ_16M),
++	[17] = DEFINE_RES_MEM(0x97e0c3000000UL, SZ_16M),
++	[18] = DEFINE_RES_MEM(0x97e0c4000000UL, SZ_16M),
++	[19] = DEFINE_RES_MEM(0x97e0c5000000UL, SZ_16M),
++};
++
++static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
++{
++	struct acpi_device *adev = to_acpi_device(cfg->parent);
++	struct acpi_pci_root *root = acpi_driver_data(adev);
++
++	return &thunder_pem_reg_res[root->segment];
++}
++#else
++static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
++{
++	return NULL;
++}
++#endif
++
+ static int thunder_pem_init(struct pci_config_window *cfg)
+ {
+ 	struct device *dev = cfg->parent;
+@@ -292,24 +326,24 @@ static int thunder_pem_init(struct pci_config_window *cfg)
+ 	struct thunder_pem_pci *pem_pci;
+ 	struct platform_device *pdev;
+ 
+-	/* Only OF support for now */
+-	if (!dev->of_node)
+-		return -EINVAL;
 -
--	nwl_pcie_free_irq_domain(pcie);
--	platform_set_drvdata(pdev, NULL);
--	return 0;
--}
+ 	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
+ 	if (!pem_pci)
+ 		return -ENOMEM;
+ 
+-	pdev = to_platform_device(dev);
 -
- static struct platform_driver nwl_pcie_driver = {
- 	.driver = {
- 		.name = "nwl-pcie",
-+		.suppress_bind_attrs = true,
- 		.of_match_table = nwl_pcie_of_match,
- 	},
- 	.probe = nwl_pcie_probe,
--	.remove = nwl_pcie_remove,
+-	/*
+-	 * The second register range is the PEM bridge to the PCIe
+-	 * bus.  It has a different config access method than those
+-	 * devices behind the bridge.
+-	 */
+-	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (acpi_disabled) {
++		pdev = to_platform_device(dev);
++
++		/*
++		 * The second register range is the PEM bridge to the PCIe
++		 * bus.  It has a different config access method than those
++		 * devices behind the bridge.
++		 */
++		res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	} else {
++		res_pem = thunder_pem_acpi_res(cfg);
++	}
+ 	if (!res_pem) {
+-		dev_err(dev, "missing \"reg[1]\"property\n");
++		dev_err(dev, "missing configuration region\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -360,3 +394,39 @@ static struct platform_driver thunder_pem_driver = {
+ 	.probe = thunder_pem_probe,
  };
--module_platform_driver(nwl_pcie_driver);
--
--MODULE_AUTHOR("Xilinx, Inc");
--MODULE_DESCRIPTION("NWL PCIe driver");
--MODULE_LICENSE("GPL");
-+builtin_platform_driver(nwl_pcie_driver);
+ builtin_platform_driver(thunder_pem_driver);
++
++#ifdef CONFIG_ACPI
++
++static struct resource thunder_pem_cfg_res[] = {
++	[4] = DEFINE_RES_MEM(0x88001f000000UL, 0x39 * SZ_16M),
++	[5] = DEFINE_RES_MEM(0x884057000000UL, 0x39 * SZ_16M),
++	[6] = DEFINE_RES_MEM(0x88808f000000UL, 0x39 * SZ_16M),
++	[7] = DEFINE_RES_MEM(0x89001f000000UL, 0x39 * SZ_16M),
++	[8] = DEFINE_RES_MEM(0x894057000000UL, 0x39 * SZ_16M),
++	[9] = DEFINE_RES_MEM(0x89808f000000UL, 0x39 * SZ_16M),
++	[14] = DEFINE_RES_MEM(0x98001f000000UL, 0x39 * SZ_16M),
++	[15] = DEFINE_RES_MEM(0x984057000000UL, 0x39 * SZ_16M),
++	[16] = DEFINE_RES_MEM(0x98808f000000UL, 0x39 * SZ_16M),
++	[17] = DEFINE_RES_MEM(0x99001f000000UL, 0x39 * SZ_16M),
++	[18] = DEFINE_RES_MEM(0x994057000000UL, 0x39 * SZ_16M),
++	[19] = DEFINE_RES_MEM(0x99808f000000UL, 0x39 * SZ_16M),
++};
++
++struct pci_config_window *
++thunder_pem_cfg_init(struct acpi_pci_root *root, struct pci_ops *ops)
++{
++	struct resource *bus_res = &root->secondary;
++	u16 seg = root->segment;
++	struct pci_config_window *cfg;
++
++	cfg = pci_ecam_create(&root->device->dev, &thunder_pem_cfg_res[seg],
++			      bus_res, &pci_thunder_pem_ops);
++	if (IS_ERR(cfg)) {
++		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
++			seg, bus_res, PTR_ERR(cfg));
++		return NULL;
++	}
++
++	return cfg;
++}
++#endif
 -- 
-2.8.4
-
+1.9.1
