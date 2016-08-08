@@ -1,41 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38724 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753010AbcHVStU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 14:49:20 -0400
-Date: Mon, 22 Aug 2016 13:49:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Pratyush Anand <panand@redhat.com>
-Cc: dongbo4@huawei.com, bhelgaas@google.com, jingoohan1@gmail.com,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/2] pcie/designware: Viewport assignment update
-Message-ID: <20160822184915.GH18628@localhost>
-References: <cover.1467647958.git.panand@redhat.com>
+Received: from relmlor2.renesas.com ([210.160.252.172]:5885 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751259AbcHHJbL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Aug 2016 05:31:11 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>
+Subject: RE: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
+Date: Mon, 8 Aug 2016 09:31:05 +0000
+Message-ID: <HK2PR0601MB1393B3642136B01087628DC9F51B0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+References: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com>
+ <20160721093514.GA7982@red-moon>
+In-Reply-To: <20160721093514.GA7982@red-moon>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1467647958.git.panand@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 04, 2016 at 09:44:41PM +0530, Pratyush Anand wrote:
-> Most of the designware PCIe platforms have more than 2 viewports. So, patch
-> 1/2 allows to fix viewport-2 for IO transaction for such cases.
-> When we have only two viewports, then patch 2/2 exchange viewport
-> assignment of memory and cfg transaction. It helps to fix a possibility of
-> corruption for memory transaction. However, there still exist possibility
-> of an IO transaction to be corrupted. We can not do much for <=2 viewports.
-> See, patch log for detail.
-> 
-> Dong Bo (1):
->   pcie/designware: Exchange viewport of `MEMORYs' and `CFGs/IOs'
-> 
-> Pratyush Anand (1):
->   pcie/designware: Keep viewport fixed for IO transaction if
->     num_viewport > 2
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |  3 ++
->  drivers/pci/host/pcie-designware.c                 | 32 +++++++++++++++-------
->  drivers/pci/host/pcie-designware.h                 |  1 +
->  3 files changed, 26 insertions(+), 10 deletions(-)
+Hi Lorenzo,
 
-Applied (with Rob's ack on 1/2) to pci/host-designware for v4.9, thanks!
+Thanks for the link, I'll wait to see how this pans out.
+
+Thanks
+Phil
+
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Lorenzo Pieralisi
+> Sent: 21 July 2016 10:35
+> To: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; linux-
+> renesas-soc@vger.kernel.org
+> Subject: Re: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
+> 
+> Hi Phil,
+> 
+> On Fri, Jul 08, 2016 at 12:49:55PM +0100, Phil Edworthy wrote:
+> > Hi Bjorn,
+> >
+> > I've marked this as RFC as I guess there might be a better way to do
+> > this, but I'm not sure how. I would appreciate your thoughts on this.
+> 
+> There is a more generic solution to this issue, that has been
+> hanging in the balance for a while:
+> 
+> http://marc.info/?l=linux-pci&m=144557674601373&w=2
+> 
+> We should bring it to completion since pci_fixup_irqs() should
+> really be replaced, this is just another example of the bugs
+> it can trigger.
+> 
+> Thanks,
+> Lorenzo
+> 
+> > Thanks
+> > Phil
+> >
+> > ---
+> > pdev_fixup_irq() performs interrupt swizzling on all PCI devices,
+> > no matter that the device may be on a completely unrelated PCI
+> > Host controller.
+> >
+> > When you have multiple PCI Host controllers, pdev_fixup_irq() can
+> > clobber the dev->irq of devices it should not be changing.
+> > This has been seen when performing suspend/resume on boards with
+> > two R-Car PCIe Host controllers, resulting in a NULL ptr access
+> > in __pci_restore_msi_state. This happens because dev->irq has been
+> > overwritten with 0, and irq_get_msi_desc(dev->irq) returns NULL.
+> >
+> > This patch introduces a new function, pci_fixup_irqs_local(), that
+> > performs the same operation as pdev_fixup_irq(), but only changes
+> > the dev->irq of device on the same domain.
+> >
+> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > ---
+> >  drivers/pci/setup-irq.c | 25 ++++++++++++++++++++++---
+> >  include/linux/pci.h     |  3 +++
+> >  2 files changed, 25 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> > index 95c225b..90ea8fa 100644
+> > --- a/drivers/pci/setup-irq.c
+> > +++ b/drivers/pci/setup-irq.c
+> > @@ -22,7 +22,8 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int
+> irq)
+> >  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> >  }
+> >
+> > -static void pdev_fixup_irq(struct pci_dev *dev,
+> > +static void pdev_fixup_irq(int domain_nr,
+> > +			   struct pci_dev *dev,
+> >  			   u8 (*swizzle)(struct pci_dev *, u8 *),
+> >  			   int (*map_irq)(const struct pci_dev *, u8, u8))
+> >  {
+> > @@ -48,8 +49,15 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+> >  		if (irq == -1)
+> >  			irq = 0;
+> >  	}
+> > -	dev->irq = irq;
+> > +	/* Since pci_fixup_irqs() can be called more than once due to multiple
+> > +	 * host controllers, and we scan all PCI devices, not just those
+> > +	 * attached to this controller, make sure we don't clobber dev->irq
+> > +	 * that has nothing to do with this domain.
+> > +	 */
+> > +	if (domain_nr >= 0 && dev->bus->domain_nr != domain_nr)
+> > +		return;
+> >
+> > +	dev->irq = irq;
+> >  	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
+> >
+> >  	/* Always tell the device, so the driver knows what is
+> > @@ -63,6 +71,17 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+> >  	struct pci_dev *dev = NULL;
+> >
+> >  	for_each_pci_dev(dev)
+> > -		pdev_fixup_irq(dev, swizzle, map_irq);
+> > +		pdev_fixup_irq(-1, dev, swizzle, map_irq);
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+> > +
+> > +void pci_fixup_irqs_local(struct pci_bus *bus,
+> > +		    u8 (*swizzle)(struct pci_dev *, u8 *),
+> > +		    int (*map_irq)(const struct pci_dev *, u8, u8))
+> > +{
+> > +	struct pci_dev *dev = NULL;
+> > +
+> > +	for_each_pci_dev(dev)
+> > +		pdev_fixup_irq(bus->domain_nr, dev, swizzle, map_irq);
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_fixup_irqs_local);
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 8badb66..37a97df 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -1134,6 +1134,9 @@ void pdev_enable_device(struct pci_dev *);
+> >  int pci_enable_resources(struct pci_dev *, int mask);
+> >  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+> >  		    int (*)(const struct pci_dev *, u8, u8));
+> > +void pci_fixup_irqs_local(struct pci_bus *,
+> > +		    u8 (*)(struct pci_dev *, u8 *),
+> > +		    int (*)(const struct pci_dev *, u8, u8));
+> >  #define HAVE_PCI_REQ_REGIONS	2
+> >  int __must_check pci_request_regions(struct pci_dev *, const char *);
+> >  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char
+> *);
+> > --
+> > 2.5.0
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
