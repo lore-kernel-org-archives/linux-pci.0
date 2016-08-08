@@ -1,61 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:38107 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755112AbcHAS7L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Aug 2016 14:59:11 -0400
-Received: by mail-wm0-f53.google.com with SMTP id o80so257791669wme.1
-        for <linux-pci@vger.kernel.org>; Mon, 01 Aug 2016 11:59:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160801125448.4bff0200@t450s.home>
-References: <CAH=XD5_0RV_o0vpx1v3dXEadzdNTwFYhevH70XNFBG-1jBnYzQ@mail.gmail.com>
- <20160801125448.4bff0200@t450s.home>
-From: Kallol Biswas <kallol@nucleodyne.com>
-Date: Mon, 1 Aug 2016 11:59:01 -0700
-Message-ID: <CAH=XD58ubyVJ=VoSb34yM0m5VgL9=m5rm_iqXU5x+LkqKhnLMw@mail.gmail.com>
-Subject: Re: how to initialize a PCI device via specific B:D.F
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH V5 1/5] PCI: Embed pci_ecam_ops in pci_config_window structure
+Date: Mon,  8 Aug 2016 15:05:37 +0200
+Message-Id: <1470661541-26270-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Just experimenting with PCIe Fabric and running into unkown issues.
+pci_config_window keeps pointer to pci_ecam_ops and every time
+we want to deallocate pci_config_window (pci_ecam_free()) we need to make
+sure to free pci_ecam_ops in case it was dynamically allocated prior to
+pci_ecam_create() call.
 
-Thanks for feedback, I will update when I find a good way to solve this.
+To avoid that extra effort, embed pci_ecam_ops in pci_config_window,
+instead of just a pointer.
 
-Thanks,
-Kallol
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+To: Jayachandran C <jchandra@broadcom.com>
+---
+ arch/arm64/kernel/pci.c  | 2 +-
+ drivers/pci/ecam.c       | 6 +++---
+ include/linux/pci-ecam.h | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-On Mon, Aug 1, 2016 at 11:54 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Mon, 1 Aug 2016 11:29:58 -0700
-> Kallol Biswas <kallol@nucleodyne.com> wrote:
->
->> Hi,
->>     I have exposed a realtek PF via an additional switch to a host CPU.
->>
->> The host CPU can now view the device via two paths. One, in regular
->> path and another via the additional switch. The device has two B:D.Fs
->> assigned to it.
->>
->> How can I tell the Realtek driver to configure the device only via new path?
->>
->> Bind/unbind may not work, as I do not want to initialize the device
->> via the regular path.
->
-> In general this sounds like a horrible idea, how can the OS know that
-> these two paths reach the same device?  What about the BAR resources of
-> the device, can they be valid for both paths?  The kernel is going
-> to try to allocate separate resources for each path.  Even if you make
-> the rtl driver only attach once, you better try to pick the BDF that the
-> kernel scanned and programmed resources for most recently.
->
-> If I had to hack something together for this, my first thought would be
-> to use pci-stub to claim both devices via the vendor:device IDs.  Then
-> use a boot script that would "echo 1 > remove" for both devices in
-> sysfs, then hopefully find a "rescan" in sysfs far enough downstream
-> via the path you want that you can rediscover only the desired BDF,
-> then bind that device to the rtl driver.  (I hope you don't intend to
-> ship any products this way).  Thanks,
->
-> Alex
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index acf3872..981e828 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -183,7 +183,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		return NULL;
+ 	}
+ 
+-	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
++	acpi_pci_root_ops.pci_ops = &ri->cfg->ops.pci_ops;
+ 	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
+ 				   ri->cfg);
+ 	if (!bus)
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index 43ed08d..24242f0 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -52,7 +52,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	cfg->parent = dev;
+-	cfg->ops = ops;
++	cfg->ops = *ops;
+ 	cfg->busr.start = busr->start;
+ 	cfg->busr.end = busr->end;
+ 	cfg->busr.flags = IORESOURCE_BUS;
+@@ -138,7 +138,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 			       int where)
+ {
+ 	struct pci_config_window *cfg = bus->sysdata;
+-	unsigned int devfn_shift = cfg->ops->bus_shift - 8;
++	unsigned int devfn_shift = cfg->ops.bus_shift - 8;
+ 	unsigned int busn = bus->number;
+ 	void __iomem *base;
+ 
+@@ -149,7 +149,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 	if (per_bus_mapping)
+ 		base = cfg->winp[busn];
+ 	else
+-		base = cfg->win + (busn << cfg->ops->bus_shift);
++		base = cfg->win + (busn << cfg->ops.bus_shift);
+ 	return base + (devfn << devfn_shift) + where;
+ }
+ 
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 7adad20..0ce2920 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -39,7 +39,7 @@ struct pci_config_window {
+ 	struct resource			res;
+ 	struct resource			busr;
+ 	void				*priv;
+-	struct pci_ecam_ops		*ops;
++	struct pci_ecam_ops		ops;
+ 	union {
+ 		void __iomem		*win;	/* 64-bit single mapping */
+ 		void __iomem		**winp; /* 32-bit per-bus mapping */
+-- 
+1.9.1
