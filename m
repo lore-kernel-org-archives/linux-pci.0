@@ -1,89 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:34150 "EHLO
-        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751465AbcHXU6O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 16:58:14 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 1/9] PCI: PCIe dpc: make it explicitly non-modular
-Date: Wed, 24 Aug 2016 16:57:44 -0400
-Message-ID: <20160824205752.12024-2-paul.gortmaker@windriver.com>
-In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36487 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753152AbcHHTRd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Aug 2016 15:17:33 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
+	Andy Lutomirski <luto@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Brian Gerst <brgerst@gmail.com>,
+	Denys Vlasenko <dvlasenk@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Josh Poimboeuf <jpoimboe@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>
+Subject: [PATCH 4.6 03/96] x86/quirks: Reintroduce scanning of secondary buses
+Date: Mon,  8 Aug 2016 21:10:26 +0200
+Message-Id: <20160808180244.049417468@linuxfoundation.org>
+In-Reply-To: <20160808180243.898163389@linuxfoundation.org>
+References: <20160808180243.898163389@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+4.6-stable review patch.  If anyone has any objections, please let me know.
 
-drivers/pci/pcie/Kconfig:config PCIE_DPC
-drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
+------------------
 
-...meaning that it currently is not being built as a module by anyone.
+From: Lukas Wunner <lukas@wunner.de>
 
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
+commit 850c321027c2e31d0afc71588974719a4b565550 upstream.
 
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.
+We used to scan secondary buses until the following commit that
+was applied in 2009:
 
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
+  8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
 
+which commit constrained early quirks to the root bus only. Its
+motivation was to prevent application of the nvidia_bugs quirk
+on secondary buses.
+
+We're about to add a quirk to reset the Broadcom 4331 wireless card on
+2011/2012 Macs, which is located on a secondary bus behind a PCIe root
+port. To facilitate that, reintroduce scanning of secondary buses.
+
+The commit message of 8659c406ade3 notes that scanning only the root bus
+"saves quite some unnecessary scanning work". The algorithm used prior
+to 8659c406ade3 was particularly time consuming because it scanned
+buses 0 to 31 brute force. To avoid lengthening boot time, employ a
+recursive strategy which only scans buses that are actually reachable
+from the root bus.
+
+Yinghai Lu pointed out that the secondary bus number read from a
+bridge's config space may be invalid, in particular a value of 0 would
+cause an infinite loop. The PCI core goes beyond that and recurses to a
+child bus only if its bus number is greater than the parent bus number
+(see pci_scan_bridge()). Since the root bus is numbered 0, this implies
+that secondary buses may not be 0. Do the same on early scanning.
+
+If this algorithm is found to significantly impact boot time or cause
+infinite loops on broken hardware, it would be possible to limit its
+recursion depth: The Broadcom 4331 quirk applies at depth 1, all others
+at depth 0, so the bus need not be scanned deeper than that for now. An
+alternative approach would be to revert to scanning only the root bus,
+and apply the Broadcom 4331 quirk to the root ports 8086:1c12, 8086:1e12
+and 8086:1e16. Apple always positioned the card behind either of these
+three ports. The quirk would then check presence of the card in slot 0
+below the root port and do its deed.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: Andy Lutomirski <luto@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Yinghai Lu <yinghai@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/pcie/pcie-dpc.c | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+Link: http://lkml.kernel.org/r/f0daa70dac1a9b2483abdb31887173eb6ab77bdf.1465690253.git.lukas@wunner.de
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 250f87861786..9811b14d9ad8 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -1,5 +1,7 @@
- /*
-  * PCI Express Downstream Port Containment services driver
-+ * Author: Keith Busch <keith.busch@intel.com>
-+ *
-  * Copyright (C) 2016 Intel Corp.
+---
+ arch/x86/kernel/early-quirks.c |   34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
+
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -610,12 +610,6 @@ struct chipset {
+ 	void (*f)(int num, int slot, int func);
+ };
+ 
+-/*
+- * Only works for devices on the root bus. If you add any devices
+- * not on bus 0 readd another loop level in early_quirks(). But
+- * be careful because at least the Nvidia quirk here relies on
+- * only matching on bus 0.
+- */
+ static struct chipset early_qrk[] __initdata = {
+ 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
+@@ -648,6 +642,8 @@ static struct chipset early_qrk[] __init
+ 	{}
+ };
+ 
++static void __init early_pci_scan_bus(int bus);
++
+ /**
+  * check_dev_quirk - apply early quirks to a given PCI device
+  * @num: bus number
+@@ -656,7 +652,7 @@ static struct chipset early_qrk[] __init
   *
-  * This file is subject to the terms and conditions of the GNU General Public
-@@ -9,7 +11,7 @@
+  * Check the vendor & device ID against the early quirks table.
+  *
+- * If the device is single function, let early_quirks() know so we don't
++ * If the device is single function, let early_pci_scan_bus() know so we don't
+  * poke at this device again.
+  */
+ static int __init check_dev_quirk(int num, int slot, int func)
+@@ -665,6 +661,7 @@ static int __init check_dev_quirk(int nu
+ 	u16 vendor;
+ 	u16 device;
+ 	u8 type;
++	u8 sec;
+ 	int i;
  
- #include <linux/delay.h>
- #include <linux/interrupt.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/pci.h>
- #include <linux/pcieport_if.h>
+ 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
+@@ -692,25 +689,36 @@ static int __init check_dev_quirk(int nu
  
-@@ -143,16 +145,4 @@ static int __init dpc_service_init(void)
- {
- 	return pcie_port_service_register(&dpcdriver);
+ 	type = read_pci_config_byte(num, slot, func,
+ 				    PCI_HEADER_TYPE);
++
++	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
++		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
++		if (sec > num)
++			early_pci_scan_bus(sec);
++	}
++
+ 	if (!(type & 0x80))
+ 		return -1;
+ 
+ 	return 0;
  }
+ 
+-void __init early_quirks(void)
++static void __init early_pci_scan_bus(int bus)
+ {
+ 	int slot, func;
+ 
+-	if (!early_pci_allowed())
+-		return;
 -
--static void __exit dpc_service_exit(void)
--{
--	pcie_port_service_unregister(&dpcdriver);
--}
--
--MODULE_DESCRIPTION("PCI Express Downstream Port Containment driver");
--MODULE_AUTHOR("Keith Busch <keith.busch@intel.com>");
--MODULE_LICENSE("GPL");
--MODULE_VERSION("0.1");
--
--module_init(dpc_service_init);
--module_exit(dpc_service_exit);
-+device_initcall(dpc_service_init);
--- 
-2.8.4
+ 	/* Poor man's PCI discovery */
+-	/* Only scan the root bus */
+ 	for (slot = 0; slot < 32; slot++)
+ 		for (func = 0; func < 8; func++) {
+ 			/* Only probe function 0 on single fn devices */
+-			if (check_dev_quirk(0, slot, func))
++			if (check_dev_quirk(bus, slot, func))
+ 				break;
+ 		}
+ }
++
++void __init early_quirks(void)
++{
++	if (!early_pci_allowed())
++		return;
++
++	early_pci_scan_bus(0);
++}
+
 
