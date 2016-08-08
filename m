@@ -1,65 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58639 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751301AbcHLFnU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5foXQ020626
-	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:30 -0400
-Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24r5uh8ega-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:30 -0400
-Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Fri, 12 Aug 2016 01:42:28 -0400
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
-	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
-Subject: [PATCH v4 2/5] PCI: Ignore enforced alignment to VF BARs
-Date: Fri, 12 Aug 2016 13:42:23 +0800
-In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1470980546-2918-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:54756 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750929AbcHHVJG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Aug 2016 17:09:06 -0400
+Date: Mon, 8 Aug 2016 16:08:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hariprasad Shenai <hariprasad@chelsio.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, leedom@chelsio.com,
+	swise@opengridcomputing.com, Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] pci: Use same logic in pci_vpd_read as that of
+ pci_vpd_write
+Message-ID: <20160808210858.GC6129@localhost>
+References: <1466827722-17287-1-git-send-email-hariprasad@chelsio.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466827722-17287-1-git-send-email-hariprasad@chelsio.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VF BARs are read-only zeroes according to SRIOV spec,
-the normal way(writing BARs) of allocating resources wouldn't
-be applied to VFs. The VFs' resources would be allocated
-when we enable SR-IOV capability. So we should not try to
-reassign alignment after we enable VFs. It's meaningless
-and will release the allocated resources which leads to a bug.
+[+cc Hannes]
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/pci.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+Hi Hariprasad,
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2d85a96..b8357d7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5048,6 +5048,15 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	resource_size_t align, size;
- 	u16 command;
- 
-+	/*
-+	 * VF BARs are RO zero according to SR-IOV spec 3.4.1.11. Their
-+	 * resources would be allocated when we enable them and not be
-+	 * re-allocated any more. So we should never try to reassign
-+	 * VF's alignment here.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
- 	/* check if specified PCI is target device to reassign */
- 	align = pci_specified_resource_alignment(dev);
- 	if (!align)
--- 
-1.7.9.5
+On Sat, Jun 25, 2016 at 09:38:42AM +0530, Hariprasad Shenai wrote:
+> The new implementation of pci_read_vpd() silently fails to perform a VPD
+> read and allows the caller to use random stack garbage in the read buffer
+> without knowing that it's not really VPD contents. If any portion of the
+> VPD read isn't going to be performed, we should signal that back to the
+> caller.  We could either return an error or we could return the number of
+> bytes actually read. The problem with the latter is that it would require
+> changing every single caller to check for Requested Read Length == Actual
+> Read Length. Returning an error is the more conservative fix and allows
+> for rapid diagnosis of problems.
 
+By "the new implementation of pci_read_vpd()", are you referring to
+104daa71b396 ("PCI: Determine actual VPD size on first access")?
+Please be explicit about which change you mean because it helps people
+review the change and figure out whether it should be backported.
+
+I think the existing semantics are the same as for the read(2)
+syscall: we return the number of bytes read, which may be less than
+the size requested, and callers may use random garbage if they don't
+check for short reads.
+
+If we make pci_read_vpd() return error instead of a short read, how do
+callers figure out how much to request?
+
+In the current tree, I think the following callers don't handle short
+reads correctly:
+
+  cxl_pci_read_adapter_vpd() (cxl, used via read_vpd())
+  eeprom_rd_phys() (cxgb4)
+  t4_get_raw_vpd_params() (cxgb4)
+  sky2_show_vpd() (sky2)
+  efx_probe_vpd_strings() (efx)
+  vfio_vpd_config_write() (vfio)
+
+That's not a very long list, so we could certainly fix them.
+
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
+> ---
+>  drivers/pci/access.c | 9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index d11cdbb8fba3..113637de79bf 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -405,13 +405,8 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
+>  	if (vpd->len == 0)
+>  		return -EIO;
+>  
+> -	if (pos > vpd->len)
+> -		return 0;
+> -
+> -	if (end > vpd->len) {
+> -		end = vpd->len;
+> -		count = end - pos;
+> -	}
+> +	if (end > vpd->len)
+> +		return -EINVAL;
+>  
+>  	if (mutex_lock_killable(&vpd->lock))
+>  		return -EINTR;
+> -- 
+> 2.3.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
