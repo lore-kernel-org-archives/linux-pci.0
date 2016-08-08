@@ -1,73 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45794 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932791AbcHVTob (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 15:44:31 -0400
-Date: Mon, 22 Aug 2016 14:44:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Keith Busch <keith.busch@intel.com>, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular
-Message-ID: <20160822194427.GM18628@localhost>
-References: <20160728193303.12945-1-paul.gortmaker@windriver.com>
- <20160728202859.GA2420@localhost.localdomain>
- <20160728212801.GY11410@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160728212801.GY11410@windriver.com>
+Received: from mga02.intel.com ([134.134.136.20]:19424 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752618AbcHHTOa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Aug 2016 15:14:30 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 1/3] pcie: Don't search capabilities on removed devices
+Date: Mon,  8 Aug 2016 13:14:25 -0600
+Message-Id: <1470683667-28418-2-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Paul,
+This patch returns immediately if trying to find a pcie capability
+on a removed device, as seen with an all 1's completion from config
+read. Previously this function would iterate the maximum 480 times to
+search for a capability at position 0xffc. There is never a case where
+we'd expect all 1's to a successful config read on a capability register,
+so this is a safe criteria to check before bailing on the device.
 
-On Thu, Jul 28, 2016 at 05:28:02PM -0400, Paul Gortmaker wrote:
-> [Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular] On 28/07/2016 (Thu 16:29) Keith Busch wrote:
-> 
-> > On Thu, Jul 28, 2016 at 03:33:03PM -0400, Paul Gortmaker wrote:
-> > > The Kconfig currently controlling compilation of this code is:
-> > > 
-> > > drivers/pci/pcie/Kconfig:config PCIE_DPC
-> > > drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
-> > > 
-> > > ...meaning that it currently is not being built as a module by anyone.
-> > > 
-> > > Lets remove the modular code that is essentially orphaned, so that
-> > > when reading the driver there is no doubt it is builtin-only.
-> > > 
-> > > Since module_init translates to device_initcall in the non-modular
-> > > case, the init ordering remains unchanged with this commit.
-> > > 
-> > > We also delete the MODULE_LICENSE tag etc. since all that information
-> > > was (or is now) contained at the top of the file in the comments.
-> > 
-> > Thanks for cleaning this up.
-> > 
-> > FWIW, all of the other pcie service drivers look like they could use
-> > the same cleanup.
-> 
-> Yep, not to worry, I've still got the following patches pending for-4.9:
-> 
-> $ grep PCI series 
-> # PCI
-> PCI-aerdrv-make-it-explicitly-non-modular.patch
-> PCI-altera-make-it-explicitly-non-modular.patch
-> PCI-dra7xx-make-it-explicitly-non-modular.patch
-> PCI-imx6-make-it-explicitly-non-modular.patch
-> PCI-pme-make-it-explicitly-non-modular.patch
-> PCI-qcom-make-it-explicitly-non-modular.patch
-> PCI-spear13xx-make-it-explicitly-non-modular.patch
-> PCI-xilinx-make-it-explicitly-non-modular.patch
-> PCI-xilinx-nwl-make-it-eplicitly-non-modular.patch
-> PCI-portdrv-make-it-explicitly-non-modular.patch
-> PCI-PCIe-make-dpc-explicitly-non-modular.patch
-> PCI-generic-make-host-common-explicitly-non-modular.patch
-> PCI-hotplug_core-make-it-explicitly-non-modular.patch
-> PCI-hotplug-make-core-code-explicitly-non-modular.patch
+While accessing a removed device shouldn't be fatal, it's doesn't
+accomplish anything. Instead, the code was testing completion synthesis
+capabilities which is observed to cause distruption to normal operations.
 
-Were you planning to post the patches above?  If so, I'll bundle them
-all up along with this DPC one.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bjorn
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d51..e884608 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -331,7 +331,7 @@ int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
+ 	if (header == 0)
+ 		return 0;
+ 
+-	while (ttl-- > 0) {
++	while (ttl-- > 0 && header != -1) {
+ 		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
+ 			return pos;
+ 
+-- 
+2.7.2
+
