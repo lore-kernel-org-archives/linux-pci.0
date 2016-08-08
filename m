@@ -1,51 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43282 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754076AbcHSBLO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:11:14 -0400
-Date: Thu, 18 Aug 2016 14:15:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: bhelgaas@google.com, jszhang@marvell.com, jingoohan1@gmail.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pcie-designware: build error fix
-Message-ID: <20160818191546.GG27353@localhost>
-References: <7083dc9188405f25307d0a75d4e199846ac06ac9.1471525771.git.jpinto@synopsys.com>
+Received: from mga02.intel.com ([134.134.136.20]:21249 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752185AbcHHRF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Aug 2016 13:05:58 -0400
+Date: Mon, 8 Aug 2016 11:05:56 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2] vmd: Fix infinite loop executing irq's
+Message-ID: <20160808170556.GB1792@localhost.localdomain>
+References: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7083dc9188405f25307d0a75d4e199846ac06ac9.1471525771.git.jpinto@synopsys.com>
+In-Reply-To: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 18, 2016 at 02:18:29PM +0100, Joao Pinto wrote:
-> This patch is to fix a building error in branch pci/host-designware. 
+Seems fine and didn't grow the struct, which is always nice
+
+Acked-by Jon Derrick: <jonathan.derrick@intel.com>
+
+On Mon, Aug 08, 2016 at 09:47:51AM -0600, Keith Busch wrote:
+> We can't initialize the list head on deletion as this causes the node
+> to point to itself, looping infinitely if the vmd IRQ handler happened
+> to be servicing that node.
 > 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-
-Thanks, I fixed this yesterday, and I got a build success report for it
-(commit 01c076732e82).
-
+> The list initialization was trying fix a bug from multiple calls to
+> disable the same IRQ. We can fix this instead by having the vmd driver
+> track if the interrupt is enabled.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Cc: Jon Derrick <jonathan.derrick@intel.com>
+> Reported-by: Grzegorz Koczot <grzegorz.koczot@intel.com>
+> Tested-by: Miroslaw Drost <miroslaw.drost@intel.com>
 > ---
->  drivers/pci/host/pcie-designware.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+> v1 -> v2:
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index be70f28..6a743c5 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -511,9 +511,8 @@ static const struct irq_domain_ops msi_domain_ops = {
+>   Removed check for poisioned list pointer. This is abusing knowledge
+>   internal to the list api, so we need another way to know if the child
+>   irq is enabled. This patch uses a driver controlled boolean for this.
+> 
+>   Added tags for the bug reporter and tester.
+> 
+>  arch/x86/pci/vmd.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index e88b417..4b85837 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -41,6 +41,7 @@ static DEFINE_RAW_SPINLOCK(list_lock);
+>   * @node:	list item for parent traversal.
+>   * @rcu:	RCU callback item for freeing.
+>   * @irq:	back pointer to parent.
+> + * @enabled:	true if driver enabled irq
+>   * @virq:	the virtual IRQ value provided to the requesting driver.
+>   *
+>   * Every MSI/MSI-X IRQ requested for a device in a VMD domain will be mapped to
+> @@ -50,6 +51,7 @@ struct vmd_irq {
+>  	struct list_head	node;
+>  	struct rcu_head		rcu;
+>  	struct vmd_irq_list	*irq;
+> +	bool			enabled;
+>  	unsigned int		virq;
+>  };
 >  
->  static u8 dw_pcie_iatu_unroll_enabled(struct pcie_port *pp)
->  {
-> -	u32 val = 0;
-> +	u32 val = dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT);
+> @@ -122,7 +124,9 @@ static void vmd_irq_enable(struct irq_data *data)
+>  	unsigned long flags;
 >  
-> -	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
->  	if (val == 0xffffffff)
->  		return 1;
+>  	raw_spin_lock_irqsave(&list_lock, flags);
+> +	WARN_ON(vmdirq->enabled);
+>  	list_add_tail_rcu(&vmdirq->node, &vmdirq->irq->irq_list);
+> +	vmdirq->enabled = true;
+>  	raw_spin_unlock_irqrestore(&list_lock, flags);
+>  
+>  	data->chip->irq_unmask(data);
+> @@ -136,8 +140,10 @@ static void vmd_irq_disable(struct irq_data *data)
+>  	data->chip->irq_mask(data);
+>  
+>  	raw_spin_lock_irqsave(&list_lock, flags);
+> -	list_del_rcu(&vmdirq->node);
+> -	INIT_LIST_HEAD_RCU(&vmdirq->node);
+> +	if (vmdirq->enabled) {
+> +		list_del_rcu(&vmdirq->node);
+> +		vmdirq->enabled = false;
+> +	}
+>  	raw_spin_unlock_irqrestore(&list_lock, flags);
+>  }
 >  
 > -- 
-> 1.8.1.5
+> 2.7.2
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
