@@ -1,122 +1,187 @@
-Return-Path: <roland.singer@desertbit.com>
-Return-Path: <roland.singer@desertbit.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost>
- <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org, dri-devel@lists.freedesktop.org
-From: Roland Singer <roland.singer@desertbit.com>
-Message-ID: <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
-Date: Mon, 29 Aug 2016 21:55:56 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160829190737.GA4053@localhost>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH V5 2/5] PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
+Date: Mon,  8 Aug 2016 15:05:38 +0200
+Message-Id: <1470661541-26270-3-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Just tried it and the system didn't freeze. However it will freeze
-after some time (few minutes while working).
+pci_acpi_setup_ecam_mapping() is not really ARM64 specific so move it out
+of arch/arm64/ directory. In preparation for adding MCFG quirk handling
+extend pci_acpi_setup_ecam_mapping() functionality to accept custom
+PCI config accessors (function's argument).
 
-Seams to be pci_read_config_dword. Where is this exactly defined?
+For ARM64 ACPI based PCI host controller we still use pci_generic_ecam_ops.
 
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ arch/arm64/kernel/pci.c  | 41 ++---------------------------------------
+ drivers/acpi/pci_mcfg.c  | 40 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  3 +++
+ 3 files changed, 45 insertions(+), 39 deletions(-)
 
-Am 29.08.2016 um 21:07 schrieb Bjorn Helgaas:
-> On Mon, Aug 29, 2016 at 08:46:17PM +0200, Roland Singer wrote:
->> Hi Bjorn,
->>
->> I am using the bbswitch kernel module to switch off/on the GPU and
->> to obtain the GPU power state.
->> Obtaining the GPU state immediately after starting the graphical user
->> session freezes the system.
->>
->> This code triggers something, which is responsible for the freeze.
->>
->> ---
->> // Returns 1 if the card is disabled, 0 if enabled
->> static int is_card_disabled(void) {
->>     u32 cfg_word;
->>     // read first config word which contains Vendor and Device ID. If all bits
->>     // are enabled, the device is assumed to be off
->>     pci_read_config_dword(dis_dev, 0, &cfg_word);
->>     // if one of the bits is not enabled (the card is enabled), the inverted
->>     // result will be non-zero and hence logical not will make it 0 ("false")
->>     return !~cfg_word;
->> }
->>
->> static int bbswitch_proc_show(struct seq_file *seqfp, void *p) {
->>     // show the card state. Example output: 0000:01:00:00 ON
->>     dis_dev_get();
->>     seq_printf(seqfp, "%s %s\n", dev_name(&dis_dev->dev),
->>              is_card_disabled() ? "OFF" : "ON");
->>     dis_dev_put();
->>     return 0;
->> }
->> ---
->>
->> Either dis_dev_get or pci_read_config_dword is the trigger.
-> 
-> What happens if you remove the call to is_card_disabled()?  Does the
-> system still freeze if you only do the dis_dev_get()/dis_dev_put()?
-> 
->> Link to the bbswitch module source code:
->> https://github.com/Bumblebee-Project/bbswitch/blob/master/bbswitch.c#L333
->>
->>
->> Am 29.08.2016 um 18:02 schrieb Bjorn Helgaas:
->>> [+cc linux-acpi, linux-kernel, dri-devel]
->>>
->>> Hi Roland,
->>>
->>> I have no idea how to debug this problem.  Are you seeing something
->>> that suggests it may be a PCI problem?
->>>
->>> On Tue, Aug 23, 2016 at 11:23:45AM +0200, Roland Singer wrote:
->>>> Hi,
->>>>
->>>> hope somebody can help me fix this kernel problem which affects the following machines:
->>>>
->>>> - Clevo P651RA (i7-6700HQ/GTX 965M, part of the P6xxRx family which are also affected)
->>>> - MSI GE62 Apache Pro (i7-6700HQ/GTX 960M)
->>>> - Gigabyte P35V5 (i7-6700HQ/GTX 970M)
->>>> - Razer Blade 14" (2016) (i7-6700HQ/GTX 970M) (BIOS 5.11, 04/07/2016)
->>>>
->>>>
->>>> The kernel freezes if the graphical user session (Xorg & Wayland) is
->>>> started with a switched off discrete GPU card (NVIDIA).
->>>> If the discrete GPU is switched off after the graphical session start,
->>>> then everything works as expected, until the graphical session is restarted.
->>>>
->>>> This problem seams to be linked to specific BIOS settings. If the computer
->>>> is started with the following command line:
->>>>
->>>> acpi_osi=! acpi_osi="Windows 2009"
->>>>
->>>> then the kernel freeze does not occur anymore. However this required a special
->>>> ACPI DSDT firmware patch for the Razer Blade 2016 laptop:
->>>>
->>>> https://github.com/m4ng0squ4sh/razer_blade_14_2016_acpi_dsdt
->>>>
->>>> I strongly recommend to fix this in the kernel and I am ready to help and solve
->>>> this problem with some help.
->>>>
->>>> Here is a link to the GitHub issue with further information:
->>>>
->>>> https://github.com/Bumblebee-Project/Bumblebee/issues/764#issuecomment-241212595
->>>>
->>>> Here are some more detailed information:
->>>>
->>>> https://github.com/Lekensteyn/acpi-stuff/blob/master/Clevo-P651RA/notes.txt
->>>>
->>>> Hope somebody can help.
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 981e828..2e7bed4 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -114,44 +114,6 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 	return 0;
+ }
+ 
+-/*
+- * Lookup the bus range for the domain in MCFG, and set up config space
+- * mapping.
+- */
+-static struct pci_config_window *
+-pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+-{
+-	struct resource *bus_res = &root->secondary;
+-	u16 seg = root->segment;
+-	struct pci_config_window *cfg;
+-	struct resource cfgres;
+-	unsigned int bsz;
+-
+-	/* Use address from _CBA if present, otherwise lookup MCFG */
+-	if (!root->mcfg_addr)
+-		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+-
+-	if (!root->mcfg_addr) {
+-		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
+-			seg, bus_res);
+-		return NULL;
+-	}
+-
+-	bsz = 1 << pci_generic_ecam_ops.bus_shift;
+-	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+-	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+-	cfgres.flags = IORESOURCE_MEM;
+-	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+-			      &pci_generic_ecam_ops);
+-	if (IS_ERR(cfg)) {
+-		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+-			seg, bus_res, PTR_ERR(cfg));
+-		return NULL;
+-	}
+-
+-	return cfg;
+-}
+-
+ /* release_info: free resources allocated by init_info */
+ static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
+ {
+@@ -177,7 +139,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (!ri)
+ 		return NULL;
+ 
+-	ri->cfg = pci_acpi_setup_ecam_mapping(root);
++	ri->cfg = pci_acpi_setup_ecam_mapping(root,
++					      &pci_generic_ecam_ops.pci_ops);
+ 	if (!ri->cfg) {
+ 		kfree(ri);
+ 		return NULL;
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index b5b376e..331b560 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -22,6 +22,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
++#include <linux/pci-ecam.h>
+ 
+ /* Structure to hold entries from the MCFG table */
+ struct mcfg_entry {
+@@ -52,6 +53,45 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
+ 	return 0;
+ }
+ 
++/*
++ * Lookup the bus range for the domain in MCFG, and set up config space
++ * mapping.
++ */
++struct pci_config_window *
++pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops)
++{
++	struct resource *bus_res = &root->secondary;
++	u16 seg = root->segment;
++	struct pci_config_window *cfg;
++	struct resource cfgres;
++	struct pci_ecam_ops ecam_ops = {
++			.bus_shift = 20,
++			.pci_ops = *ops,
++	};
++
++	/* Use address from _CBA if present, otherwise lookup MCFG */
++	if (!root->mcfg_addr)
++		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
++
++	if (!root->mcfg_addr) {
++		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
++			seg, bus_res);
++		return NULL;
++	}
++
++	cfgres.start = root->mcfg_addr + (bus_res->start << 20);
++	cfgres.end = cfgres.start + (resource_size(bus_res) << 20) - 1;
++	cfgres.flags = IORESOURCE_MEM;
++	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, &ecam_ops);
++	if (IS_ERR(cfg)) {
++		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
++			seg, bus_res, PTR_ERR(cfg));
++		return NULL;
++	}
++
++	return cfg;
++}
++
+ static __init int pci_mcfg_parse(struct acpi_table_header *header)
+ {
+ 	struct acpi_table_mcfg *mcfg;
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 7d63a66..e9bfe00 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -26,6 +26,9 @@ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+ extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
+ 
++extern struct pci_config_window *
++pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
++
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
+ 	struct pci_bus *pbus = pdev->bus;
+-- 
+1.9.1
