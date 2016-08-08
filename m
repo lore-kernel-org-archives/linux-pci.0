@@ -1,85 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.dji.com ([206.161.228.117]:15366 "EHLO mail.dji.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752298AbcHVHTy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 03:19:54 -0400
-From: First Light <xiaoguang.chen@dji.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "bhelgaas@gmail.com" <bhelgaas@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: =?utf-8?B?562U5aSNOiBTeW5vcHN5cyBwY2llIGRyaXZlciBxdWVzdGlvbg==?=
-Date: Mon, 22 Aug 2016 07:07:40 +0000
-Message-ID: <2c44ed52c282400e93b360b0c02a16f9@CWMAIL-AP-F14.dji.com>
-References: <1470817968909.9956@dji.com>
- <CAHM4w1kxhbbhWi+4_gqNPPPMWZ=0zJEB637pfn-gkytkbaZQ+Q@mail.gmail.com>
-In-Reply-To: <CAHM4w1kxhbbhWi+4_gqNPPPMWZ=0zJEB637pfn-gkytkbaZQ+Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [RFC PATCH V5 4/5] ARM64/PCI: Start using quirks handling for ACPI based PCI host controller
+Date: Mon,  8 Aug 2016 14:56:41 +0200
+Message-Id: <1470661002-26213-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470661002-26213-1-git-send-email-tn@semihalf.com>
+References: <1470661002-26213-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-PiANCj4gSGksDQo+IA0KPiANCj4gT24gV2VkLCBBdWcgMTAsIDIwMTYgYXQgMjowMyBQTSwgRmly
-c3QgTGlnaHQgPHhpYW9ndWFuZy5jaGVuQGRqaS5jb20+DQo+IHdyb3RlOg0KPiA+IEhpLCBEZWFy
-IG1haW50YWluZXJzIGZvciBzeXNub3BzeXMgcGNpZSBkcml2ZXINCj4gDQo+IFBsZWFzZSBhbHdh
-eXMga2VlcCB0aGUgbWFpbGluZyBsaXN0IGluIENDLCBzbyB0aGF0IHlvdSBjYW4gaGF2ZSByZXNw
-b25zZSBmcm9tDQo+IHdpZGVyIGF1ZGllbmNlLg0KVGhhbmtzIGZvciB0aGUgcmVtaW5kZXI6KQ0K
-PiANCj4gPg0KPiA+IEkgaGF2ZSBvbmUgcXVlc3Rpb24gZm9yIHRoaXMgZHJpdmVyDQo+ID4NCj4g
-Pg0KPiA+IHdlIGFyZSB1c2luZyBzeW5vcHN5cyBQQ0lFIElQIGluIG91ciBwbGF0Zm9ybSxhbmQg
-SSdtIHRyeWluZyB0byB1c2UNCj4gPiBsaW51eCBkcml2ZXIoZHJpdmVycy9wY2kvaG9zdC9wY2ll
-LWRlc2lnbndhcmUuYykgdG8gYnJpbmcgdXAgdGhpcyBJUC4NCj4gPg0KPiA+IGJ1dCBJIG1ldCBv
-bmUgaXNzdWUgd2hpY2ggSSBjYW5ub3QgdW5kZXJzdGFuZCB3aGV0aGVyIGl0IGlzIHNvZnR3YXJl
-DQo+ID4gaXNzdWUgb3IgaGFyZHdhcmUgaXNzdWUsIHBsZWFzZSBoZWxwIHRvIGNsZWFyaWZ5LiAg
-dGhhbmsgeW91IHZlcnkNCj4gPiBtdWNoIQ0KPiA+DQo+ID4gSW4gcGNpZS1kZXNpZ253YXJlLmMs
-IHRoZSBpbnRlcmZhY2UgdG8gcmVhZCBjb25maWcgaXMgZHdfcGNpZV9yZF9jb25mDQo+ID4gZnVu
-Y3Rpb24sIGJlbG93IGlzIHBhcnQgb2YgdGhlIGNvZGU6DQo+ID4NCj4gPiBpZiAoYnVzLT5udW1i
-ZXIgPT0gcHAtPnJvb3RfYnVzX25yKQ0KPiA+IHJldHVybiBkd19wY2llX3JkX293bl9jb25mKC4u
-LikNCj4gPiBlbHNlDQo+ID4gcmV0dXJuIGR3X3BjaWVfcmRfb3RoZXJfY29uZiguLi4pDQo+ID4N
-Cj4gPiB0aGlzIHBhcnQgb2YgY29kZSBjaGVja3MgaWYgaXQgaXMgdGhlIHJvb3QgYnVzLCBpZiBz
-bywgcmVhZCBvd24gY29uZmlnDQo+ID4gcmVnaXN0ZXJzLCBvdGhlcndpc2UgdXNlIERCRiB3YXkg
-dG8gcmVhZCBjb25maWdzIGZyb20gRVBzLg0KPiA+DQo+ID4gSW4gb3VyIHBsYXRmb3JtLCB3ZSBw
-dXQgb25lIFNTRCBkZXZpY2UgdW5kZXIgYnVzMCBkZXZpY2UxLiBkdXJpbmcNCj4gPiBlbnVtcmF0
-aW9uLCB3aGVuIGFib3ZlIHNvZnR3YXJlIGNvZGUgdHJ5IHRvIHJlYWQgc3NkJ3MgcmVnaXN0ZXJz
-LA0KPiA+DQo+ID4gaXQgZm91bmQgdGhlIGJ1cyBpcyAwLCBzbyBpdCByZWFkcyB0aGUgUkMncyBy
-ZWdpc3RlciwgYnV0IG5vdCB0aGUNCj4gPiBTU0QncyByZWdpc3Rlci4NCj4gPg0KPiANCj4gSG93
-IGRvIHlvdSBrbm93IHRoYXQgd2hlbiBpdCB0cmllZCB0byByZWFkIGJ1cyAwLCBpdCB3YXMgeW91
-ciBTU0QgZGV2aWNlPyBUaGF0DQo+IHNob3VsZCBhbHdheXMgYmUgUkMuICBEaWQgeW91IGNoZWNr
-IGlmIGxpbmt1cCB3YXMgT0sgZm9yIHlvdXIgZW5kcG9pbnQgZGV2aWNlPw0KPiBEbyB5b3Ugc2Vl
-ICJsaW5rIHVwIiBpbiB5b3VyIGRtZXNnPw0KDQpbRmlyc3QgTGlnaHRdIFllcywgSSBmb3VuZCBs
-aW5rdXAgbWVzc2FnZS4gQW5kIHRoaXMgaXNzdWUgaXMgc29sdmVkLCBpdCBpcyBzb2Z0d2FyZSBj
-b25maWd1cmF0aW9uIGlzc3VlLg0KSSBmaXhlZCBpdCBieSBtYXBwaW5nIHBjaSBhZGRyZXNzIHRv
-IDFNQiBvZmZzZXQgY3B1IGFkZHJlc3MgYW5kIHdlIGNhbiBzZWUgc3NkIGJlIGVtdW1yYXRlZC4N
-Cj4gDQo+IA0KPiA+IHNvIG91ciBzc2QgaXMgbmV2ZXIgZW51bXJhdGVkLg0KPiANCj4gV2hpY2gg
-aG9zdCBwbGF0Zm9ybSBmb3IgZGVzaWdud2FyZSBkbyB5b3UgdXNlPyBJcyB0aGF0IGhvc3QgZHJp
-dmVyIGluIG1haW5saW5lPw0KPiBEb2VzIG90aGVyIHN0YW5kYXJkIFBDSWUgY2FyZCB3b3JrIHdp
-dGggeW91ciBob3N0Pw0KDQpbRmlyc3QgTGlnaHRdIFllcywgd2UgYXJlIHVzaW5nIGxpbmFybyBz
-dGFibGUga2VybmVsIGxpbnV4NC40LiBhbmQgYWxzbyBiYWNrIHBvcnRlZCBzZXZlcmFsIHBhdGNo
-ZXMgZnJvbSBtYWlubGluZSwgY3VycmVudCBjb2RlIGlzIGFsaWduZWQgd2l0aCBtYWlubGluZS4N
-Cj4gDQo+IH5QcmF0eXVzaA0KW0ZpcnN0IExpZ2h0XSBQcmF0eXVzaCwgdGhhbmtzIGZvciB5b3Vy
-IHJlcGx5LCBJIGhhdmUgYW5vdGhlciBxdWVzdGlvbiBhYm91dCBkZXNpZ253YXJlIHBjaWUgZHJp
-dmVyLCBpdCBsb29rcyB0aGF0IGl0IGRvZXNuJ3Qgc3VwcG9ydCBNU0lYIGhhbmRsaW5nLCBhcyBJ
-J20gdXNpbmcgbnZtZSB0byBjb25uZWN0IHBjaWUgdG8gc3NkLCBhbmQgSSBzZWUgbnZtZSBkcml2
-ZXIganVzdCB0cmllZCB0byBlbmFibGUgbXNpeCBpcnEsIHdoZW4gaXQgY2FsbHMgaW50byB0aGlz
-IGRlc2lnbmV3YXJlIHBjaWUgZHJpdmVyIHdpdGggY2FsbGJhY2sgZnVuY3Rpb246IHNldHVwX2ly
-cXMsIGJ1dCBpbiBkd19tc2lfc2V0dXBfaXJxcywgaXQgY2hlY2tzIFBDSV9DQVBfSURfTVNJWCBh
-bmQgcmV0dXJuIC1FSU5WQUwsIHNvIG52bWUgZHJpdmVyIHByb2JlIGZhaWxlZC4NCldoeSB0aGlz
-IGRyaXZlciBkb2Vzbid0IHN1cHBvcnQgTVNJWD8gT3IgaXMgdGhlcmUgb3RoZXIgd2F5IHRvIHVz
-ZSBpdCB3aXRoIG52bWU/DQpUaGFua3MgdmVyeSBtdWNoIQ0KPiANCj4gPg0KPiA+IGlzIHRoZXJl
-IGFueSB3YXkgdG8gZG8gc29tZSBoYXJkd2FyZSBvciBzb2Z0d2FyZSBjb25maWd1cmF0aW9uIHRv
-IG1ha2UNCj4gPiBpdCB3b3JrPyBvciBkbyB3ZSBuZWVkIHRvIGNoYW5nZSBvdXIgaGFyZHdhcmUg
-ZGVzaWduPw0KPiA+DQo+ID4NCj4gPiBUaGFua3MNCj4gPiBYaWFvZ3VhbmcNCj4gPg0KPiA+DQo+
-ID4NCj4gPg0KPiA+DQo+ID4gVGhpcyBlbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIHRoZXJldG8g
-bWF5IGNvbnRhaW4gcHJpdmF0ZSwNCj4gPiBjb25maWRlbnRpYWwsIGFuZCBwcml2aWxlZ2VkIG1h
-dGVyaWFsIGZvciB0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkDQo+ID4gcmVjaXBpZW50LiBB
-bnkgcmV2aWV3LCBjb3B5aW5nLCBvciBkaXN0cmlidXRpb24gb2YgdGhpcyBlbWFpbCAob3IgYW55
-DQo+ID4gYXR0YWNobWVudHMgdGhlcmV0bykgYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0
-ZWQuIElmIHlvdSBhcmUgbm90DQo+ID4gdGhlIGludGVuZGVkIHJlY2lwaWVudCwgcGxlYXNlIGNv
-bnRhY3QgdGhlIHNlbmRlciBpbW1lZGlhdGVseSBhbmQNCj4gPiBwZXJtYW5lbnRseSBkZWxldGUg
-dGhlIG9yaWdpbmFsIGFuZCBhbnkgY29waWVzIG9mIHRoaXMgZW1haWwgYW5kIGFueQ0KPiBhdHRh
-Y2htZW50cyB0aGVyZXRvLg0KPiA+DQo+ID4g5q2k55S15a2Q6YKu5Lu25Y+K6ZmE5Lu25omA5YyF
-5ZCr5YaF5a655YW35pyJ5py65a+G5oCn77yM5LiU5LuF6ZmQ5LqO5o6l5pS25Lq65L2/55So44CC
-5pyq57uPDQo+IOWFgQ0KPiA+IOiuuO+8jOemgeatouesrOS4ieS6uumYheivu+OAgeWkjeWItuaI
-luS8oOaSreivpeeUteWtkOmCruS7tuS4reeahOS7u+S9leS/oeaBr+OAguWmguaenOaCqOS4jQ0K
-PiDlsZ7kuo7ku6XkuIrnlLXlrZDpgq7ku7bnmoTnm67moIfmjqXmlLbogIXvvIzor7fmgqjnq4vl
-jbPpgJrnn6Xlj5HpgIHkurrlubbliKDpmaTljp/nlLXlrZDpgq7ku7YNCj4g5Y+K5YW255u45YWz
-55qE6ZmE5Lu2DQo+ID4g44CCDQo=
+Since there are platforms which have non-compliant ECAM space we need to
+override these accessors prior to PCI buses enumeration. In order to do
+that we call pci_mcfg_match_quirks() to retrieve custom
+pci_config_window structure. If no correlated quirk on list, use
+fully ECAM compliant generic PCI config accessors.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ arch/arm64/kernel/pci.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 2e7bed4..aa734bd 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -139,8 +139,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (!ri)
+ 		return NULL;
+ 
+-	ri->cfg = pci_acpi_setup_ecam_mapping(root,
+-					      &pci_generic_ecam_ops.pci_ops);
++	ri->cfg = pci_mcfg_match_quirks(root);
+ 	if (!ri->cfg) {
+ 		kfree(ri);
+ 		return NULL;
+-- 
+1.9.1
