@@ -1,60 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 29 Aug 2016 11:02:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Roland Singer <roland.singer@desertbit.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-Message-ID: <20160829160210.GA24451@localhost>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+Subject: Re: [RFC PATCH V5 0/5] ECAM quirks handling for ARM64 platforms
+To: Tomasz Nowicki <tn@semihalf.com>, <helgaas@kernel.org>, <arnd@arndb.de>,
+        <will.deacon@arm.com>, <catalin.marinas@arm.com>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+CC: <hanjun.guo@linaro.org>, <okaya@codeaurora.org>, <jchandra@broadcom.com>,
+        <cov@codeaurora.org>, <dhdang@apm.com>, <ard.biesheuvel@linaro.org>,
+        <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
+        <Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
+        <wangyijing@huawei.com>, <msalter@redhat.com>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <linaro-acpi@lists.linaro.org>, <jcm@redhat.com>,
+        <andrea.gallo@linaro.org>, <jeremy.linton@arm.com>,
+        <gabriele.paoloni@huawei.com>, <jhugo@codeaurora.org>,
+        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Linuxarm
+	<linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <57A9A06A.30907@huawei.com>
+Date: Tue, 9 Aug 2016 17:20:42 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-acpi, linux-kernel, dri-devel]
 
-Hi Roland,
+ÔÚ 2016/8/8 21:05, Tomasz Nowicki Ð´µÀ:
+> Quirk handling relies on an idea of matching MCFG OEM ID, TABLE ID and
+> revision (the ones from standard header of MCFG table).
+>
+> Static array is used to keep quirk entries. Each entry consists of
+> mentioned MCFG IDs along with custom pci_ops structure and initialization call.
+>
+> As an example, the last patch presents quirk handling mechanism usage for
+> ThunderX PEM driver.
+>
+> v4 -> v5
+> - rebase against v4.8-rc1
+> - rework to exact MCFG OEM ID, TABLE ID, rev match
+>    - use memcmp instead of strncmp
+>    - no substring match
+> - fix typos and dmesg message
+>
+> Tomasz Nowicki (5):
+>    PCI: Embed pci_ecam_ops in pci_config_window structure
+>    PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
+>    PCI: Check platform specific ECAM quirks
+>    ARM64/PCI: Start using quirks handling for ACPI based PCI host
+>      controller
+>    PCI: thunder-pem: Support quirky configuration space access for ACPI
+>      based PCI host controller
+>
+>   arch/arm64/kernel/pci.c            | 42 +----------------
+>   drivers/acpi/pci_mcfg.c            | 40 ++++++++++++++++
+>   drivers/pci/ecam.c                 |  6 +--
+>   drivers/pci/host/Makefile          |  1 +
+>   drivers/pci/host/mcfg-quirks.c     | 93 ++++++++++++++++++++++++++++++++++++
+>   drivers/pci/host/mcfg-quirks.h     | 24 ++++++++++
+>   drivers/pci/host/pci-thunder-pem.c | 96 ++++++++++++++++++++++++++++++++------
+>   include/linux/pci-acpi.h           |  5 ++
+>   include/linux/pci-ecam.h           |  2 +-
+>   9 files changed, 252 insertions(+), 57 deletions(-)
+>   create mode 100644 drivers/pci/host/mcfg-quirks.c
+>   create mode 100644 drivers/pci/host/mcfg-quirks.h
+>
 
-I have no idea how to debug this problem.  Are you seeing something
-that suggests it may be a PCI problem?
+Based on the patchset, tested on HiSilicon D03 board with intel 82599 net card. It worked OK.
 
-On Tue, Aug 23, 2016 at 11:23:45AM +0200, Roland Singer wrote:
-> Hi,
-> 
-> hope somebody can help me fix this kernel problem which affects the following machines:
-> 
-> - Clevo P651RA (i7-6700HQ/GTX 965M, part of the P6xxRx family which are also affected)
-> - MSI GE62 Apache Pro (i7-6700HQ/GTX 960M)
-> - Gigabyte P35V5 (i7-6700HQ/GTX 970M)
-> - Razer Blade 14" (2016) (i7-6700HQ/GTX 970M) (BIOS 5.11, 04/07/2016)
-> 
-> 
-> The kernel freezes if the graphical user session (Xorg & Wayland) is
-> started with a switched off discrete GPU card (NVIDIA).
-> If the discrete GPU is switched off after the graphical session start,
-> then everything works as expected, until the graphical session is restarted.
-> 
-> This problem seams to be linked to specific BIOS settings. If the computer
-> is started with the following command line:
-> 
-> acpi_osi=! acpi_osi="Windows 2009"
-> 
-> then the kernel freeze does not occur anymore. However this required a special
-> ACPI DSDT firmware patch for the Razer Blade 2016 laptop:
-> 
-> https://github.com/m4ng0squ4sh/razer_blade_14_2016_acpi_dsdt
-> 
-> I strongly recommend to fix this in the kernel and I am ready to help and solve
-> this problem with some help.
-> 
-> Here is a link to the GitHub issue with further information:
-> 
-> https://github.com/Bumblebee-Project/Bumblebee/issues/764#issuecomment-241212595
-> 
-> Here are some more detailed information:
-> 
-> https://github.com/Lekensteyn/acpi-stuff/blob/master/Clevo-P651RA/notes.txt
-> 
-> Hope somebody can help.
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+
+Thanks
+Dongdong
