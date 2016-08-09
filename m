@@ -1,64 +1,179 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com,
-	x86@kernel.org
-Subject: [PATCH v4 5/5] x86/ioapic: Fix ioapic failing to request resource
-Date: Wed, 17 Aug 2016 16:00:37 +0800
-Message-Id: <1471420837-31003-6-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
-References: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41476 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932094AbcHIReB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Aug 2016 13:34:01 -0400
+Date: Tue, 9 Aug 2016 12:33:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 3/3] pcie/aer: Cache capability position
+Message-ID: <20160809173350.GE27301@localhost>
+References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+ <1470683667-28418-4-git-send-email-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470683667-28418-4-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-handle_ioapic_add() uses request_resource() to request ACPI "_CRS"
-resources. This can fail with the following error message:
+Hi Keith,
 
-[  247.325693] ACPI: \_SB_.IIO1.AID1: failed to insert resource
+On Mon, Aug 08, 2016 at 01:14:27PM -0600, Keith Busch wrote:
+> This saves the postition of the error reporting capability so that it
+> doesn't need to be rediscovered during error handling.
 
-This happens when there are multiple IOAPICs and DSDT groups their
-"_CRS" resources as the children of a parent resource, as seen from
-/proc/iomem:
+I like the idea of this, and I wonder if we should go even further,
+and cache aer_pos in the pci_dev.  There are a zillion places that
+look for PCI_EXT_CAP_ID_ERR, and several of them are outside the AER
+driver, where it would be inconvenient to look up the aer_rpc.
 
-fec00000-fecfffff : PNP0003:00
-  fec00000-fec003ff : IOAPIC 0
-  fec01000-fec013ff : IOAPIC 1
-  fec40000-fec403ff : IOAPIC 2
+That would probably mean adding a hook to pci_init_capabilities(),
+which would be kind of nice anyway because we already have a call to
+pci_cleanup_aer_error_status_regs() there, which is sort of dangling
+and not parallel to the other calls.
 
-In this case request_resource() fails because there's a conflicting
-resource which is the parent (fec0000-fecfffff). Fix it by using
-insert_resource() which can request resources by taking the conflicting
-resource as the parent.
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv.c | 38 +++++++++++++++++---------------------
+>  drivers/pci/pcie/aer/aerdrv.h |  1 +
+>  2 files changed, 18 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index 48d21e0..d05c864 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -122,7 +122,6 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
+>  static void aer_enable_rootport(struct aer_rpc *rpc)
+>  {
+>  	struct pci_dev *pdev = rpc->rpd->port;
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/ioapic.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+What if you did this instead:
 
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index ee20111..6d7ce6e 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -146,10 +146,12 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
- 
- 	crs_res = &ioapic->res;
- 	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
-+	crs_res->name = type;
-+	crs_res->flags |= IORESOURCE_BUSY;
- 	if (crs_res->flags == 0) {
- 		acpi_handle_warn(handle, "failed to get resource\n");
- 		goto exit_release;
--	} else if (request_resource(&iomem_resource, crs_res)) {
-+	} else if (insert_resource(&iomem_resource, crs_res)) {
- 		acpi_handle_warn(handle, "failed to insert resource\n");
- 		goto exit_release;
- 	}
--- 
-1.8.3.1
+ -	int aer_pos;
+ +	int aer_pos = rpc->pos;
+
+Then all the config accesses wouldn't have to change.
+
+>  	u16 reg16;
+>  	u32 reg32;
+>  
+> @@ -134,14 +133,13 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+>  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
+>  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+>  
+> -	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+>  	/* Clear error status */
+> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
+> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
+> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, &reg32);
+> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, reg32);
+> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, &reg32);
+> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, reg32);
+> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
+> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
+> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, &reg32);
+> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, reg32);
+> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, &reg32);
+> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, reg32);
+>  
+>  	/*
+>  	 * Enable error reporting for the root port device and downstream port
+> @@ -150,9 +148,9 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+>  	set_downstream_devices_error_reporting(pdev, true);
+>  
+>  	/* Enable Root Port's interrupt in response to error messages */
+> -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, &reg32);
+> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
+>  	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+> -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, reg32);
+> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
+>  }
+>  
+>  /**
+> @@ -165,7 +163,6 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+>  {
+>  	struct pci_dev *pdev = rpc->rpd->port;
+>  	u32 reg32;
+> -	int pos;
+>  
+>  	/*
+>  	 * Disable error reporting for the root port device and downstream port
+> @@ -173,15 +170,14 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+>  	 */
+>  	set_downstream_devices_error_reporting(pdev, false);
+>  
+> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+>  	/* Disable Root's interrupt in response to error messages */
+> -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
+> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
+>  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+> -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
+>  
+>  	/* Clear Root's error status reg */
+> -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+> -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, reg32);
+> +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
+> +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
+>  }
+>  
+>  /**
+> @@ -198,9 +194,7 @@ irqreturn_t aer_irq(int irq, void *context)
+>  	struct aer_rpc *rpc = get_service_data(pdev);
+>  	int next_prod_idx;
+>  	unsigned long flags;
+> -	int pos;
+>  
+> -	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
+>  	/*
+>  	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
+>  	 * and Root error producer/consumer index
+> @@ -208,15 +202,15 @@ irqreturn_t aer_irq(int irq, void *context)
+>  	spin_lock_irqsave(&rpc->e_lock, flags);
+>  
+>  	/* Read error status */
+> -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, &status);
+> +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, &status);
+>  	if (!(status & (PCI_ERR_ROOT_UNCOR_RCV|PCI_ERR_ROOT_COR_RCV))) {
+>  		spin_unlock_irqrestore(&rpc->e_lock, flags);
+>  		return IRQ_NONE;
+>  	}
+>  
+>  	/* Read error source and clear error status */
+> -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_ERR_SRC, &id);
+> -	pci_write_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, status);
+> +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_ERR_SRC, &id);
+> +	pci_write_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, status);
+>  
+>  	/* Store error source for later DPC handler */
+>  	next_prod_idx = rpc->prod_idx + 1;
+> @@ -317,6 +311,8 @@ static int aer_probe(struct pcie_device *dev)
+>  		return -ENOMEM;
+>  	}
+>  
+> +	rpc->pos = pci_find_ext_capability(dev->port, PCI_EXT_CAP_ID_ERR);
+> +
+>  	/* Request IRQ ISR */
+>  	status = request_irq(dev->irq, aer_irq, IRQF_SHARED, "aerdrv", dev);
+>  	if (status) {
+> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+> index 945c939..d7c586e 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.h
+> +++ b/drivers/pci/pcie/aer/aerdrv.h
+> @@ -72,6 +72,7 @@ struct aer_rpc {
+>  					 * recovery on the same
+>  					 * root port hierarchy
+>  					 */
+> +	int pos;			/* position of AER capability */
+>  };
+>  
+>  struct aer_broadcast_data {
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
