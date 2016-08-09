@@ -1,53 +1,44 @@
-Return-Path: <decui@microsoft.com>
-Return-Path: <decui@microsoft.com>
-From: Dexuan Cui <decui@microsoft.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "gregkh@linuxfoundation.org"
-	<gregkh@linuxfoundation.org>, KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
-	"jasowang@redhat.com" <jasowang@redhat.com>, "vkuznets@redhat.com"
-	<vkuznets@redhat.com>, Haiyang Zhang <haiyangz@microsoft.com>, Hadden Hoppert
-	<haddenh@microsoft.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Stephen
- Hemminger" <sthemmin@microsoft.com>
-Subject: [PATCH 5/5] PCI: hv: hv_pci_generic_compl(): handle the error case
-Date: Tue, 23 Aug 2016 04:49:22 +0000
-Message-ID: <MWHPR03MB2669E217046A38470D7E8A27BFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:60621 "EHLO
+	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932163AbcHIJwp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Aug 2016 05:52:45 -0400
+Message-Id: <0be33af4eef7e2ef328360c3622bb0581e69f437.1470735088.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Tue, 9 Aug 2016 11:53:11 +0200
+Subject: [PATCH] PCI: Drop CONFIG_KEXEC_CORE ifdeffery
+To: linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Commit 2b94ed245861 ("kexec: define kexec_in_progress in !CONFIG_KEXEC
+case") has made this unnecessary.
 
-'completetion_status' is used in some places, e.g.,
-hv_pci_protocol_negotiation(), so we should make sure it's initialized in
-error case too, though the error is unlikely here.
-
-I didn't get a real issue.
-
-Cc: Jake Oshins <jakeo@microsoft.com>
-Cc: K. Y. Srinivasan <kys@microsoft.com>
-Cc: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/pci/host/pci-hyperv.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/pci-driver.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index f337239..a93bd5d 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -456,6 +456,9 @@ hv_pci_generic_compl(void *context, struct pci_response=
- *resp,
-=20
- 	if (resp_packet_size >=3D offsetofend(struct pci_response, status))
- 		comp_pkt->completion_status =3D resp->status;
-+	else
-+		comp_pkt->completion_status =3D -1;
-+
- 	complete(&comp_pkt->host_event);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index e39a67c..edd78e0 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -466,7 +466,6 @@ static void pci_device_shutdown(struct device *dev)
+ 	pci_msi_shutdown(pci_dev);
+ 	pci_msix_shutdown(pci_dev);
+ 
+-#ifdef CONFIG_KEXEC_CORE
+ 	/*
+ 	 * If this is a kexec reboot, turn off Bus Master bit on the
+ 	 * device to tell it to not continue to do DMA. Don't touch
+@@ -476,7 +475,6 @@ static void pci_device_shutdown(struct device *dev)
+ 	 */
+ 	if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
+ 		pci_clear_master(pci_dev);
+-#endif
  }
-=20
---=20
-2.7.4
+ 
+ #ifdef CONFIG_PM
+-- 
+2.8.1
+
