@@ -1,42 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44134 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753386AbcHQT4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Aug 2016 15:56:13 -0400
-Date: Wed, 17 Aug 2016 14:49:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jszhang@marvell.com
-Subject: Re: [PATCH v5 0/3] pcie-designware: add iATU unroll feature
-Message-ID: <20160817194938.GC27353@localhost>
-References: <cover.1470822461.git.jpinto@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:56268 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752100AbcHIPvC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Aug 2016 11:51:02 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: Vineet.Gupta1@synopsys.com, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH] pci: adding support for PCI_MSI_IRQ_DOMAIN in ARC arch
+Date: Tue,  9 Aug 2016 16:50:57 +0100
+Message-Id: <fdd37b0b995d178fddb34fdbdb5daf5981822f52.1470757628.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
+Due to the added dependency on PCI_MSI_IRQ_DOMAIN for all PCIe RC 
+drivers, we were unable to build a RC solution for an ARC platform.
 
-On Wed, Aug 10, 2016 at 11:02:37AM +0100, Joao Pinto wrote:
-> The new DWC PCIe Core version (4.80) implements iATU in a different way.
-> This new mechanism is called iATU Unroll Mode. The Core still supports
-> the "old" mechanism calling it Legacy Mode if configured to do so, but
-> the standard way will be using Unroll.
-> This patch adds the necessary support for the mechanism and makes
-> some minor improvements to the existent one.
-> 
-> Joao Pinto (3):
->   pci: move definitions from header to pcie-designware.c
->   pci: add iATU Unroll mechanism
->   pcie-designware: fix typo
-> 
->  drivers/pci/host/pcie-designware.c | 138 ++++++++++++++++++++++++++++++++-----
->  drivers/pci/host/pcie-designware.h |   6 +-
->  2 files changed, 122 insertions(+), 22 deletions(-)
+To fix this, this patch adds ARC as a PCI_MSI_IRQ_DOMAIN supportive
+platform and adds the generation of msi.h in the ARC arch.
 
-I applied these to pci/host-designware for v4.9.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ arch/arc/include/asm/Kbuild | 1 +
+ drivers/pci/Kconfig         | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-I made a few changes and additions, so I'll post the patches I applied
-as a v6 series so you can test and point out any errors.
+diff --git a/arch/arc/include/asm/Kbuild b/arch/arc/include/asm/Kbuild
+index 0b10ef2..c332604 100644
+--- a/arch/arc/include/asm/Kbuild
++++ b/arch/arc/include/asm/Kbuild
+@@ -25,6 +25,7 @@ generic-y += mcs_spinlock.h
+ generic-y += mm-arch-hooks.h
+ generic-y += mman.h
+ generic-y += msgbuf.h
++generic-y += msi.h
+ generic-y += param.h
+ generic-y += parport.h
+ generic-y += pci.h
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 67f9916..6555eb7 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -25,7 +25,7 @@ config PCI_MSI
+ 	   If you don't know what to do here, say Y.
+ 
+ config PCI_MSI_IRQ_DOMAIN
+-	def_bool ARM || ARM64 || X86
++	def_bool ARC || ARM || ARM64 || X86
+ 	depends on PCI_MSI
+ 	select GENERIC_MSI_IRQ_DOMAIN
+ 
+-- 
+1.8.1.5
+
