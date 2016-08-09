@@ -1,134 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:55733 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506AbcHGJz5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Aug 2016 05:55:57 -0400
-Date: Sun, 7 Aug 2016 11:56:27 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 11/13] PM / sleep: Allow opt-out from runtime resume
- after direct-complete
-Message-ID: <20160807095627.GB5679@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
- <9f0713b23baf7c6139a4b476cd9637d96e18cc95.1463134232.git.lukas@wunner.de>
- <10830072.vubE73bdx4@vostro.rjw.lan>
+Received: from mail.kernel.org ([198.145.29.136]:37556 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932111AbcHIROB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Aug 2016 13:14:01 -0400
+Date: Tue, 9 Aug 2016 12:13:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"hjk@hansjkoch.de" <hjk@hansjkoch.de>
+Subject: Re: [PATCH v2] Extending kernel option pci=resource_alignment to be
+ able to specify PCI device/vendor IDs
+Message-ID: <20160809171355.GD27301@localhost>
+References: <685172904b71405b8db8ff01516cdade@FE-MBX1012.de.bosch.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <10830072.vubE73bdx4@vostro.rjw.lan>
+In-Reply-To: <685172904b71405b8db8ff01516cdade@FE-MBX1012.de.bosch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 18, 2016 at 03:18:25PM +0200, Rafael J. Wysocki wrote:
-> On Friday, May 13, 2016 01:15:31 PM Lukas Wunner wrote:
-> > Since commit aae4518b3124 ("PM / sleep: Mechanism to avoid resuming
-> > runtime-suspended devices unnecessarily"), we no longer wake up devices
-> > which are already runtime suspended upon entering system sleep
-> > ("direct-complete").
-> > 
-> > However commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might
-> > have been reset by firmware") changed this to mandatorily runtime resume
-> > such devices after the system is woken.  The motivation was to ensure
-> > that devices do not remain in a reset-power-on state after system
-> > resume, potentially preventing deep SoC-wide low-power states from being
-> > entered on idle.
-> > 
-> > This is counter-productive for devices of which we know that the
-> > mandatory runtime resume is unnecessary.  Thunderbolt on the Mac is a
-> > case in point: Runtime resume not just powers up the controller, but
-> > multiple adjacent chips, including a 15V boost converter, multiplexers
-> > and an eeprom.  Gratuitously powering this up after every system sleep
-> > burns a not insignificant amount of energy and needlessly strains the
-> > hardware.
-> > 
-> > Perhaps it would have been better to carry out the mandatory runtime
-> > resume only for those devices that actually need it, but at least we
-> > should allow an opt-out.
-> > 
-> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Cc: Alan Stern <stern@rowland.harvard.edu>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+On Wed, Jun 22, 2016 at 06:33:48AM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
+> Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned 
+> PCI memory resources are not page aligned.
+> By using the kernel option "pci=resource_alignment" it is possible to force
+> single PCI boards to use page alignment for their memory resources.
+> However, this is fairly cumbersome if multiple of these boards are in use as 
+> the specification of the cards has to be done via PCI bus/slot/function number
+> which might change e.g. by adding another board.
+> This patch extends the kernel option "pci=resource_alignment" to allow to
+> specify the relevant boards via PCI device/vendor (and subdevice/subvendor) ids.
+> The specification of the devices via device/vendor is indicated by a leading
+> string "pci:" as argument to "pci=resource_alignment".
+> The format of the specification is
+>   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
 > 
-> I don't like this patch and especially adding a new dev_pm_ops flag to
-> work around something that you're seeing as an issue in the generic ops.
+> Examples: 
+>   pci=resource_alignment=4096@pci:1234:abcd:1234:bcde
+>   pci=resource_alignment=pci:1234:abcd
 > 
-> It is sort of like saying "the generic ops don't work for me, so modify
-> them as well as struct dev_pm_ops", but maybe it's better to change the
-> PCI bus type to do something different from calling the generic function?
+> Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
+
+Thanks, Mathias; I applied this to for-linus for v4.8.
+
+> ---
+>  Documentation/kernel-parameters.txt |    2 +
+>  drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
+>  2 files changed, 49 insertions(+), 19 deletions(-)
 > 
-> Or you can add a ->complete callback to your driver that will clear
-> power.direct_complete for the device in question.
-
-First of all, the direct_complete flag is marked "Owned by the PM core"
-in include/linux/pm.h. So I would have expected that a driver is not
-supposed to fudge it.
-
-Second, yes it's possible to make it work by clearing direct_complete
-in the ->complete callback, but there's a catch: The device tree is
-traversed bottom-up in dpm_complete(). Recall that a Thunderbolt
-controller consists of multiple devices and that power control is
-governed by its top-most device (upstream bridge). But because we're
-going bottom-up, clearing the direct_complete flag must be done by
-the bottom-most device (NHI)! So I've got all the power management
-stuff nicely separated in functions executed for the upstream bridge,
-but a small portion needs to be executed for the NHI. That's ugly.
-
-Normally the device hierarchy is traversed bottom-up during suspend
-and top-down during resume. However ->prepare and ->complete do it
-the other way round. In the case of ->prepare, this is even documented
-in Documentation/power/devices.txt but the reason thereof is not.
-Could you explain this please?
-
-Third, I'm irritated by your question "maybe it's better to change the
-PCI bus type to do something different from calling the generic function".
-What should that be? Under which circumstances can we leave a PCI device
-asleep after direct-complete?
-
-I'm generally irritated by commit 58a1fbbb2ee8, it's a significant change
-to mandatorily wake all devices, it wastes a not insignificant amount of
-energy, yet the reasoning in the commit message sounds vague and handwavy
-("There is a concern [...] devices that are most likely to be affected").
-
-Are there clear indications for or against a device requiring a resume?
-E.g. the commit message names SoCs, perhaps those can be recognized by
-having child devices of certain types?
-
-Thanks,
-
-Lukas
-
-> 
-> > ---
-> >  drivers/base/power/generic_ops.c | 3 ++-
-> >  include/linux/pm.h               | 1 +
-> >  2 files changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/base/power/generic_ops.c b/drivers/base/power/generic_ops.c
-> > index 07c3c4a..6e88f55 100644
-> > --- a/drivers/base/power/generic_ops.c
-> > +++ b/drivers/base/power/generic_ops.c
-> > @@ -316,7 +316,8 @@ void pm_complete_with_resume_check(struct device *dev)
-> >  	 * the sleep state it is going out of and it has never been resumed till
-> >  	 * now, resume it in case the firmware powered it up.
-> >  	 */
-> > -	if (dev->power.direct_complete && pm_resume_via_firmware())
-> > +	if (dev->power.direct_complete && pm_resume_via_firmware() &&
-> > +	    !dev->power.direct_complete_noresume)
-> >  		pm_request_resume(dev);
-> >  }
-> >  EXPORT_SYMBOL_GPL(pm_complete_with_resume_check);
-> > diff --git a/include/linux/pm.h b/include/linux/pm.h
-> > index 6a5d654..023de94 100644
-> > --- a/include/linux/pm.h
-> > +++ b/include/linux/pm.h
-> > @@ -596,6 +596,7 @@ struct dev_pm_info {
-> >  	unsigned int		use_autosuspend:1;
-> >  	unsigned int		timer_autosuspends:1;
-> >  	unsigned int		memalloc_noio:1;
-> > +	unsigned int		direct_complete_noresume:1;
-> >  	enum rpm_request	request;
-> >  	enum rpm_status		runtime_status;
-> >  	int			runtime_error;
-> > 
+> Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
+> ===================================================================
+> --- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
+> +++ linux-4.7-rc1/Documentation/kernel-parameters.txt
+> @@ -2998,12 +2998,17 @@ bytes respectively. Such letter suffixes
+>  		resource_alignment=
+>  				Format:
+>  				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+> +				[<order of align>@]pci:<vendor>:<device>\
+> +						[:<subvendor>:<subdevice>][; ...]
+>  				Specifies alignment and device to reassign
+>  				aligned memory resources.
+>  				If <order of align> is not specified,
+>  				PAGE_SIZE is used as alignment.
+>  				PCI-PCI bridge can be specified, if resource
+>  				windows need to be expanded.
+> +				To specify the alignment for certain types of devices, the
+> +				PCI vendor/device (and subvendor/subdevice) may be
+> +				specified. E.g. 4096@pci:1234:abcd:1234:bcde
+>  		ecrc=		Enable/disable PCIe ECRC (transaction layer
+>  				end-to-end CRC checking).
+>  				bios: Use BIOS/firmware settings. This is the
+> Index: linux-4.7-rc1/drivers/pci/pci.c
+> ===================================================================
+> --- linux-4.7-rc1.orig/drivers/pci/pci.c
+> +++ linux-4.7-rc1/drivers/pci/pci.c
+> @@ -4755,6 +4755,7 @@ static DEFINE_SPINLOCK(resource_alignmen
+>  static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>  {
+>  	int seg, bus, slot, func, align_order, count;
+> +	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+>  	resource_size_t align = 0;
+>  	char *p;
+>  
+> @@ -4768,28 +4769,55 @@ static resource_size_t pci_specified_res
+>  		} else {
+>  			align_order = -1;
+>  		}
+> -		if (sscanf(p, "%x:%x:%x.%x%n",
+> -			&seg, &bus, &slot, &func, &count) != 4) {
+> -			seg = 0;
+> -			if (sscanf(p, "%x:%x.%x%n",
+> -					&bus, &slot, &func, &count) != 3) {
+> -				/* Invalid format */
+> -				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+> -					p);
+> +		if (strncmp(p, "pci:", 4) == 0) {
+> +			/* PCI vendor/device (subvendor/subdevice) ids are specified */
+> +			p += 4;
+> +			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
+> +				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
+> +				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
+> +					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
+> +						p);
+> +					break;
+> +				}
+> +				subsystem_vendor = subsystem_device = 0;
+> +			}
+> +			p += count;
+> +			if ((!vendor || (vendor == dev->vendor)) &&
+> +				(!device || (device == dev->device)) &&
+> +				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+> +				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
+> +				if (align_order == -1)
+> +					align = PAGE_SIZE;
+> +				else
+> +					align = 1 << align_order;
+> +				/* Found */
+>  				break;
+>  			}
+>  		}
+> -		p += count;
+> -		if (seg == pci_domain_nr(dev->bus) &&
+> -			bus == dev->bus->number &&
+> -			slot == PCI_SLOT(dev->devfn) &&
+> -			func == PCI_FUNC(dev->devfn)) {
+> -			if (align_order == -1)
+> -				align = PAGE_SIZE;
+> -			else
+> -				align = 1 << align_order;
+> -			/* Found */
+> -			break;
+> +		else {
+> +			if (sscanf(p, "%x:%x:%x.%x%n",
+> +				&seg, &bus, &slot, &func, &count) != 4) {
+> +				seg = 0;
+> +				if (sscanf(p, "%x:%x.%x%n",
+> +						&bus, &slot, &func, &count) != 3) {
+> +					/* Invalid format */
+> +					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+> +						p);
+> +					break;
+> +				}
+> +			}
+> +			p += count;
+> +			if (seg == pci_domain_nr(dev->bus) &&
+> +				bus == dev->bus->number &&
+> +				slot == PCI_SLOT(dev->devfn) &&
+> +				func == PCI_FUNC(dev->devfn)) {
+> +				if (align_order == -1)
+> +					align = PAGE_SIZE;
+> +				else
+> +					align = 1 << align_order;
+> +				/* Found */
+> +				break;
+> +			}
+>  		}
+>  		if (*p != ';' && *p != ',') {
+>  			/* End of param or invalid format */
