@@ -1,75 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59489 "EHLO
-	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753542AbcHRH3j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Aug 2016 03:29:39 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [PATCH V3 2/3] vfio/pci: Allow control SR-IOV through sysfs interface
-Date: Thu, 18 Aug 2016 10:29:16 +0300
-Message-Id: <1471505357-78110-3-git-send-email-ilyal@mellanox.com>
-In-Reply-To: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
-References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 9 Aug 2016 12:29:26 +0200
+From: Robert Richter <robert.richter@cavium.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [RFC PATCH V5 0/5] ECAM quirks handling for ARM64 platforms
+Message-ID: <20160809102926.GT22012@rric.localdomain>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: gabriele.paoloni@huawei.com, rafael@kernel.org, catalin.marinas@arm.com,
+ will.deacon@arm.com, okaya@codeaurora.org, wangyijing@huawei.com,
+ andrea.gallo@linaro.org, Lorenzo.Pieralisi@arm.com, jhugo@codeaurora.org,
+ linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com,
+ linux-acpi@vger.kernel.org, helgaas@kernel.org, liudongdong3@huawei.com,
+ linux-pci@vger.kernel.org, Liviu.Dudau@arm.com, arnd@arndb.de, jcm@redhat.com,
+ msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com,
+ linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com,
+ ard.biesheuvel@linaro.org, dhdang@apm.com, linux-kernel@vger.kernel.org,
+ jeremy.linton@arm.com, hanjun.guo@linaro.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch allows enabling and disabling SR-IOV for
-devices probed by vfio-pci.
-Since the devices might be assigned to an untrusted entities
-we use driver_override to make sure the VFs are also
-probed by the the vfio-pci driver.
+On 08.08.16 15:05:36, Tomasz Nowicki wrote:
+> Quirk handling relies on an idea of matching MCFG OEM ID, TABLE ID and
+> revision (the ones from standard header of MCFG table).
+> 
+> Static array is used to keep quirk entries. Each entry consists of
+> mentioned MCFG IDs along with custom pci_ops structure and initialization call.
+> 
+> As an example, the last patch presents quirk handling mechanism usage for
+> ThunderX PEM driver.
+> 
+> v4 -> v5
+> - rebase against v4.8-rc1
+> - rework to exact MCFG OEM ID, TABLE ID, rev match
+>   - use memcmp instead of strncmp
+>   - no substring match
+> - fix typos and dmesg message
+> 
+> Tomasz Nowicki (5):
+>   PCI: Embed pci_ecam_ops in pci_config_window structure
+>   PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
+>   PCI: Check platform specific ECAM quirks
+>   ARM64/PCI: Start using quirks handling for ACPI based PCI host
+>     controller
+>   PCI: thunder-pem: Support quirky configuration space access for ACPI
+>     based PCI host controller
+> 
+>  arch/arm64/kernel/pci.c            | 42 +----------------
+>  drivers/acpi/pci_mcfg.c            | 40 ++++++++++++++++
+>  drivers/pci/ecam.c                 |  6 +--
+>  drivers/pci/host/Makefile          |  1 +
+>  drivers/pci/host/mcfg-quirks.c     | 93 ++++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/mcfg-quirks.h     | 24 ++++++++++
+>  drivers/pci/host/pci-thunder-pem.c | 96 ++++++++++++++++++++++++++++++++------
+>  include/linux/pci-acpi.h           |  5 ++
+>  include/linux/pci-ecam.h           |  2 +-
+>  9 files changed, 252 insertions(+), 57 deletions(-)
+>  create mode 100644 drivers/pci/host/mcfg-quirks.c
+>  create mode 100644 drivers/pci/host/mcfg-quirks.h
 
-Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
----
- drivers/vfio/pci/vfio_pci.c | 24 +++++++++++++++++++-----
- 1 file changed, 19 insertions(+), 5 deletions(-)
+For the whole series
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index d624a52..6a203a7 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -297,6 +297,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 	struct vfio_pci_dummy_resource *dummy_res, *tmp;
- 	int i, bar;
- 
-+	pci_disable_sriov(pdev);
- 	/* Stop the device from further DMA */
- 	pci_clear_master(pdev);
- 
-@@ -1314,12 +1315,25 @@ static const struct pci_error_handlers vfio_err_handlers = {
- 	.error_detected = vfio_pci_aer_err_detected,
- };
- 
-+static int vfio_pci_sriov_configure(struct pci_dev *pdev, int num_vfs)
-+{
-+	if (!num_vfs) {
-+		pci_disable_sriov(pdev);
-+		return 0;
-+	}
-+
-+	return pci_enable_sriov_with_override(pdev,
-+					      num_vfs,
-+					     "vfio-pci");
-+}
-+
- static struct pci_driver vfio_pci_driver = {
--	.name		= "vfio-pci",
--	.id_table	= NULL, /* only dynamic ids */
--	.probe		= vfio_pci_probe,
--	.remove		= vfio_pci_remove,
--	.err_handler	= &vfio_err_handlers,
-+	.name		 = "vfio-pci",
-+	.id_table	 = NULL, /* only dynamic ids */
-+	.probe		 = vfio_pci_probe,
-+	.remove		 = vfio_pci_remove,
-+	.err_handler	 = &vfio_err_handlers,
-+	.sriov_configure = vfio_pci_sriov_configure,
- };
- 
- struct vfio_devices {
--- 
-1.8.3.1
+Reviewed-by: Robert Richter <rrichter@cavium.com>
+Tested-by: Robert Richter <rrichter@cavium.com>
 
+Test included:
+
+ [PATCH V7 0/8] Introduce ACPI world to ITS irqchip
+
+Thanks Tomasz,
+
+-Robert
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
