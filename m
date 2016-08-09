@@ -1,58 +1,77 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Tue, 9 Aug 2016 20:56:28 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:45391 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbcHIMMq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Aug 2016 08:12:46 -0400
+Date: Tue, 9 Aug 2016 14:13:20 +0200
 From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 0/3] Limiting pci access requests
-Message-ID: <20160809185628.GA6729@wunner.de>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
- <20160809173633.GF27301@localhost>
- <20160809185654.GA32692@localhost.localdomain>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jan Kiszka <jan.kiszka@siemens.com>,
+	Benedikt Spranger <b.spranger@linutronix.de>
+Subject: Re: x86/PCI: Scan all functions during probing
+Message-ID: <20160809121320.GA6518@wunner.de>
+References: <alpine.DEB.2.20.1608091318530.5388@nanos>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160809185654.GA32692@localhost.localdomain>
+In-Reply-To: <alpine.DEB.2.20.1608091318530.5388@nanos>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 09, 2016 at 02:56:54PM -0400, Keith Busch wrote:
-> On Tue, Aug 09, 2016 at 12:36:33PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Aug 08, 2016 at 01:14:24PM -0600, Keith Busch wrote:
-> > > We observe that error handling and device hot removal creates many
-> > > unnecessary config and memory accesses to devices, some of which are not
-> > > even present. While we expect command processing to proceed, we observe
-> > > on various platforms that the unnecessary accesses create instability
-> > > with hardware performing completion synthesis, and slows down handling
-> > > of such error events as well as normal IO processing.
-> > 
-> > Is there some hot removal path that we've suddenly starting exercising
-> > more than we used to?  Can you give us any details of that?  I'm
-> > wondering if there are any more generic fixes we can make.  These
-> > patches seem good, but a little piece-meal, so it feels like there
-> > could be more places where we trip over similar issues.
+On Tue, Aug 09, 2016 at 01:22:30PM +0200, Thomas Gleixner wrote:
+> From: Benedikt Spranger <b.spranger@linutronix.de>
 > 
-> This series came from testing JBODs of PCIe SSDs. I think the main
-> difference with this setup compared to most other PCIe testing is the
-> sheer number of simultaneous add + remove + error events while running
-> continuous IO. We're not hitting any new code paths in the kernel, but
-> we are discovering interesting software and hardware interactions that
-> were likely less reachable before such testing.
+> PCI and PCIBIOS probing only scans devices at function number 0/8/16/...
+> Subdevices (e.g. multiqueue) have function numbers which are not a
+> multiple of 8.
 > 
-> There are still more places that we can remove unnecessary config and
-> MMIO, though they're just micro-improvements compared to this series.
-> Even those just repeat the same pattern of looking for a -1 completion
-> or false return from "pci_device_is_present". So the "fixes" do look
-> tedious and piecemeal, but I didn't see how else we could do it. Any
-> thoughts or guidance is much appreciated.
+> Simple hypervisors (e.g. Jailhouse) pass subdevices directly w/o providing
+> virtual PCI mappings like KVM. As a consequence a simple PCI passthrough from
+> Jailhouse to a linux guest is not able to detect such devices.
+> 
+> Changing the probe functions to scan all function numbers makes it work. This
+> has no side effects and there is no reason to force the 0/8/16... probing
+> scheme.
 
-FWIW, similar checks were added to pciehp with commit 1469d17dd341
-("PCI: pciehp: Handle invalid data when reading from non-existent
-devices"). So the general idea to handle such faults is already
-present in the kernel, the only improvement I could see here would
-be to harmonize (i.e. make identical everywhere) the way this is
-coded (check for ~0) as well as the message logged with KERN_INFO
-(your patches do not log a message at all AFAICS).
+It does have the side effect that probing (and thus booting) is prolonged.
+Depending on how much that is, it may be worth pondering if usage of the
+smaller stride should be constrained to platforms that really need it
+(assuming they can be detected/quirked).
 
-Best regards,
+Just claiming "has no side effects" is going out on a limb I think.
+
+Thanks,
 
 Lukas
+
+> 
+> Signed-off-by: Benedikt Spranger <b.spranger@linutronix.de>
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
+>  arch/x86/pci/legacy.c |    2 +-
+>  drivers/pci/probe.c   |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> --- a/arch/x86/pci/legacy.c
+> +++ b/arch/x86/pci/legacy.c
+> @@ -42,7 +42,7 @@ void pcibios_scan_specific_bus(int busn)
+>  	if (pci_find_bus(0, busn))
+>  		return;
+>  
+> -	for (devfn = 0; devfn < 256; devfn += 8) {
+> +	for (devfn = 0; devfn < 256; devfn++) {
+>  		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
+>  		    l != 0x0000 && l != 0xffff) {
+>  			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2063,7 +2063,7 @@ unsigned int pci_scan_child_bus(struct p
+>  	dev_dbg(&bus->dev, "scanning bus\n");
+>  
+>  	/* Go find them, Rover! */
+> -	for (devfn = 0; devfn < 0x100; devfn += 8)
+> +	for (devfn = 0; devfn < 0x100; devfn++)
+>  		pci_scan_slot(bus, devfn);
+>  
+>  	/* Reserve buses for SR-IOV capability. */
