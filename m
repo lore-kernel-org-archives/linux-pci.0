@@ -1,129 +1,217 @@
-Return-Path: <mpatel6@imu.intel.com>
-Return-Path: <mpatel6@imu.intel.com>
-From: Mayurkumar Patel <mayurkumar.patel@intel.com>
-To: helgaas@kernel.org, bhelgaas@google.com
-Cc: rajatja@google.com, linux-pci@vger.kernel.org,
-        andriy.shevchenko@linux.intel.com, mika.westerberg@linux.intel.com,
-        rafael.j.wysocki@intel.com, luis.antonio.tarazona-duarte@intel.com,
-        keith.busch@intel.com, mayurkumar.patel@intel.com
-Subject: [PATCH v1 2/2] PCI: pciehp: Rework hotplug interrupt routine
-Date: Thu, 18 Aug 2016 23:07:59 +0200
-Message-Id: <1471554479-42083-2-git-send-email-mayurkumar.patel@intel.com>
-In-Reply-To: <1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com>
-References: <92EBB4272BF81E4089A7126EC1E7B28466597350@IRSMSX101.ger.corp.intel.com>
- <1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com>
+Return-Path: <matt@masarand.com>
+Return-Path: <matt@masarand.com>
+From: Matthew Minter <matt@masarand.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
+Date: Mon, 08 Aug 2016 21:40:19 -0600
+Message-ID: <1527524.CCUKfxz1mT@shredder>
+In-Reply-To: <20160808231922.GA7259@localhost>
+References: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com> <HK2PR0601MB1393B3642136B01087628DC9F51B0@HK2PR0601MB1393.apcprd06.prod.outlook.com> <20160808231922.GA7259@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-First scenario, on any slot events, pcie_isr() does as following,
-pcie_isr() -> do {...} while(detected) loop in which it
-reads PCI_EXP_SLTSTA, stores it in the intr_loc, then
-clears respective interrupts by writing to PCI_EXP_SLTSTA.
-Again, due to loop, it reads PCI_EXP_SLTSTA, which might
-have been changed already for the same type of interrupts
-because in the previous iteration they already got cleared.
-In this case, it will execute pciehp_queue_interrupt_event() only once
-based on the last event happened. This can be problematic
-for PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC types of
-interrupts as if they miss to process previous events then PCIe device
-enumeration can get effected.
+Hi Bjorn and all involved here,
 
-Second scenario, pcie_isr() after clearing interrupts, it calls
-pciehp_get_adapter_status() before processing PCI_EXP_SLTSTA_PDS
-and pciehp_check_link_active() before processing PCI_EXP_SLTSTA_DLLSC
-and takes decisions based on that to do pciehp_queue_interrupt_event()
-which might also have already got changed due to the same
-fact that the respective interrupts got cleared earlier.
+I have not really been able to do much work on the patchset in question 
+lately. A version (which I think is up to date but am not 100% sure is here 
+https://github.com/Vality/linux/commits/pci-fixes though I somehow thought I 
+rebased it onto a slightly newer kernel at some point.
+Perhaps that is in a mailing list as a patchset somewhere.
 
-The patch is just one proposal. It is just prototype and currently
-I don't know it would work any HW.
-It removes re-inspection to avoid first scenario happening
-and just reads the events once and clears them as soon as possible.
-To successfully execute right Slot events for PDC and DLLSC types which
-triggered pcie_isr() it reads the PCI_EXP_SLTSTA_PDS and
-PCI_EXP_LNKSTA_DLLLA earlier before clearing the respective interrupts
-and executes pciehp_queue_interrupt_event() based on the stored
-status of these two Slot events.
+I am not currently able to dedicate as much time as I would like to this but 
+am happy to do what I can to support any merging efforts for this if that is 
+what is propsed. Particularly if there are any questions or small fixes. 
+However I do not think I have the time to single-handedly do a major rewrite 
+at this time if that is needed. But am happy to help any other efforts.
 
-Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |   45 ++++++++++++++++----------------------
- 1 file changed, 19 insertions(+), 26 deletions(-)
+Thanks for CCing me in. I would be happy to see this go somewhere if possible.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 5c24e93..2d01b7d 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -542,36 +542,30 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	struct pci_bus *subordinate = pdev->subordinate;
- 	struct pci_dev *dev;
- 	struct slot *slot = ctrl->slot;
--	u16 detected, intr_loc;
-+	u16 slot_status, intr_loc = 0;
- 	u8 present;
- 	bool link;
+Matthew
 
-+	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
-+	if (slot_status == (u16) ~0) {
-+		ctrl_info(ctrl, "%s: no response from device\n",
-+			  __func__);
-+		return IRQ_HANDLED;
-+	}
-+	intr_loc = (slot_status & (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
-+		     PCI_EXP_SLTSTA_PDC |
-+		     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC));
-+	if (!intr_loc)
-+		return IRQ_NONE;
-+
- 	/*
--	 * In order to guarantee that all interrupt events are
--	 * serviced, we need to re-inspect Slot Status register after
--	 * clearing what is presumed to be the last pending interrupt.
-+	 * update link status before clearing interrupts to process
-+	 * it later
- 	 */
--	intr_loc = 0;
--	do {
--		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &detected);
--		if (detected == (u16) ~0) {
--			ctrl_info(ctrl, "%s: no response from device\n",
--				  __func__);
--			return IRQ_HANDLED;
--		}
--
--		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
--			     PCI_EXP_SLTSTA_PDC |
--			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
--		detected &= ~intr_loc;
--		intr_loc |= detected;
--		if (!intr_loc)
--			return IRQ_NONE;
--		if (detected)
--			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
--						   intr_loc);
--	} while (detected);
-+	if (intr_loc & PCI_EXP_SLTSTA_DLLSC)
-+		link = pciehp_check_link_active(ctrl);
-
-+	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, intr_loc);
- 	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", intr_loc);
-
- 	/* Check Command Complete Interrupt Pending */
-@@ -603,7 +597,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
-
- 	/* Check Presence Detect Changed */
- 	if (intr_loc & PCI_EXP_SLTSTA_PDC) {
--		pciehp_get_adapter_status(slot, &present);
-+		present = !!(slot_status & PCI_EXP_SLTSTA_PDS);
- 		ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
- 			  present ? "" : "not ", slot_name(slot));
- 		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
-@@ -618,7 +612,6 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	}
-
- 	if (intr_loc & PCI_EXP_SLTSTA_DLLSC) {
--		link = pciehp_check_link_active(ctrl);
- 		ctrl_info(ctrl, "slot(%s): Link %s event\n",
- 			  slot_name(slot), link ? "Up" : "Down");
- 		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
---
-1.7.9.5
+On Monday, August 8, 2016 6:19:22 PM MDT Bjorn Helgaas wrote:
+> [+cc Matthew]
+> 
+> On Mon, Aug 08, 2016 at 09:31:05AM +0000, Phil Edworthy wrote:
+> > Hi Lorenzo,
+> > 
+> > Thanks for the link, I'll wait to see how this pans out.
+> 
+> I'm not sure anything is happening there.  Last time I looked
+> (http://lkml.kernel.org/r/20151223230433.GA27708@localhost), I thought
+> there were some issues.
+> 
+> From Lorenzo's response, it sounds like he thought maybe I should
+> apply it anyway, but I dropped the ball and haven't done anything with
+> it.
+> 
+> I'll take another look at it.
+> 
+> > > -----Original Message-----
+> > > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> > > owner@vger.kernel.org] On Behalf Of Lorenzo Pieralisi
+> > > Sent: 21 July 2016 10:35
+> > > To: Phil Edworthy <phil.edworthy@renesas.com>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
+> > > linux-
+> > > renesas-soc@vger.kernel.org
+> > > Subject: Re: [RFC] pci: Provide a domain limited version of
+> > > pdev_fixup_irq
+> > > 
+> > > Hi Phil,
+> > > 
+> > > On Fri, Jul 08, 2016 at 12:49:55PM +0100, Phil Edworthy wrote:
+> > > > Hi Bjorn,
+> > > > 
+> > > > I've marked this as RFC as I guess there might be a better way to do
+> > > > this, but I'm not sure how. I would appreciate your thoughts on this.
+> > > 
+> > > There is a more generic solution to this issue, that has been
+> > > hanging in the balance for a while:
+> > > 
+> > > http://marc.info/?l=linux-pci&m=144557674601373&w=2
+> > > 
+> > > We should bring it to completion since pci_fixup_irqs() should
+> > > really be replaced, this is just another example of the bugs
+> > > it can trigger.
+> > > 
+> > > Thanks,
+> > > Lorenzo
+> > > 
+> > > > Thanks
+> > > > Phil
+> > > > 
+> > > > ---
+> > > > pdev_fixup_irq() performs interrupt swizzling on all PCI devices,
+> > > > no matter that the device may be on a completely unrelated PCI
+> > > > Host controller.
+> > > > 
+> > > > When you have multiple PCI Host controllers, pdev_fixup_irq() can
+> > > > clobber the dev->irq of devices it should not be changing.
+> > > > This has been seen when performing suspend/resume on boards with
+> > > > two R-Car PCIe Host controllers, resulting in a NULL ptr access
+> > > > in __pci_restore_msi_state. This happens because dev->irq has been
+> > > > overwritten with 0, and irq_get_msi_desc(dev->irq) returns NULL.
+> > > > 
+> > > > This patch introduces a new function, pci_fixup_irqs_local(), that
+> > > > performs the same operation as pdev_fixup_irq(), but only changes
+> > > > the dev->irq of device on the same domain.
+> > > > 
+> > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > > > ---
+> > > > 
+> > > >  drivers/pci/setup-irq.c | 25 ++++++++++++++++++++++---
+> > > >  include/linux/pci.h     |  3 +++
+> > > >  2 files changed, 25 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> > > > index 95c225b..90ea8fa 100644
+> > > > --- a/drivers/pci/setup-irq.c
+> > > > +++ b/drivers/pci/setup-irq.c
+> > > > @@ -22,7 +22,8 @@ void __weak pcibios_update_irq(struct pci_dev *dev,
+> > > > int
+> > > 
+> > > irq)
+> > > 
+> > > >  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> > > >  
+> > > >  }
+> > > > 
+> > > > -static void pdev_fixup_irq(struct pci_dev *dev,
+> > > > +static void pdev_fixup_irq(int domain_nr,
+> > > > +			   struct pci_dev *dev,
+> > > > 
+> > > >  			   u8 (*swizzle)(struct pci_dev *, u8 *),
+> > > >  			   int (*map_irq)(const struct pci_dev *, u8, u8))
+> > > >  
+> > > >  {
+> > > > 
+> > > > @@ -48,8 +49,15 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+> > > > 
+> > > >  		if (irq == -1)
+> > > >  		
+> > > >  			irq = 0;
+> > > >  	
+> > > >  	}
+> > > > 
+> > > > -	dev->irq = irq;
+> > > > +	/* Since pci_fixup_irqs() can be called more than once due to
+> > > > multiple
+> > > > +	 * host controllers, and we scan all PCI devices, not just those
+> > > > +	 * attached to this controller, make sure we don't clobber dev-
+>irq
+> > > > +	 * that has nothing to do with this domain.
+> > > > +	 */
+> > > > +	if (domain_nr >= 0 && dev->bus->domain_nr != domain_nr)
+> > > > +		return;
+> > > > 
+> > > > +	dev->irq = irq;
+> > > > 
+> > > >  	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
+> > > >  	
+> > > >  	/* Always tell the device, so the driver knows what is
+> > > > 
+> > > > @@ -63,6 +71,17 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *,
+> > > > u8 *),> > > 
+> > > >  	struct pci_dev *dev = NULL;
+> > > >  	
+> > > >  	for_each_pci_dev(dev)
+> > > > 
+> > > > -		pdev_fixup_irq(dev, swizzle, map_irq);
+> > > > +		pdev_fixup_irq(-1, dev, swizzle, map_irq);
+> > > > 
+> > > >  }
+> > > >  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+> > > > 
+> > > > +
+> > > > +void pci_fixup_irqs_local(struct pci_bus *bus,
+> > > > +		    u8 (*swizzle)(struct pci_dev *, u8 *),
+> > > > +		    int (*map_irq)(const struct pci_dev *, u8, u8))
+> > > > +{
+> > > > +	struct pci_dev *dev = NULL;
+> > > > +
+> > > > +	for_each_pci_dev(dev)
+> > > > +		pdev_fixup_irq(bus->domain_nr, dev, swizzle, map_irq);
+> > > > +}
+> > > > +EXPORT_SYMBOL_GPL(pci_fixup_irqs_local);
+> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > > index 8badb66..37a97df 100644
+> > > > --- a/include/linux/pci.h
+> > > > +++ b/include/linux/pci.h
+> > > > @@ -1134,6 +1134,9 @@ void pdev_enable_device(struct pci_dev *);
+> > > > 
+> > > >  int pci_enable_resources(struct pci_dev *, int mask);
+> > > >  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+> > > >  
+> > > >  		    int (*)(const struct pci_dev *, u8, u8));
+> > > > 
+> > > > +void pci_fixup_irqs_local(struct pci_bus *,
+> > > > +		    u8 (*)(struct pci_dev *, u8 *),
+> > > > +		    int (*)(const struct pci_dev *, u8, u8));
+> > > > 
+> > > >  #define HAVE_PCI_REQ_REGIONS	2
+> > > >  int __must_check pci_request_regions(struct pci_dev *, const char *);
+> > > >  int __must_check pci_request_regions_exclusive(struct pci_dev *,
+> > > >  const char
+> > > 
+> > > *);
+> > > 
+> > > > --
+> > > > 2.5.0
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > > > in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
