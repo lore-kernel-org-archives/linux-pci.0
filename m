@@ -1,135 +1,64 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, Linux PM <linux-pm@vger.kernel.org>, Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for system sleep
-Date: Sat, 13 Aug 2016 00:18:26 +0200
-Message-ID: <2003407.8XLAPPsQTe@vostro.rjw.lan>
-In-Reply-To: <20160812161609.GA8060@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de> <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com> <20160812161609.GA8060@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <Joao.Pinto@synopsys.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: helgaas@kernel.org
+Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jszhang@marvell.com,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v4 3/3] pcie-designware: fix typo
+Date: Tue,  9 Aug 2016 17:35:34 +0100
+Message-Id: <bba00c66a124b80c2bc259b3d2f78e561c3df27a.1470758382.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470758382.git.jpinto@synopsys.com>
+References: <cover.1470758382.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470758382.git.jpinto@synopsys.com>
+References: <cover.1470758382.git.jpinto@synopsys.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 12, 2016 06:16:09 PM Lukas Wunner wrote:
-> On Fri, Aug 12, 2016 at 02:50:04AM +0200, Rafael J. Wysocki wrote:
-> > On Thu, Aug 11, 2016 at 3:20 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > So I would like to find a common ground and something you feel
-> > > comfortable to ack. The problem I see with your suggested approach
-> > > of subclassing struct dev_pm_domain in a struct pci_pm_domain is
-> > > that I can easily envision Apple putting some custom methods in the
-> > > DSDT to power a non-PCI device up and down. They're starting to use
-> > > SPI and UART to attach devices in newer machines.
-> > 
-> > Those devices have no standard power state definitions.
-> > 
-> > The problem you have here really is PCI-specific, because you want to
-> > use PCI PM along with the non-standard methods.
-> 
-> If I introduce a struct pci_pm_domain like you suggested, it would mean
-> that *all* PCI devices using dev_pm_domain_set() have to be changed,
-> else the container_of() wouldn't work. The resulting code bloat alone
-> inhibits me from implementing this. Plus, it's a tripwire for anyone
-> wishing to assign a dev_pm_domain to their PCI device.
-> 
-> > > Hence my suggestion to add a flag to struct dev_pm_domain, even
-> > > though at the moment that flag would only be queried by the PCI core.
-> > > I don't care if this is called can_power_off or power_manageable or
-> > > whatever.
-> > 
-> > struct dev_pm_domain is way too generic for that though, as I'm sure
-> > there are users of it where the can_power_off thing wouldn't make any
-> > sense whatever.
-> 
-> That seems like a small tradeoff compared to introducing a struct
-> pci_pm_domain.
+Simple fix typo.
 
-I'm not going to apply any patches addding can_power_off or similar flags to
-struct dev_pm_domain.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+changes v1->v4:
+- Nothing changed. Just to keep up patch set version.
 
-> If you dislike a can_power_off flag in struct dev_pm_domain, that only
-> leaves the option to add a one-liner to pci_target_state(), unless I'm
-> missing something.
+ drivers/pci/host/pcie-designware.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I'm not sure why you are insisting on setting target_state to D3cold
-before taking the platform_pci_power_manageable() branch.  Why don't
-you simply rearrange the routine like
-
-	pci_power_t target_state = PCI_D3hot;
-
-	if (platform_pci_power_manageable(dev)) {
-		...
-		return target_state;
-	}
-
-	if (!dev->pm_cap)
-		return PCI_D0;
-
-	if (dev->current_state == PCI_D3cold)
-		target_state = PCI_D3cold;
-
-	if (device_may_wakeup(&dev->dev)) {
-		...
-	}
-
-	return target_state;
-
-And that would be fine by me.
-
-That said I'm not sure why you want to use pci_target_state() so badly?
-
-If you are going to use a PM domain, why do you still need that function?
-
-> BTW there seems to be a contradiction in your statements on wakeup devices:
-> 
-> On Mon, Aug 08, 2016 at 01:32:54AM +0200, Rafael J. Wysocki wrote:
-> > On Sunday, August 07, 2016 11:03:47 AM Lukas Wunner wrote:
-> > > The reasoning is that going from D3cold to D3hot before system sleep
-> > > just never makes sense, no matter if the device got there by standard
-> > > or nonstandard means.
-> >
-> > That may not be true in theory.
-> >
-> > If this is a wakeup device, it may not be able to generate wakeup signals
-> > from D3cold while the system is in the target system state, although it might
-> > be able to generate those signals when the system is in S0 (in the ACPI case).
-> 
-> However earlier you wrote:
-> 
-> On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
-> > On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
-> > > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
-> > > > Is there a reason you don't want to do this check for devices that
-> > > > may wakeup?
-> > >
-> > > Fear of breaking things. It would mean that a device would be left in
-> > > D3cold even though it may not be able to signal wakeup from that power
-> > > state.
-> >
-> > Then it should not be put into D3_cold at run time too if it is wakeup-capable.
-> 
-> So on the one hand, you warn that a wakeup-capable device may have been
-> put into D3cold at runtime but needs to be woken before system sleep
-> because it might otherwise not be able to signal wakeup.
-
-Yes, so specifically I'm concerned about the pci_target_state() invocation in
-pci_dev_keep_suspended() which is done exactly for this purpose.
-
-If you apply the "keep it in D3cold if already there" logic to that case, it
-may lead to a wrong decision in theory.  Say the device is in D3cold and
-platform_pci_choose_state() returns D1, but pci_no_d1d2() returns true,
-the device will end up in D3cold, but it may not be able to signal wakeup
-from that state after the system has been suspended.
-
-> On the other hand you say that such devices should not be put into D3cold
-> at runtime at all.
->
-> Which one is it?
-
-I said the latter under the assumption that the device would not be able to
-signal wakeup from D3cold at all (including at run time).  I may have not
-understand the context of your conversation with Bjorn correctly.
-
-Thanks,
-Rafael
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 3fb9036..7731eda 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -36,7 +36,7 @@
+ #define LINK_WAIT_IATU_MIN		9000
+ #define LINK_WAIT_IATU_MAX		10000
+ 
+-/* Synopsis specific PCIE configuration registers */
++/* Synopsys specific PCIE configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+ #define PORT_LINK_MODE_MASK		(0x3f << 16)
+ #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
+@@ -253,7 +253,7 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+ 		}
+ 
+ 		if (val == PCIE_ATU_ENABLE)
+-			break;
++			return;
+ 
+ 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+ 	}
+@@ -646,11 +646,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
++	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
++
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
+ 
+-	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
+-
+ 	pp->root_bus_nr = pp->busn->start;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+-- 
+1.8.1.5
