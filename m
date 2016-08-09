@@ -1,85 +1,327 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 31 Aug 2016 12:55:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Andi Kleen <ak@linux.intel.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Mark Haswell Power Control Unit as having
- non-compliant BARs
-Message-ID: <20160831175543.GD16426@localhost>
-References: <20160831155009.3216.93787.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <57C716F5.1080808@redhat.com>
+Return-Path: <aik@ozlabs.ru>
+Return-Path: <aik@ozlabs.ru>
+Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+To: Bjorn Helgaas <helgaas@kernel.org>, Hannes Reinecke <hare@suse.de>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+ <1452684335-46107-4-git-send-email-hare@suse.de>
+ <20160209210458.GB32530@localhost>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Babu Moger <babu.moger@oracle.com>,
+ Paul Mackerras <paulus@samba.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
+Date: Tue, 9 Aug 2016 22:54:03 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57C716F5.1080808@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160209210458.GB32530@localhost>
+Content-Type: text/plain; charset=koi8-r
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 31, 2016 at 01:42:13PM -0400, Prarit Bhargava wrote:
-> On 08/31/2016 11:50 AM, Bjorn Helgaas wrote:
-> > The Haswell Power Control Unit has a non-PCI register (CONFIG_TDP_NOMINAL)
-> > where BAR 0 is supposed to be.  This is erratum HSE43 in the spec update
-> > referenced below:
-> > 
-> >   The PCIe* Base Specification indicates that Configuration Space Headers
-> >   have a base address register at offset 0x10.  Due to this erratum, the
-> >   Power Control Unit's CONFIG_TDP_NOMINAL CSR (Bus 1; Device 30; Function
-> >   3; Offset 0x10) is located where a base register is expected.
-> > 
-> > Mark the PCU as having non-compliant BARs so we don't try to probe any of
-> > them.  There are no other BARs on this device.
-> > 
-> > Rename the quirk so it's not Broadwell-specific.
-> > 
-> > Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=153881
-> > Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  arch/x86/pci/fixup.c |   20 +++++++++++++-------
-> >  1 file changed, 13 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> > index 837ea36..6d52b94 100644
-> > --- a/arch/x86/pci/fixup.c
-> > +++ b/arch/x86/pci/fixup.c
-> > @@ -553,15 +553,21 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
-> >  
-> >  /*
-> > - * Broadwell EP Home Agent BARs erroneously return non-zero values when read.
-> > + * Device [8086:2fc0]
-> > + * Erratum HSE43
-> > + * CONFIG_TDP_NOMINAL CSR Implemented at Incorrect Offset
-> > + * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
-> >   *
-> 
-> Bjorn,
-> 
-> I really think you should point at this doc:
-> 
-> http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-datasheet-vol-2.html
-> 
-> Section 5.4, Device 30 Function 3
-> 
-> which states (at the bottom of the config space diagram) "Note: The CSR located
-> at offset in Device 30, Function 3, Offset 0x10 is not a Configuration Space
-> Header and SW should not treat it as such."
-> 
-> as it is more informative of the issue.
-> 
-> I'm also slightly concerned about blacklisting the rest of the config space, but
-> I don't see any systems that have non-zero BARs but that's a lesser issue.
-> 
-> Beyond that, testing went well.
+On 10/02/16 08:04, Bjorn Helgaas wrote:
+> On Wed, Jan 13, 2016 at 12:25:34PM +0100, Hannes Reinecke wrote:
+>> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
+>> be smaller than that. To figure out the actual size one has to read
+>> the VPD area until the 'end marker' is reached.
+>> Trying to read VPD data beyond that marker results in 'interesting'
+>> effects, from simple read errors to crashing the card. And to make
+>> matters worse not every PCI card implements this properly, leaving
+>> us with no 'end' marker or even completely invalid data.
+>> This path tries to determine the size of the VPD data.
+>> If no valid data can be read an I/O error will be returned when
+>> reading the sysfs attribute.
 
-I added the link to the changelog, but I don't think it really adds
-much about the issue.  It basically says "we screwed up and generic
-PCI BAR sizing SW should magically ignore the register at 0x10."
 
-Thanks for testing it; I added your Tested-by.
+I have a problem with this particular feature as today VFIO uses this
+pci_vpd_xxxx API to virtualize access to VPD and the existing code assumes
+there is just one VPD block with 0x2 start and 0xf end. However I have at
+least one device where this is not true - "10 Gigabit Ethernet-SR PCI
+Express Adapter" - it has 2 blocks (made a script to read/parse it as
+/sys/bus/pci/devices/0001\:03\:00.0/vpd shows it wrong):
 
-Bjorn
+
+#0000 Large item 42 bytes; name 0x2 Identifier String
+#002d Large item 74 bytes; name 0x10
+#007a Small item 1 bytes; name 0xf End Tag
+---
+#0c00 Large item 16 bytes; name 0x2 Identifier String
+#0c13 Large item 234 bytes; name 0x10
+#0d00 Large item 252 bytes; name 0x11
+#0dff Small item 0 bytes; name 0xf End Tag
+
+The cxgb3 driver is reading the second bit starting from 0xc00 but since
+the size is wrongly detected as 0x7c, VFIO blocks access beyond it and the
+guest driver fails to probe.
+
+I also cannot find a clause in the PCI 3.0 spec saying that there must be
+just a single block, is it there?
+
+What would the correct fix be? Scanning all 32k of VPD is not an option I
+suppose as this is what this patch is trying to avoid. Thanks.
+
+
+
+This is the device:
+
+[aik@p81-p9 ~]$ sudo lspci -vvnns 0001:03:00.0
+0001:03:00.0 Ethernet controller [0200]: Chelsio Communications Inc T310
+10GbE Single Port Adapter [1425:0030]
+	Subsystem: IBM Device [1014:038c]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 494
+	Region 0: Memory at 3fe080880000 (64-bit, non-prefetchable) [size=4K]
+	Region 2: Memory at 3fe080000000 (64-bit, non-prefetchable) [size=8M]
+	Region 4: Memory at 3fe080881000 (64-bit, non-prefetchable) [size=4K]
+	[virtual] Expansion ROM at 3fe080800000 [disabled] [size=512K]
+	Capabilities: [40] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [48] MSI: Enable- Count=1/32 Maskable- 64bit+
+		Address: 0000000000000000  Data: 0000
+	Capabilities: [58] Express (v2) Endpoint, MSI 00
+		DevCap:	MaxPayload 4096 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+			ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+			MaxPayload 256 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x8, ASPM L0s L1, Exit Latency L0s
+unlimited, L1 unlimited
+			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x8, TrErr- Train- SlotClk+ DLActive- BWMgmt-
+ABWMgmt-
+		DevCap2: Completion Timeout: Range ABC, TimeoutDis-, LTR-, OBFF Not Supported
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance-
+ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-,
+EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [94] Vital Product Data
+		Product Name: 10 Gigabit Ethernet-SR PCI Express Adapter
+		Read-only fields:
+			[EC] Engineering changes: D76809
+			[FN] Unknown: 34 36 4b 37 38 39 37
+			[PN] Part number: 46K7897
+			[MN] Manufacture ID: 31 30 33 37
+			[FC] Unknown: 35 37 36 39
+			[SN] Serial number: YL102035603V
+			[NA] Unknown: 30 30 31 34 35 45 39 39 32 45 44 31
+		End
+	Capabilities: [9c] MSI-X: Enable+ Count=32 Masked-
+		Vector table: BAR=4 offset=00000000
+		PBA: BAR=4 offset=00000800
+	Capabilities: [100 v1] Device Serial Number 00-00-00-01-00-00-00-01
+	Capabilities: [300 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
+ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP-
+ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+
+ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Kernel driver in use: cxgb3
+	Kernel modules: cxgb3
+
+
+>>
+>> Cc: Alexander Duyck <alexander.duyck@gmail.com>
+>> Cc: Bjorn Helgaas <helgaas@kernel.org>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/pci/access.c    | 76 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>>  drivers/pci/pci-sysfs.c |  2 +-
+>>  2 files changed, 76 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+>> index 59ac36f..914e023 100644
+>> --- a/drivers/pci/access.c
+>> +++ b/drivers/pci/access.c
+>> @@ -284,9 +284,65 @@ struct pci_vpd_pci22 {
+>>  	struct mutex lock;
+>>  	u16	flag;
+>>  	bool	busy;
+>> +	bool	valid;
+> 
+> You're just following the precedent here, but I think using "bool" in
+> structures like this is pointless: it takes more space than a :1 field
+> and doesn't really add any safety.
+> 
+>>  	u8	cap;
+>>  };
+>>  
+>> +/**
+>> + * pci_vpd_size - determine actual size of Vital Product Data
+>> + * @dev:	pci device struct
+>> + * @old_size:	current assumed size, also maximum allowed size
+>> + *
+> 
+> Superfluous empty line.
+> 
+>> + */
+>> +static size_t
+>> +pci_vpd_pci22_size(struct pci_dev *dev)
+> 
+> Please follow indentation style of the file (all on one line).
+> 
+>> +{
+>> +	size_t off = 0;
+>> +	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
+>> +
+>> +	while (off < PCI_VPD_PCI22_SIZE &&
+>> +	       pci_read_vpd(dev, off, 1, header) == 1) {
+>> +		unsigned char tag;
+>> +
+>> +		if (header[0] & PCI_VPD_LRDT) {
+>> +			/* Large Resource Data Type Tag */
+>> +			tag = pci_vpd_lrdt_tag(header);
+>> +			/* Only read length from known tag items */
+>> +			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
+>> +			    (tag == PCI_VPD_LTIN_RO_DATA) ||
+>> +			    (tag == PCI_VPD_LTIN_RW_DATA)) {
+>> +				if (pci_read_vpd(dev, off+1, 2,
+>> +						 &header[1]) != 2) {
+>> +					dev_dbg(&dev->dev,
+>> +						"invalid large vpd tag %02x "
+>> +						"size at offset %zu",
+>> +						tag, off + 1);
+> 
+> The effect of this is that we set vpd->base.len to 0, which will cause
+> all VPD accesses to fail, right?  If so, I'd make this at least a
+> dev_info(), maybe even a dev_warn().  The dev_dbg() may not appear in
+> dmesg at all, depending on config options.
+> 
+> Capitalize "VPD" and concatenate all the strings, even if it exceeds
+> 80 columns.
+> 
+>> +					break;
+> 
+> I think this leads to "return 0" below; I'd just return directly here
+> so the reader doesn't have to figure out what we're breaking from.
+> 
+>> +				}
+>> +				off += PCI_VPD_LRDT_TAG_SIZE +
+>> +					pci_vpd_lrdt_size(header);
+>> +			}
+>> +		} else {
+>> +			/* Short Resource Data Type Tag */
+>> +			off += PCI_VPD_SRDT_TAG_SIZE +
+>> +				pci_vpd_srdt_size(header);
+>> +			tag = pci_vpd_srdt_tag(header);
+>> +		}
+>> +		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
+>> +			return off;
+>> +		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
+>> +		    (tag != PCI_VPD_LTIN_RO_DATA) &&
+>> +		    (tag != PCI_VPD_LTIN_RW_DATA)) {
+>> +			dev_dbg(&dev->dev,
+>> +				"invalid %s vpd tag %02x at offset %zu",
+>> +				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
+>> +				tag, off);
+>> +			break;
+> 
+> Same dev_dbg() and break comment here.
+> 
+>> +		}
+>> +	}
+>> +	return 0;
+>> +}
+>> +
+>>  /*
+>>   * Wait for last operation to complete.
+>>   * This code has to spin since there is no other notification from the PCI
+>> @@ -337,9 +393,23 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+>>  	loff_t end = pos + count;
+>>  	u8 *buf = arg;
+>>  
+>> -	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
+>> +	if (pos < 0)
+>>  		return -EINVAL;
+>>  
+>> +	if (!vpd->valid) {
+>> +		vpd->valid = true;
+>> +		vpd->base.len = pci_vpd_pci22_size(dev);
+>> +	}
+>> +	if (vpd->base.len == 0)
+>> +		return -EIO;
+>> +
+>> +	if (end > vpd->base.len) {
+>> +		if (pos > vpd->base.len)
+>> +			return 0;
+>> +		end = vpd->base.len;
+>> +		count = end - pos;
+>> +	}
+>> +
+>>  	if (mutex_lock_killable(&vpd->lock))
+>>  		return -EINTR;
+>>  
+>> @@ -389,6 +459,9 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+>>  	loff_t end = pos + count;
+>>  	int ret = 0;
+>>  
+>> +	if (!vpd->valid)
+>> +		return -EAGAIN;
+> 
+> Does this mean we now have to do a VPD read before a VPD write?  That
+> sounds like a new requirement that is non-obvious.
+> 
+>> +
+>>  	if (pos < 0 || (pos & 3) || (count & 3) || end > vpd->base.len)
+>>  		return -EINVAL;
+>>  
+>> @@ -496,6 +569,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+>>  	mutex_init(&vpd->lock);
+>>  	vpd->cap = cap;
+>>  	vpd->busy = false;
+>> +	vpd->valid = false;
+>>  	dev->vpd = &vpd->base;
+>>  	return 0;
+>>  }
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index de327c3..31a1f35 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -1333,7 +1333,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+>>  			return -ENOMEM;
+>>  
+>>  		sysfs_bin_attr_init(attr);
+>> -		attr->size = dev->vpd->len;
+>> +		attr->size = 0;
+> 
+> I'm still puzzled about how we're using attr->size.  I don't really
+> want that size to change at run-time, i.e., I don't want it to be zero
+> immediately after boot, then change to something else after the first
+> VPD read.  I don't think it's important that this reflect the size
+> computed based on the VPD contents.  I think it would be fine if it
+> were set to 32K all the time and possibly set to zero by quirks on
+> devices where VPD is completely broken.
+> 
+>>  		attr->attr.name = "vpd";
+>>  		attr->attr.mode = S_IRUSR | S_IWUSR;
+>>  		attr->read = read_vpd_attr;
+>> -- 
+>> 1.8.5.6
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Alexey
