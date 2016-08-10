@@ -1,86 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:54770 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760071AbcHYQDR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Aug 2016 12:03:17 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org"
-        <linux-renesas-soc@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: Question about dma-ranges property for PCI host controllers
-Date: Thu, 25 Aug 2016 18:03:07 +0200
-Message-ID: <3869406.UKMxvRzqOg@wuerfel>
-In-Reply-To: <HK2PR0601MB1393EA9F8117F8EC5A1E6520F51F0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <HK2PR0601MB1393CA771AB65556D4E2F0B9F51E0@HK2PR0601MB1393.apcprd06.prod.outlook.com> <2867793.PfGZpZFyEJ@wuerfel> <HK2PR0601MB1393EA9F8117F8EC5A1E6520F51F0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: [PATCH v3 2/5] x86/ioapic: Support hot-removal of IOAPICs present during boot
+Date: Wed, 10 Aug 2016 12:01:55 +0800
+Message-Id: <1470801718-29004-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
+References: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 12, 2016 9:43:44 AM CEST Phil Edworthy wrote:
-> On 11 August 2016 16:09 Arnd Bergmann wrote:
+IOAPICs present during system boot aren't added to ioapic_list,
+thus are unable to be hot-removed. Fix it by calling
+acpi_ioapic_add() during root bus enumeration.
 
-> > In the past, we have said that the dma-ranges property should reflect
-> > the address space that is used when programming the bridge registers
-> > in the PCI host bridge itself.
-> > 
-> > I think we have also made the assumption that a PCI host bridge
-> > with an IOMMU uses a flat 32-bit DMA address space that goes through
-> > the IOMMU (possibly a separate address space per PCI function,
-> > depending on the type of IOMMU).
-> I saw Robin Murphy's patches for PCI IOMMU map bindings, though at the
-> moment to get things going I'm ignoring it because it will require quite a lot
-> of changes to the iommu/ipmmu-vmsa driver. Other IOMMU drivers will
-> also have to change a fair bit to support this new binding.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/pci_root.c | 10 ++++++++++
+ drivers/pci/setup-bus.c |  5 ++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-Ok
-
-> > One corner case that doesn't really fit in that model is a PCI host
-> > bridge that requires the bridge register to be programmed in a special
-> > way for the IOMMU to work (e.g. away from the RAM to the address that
-> > is routed to the IOMMU).
-> In our case, there is nothing special in programming the bridge registers
-> for use with an IOMMU other than the range of addresses that is exposed.
-> The PCI host has a HW limitation that the AXI bus addresses must be
-> 32-bit. The HW will allow you to set up the bridge registers so that PCI
-> bus addresses above 32-bits are mapped into the 32-bit AXI space. This
-> isn't used though at the moment, the PCI:AXI mapping is simply 1:1.
-> 
-> Simply changing the dma-ranges prop to specify all of the 32-bit range is
-> enough to get it to work with the IOMMU.
-
-That is the problem I was referring to above: the dma-ranges property
-contents depend on whether the IOMMU is used or not, and that
-is not something you know in the DT, because it depends on the OS.
-
-> Without IOMMU, the dma-ranges prop was:
-> dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000>;
-
-Ok, so you map the second 1GB of PCI space into the second 1GB of AXI
-space, which presumably is also the first 1GB of the physical RAM
-at CPU address 0x00000000, correct?
-
-> Note that this does not cover all of DDR, as there is 3GiB above the 32-bit
-> address space. Other restrictions in the way the bridge registers are
-> programmed mean we cannot even map all DDR in the 32-bit space.
-> 
-> With the IOMMU, the dma-ranges prop is simply:
-> dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
-
-Does this mean the IOMMU virtual address space covers the entire 4GB
-of low addresses, or is it a subset of that space, e.g. the first
-1GB, below where the PCI bus sees the RAM?
-
-> > Another tricky case is a PCI host that uses the IOMMU only for 32-bit
-> > DMA masters but that does have a dma-ranges property that can be
-> > used for direct mapping of all RAM through a nonzero offset that
-> > gets set up according to dma-ranges.
-> I don't think that applies, though I'm struggling a bit to understand your
-> comment.
-
-It doesn't apply since the 32-bit limitation you see is part of the
-PCI host bridge, not a limitation of some PCI devices.
-
-	Arnd
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index b07eda1..bf601d4 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -614,6 +614,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
++		/*
++		 * This is only called for the hotadd case. For the boot-time
++		 * case, we need to wait until after PCI initialization in
++		 * order to deal with IOAPICs mapped in on a PCI BAR.
++		 *
++		 * This is currently x86-specific, because acpi_ioapic_add()
++		 * is an empty function without CONFIG_ACPI_HOTPLUG_IOAPIC.
++		 * And CONFIG_ACPI_HOTPLUG_IOAPIC depends on CONFIG_X86_IO_APIC
++		 * (see drivers/acpi/Kconfig).
++		 */
+ 		acpi_ioapic_add(root->device->handle);
+ 	}
+ 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c74059e..ec538d3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -25,6 +25,7 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <linux/acpi.h>
+ #include "pci.h"
+ 
+ unsigned int pci_flags;
+@@ -1852,8 +1853,10 @@ void __init pci_assign_unassigned_resources(void)
+ {
+ 	struct pci_bus *root_bus;
+ 
+-	list_for_each_entry(root_bus, &pci_root_buses, node)
++	list_for_each_entry(root_bus, &pci_root_buses, node) {
+ 		pci_assign_unassigned_root_bus_resources(root_bus);
++		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
++	}
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+-- 
+1.8.3.1
