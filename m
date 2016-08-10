@@ -1,35 +1,53 @@
-Return-Path: <jonathan.yong@intel.com>
-Return-Path: <jonathan.yong@intel.com>
-Message-ID: <57B26BE9.3060902@intel.com>
-Date: Tue, 16 Aug 2016 09:27:05 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- intel-wired-lan@lists.osuosl.org,
- Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 0/3] PCI: Precision Time Measurement support
-References: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20160719211926.GB17840@localhost> <578EBC81.3090601@intel.com> <20160815185111.GC9790@localhost>
-In-Reply-To: <20160815185111.GC9790@localhost>
-Content-Type: text/plain; charset=ISO-8859-1
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: [PATCH v3 0/5] Fixing a set of bugs for ioapic hotplug
+Date: Wed, 10 Aug 2016 12:01:53 +0800
+Message-Id: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/16/2016 02:51, Bjorn Helgaas wrote:
->>
->> This line:
->> ctrl = PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT;
->>
->> should also set the responder capable bit (7.32.2):
->> 	If PTM Root Capable is Set, this bit must be Set to 1b.
-> 
-> The PTM Responder Capable bit (bit 1 in Table 7-145) is a HwInit bit
-> in the PTM Capability register, so it's read-only from the kernel's
-> perspective.
-> 
-> The line you mention ("ctrl = PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT")
-> is turning on bits in the PTM Control register, not the Capability
-> register.
-> 
+A set of patches fixing bugs found while testing IOAPIC hotplug.
 
-My bad, there is no "responder enable" bit control, patch looks good.
+Regards,
+Rui
+
+Changelog:
+
+Changes from v2 to v3:
+* Rebased on top of 4.8-rc1 per Bjorn & Rafael.
+* Improved the commit message of 0003, w/ clearer explanation.
+
+Changes from v1 to v2:
+* Split the first patch into two as advised by Bjorn: "would be nicer if
+the interface change and header file munging were in a separate patch so
+they wouldn't obscure the meat of the change, i.e., the addition of calls
+to acpi_ioapic_add()."
+* Removed acpi_ioapic_add() as an exported symbol.
+* Fixed some typos, and s/acpi/ACPI/, s/ioapic/IOAPIC/ throughout.
+* Fixed a warning from 0-day testing.
+
+Rui Wang (5):
+  x86/ioapic: Change prototype of acpi_ioapic_add()
+  x86/ioapic: Support hot-removal of IOAPICs present during boot
+  x86/ioapic: Fix setup_res() failing to get resource
+  x86/ioapic: Fix lost IOAPIC resource after hot-removal and hotadd
+  x86/ioapic: Fix ioapic failing to request resource
+
+ drivers/acpi/internal.h |  2 --
+ drivers/acpi/ioapic.c   | 46 ++++++++++++++++++++++++++--------------------
+ drivers/acpi/pci_root.c | 12 +++++++++++-
+ drivers/pci/setup-bus.c |  5 ++++-
+ include/linux/acpi.h    |  6 ++++++
+ 5 files changed, 47 insertions(+), 24 deletions(-)
+
+-- 
+1.8.3.1
