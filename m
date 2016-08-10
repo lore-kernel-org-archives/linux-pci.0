@@ -1,71 +1,40 @@
-Return-Path: <kishon@ti.com>
-Return-Path: <kishon@ti.com>
-Subject: Re: [RFT PATCH v2 2/3] ARM: Fix *MIGHT_HAVE_PCI* config from being
- selected redundantly
-To: Tony Lindgren <tony@atomide.com>, Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-        Jean-Christophe
- Plagniol-Villard <plagnioj@jcrosoft.com>,
-        Krzysztof Halasa <khalasa@piap.pl>, Kukjin Kim <kgene@kernel.org>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <kernel@pengutronix.de>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Robert Jarzmik
-	<robert.jarzmik@free.fr>,
-        Simon Horman <horms@verge.net.au>,
-        Magnus Damm
-	<magnus.damm@gmail.com>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Shiraz Hashim
-	<shiraz.linux.kernel@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>
-References: <1470049950-4697-1-git-send-email-kishon@ti.com>
- <1470049950-4697-3-git-send-email-kishon@ti.com>
-CC: <helgaas@kernel.org>, Benoit Cousson <bcousson@baylibre.com>,
-        Rob Herring
-	<robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-        Russell King
-	<linux@armlinux.org.uk>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Greg Ungerer
-	<gerg@uclinux.org>, <linux-samsung-soc@vger.kernel.org>,
-        <linux-renesas-soc@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <57A03C2B.2080407@ti.com>
-Date: Tue, 2 Aug 2016 11:52:35 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:45209 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932695AbcHJC6Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Aug 2016 22:58:25 -0400
+Message-ID: <57AA984E.8040308@intel.com>
+Date: Wed, 10 Aug 2016 10:58:22 +0800
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1470049950-4697-3-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/3] PCI: Add Precision Time Measurement (PTM) support
+References: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
+
+On 06/14/2016 03:05, Bjorn Helgaas wrote:
+> From: Jonathan Yong <jonathan.yong@intel.com>
+> 
+> Add Precision Time Measurement (PTM) support (see PCIe r3.1, sec 6.22).
+> 
+> Enable PTM on PTM Root devices and switch ports.  This does not enable PTM
+> on endpoints.
+> 
+> There currently are no PTM-capable devices on the market, but it is
+> expected to be supported by the Intel Apollo Lake platform.
+> 
+> [bhelgaas: complete rework]
+> Signed-off-by: Jonathan Yong <jonathan.yong@intel.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
 Hi,
 
-On Monday 01 August 2016 04:42 PM, Kishon Vijay Abraham I wrote:
-> *MIGHT_HAVE_PCI* config is already selected in ARCH_MULTIPLATFORM.
-> Fix it from getting redundantly selected in all
-> ARCH_MULTIPLATFORM based machines.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  arch/arm/Kconfig                 |    2 --
->  arch/arm/mach-at91/Kconfig       |    1 -
->  arch/arm/mach-axxia/Kconfig      |    1 -
->  arch/arm/mach-exynos/Kconfig     |    1 -
->  arch/arm/mach-integrator/Kconfig |    1 -
->  arch/arm/mach-keystone/Kconfig   |    1 -
->  arch/arm/mach-ks8695/Kconfig     |    5 -----
->  arch/arm/mach-pxa/Kconfig        |    1 -
->  arch/arm/mach-spear/Kconfig      |    1 -
->  arch/arm/mach-versatile/Kconfig  |    1 -
+Any updates on the PTM changes?
 
-Thank you everyone for reviewing this patch.
-Looks like ARCH_IXP4XX, ARCH_DOVE, ARCH_KS8695, ARCH_PXA are not converted to
-multiplatform. I'll fix this patch accordingly and repost the series.
 
-Thanks
-Kishon
