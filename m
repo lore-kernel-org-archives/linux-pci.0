@@ -1,39 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59453 "HELO
-	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S965464AbcHEBAj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Aug 2016 21:00:39 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Dave Airlie <airlied@linux.ie>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Runtime resume bridges before bus rescans
-Date: Fri, 05 Aug 2016 03:05:52 +0200
-Message-ID: <1715354.XJRkSZIhcu@vostro.rjw.lan>
-In-Reply-To: <CA+55aFxV68Bp0xCfDBzvUYZiLHiRW4FAUQ07ft_2SBuCF01bSw@mail.gmail.com>
-References: <5356594.Wd8M8VygiD@vostro.rjw.lan> <CA+55aFxV68Bp0xCfDBzvUYZiLHiRW4FAUQ07ft_2SBuCF01bSw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <Joao.Pinto@synopsys.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: helgaas@kernel.org
+Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jszhang@marvell.com,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v5 1/3] pcie-designware: move definitions
+Date: Wed, 10 Aug 2016 11:00:28 +0100
+Message-Id: <fe7e06c25a022d49a17ece0a1ce0c7d94b338f5c.1470822461.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
+References: <cover.1470822461.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
+References: <cover.1470822461.git.jpinto@synopsys.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, August 04, 2016 08:53:14 PM Linus Torvalds wrote:
-> On Thu, Aug 4, 2016 at 8:38 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > If a PCI bridge (or PCIe port) that is runtime-suspended gets an
-> > ACPI hotplug notification, such as a bus check, it has to be resumed
-> > before re-scanning the devices below it, or those devices will not
-> > be accessible and will be treated as hot-removed.
-> 
-> Just checking: do you want me to apply this as a patch, or are you
-> adding it to your git tree and just cc'ing me as a FYI?
+This patch moves the sleep definitions to the *.c file like suggested
+by Jisheng Zhang in a previous patch.
 
-Please apply it directly if that's not a problem.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+CC: Jisheng Zhang <jszhang@marvell.com>
+---
+changes v3->v5:
+- Just to keep up with the patch version
+changes v2->v3 (Bjorn Helgaas):
+- Separated from the new iATU unroll mechanism patch
 
-Thanks,
-Rafael
+ drivers/pci/host/pcie-designware.c | 5 +++++
+ drivers/pci/host/pcie-designware.h | 5 -----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12afce1..6fb88de 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -26,6 +26,11 @@
+ 
+ #include "pcie-designware.h"
+ 
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES		10
++#define LINK_WAIT_USLEEP_MIN		90000
++#define LINK_WAIT_USLEEP_MAX		100000
++
+ /* Synopsis specific PCIE configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+ #define PORT_LINK_MODE_MASK		(0x3f << 16)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index f437f9b..384e79b 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,11 +22,6 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
+-/* Parameters for the waiting for link up routine */
+-#define LINK_WAIT_MAX_RETRIES		10
+-#define LINK_WAIT_USLEEP_MIN		90000
+-#define LINK_WAIT_USLEEP_MAX		100000
+-
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+-- 
+1.8.1.5
