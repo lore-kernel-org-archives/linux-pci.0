@@ -1,16 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 18 Aug 2016 11:55:04 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Dennis Chen <dennis.chen@arm.com>
-Subject: Re: [PATCH v4 09/15] drivers: acpi: iort: add support for ARM SMMU
- platform devices creation
-Message-ID: <20160818105452.GA8982@red-moon>
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1471274620-20754-10-git-send-email-lorenzo.pieralisi@arm.com>
- <20160818105005.GA20404@arm.com>
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>, <bhelgaas@google.com>,
+ <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 1/2] PCI: designware: mv parameters for wait for link into
+ pcie-designware.c
+Date: Wed, 10 Aug 2016 18:07:02 +0800
+Message-ID: <1470823623-1360-2-git-send-email-jszhang@marvell.com>
+In-Reply-To: <1470823623-1360-1-git-send-email-jszhang@marvell.com>
+References: <1470823623-1360-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20160818105005.GA20404@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,45 +17,57 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, Marc Zyngier <marc.zyngier@arm.com>,
- Tomasz Nowicki <tn@semihalf.com>, Joerg Roedel <joro@8bytes.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, linux-pci@vger.kernel.org,
- Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
- iommu@lists.linux-foundation.org, Hanjun Guo <hanjun.guo@linaro.org>,
- Jon Masters <jcm@redhat.com>, nd@arm.com, Robin Murphy <robin.murphy@arm.com>,
- Nate Watterson <nwatters@codeaurora.org>
+Cc: Jisheng Zhang <jszhang@marvell.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 18, 2016 at 06:50:07PM +0800, Dennis Chen wrote:
+These parameters are only used in the core pcie-designware.c, let's
+move them to the core driver.
 
-[...]
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+---
+ drivers/pci/host/pcie-designware.c | 5 +++++
+ drivers/pci/host/pcie-designware.h | 5 -----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-> > +static void __init iort_smmu_init(void)
-> > +{
-> > +	struct acpi_iort_node *iort_node, *iort_end;
-> > +	struct acpi_table_iort *iort;
-> > +	struct fwnode_handle *fwnode;
-> > +	int i, ret;
-> > +
-> > +	/*
-> > +	 * table and iort will both point to the start of IORT table, but
-> > +	 * have different struct types
-> > +	 */
-> > +	iort = (struct acpi_table_iort *)iort_table;
-> >
-> If the firmware of a platform happens to miss the IORT table, then
-> iort_table here will be a NULL pointer, in this case 'NULL pointer
-> dereference' kernel panic will occur, if this is not an expected
-> behavior then we can add a sanity check here to avoid this.  IORT
-> missing is a fatal error? I don't think so.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12afce1..24a16dd 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -75,6 +75,11 @@
+ #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
+ #define PCIE_PHY_DEBUG_R1_LINK_UP	0x00000010
+ 
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES		10
++#define LINK_WAIT_USLEEP_MIN		90000
++#define LINK_WAIT_USLEEP_MAX		100000
++
+ static struct pci_ops dw_pcie_ops;
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index f437f9b..384e79b 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,11 +22,6 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
+-/* Parameters for the waiting for link up routine */
+-#define LINK_WAIT_MAX_RETRIES		10
+-#define LINK_WAIT_USLEEP_MIN		90000
+-#define LINK_WAIT_USLEEP_MAX		100000
+-
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+-- 
+2.8.1
 
-Yes, I've already fixed it, thanks for pointing that out.
-
-Lorenzo
 
 _______________________________________________
 linux-arm-kernel mailing list
