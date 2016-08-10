@@ -1,76 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0055.outbound.protection.outlook.com ([104.47.33.55]:36621
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755223AbcHTBFy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Aug 2016 21:05:54 -0400
-From: Omer Khaliq <okhaliq@caviumnetworks.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-crypto@vger.kernel.org>, <linux-arm-kernel@vger.kernel.org>,
-        <bhelgaas@google.com>, <mpm@selenic.com>,
-        <herbert@gondor.apana.org.au>, <Ananth.Jasty@cavium.com>,
-        <david.daney@cavium.com>
-CC: Omer Khaliq <okhaliq@caviumnetworks.com>
-Subject: [PATCH 1/2] PCI/IOV: Add function to allow Function Dependency Link override.
-Date: Fri, 19 Aug 2016 15:32:12 -0700
-Message-ID: <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com>
-In-Reply-To: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
-References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
+Return-Path: <alexander.duyck@gmail.com>
+Return-Path: <alexander.duyck@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1470787409.3015.81.camel@kernel.crashing.org>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+ <1452684335-46107-4-git-send-email-hare@suse.de> <20160209210458.GB32530@localhost>
+ <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru> <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
+ <1470787409.3015.81.camel@kernel.crashing.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 10 Aug 2016 08:47:41 -0700
+Message-ID: <CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
+Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, Bjorn Helgaas <helgaas@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Babu Moger <babu.moger@oracle.com>,
+	Paul Mackerras <paulus@samba.org>, Alex Williamson <alex.williamson@redhat.com>, santosh@chelsio.com,
+	Netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Tue, Aug 9, 2016 at 5:03 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Tue, 2016-08-09 at 11:12 -0700, Alexander Duyck wrote:
+>>
+>> The PCI spec is what essentially assumes that there is only one block.
+>> If I am not mistaken in the case of this device the second block here
+>> actually contains device configuration data, not actual VPD data.  The
+>> issue here is that the second block is being accessed as VPD when it
+>> isn't.
+>
+> Devices do funny things with config space, film at 11. VFIO trying to
+> be the middle man and intercept/interpret things is broken, cannot work,
+> will never work, will just results in lots and lots of useless code, but
+> I've been singing that song for too long and nobody seems to care...
+>
+>> > > #0000 Large item 42 bytes; name 0x2 Identifier String
+>> > #002d Large item 74 bytes; name 0x10
+>> > #007a Small item 1 bytes; name 0xf End Tag
+>> > ---
+>> > #0c00 Large item 16 bytes; name 0x2 Identifier String
+>> > #0c13 Large item 234 bytes; name 0x10
+>> > #0d00 Large item 252 bytes; name 0x11
+>> > #0dff Small item 0 bytes; name 0xf End Tag
+>>
+>> The second block here is driver proprietary setup bits.
+>
+> Right. They happen to be in VPD on this device. They an be elsewhere on
+> other devices. In between capabilities on some, in vendor caps on others...
+>
+>> > > The cxgb3 driver is reading the second bit starting from 0xc00 but since
+>> > the size is wrongly detected as 0x7c, VFIO blocks access beyond it and the
+>> > guest driver fails to probe.
+>> >
+>> > I also cannot find a clause in the PCI 3.0 spec saying that there must be
+>> > just a single block, is it there?
+>>
+>> > The problem is we need to be able to parse it.
+>
+> We can parse the standard part for generic stuff like inventory tools
+> or lsvpd, but we shouldn't get in the way of the driver poking at its
+> device.
 
-Some hardware presents an incorrect SR-IOV Function Dependency Link,
-add a function to allow this to be overridden in the PF driver for
-such devices.
+If we add the quirk to the kernel that reports the VPD for this device
+is the actual size of both blocks then we wouldn't be blocking the VPD
+access like we currently are.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
-Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
----
- drivers/pci/iov.c   | 14 ++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 15 insertions(+)
+The problem is if we don't do this it becomes possible for a guest to
+essentially cripple a device on the host by just accessing VPD regions
+that aren't actually viable on many devices.  We are much better off
+in terms of security and stability if we restrict access to what
+should be accessible.  In this case what has happened is that the
+vendor threw in an extra out-of-spec block and just expected it to
+work.  In order to work around it we just need to add a small function
+to drivers/pci/quirks.c that would update the VPD size reported so
+that it matches what the hardware is actually providing instead of
+what we can determine based on the VPD layout.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 2194b44..81f0672 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -640,6 +640,20 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- EXPORT_SYMBOL_GPL(pci_enable_sriov);
- 
- /**
-+ * pci_sriov_fdl_override - fix incorrect Function Dependency Link
-+ * @dev: the PCI device
-+ * @fdl: the corrected Function Dependency Link value
-+ *
-+ * For hardware presenting an incorrect Function Dependency Link in
-+ * the SR-IOV Extended Capability, allow a driver to override it.
-+ */
-+void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl)
-+{
-+	dev->sriov->link = fdl;
-+}
-+EXPORT_SYMBOL_GPL(pci_sriov_fdl_override);
-+
-+/**
-  * pci_disable_sriov - disable the SR-IOV capability
-  * @dev: the PCI device
-  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2599a98..da8a5b3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1823,6 +1823,7 @@ int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
-+void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
--- 
-1.9.1
+Really working around something like this is not much different than
+what we would have to do if the vendor had stuffed the data in some
+reserved section of their PCI configuration space.  We end up needing
+to add special quirks any time a vendor goes out-of-spec for some
+one-off configuration interface that only they are ever going to use.
 
+- Alex
