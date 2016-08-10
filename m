@@ -1,40 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor1.renesas.com ([210.160.252.171]:39990 "EHLO
-	relmlie4.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932277AbcHKPAs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Aug 2016 11:00:48 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Question about dma-ranges property for PCI host controllers
-Date: Thu, 11 Aug 2016 15:00:42 +0000
-Message-ID: <HK2PR0601MB1393CA771AB65556D4E2F0B9F51E0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: [PATCH v3 4/5] x86/ioapic: Fix lost IOAPIC resource after hot-removal and hotadd
+Date: Wed, 10 Aug 2016 12:01:57 +0800
+Message-Id: <1470801718-29004-5-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
+References: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+IOAPIC resource at 0xfecxxxxx gets lost from /proc/iomem after
+hot-removing and then hot-adding the IOAPIC device.
 
-A few PCI host controllers use the "dma-ranges" property to specify the
-mapping from PCI bus addresses to physical addresses.
+After system boot, in /proc/iomem:
+fec00000-fecfffff : PNP0003:00
+  fec00000-fec003ff : IOAPIC 0
+  fec01000-fec013ff : IOAPIC 1
+  fec40000-fec403ff : IOAPIC 2
+  fec80000-fec803ff : IOAPIC 3
+  fecc0000-fecc03ff : IOAPIC 4
 
-In the case of R-Car PCIe Host controllers, the intention was to set this
-property as a 1 to 1 mapping for all DDR that could be addressed by the
-device. However, there are some limitations for the R-Car controller which
-meant that we could only map a subset of the DDR range - this limitation
-has prompted us to work on enabling the IOMMU behind the PCI controller.
+Then hot-remove IOAPIC 2 and hot-add it again:
+fec00000-fecfffff : PNP0003:00
+  fec00000-fec003ff : IOAPIC 0
+  fec01000-fec013ff : IOAPIC 1
+  fec80000-fec803ff : IOAPIC 3
+  fecc0000-fecc03ff : IOAPIC 4
 
-When there is an IOMMU behind the PCI controller, the "dma-ranges"
-property specifies the mapping from PCI bus addresses to an IOVA address.
-So should the property map all address space?
+The range at 0xfec40000 is lost from /proc/iomem. It is because
+handle_ioapic_add() requests resource from either PCI config BAR or
+ACPI "_CRS", not both. But Intel platforms map the IOxAPIC registers
+both at the PCI config BAR (called MBAR, dynamic), and at the ACPI
+"_CRS" (called ABAR, static). The 0xfecX_YZ00 to 0xfecX_YZFF range
+appears in "_CRS" of each IOAPIC device. Both ranges should be claimed
+from /proc/iomem for exclusive use.
 
-Note that this is not actually possible with the R-Car hardware, but I
-found that the IOVA address space is outside of the DDR address space
-that we were using so had change it.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/ioapic.c | 36 ++++++++++++++++++++----------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
 
-Thanks
-Phil
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index 8ab6d42..ee20111 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -97,7 +97,7 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
+ 	unsigned long long gsi_base;
+ 	struct acpi_pci_ioapic *ioapic;
+ 	struct pci_dev *dev = NULL;
+-	struct resource *res = NULL;
++	struct resource *res = NULL, *pci_res = NULL, *crs_res;
+ 	char *type = NULL;
+ 
+ 	if (!acpi_is_ioapic(handle, &type))
+@@ -137,23 +137,28 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
+ 		pci_set_master(dev);
+ 		if (pci_request_region(dev, 0, type))
+ 			goto exit_disable;
+-		res = &dev->resource[0];
++		pci_res = &dev->resource[0];
+ 		ioapic->pdev = dev;
+ 	} else {
+ 		pci_dev_put(dev);
+ 		dev = NULL;
++	}
+ 
+-		res = &ioapic->res;
+-		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
+-		if (res->flags == 0) {
+-			acpi_handle_warn(handle, "failed to get resource\n");
+-			goto exit_free;
+-		} else if (request_resource(&iomem_resource, res)) {
+-			acpi_handle_warn(handle, "failed to insert resource\n");
+-			goto exit_free;
+-		}
++	crs_res = &ioapic->res;
++	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
++	if (crs_res->flags == 0) {
++		acpi_handle_warn(handle, "failed to get resource\n");
++		goto exit_release;
++	} else if (request_resource(&iomem_resource, crs_res)) {
++		acpi_handle_warn(handle, "failed to insert resource\n");
++		goto exit_release;
+ 	}
+ 
++	/* try pci resource first, then "_CRS" resource */
++	res = pci_res;
++	if (!res || !res->flags)
++		res = crs_res;
++
+ 	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
+ 		acpi_handle_warn(handle, "failed to register IOAPIC\n");
+ 		goto exit_release;
+@@ -174,14 +179,13 @@ done:
+ exit_release:
+ 	if (dev)
+ 		pci_release_region(dev, 0);
+-	else
+-		release_resource(res);
++	if (ioapic->res.flags && ioapic->res.parent)
++		release_resource(&ioapic->res);
+ exit_disable:
+ 	if (dev)
+ 		pci_disable_device(dev);
+ exit_put:
+ 	pci_dev_put(dev);
+-exit_free:
+ 	kfree(ioapic);
+ exit:
+ 	mutex_unlock(&ioapic_list_lock);
+@@ -217,9 +221,9 @@ int acpi_ioapic_remove(struct acpi_pci_root *root)
+ 			pci_release_region(ioapic->pdev, 0);
+ 			pci_disable_device(ioapic->pdev);
+ 			pci_dev_put(ioapic->pdev);
+-		} else if (ioapic->res.flags && ioapic->res.parent) {
+-			release_resource(&ioapic->res);
+ 		}
++		if (ioapic->res.flags && ioapic->res.parent)
++			release_resource(&ioapic->res);
+ 		list_del(&ioapic->list);
+ 		kfree(ioapic);
+ 	}
+-- 
+1.8.3.1
