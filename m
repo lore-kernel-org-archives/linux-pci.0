@@ -1,145 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54142 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752842AbcHORYc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 13:24:32 -0400
-Date: Mon, 15 Aug 2016 12:24:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kallol Biswas <kallol@nucleodyne.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Fwd: PCIe root port programming
-Message-ID: <20160815172427.GA9790@localhost>
-References: <CAH=XD5_kqkw=f1g_M69eUHsSDhry32s5VQJXC-_iVa+LZ+vUDA@mail.gmail.com>
- <CAH=XD58J+Yf-Rdz_bAJ-e9rU4ipu9opieFd0BuHeYAdX0nmrzg@mail.gmail.com>
- <CAH=XD59zixa7yoV7v0MUWAq-2ESCFmQZaSS89boJUYTy9wfgdw@mail.gmail.com>
+Return-Path: <hare@suse.de>
+Return-Path: <hare@suse.de>
+Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+To: Alexander Duyck <alexander.duyck@gmail.com>,
+ Alexey Kardashevskiy <aik@ozlabs.ru>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+ <1452684335-46107-4-git-send-email-hare@suse.de>
+ <20160209210458.GB32530@localhost>
+ <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
+ <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Babu Moger <babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>, santosh@chelsio.com,
+ Netdev <netdev@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
+Date: Wed, 10 Aug 2016 08:23:26 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAH=XD59zixa7yoV7v0MUWAq-2ESCFmQZaSS89boJUYTy9wfgdw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kallol,
-
-Sorry I didn't respond to this earlier; I was on vacation for most of
-last week.
-
-On Fri, Aug 12, 2016 at 02:14:59PM -0700, Kallol Biswas wrote:
->    I am trying to debug an issue that the PCIe memory
-> transactions are not routed through a host bridge.
+On 08/09/2016 08:12 PM, Alexander Duyck wrote:
+> On Tue, Aug 9, 2016 at 5:54 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+>> On 10/02/16 08:04, Bjorn Helgaas wrote:
+>>> On Wed, Jan 13, 2016 at 12:25:34PM +0100, Hannes Reinecke wrote:
+>>>> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
+>>>> be smaller than that. To figure out the actual size one has to read
+>>>> the VPD area until the 'end marker' is reached.
+>>>> Trying to read VPD data beyond that marker results in 'interesting'
+>>>> effects, from simple read errors to crashing the card. And to make
+>>>> matters worse not every PCI card implements this properly, leaving
+>>>> us with no 'end' marker or even completely invalid data.
+>>>> This path tries to determine the size of the VPD data.
+>>>> If no valid data can be read an I/O error will be returned when
+>>>> reading the sysfs attribute.
+>>
+>>
+>> I have a problem with this particular feature as today VFIO uses this
+>> pci_vpd_xxxx API to virtualize access to VPD and the existing code assumes
+>> there is just one VPD block with 0x2 start and 0xf end. However I have at
+>> least one device where this is not true - "10 Gigabit Ethernet-SR PCI
+>> Express Adapter" - it has 2 blocks (made a script to read/parse it as
+>> /sys/bus/pci/devices/0001\:03\:00.0/vpd shows it wrong):
 > 
-> The config transactions work fine. The primary, secondary and
-> subordinate bus numbers look fine for the PCIe tree under the host
-> bridge. The memory windows are programmed fine.
+> The PCI spec is what essentially assumes that there is only one block.
+> If I am not mistaken in the case of this device the second block here
+> actually contains device configuration data, not actual VPD data.  The
+> issue here is that the second block is being accessed as VPD when it
+> isn't.
 > 
-> Can someone point me to the code that programs the chipset/root port
-> registers those direct processor transactions to a specific host
-> bridge?
-
-It looks like you have an x86 system with ACPI.  In that case, we use
-the ACPI pci_root.c host bridge driver.  The chipset configuration for
-routing processor memory transactions to host bridges is done by the
-firmware, and the kernel doesn't touch it.  There should be
-information in the chipset spec about how to do this, but there's no
-code in Linux itself that does it.
-
-> Cat of /proc/mem is copied below.
+>> #0000 Large item 42 bytes; name 0x2 Identifier String
+>> #002d Large item 74 bytes; name 0x10
+>> #007a Small item 1 bytes; name 0xf End Tag
+>> ---
+>> #0c00 Large item 16 bytes; name 0x2 Identifier String
+>> #0c13 Large item 234 bytes; name 0x10
+>> #0d00 Large item 252 bytes; name 0x11
+>> #0dff Small item 0 bytes; name 0xf End Tag
 > 
-> /root/physmem -p c8100000 -s 4 -r
-> Operation:read to Addr: 0xc8100000 Value: 0
-> ffffffff ffffffff ffffffff ffffffff
+> The second block here is driver proprietary setup bits.
 > 
-> The PCIe analyzer sitting between host bridge (0:3.0 and 02:00.0) and
-> external switches/devices does not capture any mem transactions.
-> However, config transactions are visible in the trace.
+>> The cxgb3 driver is reading the second bit starting from 0xc00 but since
+>> the size is wrongly detected as 0x7c, VFIO blocks access beyond it and the
+>> guest driver fails to probe.
+>>
+>> I also cannot find a clause in the PCI 3.0 spec saying that there must be
+>> just a single block, is it there?
+> 
+> The problem is we need to be able to parse it.  The spec defines a
+> series of tags that can be used starting at offset 0.  That is how we
+> are supposed to get around through the VPD data.  The problem is we
+> can't have more than one end tag and what appears to be happening here
+> is that we are defining a second block of data which uses the same
+> formatting as VPD but is not VPD.
+> 
+>> What would the correct fix be? Scanning all 32k of VPD is not an option I
+>> suppose as this is what this patch is trying to avoid. Thanks.
+> 
+> I adding the current cxgb3 maintainer and netdev list to the Cc.  This
+> is something that can probably be addressed via a PCI quirk as what
+> needs to happen is that we need to extend the VPD in the case of this
+> part in order to include this second block.  As long as we can read
+> the VPD data all the way out to 0xdff odds are we could probably just
+> have the size arbitrarily increased to 0xe00 via the quirk and then
+> you would be able to access all of the VPD for the device.  We already
+> have code making other modifications to drivers/pci/quirks.c for
+> several Broadcom devices and probably just need something similar to
+> allow extended access in the case of these devices.
+> 
+Yes, that's what I think, too.
+The Broadcom quirk should work here, too.
+(Didn't we do that already?)
 
-00:03.0 is not a host bridge; it's a Root Port, which logically
-connects two PCI buses.  A host bridge logically connects a processor
-bus to a PCI bus.
+Cheers,
 
-> root@xlink-target:~# cat /proc/iomem
-> 00000000-00000fff : reserved
-> 00001000-0009abff : System RAM
-> 0009ac00-0009ffff : reserved
-> 000c0000-000c7fff : Video ROM
-> 000c8000-000c8fff : Adapter ROM
-> 000e0000-000fffff : reserved
->   000f0000-000fffff : System ROM
-> 00100000-78f36fff : System RAM
->   01000000-01828f14 : Kernel code
->   01828f15-01f3fb3f : Kernel data
->   020bb000-021fdfff : Kernel bss
->   30000000-37ffffff : Crash kernel
-> 78f37000-79839fff : reserved
->   79116018-79116018 : APEI ERST
->   7911601c-79116021 : APEI ERST
->   79116028-79116039 : APEI ERST
->   79116040-7911604c : APEI ERST
->   79116050-7911804f : APEI ERST
-> 7983a000-79d4afff : ACPI Non-volatile Storage
-> 79d4b000-8fffffff : reserved
->   80000000-8fffffff : PCI MMCONFIG 0000 [bus 00-ff]
-> c6000000-c70fffff : PCI Bus 0000:2f
->   c6000000-c70fffff : PCI Bus 0000:30
->     c6000000-c6ffffff : 0000:30:00.0
->     c7000000-c701ffff : 0000:30:00.0
-> c7100000-c71fffff : PCI Bus 0000:31
->   c7100000-c711ffff : 0000:31:00.1
->     c7100000-c711ffff : igb
->   c7120000-c713ffff : 0000:31:00.0
->     c7120000-c713ffff : igb
->   c7140000-c7143fff : 0000:31:00.1
->     c7140000-c7143fff : igb
->   c7144000-c7147fff : 0000:31:00.0
->     c7144000-c7147fff : igb
-> c7300000-c730ffff : 0000:00:14.0
->   c7300000-c730ffff : xhci-hcd
-> c7310000-c73107ff : 0000:00:1f.2
->   c7310000-c73107ff : ahci
-> c7311000-c73113ff : 0000:00:1d.0
->   c7311000-c73113ff : ehci_hcd
-> c7312000-c73123ff : 0000:00:1a.0
->   c7312000-c73123ff : ehci_hcd
-> c7314000-c731400f : 0000:00:16.1
-> c7315000-c731500f : 0000:00:16.0
-> c7316000-c73167ff : 0000:00:11.4
->   c7316000-c73167ff : ahci
-> c7317000-c7317fff : 0000:00:05.4
-> c7ffc000-c7ffcfff : dmar1
-> c8000000-c8000000 : <BAD>
-> c8000001-c8000001 : <BAD>
-> c8000002-c8000002 : <BAD>
-> c8000003-c8000003 : <BAD>
-
-Interesting, what are these from?
-
-> c8100000-c91fffff : PCI Bus 0000:02
->   c8100000-c90fffff : PCI Bus 0000:03
->     c8100000-c90fffff : PCI Bus 0000:04
->       c8100000-c82fffff : PCI Bus 0000:05
->         c8100000-c81fffff : PCI Bus 0000:06
->           c8100000-c8100fff : 0000:06:00.0
-
-You're trying to read the 06:00.0 BAR at 0xc8100000.  The windows
-above look fine, but the top-level host bridge window is missing.
-
-The c8100000-c91fffff window is a window through the 00:03.0 Root
-Port, which connects bus 00 to bus 02.  The 00:03.0 bridge forwards
-memory transactions in the c8100000-c91fffff range from its primary
-bus (bus 00) to its secondary bus (bus 02).
-
-But we don't know how those transactions get to bus 00 in the first
-place.  The host bridge is the connection between the processor and
-bus 00, and it should have a window that encloses c8100000-c91fffff.
-
-Your dmesg log should have information about this bridge, e.g.,
-something like this:
-
-  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7f])
-  PCI host bridge to bus 0000:00
-  pci_bus 0000:00: root bus resource [mem 0xc8100000-0xc9ffffff window]
-
-and there should be a line in /proc/iomem something like this:
-
-  c8100000-c9ffffff : PCI Bus 0000:00
-
-Bjorn
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
