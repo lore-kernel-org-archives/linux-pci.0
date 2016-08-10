@@ -1,27 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:38621 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757348AbcHYFW3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Aug 2016 01:22:29 -0400
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        jonathan.yong@intel.com
-Subject: [PATCH] Allow pci_enable_ptm to be called outside of the pci subsystem
-Date: Thu, 25 Aug 2016 03:41:34 +0000
-Message-Id: <1472096495-42916-1-git-send-email-jonathan.yong@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>, <bhelgaas@google.com>,
+ <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 0/2] PCI: designware: let dw_pcie_link_up() beware of LTSSM
+ training bit
+Date: Wed, 10 Aug 2016 18:07:01 +0800
+Message-ID: <1470823623-1360-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jisheng Zhang <jszhang@marvell.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow external drivers to enable PTM bits on their respective devices.
-Please CC me when replying, thanks.
+patch1 is a trivial clean up: move the parameters for wait for link
+into the core pcie-designware.c
 
-Yong, Jonathan (1):
-  PCI: Export pci_enable_ptm
+Since link may be UP but still in link training, if so, we can't think
+the link is up and operating correctly. So patch2 teaches
+dw_pcie_link_up() beware of the PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit.
 
- drivers/pci/pcie/ptm.c | 1 +
- 1 file changed, 1 insertion(+)
+Since v1:
+  - add Joao's Ack
+  - rebased on v4.8-rc1
+
+Jisheng Zhang (2):
+  PCI: designware: mv parameters for wait for link into
+    pcie-designware.c
+  PCI: designware: let dw_pcie_link_up() beware of LTSSM training bit
+
+ drivers/pci/host/pcie-designware.c | 11 +++++++++--
+ drivers/pci/host/pcie-designware.h |  5 -----
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
 -- 
-2.7.3
+2.8.1
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
