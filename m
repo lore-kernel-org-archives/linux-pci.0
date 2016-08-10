@@ -1,288 +1,241 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59493 "EHLO
-	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753534AbcHRH3j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Aug 2016 03:29:39 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [PATCH V3 3/3] vfio/pci: Add support for SR-IOV extended capablity
-Date: Thu, 18 Aug 2016 10:29:17 +0300
-Message-Id: <1471505357-78110-4-git-send-email-ilyal@mellanox.com>
-In-Reply-To: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
-References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <Joao.Pinto@synopsys.com>
+Return-Path: <Joao.Pinto@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: helgaas@kernel.org
+Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jszhang@marvell.com,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v5 2/3] pcie-designware: add iATU Unroll feature
+Date: Wed, 10 Aug 2016 11:02:39 +0100
+Message-Id: <e7ad782cee69b1cf722f3e705f447c576cd2b6fe.1470822461.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
+References: <cover.1470822461.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
+References: <cover.1470822461.git.jpinto@synopsys.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for PCIE SR-IOV extended capability.
-The capability gives the VFIO user the following abilities:
-1. Detect that the device has an SR-IOV capability
-2. Change sriov_numvfs and read the corresponding changes in
-sriov_vf_offset and sriov_vf_stride
-3. Probe vf bar sizes
+This patch adds the support to the new iATU mechanism that will be used
+from Core version 4.80, which is called iATU Unroll.
+The new Cores can support the iATU Unroll or support the "old" iATU 
+method now called Legacy Mode. The driver is perfectly capable of
+performing well for both.
 
-Enabling and disable sriov is still done through the sysfs interface
+In order to make sure that the iATU is really enabled a for loop was
+introduced in dw_pcie_prog_outbound_atu() to improve reliability.
 
-Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
-Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-Signed-off-by: Haggai Eran <haggaie@mellanox.com>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
- drivers/vfio/pci/vfio_pci.c         |  23 +++++-
- drivers/vfio/pci/vfio_pci_config.c  | 151 ++++++++++++++++++++++++++++++++----
- drivers/vfio/pci/vfio_pci_private.h |   2 +
- 3 files changed, 157 insertions(+), 19 deletions(-)
+changes v4->v5:
+- v4 patch was not done properly
+changes v3->v4:
+- Unroll Mode is now obtained before the host initialization
+- The iATU enable check loop is now returning instead of only
+interrupting the loop
+changes v2->v3 (Bjorn Helgaas):
+- Unused *CTRL3 and *UPPR iATU Unroll registers were removed
+- Inbound addr builder macro was removed to simplifiy the code
+- *readl_unroll and *writel_unroll functions were simplified. Now the
+scope is always outbound.
+- dw_pcie_get_atu_mode changed to return the status
+- iATU enable check routine was improved in dw_pcie_prog_outbound_atu()
+changes v1->v2:
+- Patch was breaking kernel build due to bad definition in macro funtion.
+- Rebased on top of pci/next.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 6a203a7..807caf2c 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1229,6 +1229,7 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
- 	mutex_init(&vdev->igate);
- 	spin_lock_init(&vdev->irqlock);
-+	mutex_init(&vdev->sriov_mutex);
+ drivers/pci/host/pcie-designware.c | 131 ++++++++++++++++++++++++++++++++-----
+ drivers/pci/host/pcie-designware.h |   1 +
+ 2 files changed, 116 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 6fb88de..d239bc9 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -31,6 +31,11 @@
+ #define LINK_WAIT_USLEEP_MIN		90000
+ #define LINK_WAIT_USLEEP_MAX		100000
  
- 	ret = vfio_add_group_dev(&pdev->dev, &vfio_pci_ops, vdev);
- 	if (ret) {
-@@ -1317,14 +1318,32 @@ static const struct pci_error_handlers vfio_err_handlers = {
++/* Parameters for the waiting for iATU enabled routine */
++#define LINK_WAIT_MAX_IATU_RETRIES	5
++#define LINK_WAIT_IATU_MIN		9000
++#define LINK_WAIT_IATU_MAX		10000
++
+ /* Synopsis specific PCIE configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+ #define PORT_LINK_MODE_MASK		(0x3f << 16)
+@@ -75,6 +80,26 @@
+ #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
  
- static int vfio_pci_sriov_configure(struct pci_dev *pdev, int num_vfs)
++/*
++ * iATU unroll specific registers and definitions
++ * from 4.80 core version the address translation will be made by unroll
++ */
++
++/* Registers */
++#define PCIE_ATU_UNR_REGION_CTRL1	0x00
++#define PCIE_ATU_UNR_REGION_CTRL2	0x01
++#define PCIE_ATU_UNR_LOWER_BASE		0x02
++#define PCIE_ATU_UNR_UPPER_BASE		0x03
++#define PCIE_ATU_UNR_LIMIT		0x04
++#define PCIE_ATU_UNR_LOWER_TARGET	0x05
++#define PCIE_ATU_UNR_UPPER_TARGET	0x06
++
++/* Register address builder */
++#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
++					((0x3 << 20) | (region << 9) |	\
++					(register << 2))
++/* End of Unroll specific */
++
+ /* PCIe Port Logic registers */
+ #define PLR_OFFSET			0x700
+ #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
+@@ -136,6 +161,28 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
+ 		writel(val, pp->dbi_base + reg);
+ }
+ 
++static inline void dw_pcie_readl_unroll(struct pcie_port *pp,
++						u32 index, u32 reg, u32 *val)
++{
++	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
++
++	if (pp->ops->readl_rc)
++		pp->ops->readl_rc(pp, pp->dbi_base + reg_addr, val);
++	else
++		*val = readl(pp->dbi_base + reg_addr);
++}
++
++static inline void dw_pcie_writel_unroll(struct pcie_port *pp,
++						u32 index, u32 val, u32 reg)
++{
++	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
++
++	if (pp->ops->writel_rc)
++		pp->ops->writel_rc(pp, val, pp->dbi_base + reg_addr);
++	else
++		writel(val, pp->dbi_base + reg_addr);
++}
++
+ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 			       u32 *val)
  {
-+	struct vfio_pci_device *vdev;
-+	struct vfio_device *device;
-+	int ret = 0;
+@@ -157,24 +204,61 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+ 		int type, u64 cpu_addr, u64 pci_addr, u32 size)
+ {
+-	u32 val;
+-
+-	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
+-			  PCIE_ATU_VIEWPORT);
+-	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
+-			  PCIE_ATU_LIMIT);
+-	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
+-	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+-	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
++	u32 val = 0;
++	u32 retries = 0;
 +
-+	device = vfio_device_get_from_dev(&pdev->dev);
-+	if (!device)
-+		return -EINVAL;
-+
-+	vdev = vfio_device_data(device);
-+	if (!vdev) {
-+		vfio_device_put(device);
-+		return -EINVAL;
++	if (pp->iatu_unroll_status) {
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
++		dw_pcie_writel_unroll(pp, index,
++			upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
++		dw_pcie_writel_unroll(pp, index,
++			upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
++		dw_pcie_writel_unroll(pp, index,
++			type, PCIE_ATU_UNR_REGION_CTRL1);
++		dw_pcie_writel_unroll(pp, index,
++			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
++	} else {
++		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
++						PCIE_ATU_VIEWPORT);
++		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
++						PCIE_ATU_LOWER_BASE);
++		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
++						PCIE_ATU_UPPER_BASE);
++		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
++						PCIE_ATU_LIMIT);
++		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
++						PCIE_ATU_LOWER_TARGET);
++		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
++						PCIE_ATU_UPPER_TARGET);
++		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
++		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
 +	}
-+
-+	mutex_lock(&vdev->sriov_mutex);
- 	if (!num_vfs) {
- 		pci_disable_sriov(pdev);
--		return 0;
-+		goto out;
- 	}
  
--	return pci_enable_sriov_with_override(pdev,
-+	ret =  pci_enable_sriov_with_override(pdev,
- 					      num_vfs,
- 					     "vfio-pci");
-+out:
-+	mutex_unlock(&vdev->sriov_mutex);
-+	return ret;
- }
- 
- static struct pci_driver vfio_pci_driver = {
-diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-index 688691d..6c813d3 100644
---- a/drivers/vfio/pci/vfio_pci_config.c
-+++ b/drivers/vfio/pci/vfio_pci_config.c
-@@ -448,6 +448,35 @@ static __le32 vfio_generate_bar_flags(struct pci_dev *pdev, int bar)
- 	return cpu_to_le32(val);
- }
- 
-+static void vfio_sriov_bar_fixup(struct vfio_pci_device *vdev,
-+				 int sriov_cap_start)
-+{
-+	struct pci_dev *pdev = vdev->pdev;
-+	int i;
-+	__le32 *bar;
-+	u64 mask;
+ 	/*
+-	 * Make sure ATU enable takes effect before any subsequent config
+-	 * and I/O accesses.
+-	 */
+-	dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
++	 * Make sure ATU enable takes effect before any subsequent config
++	 * and I/O accesses.
++	 */
++	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
 +
-+	bar = (__le32 *)&vdev->vconfig[sriov_cap_start + PCI_SRIOV_BAR];
-+
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++, bar++) {
-+		if (!pci_resource_start(pdev, i)) {
-+			*bar = 0; /* Unmapped by host = unimplemented to user */
-+			continue;
++		if (pp->iatu_unroll_status) {
++			dw_pcie_readl_unroll(pp, index,
++					PCIE_ATU_UNR_REGION_CTRL2, &val);
++		} else {
++			dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
 +		}
 +
-+		mask = ~(pci_iov_resource_size(pdev, i) - 1);
++		if (val == PCIE_ATU_ENABLE)
++			return;
 +
-+		*bar &= cpu_to_le32((u32)mask);
-+		*bar |= vfio_generate_bar_flags(pdev, i);
-+
-+		if (*bar & cpu_to_le32(PCI_BASE_ADDRESS_MEM_TYPE_64)) {
-+			bar++;
-+			*bar &= cpu_to_le32((u32)(mask >> 32));
-+			i++;
-+		}
-+	}
-+}
-+
- /*
-  * Pretend we're hardware and tweak the values of the *virtual* PCI BARs
-  * to reflect the hardware capabilities.  This implements BAR sizing.
-@@ -901,6 +930,106 @@ static int __init init_pci_ext_cap_pwr_perm(struct perm_bits *perm)
- 	return 0;
- }
- 
-+static int __init init_pci_ext_cap_sriov_perm(struct perm_bits *perm)
-+{
-+	int i;
-+
-+	if (alloc_perm_bits(perm, pci_ext_cap_length[PCI_EXT_CAP_ID_SRIOV]))
-+		return -ENOMEM;
-+
-+	/*
-+	 * Virtualize the first dword of all express capabilities
-+	 * because it includes the next pointer.  This lets us later
-+	 * remove capabilities from the chain if we need to.
-+	 */
-+	p_setd(perm, 0, ALL_VIRT, NO_WRITE);
-+
-+	/* VF Enable - Virtualized and writable
-+	 * Memory Space Enable - Non-virtualized and writable
-+	 */
-+	p_setw(perm, PCI_SRIOV_CTRL, NO_VIRT,
-+	       PCI_SRIOV_CTRL_MSE);
-+
-+	p_setw(perm, PCI_SRIOV_NUM_VF, (u16)NO_VIRT, (u16)ALL_WRITE);
-+	p_setw(perm, PCI_SRIOV_SUP_PGSIZE, (u16)ALL_VIRT, NO_WRITE);
-+
-+	/* We cannot let user space application change the page size
-+	 * so we mark it as read only and trust the user application
-+	 * (e.g. qemu) to virtualize this correctly for the guest
-+	 */
-+	p_setw(perm, PCI_SRIOV_SYS_PGSIZE, (u16)ALL_VIRT, NO_WRITE);
-+
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-+		p_setd(perm, PCI_SRIOV_BAR + 4 * i, ALL_VIRT, ALL_WRITE);
-+
-+	return 0;
-+}
-+
-+static int vfio_find_cap_start(struct vfio_pci_device *vdev, int pos)
-+{
-+	u8 cap;
-+	int base = (pos >= PCI_CFG_SPACE_SIZE) ? PCI_CFG_SPACE_SIZE :
-+						 PCI_STD_HEADER_SIZEOF;
-+	cap = vdev->pci_config_map[pos];
-+
-+	if (cap == PCI_CAP_ID_BASIC)
-+		return 0;
-+
-+	/* XXX Can we have to abutting capabilities of the same type? */
-+	while (pos - 1 >= base && vdev->pci_config_map[pos - 1] == cap)
-+		pos--;
-+
-+	return pos;
-+}
-+
-+static int vfio_sriov_cap_config_read(struct vfio_pci_device *vdev, int pos,
-+				      int count, struct perm_bits *perm,
-+				      int offset, __le32 *val)
-+{
-+	int cap_start = vfio_find_cap_start(vdev, pos);
-+
-+	vfio_sriov_bar_fixup(vdev, cap_start);
-+	return vfio_default_config_read(vdev, pos, count, perm, offset, val);
-+}
-+
-+static int vfio_sriov_cap_config_write(struct vfio_pci_device *vdev, int pos,
-+				       int count, struct perm_bits *perm,
-+				       int offset, __le32 val)
-+{
-+	switch (offset) {
-+	case  PCI_SRIOV_NUM_VF:
-+	/* Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset
-+	 * and VF Stride may change when NumVFs changes.
-+	 *
-+	 * Therefore we should pass valid writes to the hardware.
-+	 *
-+	 * Per SR-IOV spec sec 3.3.7
-+	 * The results are undefined if NumVFs is set to a value greater
-+	 * than TotalVFs.
-+	 * NumVFs may only be written while VF Enable is Clear.
-+	 * If NumVFs is written when VF Enable is Set, the results
-+	 * are undefined.
-+
-+	 * Avoid passing such writes to the Hardware just in case.
-+	 */
-+		mutex_lock(&vdev->sriov_mutex);
-+		if (pci_num_vf(vdev->pdev) ||
-+		    val > pci_sriov_get_totalvfs(vdev->pdev)) {
-+			mutex_unlock(&vdev->sriov_mutex);
-+			return count;
-+		}
-+
-+		pci_iov_set_numvfs(vdev->pdev, val);
-+		mutex_unlock(&vdev->sriov_mutex);
-+		break;
-+	default:
-+		break;
++		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
 +	}
 +
-+	return vfio_default_config_write(vdev, pos, count, perm,
-+					 offset, val);
-+}
-+
- /*
-  * Initialize the shared permission tables
-  */
-@@ -916,6 +1045,7 @@ void vfio_pci_uninit_perm_bits(void)
- 
- 	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
- 	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
-+	free_perm_bits(&ecap_perms[PCI_EXT_CAP_ID_SRIOV]);
++	dev_dbg(pp->dev, "iATU is not being enabled\n");
  }
  
- int __init vfio_pci_init_perm_bits(void)
-@@ -938,29 +1068,16 @@ int __init vfio_pci_init_perm_bits(void)
- 	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
- 	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
- 
-+	ret |= init_pci_ext_cap_sriov_perm(&ecap_perms[PCI_EXT_CAP_ID_SRIOV]);
-+	ecap_perms[PCI_EXT_CAP_ID_SRIOV].readfn = vfio_sriov_cap_config_read;
-+	ecap_perms[PCI_EXT_CAP_ID_SRIOV].writefn = vfio_sriov_cap_config_write;
-+
- 	if (ret)
- 		vfio_pci_uninit_perm_bits();
- 
- 	return ret;
- }
- 
--static int vfio_find_cap_start(struct vfio_pci_device *vdev, int pos)
--{
--	u8 cap;
--	int base = (pos >= PCI_CFG_SPACE_SIZE) ? PCI_CFG_SPACE_SIZE :
--						 PCI_STD_HEADER_SIZEOF;
--	cap = vdev->pci_config_map[pos];
--
--	if (cap == PCI_CAP_ID_BASIC)
--		return 0;
--
--	/* XXX Can we have to abutting capabilities of the same type? */
--	while (pos - 1 >= base && vdev->pci_config_map[pos - 1] == cap)
--		pos--;
--
--	return pos;
--}
--
- static int vfio_msi_config_read(struct vfio_pci_device *vdev, int pos,
- 				int count, struct perm_bits *perm,
- 				int offset, __le32 *val)
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 2128de8..02732eb 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -96,6 +96,8 @@ struct vfio_pci_device {
- 	struct eventfd_ctx	*err_trigger;
- 	struct eventfd_ctx	*req_trigger;
- 	struct list_head	dummy_resources_list;
-+	struct mutex		sriov_mutex;
-+
+ static struct irq_chip dw_msi_irq_chip = {
+@@ -433,6 +517,19 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = dw_pcie_msi_map,
  };
  
- #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
++static u8 dw_pcie_get_atu_mode(struct pcie_port *pp)
++{
++	u32 val = 0;
++
++	/* Check if the iATU unroll is enabled or not */
++	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
++
++	if (val == 0xFFFFFFFF)
++		return 1; /* enabled */
++
++	return 0; /* disabled */
++}
++
+ int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+@@ -549,6 +646,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
++	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
++
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
+ 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 384e79b..354a981 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -48,6 +48,7 @@ struct pcie_port {
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+ 	unsigned long		msi_data;
++	u8			iatu_unroll_status;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
 -- 
-1.8.3.1
-
+1.8.1.5
