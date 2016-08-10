@@ -1,57 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 3 Aug 2016 10:27:36 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: Support for configurable PCIe endpoint
-Message-ID: <20160803172736.GA12989@infradead.org>
-References: <57A18927.9070003@ti.com> <20160803094747.GA10170@infradead.org>
- <2460140.yVuTYYqBTX@wuerfel>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] pci: adding support for PCI_MSI_IRQ_DOMAIN in ARC arch
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+References: <fdd37b0b995d178fddb34fdbdb5daf5981822f52.1470757628.git.jpinto@synopsys.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>
+From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
+Message-ID: <64d6513b-13f1-953d-410b-a4aeea6908c3@synopsys.com>
+Date: Wed, 10 Aug 2016 10:55:45 -0700
 MIME-Version: 1.0
-In-Reply-To: <2460140.yVuTYYqBTX@wuerfel>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- David Daney <david.daney@cavium.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Joao Pinto <jpinto@synopsys.com>, Pratyush Anand <pratyush.anand@gmail.com>,
- Kishon Vijay Abraham I <kishon@ti.com>, Christoph Hellwig <hch@infradead.org>,
- Murali Karicheri <m-karicheri2@ti.com>, Jason Cooper <jason@lakedaemon.net>,
- Simon Horman <horms@verge.net.au>, "bhelgaas@google.com" <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Richard Zhu <Richard.Zhu@freescale.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, jdmason@kudzu.us,
- Ley Foon Tan <lftan@altera.com>, Roy Zang <tie-fei.zang@freescale.com>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <fdd37b0b995d178fddb34fdbdb5daf5981822f52.1470757628.git.jpinto@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 03, 2016 at 06:03:54PM +0200, Arnd Bergmann wrote:
-> drivers/ntb seems like a reasonable start, while an alternative
-> approach that we have discussed in the past would be based on top
-> of virtio, so we could use the existing front-end drivers (net, block,
-> v9fs, console, ...).
+On 08/09/2016 08:51 AM, Joao Pinto wrote:
+> Due to the added dependency on PCI_MSI_IRQ_DOMAIN for all PCIe RC 
+> drivers, we were unable to build a RC solution for an ARC platform.
+>
+> To fix this, this patch adds ARC as a PCI_MSI_IRQ_DOMAIN supportive
+> platform and adds the generation of msi.h in the ARC arch.
+>
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-I don't really think either is a good aproach for the lowest level
-interface.  To be useful the EP driver needs to be able to implement
-any (reasonable) thing a PCIe device could do.  Both NTB and virtio
-can sit on top of that, though.
+LGTM - Bjorn I presume you will pick this up ?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-Vineet
+> ---
+>  arch/arc/include/asm/Kbuild | 1 +
+>  drivers/pci/Kconfig         | 2 +-
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/arc/include/asm/Kbuild b/arch/arc/include/asm/Kbuild
+> index 0b10ef2..c332604 100644
+> --- a/arch/arc/include/asm/Kbuild
+> +++ b/arch/arc/include/asm/Kbuild
+> @@ -25,6 +25,7 @@ generic-y += mcs_spinlock.h
+>  generic-y += mm-arch-hooks.h
+>  generic-y += mman.h
+>  generic-y += msgbuf.h
+> +generic-y += msi.h
+>  generic-y += param.h
+>  generic-y += parport.h
+>  generic-y += pci.h
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 67f9916..6555eb7 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -25,7 +25,7 @@ config PCI_MSI
+>  	   If you don't know what to do here, say Y.
+>  
+>  config PCI_MSI_IRQ_DOMAIN
+> -	def_bool ARM || ARM64 || X86
+> +	def_bool ARC || ARM || ARM64 || X86
+>  	depends on PCI_MSI
+>  	select GENERIC_MSI_IRQ_DOMAIN
+>  
