@@ -1,80 +1,164 @@
-Return-Path: <roland.singer@desertbit.com>
-Return-Path: <roland.singer@desertbit.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Peter Wu <peter@lekensteyn.nl>, Ilia Mirkin <imirkin@alum.mit.edu>
-References: <20160829235403.GA14177@localhost>
- <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
- <20160830130634.GA16426@localhost>
- <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
- <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
- <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
- <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
- <CAKb7UviZ0qKp3PRR+iHr+KiOU9Sadeeb6PyydWN-FUL0RzyCPA@mail.gmail.com>
- <1c761bab-f82b-3f43-c4f0-c7a8eff94f25@desertbit.com>
- <CAKb7Uvjzhog27TUPTn5OOqXviyD_z3UV0qvskZDEO8CAB2-i2w@mail.gmail.com>
- <20160830192112.GA18045@al>
-Cc: Emil Velikov <emil.l.velikov@gmail.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
- "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
- ML dri-devel <dri-devel@lists.freedesktop.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-From: Roland Singer <roland.singer@desertbit.com>
-Message-ID: <98b2ae5b-399b-8337-18dc-98ac2480746f@desertbit.com>
-Date: Wed, 31 Aug 2016 13:12:30 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160830192112.GA18045@al>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V8 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
+Date: Thu, 11 Aug 2016 12:06:36 +0200
+Message-Id: <1470909998-16710-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 30.08.2016 um 21:21 schrieb Peter Wu:
-> On Tue, Aug 30, 2016 at 02:13:46PM -0400, Ilia Mirkin wrote:
->> On Tue, Aug 30, 2016 at 2:02 PM, Roland Singer
->> <roland.singer@desertbit.com> wrote:
->>> I configured bbswitch to not set any states automatically...
->>> So it's possible to obtain and verify the GPU power state.
->>>
->>> However I removed the bbswitch module and booted with nouveau.
->>>
->>> Kernel 4.7.2: nouveau switches the discrete GPU off.
->>>               I can't trigger the freeze, because bbswitch is missing.
->>>               I'll work with the system and see if it will freeze.
->>>
->>> Kernel 4.8-rc4: nouveau does not care about the power state and
->>>                 the discrete GPU is never switched off. I will notice
->>>                 this, because the second cooling FAN will stop...
->>>                 Same log messages as send before.
->>
->> That's surprising. I believe there's an issue with the new logic when
->> there's an HDMI audio subdevice. However that only appears if there's
->> a cable plugged in, at least in the systems Peter tested. You should
->> be able to see whether it's there or not with 'lspci'.
-> 
-> I doubt that the audio device is responsible here, that should only show
-> up after following very specific steps (runtime suspend/resume (PCI or
-> ACPI magic), remove PCI device, rescan bus).
-> 
->> You can check for sure by looking in the vgaswitcheroo state. It
->> should say DynOff when it's powered off.
->>
->> Either way, I think using bbswitch + nouveau isn't supported by
->> anyone, so if you want to use it that way, you're on your own. (You
->> may want to load nouveau with runpm=0 so that nouveau doesn't try to
->> manage the GPU suspend stuff.)
-> 
-> I understood that Roland's intent is to check the power state, not use
-> the suspend functionality of bbswitch, if you load bbswitch without
-> module options amd do not write to /proc/bbswitch, then it allows you to
-> read out the actual status (you could also just use lspci -H1 for that
-> though).
-> 
+ITS is prepared for being initialized different than DT,
+therefore we can initialize it in ACPI way. We collect register base
+address from MADT table and pass mandatory info to firmware-agnostic
+ITS init call.
 
-lspci -H1 works perfect. Thanks.
-Just tried to verify the output with lspci -H1. I unloaded the nouveau
-module and modprobe freezed with:
+Use here IORT lib to register ITS domain which then can be found and
+used on to build another PCI MSI domain in hierarchical stack domain.
 
-  $ modprobe -r nouveau
-    nouveau 0000:01:00.0: pci: failed to adjust lnkctl speed
-    nouveau 0000:01:00.0: fb: init failed. -22
-    nouveau 0000:01:00.0: init failed with -22
-    nouveau: DRM:00000000:00000000: init failed with -22
-    nouveau: DRM:00000000:00000000: init failed with -22
+NOTE: Waiting for proper ITS and NUMA node relation description in IORT
+table, we pass around NUMA_NO_NODE to the its_probe_one init call.
+This means that Cavium ThunderX erratum 23144 (pass1.1 only)
+is not supported for ACPI boot method yet.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+ drivers/irqchip/Kconfig          |  1 +
+ drivers/irqchip/irq-gic-v3-its.c | 59 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 59 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+index 7f87289..c2c7a19 100644
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -39,6 +39,7 @@ config ARM_GIC_V3_ITS
+ 	bool
+ 	depends on PCI
+ 	depends on PCI_MSI
++	select IORT_TABLE if ACPI
+ 
+ config ARM_NVIC
+ 	bool
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 1e0888d..c5c8616 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -15,10 +15,13 @@
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/bitmap.h>
+ #include <linux/cpu.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irqdomain.h>
++#include <linux/iort.h>
+ #include <linux/log2.h>
+ #include <linux/mm.h>
+ #include <linux/msi.h>
+@@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
+ 		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
+ 		fwspec.param[1] = hwirq;
+ 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
++	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
++		fwspec.fwnode = domain->parent->fwnode;
++		fwspec.param_count = 2;
++		fwspec.param[0] = hwirq;
++		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
+ 	} else {
+ 		return -EINVAL;
+ 	}
+@@ -1792,6 +1800,55 @@ static int __init its_of_probe(struct device_node *node)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++
++#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
++
++static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
++					  const unsigned long end)
++{
++	struct acpi_madt_generic_translator *its_entry;
++	struct fwnode_handle *dom_handle;
++	struct resource res;
++	int err;
++
++	its_entry = (struct acpi_madt_generic_translator *)header;
++	res.start = its_entry->base_address;
++	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
++
++	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
++	if (!dom_handle) {
++		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
++		       &res.start);
++		return -ENOMEM;
++	}
++
++	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
++	if (err) {
++		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
++		       &res.start, its_entry->translation_id);
++		goto dom_err;
++	}
++
++	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
++	if (!err)
++		return 0;
++
++	iort_deregister_domain_token(its_entry->translation_id);
++dom_err:
++	irq_domain_free_fwnode(dom_handle);
++	return err;
++}
++
++static void __init its_acpi_probe(void)
++{
++	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
++			      gic_acpi_parse_madt_its, 0);
++}
++#else
++static void __init its_acpi_probe(void) { }
++#endif
++
+ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 		    struct irq_domain *parent_domain)
+ {
+@@ -1802,7 +1859,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	if (of_node)
+ 		its_of_probe(of_node);
+ 	else
+-		return -ENODEV;
++		its_acpi_probe();
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+-- 
+1.9.1
