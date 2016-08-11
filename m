@@ -1,316 +1,180 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36005 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751175AbcHTFl7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 20 Aug 2016 01:41:59 -0400
-Subject: Re: [PATCH 2/2] hwrng: thunderx: Add Cavium HWRNG driver for ThunderX
- SoC.
-To: Omer Khaliq <okhaliq@caviumnetworks.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-arm-kernel@vger.kernel.org,
-        bhelgaas@google.com, mpm@selenic.com, herbert@gondor.apana.org.au,
-        Ananth.Jasty@cavium.com, david.daney@cavium.com
-References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
- <1471645933-3643-3-git-send-email-okhaliq@caviumnetworks.com>
-From: Corentin LABBE <clabbe.montjoie@gmail.com>
-Message-ID: <5650aa14-e163-13d8-2704-5f949c67cb26@gmail.com>
-Date: Sat, 20 Aug 2016 07:41:31 +0200
-MIME-Version: 1.0
-In-Reply-To: <1471645933-3643-3-git-send-email-okhaliq@caviumnetworks.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <BATV+d7a49962a47fb612189d+4736+infradead.org+hch@bombadil.srs.infradead.org>
+Return-Path: <BATV+d7a49962a47fb612189d+4736+infradead.org+hch@bombadil.srs.infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org,
+	helgaas@kernel.org,
+	agordeev@redhat.com
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] pci: use positive flags in pci_alloc_irq_vectors
+Date: Thu, 11 Aug 2016 07:11:04 -0700
+Message-Id: <1470924665-25860-2-git-send-email-hch@lst.de>
+In-Reply-To: <1470924665-25860-1-git-send-email-hch@lst.de>
+References: <1470924665-25860-1-git-send-email-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello
+Instead of using PCI_IRQ_NO* to disable behavior in pci_alloc_irq_vectors
+switch to passing the inverted flags to enable each of them individually.
 
-I have some minor comments below
+This is based on a number of pending driver conversions that just happend
+to be a whole more obvious to read this way, and given that we have no
+users in the tree yet it can still easily be done.
 
-On 20/08/2016 00:32, Omer Khaliq wrote:
-> The Cavium ThunderX SoC has a hardware random number generator.
-> This driver provides support using the HWRNG framework.
-> 
-> Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
-> Signed-off-by: Ananth Jasty <Ananth.Jasty@cavium.com>
-> Acked-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/char/hw_random/Kconfig         |  13 +++++
->  drivers/char/hw_random/Makefile        |   1 +
->  drivers/char/hw_random/cavium-rng-vf.c | 102 ++++++++++++++++++++++++++++++++
->  drivers/char/hw_random/cavium-rng.c    | 103 +++++++++++++++++++++++++++++++++
->  4 files changed, 219 insertions(+)
->  create mode 100644 drivers/char/hw_random/cavium-rng-vf.c
->  create mode 100644 drivers/char/hw_random/cavium-rng.c
-> 
-> diff --git a/drivers/char/hw_random/Kconfig b/drivers/char/hw_random/Kconfig
-> index 56ad5a5..fb9c7ad 100644
-> --- a/drivers/char/hw_random/Kconfig
-> +++ b/drivers/char/hw_random/Kconfig
-> @@ -410,6 +410,19 @@ config HW_RANDOM_MESON
->  
->  	  If unsure, say Y.
->  
-> +config HW_RANDOM_CAVIUM
-> +       tristate "Cavium ThunderX Random Number Generator support"
-> +       depends on HW_RANDOM && PCI && (ARM64 || (COMPILE_TEST && 64BIT))
-> +       default HW_RANDOM
-> +       ---help---
-> +         This driver provides kernel-side support for the Random Number
-> +         Generator hardware found on Cavium SoCs.
-> +
-> +         To compile this driver as a module, choose M here: the
-> +         module will be called cavium_rng.
-> +
-> +         If unsure, say Y.
-> +
->  endif # HW_RANDOM
->  
->  config UML_RANDOM
-> diff --git a/drivers/char/hw_random/Makefile b/drivers/char/hw_random/Makefile
-> index 04bb0b0..5f52b1e 100644
-> --- a/drivers/char/hw_random/Makefile
-> +++ b/drivers/char/hw_random/Makefile
-> @@ -35,3 +35,4 @@ obj-$(CONFIG_HW_RANDOM_XGENE) += xgene-rng.o
->  obj-$(CONFIG_HW_RANDOM_STM32) += stm32-rng.o
->  obj-$(CONFIG_HW_RANDOM_PIC32) += pic32-rng.o
->  obj-$(CONFIG_HW_RANDOM_MESON) += meson-rng.o
-> +obj-$(CONFIG_HW_RANDOM_CAVIUM) += cavium-rng.o cavium-rng-vf.o
-> diff --git a/drivers/char/hw_random/cavium-rng-vf.c b/drivers/char/hw_random/cavium-rng-vf.c
-> new file mode 100644
-> index 0000000..8e80bce
-> --- /dev/null
-> +++ b/drivers/char/hw_random/cavium-rng-vf.c
-> @@ -0,0 +1,102 @@
-> +/*
-> + * Hardware Random Number Generator support for Cavium, Inc.
-> + * Thunder processor family.
-> + *
-> + * This file is subject to the terms and conditions of the GNU General Public
-> + * License.  See the file "COPYING" in the main directory of this archive
-> + * for more details.
-> + *
-> + * Copyright (C) 2016 Cavium, Inc.
-> + */
-> +#include <linux/module.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/device.h>
-> +#include <linux/hw_random.h>
-> +#include <linux/io.h>
-> +#include <linux/pci_ids.h>
-> +#include <linux/gfp.h>
-> +#include <linux/pci.h>
-> +#include <linux/init.h>
+I've also added a PCI_IRQ_ALL_TYPES catchall to keep the case of accepting
+all interrupt types very simple.
 
-Please alphabetize headers, and check if there are necessary, clearly platform_device.h is unnecessary.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ Documentation/PCI/MSI-HOWTO.txt | 21 +++++++++------------
+ drivers/pci/msi.c               | 15 +++++++--------
+ include/linux/pci.h             | 10 ++++++----
+ 3 files changed, 22 insertions(+), 24 deletions(-)
 
-> +
-> +struct cavium_rng {
-> +	struct hwrng ops;
-> +	void __iomem *result;
-> +};
-> +
-> +/* Read data from the RNG unit */
-> +static int cavium_rng_read(struct hwrng *rng, void *dat, size_t max, bool wait)
-> +{
-> +	struct cavium_rng *p = container_of(rng, struct cavium_rng, ops);
-> +	unsigned int size = max;
-> +
-> +	while (size >= 8) {
-> +		*((u64 *)dat) = readq(p->result);
-> +		size -= 8;
-> +		dat += 8;
-> +	}
-> +	while (size > 0) {
-> +		*((u8 *)dat) = readb(p->result);
-> +		size--;
-> +		dat++;
-> +	}
-> +	return max;
-> +}
-> +
-> +/* Map Cavium RNG to an HWRNG object */
-> +static int cavium_rng_probe_vf(struct	pci_dev		*pdev,
-> +			 const struct	pci_device_id	*id)
-> +{
-> +	struct	cavium_rng *rng;
-> +	int	ret;
-> +
-> +	rng = devm_kzalloc(&pdev->dev, sizeof(*rng), GFP_KERNEL);
-> +	if (!rng)
-> +		return -ENOMEM;
-> +
-> +	/* Map the RNG result */
-> +	rng->result = pcim_iomap(pdev, 0, 0);
-> +	if (!rng->result) {
-> +		dev_err(&pdev->dev, "Error iomap failed retrieving result.\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	rng->ops.name    = "cavium rng";
-> +	rng->ops.read    = cavium_rng_read;
-> +	rng->ops.quality = 1000;
-> +
-> +	pci_set_drvdata(pdev, rng);
-> +
-> +	ret = hwrng_register(&rng->ops);
-> +	if (ret) {
-> +		dev_err(&pdev->dev, "Error registering device as HWRNG.\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/* Remove the VF */
-> +void  cavium_rng_remove_vf(struct pci_dev *pdev)
-> +{
-> +	struct cavium_rng *rng;
-> +
-> +	rng = pci_get_drvdata(pdev);
-> +	hwrng_unregister(&rng->ops);
-> +}
-> +
-> +static const struct pci_device_id cavium_rng_vf_id_table[] = {
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_CAVIUM, 0xa033), 0, 0, 0},
-> +	{0,},
-> +};
-> +MODULE_DEVICE_TABLE(pci, cavium_rng_vf_id_table);
-> +
-> +static struct pci_driver cavium_rng_vf_driver = {
-> +	.name		= "cavium_rng_vf",
-> +	.id_table	= cavium_rng_vf_id_table,
-> +	.probe		= cavium_rng_probe_vf,
-> +	.remove		= cavium_rng_remove_vf,
-> +};
-> +module_pci_driver(cavium_rng_vf_driver);
-> +
-> +MODULE_AUTHOR("Omer Khaliq");
-
-You could add your email address.
-
-> +MODULE_LICENSE("GPL");
-> diff --git a/drivers/char/hw_random/cavium-rng.c b/drivers/char/hw_random/cavium-rng.c
-> new file mode 100644
-> index 0000000..7f09ee4
-> --- /dev/null
-> +++ b/drivers/char/hw_random/cavium-rng.c
-> @@ -0,0 +1,103 @@
-> +/*
-> + * Hardware Random Number Generator support for Cavium Inc.
-> + * Thunder processor family.
-> + *
-> + * This file is subject to the terms and conditions of the GNU General Public
-> + * License.  See the file "COPYING" in the main directory of this archive
-> + * for more details.
-> + *
-> + * Copyright (C) 2016 Cavium, Inc.
-> + */
-> +
-> +#include <linux/module.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/device.h>
-> +#include <linux/hw_random.h>
-> +#include <linux/io.h>
-> +#include <linux/pci_ids.h>
-> +#include <linux/gfp.h>
-> +#include <linux/pci.h>
-> +#include <linux/init.h>
-> +#include <linux/pci-ats.h>
-
-Same comment for headers
-
-> +
-> +#define THUNDERX_RNM_ENT_EN     0x1
-> +#define THUNDERX_RNM_RNG_EN     0x2
-> +
-> +struct cavium_rng_pf {
-> +	void __iomem *control_status;
-> +};
-> +
-> +
-
-Do you have run checkpatch.pl ?
-No more than one blank line.
-
-> +/* Enable the RNG hardware and activate the VF */
-> +static int cavium_rng_probe(struct pci_dev *pdev,
-> +				 const struct pci_device_id *id)
-> +{
-> +	struct	cavium_rng_pf *rng;
-> +	int	iov_err;
-> +
-> +
-
-Same problem
-
-> +	rng = devm_kzalloc(&pdev->dev, sizeof(*rng), GFP_KERNEL);
-> +	if (!rng)
-> +		return -ENOMEM;
-> +
-> +	/*Map the RNG control */
-> +	rng->control_status = pcim_iomap(pdev, 0, 0);
-> +	if (!rng->control_status) {
-> +		dev_err(&pdev->dev,
-> +			"Error iomap failed retrieving control_status.\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	/* Enable the RNG hardware and entropy source */
-> +	writeq(THUNDERX_RNM_RNG_EN | THUNDERX_RNM_ENT_EN,
-> +		rng->control_status);
-> +
-> +	pci_set_drvdata(pdev, rng);
-> +
-> +	/* Fix for improper link id reported for cn88XX */
-> +	if (pdev->subsystem_device == 0xa118)
-> +		pci_sriov_fdl_override(pdev, pdev->devfn);
-> +
-> +	/* Enable the Cavium RNG as a VF */
-> +	iov_err = pci_enable_sriov(pdev, 1);
-> +	if (iov_err != 0) {
-> +		dev_err(&pdev->dev,
-> +			"Error initializing RNG virtual function,(%i).\n",
-> +			iov_err);
-> +		return iov_err;
-
-You return without disabling the RNG
-
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/* Disable VF and RNG Hardware */
-> +void  cavium_rng_remove(struct pci_dev *pdev)
-> +{
-> +	struct cavium_rng_pf *rng;
-> +
-> +	rng = pci_get_drvdata(pdev);
-> +
-> +	/* Remove the VF */
-> +	pci_disable_sriov(pdev);
-> +
-> +	/* Disable the RNG hardware and entropy source */
-> +	writeq(0, rng->control_status);
-> +}
-> +
-> +static const struct pci_device_id cavium_rng_pf_id_table[] = {
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_CAVIUM, 0xa018), 0, 0, 0}, /* Thunder RNM */
-> +	{0,},
-> +};
-> +
-> +MODULE_DEVICE_TABLE(pci, cavium_rng_pf_id_table);
-> +
-> +static struct pci_driver cavium_rng_pf_driver = {
-> +	.name		= "cavium_rng_pf",
-> +	.id_table	= cavium_rng_pf_id_table,
-> +	.probe		= cavium_rng_probe,
-> +	.remove		= cavium_rng_remove,
-> +};
-> +
-> +module_pci_driver(cavium_rng_pf_driver);
-> +MODULE_AUTHOR("Omer Khaliq");
-> +MODULE_LICENSE("GPL");
-> 
-
-Regards
-
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index c55df29..8faf14a 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -94,14 +94,11 @@ has a requirements for a minimum number of vectors the driver can pass a
+ min_vecs argument set to this limit, and the PCI core will return -ENOSPC
+ if it can't meet the minimum number of vectors.
+ 
+-The flags argument should normally be set to 0, but can be used to pass the
+-PCI_IRQ_NOMSI and PCI_IRQ_NOMSIX flag in case a device claims to support
+-MSI or MSI-X, but the support is broken, or to pass PCI_IRQ_NOLEGACY in
+-case the device does not support legacy interrupt lines.
+-
+-By default this function will spread the interrupts around the available
+-CPUs, but this feature can be disabled by passing the PCI_IRQ_NOAFFINITY
+-flag.
++The flags argument is used to specify which type of interrupt can be used
++by the device and the driver (PCI_IRQ_LEGACY, PCI_IRQ_MSI, PCI_IRQ_MSIX).
++A conveniant short-hand (PCI_IRQ_ALL_TYPES) is also avaiable to ask for
++any possible kind of interrupt. If the PCI_IRQ_NOAFFINITY flag is set,
++pci_alloc_irq_vectors will spread the interrupts around the available CPUs.
+ 
+ To get the Linux IRQ numbers passed to request_irq() and free_irq() and the
+ vectors, use the following function:
+@@ -131,7 +128,7 @@ larger than the number supported by the device it will automatically be
+ capped to the supported limit, so there is no need to query the number of
+ vectors supported beforehand:
+ 
+-	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, 0);
++	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_ALL_TYPES)
+ 	if (nvec < 0)
+ 		goto out_err;
+ 
+@@ -140,7 +137,7 @@ interrupts it can request a particular number of interrupts by passing that
+ number to pci_alloc_irq_vectors() function as both 'min_vecs' and
+ 'max_vecs' parameters:
+ 
+-	ret = pci_alloc_irq_vectors(pdev, nvec, nvec, 0);
++	ret = pci_alloc_irq_vectors(pdev, nvec, nvec, PCI_IRQ_ALL_TYPES);
+ 	if (ret < 0)
+ 		goto out_err;
+ 
+@@ -148,7 +145,7 @@ The most notorious example of the request type described above is enabling
+ the single MSI mode for a device.  It could be done by passing two 1s as
+ 'min_vecs' and 'max_vecs':
+ 
+-	ret = pci_alloc_irq_vectors(pdev, 1, 1, 0);
++	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
+ 	if (ret < 0)
+ 		goto out_err;
+ 
+@@ -156,7 +153,7 @@ Some devices might not support using legacy line interrupts, in which case
+ the PCI_IRQ_NOLEGACY flag can be used to fail the request if the platform
+ can't provide MSI or MSI-X interrupts:
+ 
+-	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_NOLEGACY);
++	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_MSI | PCI_IRQ_MSIX);
+ 	if (nvec < 0)
+ 		goto out_err;
+ 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a02981e..9233e7f 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1069,7 +1069,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 		nvec = maxvec;
+ 
+ 	for (;;) {
+-		if (!(flags & PCI_IRQ_NOAFFINITY)) {
++		if (flags & PCI_IRQ_AFFINITY) {
+ 			dev->irq_affinity = irq_create_affinity_mask(&nvec);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+@@ -1105,7 +1105,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+  **/
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ {
+-	return __pci_enable_msi_range(dev, minvec, maxvec, PCI_IRQ_NOAFFINITY);
++	return __pci_enable_msi_range(dev, minvec, maxvec, 0);
+ }
+ EXPORT_SYMBOL(pci_enable_msi_range);
+ 
+@@ -1120,7 +1120,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+ 		return -ERANGE;
+ 
+ 	for (;;) {
+-		if (!(flags & PCI_IRQ_NOAFFINITY)) {
++		if (flags & PCI_IRQ_AFFINITY) {
+ 			dev->irq_affinity = irq_create_affinity_mask(&nvec);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+@@ -1160,8 +1160,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+ 		int minvec, int maxvec)
+ {
+-	return __pci_enable_msix_range(dev, entries, minvec, maxvec,
+-			PCI_IRQ_NOAFFINITY);
++	return __pci_enable_msix_range(dev, entries, minvec, maxvec, 0);
+ }
+ EXPORT_SYMBOL(pci_enable_msix_range);
+ 
+@@ -1187,21 +1186,21 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ {
+ 	int vecs = -ENOSPC;
+ 
+-	if (!(flags & PCI_IRQ_NOMSIX)) {
++	if (flags & PCI_IRQ_MSIX) {
+ 		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
+ 				flags);
+ 		if (vecs > 0)
+ 			return vecs;
+ 	}
+ 
+-	if (!(flags & PCI_IRQ_NOMSI)) {
++	if (flags & PCI_IRQ_MSI) {
+ 		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, flags);
+ 		if (vecs > 0)
+ 			return vecs;
+ 	}
+ 
+ 	/* use legacy irq if allowed */
+-	if (!(flags & PCI_IRQ_NOLEGACY) && min_vecs == 1)
++	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1)
+ 		return 1;
+ 	return vecs;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2599a98..fbc1fa6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1251,10 +1251,12 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
+ 
+-#define PCI_IRQ_NOLEGACY	(1 << 0) /* don't use legacy interrupts */
+-#define PCI_IRQ_NOMSI		(1 << 1) /* don't use MSI interrupts */
+-#define PCI_IRQ_NOMSIX		(1 << 2) /* don't use MSI-X interrupts */
+-#define PCI_IRQ_NOAFFINITY	(1 << 3) /* don't auto-assign affinity */
++#define PCI_IRQ_LEGACY		(1 << 0) /* allow legacy interrupts */
++#define PCI_IRQ_MSI		(1 << 1) /* allow MSI interrupts */
++#define PCI_IRQ_MSIX		(1 << 2) /* allow MSI-X interrupts */
++#define PCI_IRQ_AFFINITY	(1 << 3) /* auto-assign affinity */
++#define PCI_IRQ_ALL_TYPES \
++	(PCI_IRQ_LEGACY | PCI_IRQ_MSI | PCI_IRQ_MSIX)
+ 
+ /* kmem_cache style wrapper around pci_alloc_consistent() */
+ 
+-- 
+2.1.4
