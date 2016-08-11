@@ -1,71 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:37755 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758994AbcHaGQZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 02:16:25 -0400
-Message-Id: <4935437e0bfbab9079db2c8b1fbac66cef7dc569.1472554278.git.lukas@wunner.de>
-In-Reply-To: <cover.1472554278.git.lukas@wunner.de>
-References: <cover.1472554278.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 31 Aug 2016 08:15:18 +0200
-Subject: [PATCH 3/4] PCI: Avoid unnecessary resume after direct-complete
-To: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V8 4/8] irqchip/gicv3-its: Cleanup for ITS domain initialization
+Date: Thu, 11 Aug 2016 12:06:34 +0200
+Message-Id: <1470909998-16710-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might have been
-reset by firmware") added a runtime resume for devices that were runtime
-suspended when the system entered sleep.
+There is no point to initialize ITS without having msi-controller
+property in corresponding DT node. However, its_probe is checking
+msi-controller presence at the end, so we can save our time and do that
+check prior to its_probe call. Also, for the code clarity purpose,
+we put domain initialization to separate function.
 
-The motivation was that devices might be in a reset-power-on state after
-waking from system sleep, so their power state as perceived by Linux
-(stored in pci_dev->current_state) would no longer reflect reality.
-By resuming such devices, we allow them to return to a low-power state
-via autosuspend and also bring their current_state in sync with reality.
-
-However for devices that are *not* in a reset-power-on state, doing an
-unconditional resume wastes energy.  A more refined approach is called
-for which issues a runtime resume only if the power state after
-direct-complete is shallower than it was before. To achieve this, update
-the device's current_state by querying the platform firmware and reading
-its PMCSR.
-
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- drivers/pci/pci-driver.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ drivers/irqchip/irq-gic-v3-its.c | 57 ++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index e39a67c..fd4b9c4 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -684,8 +684,19 @@ static int pci_pm_prepare(struct device *dev)
- 
- static void pci_pm_complete(struct device *dev)
- {
--	pci_dev_complete_resume(to_pci_dev(dev));
--	pm_complete_with_resume_check(dev);
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+
-+	pci_dev_complete_resume(pci_dev);
-+	pm_generic_complete(dev);
-+
-+	/* Resume device if platform firmware has put it in reset-power-on */
-+	if (dev->power.direct_complete && pm_resume_via_firmware()) {
-+		pci_power_t pre_sleep_state = pci_dev->current_state;
-+
-+		pci_update_current_state(pci_dev, pci_dev->current_state);
-+		if (pci_dev->current_state < pre_sleep_state)
-+			pm_request_resume(dev);
-+	}
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 7ceaba8..bd43de1 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -1609,13 +1609,37 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
  }
  
- #else /* !CONFIG_PM_SLEEP */
++static int its_init_domain(struct device_node *node, struct its_node *its,
++			   struct irq_domain *parent)
++{
++	struct irq_domain *inner_domain;
++	struct msi_domain_info *info;
++
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	if (!inner_domain) {
++		kfree(info);
++		return -ENOMEM;
++	}
++
++	inner_domain->parent = parent;
++	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
++	info->ops = &its_msi_domain_ops;
++	info->data = its;
++	inner_domain->host_data = info;
++
++	return 0;
++}
++
+ static int __init its_probe(struct device_node *node,
+ 			    struct irq_domain *parent)
+ {
+ 	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+-	struct irq_domain *inner_domain;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+@@ -1707,28 +1731,9 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	if (of_property_read_bool(node, "msi-controller")) {
+-		struct msi_domain_info *info;
+-
+-		info = kzalloc(sizeof(*info), GFP_KERNEL);
+-		if (!info) {
+-			err = -ENOMEM;
+-			goto out_free_tables;
+-		}
+-
+-		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
+-		if (!inner_domain) {
+-			err = -ENOMEM;
+-			kfree(info);
+-			goto out_free_tables;
+-		}
+-
+-		inner_domain->parent = parent;
+-		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+-		info->ops = &its_msi_domain_ops;
+-		info->data = its;
+-		inner_domain->host_data = info;
+-	}
++	err = its_init_domain(node, its, parent);
++	if (err)
++		goto out_free_tables;
+ 
+ 	spin_lock(&its_lock);
+ 	list_add(&its->entry, &its_nodes);
+@@ -1779,6 +1784,12 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
++		if (!of_property_read_bool(np, "msi-controller")) {
++			pr_warn("%s: no msi-controller property, ITS ignored\n",
++				np->full_name);
++			continue;
++		}
++
+ 		its_probe(np, parent_domain);
+ 	}
+ 
 -- 
-2.8.1
-
+1.9.1
