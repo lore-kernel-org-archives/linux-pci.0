@@ -1,84 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 2 Aug 2016 07:53:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jszhang@marvell.com,
-	CARLOS.PALMINHA@synopsys.com, MiguelFalcao.Sousa@synopsys.com
-Subject: Re: [PATCH v2 1/2] pcie-designware: add iATU Unroll feature
-Message-ID: <20160802125335.GA31847@localhost>
-References: <cover.1469193895.git.jpinto@synopsys.com>
- <0ce5678ac78d082afa3df7ad284111afcc03b2a1.1469193895.git.jpinto@synopsys.com>
- <20160725204443.GB15939@localhost>
- <e00f4953-eb9f-8b6c-0c16-f6fd1abcb717@synopsys.com>
+Return-Path: <alex.williamson@redhat.com>
+Return-Path: <alex.williamson@redhat.com>
+Date: Thu, 11 Aug 2016 14:17:00 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alexey Kardashevskiy
+ <aik@ozlabs.ru>,
+        Bjorn Helgaas <helgaas@kernel.org>, Hannes Reinecke
+ <hare@suse.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Babu Moger
+ <babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
+        santosh@chelsio.com, Netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+Message-ID: <20160811141700.4f4faabb@t450s.home>
+In-Reply-To: <CAKgT0UcPh2RZazDL-cJbJkZFUJ03kTocn5H7WA=Kk_+S-CV_HA@mail.gmail.com>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+	<1452684335-46107-4-git-send-email-hare@suse.de>
+	<20160209210458.GB32530@localhost>
+	<bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
+	<CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
+	<1470787409.3015.81.camel@kernel.crashing.org>
+	<CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
+	<1470873296.3015.117.camel@kernel.crashing.org>
+	<CAKgT0UcPh2RZazDL-cJbJkZFUJ03kTocn5H7WA=Kk_+S-CV_HA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <e00f4953-eb9f-8b6c-0c16-f6fd1abcb717@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 02, 2016 at 11:27:45AM +0100, Joao Pinto wrote:
-> On 7/25/2016 9:44 PM, Bjorn Helgaas wrote:
-> > On Fri, Jul 22, 2016 at 02:29:38PM +0100, Joao Pinto wrote:
-> >> This patch adds the support to the new iATU mechanism that will be used
-> >> from Core version 4.80, which is called iATU Unroll.
-> >> The new Cores can support the iATU Unroll or support the "old" iATU 
-> >> method now called Legacy Mode. The driver is perfectly capable of
-> >> performing well for both.
-> >>
-> >> In order to make sure that the iATU is really enabled a for loop was
-> >> introduced in dw_pcie_prog_outbound_atu() to improve reliability.
-> >>
-> >> This patch also moves the sleep definitions to the *.c file like
-> >> suggested by Jisheng Zhang in a previous patch.
-> >>
-> >> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ...
+On Thu, 11 Aug 2016 11:52:02 -0700
+Alexander Duyck <alexander.duyck@gmail.com> wrote:
 
-> >> +/* Registers */
-> >> +#define PCIE_ATU_UNR_REGION_CTRL1	0x00
-> >> +#define PCIE_ATU_UNR_REGION_CTRL2	0x01
-> >> +#define PCIE_ATU_UNR_LOWER_BASE		0x02
-> >> +#define PCIE_ATU_UNR_UPPER_BASE		0x03
-> >> +#define PCIE_ATU_UNR_LIMIT		0x04
-> >> +#define PCIE_ATU_UNR_LOWER_TARGET	0x05
-> >> +#define PCIE_ATU_UNR_UPPER_TARGET	0x06
-> >> +#define PCIE_ATU_UNR_REGION_CTRL3	0x07
-> >> +#define PCIE_ATU_UNR_UPPR_LIMIT		0x08
-> > 
-> > Last two items aren't used.
+> On Wed, Aug 10, 2016 at 4:54 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> > On Wed, 2016-08-10 at 08:47 -0700, Alexander Duyck wrote:  
+> >>
+> >> The problem is if we don't do this it becomes possible for a guest to
+> >> essentially cripple a device on the host by just accessing VPD
+> >> regions that aren't actually viable on many devices.  
+> >
+> > And ? We already can cripple the device in so many different ways
+> > simpy because we have pretty much full BAR access to it...
+> >  
+> >>  We are much better off
+> >> in terms of security and stability if we restrict access to what
+> >> should be accessible.  
+> >
+> > Bollox. I've heard that argument over and over again, it never stood
+> > and still doesn't.
+> >
+> > We have full BAR access for god sake. We can already destroy the device
+> > in many cases (think: reflashing microcode, internal debug bus access
+> > with a route to the config space, voltage/freq control ....).
+> >
+> > We aren't protecting anything more here, we are just adding layers of
+> > bloat, complication and bugs.  
 > 
-> I can take them off, but don't you think it is useful to include them for future
-> applications?
-
-This isn't a huge deal either way.  Personally I wouldn't include them
-because if they're not used, they haven't been tested, and there's
-always the possibility of transcription errors.  If you need to use
-them in the future, it makes perfect sense to add the register
-definition in the same patch that uses the register.
-
-> ...
-> >> +static inline void dw_pcie_readl_unroll(struct pcie_port *pp, u32 type,
-> >> +						u32 index, u32 reg, u32 *val)
-> >> +{
-> >> +	u32 reg_addr = 0;
-> >> +
-> >> +	if (type == PCIE_TRANSL_OUTB)
-> >> +		reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
-> >> +	else if  (type == PCIE_TRANSL_INB)
-> >> +		reg_addr = PCIE_GET_ATU_INB_UNR_REG_ADDR(index, reg);
-> > 
-> > PCIE_TRANSL_INB is never used.  In fact, dw_pcie_readl_unroll() is
-> > *always* called with PCIE_TRANSL_OUTB, so it's not clear what the
-> > value of passing it as an argument is.
+> To some extent I can agree with you.  I don't know if we should be
+> restricting the VFIO based interface the same way we restrict systemd
+> from accessing this region.  In the case of VFIO maybe we need to look
+> at a different approach for accessing this.  Perhaps we need a
+> privileged version of the VPD accessors that could be used by things
+> like VFIO and the cxgb3 driver since they are assumed to be a bit
+> smarter than those interfaces that were just trying to slurp up
+> something like 4K of VPD data.
 > 
-> I included The Inbound translation mechanism because you can have Inbound or
-> Outbound translation in the iATU. The old mechanism also had Inbound properties
-> that are not used in the code. I suggest we keep the Inbound mechanism to avoid
-> future rework. Agree?
+> >>  In this case what has happened is that the
+> >> vendor threw in an extra out-of-spec block and just expected it to
+> >> work.  
+> >
+> > Like vendors do all the time in all sort of places
+> >
+> > I still completely fail to see the point in acting as a filtering
+> > middle man.  
+> 
+> The problem is we are having to do some filtering because things like
+> systemd were using dumb accessors that were trying to suck down 4K of
+> VPD data instead of trying to parse through and read it a field at a
+> time.
 
-Again, not a huge deal, but since PCIE_TRANSL_INB is not used, it
-makes life harder for the reader, and the related code is not tested.
-So personally, I would remove it and add it back if/when it is needed.
+vfio isn't playing nanny here for the fun of it, part of the reason we
+have vpd access functions is because folks have discovered that vpd
+registers between PCI functions on multi-function devices may be
+shared.  So pounding on vpd registers for function 1 may adversely
+affect someone else reading from a different function.  This is a case
+where I feel vfio needs to step in because if that's a user competing
+with the host or two users stepping on each other, well that's exactly
+what vfio tries to prevent.  A driver in userspace or a VM driver can't
+very well determine these sorts of interactions when it only has
+visibility to a subset of the functions and users and hardware folks
+would throw a fit if I extended iommu groups to encompass all the
+related devices rather than take the relatively simple step of
+virtualizing these accesses and occasionally quirking devices that are
+extra broken, as seems to be required here.  Thanks,
 
-Bjorn
+Alex
