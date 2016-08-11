@@ -1,40 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45209 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932695AbcHJC6Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Aug 2016 22:58:25 -0400
-Message-ID: <57AA984E.8040308@intel.com>
-Date: Wed, 10 Aug 2016 10:58:22 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 1/3] PCI: Add Precision Time Measurement (PTM) support
-References: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <BATV+d7a49962a47fb612189d+4736+infradead.org+hch@bombadil.srs.infradead.org>
+Return-Path: <BATV+d7a49962a47fb612189d+4736+infradead.org+hch@bombadil.srs.infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org,
+	helgaas@kernel.org,
+	agordeev@redhat.com
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] pci: call pci_intx when using legacy interrupts in pci_alloc_irq_vectors
+Date: Thu, 11 Aug 2016 07:11:05 -0700
+Message-Id: <1470924665-25860-3-git-send-email-hch@lst.de>
+In-Reply-To: <1470924665-25860-1-git-send-email-hch@lst.de>
+References: <1470924665-25860-1-git-send-email-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/14/2016 03:05, Bjorn Helgaas wrote:
-> From: Jonathan Yong <jonathan.yong@intel.com>
-> 
-> Add Precision Time Measurement (PTM) support (see PCIe r3.1, sec 6.22).
-> 
-> Enable PTM on PTM Root devices and switch ports.  This does not enable PTM
-> on endpoints.
-> 
-> There currently are no PTM-capable devices on the market, but it is
-> expected to be supported by the Intel Apollo Lake platform.
-> 
-> [bhelgaas: complete rework]
-> Signed-off-by: Jonathan Yong <jonathan.yong@intel.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+ahci currently insists on an explicit call to pci_intx before falling back
+from MSI or MSI-X to legacy irqs.  As pci_intx is a no-op if the command
+register already contains the right value is seems safe and useful to add
+this call to pci_alloc_irq_vectors so that ahci can just use
+pci_alloc_irq_vectors.
 
-Hi,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Any updates on the PTM changes?
-
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 9233e7f..593698e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1200,8 +1200,11 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+ 	}
+ 
+ 	/* use legacy irq if allowed */
+-	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1)
++	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1) {
++		pci_intx(dev, 1);
+ 		return 1;
++	}
++
+ 	return vecs;
+ }
+ EXPORT_SYMBOL(pci_alloc_irq_vectors);
+-- 
+2.1.4
