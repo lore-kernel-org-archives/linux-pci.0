@@ -1,44 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61254 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814AbcHHTOg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Aug 2016 15:14:36 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 2/3] pci/msix: Skip disabling removed devices
-Date: Mon,  8 Aug 2016 13:14:26 -0600
-Message-Id: <1470683667-28418-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+Received: from relmlor1.renesas.com ([210.160.252.171]:39990 "EHLO
+	relmlie4.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932277AbcHKPAs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Aug 2016 11:00:48 -0400
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Question about dma-ranges property for PCI host controllers
+Date: Thu, 11 Aug 2016 15:00:42 +0000
+Message-ID: <HK2PR0601MB1393CA771AB65556D4E2F0B9F51E0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to disable MSIx interrupts on a device that doesn't
-exist.
+Hi,
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/msi.c | 5 +++++
- 1 file changed, 5 insertions(+)
+A few PCI host controllers use the "dma-ranges" property to specify the
+mapping from PCI bus addresses to physical addresses.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a02981e..b60ee25 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -999,6 +999,11 @@ void pci_msix_shutdown(struct pci_dev *dev)
- 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
- 		return;
- 
-+	if (!pci_device_is_present(dev)) {
-+		dev->msix_enabled = 0;
-+		return;
-+	}
-+
- 	/* Return the device with MSI-X masked as initial states */
- 	for_each_pci_msi_entry(entry, dev) {
- 		/* Keep cached states to be restored */
--- 
-2.7.2
+In the case of R-Car PCIe Host controllers, the intention was to set this
+property as a 1 to 1 mapping for all DDR that could be addressed by the
+device. However, there are some limitations for the R-Car controller which
+meant that we could only map a subset of the DDR range - this limitation
+has prompted us to work on enabling the IOMMU behind the PCI controller.
 
+When there is an IOMMU behind the PCI controller, the "dma-ranges"
+property specifies the mapping from PCI bus addresses to an IOVA address.
+So should the property map all address space?
+
+Note that this is not actually possible with the R-Car hardware, but I
+found that the IOVA address space is outside of the DDR address space
+that we were using so had change it.
+
+Thanks
+Phil
