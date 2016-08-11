@@ -1,91 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:50533 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755650AbcHSHVA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Aug 2016 03:21:00 -0400
-Date: Fri, 19 Aug 2016 09:21:40 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Chen Yu <yu.c.chen@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH][RFC v2] PCI: Workaround to enable poweroff on Mac Pro 11
-Message-ID: <20160819072140.GA10854@wunner.de>
-References: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
+Received: from ozlabs.ru ([83.169.36.222]:41049 "EHLO ozlabs.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932422AbcHKKJp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Aug 2016 06:09:45 -0400
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: netdev@vger.kernel.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Santosh Raspatur <santosh@chelsio.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Alexander Duyck <alexander.duyck@gmail.com>,
+	Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH kernel] PCI: Enable access to custom VPD for Chelsio devices (cxgb3)
+Date: Thu, 11 Aug 2016 20:03:29 +1000
+Message-Id: <1470909809-11007-1-git-send-email-aik@ozlabs.ru>
+In-Reply-To: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
+References: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 19, 2016 at 01:44:52AM +0800, Chen Yu wrote:
-> People reported that they can not do a poweroff nor a
-> suspend to memory on their Mac Pro 11. After some investigations
-> it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
-> mm windows([mem 0x7fa00000-0x7fbfffff] and
-> [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-> io resource 0x1804 becomes unaccessible immediately, where the
-> ACPI Sleep register is located, as a result neither poweroff(S5)
-> nor suspend to memory(S3) works.
-> 
-> As suggested by Bjorn, further testing shows that, there is an
-> unreported device may be (using) conflict with above aperture,
-> so if we reassign the memory aperture to other place, the poweroff
-> works again.
-> 
-> As we did not find any resource declared in _CRS which contain above
-> memory aperture, thus we choose a simple workaround to clear the hotplug
-> flag(suggested by Yinghai Lu), thus do not allocate any resource for
-> this pci bridge.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rafael J. Wysocki <rafael@kernel.org>
-> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> ---
->  drivers/pci/quirks.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 37ff015..47b303a 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2776,6 +2776,27 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
->  
->  /*
-> + * Apple: Avoid programming the memory/io aperture of 00:1c.0
-> + *
-> + * BIOS does not declare any resource for 00:1c.0, but with
-> + * hotplug flag set, thus OS allocate:
-> + * [mem 0x7fa00000 - 0x7fbfffff]
-> + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
-> + * which is conflict with an unreported device, which
-> + * causes unpredictable result such as accessing io port.
-> + * So clear the hotplug flag to work around it.
-> + */
-> +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
-> +{
-> +	if (dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") &&
-> +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
-> +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
+There is at least one Chelsio 10Gb card which uses VPD area to store
+some custom blocks (example below). However pci_vpd_size() returns
+the length of the first block only assuming that there can be only
+one VPD "End Tag" and VFIO blocks access beyond that offset
+(since 4e1a63555) which leads to the situation when the guest "cxgb3"
+driver fails to probe the device. The host system does not have this
+problem as the drives accesses the config space directly without
+pci_read_vpd()/...
 
-&& has higher precedence than ||, so you would need parentheses here.
-However I don't think there's another vendor using those product names,
-so it's probably safe to drop the check for the vendor altogether.
+This adds a quirk to override the VPD size to a bigger value.
 
-Best regards,
+This is the controller:
+Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
 
-Lukas
+This is its VPD:
+#0000 Large item 42 bytes; name 0x2 Identifier String
+	b'10 Gigabit Ethernet-SR PCI Express Adapter'
+#002d Large item 74 bytes; name 0x10
+	#00 [EC] len=7: b'D76809 '
+	#0a [FN] len=7: b'46K7897'
+	#14 [PN] len=7: b'46K7897'
+	#1e [MN] len=4: b'1037'
+	#25 [FC] len=4: b'5769'
+	#2c [SN] len=12: b'YL102035603V'
+	#3b [NA] len=12: b'00145E992ED1'
+#007a Small item 1 bytes; name 0xf End Tag
+---
+#0c00 Large item 16 bytes; name 0x2 Identifier String
+	b'S310E-SR-X      '
+#0c13 Large item 234 bytes; name 0x10
+	#00 [PN] len=16: b'TBD             '
+	#13 [EC] len=16: b'110107730D2     '
+	#26 [SN] len=16: b'97YL102035603V  '
+	#39 [NA] len=12: b'00145E992ED1'
+	#48 [V0] len=6: b'175000'
+	#51 [V1] len=6: b'266666'
+	#5a [V2] len=6: b'266666'
+	#63 [V3] len=6: b'2000  '
+	#6c [V4] len=2: b'1 '
+	#71 [V5] len=6: b'c2    '
+	#7a [V6] len=6: b'0     '
+	#83 [V7] len=2: b'1 '
+	#88 [V8] len=2: b'0 '
+	#8d [V9] len=2: b'0 '
+	#92 [VA] len=2: b'0 '
+	#97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+#0d00 Large item 252 bytes; name 0x11
+	#00 [VC] len=16: b'122310_1222 dp  '
+	#13 [VD] len=16: b'610-0001-00 H1\x00\x00'
+	#26 [VE] len=16: b'122310_1353 fp  '
+	#39 [VF] len=16: b'610-0001-00 H1\x00\x00'
+	#4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+#0dff Small item 0 bytes; name 0xf End Tag
 
-> +		dev->is_hotplug_bridge = 0;
-> +}
-> +
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-> +
-> +/*
->   * This is a quirk for the Ricoh MMC controller found as a part of
->   * some mulifunction chips.
->  
-> -- 
-> 2.7.4
+Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ drivers/pci/quirks.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ee72ebe1..94d3fb5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3241,6 +3241,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
+ 			quirk_thunderbolt_hotplug_msi);
+ 
++static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
++{
++	if (!dev->vpd || !dev->vpd->ops || !dev->vpd->ops->set_size)
++		return;
++
++	dev->vpd->ops->set_size(dev, max_t(unsigned int, dev->vpd->len, 0xe00));
++}
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO,
++			PCI_ANY_ID,
++			quirk_chelsio_extend_vpd);
++
+ #ifdef CONFIG_ACPI
+ /*
+  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+-- 
+2.5.0.rc3
+
