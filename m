@@ -1,117 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:34181 "EHLO
-        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932865AbcHXU6t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 16:58:49 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 4/9] PCI: dra7xx: make host code explicitly non-modular
-Date: Wed, 24 Aug 2016 16:57:47 -0400
-Message-ID: <20160824205752.12024-5-paul.gortmaker@windriver.com>
-In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V8 3/8] PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
+Date: Thu, 11 Aug 2016 12:06:33 +0200
+Message-Id: <1470909998-16710-4-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+It is possible to provide information about which MSI controller to
+use on a per-device basis for DT. This patch supply this with ACPI support.
 
-drivers/pci/host/Kconfig:config PCI_DRA7XX
-drivers/pci/host/Kconfig:       bool "TI DRA7xx PCIe controller"
+Currently, IORT is the only one ACPI table which can provide such mapping.
+In order to plug IORT into MSI infrastructure we are adding ACPI
+equivalents for finding PCI device domain and its RID translation
+(pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
 
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-We explicitly disallow a driver unbind, since that doesn't have a
-sensible use case anyway, and it allows us to drop the ".remove"
-code for non-modular drivers.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-omap@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pci-dra7xx.c | 31 +++----------------------------
- 1 file changed, 3 insertions(+), 28 deletions(-)
+ drivers/pci/msi.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 81b3949a26db..19223ed2e619 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -15,7 +15,7 @@
- #include <linux/irq.h>
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a02981e..7bb981a 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -19,6 +19,7 @@
+ #include <linux/smp.h>
+ #include <linux/errno.h>
+ #include <linux/io.h>
++#include <linux/iort.h>
+ #include <linux/slab.h>
  #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
-@@ -443,25 +443,6 @@ err_phy:
- 	return ret;
+ #include <linux/of_irq.h>
+@@ -1498,8 +1499,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+ 
+ 	of_node = irq_domain_get_of_node(domain);
+-	if (of_node)
+-		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
++	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
++			iort_msi_map_rid(&pdev->dev, rid);
+ 
+ 	return rid;
  }
- 
--static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
--{
--	struct dra7xx_pcie *dra7xx = platform_get_drvdata(pdev);
--	struct pcie_port *pp = &dra7xx->pp;
--	struct device *dev = &pdev->dev;
--	int count = dra7xx->phy_count;
--
--	if (pp->irq_domain)
--		irq_domain_remove(pp->irq_domain);
--	pm_runtime_put(dev);
--	pm_runtime_disable(dev);
--	while (count--) {
--		phy_power_off(dra7xx->phy[count]);
--		phy_exit(dra7xx->phy[count]);
--	}
--
--	return 0;
--}
--
- #ifdef CONFIG_PM_SLEEP
- static int dra7xx_pcie_suspend(struct device *dev)
+@@ -1515,9 +1516,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+  */
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
  {
-@@ -545,19 +526,13 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	{ .compatible = "ti,dra7-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, of_dra7xx_pcie_match);
++	struct irq_domain *dom;
+ 	u32 rid = 0;
  
- static struct platform_driver dra7xx_pcie_driver = {
--	.remove		= __exit_p(dra7xx_pcie_remove),
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-+		.suppress_bind_attrs = true,
- 		.pm	= &dra7xx_pcie_pm_ops,
- 	},
- };
--
--module_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
--
--MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
--MODULE_DESCRIPTION("TI PCIe controller driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+-	return of_msi_map_get_device_domain(&pdev->dev, rid);
++	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
++	if (!dom)
++		dom = iort_get_device_domain(&pdev->dev, rid);
++	return dom;
+ }
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
 -- 
-2.8.4
-
+1.9.1
