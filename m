@@ -1,97 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21249 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752185AbcHHRF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Aug 2016 13:05:58 -0400
-Date: Mon, 8 Aug 2016 11:05:56 -0600
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2] vmd: Fix infinite loop executing irq's
-Message-ID: <20160808170556.GB1792@localhost.localdomain>
-References: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V8 8/8] irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain initialization
+Date: Thu, 11 Aug 2016 12:06:38 +0200
+Message-Id: <1470909998-16710-9-git-send-email-tn@semihalf.com>
+In-Reply-To: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Seems fine and didn't grow the struct, which is always nice
+Let ACPI build ITS PCI MSI domain. ACPI code is responsible for retrieving
+inner domain token and passing it on to its_pci_msi_init_one generic
+init call.
 
-Acked-by Jon Derrick: <jonathan.derrick@intel.com>
+IORT maintains list of registered domain tokens and allows to find
+corresponding domain based on MADT ITS subtable ID info.
 
-On Mon, Aug 08, 2016 at 09:47:51AM -0600, Keith Busch wrote:
-> We can't initialize the list head on deletion as this causes the node
-> to point to itself, looping infinitely if the vmd IRQ handler happened
-> to be servicing that node.
-> 
-> The list initialization was trying fix a bug from multiple calls to
-> disable the same IRQ. We can fix this instead by having the vmd driver
-> track if the interrupt is enabled.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> Cc: Jon Derrick <jonathan.derrick@intel.com>
-> Reported-by: Grzegorz Koczot <grzegorz.koczot@intel.com>
-> Tested-by: Miroslaw Drost <miroslaw.drost@intel.com>
-> ---
-> v1 -> v2:
-> 
->   Removed check for poisioned list pointer. This is abusing knowledge
->   internal to the list api, so we need another way to know if the child
->   irq is enabled. This patch uses a driver controlled boolean for this.
-> 
->   Added tags for the bug reporter and tester.
-> 
->  arch/x86/pci/vmd.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-> index e88b417..4b85837 100644
-> --- a/arch/x86/pci/vmd.c
-> +++ b/arch/x86/pci/vmd.c
-> @@ -41,6 +41,7 @@ static DEFINE_RAW_SPINLOCK(list_lock);
->   * @node:	list item for parent traversal.
->   * @rcu:	RCU callback item for freeing.
->   * @irq:	back pointer to parent.
-> + * @enabled:	true if driver enabled irq
->   * @virq:	the virtual IRQ value provided to the requesting driver.
->   *
->   * Every MSI/MSI-X IRQ requested for a device in a VMD domain will be mapped to
-> @@ -50,6 +51,7 @@ struct vmd_irq {
->  	struct list_head	node;
->  	struct rcu_head		rcu;
->  	struct vmd_irq_list	*irq;
-> +	bool			enabled;
->  	unsigned int		virq;
->  };
->  
-> @@ -122,7 +124,9 @@ static void vmd_irq_enable(struct irq_data *data)
->  	unsigned long flags;
->  
->  	raw_spin_lock_irqsave(&list_lock, flags);
-> +	WARN_ON(vmdirq->enabled);
->  	list_add_tail_rcu(&vmdirq->node, &vmdirq->irq->irq_list);
-> +	vmdirq->enabled = true;
->  	raw_spin_unlock_irqrestore(&list_lock, flags);
->  
->  	data->chip->irq_unmask(data);
-> @@ -136,8 +140,10 @@ static void vmd_irq_disable(struct irq_data *data)
->  	data->chip->irq_mask(data);
->  
->  	raw_spin_lock_irqsave(&list_lock, flags);
-> -	list_del_rcu(&vmdirq->node);
-> -	INIT_LIST_HEAD_RCU(&vmdirq->node);
-> +	if (vmdirq->enabled) {
-> +		list_del_rcu(&vmdirq->node);
-> +		vmdirq->enabled = false;
-> +	}
->  	raw_spin_unlock_irqrestore(&list_lock, flags);
->  }
->  
-> -- 
-> 2.7.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 ++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+
+diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+index d2c2496..ae7221c 100644
+--- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+@@ -15,6 +15,7 @@
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++#include <linux/iort.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+@@ -144,9 +145,52 @@ static int __init its_pci_of_msi_init(void)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++
++static int __init
++its_pci_msi_parse_madt(struct acpi_subtable_header *header,
++		       const unsigned long end)
++{
++	struct acpi_madt_generic_translator *its_entry;
++	struct fwnode_handle *dom_handle;
++	const char *node_name;
++	int err = -ENXIO;
++
++	its_entry = (struct acpi_madt_generic_translator *)header;
++	node_name = kasprintf(GFP_KERNEL, "ITS@0x%lx",
++			      (long)its_entry->base_address);
++	dom_handle = iort_find_domain_token(its_entry->translation_id);
++	if (!dom_handle) {
++		pr_err("%s: Unable to locate ITS domain handle\n", node_name);
++		goto out;
++	}
++
++	err = its_pci_msi_init_one(dom_handle, node_name);
++	if (!err)
++		pr_info("PCI/MSI: %s domain created\n", node_name);
++
++out:
++	kfree(node_name);
++	return err;
++}
++
++static int __init its_pci_acpi_msi_init(void)
++{
++	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
++			      its_pci_msi_parse_madt, 0);
++	return 0;
++}
++#else
++static int __init its_pci_acpi_msi_init(void)
++{
++	return 0;
++}
++#endif
++
+ static int __init its_pci_msi_init(void)
+ {
+ 	its_pci_of_msi_init();
++	its_pci_acpi_msi_init();
+ 
+ 	return 0;
+ }
+-- 
+1.9.1
