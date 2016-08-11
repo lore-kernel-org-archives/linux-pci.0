@@ -1,67 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 22 Aug 2016 14:38:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: Re: [PATCH -next] PCI: aardvark: Remove redundant dev_err call in
- advk_pcie_probe()
-Message-ID: <20160822193809.GL18628@localhost>
-References: <1469722634-15049-1-git-send-email-weiyj.lk@gmail.com>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Thu, 11 Aug 2016 15:20:03 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
+ system sleep
+Message-ID: <20160811132003.GA7369@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <CAJZ5v0hPbeaUotiFxg_BbkS86HEz=u0ThkdwJju5WyXOuDgd6A@mail.gmail.com>
+ <20160807090347.GA5679@wunner.de>
+ <2182119.Z8Tk7onsTO@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1469722634-15049-1-git-send-email-weiyj.lk@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2182119.Z8Tk7onsTO@vostro.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 28, 2016 at 04:17:14PM +0000, Wei Yongjun wrote:
-> There is a error message within devm_ioremap_resource
-> already, so remove the dev_err call to avoid redundant
-> error message.
+On Mon, Aug 08, 2016 at 01:32:54AM +0200, Rafael J. Wysocki wrote:
+> On Sunday, August 07, 2016 11:03:47 AM Lukas Wunner wrote:
+> > On Thu, Aug 04, 2016 at 05:30:47PM +0200, Rafael J. Wysocki wrote:
+> > > On Thu, Aug 4, 2016 at 10:14 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > > On Thu, Aug 04, 2016 at 03:07:56AM +0200, Rafael J. Wysocki wrote:
+> > > >> On Thu, Aug 4, 2016 at 2:45 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > >> > On Thu, Aug 04, 2016 at 01:50:39AM +0200, Rafael J. Wysocki wrote:
+> > > >> >> On Wed, Aug 3, 2016 at 2:28 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > >> >> > I will update this patch with Bjorn's suggestion to also leave the
+> > > >> >> > device in D3cold if it is wakeup-capable. The idea is to just change
+> > > >> >> > the default state in the first line of the function like this:
+> > > >> >> >
+> > > >> >> > -       pci_power_t target_state = PCI_D3hot;
+> > > >> >> > +       pci_power_t target_state =
+> > > >> >> > +               dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
+> > > >> >>
+> > > >> >> That should work (even though it is a little clumsy IMO).
+> > > >> >
+> > > >> > Not sure why that is clumsy but happy to use something else if you
+> > > >> > have a suggestion?
+> > > >>
+> > > >> The clumsy thing is that we'd take the target_state as D3cold only if
+> > > >> the device already was in that state.
+> > > >>
+> > > >> Otherwise, we'd take D3hot as the target state for the same device,
+> > > >> which doesn't seem particularly consistent to me.
+> > > >>
+> > > >> Not that I have better ideas ATM, but then the current code works for
+> > > >> my use cases. :-)
+> > > >
+> > > > The goal is to afford direct-complete to devices which are not power-
+> > > > manageable by the platform but can still be runtime suspended to D3cold.
+> > > 
+> > > Well, this is a bit misleading.
+> > > 
+> > > According to the PCI spec there are two ways to put a device into
+> > > D3cold: either by putting its bus into B3 (which for PCIe means
+> > > turning the link off IIRC) which happens when the bridge goes into
+> > > D3hot, or through the platform.
+> > > 
+> > > You aren't talking about any of those cases, though, so we go outside
+> > > of the spec here.
+> > 
+> > Yes. With Nvidia Optimus / AMD PowerXpress hybrid graphics on non-Macs
+> > and Thunderbolt on Macs, it could still be argued that D3cold is
+> > facilitated by the platform, albeit with custom methods instead of _PS3.
 > 
-> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+> So you'd need a custom set of callbacks for that "platform", but that's
+> only a few devices in the system, so you would also need normal ACPI callbacks
+> for the rest.
+> 
+> Conceivably, that could be addressed with per-device platform callbacks,
+> but that is conceptually equivalent to adding a pm_domain pointer to the
+> devices in question.
 
-Applied with Thomas' reviewed-by to pci/host-aardvark for v4.9, thanks!
+Precisely.
 
-> ---
->  drivers/pci/host/pci-aardvark.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-> index ef9893f..05c33b5 100644
-> --- a/drivers/pci/host/pci-aardvark.c
-> +++ b/drivers/pci/host/pci-aardvark.c
-> @@ -925,10 +925,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
->  
->  	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->  	pcie->base = devm_ioremap_resource(&pdev->dev, res);
-> -	if (IS_ERR(pcie->base)) {
-> -		dev_err(&pdev->dev, "Failed to map registers\n");
-> +	if (IS_ERR(pcie->base))
->  		return PTR_ERR(pcie->base);
-> -	}
->  
->  	irq = platform_get_irq(pdev, 0);
->  	ret = devm_request_irq(&pdev->dev, irq, advk_pcie_irq_handler,
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > The de facto standard to power manage such devices seems to be with
+> > > > dev_pm_domain_set(). That's what vga_switcheroo does and I'll move
+> > > > to that as well for v3 of this series.
+> > > 
+> > > OK
+> > > 
+> > > > I could add a "bool can_power_off" to struct dev_pm_domain.
+> > > 
+> > > I'm not sure if dev_pm_domain is the right level.  The "can_power_off"
+> > > thing would be sort of specific to your particular use case.
+> > > 
+> > > Say you have something like
+> > > 
+> > > struct pci_pm_domain {
+> > >         struct dev_pm_domain pd;
+> > >         ...
+> > > };
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+So I would like to find a common ground and something you feel
+comfortable to ack. The problem I see with your suggested approach
+of subclassing struct dev_pm_domain in a struct pci_pm_domain is
+that I can easily envision Apple putting some custom methods in the
+DSDT to power a non-PCI device up and down. They're starting to use
+SPI and UART to attach devices in newer machines.
+
+Hence my suggestion to add a flag to struct dev_pm_domain, even
+though at the moment that flag would only be queried by the PCI core.
+I don't care if this is called can_power_off or power_manageable or
+whatever.
+
+Thanks,
+
+Lukas
