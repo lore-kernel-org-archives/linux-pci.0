@@ -1,111 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Joao Pinto <jpinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Jingoo Han <jingoohan1@gmail.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 3/3] arm64: dts: marvell: enable MSI for PCIe on Armada 7K/8K
-Date: Tue, 30 Aug 2016 14:57:10 +0200
-Message-Id: <1472561830-20932-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
- Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>,
- Nadav Haklai <nadavh@marvell.com>, Rob Herring <robh+dt@kernel.org>,
- Andrew Lunn <andrew@lunn.ch>, Kumar Gala <galak@codeaurora.org>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Shadi Ammouri <shadi@marvell.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.13]:57276 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbcHKPJd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Aug 2016 11:09:33 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: Question about dma-ranges property for PCI host controllers
+Date: Thu, 11 Aug 2016 17:09:23 +0200
+Message-ID: <2867793.PfGZpZFyEJ@wuerfel>
+In-Reply-To: <HK2PR0601MB1393CA771AB65556D4E2F0B9F51E0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+References: <HK2PR0601MB1393CA771AB65556D4E2F0B9F51E0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds a reference to the appropriate MSI controller in the
-description of the PCIe controllers on Marvel Armada 7K and 8K
-platforms.
+On Thursday, August 11, 2016 3:00:42 PM CEST Phil Edworthy wrote:
+> Hi,
+> 
+> A few PCI host controllers use the "dma-ranges" property to specify the
+> mapping from PCI bus addresses to physical addresses.
+> 
+> In the case of R-Car PCIe Host controllers, the intention was to set this
+> property as a 1 to 1 mapping for all DDR that could be addressed by the
+> device. However, there are some limitations for the R-Car controller which
+> meant that we could only map a subset of the DDR range - this limitation
+> has prompted us to work on enabling the IOMMU behind the PCI controller.
+> 
+> When there is an IOMMU behind the PCI controller, the "dma-ranges"
+> property specifies the mapping from PCI bus addresses to an IOVA address.
+> So should the property map all address space?
+> 
+> Note that this is not actually possible with the R-Car hardware, but I
+> found that the IOVA address space is outside of the DDR address space
+> that we were using so had change it.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
-Please only apply once the DT binding and the driver change have been
-accepted.
+It's a bit tricky: the dma-ranges properties are walked recursively,
+and a PCI bus may be behind a few other bridges that each have a
+nontrivial mapping, and the IOMMU may not be on the address space that
+the PCI host sees.
 
- arch/arm64/boot/dts/marvell/armada-cp110-master.dtsi | 3 +++
- arch/arm64/boot/dts/marvell/armada-cp110-slave.dtsi  | 3 +++
- 2 files changed, 6 insertions(+)
+In the past, we have said that the dma-ranges property should reflect
+the address space that is used when programming the bridge registers
+in the PCI host bridge itself.
 
-diff --git a/arch/arm64/boot/dts/marvell/armada-cp110-master.dtsi b/arch/arm64/boot/dts/marvell/armada-cp110-master.dtsi
-index ceb83b0..ff469e1 100644
---- a/arch/arm64/boot/dts/marvell/armada-cp110-master.dtsi
-+++ b/arch/arm64/boot/dts/marvell/armada-cp110-master.dtsi
-@@ -177,6 +177,7 @@
- 			#interrupt-cells = <1>;
- 			device_type = "pci";
- 			dma-coherent;
-+			msi-parent = <&gic_v2m0>;
- 
- 			bus-range = <0 0xff>;
- 			ranges =
-@@ -202,6 +203,7 @@
- 			#interrupt-cells = <1>;
- 			device_type = "pci";
- 			dma-coherent;
-+			msi-parent = <&gic_v2m0>;
- 
- 			bus-range = <0 0xff>;
- 			ranges =
-@@ -228,6 +230,7 @@
- 			#interrupt-cells = <1>;
- 			device_type = "pci";
- 			dma-coherent;
-+			msi-parent = <&gic_v2m0>;
- 
- 			bus-range = <0 0xff>;
- 			ranges =
-diff --git a/arch/arm64/boot/dts/marvell/armada-cp110-slave.dtsi b/arch/arm64/boot/dts/marvell/armada-cp110-slave.dtsi
-index 2d863f2..43cecf0 100644
---- a/arch/arm64/boot/dts/marvell/armada-cp110-slave.dtsi
-+++ b/arch/arm64/boot/dts/marvell/armada-cp110-slave.dtsi
-@@ -177,6 +177,7 @@
- 			#interrupt-cells = <1>;
- 			device_type = "pci";
- 			dma-coherent;
-+			msi-parent = <&gic_v2m0>;
- 
- 			bus-range = <0 0xff>;
- 			ranges =
-@@ -202,6 +203,7 @@
- 			#interrupt-cells = <1>;
- 			device_type = "pci";
- 			dma-coherent;
-+			msi-parent = <&gic_v2m0>;
- 
- 			bus-range = <0 0xff>;
- 			ranges =
-@@ -228,6 +230,7 @@
- 			#interrupt-cells = <1>;
- 			device_type = "pci";
- 			dma-coherent;
-+			msi-parent = <&gic_v2m0>;
- 
- 			bus-range = <0 0xff>;
- 			ranges =
--- 
-2.7.4
+I think we have also made the assumption that a PCI host bridge
+with an IOMMU uses a flat 32-bit DMA address space that goes through
+the IOMMU (possibly a separate address space per PCI function,
+depending on the type of IOMMU).
 
+One corner case that doesn't really fit in that model is a PCI host
+bridge that requires the bridge register to be programmed in a special
+way for the IOMMU to work (e.g. away from the RAM to the address that
+is routed to the IOMMU).
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Another tricky case is a PCI host that uses the IOMMU only for 32-bit
+DMA masters but that does have a dma-ranges property that can be
+used for direct mapping of all RAM through a nonzero offset that
+gets set up according to dma-ranges.
+
+Can you be more specific which of those cases you actually have here?
+
+	Arnd
