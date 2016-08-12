@@ -1,118 +1,78 @@
-Return-Path: <benh@kernel.crashing.org>
-Return-Path: <benh@kernel.crashing.org>
-Message-ID: <1471306391.12231.137.camel@kernel.crashing.org>
-Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        Alexander Duyck
- <alexander.duyck@gmail.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Bjorn
- Helgaas <helgaas@kernel.org>, Hannes Reinecke <hare@suse.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Babu Moger
- <babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
-        "santosh@chelsio.com" <santosh@chelsio.com>,
-        Netdev <netdev@vger.kernel.org>
-Date: Tue, 16 Aug 2016 10:13:11 +1000
-In-Reply-To: <B64D748A-711E-4701-96EF-C447333F5BF5@intel.com>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
-	 <1452684335-46107-4-git-send-email-hare@suse.de>
-	 <20160209210458.GB32530@localhost>
-	 <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
-	 <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
-	 <1470787409.3015.81.camel@kernel.crashing.org>
-	 <CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
-	 <1470873296.3015.117.camel@kernel.crashing.org>
-	 <CAKgT0UcPh2RZazDL-cJbJkZFUJ03kTocn5H7WA=Kk_+S-CV_HA@mail.gmail.com>
-	 <20160811141700.4f4faabb@t450s.home>
-	 <1470978669.3015.155.camel@kernel.crashing.org>
-	 <197F6532-FC5E-4D72-976D-4207BAD8D83E@intel.com>
-	 <1471299799.12231.121.camel@kernel.crashing.org>
-	 <1471300400.12231.130.camel@kernel.crashing.org>
-	 <B64D748A-711E-4701-96EF-C447333F5BF5@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39952 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751139AbcHLFnU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5XdIw033508
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:27 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 24rmj7rng9-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:27 -0400
+Received: from localhost
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 11 Aug 2016 23:42:26 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v4 0/5] PCI: Introduce a way to enforce all MMIO BARs not to share PAGE_SIZE
+Date: Fri, 12 Aug 2016 13:42:21 +0800
+Message-Id: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2016-08-15 at 23:16 +0000, Rustad, Mark D wrote:
-> 
-> Bugs in existing guests is an interesting case, but I have been focused on  
-> getting acceptable behavior from a properly functioning guest, in the face  
-> of hardware issues that can only be resolved in a single place.
-> 
-> I agree that a malicious guest can cause all kinds of havoc with  
-> directly-assigned devices. Consider a 4-port PHY chip on a shared MDIO bus,  
-> for instance. There is really nothing to be done about the potential for  
-> mischief with that kind of thing.
-> 
-> The VPD problem that I had been concerned about arises from a bad design in  
-> the PCI spec together with implementations that share the registers across  
-> functions. The hardware isn't going to change and I really doubt that the  
-> spec will either, so we address it the only place we can.
+This series introduces a way for PCI resource allocator to force
+MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO 
+driver. Because current VFIO implementation disallows to mmap 
+sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page 
+with other BARs for security reasons. Thus, we have to handle mmio 
+access to these BARs in QEMU emulation rather than in guest which 
+will cause some performance loss.
 
-Right but as I mentioned, there are plenty of holes when it comes to
-having multi function devices assigned to different guests, this is just
-one of them.
+In our solution, we try to make use of the existing code path of
+resource_alignment kernel parameter and add a macro to set default
+alignment for it. Thus we can define this macro by default on some
+archs which may easily hit the performance issue because of their
+64K page.
 
-Now, that being said, "working around" the bug to make the "non fully secure"
-case work (in my example case the "desktop user") is probably an ok workaround
-as long as we fully agree that this is all it is, it by no means provide
-actual isolation or security.
- 
-> >   >   rtain that we agree that not everything can or should be addressed  
-> in vfio. I did not mean to suggest it should try to address everything, but  
-> I think it should make it possible for correctly behaving guests to work. I  
-> think that is not unreasonable.
+In this series, patch 1,2,3 fixed bugs of using resource_alignment;
+patch 4 tried to add a new option for resource_alignment to use 
+IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 5
+adds a macro to set the default alignment of all MMIO BARs.
 
-Again as long as there is no expectation of security here, such as a data
-center giving PCI access to some devices.
+Changelog v4:
+- Rebased against v4.8-rc1
+- Drop one irrelevant patch
+- Drop the patch that adding wildcard to resource_alignment to enforce
+  the alignment of all MMIO BARs to be at least PAGE_SIZE
+- Change the format of option "noresize" of resource_alignment
+- Code style improvements
 
-> > Perhaps the VPD range check should really just have been implemented for  
-> the sysfs interface, and left the vfio case unchecked. I don't know because  
-> I was not involved in that issue. Perhaps someone more intimately involved  
-> can comment on that notion.
+Changelog v3:
+- Ignore enforced alignment to fixed BARs
+- Fix issue that disabling memory decoding when reassigning the alignment
+- Only enable default alignment on PowerNV platform
 
-That would have been my preferred approach... I think VFIO tries to do too much
-which complicates things, causes other bugs, without briging actual safety. I
-don't think it should stand in between a guest driver and its device unless
-absolutely necessary to provide the functionality due to broken HW or design,
-but with the full understanding that doing so remains unsafe from an isolation
-standpoint.
+Changelog v2:
+- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
 
-> > > Assuming that a device coming back from a guest is functional and not
-> > completely broken and can be re-used without a full PERST or power cycle
-> > is a wrong assumption. It may or may not work, no amount of "filtering"
-> > will fix the fundamental issue. If your HW won't give you access to PERST
-> > well ... blame Intel for not specifying a standard way to generate it in
-> > the first place :-)
-> 
-> Yeah, I worry about the state that a malicious guest could leave a device  
-> in, but I consider direct assignment always risky anyway. I would just like  
-> it to at least work in the non-malicious guest cases.
+Yongji Xie (5):
+  PCI: Ignore enforced alignment when kernel uses existing firmware setup
+  PCI: Ignore enforced alignment to VF BARs
+  PCI: Do not disable memory decoding in pci_reassigndev_resource_alignment()
+  PCI: Add a new option for resource_alignment to reassign alignment
+  PCI: Add a macro to set default alignment for all PCI devices
 
-Right. Only SR-IOV which is somewhat designed for assignment is reasonably safe
-in the general case.
+ Documentation/kernel-parameters.txt |    9 +++--
+ arch/powerpc/include/asm/pci.h      |    4 ++
+ drivers/pci/pci.c                   |   71 ++++++++++++++++++++++++++---------
+ 3 files changed, 64 insertions(+), 20 deletions(-)
 
-On server POWER boxes, we have isolation at the bus level with usual per-slot
-PERST control so we are in a much better situation but we also for all the
-above reasons, only allow a slot granularity for pass-through.
+-- 
+1.7.9.5
 
-> > I guess my previous response was really just too terse, I was just focused  
-> on unavoidable hangs and data corruption, which even were happening without  
-> any guest involvement. For me, guests were just an additional exposure of  
-> the same underlying issue.
-> 
-> With hindsight, it is easy to see that a standard reset would now be a  
-> pretty useful thing. I am sure that even if it existed, we would now have  
-> lots and lots of quirks around it as well! :-)
-
-Hehe yes, well, HW for you ...
-
-Cheers,
-Ben.
-
-> > --
-> Mark Rustad, Networking Division, Intel Corporation
