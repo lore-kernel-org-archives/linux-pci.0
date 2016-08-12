@@ -1,114 +1,83 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-Subject: Re: [RFC PATCH V2 1/3] PCI: hisi: re-architect Hip05/Hip06
- controllers driver to preapare for ACPI
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
- <1472644094-82731-2-git-send-email-liudongdong3@huawei.com>
- <4925807.5nZM1s8II1@wuerfel>
-CC: <helgaas@kernel.org>, <rafael@kernel.org>, <Lorenzo.Pieralisi@arm.com>,
-        <tn@semihalf.com>, <wangzhou1@hisilicon.com>,
-        <pratyush.anand@gmail.com>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <jcm@redhat.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <57C78CE9.3010707@huawei.com>
-Date: Thu, 1 Sep 2016 10:05:29 +0800
-MIME-Version: 1.0
-In-Reply-To: <4925807.5nZM1s8II1@wuerfel>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:52491 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751512AbcHLFnU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5Xe9v130508
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:36 -0400
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 24rty4dpuc-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:36 -0400
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Fri, 12 Aug 2016 01:42:35 -0400
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v4 5/5] PCI: Add a macro to set default alignment for all PCI devices
+Date: Fri, 12 Aug 2016 13:42:26 +0800
+In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1470980546-2918-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+When vfio passthroughs a PCI device of which MMIO BARs are
+smaller than PAGE_SIZE, guest will not handle the mmio
+accesses to the BARs which leads to mmio emulations in host.
 
-在 2016/8/31 19:45, Arnd Bergmann 写道:
-> On Wednesday, August 31, 2016 7:48:12 PM CEST Dongdong Liu wrote:
->> +
->> +/* HipXX PCIe host only supports 32-bit config access */
->> +int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
->> +                             u32 *val)
->> +{
->> +       u32 reg;
->> +       u32 reg_val;
->> +       void *walker = &reg_val;
->> +
->> +       walker += (where & 0x3);
->> +       reg = where & ~0x3;
->> +       reg_val = readl(reg_base + reg);
->> +
->> +       if (size == 1)
->> +               *val = *(u8 __force *) walker;
->> +       else if (size == 2)
->> +               *val = *(u16 __force *) walker;
->
-> What is the __force for?
+This is because vfio will not allow to passthrough one BAR's
+mmio page which may be shared with other BARs. Otherwise,
+there will be a backdoor that guest can use to access BARs
+of other guest.
 
-Hi Arnd, thanks for replying.
+This patch adds a macro to set default alignment for all
+PCI devices. Then we could solve this issue on some platforms
+which would easily hit this issue because of their 64K page
+such as PowerNV platform by defining this macro as PAGE_SIZE.
 
-__force is used to, well, force a conversion, like casting from or to a bitwise type, else the Sparse checker will throw a warning.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci.h |    4 ++++
+ drivers/pci/pci.c              |    4 ++++
+ 2 files changed, 8 insertions(+)
 
->
->> +       else if (size == 4)
->> +               *val = reg_val;
->> +       else
->> +               return PCIBIOS_BAD_REGISTER_NUMBER;
->> +
->> +       return PCIBIOS_SUCCESSFUL;
->
-> It looks like you are reimplementing pci_generic_config_read32/pci_generic_config_write32
-> read here, better use them directly.
->
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index e9bd6cf..5e31bc2 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -28,6 +28,10 @@
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0x10000000
+ 
++#ifdef CONFIG_PPC_POWERNV
++#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
++#endif
++
+ struct pci_dev;
+ 
+ /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d895be7..feae59e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4959,6 +4959,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 	resource_size_t align = 0;
+ 	char *p;
+ 
++#ifdef PCIBIOS_DEFAULT_ALIGNMENT
++	align = PCIBIOS_DEFAULT_ALIGNMENT;
++	*resize = false;
++#endif
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	if (pci_has_flag(PCI_PROBE_ONLY)) {
+-- 
+1.7.9.5
 
-For our host bridge, access RC and EP config space are not the same way.
-Our host bridge is non ECAM only for the RC bus config space;
-for any other bus underneath the root bus we support ECAM access.
-
-hisi_pcie_common_cfg_read is used to read RC config space, only supports 32-bit config access.
-hisi_pcie_common_cfg_read/hisi_pcie_common_cfg_write may change as below will be better.
-
-/* HipXX PCIe host only supports 32-bit config access */
-int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
-			      u32 *val)
-{
-	void __iomem *addr;
-
-	addr = reg_base + (where & ~0x3);
-	*val = readl(addr);
-
-	if (size <= 2)
-		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
-
-	return PCIBIOS_SUCCESSFUL;
-}
-
-/* HipXX PCIe host only supports 32-bit config access */
-int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int  size,
-				u32 val)
-{
-	void __iomem *addr;
-	u32 mask, tmp;
-
-	addr = reg_base + (where & ~0x3);
-	if (size == 4) {
-		writel(val, addr);
-		return PCIBIOS_SUCCESSFUL;
-	} else {
-		mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
-	}
-
-	tmp = readl(addr) & mask;
-	tmp |= val << ((where & 0x3) * 8);
-	writel(tmp, addr);
-
-	return PCIBIOS_SUCCESSFUL;
-}
-
-
-Thanks
-Dongdong
-
-> 	Arnd
->
-> .
->
