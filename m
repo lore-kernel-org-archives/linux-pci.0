@@ -1,65 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42338 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752923AbcHOTvD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 15:51:03 -0400
-Date: Mon, 15 Aug 2016 14:50:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160815195058.GA8095@localhost>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
- <1470687542-30155-2-git-send-email-keith.busch@intel.com>
- <20160815174002.GB9790@localhost>
- <20160815192316.GB18083@localhost.localdomain>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Fri, 12 Aug 2016 18:16:09 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
+ system sleep
+Message-ID: <20160812161609.GA8060@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <CAJZ5v0hPbeaUotiFxg_BbkS86HEz=u0ThkdwJju5WyXOuDgd6A@mail.gmail.com>
+ <20160807090347.GA5679@wunner.de>
+ <2182119.Z8Tk7onsTO@vostro.rjw.lan>
+ <20160811132003.GA7369@wunner.de>
+ <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160815192316.GB18083@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 15, 2016 at 03:23:16PM -0400, Keith Busch wrote:
-> On Mon, Aug 15, 2016 at 12:40:02PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Aug 08, 2016 at 02:19:02PM -0600, Keith Busch wrote:
-> > > +/*
-> > > + * The PCIe slot capabilities for Intel compatible Hot-swap backplane advertise
-> > > + * attention and power indicators, but will do the wrong thing if used in a
-> > > + * standard way. Ignore these.
-> > > + */
-> > 
-> > Hmm.  So I guess you're saying these devices are defective?  Is there
-> > an erratum we can reference?
-> > 
-> > What exactly does "do the wrong thing" mean?  These are indicators, so
-> > the only thing we really do is turn them on and off.  I think we do
-> > that with pcie_write_cmd_nowait(), and all the synchronization there
-> > is a little messy.  Maybe we got that wrong somehow?
-> > 
-> > It's hard to believe something as simple as controlling an LED is
-> > broken.  If it *is* broken, I would think the breakage would be
-> > platform-dependent, not just device-dependent, i.e., I would suspect
-> > something wrong with motherboard wiring or firmware.
+On Fri, Aug 12, 2016 at 02:50:04AM +0200, Rafael J. Wysocki wrote:
+> On Thu, Aug 11, 2016 at 3:20 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > So I would like to find a common ground and something you feel
+> > comfortable to ack. The problem I see with your suggested approach
+> > of subclassing struct dev_pm_domain in a struct pci_pm_domain is
+> > that I can easily envision Apple putting some custom methods in the
+> > DSDT to power a non-PCI device up and down. They're starting to use
+> > SPI and UART to attach devices in newer machines.
 > 
-> This is actually a "feature". The devices listed in the patch re-purpose
-> the spec defined capability and control bits for Attention and Power
-> indicators. The control values match IBPI (International Blinking Pattern
-> Interpretation) rather than the spec definition.
+> Those devices have no standard power state definitions.
 > 
-> Since these operate in a non-standard way, we'd just as soon not let
-> the kernel know about them (an incorrect LED pattern will definitely
-> occur). The LEDs are to be set from user space by 'ledmon' instead.
+> The problem you have here really is PCI-specific, because you want to
+> use PCI PM along with the non-standard methods.
 
-What?  This is August 15, not April 1.  That makes no sense
-whatsoever.
+If I introduce a struct pci_pm_domain like you suggested, it would mean
+that *all* PCI devices using dev_pm_domain_set() have to be changed,
+else the container_of() wouldn't work. The resulting code bloat alone
+inhibits me from implementing this. Plus, it's a tripwire for anyone
+wishing to assign a dev_pm_domain to their PCI device.
 
-The device is advertising that it supports the hotplug model in the
-PCIe spec.  If you don't like that model, you should define a new
-model with a different capability ID.
+> > Hence my suggestion to add a flag to struct dev_pm_domain, even
+> > though at the moment that flag would only be queried by the PCI core.
+> > I don't care if this is called can_power_off or power_manageable or
+> > whatever.
+> 
+> struct dev_pm_domain is way too generic for that though, as I'm sure
+> there are users of it where the can_power_off thing wouldn't make any
+> sense whatever.
 
-Or you could propose a PCIe spec update with a new capability bit so
-software can tell that this device supports different functionality.
+That seems like a small tradeoff compared to introducing a struct
+pci_pm_domain.
 
-> Had I my way, the hardware wouldn't advertise the capability in the
-> first place. I rarely get my way, so I instead get to publicly defend
-> the quirk. :)
+If you dislike a can_power_off flag in struct dev_pm_domain, that only
+leaves the option to add a one-liner to pci_target_state(), unless I'm
+missing something.
+
+BTW there seems to be a contradiction in your statements on wakeup devices:
+
+On Mon, Aug 08, 2016 at 01:32:54AM +0200, Rafael J. Wysocki wrote:
+> On Sunday, August 07, 2016 11:03:47 AM Lukas Wunner wrote:
+> > The reasoning is that going from D3cold to D3hot before system sleep
+> > just never makes sense, no matter if the device got there by standard
+> > or nonstandard means.
+>
+> That may not be true in theory.
+>
+> If this is a wakeup device, it may not be able to generate wakeup signals
+> from D3cold while the system is in the target system state, although it might
+> be able to generate those signals when the system is in S0 (in the ACPI case).
+
+However earlier you wrote:
+
+On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
+> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
+> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
+> > > Is there a reason you don't want to do this check for devices that
+> > > may wakeup?
+> >
+> > Fear of breaking things. It would mean that a device would be left in
+> > D3cold even though it may not be able to signal wakeup from that power
+> > state.
+>
+> Then it should not be put into D3_cold at run time too if it is wakeup-capable.
+
+So on the one hand, you warn that a wakeup-capable device may have been
+put into D3cold at runtime but needs to be woken before system sleep
+because it might otherwise not be able to signal wakeup.
+
+On the other hand you say that such devices should not be put into D3cold
+at runtime at all.
+
+Which one is it?
+
+Thanks,
+
+Lukas
