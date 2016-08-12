@@ -1,65 +1,155 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: helgaas@kernel.org
-Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jszhang@marvell.com,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v4 1/3] pcie-designware: move definitions
-Date: Tue,  9 Aug 2016 17:35:32 +0100
-Message-Id: <fe7e06c25a022d49a17ece0a1ce0c7d94b338f5c.1470758382.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470758382.git.jpinto@synopsys.com>
-References: <cover.1470758382.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470758382.git.jpinto@synopsys.com>
-References: <cover.1470758382.git.jpinto@synopsys.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:44995 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751570AbcHLFnU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5XdbV073173
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:38 -0400
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 24rtx3x38a-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:38 -0400
+Received: from localhost
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 11 Aug 2016 23:42:37 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v4 4/5] PCI: Add a new option for resource_alignment to reassign alignment
+Date: Fri, 12 Aug 2016 13:42:25 +0800
+In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1470980546-2918-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves the sleep definitions to the *.c file like suggested
-by Jisheng Zhang in a previous patch.
+When using resource_alignment kernel parameter, the current
+implement reassigns the alignment by changing resources' size
+which can potentially break some drivers. For example, the driver
+uses the size to locate some register whose length is related
+to the size.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-CC: Jisheng Zhang <jszhang@marvell.com>
+This patch adds a new option "noresize" for the parameter to
+solve this problem.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
-changes v3->v4:
-- Just to keep up with the patch version
-changes v2->v3 (Bjorn Helgaas):
-- Separated from the new iATU unroll mechanism patch
+ Documentation/kernel-parameters.txt |    9 ++++++---
+ drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
+ 2 files changed, 33 insertions(+), 13 deletions(-)
 
- drivers/pci/host/pcie-designware.c | 5 +++++
- drivers/pci/host/pcie-designware.h | 5 -----
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12afce1..6fb88de 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -26,6 +26,11 @@
- 
- #include "pcie-designware.h"
- 
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 46c030a..c64e439 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -3023,15 +3023,18 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				window. The default value is 64 megabytes.
+ 		resource_alignment=
+ 				Format:
+-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+-				[<order of align>@]pci:<vendor>:<device>\
+-						[:<subvendor>:<subdevice>][; ...]
++				[<order of align>@][noresize@][<domain>:]
++				<bus>:<slot>.<func>[; ...]
++				[<order of align>@][noresize@]pci:<vendor>:<device>
++				[:<subvendor>:<subdevice>][; ...]
+ 				Specifies alignment and device to reassign
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
++				noresize: Don't change the resources' sizes when
++				reassigning alignment.
+ 		ecrc=		Enable/disable PCIe ECRC (transaction layer
+ 				end-to-end CRC checking).
+ 				bios: Use BIOS/firmware settings. This is the
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index caa0894..d895be7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ /**
+  * pci_specified_resource_alignment - get resource alignment specified by user.
+  * @dev: the PCI device to get
++ * @resize: whether or not to change resources' size when reassigning alignment
+  *
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
+  */
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++		bool *resize)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+@@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 		} else {
+ 			align_order = -1;
+ 		}
 +
- /* Synopsis specific PCIE configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_MODE_MASK		(0x3f << 16)
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index f437f9b..384e79b 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,11 +22,6 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
++		if (!strncmp(p, "noresize@", 9)) {
++			*resize = false;
++			p += 9;
++		} else
++			*resize = true;
++
+ 		if (strncmp(p, "pci:", 4) == 0) {
+ 			/* PCI vendor/device (subvendor/subdevice) ids are specified */
+ 			p += 4;
+@@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ {
+ 	int i;
+ 	struct resource *r;
++	bool resize = true;
+ 	resource_size_t align, size;
  
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES		10
--#define LINK_WAIT_USLEEP_MIN		90000
--#define LINK_WAIT_USLEEP_MAX		100000
--
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
+ 	/*
+@@ -5057,7 +5067,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
+ 
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
+ 
+@@ -5080,15 +5090,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		}
+ 
+ 		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
++		if (resize) {
++			if (size < align) {
++				size = align;
++				dev_info(&dev->dev,
++					"Rounding up size of resource #%d to %#llx.\n",
++					i, (unsigned long long)size);
++			}
++			r->flags |= IORESOURCE_UNSET;
++			r->end = size - 1;
++			r->start = 0;
++		} else {
++			r->flags &= ~IORESOURCE_SIZEALIGN;
++			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
++			r->start = max(align, size);
++			r->end = r->start + size - 1;
+ 		}
+-		r->flags |= IORESOURCE_UNSET;
+-		r->end = size - 1;
+-		r->start = 0;
+ 	}
+ 	/* Need to disable bridge's resource window,
+ 	 * to enable the kernel to reassign new resource
 -- 
-1.8.1.5
+1.7.9.5
+
