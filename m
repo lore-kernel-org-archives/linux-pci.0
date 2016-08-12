@@ -1,34 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40706 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751640AbcHWWQO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Aug 2016 18:16:14 -0400
-Subject: [PATCH 0/2] PCI: Rename *_valid_config() to *_valid_device()
-To: Ley Foon Tan <lftan@altera.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, rfi@lists.rocketboards.org,
-        linux-pci@vger.kernel.org
-Date: Tue, 23 Aug 2016 17:09:37 -0500
-Message-ID: <20160823220620.16374.70369.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:26687 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751352AbcHLFnU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5Xe3P111486
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:32 -0400
+Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 24ru30msuc-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:31 -0400
+Received: from localhost
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 11 Aug 2016 23:42:31 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v4 3/5] PCI: Do not disable memory decoding in pci_reassigndev_resource_alignment()
+Date: Fri, 12 Aug 2016 13:42:24 +0800
+In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1470980546-2918-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename *_pcie_valid_config() to *_pcie_valid_device() for readability and
-consistency with nwl_pcie_valid_device() and xilinx_pcie_valid_device().
+We should not disable memory decoding when we reassign alignment
+in pci_reassigndev_resource_alignment(). It's meaningless and
+have some side effects. For example, we found it would break
+this kind of P2P bridge:
 
-Also consistently use boolean style ("if (!dw_pcie_valid_device()) ..."
-instead of "if (dw_pcie_valid_device() == 0) ...")
+0001:02:02.0 PCI bridge: PLX Technology, Inc. PEX 8718 16-Lane,
+5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev aa)
 
+And it may also potentially break the PCI devices with mmio_always_on
+bit set.
+
+Besides, disabling memory decoding is not expected in some fixup
+function such as fixup_vga(). The fixup_vga() read PCI_COMMAND_MEMORY
+to know whether the devices has been initialized by the firmware or
+not. Disabling memory decoding would cause the one initialized by
+firmware may not be set as the default VGA device when more than one
+graphics adapter is present.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
+ drivers/pci/pci.c |    8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-Bjorn Helgaas (2):
-      PCI: designware: Rename dw_pcie_valid_config() to dw_pcie_valid_device()
-      PCI: altera: Rename altera_pcie_valid_config() to altera_pcie_valid_device()
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b8357d7..caa0894 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5046,7 +5046,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	int i;
+ 	struct resource *r;
+ 	resource_size_t align, size;
+-	u16 command;
+ 
+ 	/*
+ 	 * VF BARs are RO zero according to SR-IOV spec 3.4.1.11. Their
+@@ -5069,12 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
+-	dev_info(&dev->dev,
+-		"Disabling memory decoding and releasing memory resources.\n");
+-	pci_read_config_word(dev, PCI_COMMAND, &command);
+-	command &= ~PCI_COMMAND_MEMORY;
+-	pci_write_config_word(dev, PCI_COMMAND, command);
+-
++	dev_info(&dev->dev, "Releasing memory resources.\n");
+ 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+-- 
+1.7.9.5
 
-
- drivers/pci/host/pcie-altera.c     |    6 +++---
- drivers/pci/host/pcie-designware.c |    8 ++++----
- 2 files changed, 7 insertions(+), 7 deletions(-)
