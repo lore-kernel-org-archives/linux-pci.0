@@ -1,59 +1,135 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Roy Zang'" <roy.zang@nxp.com>, "'Po Liu'" <po.liu@nxp.com>,
- <linux-pci@vger.kernel.org>
-References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
- <1472455618-17892-1-git-send-email-po.liu@nxp.com>
- <000a01d202d5$3f86e3a0$be94aae0$@gmail.com>
- <HE1PR0402MB2748F7A71F8A0073644EE3568BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
-In-Reply-To: <HE1PR0402MB2748F7A71F8A0073644EE3568BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
-Subject: Re: [PATCH v2] arm64:pci: fix the IOV device access config space
- valid condition
-Date: Tue, 30 Aug 2016 14:15:00 -0400
-Message-ID: <000401d202ea$6e6d5ef0$4b481cd0$@gmail.com>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, Linux PM <linux-pm@vger.kernel.org>, Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for system sleep
+Date: Sat, 13 Aug 2016 00:18:26 +0200
+Message-ID: <2003407.8XLAPPsQTe@vostro.rjw.lan>
+In-Reply-To: <20160812161609.GA8060@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de> <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com> <20160812161609.GA8060@wunner.de>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: soren.brinkmann@xilinx.com, 'Arnd Bergmann' <arnd@arndb.de>,
- pratyush.anand@gmail.com, 'Stuart Yoder' <stuart.yoder@nxp.com>,
- 'Yang-Leo Li' <leoyang.li@nxp.com>, linux-arm-kernel@lists.infradead.org,
- 'Bjorn Helgaas' <bhelgaas@google.com>, lftan@altera.com,
- michal.simek@xilinx.com, 'Mingkai Hu' <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, August 30, 2016 11:55 AM, Roy Zang wrote:
+On Friday, August 12, 2016 06:16:09 PM Lukas Wunner wrote:
+> On Fri, Aug 12, 2016 at 02:50:04AM +0200, Rafael J. Wysocki wrote:
+> > On Thu, Aug 11, 2016 at 3:20 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > So I would like to find a common ground and something you feel
+> > > comfortable to ack. The problem I see with your suggested approach
+> > > of subclassing struct dev_pm_domain in a struct pci_pm_domain is
+> > > that I can easily envision Apple putting some custom methods in the
+> > > DSDT to power a non-PCI device up and down. They're starting to use
+> > > SPI and UART to attach devices in newer machines.
+> > 
+> > Those devices have no standard power state definitions.
+> > 
+> > The problem you have here really is PCI-specific, because you want to
+> > use PCI PM along with the non-standard methods.
 > 
-> On 08/30/2016 10:43 AM, Jingoo Han wrote:
-> > I really don't like to modify host driver stuffs.
-> > But, if there is no alternatives, this patch looks good.
+> If I introduce a struct pci_pm_domain like you suggested, it would mean
+> that *all* PCI devices using dev_pm_domain_set() have to be changed,
+> else the container_of() wouldn't work. The resulting code bloat alone
+> inhibits me from implementing this. Plus, it's a tripwire for anyone
+> wishing to assign a dev_pm_domain to their PCI device.
 > 
-> I do not see other good place to fix the bug.
-
-Hi Roy Zang,
-
-I didn't find other good place, too.
-At that time, I did IOV test with the similar patch like this.
-
-Best regards,
-Jingoo Han
-
+> > > Hence my suggestion to add a flag to struct dev_pm_domain, even
+> > > though at the moment that flag would only be queried by the PCI core.
+> > > I don't care if this is called can_power_off or power_manageable or
+> > > whatever.
+> > 
+> > struct dev_pm_domain is way too generic for that though, as I'm sure
+> > there are users of it where the can_power_off thing wouldn't make any
+> > sense whatever.
 > 
-> Roy Zang <roy.zang@nxp.com>
+> That seems like a small tradeoff compared to introducing a struct
+> pci_pm_domain.
+
+I'm not going to apply any patches addding can_power_off or similar flags to
+struct dev_pm_domain.
+
+> If you dislike a can_power_off flag in struct dev_pm_domain, that only
+> leaves the option to add a one-liner to pci_target_state(), unless I'm
+> missing something.
+
+I'm not sure why you are insisting on setting target_state to D3cold
+before taking the platform_pci_power_manageable() branch.  Why don't
+you simply rearrange the routine like
+
+	pci_power_t target_state = PCI_D3hot;
+
+	if (platform_pci_power_manageable(dev)) {
+		...
+		return target_state;
+	}
+
+	if (!dev->pm_cap)
+		return PCI_D0;
+
+	if (dev->current_state == PCI_D3cold)
+		target_state = PCI_D3cold;
+
+	if (device_may_wakeup(&dev->dev)) {
+		...
+	}
+
+	return target_state;
+
+And that would be fine by me.
+
+That said I'm not sure why you want to use pci_target_state() so badly?
+
+If you are going to use a PM domain, why do you still need that function?
+
+> BTW there seems to be a contradiction in your statements on wakeup devices:
 > 
-> Roy
+> On Mon, Aug 08, 2016 at 01:32:54AM +0200, Rafael J. Wysocki wrote:
+> > On Sunday, August 07, 2016 11:03:47 AM Lukas Wunner wrote:
+> > > The reasoning is that going from D3cold to D3hot before system sleep
+> > > just never makes sense, no matter if the device got there by standard
+> > > or nonstandard means.
+> >
+> > That may not be true in theory.
+> >
+> > If this is a wakeup device, it may not be able to generate wakeup signals
+> > from D3cold while the system is in the target system state, although it might
+> > be able to generate those signals when the system is in S0 (in the ACPI case).
+> 
+> However earlier you wrote:
+> 
+> On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
+> > On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
+> > > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
+> > > > Is there a reason you don't want to do this check for devices that
+> > > > may wakeup?
+> > >
+> > > Fear of breaking things. It would mean that a device would be left in
+> > > D3cold even though it may not be able to signal wakeup from that power
+> > > state.
+> >
+> > Then it should not be put into D3_cold at run time too if it is wakeup-capable.
+> 
+> So on the one hand, you warn that a wakeup-capable device may have been
+> put into D3cold at runtime but needs to be woken before system sleep
+> because it might otherwise not be able to signal wakeup.
 
+Yes, so specifically I'm concerned about the pci_target_state() invocation in
+pci_dev_keep_suspended() which is done exactly for this purpose.
 
+If you apply the "keep it in D3cold if already there" logic to that case, it
+may lead to a wrong decision in theory.  Say the device is in D3cold and
+platform_pci_choose_state() returns D1, but pci_no_d1d2() returns true,
+the device will end up in D3cold, but it may not be able to signal wakeup
+from that state after the system has been suspended.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> On the other hand you say that such devices should not be put into D3cold
+> at runtime at all.
+>
+> Which one is it?
+
+I said the latter under the assumption that the device would not be able to
+signal wakeup from D3cold at all (including at run time).  I may have not
+understand the context of your conversation with Bjorn correctly.
+
+Thanks,
+Rafael
