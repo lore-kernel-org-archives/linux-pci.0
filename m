@@ -1,62 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36142 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752141AbcHERDM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Aug 2016 13:03:12 -0400
-Date: Fri, 5 Aug 2016 12:03:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCH 1/2] vmd: Fix infinite loop executing irq's
-Message-ID: <20160805170302.GA432@localhost>
-References: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58639 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751301AbcHLFnU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5foXQ020626
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:30 -0400
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 24r5uh8ega-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:30 -0400
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Fri, 12 Aug 2016 01:42:28 -0400
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v4 2/5] PCI: Ignore enforced alignment to VF BARs
+Date: Fri, 12 Aug 2016 13:42:23 +0800
+In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1470980546-2918-3-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+VF BARs are read-only zeroes according to SRIOV spec,
+the normal way(writing BARs) of allocating resources wouldn't
+be applied to VFs. The VFs' resources would be allocated
+when we enable SR-IOV capability. So we should not try to
+reassign alignment after we enable VFs. It's meaningless
+and will release the allocated resources which leads to a bug.
 
-On Thu, Aug 04, 2016 at 04:09:08PM -0600, Keith Busch wrote:
-> We can't initialize the list head on deletion as this causes the node
-> to point to itself, looping infinitely if the vmd IRQ handler happens
-> to be servicing that node.
-> 
-> The list initialization supposed to fix a bug from multiple calls to
-> disable the same IRQ. We can fix this instead just checking if the
-> previous pointer indicates it was already deleted.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  arch/x86/pci/vmd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-> index e88b417..2294907 100644
-> --- a/arch/x86/pci/vmd.c
-> +++ b/arch/x86/pci/vmd.c
-> @@ -136,8 +136,8 @@ static void vmd_irq_disable(struct irq_data *data)
->  	data->chip->irq_mask(data);
->  
->  	raw_spin_lock_irqsave(&list_lock, flags);
-> -	list_del_rcu(&vmdirq->node);
-> -	INIT_LIST_HEAD_RCU(&vmdirq->node);
-> +	if (vmdirq->node.prev != LIST_POISON2)
-> +		list_del_rcu(&vmdirq->node);
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-It doesn't seem quite right to test for LIST_POISON2.  It seems like a
-little too much knowledge of list internals.  There are no other
-similar tests in the kernel.  Surely this isn't the only case where we
-need to remove from a list that another thread might be traversing.  I
-would look for other similar situations and copy the way they handle
-it.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2d85a96..b8357d7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5048,6 +5048,15 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	resource_size_t align, size;
+ 	u16 command;
+ 
++	/*
++	 * VF BARs are RO zero according to SR-IOV spec 3.4.1.11. Their
++	 * resources would be allocated when we enable them and not be
++	 * re-allocated any more. So we should never try to reassign
++	 * VF's alignment here.
++	 */
++	if (dev->is_virtfn)
++		return;
++
+ 	/* check if specified PCI is target device to reassign */
+ 	align = pci_specified_resource_alignment(dev);
+ 	if (!align)
+-- 
+1.7.9.5
 
-I think I saw a Fixes: tag later, so I assume you'll pick that up for
-v2.  Should this also be tagged for stable?  Are there any bug reports
-we should reference?
-
->  	raw_spin_unlock_irqrestore(&list_lock, flags);
->  }
->  
