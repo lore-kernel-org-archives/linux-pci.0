@@ -1,92 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:60458 "EHLO
-        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756595AbcHVWAV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2016 18:00:21 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <rfi@lists.rocketboards.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 2/8] PCI: altera: make it explicitly non-modular
-Date: Mon, 22 Aug 2016 17:59:42 -0400
-Message-ID: <20160822215948.27251-3-paul.gortmaker@windriver.com>
-In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41243 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751296AbcHLFnU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5XdGU032688
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:28 -0400
+Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 24rqx27wty-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:27 -0400
+Received: from localhost
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 11 Aug 2016 23:42:27 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v4 1/5] PCI: Ignore enforced alignment when kernel uses existing firmware setup
+Date: Fri, 12 Aug 2016 13:42:22 +0800
+In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1470980546-2918-2-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+PCI resources allocator will use firmware setup and not try to
+reassign resource when PCI_PROBE_ONLY or IORESOURCE_PCI_FIXED
+is set.
 
-drivers/pci/host/Kconfig:config PCIE_ALTERA
-drivers/pci/host/Kconfig:       bool "Altera PCIe controller"
+The enforced alignment in pci_reassigndev_resource_alignment()
+should be ignored in this case. Otherwise, some PCI devices'
+resources would be released here and not re-allocated.
 
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: rfi@lists.rocketboards.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pcie-altera.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/pci/pci.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 2b7837650db8..48f2736a10cd 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -1,6 +1,9 @@
- /*
-  * Copyright Altera Corporation (C) 2013-2015. All rights reserved
-  *
-+ * Author: Ley Foon Tan <lftan@altera.com>
-+ * Description: Altera PCIe host controller driver
-+ *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms and conditions of the GNU General Public License,
-  * version 2, as published by the Free Software Foundation.
-@@ -17,7 +20,7 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/irqchip/chained_irq.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
-@@ -568,7 +571,6 @@ static const struct of_device_id altera_pcie_of_match[] = {
- 	{ .compatible = "altr,pcie-root-port-1.0", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d51..2d85a96 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4959,6 +4959,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
  
- static struct platform_driver altera_pcie_driver = {
- 	.probe		= altera_pcie_probe,
-@@ -583,8 +585,4 @@ static int altera_pcie_init(void)
- {
- 	return platform_driver_register(&altera_pcie_driver);
- }
--module_init(altera_pcie_init);
--
--MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
--MODULE_DESCRIPTION("Altera PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
-+device_initcall(altera_pcie_init);
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		if (*p)
++			pr_info_once("PCI: resource_alignment ignored with PCI_PROBE_ONLY\n");
++		spin_unlock(&resource_alignment_lock);
++		return 0;
++	}
++
+ 	while (*p) {
+ 		count = 0;
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+@@ -5063,6 +5070,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
++		if (r->flags & IORESOURCE_PCI_FIXED) {
++			dev_info(&dev->dev, "No alignment for fixed BAR%d: %pR\n",
++				i, r);
++			continue;
++		}
++
+ 		size = resource_size(r);
+ 		if (size < align) {
+ 			size = align;
 -- 
-2.8.4
+1.7.9.5
 
