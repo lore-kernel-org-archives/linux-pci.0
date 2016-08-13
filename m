@@ -1,217 +1,75 @@
-Return-Path: <matt@masarand.com>
-Return-Path: <matt@masarand.com>
-From: Matthew Minter <matt@masarand.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
-Date: Mon, 08 Aug 2016 21:40:19 -0600
-Message-ID: <1527524.CCUKfxz1mT@shredder>
-In-Reply-To: <20160808231922.GA7259@localhost>
-References: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com> <HK2PR0601MB1393B3642136B01087628DC9F51B0@HK2PR0601MB1393.apcprd06.prod.outlook.com> <20160808231922.GA7259@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:31990 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752526AbcHMAMV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Aug 2016 20:12:21 -0400
+Date: Fri, 12 Aug 2016 17:03:58 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/2] pci: add option to ignore slot capabilities
+Message-ID: <20160813000358.GA20474@sean.stalley.intel.com>
+References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and all involved here,
+Hi Keith,
 
-I have not really been able to do much work on the patchset in question 
-lately. A version (which I think is up to date but am not 100% sure is here 
-https://github.com/Vality/linux/commits/pci-fixes though I somehow thought I 
-rebased it onto a slightly newer kernel at some point.
-Perhaps that is in a mailing list as a patchset somewhere.
+On Mon, Aug 08, 2016 at 02:19:01PM -0600, Keith Busch wrote:
+> This adds flags to struct pci_dev that can be set to request ignoring
+> attention and power indicators. This is in prepration for devices that
+> advertise these capabilities, but do not support it.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c | 6 ++++++
+>  include/linux/pci.h              | 2 ++
+>  2 files changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 08e84d6..3e6646c 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -804,6 +804,12 @@ struct controller *pcie_init(struct pcie_device *dev)
+>  	}
+>  	ctrl->pcie = dev;
+>  	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
+> +
+> +	if (pdev->ignore_aip)
+> +		slot_cap &= ~PCI_EXP_SLTCAP_AIP;
+> +	if (pdev->ignore_pip)
+> +		slot_cap &= ~PCI_EXP_SLTCAP_PIP;
+> +
 
-I am not currently able to dedicate as much time as I would like to this but 
-am happy to do what I can to support any merging efforts for this if that is 
-what is propsed. Particularly if there are any questions or small fixes. 
-However I do not think I have the time to single-handedly do a major rewrite 
-at this time if that is needed. But am happy to help any other efforts.
+I think we should clear these bits after the ctrl_info() below.
+If we clear it immediately, the ctrl_info() will report these bits as cleared,
+even though they may be set in hardware.
 
-Thanks for CCing me in. I would be happy to see this go somewhere if possible.
+I don't think we want to put a value into the log that differs from what hardware reports.
 
-Matthew
-
-On Monday, August 8, 2016 6:19:22 PM MDT Bjorn Helgaas wrote:
-> [+cc Matthew]
+>  	ctrl->slot_cap = slot_cap;
+>  	mutex_init(&ctrl->ctrl_lock);
+>  	init_waitqueue_head(&ctrl->queue);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9890906..d8bc530 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -308,6 +308,8 @@ struct pci_dev {
+>  						   powered on/off by the
+>  						   corresponding bridge */
+>  	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
+> +	unsigned int	ignore_aip:1;		/* Ignore attention indicator */
+> +	unsigned int	ignore_pip:1;		/* Ignore power indicator */
+>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+>  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+>  
+> -- 
+> 2.7.2
 > 
-> On Mon, Aug 08, 2016 at 09:31:05AM +0000, Phil Edworthy wrote:
-> > Hi Lorenzo,
-> > 
-> > Thanks for the link, I'll wait to see how this pans out.
-> 
-> I'm not sure anything is happening there.  Last time I looked
-> (http://lkml.kernel.org/r/20151223230433.GA27708@localhost), I thought
-> there were some issues.
-> 
-> From Lorenzo's response, it sounds like he thought maybe I should
-> apply it anyway, but I dropped the ball and haven't done anything with
-> it.
-> 
-> I'll take another look at it.
-> 
-> > > -----Original Message-----
-> > > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > > owner@vger.kernel.org] On Behalf Of Lorenzo Pieralisi
-> > > Sent: 21 July 2016 10:35
-> > > To: Phil Edworthy <phil.edworthy@renesas.com>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> > > linux-
-> > > renesas-soc@vger.kernel.org
-> > > Subject: Re: [RFC] pci: Provide a domain limited version of
-> > > pdev_fixup_irq
-> > > 
-> > > Hi Phil,
-> > > 
-> > > On Fri, Jul 08, 2016 at 12:49:55PM +0100, Phil Edworthy wrote:
-> > > > Hi Bjorn,
-> > > > 
-> > > > I've marked this as RFC as I guess there might be a better way to do
-> > > > this, but I'm not sure how. I would appreciate your thoughts on this.
-> > > 
-> > > There is a more generic solution to this issue, that has been
-> > > hanging in the balance for a while:
-> > > 
-> > > http://marc.info/?l=linux-pci&m=144557674601373&w=2
-> > > 
-> > > We should bring it to completion since pci_fixup_irqs() should
-> > > really be replaced, this is just another example of the bugs
-> > > it can trigger.
-> > > 
-> > > Thanks,
-> > > Lorenzo
-> > > 
-> > > > Thanks
-> > > > Phil
-> > > > 
-> > > > ---
-> > > > pdev_fixup_irq() performs interrupt swizzling on all PCI devices,
-> > > > no matter that the device may be on a completely unrelated PCI
-> > > > Host controller.
-> > > > 
-> > > > When you have multiple PCI Host controllers, pdev_fixup_irq() can
-> > > > clobber the dev->irq of devices it should not be changing.
-> > > > This has been seen when performing suspend/resume on boards with
-> > > > two R-Car PCIe Host controllers, resulting in a NULL ptr access
-> > > > in __pci_restore_msi_state. This happens because dev->irq has been
-> > > > overwritten with 0, and irq_get_msi_desc(dev->irq) returns NULL.
-> > > > 
-> > > > This patch introduces a new function, pci_fixup_irqs_local(), that
-> > > > performs the same operation as pdev_fixup_irq(), but only changes
-> > > > the dev->irq of device on the same domain.
-> > > > 
-> > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > > ---
-> > > > 
-> > > >  drivers/pci/setup-irq.c | 25 ++++++++++++++++++++++---
-> > > >  include/linux/pci.h     |  3 +++
-> > > >  2 files changed, 25 insertions(+), 3 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> > > > index 95c225b..90ea8fa 100644
-> > > > --- a/drivers/pci/setup-irq.c
-> > > > +++ b/drivers/pci/setup-irq.c
-> > > > @@ -22,7 +22,8 @@ void __weak pcibios_update_irq(struct pci_dev *dev,
-> > > > int
-> > > 
-> > > irq)
-> > > 
-> > > >  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-> > > >  
-> > > >  }
-> > > > 
-> > > > -static void pdev_fixup_irq(struct pci_dev *dev,
-> > > > +static void pdev_fixup_irq(int domain_nr,
-> > > > +			   struct pci_dev *dev,
-> > > > 
-> > > >  			   u8 (*swizzle)(struct pci_dev *, u8 *),
-> > > >  			   int (*map_irq)(const struct pci_dev *, u8, u8))
-> > > >  
-> > > >  {
-> > > > 
-> > > > @@ -48,8 +49,15 @@ static void pdev_fixup_irq(struct pci_dev *dev,
-> > > > 
-> > > >  		if (irq == -1)
-> > > >  		
-> > > >  			irq = 0;
-> > > >  	
-> > > >  	}
-> > > > 
-> > > > -	dev->irq = irq;
-> > > > +	/* Since pci_fixup_irqs() can be called more than once due to
-> > > > multiple
-> > > > +	 * host controllers, and we scan all PCI devices, not just those
-> > > > +	 * attached to this controller, make sure we don't clobber dev-
->irq
-> > > > +	 * that has nothing to do with this domain.
-> > > > +	 */
-> > > > +	if (domain_nr >= 0 && dev->bus->domain_nr != domain_nr)
-> > > > +		return;
-> > > > 
-> > > > +	dev->irq = irq;
-> > > > 
-> > > >  	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
-> > > >  	
-> > > >  	/* Always tell the device, so the driver knows what is
-> > > > 
-> > > > @@ -63,6 +71,17 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *,
-> > > > u8 *),> > > 
-> > > >  	struct pci_dev *dev = NULL;
-> > > >  	
-> > > >  	for_each_pci_dev(dev)
-> > > > 
-> > > > -		pdev_fixup_irq(dev, swizzle, map_irq);
-> > > > +		pdev_fixup_irq(-1, dev, swizzle, map_irq);
-> > > > 
-> > > >  }
-> > > >  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-> > > > 
-> > > > +
-> > > > +void pci_fixup_irqs_local(struct pci_bus *bus,
-> > > > +		    u8 (*swizzle)(struct pci_dev *, u8 *),
-> > > > +		    int (*map_irq)(const struct pci_dev *, u8, u8))
-> > > > +{
-> > > > +	struct pci_dev *dev = NULL;
-> > > > +
-> > > > +	for_each_pci_dev(dev)
-> > > > +		pdev_fixup_irq(bus->domain_nr, dev, swizzle, map_irq);
-> > > > +}
-> > > > +EXPORT_SYMBOL_GPL(pci_fixup_irqs_local);
-> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > > index 8badb66..37a97df 100644
-> > > > --- a/include/linux/pci.h
-> > > > +++ b/include/linux/pci.h
-> > > > @@ -1134,6 +1134,9 @@ void pdev_enable_device(struct pci_dev *);
-> > > > 
-> > > >  int pci_enable_resources(struct pci_dev *, int mask);
-> > > >  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
-> > > >  
-> > > >  		    int (*)(const struct pci_dev *, u8, u8));
-> > > > 
-> > > > +void pci_fixup_irqs_local(struct pci_bus *,
-> > > > +		    u8 (*)(struct pci_dev *, u8 *),
-> > > > +		    int (*)(const struct pci_dev *, u8, u8));
-> > > > 
-> > > >  #define HAVE_PCI_REQ_REGIONS	2
-> > > >  int __must_check pci_request_regions(struct pci_dev *, const char *);
-> > > >  int __must_check pci_request_regions_exclusive(struct pci_dev *,
-> > > >  const char
-> > > 
-> > > *);
-> > > 
-> > > > --
-> > > > 2.5.0
-> > > > 
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> > > > in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
