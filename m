@@ -1,93 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37984 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751083AbcH2Ra4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Aug 2016 13:30:56 -0400
-Subject: Re: [PATCH] xen: Remove event channel notification through Xen PCI
- platform device
-To: KarimAllah Ahmed <karahmed@amazon.de>,
-        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
-References: <1472248536-2063-1-git-send-email-karahmed@amazon.de>
-Cc: David Vrabel <david.vrabel@citrix.com>,
-        Juergen Gross <jgross@suse.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
-        Julien Grall <julien.grall@citrix.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Ross Lagerwall <ross.lagerwall@citrix.com>,
-        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <28aa68f6-7115-bc34-54a5-38d1995f157d@oracle.com>
-Date: Mon, 29 Aug 2016 13:29:09 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1472248536-2063-1-git-send-email-karahmed@amazon.de>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1470807079-366-3-git-send-email-jszhang@marvell.com>
+References: <1470807079-366-1-git-send-email-jszhang@marvell.com>
+ <1470807079-366-3-git-send-email-jszhang@marvell.com>
+From: Pratyush Anand <pratyush.anand@gmail.com>
+Date: Sun, 14 Aug 2016 21:30:04 +0530
+Message-ID: <CAHM4w1kZ=c-hF8nwXE0h4SYcQD2QG3NvZ-R0gjyDEPmc+7E7aw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] PCI: designware: let dw_pcie_link_up() beware of
+ LTSSM training bit
+To: Jisheng Zhang <jszhang@marvell.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ linux-kernel@vger.kernel.org,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/26/2016 05:55 PM, KarimAllah Ahmed wrote:
-> Ever since commit 254d1a3f02eb ("xen/pv-on-hvm kexec: shutdown watches
-> from old kernel") using the INTx interrupt from Xen PCI platform device for
-> event channel notification would just lockup the guest during bootup.
-> postcore_initcall now calls xs_reset_watches which will eventually try to read
-> a value from XenStore and will get stuck on read_reply at XenBus forever since
-> the platform driver is not probed yet and its INTx interrupt handler is not
-> registered yet. That means that the guest can not be notified at this moment of
-> any pending event channels and none of the per-event handlers will ever be
-> invoked (including the XenStore one) and the reply will never be picked up by
-> the kernel.
+On Wed, Aug 10, 2016 at 11:01 AM, Jisheng Zhang <jszhang@marvell.com> wrote:
+> The link may be UP but still in link training. In this case, we can't
+> think the link is up and operating correctly. So we need to teach
+> dw_pcie_link_up() beware of the PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit.
 >
-> The exact stack where things get stuck during xenbus_init:
->
-> -xenbus_init
->  -xs_init
->   -xs_reset_watches
->    -xenbus_scanf
->     -xenbus_read
->      -xs_single
->       -xs_single
->        -xs_talkv
->
-> Vector callbacks have always been the favourite event notification mechanism
-> since their introduction in commit 38e20b07efd5 ("x86/xen: event channels
-> delivery on HVM.") and the vector callback feature has always been advertised
-> for quite some time by Xen that's why INTx was broken for several years now
-> without impacting anyone.
->
-> Luckily this also means that event channel notification through INTx is
-> basically dead-code which can be safely removed without impacting anybody since
-> it has been effectively disabled for more than 4 years with nobody complaining
-> about it (at least as far as I'm aware of).
->
-> This commit removes event channel notification through Xen PCI platform device.
->
-> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> Cc: David Vrabel <david.vrabel@citrix.com>
-> Cc: Juergen Gross <jgross@suse.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: "H. Peter Anvin" <hpa@zytor.com>
-> Cc: x86@kernel.org
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-> Cc: Julien Grall <julien.grall@citrix.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-> Cc: Ross Lagerwall <ross.lagerwall@citrix.com>
-> Cc: xen-devel@lists.xenproject.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: Anthony Liguori <aliguori@amazon.com>
-> Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
 
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+I have no more access of designware PCIe specification now. Since Joao
+has acked it, so I would consider that
+PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit exists in older core as well.
+If it is there then you have my Acked-by too.
 
+~Pratyush
 
+> This patch also rewrite PCIE_PHY_DEBUG_R1_LINK_UP definition so that
+> it's consistent with other MACROS.
+>
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> Acked-by: Joao Pinto <jpinto@synopsys.com>
+> ---
+>  drivers/pci/host/pcie-designware.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 24a16dd..6cc21bb 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -73,7 +73,8 @@
+>  /* PCIe Port Logic registers */
+>  #define PLR_OFFSET                     0x700
+>  #define PCIE_PHY_DEBUG_R1              (PLR_OFFSET + 0x2c)
+> -#define PCIE_PHY_DEBUG_R1_LINK_UP      0x00000010
+> +#define PCIE_PHY_DEBUG_R1_LINK_UP      (0x1 << 4)
+> +#define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING     (0x1 << 29)
+>
+>  /* Parameters for the waiting for link up routine */
+>  #define LINK_WAIT_MAX_RETRIES          10
+> @@ -417,7 +418,8 @@ int dw_pcie_link_up(struct pcie_port *pp)
+>                 return pp->ops->link_up(pp);
+>
+>         val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+> -       return val & PCIE_PHY_DEBUG_R1_LINK_UP;
+> +       return ((val & PCIE_PHY_DEBUG_R1_LINK_UP) &&
+> +               (!(val & PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING)));
+>  }
+>
+>  static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> --
+> 2.8.1
+>
 
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
