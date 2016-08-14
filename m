@@ -1,207 +1,117 @@
-Return-Path: <shawn.lin@rock-chips.com>
-Return-Path: <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH v10 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1471570471-3239-1-git-send-email-shawn.lin@rock-chips.com>
- <20160819193302.GA6308@localhost>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
- linux-rockchip@lists.infradead.org, Heiko Stuebner <heiko@sntech.de>,
- Doug Anderson <dianders@chromium.org>, Wenrui Li <wenrui.li@rock-chips.com>,
- Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
- Brian Norris <briannorris@chromium.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <597c56a1-bd62-a374-f5ed-c4ebc28a8415@rock-chips.com>
-Date: Sat, 20 Aug 2016 10:20:47 +0800
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Sun, 14 Aug 2016 12:27:25 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
+ system sleep
+Message-ID: <20160814102725.GA8634@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+ <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com>
+ <20160812161609.GA8060@wunner.de>
+ <2003407.8XLAPPsQTe@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20160819193302.GA6308@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2003407.8XLAPPsQTe@vostro.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-在 2016/8/20 3:33, Bjorn Helgaas 写道:
-> On Fri, Aug 19, 2016 at 09:34:31AM +0800, Shawn Lin wrote:
->> This patch adds a binding that describes the Rockchip PCIe controller
->> found on Rockchip SoCs PCIe interface.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> Acked-by: Rob Herring <robh@kernel.org>
->> Reviewed-by: Brian Norris <briannorris@chromium.org>
->
-> I applied both of these to pci/host-rockchip for v4.9, thanks, Shawn!
->
-> I made a few whitespace and typo fixes in pcie-rockchip.c, so take a
-> look and make sure I didn't break anything.
+On Sat, Aug 13, 2016 at 12:18:26AM +0200, Rafael J. Wysocki wrote:
+> Yes, so specifically I'm concerned about the pci_target_state() invocation
+> in pci_dev_keep_suspended() which is done exactly for this purpose.
+> 
+> If you apply the "keep it in D3cold if already there" logic to that case,
+> it may lead to a wrong decision in theory. Say the device is in D3cold and
+> platform_pci_choose_state() returns D1, but pci_no_d1d2() returns true,
+> the device will end up in D3cold, but it may not be able to signal wakeup
+> from that state after the system has been suspended.
 
+Ugh, I had missed those break statements in the platform-case.
+I must be blind. You're right of course, that wouldn't be correct.
 
-I checked your branch, host-rockchip, and it's okay.
+> Of course, I guess you'll say that it may not be able to signal wakeup from
+> D3hot as well in that case, which is correct. :-)
 
-Thanks, Bjorn!
+Hm, what would be the correct power state in that case then? PCI_D0?
 
->
->> ---
->>
->> Changes in v10:
->> - fix broken description of msi-map
->> - s/pcie/PCIe for description
->>
->> Changes in v9: None
->> Changes in v8:
->> - add Brian's review-tag
->>
->> Changes in v7:
->> - move optional properties ahead of interrupt subnode
->> - use 0-base index for INTx
->>
->> Changes in v6:
->> - add ack tag from Rob
->>
->> Changes in v5:
->> - fix wrong example reported by Marc
->> - add seperate section to describe the interrupt controller child
->>   node
->>
->> Changes in v4:
->> - fix example of adding intermediate interrupt controller for pcie
->>   legacy interrrupt
->>
->> Changes in v3:
->> - fix example dts code suggested by Rob and Marc
->> - remove driver's behaviour of regulator
->>
->> Changes in v2:
->> - fix lots clk/reset stuff suggested by Heiko
->> - remove msi-parent and add msi-map suggested by Marc
->> - drop phy related stuff
->> - some others minor fixes
->>
->>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 106 +++++++++++++++++++++
->>  1 file changed, 106 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->>
->> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> new file mode 100644
->> index 0000000..ba67b39
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> @@ -0,0 +1,106 @@
->> +* Rockchip AXI PCIe Root Port Bridge DT description
->> +
->> +Required properties:
->> +- #address-cells: Address representation for root ports, set to <3>
->> +- #size-cells: Size representation for root ports, set to <2>
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +		interrupt source. The value must be 1.
->> +- compatible: Should contain "rockchip,rk3399-pcie"
->> +- reg: Two register ranges as listed in the reg-names property
->> +- reg-names: Must include the following names
->> +	- "axi-base"
->> +	- "apb-base"
->> +- clocks: Must contain an entry for each entry in clock-names.
->> +		See ../clocks/clock-bindings.txt for details.
->> +- clock-names: Must include the following entries:
->> +	- "aclk"
->> +	- "aclk-perf"
->> +	- "hclk"
->> +	- "pm"
->> +- msi-map: Maps a Requester ID to an MSI controller and associated
->> +	msi-specifier data. See ./pci-msi.txt
->> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
->> +- phy-names:  MUST be "pcie-phy".
->> +- interrupts: Three interrupt entries must be specified.
->> +- interrupt-names: Must include the following names
->> +	- "sys"
->> +	- "legacy"
->> +	- "client"
->> +- resets: Must contain five entries for each entry in reset-names.
->> +	   See ../reset/reset.txt for details.
->> +- reset-names: Must include the following names
->> +	- "core"
->> +	- "mgmt"
->> +	- "mgmt-sticky"
->> +	- "pipe"
->> +- pinctrl-names : The pin control state names
->> +- pinctrl-0: The "default" pinctrl state
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +	interrupt source. The value must be 1.
->> +- interrupt-map-mask and interrupt-map: standard PCI properties
->> +
->> +Optional Property:
->> +- ep-gpios: contain the entry for pre-reset gpio
->> +- num-lanes: number of lanes to use
->> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
->> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
->> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
->> +
->> +*Interrupt controller child node*
->> +The core controller provides a single interrupt for legacy INTx. The PCIe node
->> +should contain an interrupt controller node as a target for the PCI
->> +'interrupt-map' property. This node represents the domain at which the four
->> +INTx interrupts are decoded and routed.
->> +
->> +
->> +Required properties for Interrupt controller child node:
->> +- interrupt-controller: identifies the node as an interrupt controller
->> +- #address-cells: specifies the number of cells needed to encode an
->> +	address. The value must be 0.
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +	interrupt source. The value must be 1.
->> +
->> +Example:
->> +
->> +pcie0: pcie@f8000000 {
->> +	compatible = "rockchip,rk3399-pcie";
->> +	#address-cells = <3>;
->> +	#size-cells = <2>;
->> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
->> +		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
->> +	clock-names = "aclk", "aclk-perf",
->> +		      "hclk", "pm";
->> +	bus-range = <0x0 0x1>;
->> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
->> +		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
->> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
->> +	interrupt-names = "sys", "legacy", "client";
->> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
->> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
->> +	assigned-clock-rates = <100000000>;
->> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
->> +	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
->> +		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
->> +	num-lanes = <4>;
->> +	msi-map = <0x0 &its 0x0 0x1000>;
->> +	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0xfd000000 0x0 0x1000000>;
->> +	reg-names = "axi-base", "apb-base";
->> +	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
->> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
->> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
->> +	phys = <&pcie_phy>;
->> +	phy-names = "pcie-phy";
->> +	pinctrl-names = "default";
->> +	pinctrl-0 = <&pcie_clkreq>;
->> +	#interrupt-cells = <1>;
->> +	interrupt-map-mask = <0 0 0 7>;
->> +	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
->> +			<0 0 0 2 &pcie0_intc 1>,
->> +			<0 0 0 3 &pcie0_intc 2>,
->> +			<0 0 0 4 &pcie0_intc 3>;
->> +	pcie0_intc: interrupt-controller {
->> +		interrupt-controller;
->> +		#address-cells = <0>;
->> +		#interrupt-cells = <1>;
->> +	};
->> +};
->> --
->> 2.3.7
->>
->>
->
->
->
+> Why don't you simply rearrange the routine like
+> 
+> 	pci_power_t target_state = PCI_D3hot;
+> 
+> 	if (platform_pci_power_manageable(dev)) {
+> 		...
+> 		return target_state;
+> 	}
+> 
+> 	if (!dev->pm_cap)
+> 		return PCI_D0;
+> 
+> 	if (dev->current_state == PCI_D3cold)
+> 		target_state = PCI_D3cold;
+> 
+> 	if (device_may_wakeup(&dev->dev)) {
+> 		...
+> 	}
+> 
+> 	return target_state;
+> 
+> And that would be fine by me.
 
+Looks good, I'll give that a try.
 
--- 
-Best Regards
-Shawn Lin
+If the correct power state in the pci_no_d1d2() case is PCI_D0,
+I could fix that up as well.
+
+> That said I'm not sure why you want to use pci_target_state() so badly?
+> 
+> If you are going to use a PM domain, why do you still need that function?
+
+The dev_pm_domain is only assigned to the topmost device exposed by
+the Thunderbolt controller (the upstream bridge). I would like to avoid
+having to assign separate dev_pm_domains to the downstream bridges.
+
+So I let the NHI and downstream bridges go to D3hot. And when the
+upstream bridge cuts power, it iterates over all child devices
+and changes their current_state to D3cold to reflect reality.
+
+When the system is later put to sleep, this patch ensures that the
+NHI and downstream bridges are not unnecessarily resumed to D3hot.
+
+So why change the current_state of the children at all? I could just
+leave the (incorrect) PCI_D3hot and everything would be peachy, right?
+Well, there's another problem: The first few Thunderbolt chips had
+broken MSI, they have to use INTx to signal hotplug. Unfortunately on
+some Macs built 2011/2012, the IRQ is shared with multiple other devices,
+most importantly the wireless card which can generate thousands of
+interrupts on a crowded WLAN. If power is cut to the Thunderbolt
+controller, reading from the hotplug ports' config space in pcie_isr()
+fails and results in a "no response from device" message logged with
+KERN_INFO. Getting thousands of such messages is annoying, not to
+mention the giant waste of CPU cycles to read from the config space
+of a device which we *know* is powered down.
+
+The solution I came up with is to add a tiny two-liner to pcie_isr()
+with commit ed91de7e14fb ("PCI: pciehp: Ignore interrupts during D3cold").
+But that requires that I update the children's current_state to D3cold,
+and necessitates that pci_target_state() doesn't resume them to D3hot
+for system sleep. Hence the need for this patch.
+
+The approach has the additional benefit that hybrid graphics devices
+are implicitly also afforded direct-complete without having to add a
+->prepare hook that returns a positive int. They only need to set their
+current_state to D3cold, which they already do, see azx_vs_set_state(),
+nouveau_pmops_runtime_suspend(), radeon_pmops_runtime_suspend(),
+amdgpu_pmops_runtime_suspend().
+
+However this also means that adding a can_power_off flag to struct
+dev_pm_domain wouldn't be a viable solution because then I'd have to
+assign a dev_pm_domain to the downstream bridges. Another thing I've
+missed. Ugh. This is so complicated it's easy to get tangled up in
+all these intricate little details.
+
+Thanks for your patience in dealing with these issues,
+
+Lukas
