@@ -1,75 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>, <bhelgaas@google.com>,
- <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 1/2] PCI: designware: mv parameters for wait for link into
- pcie-designware.c
-Date: Wed, 10 Aug 2016 18:07:02 +0800
-Message-ID: <1470823623-1360-2-git-send-email-jszhang@marvell.com>
-In-Reply-To: <1470823623-1360-1-git-send-email-jszhang@marvell.com>
-References: <1470823623-1360-1-git-send-email-jszhang@marvell.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jisheng Zhang <jszhang@marvell.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:41171 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753240AbcHOPXz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Aug 2016 11:23:55 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 03/15] drivers: acpi: iort: introduce linker section for IORT entries probing
+Date: Mon, 15 Aug 2016 16:23:28 +0100
+Message-Id: <1471274620-20754-4-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These parameters are only used in the core pcie-designware.c, let's
-move them to the core driver.
+Since commit e647b532275b ("ACPI: Add early device probing
+infrastructure") the kernel has gained the infrastructure that allows
+adding linker script section entries to execute ACPI driver callbacks
+(ie probe routines) for all subsystems that register a table entry
+in the respective kernel section (eg clocksource, irqchip).
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+Since ARM IOMMU devices data is described through IORT tables when
+booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
+callback routines that are called to probe IORT entries and initialize
+the respective IOMMU devices.
+
+To avoid adding driver specific hooks into IORT table initialization
+code (breaking therefore code modularity - ie ACPI IORT code must be made
+aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
+that allows ARM SMMU drivers to take advantage of the ACPI early probing
+infrastructure, so that they can add linker script section entries
+containing drivers callback to be executed on IORT tables detection.
+
+Since IORT nodes are differentiated by a type, the callback routines
+can easily parse the IORT table entries, check the IORT nodes and
+carry out some actions whenever the IORT node type associated with
+the driver specific callback is matched.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/host/pcie-designware.c | 5 +++++
- drivers/pci/host/pcie-designware.h | 5 -----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/acpi/arm64/iort.c         | 2 ++
+ include/asm-generic/vmlinux.lds.h | 1 +
+ include/linux/iort.h              | 3 +++
+ 3 files changed, 6 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12afce1..24a16dd 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -75,6 +75,11 @@
- #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
- #define PCIE_PHY_DEBUG_R1_LINK_UP	0x00000010
- 
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 2543f60..cad7d1d 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -383,4 +383,6 @@ void __init iort_table_detect(void)
+ 		const char *msg = acpi_format_exception(status);
+ 		pr_err("Failed to get table, %s\n", msg);
+ 	}
 +
- static struct pci_ops dw_pcie_ops;
++	acpi_probe_device_table(iort);
+ }
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 2456397..7ee4e0c 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -546,6 +546,7 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
++	ACPI_PROBE_TABLE(iort)						\
+ 	EARLYCON_TABLE()
  
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index f437f9b..384e79b 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,11 +22,6 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ #define INIT_TEXT							\
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index d7daba1..9bb30c5 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -38,4 +38,7 @@ static inline struct irq_domain *
+ iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
+ #endif
  
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES		10
--#define LINK_WAIT_USLEEP_MIN		90000
--#define LINK_WAIT_USLEEP_MAX		100000
--
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
++#define IORT_ACPI_DECLARE(name, table_id, fn)		\
++	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
++
+ #endif /* __IORT_H__ */
 -- 
-2.8.1
+2.6.4
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
