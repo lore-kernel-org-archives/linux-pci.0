@@ -1,43 +1,49 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com
-Subject: [PATCH v3 3/5] x86/ioapic: Fix setup_res() failing to get resource
-Date: Wed, 10 Aug 2016 12:01:56 +0800
-Message-Id: <1470801718-29004-4-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
-References: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Mon, 15 Aug 2016 15:23:16 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160815192316.GB18083@localhost.localdomain>
+References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+ <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+ <20160815174002.GB9790@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160815174002.GB9790@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-acpi_dev_filter_resource_type() returns 0 on success, and 1 on failure.
-A return value of zero means there's a matching resource, so we should
-continue within setup_res() to get the resource.
+On Mon, Aug 15, 2016 at 12:40:02PM -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 08, 2016 at 02:19:02PM -0600, Keith Busch wrote:
+> > +/*
+> > + * The PCIe slot capabilities for Intel compatible Hot-swap backplane advertise
+> > + * attention and power indicators, but will do the wrong thing if used in a
+> > + * standard way. Ignore these.
+> > + */
+> 
+> Hmm.  So I guess you're saying these devices are defective?  Is there
+> an erratum we can reference?
+> 
+> What exactly does "do the wrong thing" mean?  These are indicators, so
+> the only thing we really do is turn them on and off.  I think we do
+> that with pcie_write_cmd_nowait(), and all the synchronization there
+> is a little messy.  Maybe we got that wrong somehow?
+> 
+> It's hard to believe something as simple as controlling an LED is
+> broken.  If it *is* broken, I would think the breakage would be
+> platform-dependent, not just device-dependent, i.e., I would suspect
+> something wrong with motherboard wiring or firmware.
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/ioapic.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is actually a "feature". The devices listed in the patch re-purpose
+the spec defined capability and control bits for Attention and Power
+indicators. The control values match IBPI (International Blinking Pattern
+Interpretation) rather than the spec definition.
 
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index 2449377..8ab6d42 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -46,7 +46,7 @@ static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
- 	struct resource_win win;
- 
- 	res->flags = 0;
--	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
-+	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM))
- 		return AE_OK;
- 
- 	if (!acpi_dev_resource_memory(acpi_res, res)) {
--- 
-1.8.3.1
+Since these operate in a non-standard way, we'd just as soon not let
+the kernel know about them (an incorrect LED pattern will definitely
+occur). The LEDs are to be set from user space by 'ledmon' instead.
+
+Had I my way, the hardware wouldn't advertise the capability in the
+first place. I rarely get my way, so I instead get to publicly defend
+the quirk. :)
