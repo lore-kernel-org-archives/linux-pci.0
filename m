@@ -1,63 +1,223 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49824 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754879AbcHSBgO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:36:14 -0400
-Date: Thu, 18 Aug 2016 16:59:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Helen Koike <helen.koike@collabora.co.uk>
-Cc: hch@infradead.org, mlin@kernel.org, fes@google.com,
-        keith.busch@intel.com, rlnelson@google.com, axboe@fb.com,
-        digitaleric@google.com, tytso@mit.edu, mikew@google.com,
-        monish@google.com, Helen Koike <helen.koike@collabora.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 RFC 1/2] PCI: Add Google device ID
-Message-ID: <20160818215932.GR27353@localhost>
-References: <cover.1471308889.git.helen.koike@collabora.co.uk>
- <69910419c3745269604fcb052ad9b08d1b601590.1471308889.git.helen.koike@collabora.co.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <69910419c3745269604fcb052ad9b08d1b601590.1471308889.git.helen.koike@collabora.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 15/15] drivers: acpi: iort: introduce iort_iommu_configure
+Date: Mon, 15 Aug 2016 16:23:40 +0100
+Message-Id: <1471274620-20754-16-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 15, 2016 at 10:41:19PM -0300, Helen Koike wrote:
-> Add device ID for the local SSDs (NVMe) in Google Clound Engine
+DT based systems have a generic kernel API to configure IOMMUs
+for devices (ie of_iommu_configure()).
 
-s/Clound/Cloud/
+On ARM based ACPI systems, the of_iommu_configure() equivalent can
+be implemented atop ACPI IORT kernel API, with the corresponding
+functions to map device identifiers to IOMMUs and retrieve the
+corresponding IOMMU operations necessary for DMA operations set-up.
 
-> Signed-off-by: Helen Koike <helen.koike@collabora.com>
-> ---
-> 
-> Changes since v2:
-> - This is a new patch in the serie
-> 
->  include/linux/pci_ids.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index c58752f..d422afc 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -948,6 +948,8 @@
->  #define PCI_DEVICE_ID_APPLE_IPID2_GMAC	0x006b
->  #define PCI_DEVICE_ID_APPLE_TIGON3	0x1645
->  
-> +#define PCI_VENDOR_ID_GOOGLE		0x1AE0
+By relying on the iommu_fwspec generic kernel infrastructure,
+implement the IORT based IOMMU configuration for ARM ACPI systems
+and hook it up in the ACPI kernel layer that implements DMA
+configuration for a device.
 
-See the comment at the top of pci_ids.h.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 96 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/scan.c       |  7 +++-
+ include/linux/iort.h      |  5 +++
+ 3 files changed, 107 insertions(+), 1 deletion(-)
 
-It looks like you only use this in drivers/nvme/host/pci.c.
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index e68ed2c..c231629 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -18,6 +18,7 @@
+ 
+ #define pr_fmt(fmt)	"ACPI: IORT: " fmt
+ 
++#include <linux/iommu-fwspec.h>
+ #include <linux/iort.h>
+ #include <linux/kernel.h>
+ #include <linux/list.h>
+@@ -27,6 +28,8 @@
+ 
+ #define IORT_TYPE_MASK(type)	(1 << (type))
+ #define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
++#define IORT_IOMMU_TYPE		((1 << ACPI_IORT_NODE_SMMU) |	\
++				(1 << ACPI_IORT_NODE_SMMU_V3))
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -496,6 +499,99 @@ iort_get_device_domain(struct device *dev, u32 req_id)
+ 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+ }
+ 
++static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
++{
++	u32 *rid = data;
++
++	*rid = alias;
++	return 0;
++}
++
++static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
++			       struct fwnode_handle *fwnode)
++{
++	int ret = iommu_fwspec_init(dev, fwnode);
++
++	if (!ret)
++		ret = iommu_fwspec_add_ids(dev, &streamid, 1);
++
++	return ret;
++}
++
++static const struct iommu_ops *
++iort_iommu_xlate(struct device *dev, struct acpi_iort_node *node,
++		 u32 streamid)
++{
++	struct fwnode_handle *iort_fwnode = NULL;
++	int ret;
++
++	if (node) {
++		iort_fwnode = iort_get_fwnode(node);
++		if (!iort_fwnode)
++			return NULL;
++
++		ret = arm_smmu_iort_xlate(dev, streamid,
++					  iort_fwnode);
++		if (!ret)
++			return fwspec_iommu_get_ops(iort_fwnode);
++	}
++
++	return NULL;
++}
++
++/**
++ * iort_iommu_configure - Set-up IOMMU configuration for a device.
++ *
++ * @dev: device to configure
++ *
++ * Returns: iommu_ops pointer on configuration success
++ *          NULL on configuration failure
++ */
++const struct iommu_ops *iort_iommu_configure(struct device *dev)
++{
++	struct acpi_iort_node *node, *parent;
++	const struct iommu_ops *ops = NULL;
++	u32 streamid = 0;
++
++	if (dev_is_pci(dev)) {
++		struct pci_bus *bus = to_pci_dev(dev)->bus;
++		u32 rid;
++
++		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
++				       &rid);
++
++		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
++				      iort_match_node_callback, &bus->dev);
++		if (!node)
++			return NULL;
++
++		parent = iort_node_map_rid(node, rid, &streamid,
++					   IORT_IOMMU_TYPE);
++
++		ops = iort_iommu_xlate(dev, parent, streamid);
++
++	} else {
++		int i = 0;
++
++		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
++				      iort_match_node_callback, dev);
++		if (!node)
++			return NULL;
++
++		parent = iort_node_get_id(node, &streamid,
++					  IORT_IOMMU_TYPE, i++);
++
++		while (parent) {
++			ops = iort_iommu_xlate(dev, parent, streamid);
++
++			parent = iort_node_get_id(node, &streamid,
++						  IORT_IOMMU_TYPE, i++);
++		}
++	}
++
++	return ops;
++}
++
+ static void __init acpi_iort_register_irq(int hwirq, const char *name,
+ 					  int trigger,
+ 					  struct resource *res)
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 0bdc98e..e875537 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/kernel.h>
+ #include <linux/acpi.h>
++#include <linux/iort.h>
+ #include <linux/signal.h>
+ #include <linux/kthread.h>
+ #include <linux/dmi.h>
+@@ -1377,11 +1378,15 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+  */
+ void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ {
++	const struct iommu_ops *iommu;
++
++	iommu = iort_iommu_configure(dev);
++
+ 	/*
+ 	 * Assume dma valid range starts at 0 and covers the whole
+ 	 * coherent_dma_mask.
+ 	 */
+-	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
++	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+ 			   attr == DEV_DMA_COHERENT);
+ }
+ 
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index bf37aaf..1b6c50d 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -34,6 +34,8 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
+ int iort_set_fwnode(struct acpi_iort_node *iort_node,
+ 		    struct fwnode_handle *fwnode);
+ struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node);
++/* IOMMU interface */
++const struct iommu_ops *iort_iommu_configure(struct device *dev);
+ #else
+ static inline bool iort_node_match(u8 type) { return false; }
+ static inline void iort_table_detect(void) { }
+@@ -46,6 +48,9 @@ static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
+ { return -ENODEV; }
+ static inline struct fwnode_handle *
+ iort_get_fwnode(struct acpi_iort_node *node) { return NULL; }
++/* IOMMU interface */
++static inline const struct iommu_ops *
++iort_iommu_configure(struct device *dev) { return NULL; }
+ #endif
+ 
+ #define IORT_ACPI_DECLARE(name, table_id, fn)		\
+-- 
+2.6.4
 
->  #define PCI_VENDOR_ID_YAMAHA		0x1073
->  #define PCI_DEVICE_ID_YAMAHA_724	0x0004
->  #define PCI_DEVICE_ID_YAMAHA_724F	0x000d
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
