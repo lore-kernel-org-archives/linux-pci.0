@@ -1,58 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Omer Khaliq <okhaliq@caviumnetworks.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-crypto@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <bhelgaas@google.com>, <mpm@selenic.com>, <herbert@gondor.apana.org.au>,
- <Ananth.Jasty@cavium.com>, <David.Daney@cavium.com>,
- <clabbe.montjoie@gmail.com>
-Subject: [PATCH v2 0/2] HWRNG/PCI: Add driver for Cavium Thunder RNG
-Date: Tue, 23 Aug 2016 16:27:13 -0700
-Message-ID: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42338 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752923AbcHOTvD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Aug 2016 15:51:03 -0400
+Date: Mon, 15 Aug 2016 14:50:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160815195058.GA8095@localhost>
+References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+ <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+ <20160815174002.GB9790@localhost>
+ <20160815192316.GB18083@localhost.localdomain>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Omer Khaliq <okhaliq@caviumnetworks.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160815192316.GB18083@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is a hardware error rendering the FDL field incorrect for the some
-Thunder RNG devices. The first patch adds a PCI quirk to fix the problem.
+On Mon, Aug 15, 2016 at 03:23:16PM -0400, Keith Busch wrote:
+> On Mon, Aug 15, 2016 at 12:40:02PM -0500, Bjorn Helgaas wrote:
+> > On Mon, Aug 08, 2016 at 02:19:02PM -0600, Keith Busch wrote:
+> > > +/*
+> > > + * The PCIe slot capabilities for Intel compatible Hot-swap backplane advertise
+> > > + * attention and power indicators, but will do the wrong thing if used in a
+> > > + * standard way. Ignore these.
+> > > + */
+> > 
+> > Hmm.  So I guess you're saying these devices are defective?  Is there
+> > an erratum we can reference?
+> > 
+> > What exactly does "do the wrong thing" mean?  These are indicators, so
+> > the only thing we really do is turn them on and off.  I think we do
+> > that with pcie_write_cmd_nowait(), and all the synchronization there
+> > is a little messy.  Maybe we got that wrong somehow?
+> > 
+> > It's hard to believe something as simple as controlling an LED is
+> > broken.  If it *is* broken, I would think the breakage would be
+> > platform-dependent, not just device-dependent, i.e., I would suspect
+> > something wrong with motherboard wiring or firmware.
+> 
+> This is actually a "feature". The devices listed in the patch re-purpose
+> the spec defined capability and control bits for Attention and Power
+> indicators. The control values match IBPI (International Blinking Pattern
+> Interpretation) rather than the spec definition.
+> 
+> Since these operate in a non-standard way, we'd just as soon not let
+> the kernel know about them (an incorrect LED pattern will definitely
+> occur). The LEDs are to be set from user space by 'ledmon' instead.
 
-The second patch adds the driver.
+What?  This is August 15, not April 1.  That makes no sense
+whatsoever.
 
-Changes from v1:
-	Use PCI quirks as advised.
-	Removed unecessary headers
-	Format changes as advised
+The device is advertising that it supports the hotplug model in the
+PCIe spec.  If you don't like that model, you should define a new
+model with a different capability ID.
 
-Ananth Jasty (1):
-  PCI: quirk fixup for cavium invalid sriov link value.
+Or you could propose a PCIe spec update with a new capability bit so
+software can tell that this device supports different functionality.
 
-Omer Khaliq (1):
-  HWRNG: thunderx: Add Cavium HWRNG driver for ThunderX SoC.
-
- drivers/char/hw_random/Kconfig         | 13 +++++
- drivers/char/hw_random/Makefile        |  1 +
- drivers/char/hw_random/cavium-rng-vf.c | 99 ++++++++++++++++++++++++++++++++++
- drivers/char/hw_random/cavium-rng.c    | 94 ++++++++++++++++++++++++++++++++
- drivers/pci/quirks.c                   | 11 ++++
- 5 files changed, 218 insertions(+)
- create mode 100644 drivers/char/hw_random/cavium-rng-vf.c
- create mode 100644 drivers/char/hw_random/cavium-rng.c
-
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Had I my way, the hardware wouldn't advertise the capability in the
+> first place. I rarely get my way, so I instead get to publicly defend
+> the quirk. :)
