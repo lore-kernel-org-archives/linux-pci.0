@@ -1,128 +1,102 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Wed, 17 Aug 2016 19:09:51 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160817230951.GD25146@localhost.localdomain>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
- <1470687542-30155-2-git-send-email-keith.busch@intel.com>
- <20160815174002.GB9790@localhost>
- <20160815192316.GB18083@localhost.localdomain>
- <20160817213745.GE27353@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160817213745.GE27353@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:41947 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752590AbcHOQv0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Aug 2016 12:51:26 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+Subject: [PATCH 2/6] drivers: pci: host: designware: fix pci_remap_iospace() failure path
+Date: Mon, 15 Aug 2016 17:50:42 +0100
+Message-Id: <1471279854-11916-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 17, 2016 at 04:37:45PM -0500, Bjorn Helgaas wrote:
-> Usually when I think something is totally stupid, it's because I don't
-> know the whole story.  So it might make more sense and lead to a
-> better solution if you could tell us more about your intent here.
+On ARM/ARM64 architectures, PCI IO ports are emulated through memory
+mapped IO, by reserving a chunk of virtual address space starting at
+PCI_IOBASE and by mapping the PCI host bridges memory address space
+driving PCI IO cycles to it.
 
-Definitely. I did not provide all the details because I didn't think
-knowing the full context would help toward understanding the function
-of the patch, but I see now that skimping on the details did not help
-our cause.
+PCI host bridge drivers that enable downstream PCI IO cycles map the
+host bridge memory address responding to PCI IO cycles to the fixed
+virtual address space through the pci_remap_iospace() API.
 
-This came about from wanting a simple SGPIO-like LED management solution
-for PCIe SSDs. The Intel group who made this, not considering the
-more broad impact on standarization, chose to reuse the hot plug
-serial SMBus in the Intel CPUs (aka VPP) that already carried the Slot
-Control register bits out of the CPU.
+This means that if the pci_remap_iospace() function fails, the
+corresponding host bridge PCI IO resource must be considered invalid, in
+that there is no way for the kernel to actually drive PCI IO
+transactions if the memory addresses responding to PCI
+IO cycles cannot be mapped into the CPU virtual address space.
 
-We would love to have been able to disable the capability present
-bits, but the hardware logic that would disable those bits would also
-have disabled LED control entirely, and we can't change the hardware
-now. We have to rely on software to work around this limitation for this
-generation of hardware.
+The PCI designware host bridge driver does not remove the PCI IO
+resource from the host bridge resource windows if the
+pci_remap_iospace() call fails; this is an actual bug in that the
+PCI host bridge would consider the PCI IO resource valid (and possibly
+assign it to downstream devices) even if the kernel was not able
+to map the PCI host bridge memory address driving IO cycle to the
+CPU virtual address space (ie pci_remap_iospace() failures).
 
-The next generation of these devices will pursue standards compliant
-methods by engaging with PCI-SIG and the NVMe-MI standards bodies.
-This current generation of devices is the only one set this way that
-requires this work-around.
+Fix the PCI host bridge driver pci_remap_iospace() failure path, by
+destroying the PCI host bridge PCI IO resources retrieved through
+firmware when the pci_remap_iospace() function call fails, therefore
+preventing the kernel from adding the respective PCI IO resource to the
+list of PCI host bridge valid resources, fixing the issue.
 
-> According to the Linux PCI database, the devices you want to quirk are:
-> 
->   2030  Sky Lake-E PCI Express Root Port 1A	
->   2031  Sky Lake-E PCI Express Root Port 1B	
->   2032  Sky Lake-E PCI Express Root Port 1C	
->   2033  Sky Lake-E PCI Express Root Port 1D
->
-> 
-> So are you saying that on every platform that uses Sky Lake-E, these
-> indicators are non-standard in this way?
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/host/pcie-designware.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-Yes (more details below), but I may need to refine this to specific
-subsystem IDs (clarifying that internally now).
-
-Also, just for future note, the device list that I provided with the quirk
-may need to be augmented for other vendor devices that implement it this
-way as well.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12afce1..2a500f2 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -436,7 +436,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct resource *cfg_res;
+ 	int i, ret;
+ 	LIST_HEAD(res);
+-	struct resource_entry *win;
++	struct resource_entry *win, *tmp;
  
-> IBPI looks like it's targeted at storage arrays, since it has states
-> for "drive not present", "fail", "rebuild", "hotspare", etc.  Maybe
-> there's some sense for Sky Lake-E platforms with directly-attached
-> storage.
-> 
-> But if somebody built a Sky Lake-E platform with one of these Root
-> Ports leading to a plain hotplug PCIe slot with regular indicators,
-> your quirk would break them, wouldn't it?  Or are you imposing
-> constraints on how those Root Ports can be used?
-
-Yes, you totally nailed it on this being for storage.
-
-To go even further, we constrain these to be in Sky Lake's VMD domains. We
-do not support using VMD for anything but PCIe storage.
-
-> How does 'ledmon' manage the indicators?  The kernel (pciehp) uses the
-> Slot Control register, which is not completely trivial because of the
-> Command Completed synchronization required.  I'm hoping ledmon isn't
-> going to mess up that synchronization.
-
-We've augmented 'ledmon' with libpci and toggles these indicators very
-similar to how 'setpci' can change PCI config registers. It is done only
-after the storage device is up and registered, which is well outside
-the time when pciehp is actively using the slot control.
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+@@ -457,17 +457,20 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		goto error;
  
-> How does this work for other OSes?  Are you proposing similar changes
-> to Windows?
+ 	/* Get the I/O and memory ranges from DT */
+-	resource_list_for_each_entry(win, &res) {
++	resource_list_for_each_entry_safe(win, tmp, &res) {
+ 		switch (resource_type(win->res)) {
+ 		case IORESOURCE_IO:
+-			pp->io = win->res;
+-			pp->io->name = "I/O";
+-			pp->io_size = resource_size(pp->io);
+-			pp->io_bus_addr = pp->io->start - win->offset;
+-			ret = pci_remap_iospace(pp->io, pp->io_base);
+-			if (ret)
++			ret = pci_remap_iospace(win->res, pp->io_base);
++			if (ret) {
+ 				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
+-					 ret, pp->io);
++					 ret, win->res);
++				resource_list_destroy_entry(win);
++			} else {
++				pp->io = win->res;
++				pp->io->name = "I/O";
++				pp->io_size = resource_size(pp->io);
++				pp->io_bus_addr = pp->io->start - win->offset;
++			}
+ 			break;
+ 		case IORESOURCE_MEM:
+ 			pp->mem = win->res;
+-- 
+2.6.4
 
-Aha, the mystery to that part might be clarified knowing this is tied
-to VMD.
-
-For other OSes including Windows, the VMD driver does not expose the
-domain to the rest of the operating system. These VMD drivers implement
-their own pci bus and port service drivers, nvme storage drivers,
-and interrupt chaining, so they don't have to worry about anyone using
-these devices incorrectly. Those drivers also provide VMD specific
-management interfaces (special ioctls, for example) to manage its domain.
-
-For Linux, we did not think it appropriate or upstreamable to
-re-write all the drivers and services into a monolithic VMD driver,
-then implement new user tooling for things that 'lspci' and 'setpci'
-already provide. Instead, we leverage all the existing good code by
-implementing VMD as a PCI host-bridge driver. The down side is we have
-to get our quirks fixed in generic code.
-
-
-> What's your plan for backwards compatibility?  Just accept that old
-> OSes won't be able to operate the indicators correctly until they're
-> patched with this quirk?
-
-You may have surmised this already based on the new details, but I'll
-just add that since it's tied to VMD, and that being a very new driver,
-backward compatibility is not a concern.
-
-> You must have set that capability bit for some reason.  You don't want
-> the OS to consume it, so who *do* you expect to consume it, and how
-> (direct PCI config access, lspci, etc.), and what are they supposed to
-> do with it?
-
-Just restating what I mentioned above, this is an artifact on how the h/w gates
-were wired. Suppressing the capability bit automatically suppresses the
-LED control, and we need LED control.
-
-This is being addressed in the next generation to do provide the desired
-LED control in a standard compliant manner.
