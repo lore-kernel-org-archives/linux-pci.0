@@ -1,158 +1,259 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1471595078-26297-1-git-send-email-lftan@altera.com>
- <20160822154738.GB18628@localhost>
- <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
- <20160824175431.GC23914@localhost>
- <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
- <20160830133747.GB16426@localhost>
- <a1688079-6a39-3c25-756f-cd1e1256f468@broadcom.com>
- <20160830170055.GA22908@localhost>
-Cc: Ley Foon Tan <lftan@altera.com>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- bcm-kernel-feedback-list@broadcom.com
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <8093b687-2d62-73b5-2d67-421eab5b7c27@broadcom.com>
-Date: Tue, 30 Aug 2016 10:04:58 -0700
-MIME-Version: 1.0
-In-Reply-To: <20160830170055.GA22908@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 12/15] drivers: iommu: arm-smmu-v3: add IORT configuration
+Date: Mon, 15 Aug 2016 16:23:37 +0100
+Message-Id: <1471274620-20754-13-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+In ACPI bases systems, in order to be able to create platform
+devices and initialize them for ARM SMMU v3 components, the IORT
+kernel implementation requires a set of static functions to be
+used by the IORT kernel layer to configure platform devices for
+ARM SMMU v3 components.
 
+Add static configuration functions to the IORT kernel layer for
+the ARM SMMU v3 components, so that the ARM SMMU v3 driver can
+initialize its respective platform device by relying on the IORT
+kernel infrastructure and by adding a corresponding ACPI device
+early probe section entry.
 
-On 8/30/2016 10:00 AM, Bjorn Helgaas wrote:
-> On Tue, Aug 30, 2016 at 09:36:52AM -0700, Ray Jui wrote:
->>
->>
->> On 8/30/2016 6:37 AM, Bjorn Helgaas wrote:
->>> On Mon, Aug 29, 2016 at 05:37:09PM -0700, Ray Jui wrote:
->>>> Hi Bjorn,
->>>>
->>>> On 8/24/2016 10:54 AM, Bjorn Helgaas wrote:
->>>>> [+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
->>>>>
->>>>> On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
->>>>>> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>>>>> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
->>>>>>>> Altera PCIe IP can be configured as rootport or device and they might have
->>>>>>>> same vendor ID. It will cause the system hang issue if Altera PCIe is in
->>>>>>>> endpoint mode and work with other PCIe rootport that from other vendors.
->>>>>>>> So, add the rootport mode checking in link retrain fixup function.
->>>>>>>>
->>>>>>>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->>>>>>>> ---
->>>>>>>> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
->>>>>>>> ---
->>>>>>>> drivers/pci/host/pcie-altera.c | 3 +++
->>>>>>>> 1 file changed, 3 insertions(+)
->>>>>>>>
->>>>>>>> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
->>>>>>>> index 58eef99..33b6968 100644
->>>>>>>> --- a/drivers/pci/host/pcie-altera.c
->>>>>>>> +++ b/drivers/pci/host/pcie-altera.c
->>>>>>>> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
->>>>>>>>     u16 linkcap, linkstat;
->>>>>>>>     struct altera_pcie *pcie = dev->bus->sysdata;
->>>>>>>>
->>>>>>>> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
->>>>>>>> +             return;
->>>>>>>> +
->>>>>>>>     if (!altera_pcie_link_is_up(pcie))
->>>>>>>>             return;
->>>>>>>
->>>>>>> Instead of making this a PCI fixup, can you make an
->>>>>>> altera_pcie_host_init() function, call it from altera_pcie_probe(),
->>>>>>> and do the link retrain there?  Then you wouldn't need to worry about
->>>>>>> whether this is a Root Port or an Endpoint, plus it would make the
->>>>>>> altera driver structure more like the other drivers.
->>>>>>>
->>>>>>> You would call altera_pcie_host_init() before pci_scan_root_bus(), so
->>>>>>> you wouldn't have a pci_dev yet, so you wouldn't be able to use
->>>>>>> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
->>>>>>> assume there's some device-dependent way to access it using
->>>>>>> cra_writel()?
->>>>>> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
->>>>>
->>>>> Why not?  I don't mean it has to be cra_write(), but isn't there some
->>>>> way you can write that bit before we scan the root bus?  It doesn't
->>>>> make sense that we have to scan the bus before we can train the link.
->>>>>
->>>>> We want to be able to tell the PCI core "all the device-specific root
->>>>> complex initialization has been done, here are the config accessors
->>>>> you need, please scan for devices."  I want to keep device-specific
->>>>> things like this quirk directly in the driver and out of the
->>>>> enumeration process.
->>>>>
->>>>>> We can use
->>>>>> pci_bus_find_capability() and pci_bus_read_config_word() with struct
->>>>>> pci_bus instead.
->>>>>> But this only can be called after pci_scan_root_bus().
->>>>>
->>>>>> Found
->>>>>> iproc_pcie_check_link() have similar implementation.
->>>>>
->>>>> You're right, and I don't like iproc_pcie_check_link() either, for the
->>>>> same reasons.
->>>>>
->>>>> The iproc_pcie_check_link() is a little better because it's called
->>>>> before enumeration:
->>>>>
->>>>> pci_create_root_bus()
->>>>> iproc_pcie_check_link()
->>>>> pci_scan_child_bus()
->>>>>
->>>>> But it would be a lot better if iproc_pcie_check_link() were done
->>>>> first, before pci_create_root_bus().  Then it would be more like the
->>>>> structure of other drivers, and we could use pci_scan_root_bus()
->>>>> instead.
->>>>
->>>> Although not yet tested, I suppose we can do iproc_pcie_check_link
->>>> before calling pci_scan_root_bus so we can get rid of separate calls
->>>> to pci_create_root_bus and pci_scan_child_bus. But then we need to
->>>> create some dummy bus in the iproc_pcie_check_link function to allow
->>>> access to the root bus for link check, which was the primary reason
->>>> why we did pci_create_root_bus before iproc_pcie_check_link, i.e.,
->>>> to avoid the use of dummy root bus.
->>>
->>> I don't want a dummy root bus.
->>
->> Okay we are on the same page for this.
->>
->>> There should be some way to structure that code so you can write the
->>> class code and the link status stuff without having a struct pci_bus.
->>> The only reason you need the struct pci_bus in the first place is so
->>> you can extract the struct iproc_pcie *, and you already have that in
->>> iproc_pcie_check_link().
->>>
->>> No, you won't be able to use pci_bus_find_capability(), but presumably
->>> you already *know* where the capability is, since you know exactly
->>> what device this is.
->>
->> I'll need to review the check link function carefully and do some
->> experiment to see what I can do to determine the link status without
->> accessing any of the configuration registers, which is what you seem
->> to imply here.
->
-> No, that's not what I'm trying to say.  You can access the
-> configuration registers if you need to.  But you shouldn't need a
-> struct pci_bus to do that.  All you do with the struct pci_bus is get
-> the corresponding struct iproc_pcie.
->
-> It will require some restructuring, of course, e.g., making low-level
-> accessors that take the struct iproc_pcie, and wrappers around them
-> that take a struct pci_bus.  The usual config accesses can go through
-> the wrapper, and the iproc-internal accesses can use the low-level
-> accessors directly.
->
-> Bjorn
->
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/acpi/arm64/iort.c   | 103 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/iommu/arm-smmu-v3.c |  61 ++++++++++++++++++++++++++
+ 2 files changed, 163 insertions(+), 1 deletion(-)
 
-Okay I got it. Thanks for the clarifications. I'll look into this when I 
-have a chance.
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 4043071..f42cff8 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -455,6 +455,95 @@ iort_get_device_domain(struct device *dev, u32 req_id)
+ 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+ }
+ 
++static void __init acpi_iort_register_irq(int hwirq, const char *name,
++					  int trigger,
++					  struct resource *res)
++{
++	int irq = acpi_register_gsi(NULL, hwirq, trigger,
++				    ACPI_ACTIVE_HIGH);
++
++	if (irq < 0) {
++		pr_err("could not register gsi hwirq %d name [%s]\n", hwirq,
++								      name);
++		return;
++	}
++
++	res->start = irq;
++	res->end = irq;
++	res->flags = IORESOURCE_IRQ;
++	res->name = name;
++}
++
++static int __init arm_smmu_v3_count_resources(struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++	/* Always present mem resource */
++	int num_res = 1;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	if (smmu->event_gsiv)
++		num_res++;
++
++	if (smmu->pri_gsiv)
++		num_res++;
++
++	if (smmu->gerr_gsiv)
++		num_res++;
++
++	if (smmu->sync_gsiv)
++		num_res++;
++
++	return num_res;
++}
++
++static void __init arm_smmu_v3_init_resources(struct resource *res,
++					      struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++	int num_res = 0;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	res[num_res].start = smmu->base_address;
++	res[num_res].end = smmu->base_address + SZ_128K - 1;
++	res[num_res].flags = IORESOURCE_MEM;
++
++	num_res++;
++
++	if (smmu->event_gsiv)
++		acpi_iort_register_irq(smmu->event_gsiv, "eventq",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->pri_gsiv)
++		acpi_iort_register_irq(smmu->pri_gsiv, "priq",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->gerr_gsiv)
++		acpi_iort_register_irq(smmu->gerr_gsiv, "gerror",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->sync_gsiv)
++		acpi_iort_register_irq(smmu->sync_gsiv, "cmdq-sync",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++}
++
++static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
++}
++
+ struct iort_iommu_config {
+ 	const char *name;
+ 	int (*iommu_init)(struct acpi_iort_node *node);
+@@ -464,10 +553,22 @@ struct iort_iommu_config {
+ 				     struct acpi_iort_node *node);
+ };
+ 
++const struct iort_iommu_config iort_arm_smmu_v3_cfg __initconst = {
++	.name = "arm-smmu-v3",
++	.iommu_is_coherent = arm_smmu_v3_is_coherent,
++	.iommu_count_resources = arm_smmu_v3_count_resources,
++	.iommu_init_resources = arm_smmu_v3_init_resources
++};
++
+ static const struct iort_iommu_config * __init
+ iort_get_iommu_config(struct acpi_iort_node *node)
+ {
+-	return NULL;
++	switch (node->type) {
++	case ACPI_IORT_NODE_SMMU_V3:
++		return &iort_arm_smmu_v3_cfg;
++	default:
++		return NULL;
++	}
+ }
+ 
+ /**
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 75b78f9..197e78f 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1744,6 +1744,8 @@ arm_smmu_get_by_fwnode(struct fwnode_handle *handle)
+ 
+ 	if (is_of_node(handle))
+ 		smmu_pdev = of_find_device_by_node(to_of_node(handle));
++	else if (is_fwnode_iommu(handle))
++		smmu_pdev = platform_find_device_by_fwnode(handle);
+ 
+ 	if (!smmu_pdev)
+ 		return NULL;
+@@ -1766,6 +1768,7 @@ static struct iommu_ops arm_smmu_ops;
+ static int arm_smmu_add_device(struct device *dev)
+ {
+ 	int i, ret;
++
+ 	struct arm_smmu_device *smmu;
+ 	struct arm_smmu_master_data *master;
+ 	struct iommu_fwspec *fwspec = dev_iommu_fwspec(dev);
+@@ -2744,6 +2747,64 @@ static int __init arm_smmu_of_init(struct device_node *np)
+ }
+ IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+ 
++#ifdef CONFIG_ACPI
++static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
++{
++	struct acpi_iort_node *iort_node, *iort_end;
++	struct acpi_table_iort *iort;
++	struct fwnode_handle *fwnode;
++	int i, ret;
++
++	/*
++	 * table and iort will both point to the start of IORT table, but
++	 * have different struct types
++	 */
++	iort = (struct acpi_table_iort *)table;
++
++	/* Get the first IORT node */
++	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, table,
++				 iort->node_offset);
++	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, table,
++				table->length);
++
++	for (i = 0; i < iort->node_count; i++) {
++
++		if (iort_node >= iort_end) {
++			pr_err("iort node pointer overflows, bad table\n");
++			return -EINVAL;
++		}
++
++		if (iort_node->type == ACPI_IORT_NODE_SMMU_V3) {
++			ret = arm_smmu_init();
++			if (ret)
++				return ret;
++
++			fwnode = iommu_alloc_fwnode();
++
++			if (!fwnode)
++				return -ENOMEM;
++
++			ret = iort_set_fwnode(iort_node, fwnode);
++			if (ret)
++				goto free;
++
++			fwspec_iommu_set_ops(fwnode, &arm_smmu_ops);
++		}
++
++		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
++					 iort_node->length);
++	}
++
++	return 0;
++free:
++	iommu_free_fwnode(fwnode);
++	return ret;
++
++}
++IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
++
++#endif
++
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+ MODULE_LICENSE("GPL v2");
+-- 
+2.6.4
 
-Ray
