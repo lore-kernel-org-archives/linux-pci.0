@@ -1,53 +1,29 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v9 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Mon, 15 Aug 2016 18:35:03 -0400
+From: Keith Busch <keith.busch@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1470297128-6213-1-git-send-email-shawn.lin@rock-chips.com>
- <20160818210237.GP27353@localhost>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>,
-        Doug Anderson <dianders@chromium.org>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <57003143-d52e-154f-458a-5a3aacbf2684@rock-chips.com>
-Date: Fri, 19 Aug 2016 09:15:14 +0800
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160815223503.GD18083@localhost.localdomain>
+References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+ <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+ <20160815174002.GB9790@localhost>
+ <20160815192316.GB18083@localhost.localdomain>
+ <20160815195058.GA8095@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20160818210237.GP27353@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160815195058.GA8095@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-在 2016/8/19 5:02, Bjorn Helgaas 写道:
-> On Thu, Aug 04, 2016 at 03:52:07PM +0800, Shawn Lin wrote:
->> This patch adds a binding that describes the Rockchip PCIe controller
->> found on Rockchip SoCs PCIe interface.
->> ...
->
->> +- msi-map: Maps a Requester ID to an MSI controller and associated.
->
-> And associated *what*?
+On Mon, Aug 15, 2016 at 02:50:58PM -0500, Bjorn Helgaas wrote:
+> What?  This is August 15, not April 1.  That makes no sense
+> whatsoever.
 
-Ah, will fix it. :)
+Yes, I agree, and not advocating this was a good idea. I'm just the
+messenger in this case.
 
->
->> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
->> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
->> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
->
-> s/pcie/PCIe/ (also elsewhere in this patch)
-
-sure, I will use PCIe for the descriptions in this patch.
-
->
->
->
-
-
--- 
-Best Regards
-Shawn Lin
+That said, it looks like this can fall under the intended usage for
+the quirk framework if we can consider this a work-around for standard
+non-compliance. Or are your thoughts that we've gone too far if it's
+not a true erratum?
