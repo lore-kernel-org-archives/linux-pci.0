@@ -1,87 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:60465 "EHLO
-        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756610AbcHVWAW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2016 18:00:22 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 5/8] PCI: spear13xx: make it explicitly non-modular
-Date: Mon, 22 Aug 2016 17:59:45 -0400
-Message-ID: <20160822215948.27251-6-paul.gortmaker@windriver.com>
-In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 14/15] drivers: acpi: iort: add single mapping function
+Date: Mon, 15 Aug 2016 16:23:39 +0100
+Message-Id: <1471274620-20754-15-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+The current IORT id mapping API requires components to provide
+an input requester ID (a Bus-Device-Function (BDF) identifier for
+PCI devices) to translate an input identifier to an output
+identifier through an IORT range mapping.
 
-drivers/pci/host/Kconfig:config PCIE_SPEAR13XX
-drivers/pci/host/Kconfig:       bool "STMicroelectronics SPEAr PCIe controller"
+Named components do not have an identifiable source ID therefore
+their respective input/output mapping can only be defined in
+IORT tables through single mappings, that provide a translation
+that does not require any input identifier.
 
-...meaning that it currently is not being built as a module by anyone.
+Current IORT interface for requester id mappings (iort_node_map_rid())
+is not suitable for components that do not provide a requester id,
+so it cannot be used for IORT named components.
 
-Lets remove the couple instances of modular code usage, so that
-when reading the driver there is no doubt it is builtin-only.
+Add an interface to the IORT API to enable retrieval of id
+by allowing an indexed walk of the single mappings array for
+a given component, therefore completing the IORT mapping API.
 
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.
-
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- drivers/pci/host/pcie-spear13xx.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+ drivers/acpi/arm64/iort.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index a4060b85ab23..09aed85f275a 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -15,7 +15,7 @@
- #include <linux/clk.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/of.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
-@@ -355,7 +355,6 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
- 	{ .compatible = "st,spear1340-pcie", },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
- 
- static struct platform_driver spear13xx_pcie_driver = {
- 	.probe		= spear13xx_pcie_probe,
-@@ -365,14 +364,8 @@ static struct platform_driver spear13xx_pcie_driver = {
- 	},
- };
- 
--/* SPEAr13xx PCIe driver does not allow module unload */
--
- static int __init spear13xx_pcie_init(void)
- {
- 	return platform_driver_register(&spear13xx_pcie_driver);
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index a04a1d2..e68ed2c 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -301,6 +301,44 @@ iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in, u32 *rid_out)
  }
--module_init(spear13xx_pcie_init);
--
--MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
--MODULE_AUTHOR("Pratyush Anand <pratyush.anand@gmail.com>");
--MODULE_LICENSE("GPL v2");
-+device_initcall(spear13xx_pcie_init);
+ 
+ static struct acpi_iort_node *
++iort_node_get_id(struct acpi_iort_node *node, u32 *id_out,
++		 u8 type_mask, int index)
++{
++	struct acpi_iort_node *parent;
++	struct acpi_iort_id_mapping *map;
++
++	if (!node->mapping_offset || !node->mapping_count ||
++				     index >= node->mapping_count)
++		return NULL;
++
++	map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
++			   node->mapping_offset);
++
++	/* Firmware bug! */
++	if (!map->output_reference) {
++		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
++		       node, node->type);
++		return NULL;
++	}
++
++	parent = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++			       map->output_reference);
++
++	if (!(IORT_TYPE_MASK(parent->type) & type_mask))
++		return NULL;
++
++	if (map[index].flags & ACPI_IORT_ID_SINGLE_MAPPING) {
++		if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT ||
++		    node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
++			*id_out = map[index].output_base;
++			return parent;
++		}
++	}
++
++	return NULL;
++}
++
++static struct acpi_iort_node *
+ iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
+ 		  u32 *rid_out, u8 type_mask)
+ {
 -- 
-2.8.4
+2.6.4
 
