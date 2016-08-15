@@ -1,139 +1,168 @@
-Return-Path: <ray.jui@broadcom.com>
-Return-Path: <ray.jui@broadcom.com>
-Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1471595078-26297-1-git-send-email-lftan@altera.com>
- <20160822154738.GB18628@localhost>
- <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
- <20160824175431.GC23914@localhost>
- <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
- <20160830133747.GB16426@localhost>
-Cc: Ley Foon Tan <lftan@altera.com>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- bcm-kernel-feedback-list@broadcom.com
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <a1688079-6a39-3c25-756f-cd1e1256f468@broadcom.com>
-Date: Tue, 30 Aug 2016 09:36:52 -0700
-MIME-Version: 1.0
-In-Reply-To: <20160830133747.GB16426@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 10/15] drivers: iommu: arm-smmu-v3: split probe functions into DT/generic portions
+Date: Mon, 15 Aug 2016 16:23:35 +0100
+Message-Id: <1471274620-20754-11-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
+initialization functions to detect and programme the ARM SMMU v3 driver
+features. In order to allow probing the ARM SMMUv3 with other firmwares
+than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
+specific portions so that other FW interfaces (ie ACPI) can reuse the HW
+probing functions and skip the DT portion accordingly.
 
+This patch implements no functional change, only code reshuffling.
 
-On 8/30/2016 6:37 AM, Bjorn Helgaas wrote:
-> On Mon, Aug 29, 2016 at 05:37:09PM -0700, Ray Jui wrote:
->> Hi Bjorn,
->>
->> On 8/24/2016 10:54 AM, Bjorn Helgaas wrote:
->>> [+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
->>>
->>> On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
->>>> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>>> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
->>>>>> Altera PCIe IP can be configured as rootport or device and they might have
->>>>>> same vendor ID. It will cause the system hang issue if Altera PCIe is in
->>>>>> endpoint mode and work with other PCIe rootport that from other vendors.
->>>>>> So, add the rootport mode checking in link retrain fixup function.
->>>>>>
->>>>>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->>>>>> ---
->>>>>> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
->>>>>> ---
->>>>>> drivers/pci/host/pcie-altera.c | 3 +++
->>>>>> 1 file changed, 3 insertions(+)
->>>>>>
->>>>>> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
->>>>>> index 58eef99..33b6968 100644
->>>>>> --- a/drivers/pci/host/pcie-altera.c
->>>>>> +++ b/drivers/pci/host/pcie-altera.c
->>>>>> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
->>>>>>      u16 linkcap, linkstat;
->>>>>>      struct altera_pcie *pcie = dev->bus->sysdata;
->>>>>>
->>>>>> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
->>>>>> +             return;
->>>>>> +
->>>>>>      if (!altera_pcie_link_is_up(pcie))
->>>>>>              return;
->>>>>
->>>>> Instead of making this a PCI fixup, can you make an
->>>>> altera_pcie_host_init() function, call it from altera_pcie_probe(),
->>>>> and do the link retrain there?  Then you wouldn't need to worry about
->>>>> whether this is a Root Port or an Endpoint, plus it would make the
->>>>> altera driver structure more like the other drivers.
->>>>>
->>>>> You would call altera_pcie_host_init() before pci_scan_root_bus(), so
->>>>> you wouldn't have a pci_dev yet, so you wouldn't be able to use
->>>>> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
->>>>> assume there's some device-dependent way to access it using
->>>>> cra_writel()?
->>>> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
->>>
->>> Why not?  I don't mean it has to be cra_write(), but isn't there some
->>> way you can write that bit before we scan the root bus?  It doesn't
->>> make sense that we have to scan the bus before we can train the link.
->>>
->>> We want to be able to tell the PCI core "all the device-specific root
->>> complex initialization has been done, here are the config accessors
->>> you need, please scan for devices."  I want to keep device-specific
->>> things like this quirk directly in the driver and out of the
->>> enumeration process.
->>>
->>>> We can use
->>>> pci_bus_find_capability() and pci_bus_read_config_word() with struct
->>>> pci_bus instead.
->>>> But this only can be called after pci_scan_root_bus().
->>>
->>>> Found
->>>> iproc_pcie_check_link() have similar implementation.
->>>
->>> You're right, and I don't like iproc_pcie_check_link() either, for the
->>> same reasons.
->>>
->>> The iproc_pcie_check_link() is a little better because it's called
->>> before enumeration:
->>>
->>>  pci_create_root_bus()
->>>  iproc_pcie_check_link()
->>>  pci_scan_child_bus()
->>>
->>> But it would be a lot better if iproc_pcie_check_link() were done
->>> first, before pci_create_root_bus().  Then it would be more like the
->>> structure of other drivers, and we could use pci_scan_root_bus()
->>> instead.
->>
->> Although not yet tested, I suppose we can do iproc_pcie_check_link
->> before calling pci_scan_root_bus so we can get rid of separate calls
->> to pci_create_root_bus and pci_scan_child_bus. But then we need to
->> create some dummy bus in the iproc_pcie_check_link function to allow
->> access to the root bus for link check, which was the primary reason
->> why we did pci_create_root_bus before iproc_pcie_check_link, i.e.,
->> to avoid the use of dummy root bus.
->
-> I don't want a dummy root bus.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/arm-smmu-v3.c | 63 +++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 52 insertions(+), 11 deletions(-)
 
-Okay we are on the same page for this.
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 6b68232..91a7600 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -20,6 +20,7 @@
+  * This driver is powered by bad coffee and bombay mix.
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/delay.h>
+ #include <linux/dma-iommu.h>
+ #include <linux/err.h>
+@@ -27,6 +28,7 @@
+ #include <linux/iommu.h>
+ #include <linux/iommu-fwspec.h>
+ #include <linux/iopoll.h>
++#include <linux/iort.h>
+ #include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+@@ -2373,10 +2375,10 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu)
+ 	return 0;
+ }
+ 
+-static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
++static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ {
+ 	u32 reg;
+-	bool coherent;
++	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
+ 
+ 	/* IDR0 */
+ 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
+@@ -2428,13 +2430,9 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+ 		smmu->features |= ARM_SMMU_FEAT_HYP;
+ 
+ 	/*
+-	 * The dma-coherent property is used in preference to the ID
++	 * The coherency feature as set by FW is used in preference to the ID
+ 	 * register, but warn on mismatch.
+ 	 */
+-	coherent = of_dma_is_coherent(smmu->dev->of_node);
+-	if (coherent)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
+-
+ 	if (!!(reg & IDR0_COHACC) != coherent)
+ 		dev_warn(smmu->dev, "IDR0.COHACC overridden by dma-coherent property (%s)\n",
+ 			 coherent ? "true" : "false");
+@@ -2555,7 +2553,44 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+ 	return 0;
+ }
+ 
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++#ifdef CONFIG_ACPI
++static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
++				      struct arm_smmu_device *smmu)
++{
++	struct acpi_iort_smmu_v3 *iort_smmu;
++	struct device *dev = smmu->dev;
++	struct acpi_iort_node *node;
++
++	node = *(struct acpi_iort_node **)dev_get_platdata(dev);
++
++	/* Retrieve SMMUv3 specific data */
++	iort_smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	if (iort_smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE)
++		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
++
++	return 0;
++}
++#else
++static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
++				      struct arm_smmu_device *smmu)
++{
++	return -ENODEV;
++}
++#endif
++
++static int arm_smmu_device_dt_probe(struct platform_device *pdev,
++				    struct arm_smmu_device *smmu)
++{
++	parse_driver_options(smmu);
++
++	if (of_dma_is_coherent(smmu->dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
++
++	return 0;
++}
++
++static int arm_smmu_device_probe(struct platform_device *pdev)
+ {
+ 	int irq, ret;
+ 	struct resource *res;
+@@ -2597,10 +2632,16 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	if (irq > 0)
+ 		smmu->gerr_irq = irq;
+ 
+-	parse_driver_options(smmu);
++	if (acpi_disabled)
++		ret = arm_smmu_device_dt_probe(pdev, smmu);
++	else
++		ret = arm_smmu_device_acpi_probe(pdev, smmu);
++
++	if (ret)
++		return ret;
+ 
+ 	/* Probe the h/w */
+-	ret = arm_smmu_device_probe(smmu);
++	ret = arm_smmu_device_hw_probe(smmu);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -2635,7 +2676,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu-v3",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
+-- 
+2.6.4
 
-> There should be some way to structure that code so you can write the
-> class code and the link status stuff without having a struct pci_bus.
-> The only reason you need the struct pci_bus in the first place is so
-> you can extract the struct iproc_pcie *, and you already have that in
-> iproc_pcie_check_link().
->
-> No, you won't be able to use pci_bus_find_capability(), but presumably
-> you already *know* where the capability is, since you know exactly
-> what device this is.
-
-I'll need to review the check link function carefully and do some 
-experiment to see what I can do to determine the link status without 
-accessing any of the configuration registers, which is what you seem to 
-imply here.
-
-Thanks.
-
->
-> Bjorn
->
