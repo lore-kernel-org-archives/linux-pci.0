@@ -1,54 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 24 Aug 2016 14:30:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Duc Dang <dhdang@apm.com>, Rafael Wysocki <rafael@kernel.org>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Marc Zyngier <marc.zyngier@arm.com>, patches <patches@apm.com>,
-        bhelgaas@google.com, punit.agrawal@arm.com
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-Message-ID: <20160824193000.GE23914@localhost>
-References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
- <20160824142723.GA25843@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160824142723.GA25843@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:41958 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752590AbcHOQv3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Aug 2016 12:51:29 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH 4/6] drivers: pci: host: rcar: fix pci_remap_iospace() failure path
+Date: Mon, 15 Aug 2016 17:50:44 +0100
+Message-Id: <1471279854-11916-5-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:
-> [ +Bjorn, Punit]
-> 
-> On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:
-> > [Resend in plain text mode]
-> > 
-> > Hi Lorenzo, Rafael,
-> > 
-> > ACPI 6.1 spec does not specify how to set interrupt polarity and
-> > trigger mode in _PRT when the interrupts are static (hardwired to
-> > specific interrupt inputs in interrupt controller). In current
-> > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
-> > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
-> > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
-> > GICv3 controllers and will cause failures in PCIe AER, PME services
-> > (on X-Gene platforms).
+On ARM/ARM64 architectures, PCI IO ports are emulated through memory
+mapped IO, by reserving a chunk of virtual address space starting at
+PCI_IOBASE and by mapping the PCI host bridges memory address space
+driving PCI IO cycles to it.
 
-PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
-and defined as 'level sensitive,' asserted low."
+PCI host bridge drivers that enable downstream PCI IO cycles map the
+host bridge memory address responding to PCI IO cycles to the fixed
+virtual address space through the pci_remap_iospace() API.
 
-I've heard before that ARM64 does this differently, but I still don't
-understand the difference.  Obviously if you plug a legacy PCI card
-into an ARM64 system, it's still going to pull INTA# low to assert an
-interrupt.  So is there something special about ARM64 that inverts
-that, or what?
+This means that if the pci_remap_iospace() function fails, the
+corresponding host bridge PCI IO resource must be considered invalid, in
+that there is no way for the kernel to actually drive PCI IO
+transactions if the memory addresses responding to PCI
+IO cycles cannot be mapped into the CPU virtual address space.
 
-> > Is there any way to specify polarity and trigger mode for static
-> > interrupts in _PRT? 
+The PCI rcar host bridge driver does not remove the PCI IO
+resource from the host bridge resource windows if the
+pci_remap_iospace() call fails; this is an actual bug in that the
+PCI host bridge would consider the PCI IO resource valid (and possibly
+assign it to downstream devices) even if the kernel was not able
+to map the PCI host bridge memory address driving IO cycle to the
+CPU virtual address space (ie pci_remap_iospace() failures).
 
-There is no way I'm aware of in _PRT to specify polarity and trigger
-mode.  I don't know the history, but my guess is that it would be seen
-as superfluous given that the PCI spec requires level, active low.
+Fix the PCI host bridge driver pci_remap_iospace() failure path, by
+destroying the PCI host bridge PCI IO resources retrieved through
+firmware when the pci_remap_iospace() function call fails, therefore
+preventing the kernel from adding the respective PCI IO resource to the
+list of PCI host bridge valid resources, fixing the issue.
 
-Obviously I'm missing something important.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Fixes: 5d2917d469fa ("PCI: rcar: Convert to DT resource parsing API")
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/pci/host/pcie-rcar.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 65db7a2..5f7fcc9 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -945,7 +945,7 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+ 	struct device *dev = pci->dev;
+ 	struct device_node *np = dev->of_node;
+ 	resource_size_t iobase;
+-	struct resource_entry *win;
++	struct resource_entry *win, *tmp;
+ 
+ 	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources, &iobase);
+ 	if (err)
+@@ -955,14 +955,17 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+ 	if (err)
+ 		goto out_release_res;
+ 
+-	resource_list_for_each_entry(win, &pci->resources) {
++	resource_list_for_each_entry_safe(win, tmp, &pci->resources) {
+ 		struct resource *res = win->res;
+ 
+ 		if (resource_type(res) == IORESOURCE_IO) {
+ 			err = pci_remap_iospace(res, iobase);
+-			if (err)
++			if (err) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 err, res);
++
++				resource_list_destroy_entry(win);
++			}
+ 		}
+ 	}
+ 
+-- 
+2.6.4
+
