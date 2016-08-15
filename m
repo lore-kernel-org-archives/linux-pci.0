@@ -1,59 +1,120 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com,
-	x86@kernel.org
-Subject: [PATCH v4 0/5] Fixing a set of bugs for ioapic hotplug
-Date: Wed, 17 Aug 2016 16:00:32 +0800
-Message-Id: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <mark.d.rustad@intel.com>
+Return-Path: <mark.d.rustad@intel.com>
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: Alex Williamson <alex.williamson@redhat.com>, Alexander Duyck
+	<alexander.duyck@gmail.com>, Alexey Kardashevskiy <aik@ozlabs.ru>, "Bjorn
+ Helgaas" <helgaas@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Babu Moger
+	<babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
+	"santosh@chelsio.com" <santosh@chelsio.com>, Netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+Date: Mon, 15 Aug 2016 23:16:57 +0000
+Message-ID: <B64D748A-711E-4701-96EF-C447333F5BF5@intel.com>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+ <1452684335-46107-4-git-send-email-hare@suse.de>
+ <20160209210458.GB32530@localhost>
+ <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
+ <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
+ <1470787409.3015.81.camel@kernel.crashing.org>
+ <CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
+ <1470873296.3015.117.camel@kernel.crashing.org>
+ <CAKgT0UcPh2RZazDL-cJbJkZFUJ03kTocn5H7WA=Kk_+S-CV_HA@mail.gmail.com>
+ <20160811141700.4f4faabb@t450s.home>
+ <1470978669.3015.155.camel@kernel.crashing.org>
+ <197F6532-FC5E-4D72-976D-4207BAD8D83E@intel.com>
+ <1471299799.12231.121.camel@kernel.crashing.org>
+ <1471300400.12231.130.camel@kernel.crashing.org>
+In-Reply-To: <1471300400.12231.130.camel@kernel.crashing.org>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_4378A241-00CD-4684-B3B4-5F5698D79B1E";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-A set of patches fixing bugs found while testing IOAPIC hotplug.
+--Apple-Mail=_4378A241-00CD-4684-B3B4-5F5698D79B1E
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii;
+	delsp=yes;
+	format=flowed
 
-Regards,
-Rui
+Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
 
-Changelog:
+> Filtering things to work around bugs in existing guests to avoid crashes
+> is a different kettle of fish and could be justified but keep in mind that
+> in most cases a malicious guest will be able to exploit those HW flaws.
 
-Changes from v3 to v4:
-* Rebased on top of 4.8-rc2 and re-tested it.
-* Added the missing 'Acked-by: Bjorn Helgaas <bhelgaas@google.com>' in 0002.
-* Sent to x86@kernel.org for review as suggested by Rafael.
+Bugs in existing guests is an interesting case, but I have been focused on  
+getting acceptable behavior from a properly functioning guest, in the face  
+of hardware issues that can only be resolved in a single place.
 
-Changes from v2 to v3:
-* Rebased on top of 4.8-rc1 per Bjorn & Rafael.
-* Improved the commit message of 0003, w/ clearer explanation.
+I agree that a malicious guest can cause all kinds of havoc with  
+directly-assigned devices. Consider a 4-port PHY chip on a shared MDIO bus,  
+for instance. There is really nothing to be done about the potential for  
+mischief with that kind of thing.
 
-Changes from v1 to v2:
-* Split the first patch into two as advised by Bjorn: "would be nicer if
-the interface change and header file munging were in a separate patch so
-they wouldn't obscure the meat of the change, i.e., the addition of calls
-to acpi_ioapic_add()."
-* Removed acpi_ioapic_add() as an exported symbol.
-* Fixed some typos, and s/acpi/ACPI/, s/ioapic/IOAPIC/ throughout.
-* Fixed a warning from 0-day testing.
+The VPD problem that I had been concerned about arises from a bad design in  
+the PCI spec together with implementations that share the registers across  
+functions. The hardware isn't going to change and I really doubt that the  
+spec will either, so we address it the only place we can.
 
-Rui Wang (5):
-  x86/ioapic: Change prototype of acpi_ioapic_add()
-  x86/ioapic: Support hot-removal of IOAPICs present during boot
-  x86/ioapic: Fix setup_res() failing to get resource
-  x86/ioapic: Fix lost IOAPIC resource after hot-removal and hotadd
-  x86/ioapic: Fix ioapic failing to request resource
+I am certain that we agree that not everything can or should be addressed  
+in vfio. I did not mean to suggest it should try to address everything, but  
+I think it should make it possible for correctly behaving guests to work. I  
+think that is not unreasonable.
 
- drivers/acpi/internal.h |  2 --
- drivers/acpi/ioapic.c   | 46 ++++++++++++++++++++++++++--------------------
- drivers/acpi/pci_root.c | 12 +++++++++++-
- drivers/pci/setup-bus.c |  5 ++++-
- include/linux/acpi.h    |  6 ++++++
- 5 files changed, 47 insertions(+), 24 deletions(-)
+Perhaps the VPD range check should really just have been implemented for  
+the sysfs interface, and left the vfio case unchecked. I don't know because  
+I was not involved in that issue. Perhaps someone more intimately involved  
+can comment on that notion.
 
--- 
-1.8.3.1
+> Assuming that a device coming back from a guest is functional and not
+> completely broken and can be re-used without a full PERST or power cycle
+> is a wrong assumption. It may or may not work, no amount of "filtering"
+> will fix the fundamental issue. If your HW won't give you access to PERST
+> well ... blame Intel for not specifying a standard way to generate it in
+> the first place :-)
+
+Yeah, I worry about the state that a malicious guest could leave a device  
+in, but I consider direct assignment always risky anyway. I would just like  
+it to at least work in the non-malicious guest cases.
+
+I guess my previous response was really just too terse, I was just focused  
+on unavoidable hangs and data corruption, which even were happening without  
+any guest involvement. For me, guests were just an additional exposure of  
+the same underlying issue.
+
+With hindsight, it is easy to see that a standard reset would now be a  
+pretty useful thing. I am sure that even if it existed, we would now have  
+lots and lots of quirks around it as well! :-)
+
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+--Apple-Mail=_4378A241-00CD-4684-B3B4-5F5698D79B1E
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJXsk1oAAoJEDwO/+eO4+5ucXYQAKOGYyHnEI9+QpoV7FEgGsTQ
++Ire7lSaKbkhfIDDcECGW/CjrfKBeAM9x9Hk1NII2/Dbux4Hlf8WMXkfmsFb2VXU
+axjM2OyjJahdsGWHy96gZ7M/Do/tho/aOjBL27a9G539bJci5Y+rEcIO0disjds+
+lyQ5IOf6j1zJFdl3koiNJMmsJou+kTadC4Cq93x3trG9iiOl8m8FaujmcWr3uz8M
+y1uG6xuUBEXRexxKe2UL0SQQvR0/XY/J9dMyTEKmT+3a2+VhvxwOjFlduJy31BUp
+T8SFT9okqliTWY5QzT+xJ2A9C6+/5ji3Pj47eTeo0GCQVPnjwD7nFYCtjczM2Ni5
+4o0znkwijA2TwYuPf2ZUXNzqUwU15fAK5zJT1ga5juRpsasiJavn1izF7WXI76ca
+/4wfdyJvt/vaqJBBzKzCEbX73gM275G3ETq3nLtw+09yuq+S1ZPkXd/28g/wmlXl
+tZ5Rs6SdvT37FEAHiuxJxLfmBNpZ9dd58RHb4Hq6PpL7FS0yh/1mBY/DWobB4MHl
+zgCI1dxv2udAGcLOSJ2LAPE/oEqlQXmYmIa39NwGS/lMAFD7DDnH1BpcyrseSlRX
+IJhnL0x1Lfb2eVAiNlwjJLZgvNSjbeQv2rdsgLjrmgH06XXJqZcXjgbUHRKSK2pT
+dXqcxOxBrHnHIgpmHy9W
+=MBjF
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_4378A241-00CD-4684-B3B4-5F5698D79B1E--
