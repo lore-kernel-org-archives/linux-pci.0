@@ -1,99 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52596 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752797AbcHQVid (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Aug 2016 17:38:33 -0400
-Date: Wed, 17 Aug 2016 16:37:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160817213745.GE27353@localhost>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
- <1470687542-30155-2-git-send-email-keith.busch@intel.com>
- <20160815174002.GB9790@localhost>
- <20160815192316.GB18083@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160815192316.GB18083@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 00/15] ACPI IORT ARM SMMU v3 support
+Date: Mon, 15 Aug 2016 16:23:25 +0100
+Message-Id: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 15, 2016 at 03:23:16PM -0400, Keith Busch wrote:
-> On Mon, Aug 15, 2016 at 12:40:02PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Aug 08, 2016 at 02:19:02PM -0600, Keith Busch wrote:
-> > > +/*
-> > > + * The PCIe slot capabilities for Intel compatible Hot-swap backplane advertise
-> > > + * attention and power indicators, but will do the wrong thing if used in a
-> > > + * standard way. Ignore these.
-> > > + */
-> > 
-> > Hmm.  So I guess you're saying these devices are defective?  Is there
-> > an erratum we can reference?
-> > 
-> > What exactly does "do the wrong thing" mean?  These are indicators, so
-> > the only thing we really do is turn them on and off.  I think we do
-> > that with pcie_write_cmd_nowait(), and all the synchronization there
-> > is a little messy.  Maybe we got that wrong somehow?
-> > 
-> > It's hard to believe something as simple as controlling an LED is
-> > broken.  If it *is* broken, I would think the breakage would be
-> > platform-dependent, not just device-dependent, i.e., I would suspect
-> > something wrong with motherboard wiring or firmware.
-> 
-> This is actually a "feature". The devices listed in the patch re-purpose
-> the spec defined capability and control bits for Attention and Power
-> indicators. The control values match IBPI (International Blinking Pattern
-> Interpretation) rather than the spec definition.
-> 
-> Since these operate in a non-standard way, we'd just as soon not let
-> the kernel know about them (an incorrect LED pattern will definitely
-> occur). The LEDs are to be set from user space by 'ledmon' instead.
-> 
-> Had I my way, the hardware wouldn't advertise the capability in the
-> first place. I rarely get my way, so I instead get to publicly defend
-> the quirk. :)
+This patch series is v4 of a previous posting:
 
-Usually when I think something is totally stupid, it's because I don't
-know the whole story.  So it might make more sense and lead to a
-better solution if you could tell us more about your intent here.
+https://lkml.org/lkml/2016/7/20/248
 
-According to the Linux PCI database, the devices you want to quirk are:
+v3 -> v4
+	- Added single mapping API (for IORT named components)
+	- Fixed arm_smmu_iort_xlate() return value
+	- Reworked fwnode registration and platform device creation
+	  ordering to fix probe ordering dependencies
+	- Added code to keep device_node ref count with new iommu
+	  fwspec API
+	- Added patch to make iommu_fwspec arch agnostic
+	- Dropped RFC status
+	- Rebased against v4.8-rc2
 
-  2030  Sky Lake-E PCI Express Root Port 1A	
-  2031  Sky Lake-E PCI Express Root Port 1B	
-  2032  Sky Lake-E PCI Express Root Port 1C	
-  2033  Sky Lake-E PCI Express Root Port 1D
+v2 -> v3
+	- Rebased on top of dependencies series [1][2][3](v4.7-rc3)
+	- Added back reliance on ACPI early probing infrastructure
+	- Patch[1-3] merged through other dependent series
+	- Added back IOMMU fwnode generalization
+	- Move SMMU v3 static functions configuration to IORT code
+	- Implemented generic IOMMU fwspec API
+	- Added code to implement fwnode platform device look-up
 
-So are you saying that on every platform that uses Sky Lake-E, these
-indicators are non-standard in this way?
+v1 -> v2:
+	- Rebased on top of dependencies series [1][2][3](v4.7-rc1)
+	- Removed IOMMU fwnode generalization
+	- Implemented ARM SMMU v3 ACPI probing instead of ARM SMMU v2
+	  owing to patch series dependencies [1]
+	- Moved platform device creation logic to IORT code to
+	  generalize its usage for ARM SMMU v1-v2-v3 components
+	- Removed reliance on ACPI early device probing
+	- Created IORT specific iommu_xlate() translation hook leaving
+	  OF code unchanged according to v1 reviews
 
-IBPI looks like it's targeted at storage arrays, since it has states
-for "drive not present", "fail", "rebuild", "hotspare", etc.  Maybe
-there's some sense for Sky Lake-E platforms with directly-attached
-storage.
+The ACPI IORT table provides information that allows instantiating
+ARM SMMU devices and carrying out id mappings between components on
+ARM based systems (devices, IOMMUs, interrupt controllers).
 
-But if somebody built a Sky Lake-E platform with one of these Root
-Ports leading to a plain hotplug PCIe slot with regular indicators,
-your quirk would break them, wouldn't it?  Or are you imposing
-constraints on how those Root Ports can be used?
+http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
 
-How does 'ledmon' manage the indicators?  The kernel (pciehp) uses the
-Slot Control register, which is not completely trivial because of the
-Command Completed synchronization required.  I'm hoping ledmon isn't
-going to mess up that synchronization.
+Building on basic IORT support, available through [2],
+this patchset enables ARM SMMU v3 support on ACPI systems.
 
-How does this work for other OSes?  Are you proposing similar changes
-to Windows?
+Most of the code is aimed at building the required generic ACPI
+infrastructure to create and enable IOMMU components and to bring
+the IOMMU infrastructure for ACPI on par with DT, which is going to
+make future ARM SMMU components easier to integrate.
 
-What's your plan for backwards compatibility?  Just accept that old
-OSes won't be able to operate the indicators correctly until they're
-patched with this quirk?
+PATCH (1) adds a FWNODE_IOMMU type to the struct fwnode_handle type.
+          It is required to attach a fwnode identifier to platform
+          devices allocated/detected through IORT tables entries;
+          IOMMU devices have to have an identifier to look them up
+          eg IOMMU core layer carrying out id translation. This can be
+          done through a fwnode_handle (ie IOMMU platform devices created
+          out of IORT tables are not ACPI devices hence they can't be
+          allocated as such, otherwise they would have a fwnode_handle of
+          type FWNODE_ACPI).
 
-You must have set that capability bit for some reason.  You don't want
-the OS to consume it, so who *do* you expect to consume it, and how
-(direct PCI config access, lspci, etc.), and what are they supposed to
-do with it?
+PATCH (2) Add kernel infrastructure to make the struct iommu_fwspec
+          handling arch agnostic and generic.
 
-Still scratching my head,
-Bjorn
+PATCH (3) makes use of the ACPI early probing API to add a linker script
+          section for probing devices via IORT ACPI kernel code.
+
+PATCH (4) provides IORT support for registering IOMMU IORT node through
+          their fwnode handle.
+
+PATCH (5) implements core code fwnode based platform devices look-up.
+
+PATCH (6) extends iommu_fwspec so that it can be used on ACPI based
+          system by creating a generic IOMMU fwspec kernel layer.
+
+PATCH (7) implements the of_dma_configure() API in ACPI world -
+          acpi_dma_configure() - and patches PCI and ACPI core code to
+          start making use of it.
+
+PATCH (8) provides an IORT function to detect existence of specific type
+          of IORT components.
+
+PATCH (9) creates the kernel infrastructure required to create ARM SMMU
+          platform devices for IORT nodes.
+
+PATCH (10) refactors the ARM SMMU v3 driver so that the init functions are
+           split in a way that groups together code that probes through DT
+           and code that carries out HW registers FW agnostic probing, in
+           preparation for adding the ACPI probing path.
+
+PATCH (11) rework ARM SMMU v3 platform driver registration to make it work
+           on ACPI systems.
+
+PATCH (12) Building on patch (9), it adds ARM SMMU v3 IORT IOMMU
+           operations to create and probe ARM SMMU v3 components.
+
+PATCH (13) Extend the IORT iort_node_map_rid() to work on a type mask
+           instead of a single type so that the translation API can
+           be used on a range of components.
+
+PATCH (14) Add IORT API to carry out id mappings for components that do
+           do not have an input identifier/RIDs (ie named components).
+
+PATCH (15) provides IORT infrastructure to carry out IOMMU configuration
+           for devices and hook it up to the previously introduced ACPI
+           DMA configure API.
+
+This patchset is built on top and depends on these two patch series:
+
+[1] R.Murphy "Generic DT bindings for PCI and ARM SMMU v3" v4
+    https://marc.info/?l=devicetree&m=146739193215518&w=2
+
+[2] T.Nowicki "Introduce ACPI world to ITS irqchip" v8
+    https://marc.info/?l=linux-kernel&m=147091000919640&w=2
+
+and is provided for early review/testing purposes here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v4
+
+Tested on FVP models for ARM SMMU v3 probing path.
+
+Lorenzo Pieralisi (15):
+  drivers: iommu: add FWNODE_IOMMU fwnode type
+  drivers: iommu: implement arch_{set/get}_iommu_fwspec API
+  drivers: acpi: iort: introduce linker section for IORT entries probing
+  drivers: acpi: iort: add support for IOMMU fwnode registration
+  drivers: platform: add fwnode base platform devices retrieval
+  drivers: iommu: make iommu_fwspec OF agnostic
+  drivers: acpi: implement acpi_dma_configure
+  drivers: acpi: iort: add node match function
+  drivers: acpi: iort: add support for ARM SMMU platform devices
+    creation
+  drivers: iommu: arm-smmu-v3: split probe functions into DT/generic
+    portions
+  drivers: iommu: arm-smmu-v3: enable ACPI driver initialization
+  drivers: iommu: arm-smmu-v3: add IORT configuration
+  drivers: acpi: iort: replace rid map type with type mask
+  drivers: acpi: iort: add single mapping function
+  drivers: acpi: iort: introduce iort_iommu_configure
+
+ arch/arm/Kconfig                      |   1 +
+ arch/arm/include/asm/iommu-fwspec.h   |  30 +++
+ arch/arm64/Kconfig                    |   1 +
+ arch/arm64/include/asm/iommu-fwspec.h |  30 +++
+ drivers/acpi/arm64/iort.c             | 481 +++++++++++++++++++++++++++++++++-
+ drivers/acpi/glue.c                   |   4 +-
+ drivers/acpi/scan.c                   |  29 ++
+ drivers/base/platform.c               |  23 ++
+ drivers/iommu/Kconfig                 |   7 +
+ drivers/iommu/Makefile                |   1 +
+ drivers/iommu/arm-smmu-v3.c           | 150 +++++++++--
+ drivers/iommu/iommu-fwspec.c          | 126 +++++++++
+ drivers/iommu/of_iommu.c              |  91 -------
+ drivers/pci/probe.c                   |   3 +-
+ include/acpi/acpi_bus.h               |   2 +
+ include/asm-generic/vmlinux.lds.h     |   1 +
+ include/linux/acpi.h                  |   5 +
+ include/linux/fwnode.h                |   1 +
+ include/linux/iommu-fwspec.h          |  70 +++++
+ include/linux/iommu.h                 |  25 ++
+ include/linux/iort.h                  |  18 ++
+ include/linux/of_iommu.h              |  28 +-
+ include/linux/platform_device.h       |   3 +
+ 23 files changed, 995 insertions(+), 135 deletions(-)
+ create mode 100644 arch/arm/include/asm/iommu-fwspec.h
+ create mode 100644 arch/arm64/include/asm/iommu-fwspec.h
+ create mode 100644 drivers/iommu/iommu-fwspec.c
+ create mode 100644 include/linux/iommu-fwspec.h
+
+-- 
+2.6.4
+
