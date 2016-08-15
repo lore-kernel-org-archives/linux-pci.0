@@ -1,82 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:32916 "EHLO mail5.wrs.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756610AbcHVWAa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 18:00:30 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Richard Zhu <Richard.Zhu@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 3/8] PCI: imx6: make it explicitly non-modular
-Date: Mon, 22 Aug 2016 17:59:43 -0400
-Message-ID: <20160822215948.27251-4-paul.gortmaker@windriver.com>
-In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from foss.arm.com ([217.140.101.70]:41933 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752590AbcHOQvU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Aug 2016 12:51:20 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Simon Horman <horms+renesas@verge.net.au>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <treding@nvidia.com>
+Subject: [PATCH 0/6] PCI: fix pci_remap_iospace() failure paths
+Date: Mon, 15 Aug 2016 17:50:40 +0100
+Message-Id: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On ARM/ARM64 architectures, PCI IO ports are emulated through memory
+mapped IO, by reserving a chunk of virtual address space starting at
+PCI_IOBASE and by mapping the PCI host bridges memory address space
+driving PCI IO cycles to it.
 
-drivers/pci/host/Kconfig:config PCI_IMX6
-drivers/pci/host/Kconfig:       bool "Freescale i.MX6 PCIe controller"
+PCI host bridge drivers that enable downstream PCI IO cycles map the
+host bridge memory address responding to PCI IO cycles to the fixed
+virtual address space through the pci_remap_iospace() API.
 
-...meaning that it currently is not being built as a module by anyone.
+This means that if the pci_remap_iospace() function fails, the
+corresponding host bridge PCI IO resource must be considered invalid, in
+that there is no way for the kernel to actually drive PCI IO transactions
+if the memory addresses responding to PCI IO cycles cannot be mapped into
+the CPU virtual address space.
 
-Lets remove the couple instances of modular code usage, so that
-when reading the driver there is no doubt it is builtin-only.
+As a follow-up to the linux-pci mailing list thread ([0]), this series
+fixes the pci_remap_iospace() failure paths by adding code that handles
+the failures and takes the required actions.
 
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.
+Compile tested on all affected PCI host controllers, testing and
+reviewing much appreciated.
 
-Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+[0] http://marc.info/?l=linux-pci&m=145816042427417&w=2
 
-We don't delete module.h since the file never even had that.
+Lorenzo Pieralisi (6):
+  drivers: pci: host: aardvark: fix pci_remap_iospace() failure path
+  drivers: pci: host: designware: fix pci_remap_iospace() failure path
+  drivers: pci: host: versatile: fix pci_remap_iospace() failure path
+  drivers: pci: host: rcar: fix pci_remap_iospace() failure path
+  drivers: pci: host: common: fix pci_remap_iospace() failure path
+  drivers: pci: host: tegra: fix pci_remap_iospace() failure path
 
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
+ drivers/pci/host/pci-aardvark.c    |  8 +++++---
+ drivers/pci/host/pci-host-common.c |  8 +++++---
+ drivers/pci/host/pci-tegra.c       |  7 +++++--
+ drivers/pci/host/pci-versatile.c   |  8 +++++---
+ drivers/pci/host/pcie-designware.c | 21 ++++++++++++---------
+ drivers/pci/host/pcie-rcar.c       |  9 ++++++---
+ 6 files changed, 38 insertions(+), 23 deletions(-)
 
-Cc: Richard Zhu <Richard.Zhu@freescale.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pci-imx6.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index b741a36a67f3..ead4a5c3480b 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -739,7 +739,6 @@ static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6qp-pcie", .data = (void *)IMX6QP, },
- 	{},
- };
--MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
- 
- static struct platform_driver imx6_pcie_driver = {
- 	.driver = {
-@@ -749,14 +748,8 @@ static struct platform_driver imx6_pcie_driver = {
- 	.shutdown = imx6_pcie_shutdown,
- };
- 
--/* Freescale PCIe driver does not allow module unload */
--
- static int __init imx6_pcie_init(void)
- {
- 	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
- }
--module_init(imx6_pcie_init);
--
--MODULE_AUTHOR("Sean Cross <xobs@kosagi.com>");
--MODULE_DESCRIPTION("Freescale i.MX6 PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
-+device_initcall(imx6_pcie_init);
 -- 
-2.8.4
+2.6.4
 
