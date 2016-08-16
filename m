@@ -1,98 +1,91 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [RFC 2/2] vmd: eliminate index member from irq list
-Date: Tue, 30 Aug 2016 15:04:57 -0600
-Message-Id: <1472591097-19712-3-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1472591097-19712-1-git-send-email-jonathan.derrick@intel.com>
-References: <1472591097-19712-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <marc.zyngier@arm.com>
+Return-Path: <marc.zyngier@arm.com>
+Subject: Re: [PATCH V8 2/8] ACPI: Add new IORT functions to support MSI domain
+ handling
+To: "Zheng, Lv" <lv.zheng@intel.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Tomasz Nowicki <tn@semihalf.com>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+ <1470909998-16710-3-git-send-email-tn@semihalf.com>
+ <20160812164234.GB17734@red-moon>
+ <1AE640813FDE7649BE1B193DEA596E883BC0E3F2@SHSMSX101.ccr.corp.intel.com>
+Cc: "tglx@linutronix.de" <tglx@linutronix.de>,
+ "jason@lakedaemon.net" <jason@lakedaemon.net>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "rafael@kernel.org" <rafael@kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "shijie.huang@arm.com" <shijie.huang@arm.com>,
+ "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+ "mw@semihalf.com" <mw@semihalf.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "al.stone@linaro.org" <al.stone@linaro.org>,
+ "graeme.gregory@linaro.org" <graeme.gregory@linaro.org>,
+ "ddaney.cavm@gmail.com" <ddaney.cavm@gmail.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57B2EDEB.40903@arm.com>
+Date: Tue, 16 Aug 2016 11:41:47 +0100
+MIME-Version: 1.0
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E883BC0E3F2@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Use math to discover the irq list index number relative to the irq list
-head.
+On 16/08/16 03:15, Zheng, Lv wrote:
+> Hi,
+> 
+>> From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-owner@vger.kernel.org] On Behalf Of Lorenzo
+>> Pieralisi
+>> Subject: Re: [PATCH V8 2/8] ACPI: Add new IORT functions to support MSI domain handling
+>>
+>> On Thu, Aug 11, 2016 at 12:06:32PM +0200, Tomasz Nowicki wrote:
+>>
+>> [...]
+>>
+>>> +/**
+>>> + * iort_register_domain_token() - register domain token and related ITS ID
+>>> + * to the list from where we can get it back later on.
+>>> + * @trans_id: ITS ID.
+>>> + * @fw_node: Domain token.
+>>> + *
+>>> + * Returns: 0 on success, -ENOMEM if no memory when allocating list element
+>>> + */
+>>> +int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
+>>> +{
+>>> +	struct iort_its_msi_chip *its_msi_chip;
+>>> +
+>>> +	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
+>>
+>> I spotted this while reworking my ARM SMMU series, this may sleep
+>> and that's no good given that we call it within the acpi_probe_lock.
+>>
+>> Same goes for irq_domain_alloc_fwnode() (that we call in
+>> gic_v2_acpi_init()), we have got to fix this usage, I will see with
+>> Marc what's the best way to do it.
+> 
+> If we can ensure that all table device probe entries are created
+> during link stage or early stage. I think you can safely unlock probe
+> lock before invoking acpi_table_parse() in
+> __acpi_probe_device_table().
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- arch/x86/pci/vmd.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+That'd be quite risky, as this lock is the only thing that protects the
+acpi_probe_entry pointer (I really wish the ACPI API was less global
+variable happy), and I don't see how we can guarantee to only ever
+execute this in a single-threaded environment.
 
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index 9320216..aa8d74e 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -58,13 +58,11 @@ struct vmd_irq {
- /**
-  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
-  * @irq_list:	the list of irq's the VMD one demuxes to.
-- * @index:	index into the VMD MSI-X table; used for message routing.
-  * @count:	number of child IRQs assigned to this vector; used to track
-  *		sharing.
-  */
- struct vmd_irq_list {
- 	struct list_head	irq_list;
--	unsigned int		index;
- 	unsigned int		count;
- };
- 
-@@ -93,6 +91,12 @@ static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
- 	return container_of(bus->sysdata, struct vmd_dev, sysdata);
- }
- 
-+static inline unsigned int index_from_irqs(struct vmd_dev *vmd,
-+					   struct vmd_irq_list *irqs)
-+{
-+	return irqs - vmd->irqs;
-+}
-+
- /*
-  * Drivers managing a device in a VMD domain allocate their own IRQs as before,
-  * but the MSI entry for the hardware it's driving will be programmed with a
-@@ -105,9 +109,11 @@ static void vmd_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct vmd_irq *vmdirq = data->chip_data;
- 	struct vmd_irq_list *irq = vmdirq->irq;
-+	struct vmd_dev *vmd = irq_data_get_irq_handler_data(data);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(irq->index);
-+	msg->address_lo = MSI_ADDR_BASE_LO |
-+			  MSI_ADDR_DEST_ID(index_from_irqs(vmd, irq));
- 	msg->data = 0;
- }
- 
-@@ -196,6 +202,7 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
- 	struct msi_desc *desc = arg->desc;
- 	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
- 	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
-+	unsigned int index, vector;
- 
- 	if (!vmdirq)
- 		return -ENOMEM;
-@@ -203,10 +210,10 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
- 	INIT_LIST_HEAD(&vmdirq->node);
- 	vmdirq->irq = vmd_next_irq(vmd, desc);
- 	vmdirq->virq = virq;
-+	index = index_from_irqs(vmd, vmdirq->irq);
-+	vector = pci_irq_vector(vmd->dev, index);
- 
--	irq_domain_set_info(domain, virq,
--			    pci_irq_vector(vmd->dev, vmdirq->irq->index),
--			    info->chip, vmdirq,
-+	irq_domain_set_info(domain, virq, vector, info->chip, vmdirq,
- 			    handle_untracked_irq, vmd, NULL);
- 	return 0;
- }
-@@ -689,7 +696,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	for (i = 0; i < vmd->msix_count; i++) {
- 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
--		vmd->irqs[i].index = i;
- 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
- 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
- 		if (err)
+An alternative would be to turn the spinlock into a mutex, which will
+allow sleeping, and yet provide the required mutual exclusion.
+
+Thanks,
+
+	M.
 -- 
-1.8.3.1
+Jazz is not dead. It just smells funny...
