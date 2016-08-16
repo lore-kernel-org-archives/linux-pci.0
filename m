@@ -1,108 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.ru ([83.169.36.222]:41049 "EHLO ozlabs.ru"
+Received: from mail.kernel.org ([198.145.29.136]:33928 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932422AbcHKKJp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Aug 2016 06:09:45 -0400
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: netdev@vger.kernel.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Santosh Raspatur <santosh@chelsio.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Alexander Duyck <alexander.duyck@gmail.com>,
-	Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH kernel] PCI: Enable access to custom VPD for Chelsio devices (cxgb3)
-Date: Thu, 11 Aug 2016 20:03:29 +1000
-Message-Id: <1470909809-11007-1-git-send-email-aik@ozlabs.ru>
-In-Reply-To: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
-References: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
+	id S1753431AbcHPNh0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Aug 2016 09:37:26 -0400
+Date: Tue, 16 Aug 2016 08:37:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Yong, Jonathan" <jonathan.yong@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/3] PCI: Add Precision Time Measurement (PTM) support
+Message-ID: <20160816133715.GA30825@localhost>
+References: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <57AA984E.8040308@intel.com>
+ <20160815185931.GD9790@localhost>
+ <57B2C90F.8010109@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57B2C90F.8010109@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is at least one Chelsio 10Gb card which uses VPD area to store
-some custom blocks (example below). However pci_vpd_size() returns
-the length of the first block only assuming that there can be only
-one VPD "End Tag" and VFIO blocks access beyond that offset
-(since 4e1a63555) which leads to the situation when the guest "cxgb3"
-driver fails to probe the device. The host system does not have this
-problem as the drives accesses the config space directly without
-pci_read_vpd()/...
+On Tue, Aug 16, 2016 at 04:04:31PM +0800, Yong, Jonathan wrote:
+> On 08/16/2016 02:59, Bjorn Helgaas wrote:
+> > 
+> > I guess I was hoping you could test these patches.  Do you have any
+> > way to do that?
+> > 
+> 
+> No real hardware with this feature yet, so testing is entirely on software.
 
-This adds a quirk to override the VPD size to a bigger value.
+OK, let me know the results of your software testing with these patches.
 
-This is the controller:
-Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
+> Looks like there is still this compile warning to fix:
+> http://patchwork.ozlabs.org/patch/634825/
 
-This is its VPD:
-#0000 Large item 42 bytes; name 0x2 Identifier String
-	b'10 Gigabit Ethernet-SR PCI Express Adapter'
-#002d Large item 74 bytes; name 0x10
-	#00 [EC] len=7: b'D76809 '
-	#0a [FN] len=7: b'46K7897'
-	#14 [PN] len=7: b'46K7897'
-	#1e [MN] len=4: b'1037'
-	#25 [FC] len=4: b'5769'
-	#2c [SN] len=12: b'YL102035603V'
-	#3b [NA] len=12: b'00145E992ED1'
-#007a Small item 1 bytes; name 0xf End Tag
----
-#0c00 Large item 16 bytes; name 0x2 Identifier String
-	b'S310E-SR-X      '
-#0c13 Large item 234 bytes; name 0x10
-	#00 [PN] len=16: b'TBD             '
-	#13 [EC] len=16: b'110107730D2     '
-	#26 [SN] len=16: b'97YL102035603V  '
-	#39 [NA] len=12: b'00145E992ED1'
-	#48 [V0] len=6: b'175000'
-	#51 [V1] len=6: b'266666'
-	#5a [V2] len=6: b'266666'
-	#63 [V3] len=6: b'2000  '
-	#6c [V4] len=2: b'1 '
-	#71 [V5] len=6: b'c2    '
-	#7a [V6] len=6: b'0     '
-	#83 [V7] len=2: b'1 '
-	#88 [V8] len=2: b'0 '
-	#8d [V9] len=2: b'0 '
-	#92 [VA] len=2: b'0 '
-	#97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
-#0d00 Large item 252 bytes; name 0x11
-	#00 [VC] len=16: b'122310_1222 dp  '
-	#13 [VD] len=16: b'610-0001-00 H1\x00\x00'
-	#26 [VE] len=16: b'122310_1353 fp  '
-	#39 [VF] len=16: b'610-0001-00 H1\x00\x00'
-	#4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
-#0dff Small item 0 bytes; name 0xf End Tag
+That report was from June 16, and I think I fixed the warning already.
+Or do you still see the warning?  I don't see it myself.
 
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
- drivers/pci/quirks.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ee72ebe1..94d3fb5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3241,6 +3241,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
- 			quirk_thunderbolt_hotplug_msi);
- 
-+static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
-+{
-+	if (!dev->vpd || !dev->vpd->ops || !dev->vpd->ops->set_size)
-+		return;
-+
-+	dev->vpd->ops->set_size(dev, max_t(unsigned int, dev->vpd->len, 0xe00));
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO,
-+			PCI_ANY_ID,
-+			quirk_chelsio_extend_vpd);
-+
- #ifdef CONFIG_ACPI
- /*
-  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
--- 
-2.5.0.rc3
-
+Bjorn
