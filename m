@@ -1,92 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 24 Aug 2016 11:47:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Omer Khaliq <okhaliq@caviumnetworks.com>
-Subject: Re: [PATCH v2 1/2] PCI: quirk fixup for cavium invalid sriov link
- value.
-Message-ID: <20160824164736.GA23914@localhost>
-References: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
- <1471994835-2423-2-git-send-email-okhaliq@caviumnetworks.com>
-MIME-Version: 1.0
-In-Reply-To: <1471994835-2423-2-git-send-email-okhaliq@caviumnetworks.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: herbert@gondor.apana.org.au, David.Daney@cavium.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ananth.Jasty@cavium.com, linux-crypto@vger.kernel.org, mpm@selenic.com,
- bhelgaas@google.com, clabbe.montjoie@gmail.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Helen Koike <helen.koike@collabora.co.uk>
+To: hch@infradead.org, mlin@kernel.org, fes@google.com,
+	keith.busch@intel.com, rlnelson@google.com, axboe@fb.com,
+	digitaleric@google.com, tytso@mit.edu, mikew@google.com,
+	monish@google.com
+Cc: Helen Koike <helen.koike@collabora.co.uk>,
+	linux-kernel@vger.kernel.org (open list),
+	linux-nvme@lists.infradead.org (open list:NVM EXPRESS DRIVER),
+	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
+Subject: [PATCH v3 RFC 0/2] Virtual NVMe device optimization
+Date: Mon, 15 Aug 2016 22:41:18 -0300
+Message-Id: <cover.1471308889.git.helen.koike@collabora.co.uk>
+In-Reply-To: <1460657059-21214-1-git-send-email-helen.koike@collabora.co.uk>
+References: <1460657059-21214-1-git-send-email-helen.koike@collabora.co.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 23, 2016 at 04:27:14PM -0700, Omer Khaliq wrote:
-> From: Ananth Jasty <Ananth.Jasty@cavium.com>
-> 
-> Cavium cn88xx hardware presents an incorrect SR-IOV Function
-> Dependency Link, add a fixup quirk for the affected devices.
-> 
-> Acked-by: David Daney <david.daney@cavium.com>
-> Signed-off-by: Ananth Jasty <Ananth.Jasty@cavium.com>
-> Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
+Please, check commit "nvme: improve performance for virtual NVMe devices" for more details
+Commit "PCI: Add Google device ID" only adds a new id in pci_ids.h
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Patches are based in the linux-block/for-next branch and available here:
+https://github.com/helen-fornazier/opw-staging/commits/nvme/dev
 
-If you update this patch for any reason, please update the subject
-like this:
+Helen Koike (1):
+  PCI: Add Google device ID
 
-  -PCI: quirk fixup for cavium invalid sriov link value.
-  +PCI: Fix incorrect Cavium cn8xx SR-IOV Function Dependency Link
+Rob Nelson (1):
+  nvme: improve performance for virtual NVMe devices
 
-This will make "git log --oneline drivers/pci/quirks.c" show more
-useful information and look more consistent.
+ drivers/nvme/host/Kconfig  |  11 ++++
+ drivers/nvme/host/Makefile |   1 +
+ drivers/nvme/host/pci.c    |  29 ++++++++++-
+ drivers/nvme/host/vdb.c    | 125 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/nvme/host/vdb.h    | 118 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/nvme.h       |  17 ++++++
+ include/linux/pci_ids.h    |   2 +
+ 7 files changed, 301 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/nvme/host/vdb.c
+ create mode 100644 drivers/nvme/host/vdb.h
 
-I assume somebody else will merge this patch along with your HWRNG
-driver.
-
-> ---
->  drivers/pci/quirks.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 37ff015..5980aae 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -834,6 +834,17 @@ static void quirk_amd_ioapic(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_VIPER_7410,	quirk_amd_ioapic);
->  #endif /* CONFIG_X86_IO_APIC */
->  
-> +#ifdef CONFIG_ARM64
-> +
-> +static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
-> +{
-> +	/* Fix for improper SRIOV configuration on Cavium cn88xx  RNM device */
-> +	if (dev->subsystem_device == 0xa118)
-> +		dev->sriov->link = dev->devfn;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
-> +#endif
-> +
->  /*
->   * Some settings of MMRBC can lead to data corruption so block changes.
->   * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+1.9.1
