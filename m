@@ -1,62 +1,33 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Thu, 18 Aug 2016 12:33:57 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, helgaas@kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci: call pci_intx when using legacy interrupts in
- pci_alloc_irq_vectors
-Message-ID: <20160818103357.GF27949@agordeev.lab.eng.brq.redhat.com>
-References: <1470924665-25860-1-git-send-email-hch@lst.de>
- <1470924665-25860-3-git-send-email-hch@lst.de>
- <20160818092007.GD27949@agordeev.lab.eng.brq.redhat.com>
+Return-Path: <jonathan.yong@intel.com>
+Return-Path: <jonathan.yong@intel.com>
+Message-ID: <57B2C90F.8010109@intel.com>
+Date: Tue, 16 Aug 2016 16:04:31 +0800
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160818092007.GD27949@agordeev.lab.eng.brq.redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ intel-wired-lan@lists.osuosl.org,
+ Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/3] PCI: Add Precision Time Measurement (PTM) support
+References: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com> <57AA984E.8040308@intel.com> <20160815185931.GD9790@localhost>
+In-Reply-To: <20160815185931.GD9790@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 18, 2016 at 11:20:07AM +0200, Alexander Gordeev wrote:
-> On Thu, Aug 11, 2016 at 07:11:05AM -0700, Christoph Hellwig wrote:
-> > ahci currently insists on an explicit call to pci_intx before falling back
-> > from MSI or MSI-X to legacy irqs.  As pci_intx is a no-op if the command
-> > register already contains the right value is seems safe and useful to add
-> > this call to pci_alloc_irq_vectors so that ahci can just use
-> > pci_alloc_irq_vectors.
+On 08/16/2016 02:59, Bjorn Helgaas wrote:
 > 
-> Looking at ahci_init_interrupts() (and probably at commit d684a90d
-> ("ahci: per-port msix support")) it looks like pci_alloc_irq_vectors()
-> is able to preserve the current AHCI logic?
-     ^^^^
-  is *not* able (sorry)
+> I guess I was hoping you could test these patches.  Do you have any
+> way to do that?
+> 
 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  drivers/pci/msi.c | 5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index 9233e7f..593698e 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -1200,8 +1200,11 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
-> >  	}
-> >  
-> >  	/* use legacy irq if allowed */
-> > -	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1)
-> > +	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1) {
-> > +		pci_intx(dev, 1);
+No real hardware with this feature yet, so testing is entirely on software.
+
+> I rebased them and pushed them to pci/ptm.  If everything looks good,
+> I'll merge them for v4.9.
 > 
-> It would rather called pci_intx_for_msi() here. But because it is
-> a generic code I am not sure what implications it has for all
-> drivers out there.
+> Bjorn
 > 
-> >  		return 1;
-> > +	}
-> > +
-> >  	return vecs;
-> >  }
-> >  EXPORT_SYMBOL(pci_alloc_irq_vectors);
-> > -- 
-> > 2.1.4
-> > 
+
+Looks like there is still this compile warning to fix:
+http://patchwork.ozlabs.org/patch/634825/
