@@ -1,153 +1,110 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Roy Zang <roy.zang@nxp.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, Jingoo Han
- <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: Support for configurable PCIe endpoint
-Date: Mon, 29 Aug 2016 15:25:17 +0000
-Message-ID: <HE1PR0402MB274801CA5F1062E7A58CEE688BE10@HE1PR0402MB2748.eurprd04.prod.outlook.com>
-References: <57A18927.9070003@ti.com>
- <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com> <57A31299.2040805@ti.com>
- <VI1PR04MB14544C83482106ABF1067D5F8E140@VI1PR04MB1454.eurprd04.prod.outlook.com>
- <57B5A919.6000809@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Simon
- Horman <horms@verge.net.au>, David Daney <david.daney@cavium.com>, Gabriele
- Paoloni <gabriele.paoloni@huawei.com>, Richard Zhu <Richard.Zhu@freescale.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay
- Inamdar <tinamdar@apm.com>, Ley Foon Tan <lftan@altera.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
- Roy Zang <tie-fei.zang@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <andriy.shevchenko@linux.intel.com>
+Return-Path: <andriy.shevchenko@linux.intel.com>
+Message-ID: <1471346604.4887.120.camel@linux.intel.com>
+Subject: Re: ACPI device using sub-resource of PCI device
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>, Aaron Durbin
+	 <adurbin@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas
+ <helgaas@kernel.org>,  "Rafael J. Wysocki" <rafael@kernel.org>, ACPI Devel
+ Maling List <linux-acpi@vger.kernel.org>,  Linux PCI
+ <linux-pci@vger.kernel.org>
+Date: Tue, 16 Aug 2016 14:23:24 +0300
+In-Reply-To: <20160816091502.GB1751@lahna.fi.intel.com>
+References: 
+	<CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
+	 <3103060.86QBTjSLk3@vostro.rjw.lan>
+	 <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
+	 <3861743.KWBechkp08@vostro.rjw.lan>
+	 <CAE2855sk2M_77W7dPUb-G43zaDgiNvH2fwpEUvZKOZCBZ-1UpQ@mail.gmail.com>
+	 <CAE2855uNKxtSJSGdF9T7LcGV+F6HzqJhmgDEdgAEwrY=HjPnrQ@mail.gmail.com>
+	 <20160816091502.GB1751@lahna.fi.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/18/2016 07:25 AM, Kishon Vijay Abraham I wrote:
-> Hi,
->
-> On Wednesday 17 August 2016 03:19 PM, Mingkai Hu wrote:
->>
->>> -----Original Message-----
->>> From: Kishon Vijay Abraham I [mailto:kishon@ti.com]
->>> Sent: Thursday, August 04, 2016 6:02 PM
->>> To: Joao Pinto <Joao.Pinto@synopsys.com>; bhelgaas@google.com; linux-
->>> pci@vger.kernel.org; arnd@arndb.de; Jingoo Han <jingoohan1@gmail.com>;
->>> Pratyush Anand <pratyush.anand@gmail.com>
->>> Cc: Ley Foon Tan <lftan@altera.com>; Rob Herring <robh@kernel.org>;
->>> Tanmay Inamdar <tinamdar@apm.com>; Roy Zang <tie-
->>> fei.zang@freescale.com>; Mingkai Hu <mingkai.hu@freescale.com>;
->>> Minghuan Lian <minghuan.Lian@freescale.com>; Richard Zhu
->>> <Richard.Zhu@freescale.com>; Lucas Stach <l.stach@pengutronix.de>;
->>> Murali Karicheri <m-karicheri2@ti.com>; Thomas Petazzoni
->>> <thomas.petazzoni@free-electrons.com>; Jason Cooper
->>> <jason@lakedaemon.net>; Thierry Reding <thierry.reding@gmail.com>;
->>> Simon Horman <horms@verge.net.au>; Zhou Wang
->>> <wangzhou1@hisilicon.com>; Gabriele Paoloni
->>> <gabriele.paoloni@huawei.com>; Stanimir Varbanov <svarbanov@mm-
->>> sol.com>; David Daney <david.daney@cavium.com>; linux-
->>> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
->>> omap@vger.kernel.org; Carlos Palminha
->>> <CARLOS.PALMINHA@synopsys.com>
->>> Subject: Re: Support for configurable PCIe endpoint
->>>
->>> Hi,
->>>
->>> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
->>>> Hi Kishon,
->>>>
->>>> On 8/3/2016 7:03 AM, Kishon Vijay Abraham I wrote:
->>>>> Hi,
->>>>>
->>>>> The PCIe controller present in TI's DRA7 SoC is capable of operating
->>>>> either in Root Complex mode or Endpoint mode. (It uses Synopsys
->>>>> Designware Core). I'd assume most of the PCIe controllers on other
->>>>> platforms that use Designware core should also be capable to operate
->>>>> in endpoint mode. But linux kernel right now supports only RC mode.
->>>>>
->>>>> PCIe endpoint support discussion came up briefly before [1] but it
->>>>> was felt the practical use case will find firmware more suitable and
->>>>> endpoint support in kernel can be used only for validation or demo.
->>>>>
->>>>> *) Modify platform driver to support EP mode (in my case pci-dra7xx.c).
->>>>>
->>>>> *) dt binding specific to EP mode should be created.
->>>>>
->>>>> Once I complete the implementation and start posting RFC patches, a
->>>>> lot of these will become clear. But I want to check if this sounds
->>>>> okay to you guys before starting the implementation.
->>>>>
->>>>> Let me know if you have some other ideas too.
->>>>>
->>>>> Cheers
->>>>> Kishon
->>>>>
->>>>> [1] -> http://www.spinics.net/lists/linux-pci/msg26026.html
->>>>>
->>>> You are rising a topic that we are also addressing in Synopsys.
->>>>
->>>> For the PCIe RC hardware validation we are currently using the
->>>> standard pcie-designware and pcie-designware-plat drivers.
->>>>
->>>> For the Endpoint we have to use an internal software package. Its main
->>>> purpose is to initialize the IP registers, eDMA channels and make data
->>>> transfer to prove that the everything is working properly. This is
->>>> done in 2 levels, a custom driver built and loaded and an application
->>>> that makes some ioctl to the driver executing some interesting
->>>> functions to check the Endpoint status and make some data exchange.
->>> hmm.. the platform I have doesn't have a DMA in PCIe IP
->>> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does
->>> the EP access RC memory? i.e the driver in the RC allocates memory from it's
->>> DDR and gives it's DDR address to the EP. The EP then transfers data to this
->>> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
->>> simple with configurable EPs. I'd like to know more about your testing though.
->>>
->> Hi Kishon,
->>
->> This is a typical user case for EP to use DMA transfer data to/from RC memory.
->> In our case, we implement ring (like BD ring) or register in EP to communicate
->> The address allocated in RC memory, then EP can transfer data to/from RC memory.
-> Initially I had some confusion w.r.t this because the address allocated in RC
-> memory can also be an address in EP system. For example let's assume we connect
-> two similar systems one configured as RC and the other configured as EP. The
-> PCI driver in the RC allocates memory in it's DDR (say 0x80000000) and programs
-> this address in the EP. Since it's a similar system, 0x80000000 will also be an
-> address in the EPs DDR. This will result in EP transferring data to it's own
-> DDR (at 0x80000000) instead of the same address in RC.
->
-> But later realized instead of directly using the DDR address given by RC, this
-> address should only be used to program the outbound window. That way the target
-> of the outbound window can be an address given by the RC and source should be
-> an address from the address space in the EP's system.
->
-> Do you also use the RC memory address to program the outbound window?
->
+On Tue, 2016-08-16 at 12:15 +0300, Mika Westerberg wrote:
+> On Fri, Aug 12, 2016 at 11:45:30AM -0500, Aaron Durbin wrote:
+> > 
+> > Was anyone able to take a look into a solution for the current
+> > problem?  Again, please feel free to ask if anyone would like help
+> > testing potential solutions.
+> 
+> Below is one proposal for fixing the issue. It is just a prototype and
+> I'm not sure if it takes everything needed into account. Would you be
+> able to try it out and let us know if it works for you?
 
-When EP access RC memory, from EP perspective, there should be a offset
-added to 0x800000000 to match the pcie outbound access  window.
-Thanks.
-Roy
+Just style comments below.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> --- a/drivers/acpi/acpi_platform.c
+> +++ b/drivers/acpi/acpi_platform.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/module.h>
+>  #include <linux/dma-mapping.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/pci.h>
+
+I would keep trying to arrange them in alphabetical order, i.e. put
+before platform_device.h.
+
+>  
+>  #include "internal.h"
+>  
+> @@ -30,6 +31,35 @@ static const struct acpi_device_id
+> forbidden_id_list[] = {
+>  	{"", 0},
+>  };
+>  
+> +static struct resource *acpi_find_parent_resource(struct acpi_device
+> *adev,
+> +						  struct resource
+> *res)
+> +{
+> +	struct device *parent;
+> +
+> +	parent = acpi_get_first_physical_node(adev->parent);
+> +	if (!parent)
+> +		return NULL;
+> +
+> +#if IS_ENABLED(CONFIG_PCI)
+
+Oh.
+
+> +	if (dev_is_pci(parent)) {
+
+Has a stub.
+
+> +		struct pci_dev *pdev = to_pci_dev(parent);
+
+Not needed an ugly define.
+
+> +
+> +		if (!pci_is_bridge(pdev)) {
+
+Ditto.
+
+> +			int i;
+> +
+> +			for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+
+Ditto.
+
+> +				struct resource *r = &pdev-
+> >resource[i];
+> +
+> +				if (r->start && resource_contains(r,
+> res))
+> +					return r;
+> +			}
+> +		}
+> +	}
+> +#endif
+> +
+> +	return NULL;
+> +}
+> +
+
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
