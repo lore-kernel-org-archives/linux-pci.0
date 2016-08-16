@@ -1,157 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Aug 2016 13:54:01 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:46934 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752940AbcHPTeW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Aug 2016 15:34:22 -0400
+Date: Tue, 16 Aug 2016 14:34:18 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Daniel Drake <drake@endlessm.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Carlo Caione <carlo@endlessm.com>,
-	Linux Upstreaming Team <linux@endlessm.com>,
-	Chris Chiu <chiu@endlessm.com>
-Subject: Re: pcieport AER error spam on Intel Skylake
-Message-ID: <20160805185400.GA7631@localhost>
-References: <CAD8Lp44cpj0Z3aadOzW=Lc=m88AbQpaW3g=GCgtpvbpGATT7uw@mail.gmail.com>
- <CAErSpo6tMJYqiynS-+svvMB2mskMBrTpWNBxR7OLPSxGxKbBvw@mail.gmail.com>
- <55E7A90A.5080406@gmail.com>
- <CAD8Lp4534o9+=MSSt5Rf_9HgxpoNJdA=gRsFAG8w-U8Eh5Otng@mail.gmail.com>
- <55E88C07.3090503@gmail.com>
- <CAD8Lp44x0-KQEVQQ1p8bOScN5Gs7SPMeZek_SGR5BO0EPL5NYA@mail.gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-pci@vger.kernel.org, agordeev@redhat.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: two pci_alloc_irq_vectors improvements
+Message-ID: <20160816193418.GA10555@localhost>
+References: <1470924665-25860-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAD8Lp44x0-KQEVQQ1p8bOScN5Gs7SPMeZek_SGR5BO0EPL5NYA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1470924665-25860-1-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 05, 2016 at 12:15:53PM -0600, Daniel Drake wrote:
-> Hi Alexander,
-> 
-> Reviving an old topic here...
-> 
-> We are seeing this "problem" on an increasing number of units from the
-> vendor, and searching around it can also be seen on Dell and HP
-> products. Always with the same Realtek b723 wifi device. e.g.
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1521173
-> 
-> The amount of error spam is problematic in that it slows down boot
-> really significantly, while printing lots of scary messages for the
-> user.
-> We tried doing a PCI MSI blacklist for affected laptops but we are
-> struggling to keep that blacklist updated with the increasing number
-> of affected models.
-> 
-> Enough hacks, I am wondering what we can do to solve this problem in
-> the mainline kernel...
+Hi Christoph,
 
-I think this is a bug in AER:
-https://bugzilla.kernel.org/show_bug.cgi?id=109691
-
-I think I understand the problem, but I haven't had time to fix it.
-The bugzilla has a pointer to more details, and it would be awesome if
-somebody would jump in.
-
-> On Thu, Sep 3, 2015 at 12:05 PM, Alexander Duyck
-> <alexander.duyck@gmail.com> wrote:
-> > On 09/03/2015 06:32 AM, Daniel Drake wrote:
-> >>
-> >> On Wed, Sep 2, 2015 at 7:57 PM, Alexander Duyck
-> >> <alexander.duyck@gmail.com> wrote:
-> >>>
-> >>> Since it is correctable errors it is likely some sort of signalling
-> >>> issue.
-> >>> Could we get the output of something like an lspci -vt? Then you would be
-> >>> able to tell what the device is on the other side of the link from
-> >>> 00:1c.5
-> >>> and then we could probably check to see if there has been any changes for
-> >>> the device driver on the other end of the link.
-> >>
-> >> "lspci -vt" reliably causes one occurance of the message, which is
-> >> logged by the kernel before lspci has written anything to stdout.
-> >>   pcieport 0000:00:1c.5: AER: Corrected error received: id=00e5
-> >>   pcieport 0000:00:1c.5: PCIe Bus Error: severity=Corrected,
-> >> type=Physical Layer, id=00e5(Receiver ID)
-> >>   pcieport 0000:00:1c.5:   device [8086:9d15] error
-> >> status/mask=00000001/00002000
-> >>   pcieport 0000:00:1c.5:    [ 0] Receiver Error
-> >>
-> >> -[0000:00]-+-00.0  Intel Corporation Device 1904
-> >>             +-02.0  Intel Corporation Device 1916
-> >>             +-04.0  Intel Corporation Device 1903
-> >>             +-08.0  Intel Corporation Device 1911
-> >>             +-14.0  Intel Corporation Device 9d2f
-> >>             +-14.2  Intel Corporation Device 9d31
-> >>             +-15.0  Intel Corporation Device 9d60
-> >>             +-15.1  Intel Corporation Device 9d61
-> >>             +-16.0  Intel Corporation Device 9d3a
-> >>             +-17.0  Intel Corporation Device 9d03
-> >>             +-1c.0-[01]--
-> >>             +-1c.4-[02]----00.0  Realtek Semiconductor Co., Ltd.
-> >> RTL8111/8168 PCI Express Gigabit Ethernet controller
-> >>             +-1c.5-[03]----00.0  Realtek Semiconductor Co., Ltd. Device
-> >> b723
-> >>             +-1f.0  Intel Corporation Device 9d48
-> >>             +-1f.2  Intel Corporation Device 9d21
-> >>             +-1f.3  Intel Corporation Device 9d70
-> >>             \-1f.4  Intel Corporation Device 9d23
-> >>
-> >> Does this mean these messages are somehow related to the Realtek b723
-> >> device? That is the wifi card.
-> >> Using x86_64_defconfig there is not even any driver loaded for this
-> >> device, yet the messages appear quite a bit.
-> >> If I use a full config with all the relevant drivers including
-> >> rtlwifi, the frequency of these messages goes up a lot though.
-> >
-> >
-> > The correctable errors are likely a result of some sort of link error
-> > between the root port 00:1c.5 and the wireless adapter at 3:00.0.  What is
-> > likely happening is that when the device is unused it transitions down to a
-> > lower power link state like L0s or L1, and when it comes out of that state
-> > it is likely triggering the PCIe error most likely as a result of something
-> > during the PCIe link training sequence.
-> >
-> > You might want to notify the manufacturer of the laptop as they may need to
-> > address an issue in their hardware, firmware, or possibly add  a workaround
-> > to mask off Receiver Error reporting for their part via either a PCIe quirk
-> > or driver fix.
-> >
-> >>> My suspicion since this is a laptop is that something like a power
-> >>> management change might be responsible if this is a regression as I have
-> >>> seen messages like this pop up as a result of ASPM being enabled before.
-> >>
-> >> It's likely not a regression, this is brand new hardware and this
-> >> message is seen on all kernels that we have tried (4.1, 4.2, master).
-> >> pcie_aspm=off also makes these messages go away.
-> >
-> >
-> > Correctable errors are considered a sign of the PCIe link health. In theory
-> > they can be ignored since by definition they can be corrected by the
-> > hardware.  One thing you could do if you aren't using the wireless card
-> > would be to simply switch off the correctable error reporting by setting the
-> > mask bit for it in configuration space using setpci.
-> >
-> > To do that what you could do is find the offset for the PCIe AER
-> > configuration register for your port by doing a "lspci -vvv -s 0:1c.5" and
-> > what you should get will be a dump listing the capabilities and their
-> > current settings.  In there you should find a line like:
-> >     Capabilities: [148 v1] Advanced Error Reporting
-> >
-> > The 148 is the hex offset of the configuration space.  The Correctable Error
-> > mask is located at a hex offset of 0x14 from there.  So adding the hex
-> > values 0x148 and 0x14 gives us 0x15C.  To disable reporting correctable
-> > receiver errors you would just want to add a 1 to whatever value you get
-> > from "setpci -s 0:1c.5 0x15C.l" and then write that value back.  So for
-> > example on my system I ended up with something like "setpci -s 0:1c.5
-> > 0x15C.l=2001" where the output from the first command was 2000.
+On Thu, Aug 11, 2016 at 07:11:03AM -0700, Christoph Hellwig wrote:
+> Hi Bjorn, hi Alex,
 > 
-> I guess this is the most concrete suggestion for how to avoid the
-> issue - perhaps we can do that in rtl8723be driver probe. However, you
-> mentioned above that we should only do it if we aren't using the
-> wireless card. In this case we are using it... should we look for
-> another approach instead?
+> below are two patches I'd love to see in 4.8 to improve the
+> pci_alloc_irq_vectors interface.  I've realized we need these while
+> starting a mass conversion of the MSI-X users to the new interface,
+> and getting it into 4.8 before users show up should make life a lot
+> easier.
 > 
-> Thanks
-> Daniel
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The positive flags things comes out of the fact that a lot of driver
+> want MSI-X only without any fallback, or some elaborate differences
+> for the different interrupt schemes.  For example while most modern
+> devices use one MSI-X vector per queue and scale nicely from the
+> MSI to the MSI-X scheme many older devices use a MSI-X vector per
+> functionality in the ISR, so they might wan to allocate them
+> differently.
+> 
+> The second one ensures the legacy interrupt line is actually enabled
+> before using it, because some devices like MSI-X might actually have
+> it disable by default.
+
+I really like this change.  It's much nicer to read
+
+  if (flags & PCI_IRQ_AFFINITY)
+
+than it was to read
+
+  if (!(flags & PCI_IRQ_NOAFFINITY))
+
+Speaking of affinity, the original documentation said "By default this
+function will spread the interrupts around the available CPUs".  After
+these patches, you have to pass PCI_IRQ_AFFINITY to get that behavior.
+Are you planning to have drivers use
+
+  pci_alloc_irq_vectors(dev, 1, nvec, PCI_IRQ_ALL_TYPES | PCI_IRQ_AFFINITY)
+
+to explicitly ask for affinity?
+
+I applied these to for-linus with the intent of merging them for v4.8.
+I fixed a couple typos in the first one as shown below.
+
+Any objections, Alex?
+
+Bjorn
+
+
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 8faf14a..cd9c9f6 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -96,9 +96,9 @@ if it can't meet the minimum number of vectors.
+ 
+ The flags argument is used to specify which type of interrupt can be used
+ by the device and the driver (PCI_IRQ_LEGACY, PCI_IRQ_MSI, PCI_IRQ_MSIX).
+-A conveniant short-hand (PCI_IRQ_ALL_TYPES) is also avaiable to ask for
+-any possible kind of interrupt. If the PCI_IRQ_NOAFFINITY flag is set,
+-pci_alloc_irq_vectors will spread the interrupts around the available CPUs.
++A convenient short-hand (PCI_IRQ_ALL_TYPES) is also available to ask for
++any possible kind of interrupt.  If the PCI_IRQ_AFFINITY flag is set,
++pci_alloc_irq_vectors() will spread the interrupts around the available CPUs.
+ 
+ To get the Linux IRQ numbers passed to request_irq() and free_irq() and the
+ vectors, use the following function:
+@@ -150,8 +150,7 @@ the single MSI mode for a device.  It could be done by passing two 1s as
+ 		goto out_err;
+ 
+ Some devices might not support using legacy line interrupts, in which case
+-the PCI_IRQ_NOLEGACY flag can be used to fail the request if the platform
+-can't provide MSI or MSI-X interrupts:
++the driver can specify that only MSI or MSI-X is acceptable:
+ 
+ 	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_MSI | PCI_IRQ_MSIX);
+ 	if (nvec < 0)
