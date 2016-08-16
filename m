@@ -1,57 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:39817 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965095AbcHBMnK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:43:10 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: bhelgaas@google.com, paulus@samba.org, mpe@ellerman.id.au,
-	sbranden@broadcom.com, m.chehab@samsung.com, pawel@osciak.com,
-	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
-	k.kozlowski@samsung.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	luto@kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
-Subject: [PATCH 0827/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:50:16 +0800
-Message-Id: <20160802115016.5112-1-baolex.ni@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <benh@kernel.crashing.org>
+Return-Path: <benh@kernel.crashing.org>
+Message-ID: <1471306391.12231.137.camel@kernel.crashing.org>
+Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Alexander Duyck
+ <alexander.duyck@gmail.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Bjorn
+ Helgaas <helgaas@kernel.org>, Hannes Reinecke <hare@suse.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Babu Moger
+ <babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
+        "santosh@chelsio.com" <santosh@chelsio.com>,
+        Netdev <netdev@vger.kernel.org>
+Date: Tue, 16 Aug 2016 10:13:11 +1000
+In-Reply-To: <B64D748A-711E-4701-96EF-C447333F5BF5@intel.com>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+	 <1452684335-46107-4-git-send-email-hare@suse.de>
+	 <20160209210458.GB32530@localhost>
+	 <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
+	 <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
+	 <1470787409.3015.81.camel@kernel.crashing.org>
+	 <CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
+	 <1470873296.3015.117.camel@kernel.crashing.org>
+	 <CAKgT0UcPh2RZazDL-cJbJkZFUJ03kTocn5H7WA=Kk_+S-CV_HA@mail.gmail.com>
+	 <20160811141700.4f4faabb@t450s.home>
+	 <1470978669.3015.155.camel@kernel.crashing.org>
+	 <197F6532-FC5E-4D72-976D-4207BAD8D83E@intel.com>
+	 <1471299799.12231.121.camel@kernel.crashing.org>
+	 <1471300400.12231.130.camel@kernel.crashing.org>
+	 <B64D748A-711E-4701-96EF-C447333F5BF5@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Mon, 2016-08-15 at 23:16 +0000, Rustad, Mark D wrote:
+> 
+> Bugs in existing guests is an interesting case, but I have been focused on  
+> getting acceptable behavior from a properly functioning guest, in the face  
+> of hardware issues that can only be resolved in a single place.
+> 
+> I agree that a malicious guest can cause all kinds of havoc with  
+> directly-assigned devices. Consider a 4-port PHY chip on a shared MDIO bus,  
+> for instance. There is really nothing to be done about the potential for  
+> mischief with that kind of thing.
+> 
+> The VPD problem that I had been concerned about arises from a bad design in  
+> the PCI spec together with implementations that share the registers across  
+> functions. The hardware isn't going to change and I really doubt that the  
+> spec will either, so we address it the only place we can.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/pci/pcie/aspm.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Right but as I mentioned, there are plenty of holes when it comes to
+having multi function devices assigned to different guests, this is just
+one of them.
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 2dfe7fd..920df3f 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -814,7 +814,7 @@ static int pcie_aspm_get_policy(char *buffer, struct kernel_param *kp)
- }
+Now, that being said, "working around" the bug to make the "non fully secure"
+case work (in my example case the "desktop user") is probably an ok workaround
+as long as we fully agree that this is all it is, it by no means provide
+actual isolation or security.
  
- module_param_call(policy, pcie_aspm_set_policy, pcie_aspm_get_policy,
--	NULL, 0644);
-+	NULL, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- 
- #ifdef CONFIG_PCIEASPM_DEBUG
- static ssize_t link_state_show(struct device *dev,
-@@ -886,8 +886,8 @@ static ssize_t clk_ctl_store(struct device *dev,
- 	return n;
- }
- 
--static DEVICE_ATTR(link_state, 0644, link_state_show, link_state_store);
--static DEVICE_ATTR(clk_ctl, 0644, clk_ctl_show, clk_ctl_store);
-+static DEVICE_ATTR(link_state, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, link_state_show, link_state_store);
-+static DEVICE_ATTR(clk_ctl, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, clk_ctl_show, clk_ctl_store);
- 
- static char power_group[] = "power";
- void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
--- 
-2.9.2
+> >   >   rtain that we agree that not everything can or should be addressed  
+> in vfio. I did not mean to suggest it should try to address everything, but  
+> I think it should make it possible for correctly behaving guests to work. I  
+> think that is not unreasonable.
 
+Again as long as there is no expectation of security here, such as a data
+center giving PCI access to some devices.
+
+> > Perhaps the VPD range check should really just have been implemented for  
+> the sysfs interface, and left the vfio case unchecked. I don't know because  
+> I was not involved in that issue. Perhaps someone more intimately involved  
+> can comment on that notion.
+
+That would have been my preferred approach... I think VFIO tries to do too much
+which complicates things, causes other bugs, without briging actual safety. I
+don't think it should stand in between a guest driver and its device unless
+absolutely necessary to provide the functionality due to broken HW or design,
+but with the full understanding that doing so remains unsafe from an isolation
+standpoint.
+
+> > > Assuming that a device coming back from a guest is functional and not
+> > completely broken and can be re-used without a full PERST or power cycle
+> > is a wrong assumption. It may or may not work, no amount of "filtering"
+> > will fix the fundamental issue. If your HW won't give you access to PERST
+> > well ... blame Intel for not specifying a standard way to generate it in
+> > the first place :-)
+> 
+> Yeah, I worry about the state that a malicious guest could leave a device  
+> in, but I consider direct assignment always risky anyway. I would just like  
+> it to at least work in the non-malicious guest cases.
+
+Right. Only SR-IOV which is somewhat designed for assignment is reasonably safe
+in the general case.
+
+On server POWER boxes, we have isolation at the bus level with usual per-slot
+PERST control so we are in a much better situation but we also for all the
+above reasons, only allow a slot granularity for pass-through.
+
+> > I guess my previous response was really just too terse, I was just focused  
+> on unavoidable hangs and data corruption, which even were happening without  
+> any guest involvement. For me, guests were just an additional exposure of  
+> the same underlying issue.
+> 
+> With hindsight, it is easy to see that a standard reset would now be a  
+> pretty useful thing. I am sure that even if it existed, we would now have  
+> lots and lots of quirks around it as well! :-)
+
+Hehe yes, well, HW for you ...
+
+Cheers,
+Ben.
+
+> > --
+> Mark Rustad, Networking Division, Intel Corporation
