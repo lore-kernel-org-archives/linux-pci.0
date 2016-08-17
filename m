@@ -1,69 +1,66 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Omer Khaliq <okhaliq@caviumnetworks.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-crypto@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <bhelgaas@google.com>, <mpm@selenic.com>, <herbert@gondor.apana.org.au>,
- <Ananth.Jasty@cavium.com>, <David.Daney@cavium.com>,
- <clabbe.montjoie@gmail.com>
-Subject: [PATCH v2 1/2] PCI: quirk fixup for cavium invalid sriov link value.
-Date: Tue, 23 Aug 2016 16:27:14 -0700
-Message-ID: <1471994835-2423-2-git-send-email-okhaliq@caviumnetworks.com>
-In-Reply-To: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
-References: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45286 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753749AbcHQUAK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Aug 2016 16:00:10 -0400
+Subject: [PATCH v6 2/4] PCI: designware: Move link wait definitions to .c
+ file
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: jszhang@marvell.com, jingoohan1@gmail.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 17 Aug 2016 14:59:58 -0500
+Message-ID: <20160817195958.10418.30303.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Omer Khaliq <okhaliq@caviumnetworks.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ananth Jasty <Ananth.Jasty@cavium.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
 
-Cavium cn88xx hardware presents an incorrect SR-IOV Function
-Dependency Link, add a fixup quirk for the affected devices.
+Move the link wait sleep definitions to the .c file as suggested by
+Jisheng Zhang in a previous patch.
 
-Acked-by: David Daney <david.daney@cavium.com>
-Signed-off-by: Ananth Jasty <Ananth.Jasty@cavium.com>
-Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jisheng Zhang <jszhang@marvell.com>
 ---
- drivers/pci/quirks.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/pci/host/pcie-designware.c |    5 +++++
+ drivers/pci/host/pcie-designware.h |    5 -----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 37ff015..5980aae 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -834,6 +834,17 @@ static void quirk_amd_ioapic(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_VIPER_7410,	quirk_amd_ioapic);
- #endif /* CONFIG_X86_IO_APIC */
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 1f6bd6d..e99f56e 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -26,6 +26,11 @@
  
-+#ifdef CONFIG_ARM64
+ #include "pcie-designware.h"
+ 
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES		10
++#define LINK_WAIT_USLEEP_MIN		90000
++#define LINK_WAIT_USLEEP_MAX		100000
 +
-+static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
-+{
-+	/* Fix for improper SRIOV configuration on Cavium cn88xx  RNM device */
-+	if (dev->subsystem_device == 0xa118)
-+		dev->sriov->link = dev->devfn;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
-+#endif
-+
- /*
-  * Some settings of MMRBC can lead to data corruption so block changes.
-  * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide
--- 
-1.9.1
+ /* Synopsis specific PCIE configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+ #define PORT_LINK_MODE_MASK		(0x3f << 16)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 74a8fc6..285e1ed 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,11 +22,6 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
+-/* Parameters for the waiting for link up routine */
+-#define LINK_WAIT_MAX_RETRIES		10
+-#define LINK_WAIT_USLEEP_MIN		90000
+-#define LINK_WAIT_USLEEP_MAX		100000
+-
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
