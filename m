@@ -1,27 +1,44 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Mon, 22 Aug 2016 13:02:25 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, helgaas@kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci: call pci_intx when using legacy interrupts in
- pci_alloc_irq_vectors
-Message-ID: <20160822110225.GA3478@agordeev.lab.eng.brq.redhat.com>
-References: <1470924665-25860-1-git-send-email-hch@lst.de>
- <1470924665-25860-3-git-send-email-hch@lst.de>
- <20160818092007.GD27949@agordeev.lab.eng.brq.redhat.com>
- <20160818152649.GA12340@lst.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49792 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752353AbcHQVBF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Aug 2016 17:01:05 -0400
+Date: Wed, 17 Aug 2016 16:01:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jisheng Zhang <jszhang@marvell.com>
+Cc: jingoohan1@gmail.com, pratyush.anand@gmail.com,
+	bhelgaas@google.com, Joao.Pinto@synopsys.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 0/2] PCI: designware: let dw_pcie_link_up() beware of
+ LTSSM training bit
+Message-ID: <20160817210100.GD27353@localhost>
+References: <1470823623-1360-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160818152649.GA12340@lst.de>
+In-Reply-To: <1470823623-1360-1-git-send-email-jszhang@marvell.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 18, 2016 at 05:26:49PM +0200, Christoph Hellwig wrote:
-> It probably should be pci_intx_for_msi.  For now I'm not touching
-> drivers that need the quirk, so how about getting the intx in
-> now so that the conversion can start, and I'll send a follow on
-> to convert to pci_intx_for_msi with Cc to all the relevant parties
-> for the quirk as a follow on?
+On Wed, Aug 10, 2016 at 06:07:01PM +0800, Jisheng Zhang wrote:
+> patch1 is a trivial clean up: move the parameters for wait for link
+> into the core pcie-designware.c
+> 
+> Since link may be UP but still in link training, if so, we can't think
+> the link is up and operating correctly. So patch2 teaches
+> dw_pcie_link_up() beware of the PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit.
+> 
+> Since v1:
+>   - add Joao's Ack
+>   - rebased on v4.8-rc1
+> 
+> Jisheng Zhang (2):
+>   PCI: designware: mv parameters for wait for link into
+>     pcie-designware.c
+>   PCI: designware: let dw_pcie_link_up() beware of LTSSM training bit
+> 
+>  drivers/pci/host/pcie-designware.c | 11 +++++++++--
+>  drivers/pci/host/pcie-designware.h |  5 -----
+>  2 files changed, 9 insertions(+), 7 deletions(-)
 
-Probably should work.
+Applied to pci/host-designware for v4.9, thanks, Jisheng.
