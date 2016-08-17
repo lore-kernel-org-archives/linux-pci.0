@@ -1,80 +1,100 @@
-Return-Path: <benh@kernel.crashing.org>
-Return-Path: <benh@kernel.crashing.org>
-Message-ID: <1470873296.3015.117.camel@kernel.crashing.org>
-Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, Bjorn Helgaas
- <helgaas@kernel.org>,
-        Hannes Reinecke <hare@suse.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Babu Moger
- <babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
-        Alex Williamson
- <alex.williamson@redhat.com>, santosh@chelsio.com,
-        Netdev
- <netdev@vger.kernel.org>
-Date: Thu, 11 Aug 2016 09:54:56 +1000
-In-Reply-To: <CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
-	 <1452684335-46107-4-git-send-email-hare@suse.de>
-	 <20160209210458.GB32530@localhost>
-	 <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
-	 <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
-	 <1470787409.3015.81.camel@kernel.crashing.org>
-	 <CAKgT0UcfznUD2LM08focv7Y+vqLFMhqNiK5o1TUSsJFFYSt2Gg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com,
+	x86@kernel.org
+Subject: [PATCH v4 1/5] x86/ioapic: Change prototype of acpi_ioapic_add()
+Date: Wed, 17 Aug 2016 16:00:33 +0800
+Message-Id: <1471420837-31003-2-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+References: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-08-10 at 08:47 -0700, Alexander Duyck wrote:
-> 
-> The problem is if we don't do this it becomes possible for a guest to
-> essentially cripple a device on the host by just accessing VPD
-> regions that aren't actually viable on many devices. 
+Change the argument of acpi_ioapic_add() to a generic ACPI handle, and
+move its prototype from drivers/acpi/internal.h to include/linux/acpi.h
+so that it can be called from outside the pci_root driver.
 
-And ? We already can cripple the device in so many different ways
-simpy because we have pretty much full BAR access to it...
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/internal.h | 2 --
+ drivers/acpi/ioapic.c   | 6 +++---
+ drivers/acpi/pci_root.c | 2 +-
+ include/linux/acpi.h    | 6 ++++++
+ 4 files changed, 10 insertions(+), 6 deletions(-)
 
->  We are much better off
-> in terms of security and stability if we restrict access to what
-> should be accessible. 
-
-Bollox. I've heard that argument over and over again, it never stood
-and still doesn't.
-
-We have full BAR access for god sake. We can already destroy the device
-in many cases (think: reflashing microcode, internal debug bus access
-with a route to the config space, voltage/freq control ....).
-
-We aren't protecting anything more here, we are just adding layers of
-bloat, complication and bugs.
-
->  In this case what has happened is that the
-> vendor threw in an extra out-of-spec block and just expected it to
-> work.
-
-Like vendors do all the time in all sort of places
-
-I still completely fail to see the point in acting as a filtering
-middle man.
-
-> In order to work around it we just need to add a small function
-> to drivers/pci/quirks.c that would update the VPD size reported so
-> that it matches what the hardware is actually providing instead of
-> what we can determine based on the VPD layout.
-> 
-> Really working around something like this is not much different than
-> what we would have to do if the vendor had stuffed the data in some
-> reserved section of their PCI configuration space.
-
-It is, in both cases we shouldn't have VFIO or the host involved. We
-should just let the guest config space accesses go through.
-
->   We end up needing
-> to add special quirks any time a vendor goes out-of-spec for some
-> one-off configuration interface that only they are ever going to use.
-
-Cheers,
-Ben.
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 940218f..f26fc1d 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -40,10 +40,8 @@ int acpi_sysfs_init(void);
+ void acpi_container_init(void);
+ void acpi_memory_hotplug_init(void);
+ #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
+-int acpi_ioapic_add(struct acpi_pci_root *root);
+ int acpi_ioapic_remove(struct acpi_pci_root *root);
+ #else
+-static inline int acpi_ioapic_add(struct acpi_pci_root *root) { return 0; }
+ static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
+ #endif
+ #ifdef CONFIG_ACPI_DOCK
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index ccdc8db..2449377 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -189,13 +189,13 @@ exit:
+ 	return AE_OK;
+ }
+ 
+-int acpi_ioapic_add(struct acpi_pci_root *root)
++int acpi_ioapic_add(acpi_handle root_handle)
+ {
+ 	acpi_status status, retval = AE_OK;
+ 
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root_handle,
+ 				     UINT_MAX, handle_ioapic_add, NULL,
+-				     root->device->handle, (void **)&retval);
++				     root_handle, (void **)&retval);
+ 
+ 	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
+ }
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d144168..b07eda1 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -614,7 +614,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
+-		acpi_ioapic_add(root);
++		acpi_ioapic_add(root->device->handle);
+ 	}
+ 
+ 	pci_lock_rescan_remove();
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 4d8452c..c9a596b 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -751,6 +751,12 @@ static inline int acpi_reconfig_notifier_unregister(struct notifier_block *nb)
+ 
+ #endif	/* !CONFIG_ACPI */
+ 
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++int acpi_ioapic_add(acpi_handle root);
++#else
++static inline int acpi_ioapic_add(acpi_handle root) { return 0; }
++#endif
++
+ #ifdef CONFIG_ACPI
+ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
+ 			       u32 pm1a_ctrl,  u32 pm1b_ctrl));
+-- 
+1.8.3.1
