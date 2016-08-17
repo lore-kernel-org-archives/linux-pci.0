@@ -1,142 +1,58 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Thu, 18 Aug 2016 18:46:10 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160818224610.GA28276@localhost.localdomain>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
- <1470687542-30155-2-git-send-email-keith.busch@intel.com>
- <20160815174002.GB9790@localhost>
- <20160815192316.GB18083@localhost.localdomain>
- <20160817213745.GE27353@localhost>
- <20160817230951.GD25146@localhost.localdomain>
- <20160818195656.GH27353@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45164 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753430AbcHQT7r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Aug 2016 15:59:47 -0400
+Subject: [PATCH v6 0/4] pcie-designware: add iATU unroll feature
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: jszhang@marvell.com, jingoohan1@gmail.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 17 Aug 2016 14:59:39 -0500
+Message-ID: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160818195656.GH27353@localhost>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 18, 2016 at 02:56:56PM -0500, Bjorn Helgaas wrote:
-> On Wed, Aug 17, 2016 at 07:09:51PM -0400, Keith Busch wrote:
-> > We've augmented 'ledmon' with libpci and toggles these indicators very
-> > similar to how 'setpci' can change PCI config registers. It is done only
-> > after the storage device is up and registered, which is well outside
-> > the time when pciehp is actively using the slot control.
-> 
-> I assume this means ledmon writes Slot Control to manage the LEDs.
+Original description from Joao:
 
-Correct, the registers that are defined for AttnCtrl and PwrCtrl are
-what's being redefined for the new pattern.
+  The new DWC PCIe Core version (4.80) implements iATU in a different
+  way.  This new mechanism is called iATU Unroll Mode. The Core still
+  supports the "old" mechanism calling it Legacy Mode if configured to
+  do so, but the standard way will be using Unroll.  This patch adds
+  the necessary support for the mechanism and makes some minor
+  improvements to the existent one.
 
-We are definitely not dead set on requiring we let ledmon have direct
-access to SlotCtl through libpci. That's just the one way we thought of
-that didn't require new kernel dependencies.
+I made a few changes from the v5 series Joao posted, so I'm posting
+the patches I applied as this v6.
 
-> That sounds pretty scary to me because it's impossible to enforce the
-> assumption that ledmon only uses Slot Control when pciehp isn't using
-> it.  Hotplug includes surprise events, and I think pciehp is entitled
-> to assume it is the sole owner of Slot Control.
-
-I understand the concern here. You don't want independent programs
-vying to mask/unmask bits in SlotCtl and end up with a state neither
-intended. The only scenario that I can come up with where that could
-happen is if ledmon changes the LED on a slot at the same time the drive
-is removed, but there is no MRL or attention buttons on this hardware,
-and the rest that we do care about looks totally harmless on these slots.
-
-This condition also isn't really new. While probably not recommended,
-I could blink the standard Attn and Pwr LED's like this (user, of course,
-assumes all the risks):
-
-  # setpci -s <B:D.f> CAP_EXP+18.w=280:3c0
-
-It's basically the same as what we'd have ledmon do, but with a less
-esoteric syntax:
-
-  # ledctl locate=/dev/nvme0n1
-
-[ledmon invokes ledctl from a daemon, but ledctl can run on its own]
-
-> I wonder if there's some way to implement the LED control in pciehp,
-> e.g., by enhancing pciehp_set_attention_status().  I assume the
-> desired indicator state is coming from some in-kernel storage driver,
-> and ledmon learns about that somehow, then fiddles with Slot Control
-> behind the kernel's back?  That looping from kernel to user and back
-> to kernel sounds a little dodgy and fragile.
-
-That is definitely an interesting possibility if you are open to
-this. We'd "just" need the kernel to comprehend these vendor specific
-bit patterns for this particular generation of hardware.
-
-If you're okay with that, then I'm more than happy to propose a patch
-for consideration. We can then have ledmon subscribe to the sysfs entry
-point instead of going through libpci, no problem.
- 
-> Can you share any details about how you plan to implement this on the
-> next generation of devices?  Maybe we can enhance pciehp indicator
-> control in a way that supports both Sky Lake and future devices.
-
-One possibility is to define through PCI-SIG
-SlotCap2 and SlotCtl2 with this kind of LED control.
-
-Another possibilities I hear about through the NVMe-MI working group
-is creating similar type of devices as SES (SCSI Enclosure Services)
-for PCIe SSD enclosures.
-
-
-
-Finally, at the risk of digressing this thread, but if I may switch
-topic back to suppressing the indicator presence fields...
-
-Since these are specific to VMD domains, there are folks at Intel who
-want to see the VMD driver mask off these capabilities from the driver.
-There is never a case where a slot in this domain should advertise these,
-so masking off the bits at the config read level would achieve the desired
-result. It'd be isolated to the VMD driver, and the quirk wouldn't need
-to be maintained as addtional vendor devices implementing the same quirk
-are made.
-
-Below is the diff for *that* proposal, and the developer of this patch
-wanted to know if you may consider this over the quirk that was previously
-written. This looks odd to me, but I can't argue against that it achieves
-what the device maker desires.
-
-Thanks!
-Keith
+changes v5->v6:
+  - Add a patch to change the signature of dw_pcie_readl_rc() from
+    this:
+      void dw_pcie_readl_rc(struct pcie_port *pp, u32 reg, u32 *val)
+    to this:
+      u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg)
+    Note that this also affects Exynos.
+  - Move loop checking for iATU enable to a separate patch.
+  - Change iATU register definitions to be offsets (not register
+    numbers).  This is to match the existing style of the pre-unroll
+    definitions.
+  - Rename dw_pcie_get_atu_mode() and related things to
+    dw_pcie_iatu_unroll_enabled() so they're more descriptive.
 
 ---
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index b73da50..aa2791f 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -452,6 +452,7 @@ static int vmd_pci_read(struct pci_bus *bus,
-unsigned int devfn, int reg,
- {
- 	struct vmd_dev *vmd = vmd_from_bus(bus);
- 	char __iomem *addr = vmd_cfg_addr(vmd, bus, devfn, reg, len);
-+	struct pci_dev *dev;
- 	unsigned long flags;
- 	int ret = 0;
- 
-@@ -474,6 +475,17 @@ static int vmd_pci_read(struct pci_bus *bus,
-unsigned int devfn, int reg,
- 		break;
- 	}
- 	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (dev->devfn == devfn) {
-+			if (dev->pcie_cap &&
-+					reg == dev->pcie_cap + PCI_EXP_SLTCAP)
-+				*value &= ~(PCI_EXP_SLTCAP_AIP |
-+					    PCI_EXP_SLTCAP_PIP);
-+			break;
-+		}
-+	}
-+
- 	return ret;
- }
- 
---
+
+Bjorn Helgaas (1):
+      PCI: designware: Return data directly from dw_pcie_readl_rc()
+
+Joao Pinto (3):
+      PCI: designware: Move link wait definitions to .c file
+      PCI: designware: Wait for iATU enable
+      PCI: designware: Add iATU Unroll feature
+
+
+ drivers/pci/host/pci-exynos.c      |    9 ++
+ drivers/pci/host/pcie-designware.c |  138 ++++++++++++++++++++++++++++++------
+ drivers/pci/host/pcie-designware.h |    9 +-
+ 3 files changed, 123 insertions(+), 33 deletions(-)
