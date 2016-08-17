@@ -1,117 +1,128 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Sun, 14 Aug 2016 12:27:25 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
- system sleep
-Message-ID: <20160814102725.GA8634@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
- <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com>
- <20160812161609.GA8060@wunner.de>
- <2003407.8XLAPPsQTe@vostro.rjw.lan>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Wed, 17 Aug 2016 19:09:51 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160817230951.GD25146@localhost.localdomain>
+References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+ <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+ <20160815174002.GB9790@localhost>
+ <20160815192316.GB18083@localhost.localdomain>
+ <20160817213745.GE27353@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2003407.8XLAPPsQTe@vostro.rjw.lan>
+In-Reply-To: <20160817213745.GE27353@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 13, 2016 at 12:18:26AM +0200, Rafael J. Wysocki wrote:
-> Yes, so specifically I'm concerned about the pci_target_state() invocation
-> in pci_dev_keep_suspended() which is done exactly for this purpose.
+On Wed, Aug 17, 2016 at 04:37:45PM -0500, Bjorn Helgaas wrote:
+> Usually when I think something is totally stupid, it's because I don't
+> know the whole story.  So it might make more sense and lead to a
+> better solution if you could tell us more about your intent here.
+
+Definitely. I did not provide all the details because I didn't think
+knowing the full context would help toward understanding the function
+of the patch, but I see now that skimping on the details did not help
+our cause.
+
+This came about from wanting a simple SGPIO-like LED management solution
+for PCIe SSDs. The Intel group who made this, not considering the
+more broad impact on standarization, chose to reuse the hot plug
+serial SMBus in the Intel CPUs (aka VPP) that already carried the Slot
+Control register bits out of the CPU.
+
+We would love to have been able to disable the capability present
+bits, but the hardware logic that would disable those bits would also
+have disabled LED control entirely, and we can't change the hardware
+now. We have to rely on software to work around this limitation for this
+generation of hardware.
+
+The next generation of these devices will pursue standards compliant
+methods by engaging with PCI-SIG and the NVMe-MI standards bodies.
+This current generation of devices is the only one set this way that
+requires this work-around.
+
+> According to the Linux PCI database, the devices you want to quirk are:
 > 
-> If you apply the "keep it in D3cold if already there" logic to that case,
-> it may lead to a wrong decision in theory. Say the device is in D3cold and
-> platform_pci_choose_state() returns D1, but pci_no_d1d2() returns true,
-> the device will end up in D3cold, but it may not be able to signal wakeup
-> from that state after the system has been suspended.
-
-Ugh, I had missed those break statements in the platform-case.
-I must be blind. You're right of course, that wouldn't be correct.
-
-> Of course, I guess you'll say that it may not be able to signal wakeup from
-> D3hot as well in that case, which is correct. :-)
-
-Hm, what would be the correct power state in that case then? PCI_D0?
-
-> Why don't you simply rearrange the routine like
+>   2030  Sky Lake-E PCI Express Root Port 1A	
+>   2031  Sky Lake-E PCI Express Root Port 1B	
+>   2032  Sky Lake-E PCI Express Root Port 1C	
+>   2033  Sky Lake-E PCI Express Root Port 1D
+>
 > 
-> 	pci_power_t target_state = PCI_D3hot;
+> So are you saying that on every platform that uses Sky Lake-E, these
+> indicators are non-standard in this way?
+
+Yes (more details below), but I may need to refine this to specific
+subsystem IDs (clarifying that internally now).
+
+Also, just for future note, the device list that I provided with the quirk
+may need to be augmented for other vendor devices that implement it this
+way as well.
+ 
+> IBPI looks like it's targeted at storage arrays, since it has states
+> for "drive not present", "fail", "rebuild", "hotspare", etc.  Maybe
+> there's some sense for Sky Lake-E platforms with directly-attached
+> storage.
 > 
-> 	if (platform_pci_power_manageable(dev)) {
-> 		...
-> 		return target_state;
-> 	}
-> 
-> 	if (!dev->pm_cap)
-> 		return PCI_D0;
-> 
-> 	if (dev->current_state == PCI_D3cold)
-> 		target_state = PCI_D3cold;
-> 
-> 	if (device_may_wakeup(&dev->dev)) {
-> 		...
-> 	}
-> 
-> 	return target_state;
-> 
-> And that would be fine by me.
+> But if somebody built a Sky Lake-E platform with one of these Root
+> Ports leading to a plain hotplug PCIe slot with regular indicators,
+> your quirk would break them, wouldn't it?  Or are you imposing
+> constraints on how those Root Ports can be used?
 
-Looks good, I'll give that a try.
+Yes, you totally nailed it on this being for storage.
 
-If the correct power state in the pci_no_d1d2() case is PCI_D0,
-I could fix that up as well.
+To go even further, we constrain these to be in Sky Lake's VMD domains. We
+do not support using VMD for anything but PCIe storage.
 
-> That said I'm not sure why you want to use pci_target_state() so badly?
-> 
-> If you are going to use a PM domain, why do you still need that function?
+> How does 'ledmon' manage the indicators?  The kernel (pciehp) uses the
+> Slot Control register, which is not completely trivial because of the
+> Command Completed synchronization required.  I'm hoping ledmon isn't
+> going to mess up that synchronization.
 
-The dev_pm_domain is only assigned to the topmost device exposed by
-the Thunderbolt controller (the upstream bridge). I would like to avoid
-having to assign separate dev_pm_domains to the downstream bridges.
+We've augmented 'ledmon' with libpci and toggles these indicators very
+similar to how 'setpci' can change PCI config registers. It is done only
+after the storage device is up and registered, which is well outside
+the time when pciehp is actively using the slot control.
+ 
+> How does this work for other OSes?  Are you proposing similar changes
+> to Windows?
 
-So I let the NHI and downstream bridges go to D3hot. And when the
-upstream bridge cuts power, it iterates over all child devices
-and changes their current_state to D3cold to reflect reality.
+Aha, the mystery to that part might be clarified knowing this is tied
+to VMD.
 
-When the system is later put to sleep, this patch ensures that the
-NHI and downstream bridges are not unnecessarily resumed to D3hot.
+For other OSes including Windows, the VMD driver does not expose the
+domain to the rest of the operating system. These VMD drivers implement
+their own pci bus and port service drivers, nvme storage drivers,
+and interrupt chaining, so they don't have to worry about anyone using
+these devices incorrectly. Those drivers also provide VMD specific
+management interfaces (special ioctls, for example) to manage its domain.
 
-So why change the current_state of the children at all? I could just
-leave the (incorrect) PCI_D3hot and everything would be peachy, right?
-Well, there's another problem: The first few Thunderbolt chips had
-broken MSI, they have to use INTx to signal hotplug. Unfortunately on
-some Macs built 2011/2012, the IRQ is shared with multiple other devices,
-most importantly the wireless card which can generate thousands of
-interrupts on a crowded WLAN. If power is cut to the Thunderbolt
-controller, reading from the hotplug ports' config space in pcie_isr()
-fails and results in a "no response from device" message logged with
-KERN_INFO. Getting thousands of such messages is annoying, not to
-mention the giant waste of CPU cycles to read from the config space
-of a device which we *know* is powered down.
+For Linux, we did not think it appropriate or upstreamable to
+re-write all the drivers and services into a monolithic VMD driver,
+then implement new user tooling for things that 'lspci' and 'setpci'
+already provide. Instead, we leverage all the existing good code by
+implementing VMD as a PCI host-bridge driver. The down side is we have
+to get our quirks fixed in generic code.
 
-The solution I came up with is to add a tiny two-liner to pcie_isr()
-with commit ed91de7e14fb ("PCI: pciehp: Ignore interrupts during D3cold").
-But that requires that I update the children's current_state to D3cold,
-and necessitates that pci_target_state() doesn't resume them to D3hot
-for system sleep. Hence the need for this patch.
 
-The approach has the additional benefit that hybrid graphics devices
-are implicitly also afforded direct-complete without having to add a
-->prepare hook that returns a positive int. They only need to set their
-current_state to D3cold, which they already do, see azx_vs_set_state(),
-nouveau_pmops_runtime_suspend(), radeon_pmops_runtime_suspend(),
-amdgpu_pmops_runtime_suspend().
+> What's your plan for backwards compatibility?  Just accept that old
+> OSes won't be able to operate the indicators correctly until they're
+> patched with this quirk?
 
-However this also means that adding a can_power_off flag to struct
-dev_pm_domain wouldn't be a viable solution because then I'd have to
-assign a dev_pm_domain to the downstream bridges. Another thing I've
-missed. Ugh. This is so complicated it's easy to get tangled up in
-all these intricate little details.
+You may have surmised this already based on the new details, but I'll
+just add that since it's tied to VMD, and that being a very new driver,
+backward compatibility is not a concern.
 
-Thanks for your patience in dealing with these issues,
+> You must have set that capability bit for some reason.  You don't want
+> the OS to consume it, so who *do* you expect to consume it, and how
+> (direct PCI config access, lspci, etc.), and what are they supposed to
+> do with it?
 
-Lukas
+Just restating what I mentioned above, this is an artifact on how the h/w gates
+were wired. Suppressing the capability bit automatically suppresses the
+LED control, and we need LED control.
+
+This is being addressed in the next generation to do provide the desired
+LED control in a standard compliant manner.
