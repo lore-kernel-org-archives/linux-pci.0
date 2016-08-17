@@ -1,110 +1,169 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-To: Marc Zyngier <marc.zyngier@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
- <20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost>
- <20160824213005.1a9300ef@arm.com>
- <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
- <20160825121825.322d8450@arm.com>
- <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
- <20160825195917.0e75a8db@arm.com> <20160826090813.GA1038@red-moon>
- <20160826130832.2fde2327@arm.com>
-Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, patches <patches@apm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Punit Agrawal <punit.agrawal@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
-Date: Fri, 26 Aug 2016 10:07:31 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33690 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752469AbcHQSPE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Aug 2016 14:15:04 -0400
+Date: Wed, 17 Aug 2016 13:14:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+	"mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
+	"Busch, Keith" <keith.busch@intel.com>,
+	"Tarazona-Duarte, Luis Antonio"
+	<luis.antonio.tarazona-duarte@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH v1] PCI: pciehp: Fix presence detect change interrupt
+ handling
+Message-ID: <20160817181459.GB27353@localhost>
+References: <92EBB4272BF81E4089A7126EC1E7B284665970B5@IRSMSX101.ger.corp.intel.com>
+ <20160817171225.GA27353@localhost>
+ <CACK8Z6H2G1cA6W+7timaKdeK2wuPNQfdLeZQCx=C8VkBESUOfQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160826130832.2fde2327@arm.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACK8Z6H2G1cA6W+7timaKdeK2wuPNQfdLeZQCx=C8VkBESUOfQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/26/2016 8:08 AM, Marc Zyngier wrote:
-> On Fri, 26 Aug 2016 10:08:13 +0100
-> Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+Hi Rajat, thanks for chiming in!
+
+On Wed, Aug 17, 2016 at 10:54:12AM -0700, Rajat Jain wrote:
+> On Wed, Aug 17, 2016 at 10:12 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > Hi Mayurkumar,
+> >
+> > On Wed, Aug 17, 2016 at 01:42:18PM +0000, Patel, Mayurkumar wrote:
+> > > Currently, if very fast hotplug removal and insertion event comes
+> > > as following
+> > >
+> > > [  608.823412] pciehp 0000:00:1c.1:pcie04: Card not present on Slot(1)
+> > > [  608.835249] pciehp 0000:00:1c.1:pcie04: Card present on Slot(1)
+> > >
+> > > In this case following scenario happens,
+> > >
+> > > While removal:
+> > > pcie_isr() -> pciehp_queue_interrupt_event() -> triggers queue_work().
+> > > work invokes interrupt_event_handler() -> case INT_PRESENCE_OFF
+> > > and calls handle_surprise_event().
+> > >
+> > > handle_surprise_event() again calls pciehp_get_adapter_status()
+> > > and reads slot status which might have been changed
+> > > already due to PCI_EXP_SLTSTA_PDC event for hotplug insertion
+> > > has happened. So it queues, ENABLE_REQ for both removal
+> > > and insertion interrupt based on latest slot status.
+> > >
+> > > In this case, PCIe device can not be hot-add again because
+> > > it was never removed due to which device can not get enabled.
+> > >
+> > > handle_surprise_event() can be removed and pciehp_queue_power_work()
+> > > can be directly triggered based on INT_PRESENCE_ON and INT_PRESENCE_OFF
+> > > from the switch case exist in interrupt_event_hanlder().
+> > >
+> > > The patch ensures the pciehp_queue_power_work() processes
+> > > presence detect change for removal and insertion correctly.
+> > >
+> > > Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
 > 
->> [ +Sinan ]
->>
->> On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
->>
->> [...]
->>
->>>> Thanks, Marc! It works, I tested on current X-Gene platforms that uses
->>>> GICv2 and GICv2m.
->>>>
->>>> Will you commit this change? It will be a huge help as going with
->>>> interrupt link will require firmware change.  
->>>
->>> Not for the time being. We now have an understanding of *why* things do
->>> not work, but Lorenzo seems to have a good grasp on what we can do to
->>> address it correctly, and we should explore this first. If (and only if)
->>> there is a consensus that firmware already does all it should, then
->>> I'll turn this hack into a proper series.  
->>
->> For the records, it is a discussion that already took place:
->>
->> https://lkml.org/lkml/2016/3/14/923
->>
->> As I have said there are already ARM64 systems with ACPI tables
->> out there using PCI interrupt links; I doubt that Qualcomm systems
->> allow to reconfigure the GIC interrupt pin allocated to legacy PCI
->> IRQs through interrupt links _SRS (hey it is *empty* :)),
->> therefore:
->>
->> a) Some (the above is just an example from the mailing lists I am not
->>    picking on anyone it is just for the sake of this discussion, I have
->>    not dumped all ARM partners _PRT from their ACPI tables to check)
->>    ACPI tables must be rewritten because they are not FW compliant
->>
->> OR
->>
->> b) We allow PCI interrupt links to be used for static interrupt
->>    configurations
->>
->> OR
->>
->> c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
->>    how GIC code can detect from which part of the kernel the interrupt
->>    request is coming, unless we implement an ACPI-PCI-legacy-IRQ-special
->>    gem)
->>
->> Comments ?
+> Acked-by: Rajat Jain <rajatxjain@gmail.com>
 > 
-> I'm not overly keen on (c), as it is pretty hard to find out where the
-> request is coming from (and the hack I previously posted opens the door
-> to all kind of undetected misconfiguration). We *could* use a stacked
-> irqchip to represent the inverter, but it feels like using a car sized
-> hammer to squash a tiny fly.
+> >
+> > > ---
+> > >  Resending the patch addressing to PCI Maintainer Bjorn Helgaas.
+> > >
+> > >  drivers/pci/hotplug/pciehp_ctrl.c |   18 ++----------------
+> > >  1 file changed, 2 insertions(+), 16 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> > > index 880978b..87c5bea 100644
+> > > --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> > > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> > > @@ -301,20 +301,6 @@ static void handle_button_press_event(struct slot *p_slot)
+> > >  /*
+> > >   * Note: This function must be called with slot->lock held
+> > >   */
+> > > -static void handle_surprise_event(struct slot *p_slot)
+> > > -{
+> > > -     u8 getstatus;
+> > > -
+> > > -     pciehp_get_adapter_status(p_slot, &getstatus);
+> > > -     if (!getstatus)
+> > > -             pciehp_queue_power_work(p_slot, DISABLE_REQ);
+> > > -     else
+> > > -             pciehp_queue_power_work(p_slot, ENABLE_REQ);
+> > > -}
+> > > -
+> > > -/*
+> > > - * Note: This function must be called with slot->lock held
+> > > - */
+> > >  static void handle_link_event(struct slot *p_slot, u32 event)
+> > >  {
+> > >       struct controller *ctrl = p_slot->ctrl;
+> > > @@ -377,14 +363,14 @@ static void interrupt_event_handler(struct work_struct *work)
+> > >               pciehp_green_led_off(p_slot);
+> > >               break;
+> > >       case INT_PRESENCE_ON:
+> > > -             handle_surprise_event(p_slot);
+> > > +             pciehp_queue_power_work(p_slot, ENABLE_REQ);
+> > >               break;
+> > >       case INT_PRESENCE_OFF:
+> > >               /*
+> > >                * Regardless of surprise capability, we need to
+> > >                * definitely remove a card that has been pulled out!
+> > >                */
+> > > -             handle_surprise_event(p_slot);
+> > > +             pciehp_queue_power_work(p_slot, DISABLE_REQ);
+> > >               break;
+> > >       case INT_LINK_UP:
+> > >       case INT_LINK_DOWN:
+> >
+> > Thanks a lot for this.  I think other people have seen the same issue.
+> >
+> > Even with this fix, don't we have essentially the same problem one
+> > layer back?  The first thing pcie_isr() does is read PCI_EXP_SLTSTA,
+> > then few lines down, we call pciehp_get_adapter_status(), which reads
+> > PCI_EXP_SLTSTA *again*.  So I think the window is smaller but still
+> > there.
+> >
+> > I think what we really should do is read the status registers
+> > (PCI_EXP_SLTSTA and probably also PCI_EXP_LNKSTA) *once* in
+> > pcie_isr(), before we write PCI_EXP_SLTSTA to clear the RW1C bits
+> > there, and then queue up events based on those values, without
+> > re-reading the registers.
+> >
+> > What do you think?
 > 
-> (b) seems like the right thing to do, but I cannot comment on whether
-> or not this is compliant with the specification.
 > 
-> Thanks,
+> Yes, I agree. We need to do something about that *in addition * to the
+> above patch to cover the
+> whole story. However I think there still will be a room for some
+> interrupt misses because we are
+> collecting the interrupts in intr_loc, and theoretically we could be
+> in a situation where in the pcie_isr, the
 > 
-> 	M.
+> do {
+>     ...
+> } while(detected)
 > 
+> loop gets a removal->insertion->removal all while in the same
+> invocation of pcie_isr().
+> If this happens, the intr_loc will have recorded a single insertion
+> and a single removal, and
+> the final result will depend on the order in which we decide to
+> process the events in intr_loc.
 
-Let me throw option d here.
+I don't quite understand how that "do { .. } while (detected)" loop
+works or why it's done that way.  Collecting interrupt status bits in
+an ISR is obviously a very common task; it seems like there should be
+a standard, idiomatic way of doing it, but I don't know it.
 
-I know Bjorn wants to keep ACTIVE_LOW in the code for common code but can't
-we override this in an arch specific way (arm64's pci.c) while creating the root
-bridge? 
+> Or, may be we can make the calls to pciehp_queue_interrupt_event()
+> before clearing the
+> RW1C in the slot status register (in the loop)?
 
-If the ARCH override doesn't exist, ACTIVE LOW still remains the default. There could
-be another arch that could have the same problem in the future.
+Yeah, it seems like we should read PCI_EXP_SLTSTA once, queue up any
+events related to it, then clear the relevant SLTSTA bits.
 
-This way, we don't need to touch irqchip (GIC) driver or introduce a new API and/or
-introduce bugs for the rest of the non-PCI code.
-
->From what I see in the ACPI spec, both _PRT approaches are correct and they need to
-be supported by Linux. 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Bjorn
