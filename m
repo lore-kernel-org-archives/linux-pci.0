@@ -1,62 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39174 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933435AbcHYNPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Aug 2016 09:15:46 -0400
-Date: Thu, 25 Aug 2016 08:15:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Richard van der Hoff <linux@rvanderhoff.org.uk>
-Cc: linux-pci@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: Hotplug not working for USB 3.1 docking station on Dell XPS 13
-Message-ID: <20160825131536.GA9554@localhost>
-References: <57BDCE15.4080201@rvanderhoff.org.uk>
- <20160824201511.GF23914@localhost>
- <57BEE0E7.7020300@rvanderhoff.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57BEE0E7.7020300@rvanderhoff.org.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com,
+	x86@kernel.org
+Subject: [PATCH v4 3/5] x86/ioapic: Fix setup_res() failing to get resource
+Date: Wed, 17 Aug 2016 16:00:35 +0800
+Message-Id: <1471420837-31003-4-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+References: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 25, 2016 at 01:13:27PM +0100, Richard van der Hoff wrote:
-> On 24/08/16 21:15, Bjorn Helgaas wrote:
-> >[+cc Andreas, linux-kernel]
-> >
-> >On Wed, Aug 24, 2016 at 05:40:53PM +0100, Richard van der Hoff wrote:
-> >>I'm having problems with a Plugable USB-C docking station, with my
-> >>laptop, a Dell XPS 13 (9350).  ...
-> >>My impression, and feedback from the linux-usb mailing list, is
-> >>therefore that this is a PCI hotplug problem.
-> >
-> >Please include a pointer to the linux-usb analysis.
-> 
-> For the record, here:
-> http://marc.info/?l=linux-usb&m=147204147226274&w=2, however:
+acpi_dev_filter_resource_type() returns 0 on success, and 1 on failure.
+A return value of zero means there's a matching resource, so we should
+continue within setup_res() to get the resource.
 
-Huh, turns out you and Oliver were right about it being a PCI problem.
-But it would have saved some time to know how Oliver decided that.
-Otherwise it's just "he said, she said."
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/ioapic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > From the kernel's point of view, plugging in the dock would be a PCIe
-> >hotplug event on 00:1c.0 that should be handled by pciehp.  Do you
-> >have pciehp included in your kernel?
-> 
-> I did not; now I do, and it works perfectly. Thank you! A case of it
-> being incredibly obvious once you know what you are looking for.
-> 
-> >01:00.0 and 02:02.0 are ports of a Thunderbolt switch. Since they
-> >don't appear when you boot without the docking station, the dock
-> >connection must be between 00:1c.0 and 01:00.0.
-> 
-> This would strike me as surprising - the dock bills itself as a
-> USB-C device, and the Thunderbolt devices look like they are part of
-> the laptop chipset to me. To me it seems more likely that those PCI
-> devices are part of the laptop, but are powered down until something
-> is plugged into the USB-C port.
-
-Yep, I agree, that sounds like a better theory.  Glad it's working
-now.
-
-Bjorn
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index 2449377..8ab6d42 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -46,7 +46,7 @@ static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
+ 	struct resource_win win;
+ 
+ 	res->flags = 0;
+-	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
++	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM))
+ 		return AE_OK;
+ 
+ 	if (!acpi_dev_resource_memory(acpi_res, res)) {
+-- 
+1.8.3.1
