@@ -1,235 +1,134 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: helgaas@kernel.org,
-	jingoohan1@gmail.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jszhang@marvell.com, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v3 2/3] pcie-designware: add iATU Unroll feature
-Date: Tue,  2 Aug 2016 18:36:22 +0100
-Message-Id: <24e35d8579ef42ad35a3fba9567f2ea93865d1e8.1470158164.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470158164.git.jpinto@synopsys.com>
-References: <cover.1470158164.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470158164.git.jpinto@synopsys.com>
-References: <cover.1470158164.git.jpinto@synopsys.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Mingkai Hu <mingkai.hu@nxp.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
+ <Joao.Pinto@synopsys.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "arnd@arndb.de"
+ <arnd@arndb.de>, Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand
+ <pratyush.anand@gmail.com>
+Subject: RE: Support for configurable PCIe endpoint
+Date: Wed, 17 Aug 2016 09:49:20 +0000
+Message-ID: <VI1PR04MB14544C83482106ABF1067D5F8E140@VI1PR04MB1454.eurprd04.prod.outlook.com>
+References: <57A18927.9070003@ti.com>
+ <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com> <57A31299.2040805@ti.com>
+In-Reply-To: <57A31299.2040805@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Simon
+ Horman <horms@verge.net.au>, David Daney <david.daney@cavium.com>, Gabriele
+ Paoloni <gabriele.paoloni@huawei.com>, Richard Zhu <Richard.Zhu@freescale.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay
+ Inamdar <tinamdar@apm.com>, Ley Foon Tan <lftan@altera.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ Roy Zang <tie-fei.zang@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the support to the new iATU mechanism that will be used
-from Core version 4.80, which is called iATU Unroll.
-The new Cores can support the iATU Unroll or support the "old" iATU 
-method now called Legacy Mode. The driver is perfectly capable of
-performing well for both.
 
-In order to make sure that the iATU is really enabled a for loop was
-introduced in dw_pcie_prog_outbound_atu() to improve reliability.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-changes v2->v3 (Bjorn Helgaas):
-- Unused *CTRL3 and *UPPR iATU Unroll registers were removed
-- Inbound addr builder macro was removed to simplifiy the code
-- *readl_unroll and *writel_unroll functions were simplified. Now the
-scope is always outbound.
-- dw_pcie_get_atu_mode changed to return the status
-- iATU enable check routine was improved in dw_pcie_prog_outbound_atu()
-changes v1->v2:
-- Patch was breaking kernel build due to bad definition in macro funtion.
-- Rebased on top of pci/next.
+> -----Original Message-----
+> From: Kishon Vijay Abraham I [mailto:kishon@ti.com]
+> Sent: Thursday, August 04, 2016 6:02 PM
+> To: Joao Pinto <Joao.Pinto@synopsys.com>; bhelgaas@google.com; linux-
+> pci@vger.kernel.org; arnd@arndb.de; Jingoo Han <jingoohan1@gmail.com>;
+> Pratyush Anand <pratyush.anand@gmail.com>
+> Cc: Ley Foon Tan <lftan@altera.com>; Rob Herring <robh@kernel.org>;
+> Tanmay Inamdar <tinamdar@apm.com>; Roy Zang <tie-
+> fei.zang@freescale.com>; Mingkai Hu <mingkai.hu@freescale.com>;
+> Minghuan Lian <minghuan.Lian@freescale.com>; Richard Zhu
+> <Richard.Zhu@freescale.com>; Lucas Stach <l.stach@pengutronix.de>;
+> Murali Karicheri <m-karicheri2@ti.com>; Thomas Petazzoni
+> <thomas.petazzoni@free-electrons.com>; Jason Cooper
+> <jason@lakedaemon.net>; Thierry Reding <thierry.reding@gmail.com>;
+> Simon Horman <horms@verge.net.au>; Zhou Wang
+> <wangzhou1@hisilicon.com>; Gabriele Paoloni
+> <gabriele.paoloni@huawei.com>; Stanimir Varbanov <svarbanov@mm-
+> sol.com>; David Daney <david.daney@cavium.com>; linux-
+> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> omap@vger.kernel.org; Carlos Palminha
+> <CARLOS.PALMINHA@synopsys.com>
+> Subject: Re: Support for configurable PCIe endpoint
+> 
+> Hi,
+> 
+> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
+> > Hi Kishon,
+> >
+> > On 8/3/2016 7:03 AM, Kishon Vijay Abraham I wrote:
+> >> Hi,
+> >>
+> >> The PCIe controller present in TI's DRA7 SoC is capable of operating
+> >> either in Root Complex mode or Endpoint mode. (It uses Synopsys
+> >> Designware Core). I'd assume most of the PCIe controllers on other
+> >> platforms that use Designware core should also be capable to operate
+> >> in endpoint mode. But linux kernel right now supports only RC mode.
+> >>
+> >> PCIe endpoint support discussion came up briefly before [1] but it
+> >> was felt the practical use case will find firmware more suitable and
+> >> endpoint support in kernel can be used only for validation or demo.
+> >>
+> >> *) Modify platform driver to support EP mode (in my case pci-dra7xx.c).
+> >>
+> >> *) dt binding specific to EP mode should be created.
+> >>
+> >> Once I complete the implementation and start posting RFC patches, a
+> >> lot of these will become clear. But I want to check if this sounds
+> >> okay to you guys before starting the implementation.
+> >>
+> >> Let me know if you have some other ideas too.
+> >>
+> >> Cheers
+> >> Kishon
+> >>
+> >> [1] -> http://www.spinics.net/lists/linux-pci/msg26026.html
+> >>
+> >
+> > You are rising a topic that we are also addressing in Synopsys.
+> >
+> > For the PCIe RC hardware validation we are currently using the
+> > standard pcie-designware and pcie-designware-plat drivers.
+> >
+> > For the Endpoint we have to use an internal software package. Its main
+> > purpose is to initialize the IP registers, eDMA channels and make data
+> > transfer to prove that the everything is working properly. This is
+> > done in 2 levels, a custom driver built and loaded and an application
+> > that makes some ioctl to the driver executing some interesting
+> > functions to check the Endpoint status and make some data exchange.
+> 
+> hmm.. the platform I have doesn't have a DMA in PCIe IP
+> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does
+> the EP access RC memory? i.e the driver in the RC allocates memory from it's
+> DDR and gives it's DDR address to the EP. The EP then transfers data to this
+> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
+> simple with configurable EPs. I'd like to know more about your testing though.
+> 
 
- drivers/pci/host/pcie-designware.c | 131 ++++++++++++++++++++++++++++++++-----
- drivers/pci/host/pcie-designware.h |   1 +
- 2 files changed, 116 insertions(+), 16 deletions(-)
+Hi Kishon,
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 6fb88de..3fb9036 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -31,6 +31,11 @@
- #define LINK_WAIT_USLEEP_MIN		90000
- #define LINK_WAIT_USLEEP_MAX		100000
- 
-+/* Parameters for the waiting for iATU enabled routine */
-+#define LINK_WAIT_MAX_IATU_RETRIES	5
-+#define LINK_WAIT_IATU_MIN		9000
-+#define LINK_WAIT_IATU_MAX		10000
-+
- /* Synopsis specific PCIE configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_MODE_MASK		(0x3f << 16)
-@@ -75,6 +80,26 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
-+/*
-+ * iATU unroll specific registers and definitions
-+ * from 4.80 core version the address translation will be made by unroll
-+ */
-+
-+/* Registers */
-+#define PCIE_ATU_UNR_REGION_CTRL1	0x00
-+#define PCIE_ATU_UNR_REGION_CTRL2	0x01
-+#define PCIE_ATU_UNR_LOWER_BASE		0x02
-+#define PCIE_ATU_UNR_UPPER_BASE		0x03
-+#define PCIE_ATU_UNR_LIMIT		0x04
-+#define PCIE_ATU_UNR_LOWER_TARGET	0x05
-+#define PCIE_ATU_UNR_UPPER_TARGET	0x06
-+
-+/* Register address builder */
-+#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
-+					((0x3 << 20) | (region << 9) |	\
-+					(register << 2))
-+/* End of Unroll specific */
-+
- /* PCIe Port Logic registers */
- #define PLR_OFFSET			0x700
- #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
-@@ -136,6 +161,28 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
- 		writel(val, pp->dbi_base + reg);
- }
- 
-+static inline void dw_pcie_readl_unroll(struct pcie_port *pp,
-+						u32 index, u32 reg, u32 *val)
-+{
-+	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
-+
-+	if (pp->ops->readl_rc)
-+		pp->ops->readl_rc(pp, pp->dbi_base + reg_addr, val);
-+	else
-+		*val = readl(pp->dbi_base + reg_addr);
-+}
-+
-+static inline void dw_pcie_writel_unroll(struct pcie_port *pp,
-+						u32 index, u32 val, u32 reg)
-+{
-+	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
-+
-+	if (pp->ops->writel_rc)
-+		pp->ops->writel_rc(pp, val, pp->dbi_base + reg_addr);
-+	else
-+		writel(val, pp->dbi_base + reg_addr);
-+}
-+
- static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 			       u32 *val)
- {
-@@ -157,24 +204,61 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
- 		int type, u64 cpu_addr, u64 pci_addr, u32 size)
- {
--	u32 val;
--
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+	u32 val = 0;
-+	u32 retries = 0;
-+
-+	if (pp->iatu_unroll_status) {
-+		dw_pcie_writel_unroll(pp, index,
-+			lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
-+		dw_pcie_writel_unroll(pp, index,
-+			upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
-+		dw_pcie_writel_unroll(pp, index,
-+			lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
-+		dw_pcie_writel_unroll(pp, index,
-+			lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
-+		dw_pcie_writel_unroll(pp, index,
-+			upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
-+		dw_pcie_writel_unroll(pp, index,
-+			type, PCIE_ATU_UNR_REGION_CTRL1);
-+		dw_pcie_writel_unroll(pp, index,
-+			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
-+	} else {
-+		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
-+						PCIE_ATU_VIEWPORT);
-+		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
-+						PCIE_ATU_LOWER_BASE);
-+		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
-+						PCIE_ATU_UPPER_BASE);
-+		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
-+						PCIE_ATU_LIMIT);
-+		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
-+						PCIE_ATU_LOWER_TARGET);
-+		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
-+						PCIE_ATU_UPPER_TARGET);
-+		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-+		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+	}
- 
- 	/*
--	 * Make sure ATU enable takes effect before any subsequent config
--	 * and I/O accesses.
--	 */
--	dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
-+	 * Make sure ATU enable takes effect before any subsequent config
-+	 * and I/O accesses.
-+	 */
-+	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-+
-+		if (pp->iatu_unroll_status) {
-+			dw_pcie_readl_unroll(pp, index,
-+					PCIE_ATU_UNR_REGION_CTRL2, &val);
-+		} else {
-+			dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
-+		}
-+
-+		if (val == PCIE_ATU_ENABLE)
-+			break;
-+
-+		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+	}
-+
-+	dev_dbg(pp->dev, "iATU is not being enabled\n");
- }
- 
- static struct irq_chip dw_msi_irq_chip = {
-@@ -433,6 +517,19 @@ static const struct irq_domain_ops msi_domain_ops = {
- 	.map = dw_pcie_msi_map,
- };
- 
-+static u8 dw_pcie_get_atu_mode(struct pcie_port *pp)
-+{
-+	u32 val = 0;
-+
-+	/* Check if the iATU unroll is enabled or not */
-+	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
-+
-+	if (val == 0xFFFFFFFF)
-+		return 1; /* enabled */
-+
-+	return 0; /* disabled */
-+}
-+
- int dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
-@@ -552,6 +649,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
- 
-+	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
-+
- 	pp->root_bus_nr = pp->busn->start;
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 384e79b..354a981 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -48,6 +48,7 @@ struct pcie_port {
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
-+	u8			iatu_unroll_status;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
- 
--- 
-1.8.1.5
+This is a typical user case for EP to use DMA transfer data to/from RC memory.
+In our case, we implement ring (like BD ring) or register in EP to communicate
+The address allocated in RC memory, then EP can transfer data to/from RC memory.
+
+Thanks,
+Mingkai
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
