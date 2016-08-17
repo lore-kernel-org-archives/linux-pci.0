@@ -1,61 +1,28 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0077.outbound.protection.outlook.com ([104.47.2.77]:33820
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934612AbcHBP5A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Aug 2016 11:57:00 -0400
-From: Haggai Eran <haggaie@mellanox.com>
-To: "hch@infradead.org" <hch@infradead.org>,
-	"jonathan.derrick@intel.com" <jonathan.derrick@intel.com>
-CC: Leon Romanovsky <leonro@mellanox.com>,
-	Kovalyov Artemy <artemyko@mellanox.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	Yishai Hadas <yishaih@mellanox.com>,
-	"stephen.bates@microsemi.com" <stephen.bates@microsemi.com>,
-	"j.glisse@gmail.com" <j.glisse@gmail.com>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	Liran Liss <liranl@mellanox.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [RFC 6/7] NVMe: Use genalloc to allocate CMB regions
-Date: Tue, 2 Aug 2016 07:15:26 +0000
-Message-ID: <1470122126.20129.11.camel@mellanox.com>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
-	 <1470034653-9097-7-git-send-email-haggaie@mellanox.com>
-	 <20160801155348.GB23224@infradead.org>
-	 <20160801162057.GA11476@localhost.localdomain>
-In-Reply-To: <20160801162057.GA11476@localhost.localdomain>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <jonathan.yong@intel.com>
+Return-Path: <jonathan.yong@intel.com>
+Message-ID: <57B4259F.2040302@intel.com>
+Date: Wed, 17 Aug 2016 16:51:43 +0800
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ intel-wired-lan@lists.osuosl.org,
+ Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/3] PCI: Add Precision Time Measurement (PTM) support
+References: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com> <57AA984E.8040308@intel.com> <20160815185931.GD9790@localhost> <57B2C90F.8010109@intel.com> <20160816133715.GA30825@localhost>
+In-Reply-To: <20160816133715.GA30825@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
-T24g15EnLCAyMDE2LTA4LTAxIGF0IDEwOjIwIC0wNjAwLCBKb24gRGVycmljayB3cm90ZToNCj4g
-T24gTW9uLCBBdWcgMDEsIDIwMTYgYXQgMDg6NTM6NDlBTSAtMDcwMCwgQ2hyaXN0b3BoIEhlbGx3
-aWcgd3JvdGU6DQo+ID4gDQo+ID4gT24gTW9uLCBBdWcgMDEsIDIwMTYgYXQgMDk6NTc6MzJBTSAr
-MDMwMCwgSGFnZ2FpIEVyYW4gd3JvdGU6DQo+ID4gPiANCj4gPiA+IFJlZ2lzdGVyIHRoZSBDTUIg
-aW4gYSBnZW5fcG9vbCBkZWRpY2F0ZWQgdG8gbWFuYWdlIENNQiByZWdpb25zLg0KPiA+ID4gVXNl
-IHRoZQ0KPiA+ID4gcG9vbCB0byBhbGxvY2F0ZSB0aGUgU1FzIHRvIG1ha2Ugc3VyZSB0aGV5IGFy
-ZSByZWdpc3RlcmVkLg0KPiA+IEFuZCB3aHkgd291bGQgdGhlIE5WTWUgZHJpdmVyIGNhcmUgaWYg
-InRoZXkgYXJlIHJlZ2lzdGVyZWQiPw0KPiA+IA0KPiA+IE9uY2Ugd2Ugc3RhcnQgYWxsb3dpbmcg
-ZGl2ZXJzZSBDTUIgdXNlcyAod2hhdCBoYXBwZW5lZCB0byBKb24ncw0KPiA+IHBhdGNoZXMNCj4g
-PiBidHc/KSBnZW5hbGxvYyBtaWdodCBiZSBhIGdvb2QgYmFja2VuZCBhbGxvY2F0b3IsIGJ1dCB3
-aXRob3V0IHRoYXQNCj4gPiBpdCdzIGVudGlyZWx5IHBvaW50bGVzcy7CoMKgQWxzbyBwbGVhc2Ug
-ZG9uJ3QgaW50cm9kdWNlIHVzZWxlc3MNCj4gPiBoZWFkZXINCj4gPiBmaWxlcy4NCj4gTXkgY29u
-Y2VybiBpcyB1c2luZyBDTUIgYXMgYSBnZW5lcmljIG1lbW9yeSBzcGFjZSBjb3VsZCBsZWFkIHRv
-DQo+IGludmFsaWQgdXNlcyBhbmQgdW50ZXN0ZWQgcGF0aHMgaW4gYnJva2VuIGZpcm13YXJlIChs
-ZWFkaW5nIHRvDQo+IGJyaWNrZWQgZHJpdmVzLi4uKS4gVGhlIHNwZWMgZGVmaW5lcyB3aGF0IGl0
-J3MgYWxsb3dlZCB0byBiZSB1c2VkDQo+IGZvciwgYnV0IGRvZXNuJ3QgcmVhbGx5IGxlYXZlIGl0
-IG9wZW4gZm9yIGdlbmVyYWwgcHVycG9zZSB1c2FnZQ0KPiBvdXRzaWRlIG9mIHRoYXQuIEJlY2F1
-c2Ugb2YgdGhhdCBJIHRoaW5rIGl0IG5lZWRzIG1vcmUgaGFuZC1ob2xkaW5nDQo+IGJ5IHRoZSBr
-ZXJuZWwgdG8gcHJldmVudCBpbnZhbGlkIHVzYWdlLg0KSSB1bmRlcnN0YW5kLiBEaWQgeW91IGhh
-cHBlbiB0byB0aGluayBvZiBob3cgdGhlIGtlcm5lbCB3b3VsZCBleHBvc2UNCml0Pw0KDQo+IFdo
-YXQgSSB3b3VsZCBsaWtlIHRvIHNlZSBpcyBhIHNldCBvZiBrbm9icyBjb250cm9sbGluZyB0aGUg
-J2NodW5rcycNCj4gb2YgbWVtb3J5J3MgdXNhZ2VzIChjb250cm9sbGVkIHRocm91Z2ggc3lzZnMv
-Y29uZmlnZnM/KSBhbmQgdGhlDQo+IGtlcm5lbCB0YWtlcyBjYXJlIG9mIGFsbG9jYXRpb24uIE15
-IHNldCB3YXMgZ29pbmcgdG8gZXhwb3NlIGENCj4gcmVzb3VyY2UgZmlsZSBmb3IgV0RTL1JEUyBi
-dXQgZXZlcnl0aGluZyBlbHNlIHdhcyB1bmhhbmRsZWQgZXhjZXB0DQo+IGZvciBpdHMgY3VycmVu
-dCBzcWVzIHVzYWdlLiBJIHRoaW5rIHRoZSBnZW5hbGxvYyBjb3VsZCBmaXQgaW50byB0aGlzDQo+
-IHNjaGVtZSBxdWl0ZSB3ZWxsLg0KV2hhdCBkbyB5b3UgbWVhbiBieSBhIHJlc291cmNlIGZpbGU/
-IEFyZSB5b3UgcmVmZXJyaW5nIHRvIHRoZQ0Kc3lzZnMvY29uZmlnZnMga25vYiBvciB0byBhIGZp
-bGUgdGhhdCBleHBvc2VzIHRoZSByZXNvdXJjZSB0byB1c2VyLQ0Kc3BhY2U/DQoNClRoYW5rcywN
-CkhhZ2dhaQ==
+On 08/16/2016 21:37, Bjorn Helgaas wrote:
+>> Looks like there is still this compile warning to fix:
+>> http://patchwork.ozlabs.org/patch/634825/
+> 
+> That report was from June 16, and I think I fixed the warning already.
+> Or do you still see the warning?  I don't see it myself.
+> 
+> Bjorn
+> 
+
+If that is fixed, I don't anything else to add.
