@@ -1,38 +1,80 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: release pci_host_bridge resource after remove root
- bus
-To: Bjorn Helgaas <helgaas@kernel.org>, wangyijing <wangyijing@huawei.com>
-References: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
- <20160822172821.GG18628@localhost> <57BBB383.50503@huawei.com>
- <20160824213921.GH23914@localhost>
-Cc: bhelgaas@google.com, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
- linux-pci@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <c9129658-d500-ac4c-ccd7-090ebcbf731d@codeaurora.org>
-Date: Wed, 24 Aug 2016 17:48:48 -0400
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: helgaas@kernel.org, tglx@linutronix.de, tony.luck@intel.com, bhelgaas@google.com, linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/5] x86/ioapic: Support hot-removal of IOAPICs present during boot
+Date: Wed, 17 Aug 2016 02:33:30 +0200
+Message-ID: <23015419.Vf5YANn61V@vostro.rjw.lan>
+In-Reply-To: <1470801718-29004-3-git-send-email-rui.y.wang@intel.com>
+References: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com> <1470801718-29004-3-git-send-email-rui.y.wang@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160824213921.GH23914@localhost>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/24/2016 5:39 PM, Bjorn Helgaas wrote:
->> Yes, may some pci drivers make a mistake, the refcount control the device object
->> > release is fine, but I think move the mem resource release out is better.
-> If this is caused by driver bugs, I think we need to fix the driver
-> bugs.
+On Wednesday, August 10, 2016 12:01:55 PM Rui Wang wrote:
+> IOAPICs present during system boot aren't added to ioapic_list,
+> thus are unable to be hot-removed. Fix it by calling
+> acpi_ioapic_add() during root bus enumeration.
 > 
-> So far all I see here is "it works when I do this."  What we need is
-> an argument for "it's correct to do this."  It's certainly possible
-> that you're already making that argument and I'm just not
-> understanding it.
-> 
+> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 
-I also want to point out that the sysfs is not the only device removal
-path. As Bjorn pointed out, you were moving resource free code into the sysfs
-path and breaking other path (ACPI hotplug).
+This patch has been ACKed by Bjorn, right?
+
+In which case you should have added the Acked-by tag to it when reposting.
+
+> ---
+>  drivers/acpi/pci_root.c | 10 ++++++++++
+>  drivers/pci/setup-bus.c |  5 ++++-
+>  2 files changed, 14 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index b07eda1..bf601d4 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -614,6 +614,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	if (hotadd) {
+>  		pcibios_resource_survey_bus(root->bus);
+>  		pci_assign_unassigned_root_bus_resources(root->bus);
+> +		/*
+> +		 * This is only called for the hotadd case. For the boot-time
+> +		 * case, we need to wait until after PCI initialization in
+> +		 * order to deal with IOAPICs mapped in on a PCI BAR.
+> +		 *
+> +		 * This is currently x86-specific, because acpi_ioapic_add()
+> +		 * is an empty function without CONFIG_ACPI_HOTPLUG_IOAPIC.
+> +		 * And CONFIG_ACPI_HOTPLUG_IOAPIC depends on CONFIG_X86_IO_APIC
+> +		 * (see drivers/acpi/Kconfig).
+> +		 */
+>  		acpi_ioapic_add(root->device->handle);
+>  	}
+>  
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index c74059e..ec538d3 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/ioport.h>
+>  #include <linux/cache.h>
+>  #include <linux/slab.h>
+> +#include <linux/acpi.h>
+>  #include "pci.h"
+>  
+>  unsigned int pci_flags;
+> @@ -1852,8 +1853,10 @@ void __init pci_assign_unassigned_resources(void)
+>  {
+>  	struct pci_bus *root_bus;
+>  
+> -	list_for_each_entry(root_bus, &pci_root_buses, node)
+> +	list_for_each_entry(root_bus, &pci_root_buses, node) {
+>  		pci_assign_unassigned_root_bus_resources(root_bus);
+> +		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
+> +	}
+>  }
+>  
+>  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+> 
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
