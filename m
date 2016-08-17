@@ -1,53 +1,35 @@
-Return-Path: <tglx@linutronix.de>
-Return-Path: <tglx@linutronix.de>
-Date: Wed, 24 Aug 2016 19:23:46 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-    x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-    linux-pci@vger.kernel.org, Benedikt Spranger <b.spranger@linutronix.de>,
-    Lukas Wunner <lukas@wunner.de>
-Subject: Re: x86/PCI: Scan all functions during probing
-In-Reply-To: <73341fe4-9017-7dcb-7ae3-a993428c11fc@siemens.com>
-Message-ID: <alpine.DEB.2.20.1608241923190.5714@nanos>
-References: <alpine.DEB.2.20.1608091318530.5388@nanos> <20160809134452.GA27301@localhost> <20160818203348.GK27353@localhost> <alpine.DEB.2.20.1608241037510.5714@nanos> <73341fe4-9017-7dcb-7ae3-a993428c11fc@siemens.com>
+Return-Path: <hch@lst.de>
+Return-Path: <hch@lst.de>
+Date: Wed, 17 Aug 2016 02:48:50 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
+	agordeev@redhat.com, linux-kernel@vger.kernel.org
+Subject: Re: two pci_alloc_irq_vectors improvements
+Message-ID: <20160817004850.GB21992@lst.de>
+References: <1470924665-25860-1-git-send-email-hch@lst.de> <20160816193418.GA10555@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160816193418.GA10555@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 24 Aug 2016, Jan Kiszka wrote:
-> On 2016-08-24 04:39, Thomas Gleixner wrote:
-> > On Thu, 18 Aug 2016, Bjorn Helgaas wrote:
-> >> I looked up the spec: PCI (not PCIe) r3.0, sec 3.2.2.3.4, says:
-> >>
-> >>   A single-function device may optionally respond to all function
-> >>   numbers as the same function or may ... respond only to function 0
-> >>   and not respond to the other function numbers.
-> >>
-> >> I'm concerned that a single-function device that responds to all
-> >> function numbers might break with this patch.
-> >>
-> >>   [multi-function devices] are also required to always implement
-> >>   function 0 in the device.
-> >>
-> >> Here's the reason we can advance by 8 in the "Go find them" loop.
-> >>
-> >>   If a single function device is detected (i.e., bit 7 in the Header
-> >>   Type register of function 0 is 0), no more functions for that Device
-> >>   Number will be checked.  If a multi-function device is detected
-> >>   (i.e., bit 7 in the Header Type register of function 0 is 1), then
-> >>   all remaining Function Numbers will be checked.
-> >>
-> >> This patch does the opposite of what the first sentence recommends.
-> > 
-> > Fair enough. We'll need to find a way to deal with that in jailhouse then.
+On Tue, Aug 16, 2016 at 02:34:18PM -0500, Bjorn Helgaas wrote:
+> Speaking of affinity, the original documentation said "By default this
+> function will spread the interrupts around the available CPUs".  After
+> these patches, you have to pass PCI_IRQ_AFFINITY to get that behavior.
+> Are you planning to have drivers use
 > 
-> Wouldn't it also be an option to have this fine-grained scanning only
-> activated if we detect to run over Jailhouse (which we have to anyway)?
-> Such code hasn't been proposed for upstream yet, but we will eventually.
+>   pci_alloc_irq_vectors(dev, 1, nvec, PCI_IRQ_ALL_TYPES | PCI_IRQ_AFFINITY)
+> 
+> to explicitly ask for affinity?
 
-That might be an option.
+Yes, at least for now.  During my mass conversion attempts I found
+enough drivers that don't use MSI-X for spreading queues over CPUs
+but instead for different kinds of interrupts.  I'd been to much in
+my NVMe and RDMA world earlier to assume everyone else would do something
+that sensible..
 
-Thanks,
+> I applied these to for-linus with the intent of merging them for v4.8.
+> I fixed a couple typos in the first one as shown below.
 
-	tglx
+Thanks.
