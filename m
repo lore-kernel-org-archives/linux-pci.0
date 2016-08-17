@@ -1,193 +1,184 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Nate Watterson <nwatters@codeaurora.org>,
-	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 00/15] ACPI IORT ARM SMMU v3 support
-Date: Mon, 15 Aug 2016 16:23:25 +0100
-Message-Id: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v6 4/4] PCI: designware: Add iATU Unroll feature
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: jszhang@marvell.com, jingoohan1@gmail.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Wed, 17 Aug 2016 15:00:22 -0500
+Message-ID: <20160817200022.10418.88555.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160817195239.10418.7037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series is v4 of a previous posting:
+From: Joao Pinto <Joao.Pinto@synopsys.com>
 
-https://lkml.org/lkml/2016/7/20/248
+Add support for the new iATU Unroll mechanism that will be used from Core
+version 4.80.  The new Cores can support either iATU Unroll or the "old"
+iATU method, now called Legacy Mode.  The driver is perfectly capable of
+performing well for both.
 
-v3 -> v4
-	- Added single mapping API (for IORT named components)
-	- Fixed arm_smmu_iort_xlate() return value
-	- Reworked fwnode registration and platform device creation
-	  ordering to fix probe ordering dependencies
-	- Added code to keep device_node ref count with new iommu
-	  fwspec API
-	- Added patch to make iommu_fwspec arch agnostic
-	- Dropped RFC status
-	- Rebased against v4.8-rc2
+[bhelgaas: split ATU enable timeout to separate patch]
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-designware.c |   97 ++++++++++++++++++++++++++++++++----
+ drivers/pci/host/pcie-designware.h |    1 
+ 2 files changed, 87 insertions(+), 11 deletions(-)
 
-v2 -> v3
-	- Rebased on top of dependencies series [1][2][3](v4.7-rc3)
-	- Added back reliance on ACPI early probing infrastructure
-	- Patch[1-3] merged through other dependent series
-	- Added back IOMMU fwnode generalization
-	- Move SMMU v3 static functions configuration to IORT code
-	- Implemented generic IOMMU fwspec API
-	- Added code to implement fwnode platform device look-up
-
-v1 -> v2:
-	- Rebased on top of dependencies series [1][2][3](v4.7-rc1)
-	- Removed IOMMU fwnode generalization
-	- Implemented ARM SMMU v3 ACPI probing instead of ARM SMMU v2
-	  owing to patch series dependencies [1]
-	- Moved platform device creation logic to IORT code to
-	  generalize its usage for ARM SMMU v1-v2-v3 components
-	- Removed reliance on ACPI early device probing
-	- Created IORT specific iommu_xlate() translation hook leaving
-	  OF code unchanged according to v1 reviews
-
-The ACPI IORT table provides information that allows instantiating
-ARM SMMU devices and carrying out id mappings between components on
-ARM based systems (devices, IOMMUs, interrupt controllers).
-
-http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-
-Building on basic IORT support, available through [2],
-this patchset enables ARM SMMU v3 support on ACPI systems.
-
-Most of the code is aimed at building the required generic ACPI
-infrastructure to create and enable IOMMU components and to bring
-the IOMMU infrastructure for ACPI on par with DT, which is going to
-make future ARM SMMU components easier to integrate.
-
-PATCH (1) adds a FWNODE_IOMMU type to the struct fwnode_handle type.
-          It is required to attach a fwnode identifier to platform
-          devices allocated/detected through IORT tables entries;
-          IOMMU devices have to have an identifier to look them up
-          eg IOMMU core layer carrying out id translation. This can be
-          done through a fwnode_handle (ie IOMMU platform devices created
-          out of IORT tables are not ACPI devices hence they can't be
-          allocated as such, otherwise they would have a fwnode_handle of
-          type FWNODE_ACPI).
-
-PATCH (2) Add kernel infrastructure to make the struct iommu_fwspec
-          handling arch agnostic and generic.
-
-PATCH (3) makes use of the ACPI early probing API to add a linker script
-          section for probing devices via IORT ACPI kernel code.
-
-PATCH (4) provides IORT support for registering IOMMU IORT node through
-          their fwnode handle.
-
-PATCH (5) implements core code fwnode based platform devices look-up.
-
-PATCH (6) extends iommu_fwspec so that it can be used on ACPI based
-          system by creating a generic IOMMU fwspec kernel layer.
-
-PATCH (7) implements the of_dma_configure() API in ACPI world -
-          acpi_dma_configure() - and patches PCI and ACPI core code to
-          start making use of it.
-
-PATCH (8) provides an IORT function to detect existence of specific type
-          of IORT components.
-
-PATCH (9) creates the kernel infrastructure required to create ARM SMMU
-          platform devices for IORT nodes.
-
-PATCH (10) refactors the ARM SMMU v3 driver so that the init functions are
-           split in a way that groups together code that probes through DT
-           and code that carries out HW registers FW agnostic probing, in
-           preparation for adding the ACPI probing path.
-
-PATCH (11) rework ARM SMMU v3 platform driver registration to make it work
-           on ACPI systems.
-
-PATCH (12) Building on patch (9), it adds ARM SMMU v3 IORT IOMMU
-           operations to create and probe ARM SMMU v3 components.
-
-PATCH (13) Extend the IORT iort_node_map_rid() to work on a type mask
-           instead of a single type so that the translation API can
-           be used on a range of components.
-
-PATCH (14) Add IORT API to carry out id mappings for components that do
-           do not have an input identifier/RIDs (ie named components).
-
-PATCH (15) provides IORT infrastructure to carry out IOMMU configuration
-           for devices and hook it up to the previously introduced ACPI
-           DMA configure API.
-
-This patchset is built on top and depends on these two patch series:
-
-[1] R.Murphy "Generic DT bindings for PCI and ARM SMMU v3" v4
-    https://marc.info/?l=devicetree&m=146739193215518&w=2
-
-[2] T.Nowicki "Introduce ACPI world to ITS irqchip" v8
-    https://marc.info/?l=linux-kernel&m=147091000919640&w=2
-
-and is provided for early review/testing purposes here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v4
-
-Tested on FVP models for ARM SMMU v3 probing path.
-
-Lorenzo Pieralisi (15):
-  drivers: iommu: add FWNODE_IOMMU fwnode type
-  drivers: iommu: implement arch_{set/get}_iommu_fwspec API
-  drivers: acpi: iort: introduce linker section for IORT entries probing
-  drivers: acpi: iort: add support for IOMMU fwnode registration
-  drivers: platform: add fwnode base platform devices retrieval
-  drivers: iommu: make iommu_fwspec OF agnostic
-  drivers: acpi: implement acpi_dma_configure
-  drivers: acpi: iort: add node match function
-  drivers: acpi: iort: add support for ARM SMMU platform devices
-    creation
-  drivers: iommu: arm-smmu-v3: split probe functions into DT/generic
-    portions
-  drivers: iommu: arm-smmu-v3: enable ACPI driver initialization
-  drivers: iommu: arm-smmu-v3: add IORT configuration
-  drivers: acpi: iort: replace rid map type with type mask
-  drivers: acpi: iort: add single mapping function
-  drivers: acpi: iort: introduce iort_iommu_configure
-
- arch/arm/Kconfig                      |   1 +
- arch/arm/include/asm/iommu-fwspec.h   |  30 +++
- arch/arm64/Kconfig                    |   1 +
- arch/arm64/include/asm/iommu-fwspec.h |  30 +++
- drivers/acpi/arm64/iort.c             | 481 +++++++++++++++++++++++++++++++++-
- drivers/acpi/glue.c                   |   4 +-
- drivers/acpi/scan.c                   |  29 ++
- drivers/base/platform.c               |  23 ++
- drivers/iommu/Kconfig                 |   7 +
- drivers/iommu/Makefile                |   1 +
- drivers/iommu/arm-smmu-v3.c           | 150 +++++++++--
- drivers/iommu/iommu-fwspec.c          | 126 +++++++++
- drivers/iommu/of_iommu.c              |  91 -------
- drivers/pci/probe.c                   |   3 +-
- include/acpi/acpi_bus.h               |   2 +
- include/asm-generic/vmlinux.lds.h     |   1 +
- include/linux/acpi.h                  |   5 +
- include/linux/fwnode.h                |   1 +
- include/linux/iommu-fwspec.h          |  70 +++++
- include/linux/iommu.h                 |  25 ++
- include/linux/iort.h                  |  18 ++
- include/linux/of_iommu.h              |  28 +-
- include/linux/platform_device.h       |   3 +
- 23 files changed, 995 insertions(+), 135 deletions(-)
- create mode 100644 arch/arm/include/asm/iommu-fwspec.h
- create mode 100644 arch/arm64/include/asm/iommu-fwspec.h
- create mode 100644 drivers/iommu/iommu-fwspec.c
- create mode 100644 include/linux/iommu-fwspec.h
-
--- 
-2.6.4
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 947fac3..e489b18 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -80,6 +80,21 @@
+ #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
++/*
++ * iATU Unroll-specific register definitions
++ * From 4.80 core version the address translation will be made by unroll
++ */
++#define PCIE_ATU_UNR_REGION_CTRL1	0x00
++#define PCIE_ATU_UNR_REGION_CTRL2	0x04
++#define PCIE_ATU_UNR_LOWER_BASE		0x08
++#define PCIE_ATU_UNR_UPPER_BASE		0x0C
++#define PCIE_ATU_UNR_LIMIT		0x10
++#define PCIE_ATU_UNR_LOWER_TARGET	0x14
++#define PCIE_ATU_UNR_UPPER_TARGET	0x18
++
++/* Register address builder */
++#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)  ((0x3 << 20) | (region << 9)
++
+ /* PCIe Port Logic registers */
+ #define PLR_OFFSET			0x700
+ #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
+@@ -141,6 +156,27 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
+ 		writel(val, pp->dbi_base + reg);
+ }
+ 
++static inline u32 dw_pcie_readl_unroll(struct pcie_port *pp, u32 index, u32 reg)
++{
++	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
++
++	if (pp->ops->readl_rc)
++		return pp->ops->readl_rc(pp, pp->dbi_base + offset + reg);
++
++	return readl(pp->dbi_base + offset + reg);
++}
++
++static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 index,
++					 u32 val, u32 reg)
++{
++	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
++
++	if (pp->ops->writel_rc)
++		pp->ops->writel_rc(pp, val, pp->dbi_base + offset + reg);
++	else
++		writel(val, pp->dbi_base + offset + reg);
++}
++
+ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 			       u32 *val)
+ {
+@@ -164,23 +200,49 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
+ {
+ 	u32 retries, val;
+ 
+-	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
+-			  PCIE_ATU_VIEWPORT);
+-	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
+-			  PCIE_ATU_LIMIT);
+-	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
+-	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
+-	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
++	if (pp->iatu_unroll_enabled) {
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
++		dw_pcie_writel_unroll(pp, index,
++			upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
++		dw_pcie_writel_unroll(pp, index,
++			lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
++		dw_pcie_writel_unroll(pp, index,
++			upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
++		dw_pcie_writel_unroll(pp, index,
++			type, PCIE_ATU_UNR_REGION_CTRL1);
++		dw_pcie_writel_unroll(pp, index,
++			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
++	} else {
++		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
++						PCIE_ATU_VIEWPORT);
++		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
++						PCIE_ATU_LOWER_BASE);
++		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
++						PCIE_ATU_UPPER_BASE);
++		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
++						PCIE_ATU_LIMIT);
++		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
++						PCIE_ATU_LOWER_TARGET);
++		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
++						PCIE_ATU_UPPER_TARGET);
++		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
++		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
++	}
+ 
+ 	/*
+ 	 * Make sure ATU enable takes effect before any subsequent config
+ 	 * and I/O accesses.
+ 	 */
+ 	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
+-		val = dw_pcie_readl_rc(pp, PCIE_ATU_CR2);
++		if (pp->iatu_unroll_enabled)
++			val = dw_pcie_readl_unroll(pp, index,
++						   PCIE_ATU_UNR_REGION_CTRL2);
++		else
++			val = dw_pcie_readl_rc(pp, PCIE_ATU_CR2);
++
+ 		if (val == PCIE_ATU_ENABLE)
+ 			return;
+ 
+@@ -445,6 +507,17 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = dw_pcie_msi_map,
+ };
+ 
++static u8 dw_pcie_iatu_unroll_enabled(struct pcie_port *pp)
++{
++	u32 val = 0;
++
++	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
++	if (val == 0xffffffff)
++		return 1;
++
++	return 0;
++}
++
+ int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct device_node *np = pp->dev->of_node;
+@@ -561,6 +634,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
++	pp->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pp);
++
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
+ 
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 285e1ed..e74cc4a 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -48,6 +48,7 @@ struct pcie_port {
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+ 	unsigned long		msi_data;
++	u8			iatu_unroll_enabled;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
