@@ -1,69 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48392 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753617AbcHWTwc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Aug 2016 15:52:32 -0400
-Date: Tue, 23 Aug 2016 14:52:21 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 17 Aug 2016 10:58:32 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160823195221.GA3725@localhost>
-References: <20160817213745.GE27353@localhost>
- <20160817230951.GD25146@localhost.localdomain>
- <20160818195656.GH27353@localhost>
- <20160818224610.GA28276@localhost.localdomain>
- <20160822165524.GC18628@localhost>
- <20160822211536.GE28276@localhost.localdomain>
- <20160823133913.GN18628@localhost>
- <20160823171018.GB10224@localhost.localdomain>
- <eed69a47-633b-0c0c-e5c1-663bf37a9ec3@codeaurora.org>
- <20160823192330.GA10866@localhost.localdomain>
+To: Hanjun Guo <guohanjun@huawei.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com,
+	tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+	rafael@kernel.org, Lorenzo.Pieralisi@arm.com, will.deacon@arm.com,
+	catalin.marinas@arm.com, hanjun.guo@linaro.org,
+	shijie.huang@arm.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, al.stone@linaro.org,
+	graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org
+Subject: Re: [PATCH V8 5/8] irqchip/gicv3-its: Refactor ITS DT init code to
+ prepare for ACPI
+Message-ID: <20160817155832.GA25421@localhost>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+ <1470909998-16710-6-git-send-email-tn@semihalf.com>
+ <57B4213E.3060201@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160823192330.GA10866@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <57B4213E.3060201@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 23, 2016 at 03:23:31PM -0400, Keith Busch wrote:
-> On Tue, Aug 23, 2016 at 01:14:03PM -0400, Sinan Kaya wrote:
-> > On 8/23/2016 1:10 PM, Keith Busch wrote:
-> > > It's superficially related to pciehp only because that's the only module
-> > > that touches Slot Control, and this particular hardware interprets
-> > > pciehp's control commands differently than the specification.
-> > > 
-> > > Since the hardware can't be changed, is there any guidance you can
-> > > recommend we follow to appropriately fence off pciehp from attention and
-> > > power indicator control? I initially attempted the least invasive method,
-> > > but I'm happy to explore other possibilities.
-> > 
-> > Most other non-standard HW require an LED driver for hotplug in the kernel. 
-> > IBM has one. It sound like you need another one.
+On Wed, Aug 17, 2016 at 04:33:02PM +0800, Hanjun Guo wrote:
+> On 2016/8/11 18:06, Tomasz Nowicki wrote:
+> > In order to add ACPI support we need to isolate ACPI&DT common code and
+> > move DT logic to corresponding functions. To achieve this we are using
+> > firmware agnostic handle which can be unpacked to either DT or ACPI node.
+> >
+> > No functional changes other than a very minor one:
+> > 1. Terminate its_init call with -ENODEV for non-DT case which allows
+> > to remove hack from its-gic-v3.c.
+> > 2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+> > as a bonus we get nice string formatting.
+> > 3. Since there is only one of ITS parent domain convert it to static global
+> > variable and drop the parameter from its_probe_one. Users can refer to it
+> > in more convenient way then.
+> [...]
+> > -static int __init its_probe(struct device_node *node,
+> > -			    struct irq_domain *parent)
+> > +static int __init its_probe_one(struct resource *res,
+> > +				struct fwnode_handle *handle, int numa_node)
+> >  {
+> > -	struct resource res;
+> >  	struct its_node *its;
+> >  	void __iomem *its_base;
+> >  	u32 val;
+> >  	u64 baser, tmp;
+> >  	int err;
+> >  
+> > -	err = of_address_to_resource(node, 0, &res);
+> > -	if (err) {
+> > -		pr_warn("%s: no regs?\n", node->full_name);
+> > -		return -ENXIO;
+> > -	}
+> > -
+> > -	its_base = ioremap(res.start, resource_size(&res));
+> > +	its_base = ioremap(res->start, resource_size(res));
+> >  	if (!its_base) {
+> > -		pr_warn("%s: unable to map registers\n", node->full_name);
+> > +		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+> >  		return -ENOMEM;
+> >  	}
+> >  
+> >  	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+> >  	if (val != 0x30 && val != 0x40) {
+> > -		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
+> > +		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+> >  		err = -ENODEV;
+> >  		goto out_unmap;
+> >  	}
+> >  
+> >  	err = its_force_quiescent(its_base);
+> >  	if (err) {
+> > -		pr_warn("%s: failed to quiesce, giving up\n",
+> > -			node->full_name);
+> > +		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+> >  		goto out_unmap;
+> >  	}
+> >  
+> > -	pr_info("ITS: %s\n", node->full_name);
+> > +	pr_info("ITS@%pa\n", &res->start);
+>                 ^^
 > 
-> We'd still need to fence off pciehp from LED control since it manipulates
-> these in response to hot plug events handled by that driver.
+> When I was testing this patch set I found message printed as below:
+> 
+> [    0.000000] ITS@0x00000000c6000000
 
-Everybody probably knows this, but the problem is not with LED control
-per se.  The problem is multiple writers to the Slot Control register.
-Each write to Slot Control is a "command", and software is responsible
-for waiting for one command to complete before writing another (see
-PCIe r3.0, sec 6.7.3.2).
+I think it'd be nicer to print the resource with %pR so we see the
+type and size in a way that matches other physical address usage.
 
-It's no problem to make pciehp keep its mitts off the LEDs; the
-problem is if ledmon writes Slot Control for the indicators, and
-pciehp writes Slot Control for some other reason at about the same
-time.
+I don't know whether there is or should be a struct device associated
+with the ITS.  The its_probe_one() function looks similar to regular
+driver probe functions, so maybe there should be.
 
-Sinan has a very interesting idea...  Maybe we can work with that.
-Hmm, it looks like if we have an attention indicator, we already put
-an "attention" file in sysfs (see attention_write_file()).  That
-should eventually call into pciehp_set_attention_status(), where we
-currently only support off/on/blink states.
+If there were a struct device associated with the ITS, it'd be nicer
+to use dev_info() as well, of course.
 
-What if you made a quirk that replaced pciehp_set_attention_status()
-with a special version that supported the extra states you need and
-made ledmon use that sysfs file instead of writing Slot Control
-directly?  Would everything just work?
-
-Bjorn
+> [    0.000000] ITS@0x00000000c6000000: allocated 524288 Devices @27dc400000 (flat, esz 8, psz 16K, shr 1)
+> [    0.000000] ITS@0x00000000c6000000: allocated 2048 Virtual CPUs @27dc820000 (flat, esz 8, psz 4K, shr 1)
+> [    0.000000] ITS@0x00000000c6000000: allocated 512 Interrupt Collections @27dc80f000 (flat, esz 8, psz 4K, shr 1)
+> 
+> Seems this print is redundant, can we remove it?
+> 
+> Thanks
+> Hanjun
+> 
