@@ -1,56 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:56268 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100AbcHIPvC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Aug 2016 11:51:02 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: Vineet.Gupta1@synopsys.com, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH] pci: adding support for PCI_MSI_IRQ_DOMAIN in ARC arch
-Date: Tue,  9 Aug 2016 16:50:57 +0100
-Message-Id: <fdd37b0b995d178fddb34fdbdb5daf5981822f52.1470757628.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com,
+	x86@kernel.org
+Subject: [PATCH v4 2/5] x86/ioapic: Support hot-removal of IOAPICs present during boot
+Date: Wed, 17 Aug 2016 16:00:34 +0800
+Message-Id: <1471420837-31003-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+References: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Due to the added dependency on PCI_MSI_IRQ_DOMAIN for all PCIe RC 
-drivers, we were unable to build a RC solution for an ARC platform.
+IOAPICs present during system boot aren't added to ioapic_list,
+thus are unable to be hot-removed. Fix it by calling
+acpi_ioapic_add() during root bus enumeration.
 
-To fix this, this patch adds ARC as a PCI_MSI_IRQ_DOMAIN supportive
-platform and adds the generation of msi.h in the ARC arch.
-
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/arc/include/asm/Kbuild | 1 +
- drivers/pci/Kconfig         | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/acpi/pci_root.c | 10 ++++++++++
+ drivers/pci/setup-bus.c |  5 ++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arc/include/asm/Kbuild b/arch/arc/include/asm/Kbuild
-index 0b10ef2..c332604 100644
---- a/arch/arc/include/asm/Kbuild
-+++ b/arch/arc/include/asm/Kbuild
-@@ -25,6 +25,7 @@ generic-y += mcs_spinlock.h
- generic-y += mm-arch-hooks.h
- generic-y += mman.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += parport.h
- generic-y += pci.h
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 67f9916..6555eb7 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -25,7 +25,7 @@ config PCI_MSI
- 	   If you don't know what to do here, say Y.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index b07eda1..bf601d4 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -614,6 +614,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_root_bus_resources(root->bus);
++		/*
++		 * This is only called for the hotadd case. For the boot-time
++		 * case, we need to wait until after PCI initialization in
++		 * order to deal with IOAPICs mapped in on a PCI BAR.
++		 *
++		 * This is currently x86-specific, because acpi_ioapic_add()
++		 * is an empty function without CONFIG_ACPI_HOTPLUG_IOAPIC.
++		 * And CONFIG_ACPI_HOTPLUG_IOAPIC depends on CONFIG_X86_IO_APIC
++		 * (see drivers/acpi/Kconfig).
++		 */
+ 		acpi_ioapic_add(root->device->handle);
+ 	}
  
- config PCI_MSI_IRQ_DOMAIN
--	def_bool ARM || ARM64 || X86
-+	def_bool ARC || ARM || ARM64 || X86
- 	depends on PCI_MSI
- 	select GENERIC_MSI_IRQ_DOMAIN
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c74059e..ec538d3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -25,6 +25,7 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <linux/acpi.h>
+ #include "pci.h"
  
+ unsigned int pci_flags;
+@@ -1852,8 +1853,10 @@ void __init pci_assign_unassigned_resources(void)
+ {
+ 	struct pci_bus *root_bus;
+ 
+-	list_for_each_entry(root_bus, &pci_root_buses, node)
++	list_for_each_entry(root_bus, &pci_root_buses, node) {
+ 		pci_assign_unassigned_root_bus_resources(root_bus);
++		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
++	}
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
 -- 
-1.8.1.5
-
+1.8.3.1
