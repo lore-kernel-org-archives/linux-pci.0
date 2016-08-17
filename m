@@ -1,83 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: helgaas@kernel.org, tglx@linutronix.de, tony.luck@intel.com, bhelgaas@google.com, linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, x86@kernel.org
+Subject: Re: [PATCH v3 0/5] Fixing a set of bugs for ioapic hotplug
+Date: Wed, 17 Aug 2016 02:36:09 +0200
+Message-ID: <2854492.7D21TlQXT3@vostro.rjw.lan>
+In-Reply-To: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
+References: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1470807079-366-3-git-send-email-jszhang@marvell.com>
-References: <1470807079-366-1-git-send-email-jszhang@marvell.com>
- <1470807079-366-3-git-send-email-jszhang@marvell.com>
-From: Pratyush Anand <pratyush.anand@gmail.com>
-Date: Sun, 14 Aug 2016 21:30:04 +0530
-Message-ID: <CAHM4w1kZ=c-hF8nwXE0h4SYcQD2QG3NvZ-R0gjyDEPmc+7E7aw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] PCI: designware: let dw_pcie_link_up() beware of
- LTSSM training bit
-To: Jisheng Zhang <jszhang@marvell.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- linux-kernel@vger.kernel.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 10, 2016 at 11:01 AM, Jisheng Zhang <jszhang@marvell.com> wrote:
-> The link may be UP but still in link training. In this case, we can't
-> think the link is up and operating correctly. So we need to teach
-> dw_pcie_link_up() beware of the PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit.
->
+On Wednesday, August 10, 2016 12:01:53 PM Rui Wang wrote:
+> A set of patches fixing bugs found while testing IOAPIC hotplug.
 
-I have no more access of designware PCIe specification now. Since Joao
-has acked it, so I would consider that
-PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit exists in older core as well.
-If it is there then you have my Acked-by too.
+This should have been posted to the x86@kernel.org list too for the benefit
+of the maintainers.
 
-~Pratyush
+Can you please resend it with a CC to that one (and the Bjorn's ACK on the
+second patch)?
 
-> This patch also rewrite PCIE_PHY_DEBUG_R1_LINK_UP definition so that
-> it's consistent with other MACROS.
->
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> Acked-by: Joao Pinto <jpinto@synopsys.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 24a16dd..6cc21bb 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -73,7 +73,8 @@
->  /* PCIe Port Logic registers */
->  #define PLR_OFFSET                     0x700
->  #define PCIE_PHY_DEBUG_R1              (PLR_OFFSET + 0x2c)
-> -#define PCIE_PHY_DEBUG_R1_LINK_UP      0x00000010
-> +#define PCIE_PHY_DEBUG_R1_LINK_UP      (0x1 << 4)
-> +#define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING     (0x1 << 29)
->
->  /* Parameters for the waiting for link up routine */
->  #define LINK_WAIT_MAX_RETRIES          10
-> @@ -417,7 +418,8 @@ int dw_pcie_link_up(struct pcie_port *pp)
->                 return pp->ops->link_up(pp);
->
->         val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-> -       return val & PCIE_PHY_DEBUG_R1_LINK_UP;
-> +       return ((val & PCIE_PHY_DEBUG_R1_LINK_UP) &&
-> +               (!(val & PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING)));
->  }
->
->  static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-> --
-> 2.8.1
->
+Thanks,
+Rafael
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+> Changelog:
+> 
+> Changes from v2 to v3:
+> * Rebased on top of 4.8-rc1 per Bjorn & Rafael.
+> * Improved the commit message of 0003, w/ clearer explanation.
+> 
+> Changes from v1 to v2:
+> * Split the first patch into two as advised by Bjorn: "would be nicer if
+> the interface change and header file munging were in a separate patch so
+> they wouldn't obscure the meat of the change, i.e., the addition of calls
+> to acpi_ioapic_add()."
+> * Removed acpi_ioapic_add() as an exported symbol.
+> * Fixed some typos, and s/acpi/ACPI/, s/ioapic/IOAPIC/ throughout.
+> * Fixed a warning from 0-day testing.
+> 
+> Rui Wang (5):
+>   x86/ioapic: Change prototype of acpi_ioapic_add()
+>   x86/ioapic: Support hot-removal of IOAPICs present during boot
+>   x86/ioapic: Fix setup_res() failing to get resource
+>   x86/ioapic: Fix lost IOAPIC resource after hot-removal and hotadd
+>   x86/ioapic: Fix ioapic failing to request resource
+> 
+>  drivers/acpi/internal.h |  2 --
+>  drivers/acpi/ioapic.c   | 46 ++++++++++++++++++++++++++--------------------
+>  drivers/acpi/pci_root.c | 12 +++++++++++-
+>  drivers/pci/setup-bus.c |  5 ++++-
+>  include/linux/acpi.h    |  6 ++++++
+>  5 files changed, 47 insertions(+), 24 deletions(-)
