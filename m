@@ -1,179 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 30 Aug 2016 08:06:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Roland Singer <roland.singer@desertbit.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-Message-ID: <20160830130634.GA16426@localhost>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost>
- <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost>
- <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
- <20160829235403.GA14177@localhost>
- <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Thu, 18 Aug 2016 18:59:21 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 0/3] Limiting pci access requests
+Message-ID: <20160818165921.GA10737@wunner.de>
+References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+ <20160809173633.GF27301@localhost>
+ <20160809185654.GA32692@localhost.localdomain>
+ <20160809185628.GA6729@wunner.de>
+ <20160817210539.GA25146@localhost.localdomain>
+ <20160818140213.GA10631@wunner.de>
+ <20160818160516.GB27538@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160818160516.GB27538@localhost.localdomain>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 12:08:57PM +0200, Roland Singer wrote:
-> Thanks for pointing it out.
+On Thu, Aug 18, 2016 at 12:05:16PM -0400, Keith Busch wrote:
+> On Thu, Aug 18, 2016 at 04:02:13PM +0200, Lukas Wunner wrote:
+> > How is it possible that a device is accessed that no longer exists?
 > 
-> Yeah that's right. The system will hang randomly a few minutes later,
-> because some certain actions in the graphical user session will trigger
-> the freeze.
+> Surprise hot removal.
 > 
-> I had a look at the function body of pci_read_config_dword:
+> > Are these (native) pciehp ports and the attached pci_dev isn't torn
+> > down quickly enough? Do we need some kind of locking or an atomic flag
+> > that prevents accesses to devices until they're torn down completely?
 > 
->   #define PCI_OP_READ(size, type, len) \
->   int pci_bus_read_config_##size \
-> 	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
->   {									\
-> 	int res;							\
-> 	unsigned long flags;						\
-> 	u32 data = 0;							\
-> 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
-> 	raw_spin_lock_irqsave(&pci_lock, flags);			\
-> 	res = bus->ops->read(bus, devfn, pos, len, &data);		\
-> 	*value = (type)data;						\
-> 	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-> 	return res;							\
->   }
+> Tearing down a device and unbinding it from a driver generates lots of
+> additional accesses. Patch 2/3 removes MSI-x teardown which was one of
+> the larger sources of config and MMIO access to a non-existent device.
 > 
-> I guess, that bus->ops->read(...) might be the trigger.
-> Any hints how to continue debugging?
+> There are others, too. Heck, even checking if the device is present
+> (pci_device_is_present) generates config access to the removed device. :)
+> 
+> What do you think about adding a state to the pci_dev to say that it is
+> removed? The state can be set by pciehp or pcie-dpc if either detects
+> removal or link down, or on the first ~0 completion. Then have the
+> teardown check for the removal state before doing orderly device removal.
 
-It's not likely that the problem is in the bus->ops->read() path.  That
-is used by every device driver, so a problem there would cause more
-serious problems than what you're seeing.
+Exactly.
 
-My guess would be some problem in the video driver or the bbswitch
-thing.
+Attribute names that come to mind: "removed", "hot_removed",
+"surprise_removed", perhaps with an "is_" prefix.
 
-> Am 30.08.2016 um 01:54 schrieb Bjorn Helgaas:
-> > On Mon, Aug 29, 2016 at 09:55:56PM +0200, Roland Singer wrote:
-> >> Just tried it and the system didn't freeze. However it will freeze
-> >> after some time (few minutes while working).
-> >>
-> >> Seams to be pci_read_config_dword. Where is this exactly defined?
-> > 
-> > pci_read_config_dword() is defined in include/linux/pci.h.  It calls
-> > pci_bus_read_config_dword() which is defined by the PCI_OP_READ() macro
-> > in drivers/pci/access.c.
-> > 
-> > If I understand correctly, this:
-> > 
-> >   dis_dev_get();
-> >   pci_read_config_dword(dis_dev, 0, &cfg_word);
-> >   dis_dev_put();
-> > 
-> > causes an immediate system hang, but if you only do this:
-> > 
-> >   dis_dev_get();
-> >   dis_dev_put();
-> > 
-> > the system hangs a few minutes later.  Right?
-> > 
-> >> Am 29.08.2016 um 21:07 schrieb Bjorn Helgaas:
-> >>> On Mon, Aug 29, 2016 at 08:46:17PM +0200, Roland Singer wrote:
-> >>>> Hi Bjorn,
-> >>>>
-> >>>> I am using the bbswitch kernel module to switch off/on the GPU and
-> >>>> to obtain the GPU power state.
-> >>>> Obtaining the GPU state immediately after starting the graphical user
-> >>>> session freezes the system.
-> >>>>
-> >>>> This code triggers something, which is responsible for the freeze.
-> >>>>
-> >>>> ---
-> >>>> // Returns 1 if the card is disabled, 0 if enabled
-> >>>> static int is_card_disabled(void) {
-> >>>>     u32 cfg_word;
-> >>>>     // read first config word which contains Vendor and Device ID. If all bits
-> >>>>     // are enabled, the device is assumed to be off
-> >>>>     pci_read_config_dword(dis_dev, 0, &cfg_word);
-> >>>>     // if one of the bits is not enabled (the card is enabled), the inverted
-> >>>>     // result will be non-zero and hence logical not will make it 0 ("false")
-> >>>>     return !~cfg_word;
-> >>>> }
-> >>>>
-> >>>> static int bbswitch_proc_show(struct seq_file *seqfp, void *p) {
-> >>>>     // show the card state. Example output: 0000:01:00:00 ON
-> >>>>     dis_dev_get();
-> >>>>     seq_printf(seqfp, "%s %s\n", dev_name(&dis_dev->dev),
-> >>>>              is_card_disabled() ? "OFF" : "ON");
-> >>>>     dis_dev_put();
-> >>>>     return 0;
-> >>>> }
-> >>>> ---
-> >>>>
-> >>>> Either dis_dev_get or pci_read_config_dword is the trigger.
-> >>>
-> >>> What happens if you remove the call to is_card_disabled()?  Does the
-> >>> system still freeze if you only do the dis_dev_get()/dis_dev_put()?
-> >>>
-> >>>> Link to the bbswitch module source code:
-> >>>> https://github.com/Bumblebee-Project/bbswitch/blob/master/bbswitch.c#L333
-> >>>>
-> >>>>
-> >>>> Am 29.08.2016 um 18:02 schrieb Bjorn Helgaas:
-> >>>>> [+cc linux-acpi, linux-kernel, dri-devel]
-> >>>>>
-> >>>>> Hi Roland,
-> >>>>>
-> >>>>> I have no idea how to debug this problem.  Are you seeing something
-> >>>>> that suggests it may be a PCI problem?
-> >>>>>
-> >>>>> On Tue, Aug 23, 2016 at 11:23:45AM +0200, Roland Singer wrote:
-> >>>>>> Hi,
-> >>>>>>
-> >>>>>> hope somebody can help me fix this kernel problem which affects the following machines:
-> >>>>>>
-> >>>>>> - Clevo P651RA (i7-6700HQ/GTX 965M, part of the P6xxRx family which are also affected)
-> >>>>>> - MSI GE62 Apache Pro (i7-6700HQ/GTX 960M)
-> >>>>>> - Gigabyte P35V5 (i7-6700HQ/GTX 970M)
-> >>>>>> - Razer Blade 14" (2016) (i7-6700HQ/GTX 970M) (BIOS 5.11, 04/07/2016)
-> >>>>>>
-> >>>>>>
-> >>>>>> The kernel freezes if the graphical user session (Xorg & Wayland) is
-> >>>>>> started with a switched off discrete GPU card (NVIDIA).
-> >>>>>> If the discrete GPU is switched off after the graphical session start,
-> >>>>>> then everything works as expected, until the graphical session is restarted.
-> >>>>>>
-> >>>>>> This problem seams to be linked to specific BIOS settings. If the computer
-> >>>>>> is started with the following command line:
-> >>>>>>
-> >>>>>> acpi_osi=! acpi_osi="Windows 2009"
-> >>>>>>
-> >>>>>> then the kernel freeze does not occur anymore. However this required a special
-> >>>>>> ACPI DSDT firmware patch for the Razer Blade 2016 laptop:
-> >>>>>>
-> >>>>>> https://github.com/m4ng0squ4sh/razer_blade_14_2016_acpi_dsdt
-> >>>>>>
-> >>>>>> I strongly recommend to fix this in the kernel and I am ready to help and solve
-> >>>>>> this problem with some help.
-> >>>>>>
-> >>>>>> Here is a link to the GitHub issue with further information:
-> >>>>>>
-> >>>>>> https://github.com/Bumblebee-Project/Bumblebee/issues/764#issuecomment-241212595
-> >>>>>>
-> >>>>>> Here are some more detailed information:
-> >>>>>>
-> >>>>>> https://github.com/Lekensteyn/acpi-stuff/blob/master/Clevo-P651RA/notes.txt
-> >>>>>>
-> >>>>>> Hope somebody can help.
-> >>>>
-> >>>> --
-> >>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >>>> the body of a message to majordomo@vger.kernel.org
-> >>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>
-> >>
+In principle this could be checked at the lowest level when
+accessing config space in drivers/pci/access.c, and immediately
+return ~0. With the check wrapped in unlikely().
+
+aerdrv is not the only driver that has trouble with surprise removal:
+Unplugging the Thunderbolt Ethernet adapter on a Mac while the interface
+is up currently causes a lockup in the tg3 driver. Same with nouveau,
+which often queries a timer on the GPU and ends up in an infinite loop
+if the timer readout returns with -1. If the drivers could sense hot
+removal by querying a flag, they could react accordingly in their
+->remove hook, so this would be a real improvement.
+
+> > Since your patches pertain to aerdrv, do we need synchronization between
+> > the pciehp and aer drivers so that aer doesn't touch a device for which
+> > pciehp has sensed removal? (Is the interrupt shared between pciehp and
+> > aerdrv?)
 > 
+> pciehp and aerdrv can share an interrupt on root ports, but that's it.
+> The aer driver, though, does access every device in its sub-tree.
+> There's also pciehp and pcie-dpc that could benifit from coordination.
+> 
+> I can look into these, but it's much less trivial than these incremental
+> improvements. I'm hoping we can clean up these biggest offenders first
+> before attempting a more risky synchronization among the different
+> services.
+
+There's no synchronization necessary if there's just a flag to be
+checked. Of course if aerdrv/dpc or other drivers need to react
+immediately on hot removal, we'd need a separate ->hot_remove hook.
+
+Best regards,
+
+Lukas
