@@ -1,41 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Baole Ni <baolex.ni@intel.com>
-To: bhelgaas@google.com, rjui@broadcom.com, sbranden@broadcom.com,
-	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	brutallesale@gmail.com, geliangtang@163.com,
-	chuansheng.liu@intel.com, baolex.ni@intel.com
-Subject: [PATCH 0823/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:49:54 +0800
-Message-Id: <20160802114954.4843-1-baolex.ni@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49824 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754879AbcHSBgO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Aug 2016 21:36:14 -0400
+Date: Thu, 18 Aug 2016 16:59:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Helen Koike <helen.koike@collabora.co.uk>
+Cc: hch@infradead.org, mlin@kernel.org, fes@google.com,
+        keith.busch@intel.com, rlnelson@google.com, axboe@fb.com,
+        digitaleric@google.com, tytso@mit.edu, mikew@google.com,
+        monish@google.com, Helen Koike <helen.koike@collabora.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 RFC 1/2] PCI: Add Google device ID
+Message-ID: <20160818215932.GR27353@localhost>
+References: <cover.1471308889.git.helen.koike@collabora.co.uk>
+ <69910419c3745269604fcb052ad9b08d1b601590.1471308889.git.helen.koike@collabora.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <69910419c3745269604fcb052ad9b08d1b601590.1471308889.git.helen.koike@collabora.co.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Mon, Aug 15, 2016 at 10:41:19PM -0300, Helen Koike wrote:
+> Add device ID for the local SSDs (NVMe) in Google Clound Engine
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/pci/hotplug/pcihp_skeleton.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+s/Clound/Cloud/
 
-diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
-index 172ed89..3c23f01 100644
---- a/drivers/pci/hotplug/pcihp_skeleton.c
-+++ b/drivers/pci/hotplug/pcihp_skeleton.c
-@@ -69,7 +69,7 @@ static int num_slots;
- MODULE_AUTHOR(DRIVER_AUTHOR);
- MODULE_DESCRIPTION(DRIVER_DESC);
- MODULE_LICENSE("GPL");
--module_param(debug, bool, 0644);
-+module_param(debug, bool, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
- 
- static int enable_slot(struct hotplug_slot *slot);
--- 
-2.9.2
+> Signed-off-by: Helen Koike <helen.koike@collabora.com>
+> ---
+> 
+> Changes since v2:
+> - This is a new patch in the serie
+> 
+>  include/linux/pci_ids.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index c58752f..d422afc 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -948,6 +948,8 @@
+>  #define PCI_DEVICE_ID_APPLE_IPID2_GMAC	0x006b
+>  #define PCI_DEVICE_ID_APPLE_TIGON3	0x1645
+>  
+> +#define PCI_VENDOR_ID_GOOGLE		0x1AE0
+
+See the comment at the top of pci_ids.h.
+
+It looks like you only use this in drivers/nvme/host/pci.c.
+
+>  #define PCI_VENDOR_ID_YAMAHA		0x1073
+>  #define PCI_DEVICE_ID_YAMAHA_724	0x0004
+>  #define PCI_DEVICE_ID_YAMAHA_724F	0x000d
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
