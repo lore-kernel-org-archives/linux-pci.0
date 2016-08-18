@@ -1,116 +1,114 @@
-Return-Path: <lftan.linux@gmail.com>
-Return-Path: <lftan.linux@gmail.com>
+Return-Path: <guohanjun@huawei.com>
+Return-Path: <guohanjun@huawei.com>
+Subject: Re: [PATCH V8 5/8] irqchip/gicv3-its: Refactor ITS DT init code to
+ prepare for ACPI
+To: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+ <1470909998-16710-6-git-send-email-tn@semihalf.com>
+ <57B4213E.3060201@huawei.com> <20160817155832.GA25421@localhost>
+ <00af2bfa-0869-75e0-8a9a-4d7e0cafb687@semihalf.com>
+CC: <marc.zyngier@arm.com>, <tglx@linutronix.de>, <jason@lakedaemon.net>,
+        <rjw@rjwysocki.net>, <rafael@kernel.org>, <Lorenzo.Pieralisi@arm.com>,
+        <will.deacon@arm.com>, <catalin.marinas@arm.com>,
+        <hanjun.guo@linaro.org>, <shijie.huang@arm.com>,
+        <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <linaro-acpi@lists.linaro.org>, <andrea.gallo@linaro.org>,
+        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <al.stone@linaro.org>, <graeme.gregory@linaro.org>,
+        <ddaney.cavm@gmail.com>, <okaya@codeaurora.org>
+From: Hanjun Guo <guohanjun@huawei.com>
+Message-ID: <57B55BEA.6070702@huawei.com>
+Date: Thu, 18 Aug 2016 14:55:38 +0800
 MIME-Version: 1.0
-Sender: lftan.linux@gmail.com
-In-Reply-To: <20160824175431.GC23914@localhost>
-References: <1471595078-26297-1-git-send-email-lftan@altera.com>
- <20160822154738.GB18628@localhost> <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
- <20160824175431.GC23914@localhost>
-From: Ley Foon Tan <lftan@altera.com>
-Date: Thu, 25 Aug 2016 13:42:27 +0800
-Message-ID: <CAFiDJ58cJkRhs4F3m7Vew6TJN6T4mgUrgTog1uHCbB1ObP8K8A@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>, bcm-kernel-feedback-list@broadcom.com
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <00af2bfa-0869-75e0-8a9a-4d7e0cafb687@semihalf.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 25, 2016 at 1:54 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> [+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
+On 2016/8/18 14:42, Tomasz Nowicki wrote:
+> On 17.08.2016 17:58, Bjorn Helgaas wrote:
+>> On Wed, Aug 17, 2016 at 04:33:02PM +0800, Hanjun Guo wrote:
+>>> On 2016/8/11 18:06, Tomasz Nowicki wrote:
+>>>> In order to add ACPI support we need to isolate ACPI&DT common code and
+>>>> move DT logic to corresponding functions. To achieve this we are using
+>>>> firmware agnostic handle which can be unpacked to either DT or ACPI node.
+>>>>
+>>>> No functional changes other than a very minor one:
+>>>> 1. Terminate its_init call with -ENODEV for non-DT case which allows
+>>>> to remove hack from its-gic-v3.c.
+>>>> 2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+>>>> as a bonus we get nice string formatting.
+>>>> 3. Since there is only one of ITS parent domain convert it to static global
+>>>> variable and drop the parameter from its_probe_one. Users can refer to it
+>>>> in more convenient way then.
+>>> [...]
+>>>> -static int __init its_probe(struct device_node *node,
+>>>> -                struct irq_domain *parent)
+>>>> +static int __init its_probe_one(struct resource *res,
+>>>> +                struct fwnode_handle *handle, int numa_node)
+>>>>  {
+>>>> -    struct resource res;
+>>>>      struct its_node *its;
+>>>>      void __iomem *its_base;
+>>>>      u32 val;
+>>>>      u64 baser, tmp;
+>>>>      int err;
+>>>>
+>>>> -    err = of_address_to_resource(node, 0, &res);
+>>>> -    if (err) {
+>>>> -        pr_warn("%s: no regs?\n", node->full_name);
+>>>> -        return -ENXIO;
+>>>> -    }
+>>>> -
+>>>> -    its_base = ioremap(res.start, resource_size(&res));
+>>>> +    its_base = ioremap(res->start, resource_size(res));
+>>>>      if (!its_base) {
+>>>> -        pr_warn("%s: unable to map registers\n", node->full_name);
+>>>> +        pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+>>>>          return -ENOMEM;
+>>>>      }
+>>>>
+>>>>      val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+>>>>      if (val != 0x30 && val != 0x40) {
+>>>> -        pr_warn("%s: no ITS detected, giving up\n", node->full_name);
+>>>> +        pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+>>>>          err = -ENODEV;
+>>>>          goto out_unmap;
+>>>>      }
+>>>>
+>>>>      err = its_force_quiescent(its_base);
+>>>>      if (err) {
+>>>> -        pr_warn("%s: failed to quiesce, giving up\n",
+>>>> -            node->full_name);
+>>>> +        pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+>>>>          goto out_unmap;
+>>>>      }
+>>>>
+>>>> -    pr_info("ITS: %s\n", node->full_name);
+>>>> +    pr_info("ITS@%pa\n", &res->start);
+>>>                 ^^
+>>>
+>>> When I was testing this patch set I found message printed as below:
+>>>
+>>> [    0.000000] ITS@0x00000000c6000000
+>>
+>> I think it'd be nicer to print the resource with %pR so we see the
+>> type and size in a way that matches other physical address usage.
 >
-> On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
->> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
->> >> Altera PCIe IP can be configured as rootport or device and they might have
->> >> same vendor ID. It will cause the system hang issue if Altera PCIe is in
->> >> endpoint mode and work with other PCIe rootport that from other vendors.
->> >> So, add the rootport mode checking in link retrain fixup function.
->> >>
->> >> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->> >> ---
->> >> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
->> >> ---
->> >>  drivers/pci/host/pcie-altera.c | 3 +++
->> >>  1 file changed, 3 insertions(+)
->> >>
->> >> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
->> >> index 58eef99..33b6968 100644
->> >> --- a/drivers/pci/host/pcie-altera.c
->> >> +++ b/drivers/pci/host/pcie-altera.c
->> >> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
->> >>       u16 linkcap, linkstat;
->> >>       struct altera_pcie *pcie = dev->bus->sysdata;
->> >>
->> >> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
->> >> +             return;
->> >> +
->> >>       if (!altera_pcie_link_is_up(pcie))
->> >>               return;
->> >
->> > Instead of making this a PCI fixup, can you make an
->> > altera_pcie_host_init() function, call it from altera_pcie_probe(),
->> > and do the link retrain there?  Then you wouldn't need to worry about
->> > whether this is a Root Port or an Endpoint, plus it would make the
->> > altera driver structure more like the other drivers.
->> >
->> > You would call altera_pcie_host_init() before pci_scan_root_bus(), so
->> > you wouldn't have a pci_dev yet, so you wouldn't be able to use
->> > pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
->> > assume there's some device-dependent way to access it using
->> > cra_writel()?
->> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
+> The intention was to keep previous message layout but while we are here, %pR usage for this one pr_info seems nice to me.
 >
-> Why not?  I don't mean it has to be cra_write(), but isn't there some
-> way you can write that bit before we scan the root bus?  It doesn't
-> make sense that we have to scan the bus before we can train the link.
+>>
+>> I don't know whether there is or should be a struct device associated
+>> with the ITS.  The its_probe_one() function looks similar to regular
+>> driver probe functions, so maybe there should be.
+>>
+>> If there were a struct device associated with the ITS, it'd be nicer
+>> to use dev_info() as well, of course.
 >
-> We want to be able to tell the PCI core "all the device-specific root
-> complex initialization has been done, here are the config accessors
-> you need, please scan for devices."  I want to keep device-specific
-> things like this quirk directly in the driver and out of the
-> enumeration process.
-We don't have internal register bit to trigger link retrain, but need to set
-PCI_EXP_LNKCTL_RL bit in Link Control register of PCIe Capabilities Structure.
-So, this requires the altera_pcie_cfg_read() and altera_pcie_cfg_write().
-I can restructure the altera_pcie_cfg_read() and
-altera_pcie_cfg_write() and have
-new _altera_pcie_cfg_read() and _altera_pcie_cfg_write() that avoid
-the dependency of struct pci_bus. By doing this, we can retrain the link before
-pci_scan_root_bus and remove _FIXUP()
+> Indeed dev_info() would be nice but there is no struct device for ITS.
 
-Will send new v3 patch, please take a look.
+Yes, it's configured in the MADT table not in the DSDT, which has no struct
+device associated with it.
 
->
->> We can use
->> pci_bus_find_capability() and pci_bus_read_config_word() with struct
->> pci_bus instead.
->> But this only can be called after pci_scan_root_bus().
->
->> Found
->> iproc_pcie_check_link() have similar implementation.
->
-> You're right, and I don't like iproc_pcie_check_link() either, for the
-> same reasons.
->
-> The iproc_pcie_check_link() is a little better because it's called
-> before enumeration:
->
->   pci_create_root_bus()
->   iproc_pcie_check_link()
->   pci_scan_child_bus()
->
-> But it would be a lot better if iproc_pcie_check_link() were done
-> first, before pci_create_root_bus().  Then it would be more like the
-> structure of other drivers, and we could use pci_scan_root_bus()
-> instead.
->
-> Comments, iproc folks?
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Hanjun
