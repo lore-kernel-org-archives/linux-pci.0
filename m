@@ -1,84 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41914 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161272AbcHESXl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Aug 2016 14:23:41 -0400
-Date: Fri, 5 Aug 2016 13:23:32 -0500
+Received: from mail.kernel.org ([198.145.29.136]:42042 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754374AbcHSBGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Aug 2016 21:06:14 -0400
+Date: Thu, 18 Aug 2016 15:18:43 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: skhare@vmware.com, bhelgaas@google.com, pv-drivers@vmware.com,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, leon@kernel.org
-Subject: Re: [PATCH] vmxnet3: Move PCI Id to pci_ids.h
-Message-ID: <20160805182332.GA6369@localhost>
-References: <1470420039-23125-1-git-send-email-aditr@vmware.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Ley Foon Tan <lftan.linux@gmail.com>
+Subject: Re: [PATCH] PCI: altera: Retrain link in rootport mode only
+Message-ID: <20160818201843.GI27353@localhost>
+References: <1471250179-24198-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470420039-23125-1-git-send-email-aditr@vmware.com>
+In-Reply-To: <1471250179-24198-1-git-send-email-lftan@altera.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 05, 2016 at 11:00:39AM -0700, Adit Ranadive wrote:
-> The VMXNet3 PCI Id will be shared with our upcoming paravirtual RDMA
-> driver. Moved it to the shared location in pci_ids.h and updated the
-> driver version.
+On Mon, Aug 15, 2016 at 04:36:19PM +0800, Ley Foon Tan wrote:
+> Altera PCIe IP can be configured as rootport or device and they might have
+> same vendor ID. It will cause the system hang issue if Altera PCIe is in
+> endpoint mode and work with other PCIe rootport that from other vendors.
+> So, add the rootport mode checking in link retrain fixup function.
 > 
-> Suggested-by: Leon Romanovsky <leon@kernel.org>
-> Signed-off-by: Adit Ranadive <aditr@vmware.com>
-
-Please include this in the series that adds your paravirtual RDMA
-driver.  Please do not change the driver version information in this
-patch, because that change is unrelated to moving the PCI ID.
-
+> Signed-off-by: Ley Foon Tan <lftan@altera.com>
 > ---
->  drivers/net/vmxnet3/vmxnet3_int.h | 7 +++----
->  include/linux/pci_ids.h           | 1 +
->  2 files changed, 4 insertions(+), 4 deletions(-)
+>  drivers/pci/host/pcie-altera.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/net/vmxnet3/vmxnet3_int.h b/drivers/net/vmxnet3/vmxnet3_int.h
-> index 74fc030..be5991e 100644
-> --- a/drivers/net/vmxnet3/vmxnet3_int.h
-> +++ b/drivers/net/vmxnet3/vmxnet3_int.h
-> @@ -69,10 +69,10 @@
->  /*
->   * Version numbers
->   */
-> -#define VMXNET3_DRIVER_VERSION_STRING   "1.4.9.0-k"
-> +#define VMXNET3_DRIVER_VERSION_STRING   "1.4.10.0-k"
+> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> index 58eef99..6477738 100644
+> --- a/drivers/pci/host/pcie-altera.c
+> +++ b/drivers/pci/host/pcie-altera.c
+> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+>  	u16 linkcap, linkstat;
+>  	struct altera_pcie *pcie = dev->bus->sysdata;
 >  
->  /* a 32-bit int, each byte encode a verion number in VMXNET3_DRIVER_VERSION */
-> -#define VMXNET3_DRIVER_VERSION_NUM      0x01040900
-> +#define VMXNET3_DRIVER_VERSION_NUM      0x01040A00
+> +	if (!pci_is_root_bus(dev->bus))
+> +		return;
+
+It seems like it would be more direct to check for
+"pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT"?
+
+>  	if (!altera_pcie_link_is_up(pcie))
+>  		return;
 >  
->  #if defined(CONFIG_PCI_MSI)
->  	/* RSS only makes sense if MSI-X is supported. */
-> @@ -119,9 +119,8 @@ enum {
->  };
->  
->  /*
-> - * PCI vendor and device IDs.
-> + * Maximum devices supported.
->   */
-> -#define PCI_DEVICE_ID_VMWARE_VMXNET3    0x07B0
->  #define MAX_ETHERNET_CARDS		10
->  #define MAX_PCI_PASSTHRU_DEVICE		6
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index c58752f..98bb455 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2251,6 +2251,7 @@
->  #define PCI_DEVICE_ID_RASTEL_2PORT	0x2000
->  
->  #define PCI_VENDOR_ID_VMWARE		0x15ad
-> +#define PCI_DEVICE_ID_VMWARE_VMXNET3	0x07b0
->  
->  #define PCI_VENDOR_ID_ZOLTRIX		0x15b0
->  #define PCI_DEVICE_ID_ZOLTRIX_2BD0	0x2bd0
 > -- 
-> 2.7.4
+> 1.8.2.1
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
