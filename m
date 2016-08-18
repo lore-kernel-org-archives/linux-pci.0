@@ -1,94 +1,75 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-Date: Wed, 31 Aug 2016 13:46:39 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Roland Singer <roland.singer@desertbit.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, emil.l.velikov@gmail.com,
-	"imirkin@alum.mit.edu >> Ilia Mirkin" <imirkin@alum.mit.edu>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-Message-ID: <20160831114639.GD19420@al>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost>
- <20160830195337.GA18805@al>
- <e7318236-9737-518e-c360-398c66220961@desertbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <e7318236-9737-518e-c360-398c66220961@desertbit.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59489 "EHLO
+	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753542AbcHRH3j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Aug 2016 03:29:39 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [PATCH V3 2/3] vfio/pci: Allow control SR-IOV through sysfs interface
+Date: Thu, 18 Aug 2016 10:29:16 +0300
+Message-Id: <1471505357-78110-3-git-send-email-ilyal@mellanox.com>
+In-Reply-To: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
+References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 31, 2016 at 01:27:36PM +0200, Roland Singer wrote:
-> Am 30.08.2016 um 21:53 schrieb Peter Wu:
-> > On Mon, Aug 29, 2016 at 11:02:10AM -0500, Bjorn Helgaas wrote:
-> >> [+cc linux-acpi, linux-kernel, dri-devel]
-> >>
-> >> Hi Roland,
-> >>
-> >> I have no idea how to debug this problem.  Are you seeing something
-> >> that suggests it may be a PCI problem?
-> > 
-> > Yes I suspect there is an ACPI and/ or PCI problem, possibly
-> > device-specific. Steps to reproduce on the affected machines:
-> > 
-> >  1. Load nouveau.
-> >  2. Wait for it to runtime suspend.
-> >  2. Invoke 'lspci', this resumes the Nvidia PCI device via nouveau.
-> >  3. lspci never returns, few moments later an AML_INFINITE_LOOP is
-> >     reported.
-> > 
-> 
-> I can confirm this. Same result on my machine.
-> 
-> Here is a link to my ACPI tables:
-> https://bugs.launchpad.net/lpbugreporter/+bug/752542/+attachment/4722651/+files/Razer-Blade.tar.gz
-> 
-> The specific source for the NVIDIA card can be found in the ssdt5.dsl file.
-> 
-> 
->     Method (PGON, 1, Serialized)
->     {
->         /* ... */
-> 
->         GPPR (PION, One)
->         If ((OSYS == 0x07D9))  /* Is Windows 2009 - In my case, setting to Windows 2009 only works! */
->         {
-[..]
->         }
->         Else
->         {
->             LKEN (PION)
->         }
-> 
->         /* ... */
->         
->         Return (Zero)
->     }
-> 
-> 
-> 
-> If not set to Windows 2009, then this is triggered:
-> 
-> 
->     Method (LKEN, 1, NotSerialized)
->     {
-[..]
->     }
+This patch allows enabling and disabling SR-IOV for
+devices probed by vfio-pci.
+Since the devices might be assigned to an untrusted entities
+we use driver_override to make sure the VFs are also
+probed by the the vfio-pci driver.
 
-Yep, this is the same code. I stripped out irrelevant parts from the
-previous mail for brevity.
+Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
+---
+ drivers/vfio/pci/vfio_pci.c | 24 +++++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
-> Is it possible to override the specific ACPI table functions (SSDT) in the DSDT?
-> This way I could try to debug to find some more information...
-
-See Documentation/acpi/initrd_table_override.txt and note that it is
-important that the tables are really located at /kernel/firmware/acpi/
-in your initrd (which must be the first, even before any possible
-microcode updates).
-
-What are you trying to do? For ACPI method tracing, see
-Documentation/acpi/method-tracing.txt
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index d624a52..6a203a7 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -297,6 +297,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	struct vfio_pci_dummy_resource *dummy_res, *tmp;
+ 	int i, bar;
+ 
++	pci_disable_sriov(pdev);
+ 	/* Stop the device from further DMA */
+ 	pci_clear_master(pdev);
+ 
+@@ -1314,12 +1315,25 @@ static const struct pci_error_handlers vfio_err_handlers = {
+ 	.error_detected = vfio_pci_aer_err_detected,
+ };
+ 
++static int vfio_pci_sriov_configure(struct pci_dev *pdev, int num_vfs)
++{
++	if (!num_vfs) {
++		pci_disable_sriov(pdev);
++		return 0;
++	}
++
++	return pci_enable_sriov_with_override(pdev,
++					      num_vfs,
++					     "vfio-pci");
++}
++
+ static struct pci_driver vfio_pci_driver = {
+-	.name		= "vfio-pci",
+-	.id_table	= NULL, /* only dynamic ids */
+-	.probe		= vfio_pci_probe,
+-	.remove		= vfio_pci_remove,
+-	.err_handler	= &vfio_err_handlers,
++	.name		 = "vfio-pci",
++	.id_table	 = NULL, /* only dynamic ids */
++	.probe		 = vfio_pci_probe,
++	.remove		 = vfio_pci_remove,
++	.err_handler	 = &vfio_err_handlers,
++	.sriov_configure = vfio_pci_sriov_configure,
+ };
+ 
+ struct vfio_devices {
 -- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+1.8.3.1
+
