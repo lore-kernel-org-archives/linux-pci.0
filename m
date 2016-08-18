@@ -1,106 +1,253 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52296 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754670AbcHXRym (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Aug 2016 13:54:42 -0400
-Date: Wed, 24 Aug 2016 12:54:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com
-Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
-Message-ID: <20160824175431.GC23914@localhost>
-References: <1471595078-26297-1-git-send-email-lftan@altera.com>
- <20160822154738.GB18628@localhost>
- <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+Received: from eu-smtp-delivery-143.mimecast.com ([207.82.80.143]:40305 "EHLO
+	eu-smtp-delivery-143.mimecast.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752864AbcHRKu5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Aug 2016 06:50:57 -0400
+Date: Thu, 18 Aug 2016 18:50:07 +0800
+From: Dennis Chen <dennis.chen@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: <iommu@lists.linux-foundation.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Robin Murphy" <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Nate Watterson <nwatters@codeaurora.org>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <nd@arm.com>
+Subject: Re: [PATCH v4 09/15] drivers: acpi: iort: add support for ARM SMMU
+ platform devices creation
+Message-ID: <20160818105005.GA20404@arm.com>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1471274620-20754-10-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+In-Reply-To: <1471274620-20754-10-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
+Hi Lorenzo,
 
-On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
-> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
-> >> Altera PCIe IP can be configured as rootport or device and they might have
-> >> same vendor ID. It will cause the system hang issue if Altera PCIe is in
-> >> endpoint mode and work with other PCIe rootport that from other vendors.
-> >> So, add the rootport mode checking in link retrain fixup function.
-> >>
-> >> Signed-off-by: Ley Foon Tan <lftan@altera.com>
-> >> ---
-> >> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
-> >> ---
-> >>  drivers/pci/host/pcie-altera.c | 3 +++
-> >>  1 file changed, 3 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> >> index 58eef99..33b6968 100644
-> >> --- a/drivers/pci/host/pcie-altera.c
-> >> +++ b/drivers/pci/host/pcie-altera.c
-> >> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
-> >>       u16 linkcap, linkstat;
-> >>       struct altera_pcie *pcie = dev->bus->sysdata;
-> >>
-> >> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
-> >> +             return;
-> >> +
-> >>       if (!altera_pcie_link_is_up(pcie))
-> >>               return;
-> >
-> > Instead of making this a PCI fixup, can you make an
-> > altera_pcie_host_init() function, call it from altera_pcie_probe(),
-> > and do the link retrain there?  Then you wouldn't need to worry about
-> > whether this is a Root Port or an Endpoint, plus it would make the
-> > altera driver structure more like the other drivers.
-> >
-> > You would call altera_pcie_host_init() before pci_scan_root_bus(), so
-> > you wouldn't have a pci_dev yet, so you wouldn't be able to use
-> > pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
-> > assume there's some device-dependent way to access it using
-> > cra_writel()?
-> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit. 
+On Mon, Aug 15, 2016 at 04:23:34PM +0100, Lorenzo Pieralisi wrote:
+> In ARM ACPI systems, IOMMU components are specified through static
+> IORT table entries. In order to create platform devices for the
+> corresponding ARM SMMU components, IORT kernel code should be made
+> able to parse IORT table entries and create platform devices
+> dynamically.
+>=20
+> This patch adds the generic IORT infrastructure required to create
+> platform devices for ARM SMMUs.
+>=20
+> ARM SMMU versions have different resources requirement therefore this
+> patch also introduces an IORT specific structure (ie iort_iommu_config)
+> that contains hooks (to be defined when the corresponding ARM SMMU
+> driver support is added to the kernel) to be used to define the
+> platform devices names, init the IOMMUs, count their resources and
+> finally initialize them.
+>=20
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>  drivers/acpi/arm64/iort.c | 153 ++++++++++++++++++++++++++++++++++++++++=
+++++++
+>  1 file changed, 153 insertions(+)
+>=20
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index f6db3d8..4043071 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/list.h>
+>  #include <linux/pci.h>
+> +#include <linux/platform_device.h>
+>  #include <linux/slab.h>
+> =20
+>  struct iort_its_msi_chip {
+> @@ -454,6 +455,157 @@ iort_get_device_domain(struct device *dev, u32 req_=
+id)
+>  =09return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+>  }
+> =20
+> +struct iort_iommu_config {
+> +=09const char *name;
+> +=09int (*iommu_init)(struct acpi_iort_node *node);
+> +=09bool (*iommu_is_coherent)(struct acpi_iort_node *node);
+> +=09int (*iommu_count_resources)(struct acpi_iort_node *node);
+> +=09void (*iommu_init_resources)(struct resource *res,
+> +=09=09=09=09     struct acpi_iort_node *node);
+> +};
+> +
+> +static const struct iort_iommu_config * __init
+> +iort_get_iommu_config(struct acpi_iort_node *node)
+> +{
+> +=09return NULL;
+> +}
+> +
+> +/**
+> + * iort_add_smmu_platform_device() - Allocate a platform device for SMMU
+> + * @fwnode: IORT node associated fwnode handle
+> + * @node: Pointer to SMMU ACPI IORT node
+> + *
+> + * Returns: 0 on success, <0 failure
+> + */
+> +static int __init
+> +iort_add_smmu_platform_device(struct fwnode_handle *fwnode,
+> +=09=09=09      struct acpi_iort_node *node)
+> +{
+> +=09struct platform_device *pdev;
+> +=09struct resource *r;
+> +=09enum dev_dma_attr attr;
+> +=09int ret, count;
+> +=09const struct iort_iommu_config *ops =3D
+> +=09=09=09=09iort_get_iommu_config(node);
+> +
+> +=09if (!ops)
+> +=09=09return -ENODEV;
+> +
+> +=09pdev =3D platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
+> +=09if (!pdev)
+> +=09=09return PTR_ERR(pdev);
+> +
+> +=09count =3D ops->iommu_count_resources(node);
+> +
+> +=09r =3D kcalloc(count, sizeof(*r), GFP_KERNEL);
+> +=09if (!r) {
+> +=09=09ret =3D -ENOMEM;
+> +=09=09goto dev_put;
+> +=09}
+> +
+> +=09ops->iommu_init_resources(r, node);
+> +
+> +=09ret =3D platform_device_add_resources(pdev, r, count);
+> +=09/*
+> +=09 * Resources are duplicated in platform_device_add_resources,
+> +=09 * free their allocated memory
+> +=09 */
+> +=09kfree(r);
+> +
+> +=09if (ret)
+> +=09=09goto dev_put;
+> +
+> +=09/*
+> +=09 * Add a copy of IORT node pointer to platform_data to
+> +=09 * be used to retrieve IORT data information.
+> +=09 */
+> +=09ret =3D platform_device_add_data(pdev, &node, sizeof(node));
+> +=09if (ret)
+> +=09=09goto dev_put;
+> +
+> +=09pdev->dev.dma_mask =3D kmalloc(sizeof(*pdev->dev.dma_mask), GFP_KERNE=
+L);
+> +=09if (!pdev->dev.dma_mask) {
+> +=09=09ret =3D -ENOMEM;
+> +=09=09goto dev_put;
+> +=09}
+> +
+> +=09pdev->dev.fwnode =3D fwnode;
+> +
+> +=09/*
+> +=09 * Set default dma mask value for the table walker,
+> +=09 * to be overridden on probing with correct value.
+> +=09 */
+> +=09*pdev->dev.dma_mask =3D DMA_BIT_MASK(32);
+> +=09pdev->dev.coherent_dma_mask =3D *pdev->dev.dma_mask;
+> +
+> +=09attr =3D ops->iommu_is_coherent(node) ?
+> +=09=09=09     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
+> +
+> +=09/* Configure DMA for the page table walker */
+> +=09acpi_dma_configure(&pdev->dev, attr);
+> +
+> +=09ret =3D platform_device_add(pdev);
+> +=09if (ret)
+> +=09=09goto dma_deconfigure;
+> +
+> +=09return 0;
+> +
+> +dma_deconfigure:
+> +=09acpi_dma_deconfigure(&pdev->dev);
+> +=09kfree(pdev->dev.dma_mask);
+> +
+> +dev_put:
+> +=09platform_device_put(pdev);
+> +
+> +=09return ret;
+> +}
+> +
+> +static void __init iort_smmu_init(void)
+> +{
+> +=09struct acpi_iort_node *iort_node, *iort_end;
+> +=09struct acpi_table_iort *iort;
+> +=09struct fwnode_handle *fwnode;
+> +=09int i, ret;
+> +
+> +=09/*
+> +=09 * table and iort will both point to the start of IORT table, but
+> +=09 * have different struct types
+> +=09 */
+> +=09iort =3D (struct acpi_table_iort *)iort_table;
+>
+If the firmware of a platform happens to miss the IORT table, then iort_tab=
+le here
+will be a NULL pointer, in this case 'NULL pointer dereference' kernel pani=
+c will occur,=20
+if this is not an expected behavior then we can add a sanity check here to =
+avoid this.=20
+IORT missing is a fatal error? I don't think so.
 
-Why not?  I don't mean it has to be cra_write(), but isn't there some
-way you can write that bit before we scan the root bus?  It doesn't
-make sense that we have to scan the bus before we can train the link.
+Thanks,
+Dennis
+> +
+> +=09/* Get the first IORT node */
+> +=09iort_node =3D ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
+> +=09=09=09=09 iort->node_offset);
+> +=09iort_end =3D ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
+> +=09=09=09=09iort_table->length);
+> +
+> +=09for (i =3D 0; i < iort->node_count; i++) {
+> +
+> +=09=09if (iort_node >=3D iort_end) {
+> +=09=09=09pr_err("iort node pointer overflows, bad table\n");
+> +=09=09=09return;
+> +=09=09}
+> +
+> +=09=09if (iort_node->type =3D=3D ACPI_IORT_NODE_SMMU ||
+> +=09=09    iort_node->type =3D=3D ACPI_IORT_NODE_SMMU_V3) {
+> +=09=09=09fwnode =3D iort_get_fwnode(iort_node);
+> +
+> +=09=09=09if (!fwnode)
+> +=09=09=09=09continue;
+> +
+> +=09=09=09ret =3D iort_add_smmu_platform_device(fwnode,
+> +=09=09=09=09=09=09=09    iort_node);
+> +=09=09=09if (ret) {
+> +=09=09=09=09pr_err("Error in platform device creation\n");
+> +=09=09=09=09return;
+> +=09=09=09}
+> +=09=09}
+> +
+> +=09=09iort_node =3D ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
+> +=09=09=09=09=09 iort_node->length);
+> +=09}
+> +}
+> +
+>  void __init iort_table_detect(void)
+>  {
+>  =09acpi_status status;
+> @@ -465,4 +617,5 @@ void __init iort_table_detect(void)
+>  =09}
+> =20
+>  =09acpi_probe_device_table(iort);
+> +=09iort_smmu_init();
+>  }
+> --=20
+> 2.6.4
+>=20
 
-We want to be able to tell the PCI core "all the device-specific root
-complex initialization has been done, here are the config accessors
-you need, please scan for devices."  I want to keep device-specific
-things like this quirk directly in the driver and out of the
-enumeration process.
-
-> We can use
-> pci_bus_find_capability() and pci_bus_read_config_word() with struct
-> pci_bus instead.
-> But this only can be called after pci_scan_root_bus().
-
-> Found
-> iproc_pcie_check_link() have similar implementation.
-
-You're right, and I don't like iproc_pcie_check_link() either, for the
-same reasons.
-
-The iproc_pcie_check_link() is a little better because it's called
-before enumeration:
-
-  pci_create_root_bus()
-  iproc_pcie_check_link()
-  pci_scan_child_bus()
-
-But it would be a lot better if iproc_pcie_check_link() were done
-first, before pci_create_root_bus().  Then it would be more like the
-structure of other drivers, and we could use pci_scan_root_bus()
-instead.
-
-Comments, iproc folks?
-
-Bjorn
