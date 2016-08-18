@@ -1,61 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:55585 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758411AbcH3M5W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2016 08:57:22 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Joao Pinto <jpinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Ian Campbell <ijc+devicetree@hellion.org.uk>,
-        Pawel Moll <pawel.moll@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kumar Gala <galak@codeaurora.org>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 1/3] dt-bindings: designware-pcie: document optional msi-parent property
-Date: Tue, 30 Aug 2016 14:57:08 +0200
-Message-Id: <1472561830-20932-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Thu, 18 Aug 2016 18:46:10 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160818224610.GA28276@localhost.localdomain>
+References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+ <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+ <20160815174002.GB9790@localhost>
+ <20160815192316.GB18083@localhost.localdomain>
+ <20160817213745.GE27353@localhost>
+ <20160817230951.GD25146@localhost.localdomain>
+ <20160818195656.GH27353@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160818195656.GH27353@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit updates the Designware PCIe Device Tree binding
-documentation to document the optional msi-parent property. This
-property allows to point to an external MSI controller, which can
-optionally be provided. If provided, this external MSI controller is
-used in preference over the internal MSI controller of the Designware
-PCIe IP.
+On Thu, Aug 18, 2016 at 02:56:56PM -0500, Bjorn Helgaas wrote:
+> On Wed, Aug 17, 2016 at 07:09:51PM -0400, Keith Busch wrote:
+> > We've augmented 'ledmon' with libpci and toggles these indicators very
+> > similar to how 'setpci' can change PCI config registers. It is done only
+> > after the storage device is up and registered, which is well outside
+> > the time when pciehp is actively using the slot control.
+> 
+> I assume this means ledmon writes Slot Control to manage the LEDs.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Correct, the registers that are defined for AttnCtrl and PwrCtrl are
+what's being redefined for the new pattern.
+
+We are definitely not dead set on requiring we let ledmon have direct
+access to SlotCtl through libpci. That's just the one way we thought of
+that didn't require new kernel dependencies.
+
+> That sounds pretty scary to me because it's impossible to enforce the
+> assumption that ledmon only uses Slot Control when pciehp isn't using
+> it.  Hotplug includes surprise events, and I think pciehp is entitled
+> to assume it is the sole owner of Slot Control.
+
+I understand the concern here. You don't want independent programs
+vying to mask/unmask bits in SlotCtl and end up with a state neither
+intended. The only scenario that I can come up with where that could
+happen is if ledmon changes the LED on a slot at the same time the drive
+is removed, but there is no MRL or attention buttons on this hardware,
+and the rest that we do care about looks totally harmless on these slots.
+
+This condition also isn't really new. While probably not recommended,
+I could blink the standard Attn and Pwr LED's like this (user, of course,
+assumes all the risks):
+
+  # setpci -s <B:D.f> CAP_EXP+18.w=280:3c0
+
+It's basically the same as what we'd have ledmon do, but with a less
+esoteric syntax:
+
+  # ledctl locate=/dev/nvme0n1
+
+[ledmon invokes ledctl from a daemon, but ledctl can run on its own]
+
+> I wonder if there's some way to implement the LED control in pciehp,
+> e.g., by enhancing pciehp_set_attention_status().  I assume the
+> desired indicator state is coming from some in-kernel storage driver,
+> and ledmon learns about that somehow, then fiddles with Slot Control
+> behind the kernel's back?  That looping from kernel to user and back
+> to kernel sounds a little dodgy and fragile.
+
+That is definitely an interesting possibility if you are open to
+this. We'd "just" need the kernel to comprehend these vendor specific
+bit patterns for this particular generation of hardware.
+
+If you're okay with that, then I'm more than happy to propose a patch
+for consideration. We can then have ledmon subscribe to the sysfs entry
+point instead of going through libpci, no problem.
+ 
+> Can you share any details about how you plan to implement this on the
+> next generation of devices?  Maybe we can enhance pciehp indicator
+> control in a way that supports both Sky Lake and future devices.
+
+One possibility is to define through PCI-SIG
+SlotCap2 and SlotCtl2 with this kind of LED control.
+
+Another possibilities I hear about through the NVMe-MI working group
+is creating similar type of devices as SES (SCSI Enclosure Services)
+for PCIe SSD enclosures.
+
+
+
+Finally, at the risk of digressing this thread, but if I may switch
+topic back to suppressing the indicator presence fields...
+
+Since these are specific to VMD domains, there are folks at Intel who
+want to see the VMD driver mask off these capabilities from the driver.
+There is never a case where a slot in this domain should advertise these,
+so masking off the bits at the config read level would achieve the desired
+result. It'd be isolated to the VMD driver, and the quirk wouldn't need
+to be maintained as addtional vendor devices implementing the same quirk
+are made.
+
+Below is the diff for *that* proposal, and the developer of this patch
+wanted to know if you may consider this over the quirk that was previously
+written. This looks odd to me, but I can't argue against that it achieves
+what the device maker desires.
+
+Thanks!
+Keith
+
 ---
- Documentation/devicetree/bindings/pci/designware-pcie.txt | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 6c5322c..7a729bb 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -28,6 +28,8 @@ Optional properties:
- - clock-names: Must include the following entries:
- 	- "pcie"
- 	- "pcie_bus"
-+- msi-parent: Pointer to an external MSI controller. If not provided,
-+  the built-in MSI controller is used.
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+index b73da50..aa2791f 100644
+--- a/arch/x86/pci/vmd.c
++++ b/arch/x86/pci/vmd.c
+@@ -452,6 +452,7 @@ static int vmd_pci_read(struct pci_bus *bus,
+unsigned int devfn, int reg,
+ {
+ 	struct vmd_dev *vmd = vmd_from_bus(bus);
+ 	char __iomem *addr = vmd_cfg_addr(vmd, bus, devfn, reg, len);
++	struct pci_dev *dev;
+ 	unsigned long flags;
+ 	int ret = 0;
  
- Example configuration:
+@@ -474,6 +475,17 @@ static int vmd_pci_read(struct pci_bus *bus,
+unsigned int devfn, int reg,
+ 		break;
+ 	}
+ 	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (dev->devfn == devfn) {
++			if (dev->pcie_cap &&
++					reg == dev->pcie_cap + PCI_EXP_SLTCAP)
++				*value &= ~(PCI_EXP_SLTCAP_AIP |
++					    PCI_EXP_SLTCAP_PIP);
++			break;
++		}
++	}
++
+ 	return ret;
+ }
  
--- 
-2.7.4
-
+--
