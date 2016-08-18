@@ -1,133 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 6/9] PCI: PCIe xilinx: make host code explicitly non-modular
-Date: Wed, 24 Aug 2016 16:57:49 -0400
-Message-ID: <20160824205752.12024-7-paul.gortmaker@windriver.com>
-In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43282 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754076AbcHSBLO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Aug 2016 21:11:14 -0400
+Date: Thu, 18 Aug 2016 14:15:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: bhelgaas@google.com, jszhang@marvell.com, jingoohan1@gmail.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pcie-designware: build error fix
+Message-ID: <20160818191546.GG27353@localhost>
+References: <7083dc9188405f25307d0a75d4e199846ac06ac9.1471525771.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7083dc9188405f25307d0a75d4e199846ac06ac9.1471525771.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On Thu, Aug 18, 2016 at 02:18:29PM +0100, Joao Pinto wrote:
+> This patch is to fix a building error in branch pci/host-designware. 
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-drivers/pci/host/Kconfig:config PCIE_XILINX
-drivers/pci/host/Kconfig:       bool "Xilinx AXI PCIe host bridge support"
+Thanks, I fixed this yesterday, and I got a build success report for it
+(commit 01c076732e82).
 
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.  This
-makes xilinx_pcie_free_irq_domain orphaned so we remove it too.
-
-We don't have to worry about disallowing a driver unbind, since this
-driver already does that.
-
-Since module_platform_driver() uses the same init level priority as
-builtin_platform_driver() the init ordering remains unchanged with
-this commit.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-xilinx.c | 53 ++----------------------------------------
- 1 file changed, 2 insertions(+), 51 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index a30e01639557..7b7dbd22bccc 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -18,7 +18,7 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -506,35 +506,6 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- }
- 
- /**
-- * xilinx_pcie_free_irq_domain - Free IRQ domain
-- * @port: PCIe port information
-- */
--static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
--{
--	int i;
--	u32 irq, num_irqs;
--
--	/* Free IRQ Domain */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--
--		free_pages(port->msi_pages, 0);
--
--		num_irqs = XILINX_NUM_MSI_IRQS;
--	} else {
--		/* INTx */
--		num_irqs = 4;
--	}
--
--	for (i = 0; i < num_irqs; i++) {
--		irq = irq_find_mapping(port->irq_domain, i);
--		if (irq > 0)
--			irq_dispose_mapping(irq);
--	}
--
--	irq_domain_remove(port->irq_domain);
--}
--
--/**
-  * xilinx_pcie_init_irq_domain - Initialize IRQ domain
-  * @port: PCIe port information
-  *
-@@ -724,21 +695,6 @@ error:
- 	return err;
- }
- 
--/**
-- * xilinx_pcie_remove - Remove function
-- * @pdev: Platform device pointer
-- *
-- * Return: '0' always
-- */
--static int xilinx_pcie_remove(struct platform_device *pdev)
--{
--	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
--
--	xilinx_pcie_free_irq_domain(port);
--
--	return 0;
--}
--
- static struct of_device_id xilinx_pcie_of_match[] = {
- 	{ .compatible = "xlnx,axi-pcie-host-1.00.a", },
- 	{}
-@@ -751,10 +707,5 @@ static struct platform_driver xilinx_pcie_driver = {
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = xilinx_pcie_probe,
--	.remove = xilinx_pcie_remove,
- };
--module_platform_driver(xilinx_pcie_driver);
--
--MODULE_AUTHOR("Xilinx Inc");
--MODULE_DESCRIPTION("Xilinx AXI PCIe driver");
--MODULE_LICENSE("GPL v2");
-+builtin_platform_driver(xilinx_pcie_driver);
--- 
-2.8.4
+> ---
+>  drivers/pci/host/pcie-designware.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index be70f28..6a743c5 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -511,9 +511,8 @@ static const struct irq_domain_ops msi_domain_ops = {
+>  
+>  static u8 dw_pcie_iatu_unroll_enabled(struct pcie_port *pp)
+>  {
+> -	u32 val = 0;
+> +	u32 val = dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT);
+>  
+> -	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
+>  	if (val == 0xffffffff)
+>  		return 1;
+>  
+> -- 
+> 1.8.1.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
