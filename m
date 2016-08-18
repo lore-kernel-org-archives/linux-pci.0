@@ -1,108 +1,64 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V8 5/8] irqchip/gicv3-its: Refactor ITS DT init code to
- prepare for ACPI
-To: Bjorn Helgaas <helgaas@kernel.org>, Hanjun Guo <guohanjun@huawei.com>
-References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
- <1470909998-16710-6-git-send-email-tn@semihalf.com>
- <57B4213E.3060201@huawei.com> <20160817155832.GA25421@localhost>
-Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
- rjw@rjwysocki.net, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
- will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
- shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
- okaya@codeaurora.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <00af2bfa-0869-75e0-8a9a-4d7e0cafb687@semihalf.com>
-Date: Thu, 18 Aug 2016 08:42:37 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 18 Aug 2016 11:55:04 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dennis Chen <dennis.chen@arm.com>
+Subject: Re: [PATCH v4 09/15] drivers: acpi: iort: add support for ARM SMMU
+ platform devices creation
+Message-ID: <20160818105452.GA8982@red-moon>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1471274620-20754-10-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160818105005.GA20404@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20160817155832.GA25421@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20160818105005.GA20404@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel@lists.infradead.org, Marc Zyngier <marc.zyngier@arm.com>,
+ Tomasz Nowicki <tn@semihalf.com>, Joerg Roedel <joro@8bytes.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ iommu@lists.linux-foundation.org, Hanjun Guo <hanjun.guo@linaro.org>,
+ Jon Masters <jcm@redhat.com>, nd@arm.com, Robin Murphy <robin.murphy@arm.com>,
+ Nate Watterson <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17.08.2016 17:58, Bjorn Helgaas wrote:
-> On Wed, Aug 17, 2016 at 04:33:02PM +0800, Hanjun Guo wrote:
->> On 2016/8/11 18:06, Tomasz Nowicki wrote:
->>> In order to add ACPI support we need to isolate ACPI&DT common code and
->>> move DT logic to corresponding functions. To achieve this we are using
->>> firmware agnostic handle which can be unpacked to either DT or ACPI node.
->>>
->>> No functional changes other than a very minor one:
->>> 1. Terminate its_init call with -ENODEV for non-DT case which allows
->>> to remove hack from its-gic-v3.c.
->>> 2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
->>> as a bonus we get nice string formatting.
->>> 3. Since there is only one of ITS parent domain convert it to static global
->>> variable and drop the parameter from its_probe_one. Users can refer to it
->>> in more convenient way then.
->> [...]
->>> -static int __init its_probe(struct device_node *node,
->>> -			    struct irq_domain *parent)
->>> +static int __init its_probe_one(struct resource *res,
->>> +				struct fwnode_handle *handle, int numa_node)
->>>  {
->>> -	struct resource res;
->>>  	struct its_node *its;
->>>  	void __iomem *its_base;
->>>  	u32 val;
->>>  	u64 baser, tmp;
->>>  	int err;
->>>
->>> -	err = of_address_to_resource(node, 0, &res);
->>> -	if (err) {
->>> -		pr_warn("%s: no regs?\n", node->full_name);
->>> -		return -ENXIO;
->>> -	}
->>> -
->>> -	its_base = ioremap(res.start, resource_size(&res));
->>> +	its_base = ioremap(res->start, resource_size(res));
->>>  	if (!its_base) {
->>> -		pr_warn("%s: unable to map registers\n", node->full_name);
->>> +		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
->>>  		return -ENOMEM;
->>>  	}
->>>
->>>  	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
->>>  	if (val != 0x30 && val != 0x40) {
->>> -		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
->>> +		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
->>>  		err = -ENODEV;
->>>  		goto out_unmap;
->>>  	}
->>>
->>>  	err = its_force_quiescent(its_base);
->>>  	if (err) {
->>> -		pr_warn("%s: failed to quiesce, giving up\n",
->>> -			node->full_name);
->>> +		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
->>>  		goto out_unmap;
->>>  	}
->>>
->>> -	pr_info("ITS: %s\n", node->full_name);
->>> +	pr_info("ITS@%pa\n", &res->start);
->>                 ^^
->>
->> When I was testing this patch set I found message printed as below:
->>
->> [    0.000000] ITS@0x00000000c6000000
->
-> I think it'd be nicer to print the resource with %pR so we see the
-> type and size in a way that matches other physical address usage.
+On Thu, Aug 18, 2016 at 06:50:07PM +0800, Dennis Chen wrote:
 
-The intention was to keep previous message layout but while we are here, 
-%pR usage for this one pr_info seems nice to me.
+[...]
 
->
-> I don't know whether there is or should be a struct device associated
-> with the ITS.  The its_probe_one() function looks similar to regular
-> driver probe functions, so maybe there should be.
->
-> If there were a struct device associated with the ITS, it'd be nicer
-> to use dev_info() as well, of course.
+> > +static void __init iort_smmu_init(void)
+> > +{
+> > +	struct acpi_iort_node *iort_node, *iort_end;
+> > +	struct acpi_table_iort *iort;
+> > +	struct fwnode_handle *fwnode;
+> > +	int i, ret;
+> > +
+> > +	/*
+> > +	 * table and iort will both point to the start of IORT table, but
+> > +	 * have different struct types
+> > +	 */
+> > +	iort = (struct acpi_table_iort *)iort_table;
+> >
+> If the firmware of a platform happens to miss the IORT table, then
+> iort_table here will be a NULL pointer, in this case 'NULL pointer
+> dereference' kernel panic will occur, if this is not an expected
+> behavior then we can add a sanity check here to avoid this.  IORT
+> missing is a fatal error? I don't think so.
 
-Indeed dev_info() would be nice but there is no struct device for ITS.
+Yes, I've already fixed it, thanks for pointing that out.
 
-Tomasz
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
