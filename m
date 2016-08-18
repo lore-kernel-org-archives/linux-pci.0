@@ -1,65 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41194 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755134AbcHWWWZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Aug 2016 18:22:25 -0400
-Subject: [PATCH 1/2] PCI: designware: Rename dw_pcie_valid_config() to
- dw_pcie_valid_device()
-To: Ley Foon Tan <lftan@altera.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, rfi@lists.rocketboards.org,
-        linux-pci@vger.kernel.org
-Date: Tue, 23 Aug 2016 17:10:01 -0500
-Message-ID: <20160823221001.16374.62205.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160823220620.16374.70369.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160823220620.16374.70369.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <hch@lst.de>
+Return-Path: <hch@lst.de>
+Date: Thu, 18 Aug 2016 17:26:49 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
+	helgaas@kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] pci: call pci_intx when using legacy interrupts in
+	pci_alloc_irq_vectors
+Message-ID: <20160818152649.GA12340@lst.de>
+References: <1470924665-25860-1-git-send-email-hch@lst.de> <1470924665-25860-3-git-send-email-hch@lst.de> <20160818092007.GD27949@agordeev.lab.eng.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160818092007.GD27949@agordeev.lab.eng.brq.redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename dw_pcie_valid_config() to dw_pcie_valid_device() and use the result
-directly as a boolean value instead of testing against 0.
+On Thu, Aug 18, 2016 at 11:20:07AM +0200, Alexander Gordeev wrote:
+> On Thu, Aug 11, 2016 at 07:11:05AM -0700, Christoph Hellwig wrote:
+> > ahci currently insists on an explicit call to pci_intx before falling back
+> > from MSI or MSI-X to legacy irqs.  As pci_intx is a no-op if the command
+> > register already contains the right value is seems safe and useful to add
+> > this call to pci_alloc_irq_vectors so that ahci can just use
+> > pci_alloc_irq_vectors.
+> 
+> Looking at ahci_init_interrupts() (and probably at commit d684a90d
+> ("ahci: per-port msix support")) it looks like pci_alloc_irq_vectors()
+> is able to preserve the current AHCI logic?
 
-No functional change intended; for readability only.
+Not quite.  For the currentl logic we need 3 calls to
+pci_alloc_irq_vectors, and I have a patch to implement that.  From
+looking at the changelogs and intentions I think we can consolidate
+that down to two calls (per-port vectors and single vectors) and I
+will propose that as an RFC on top of the base which, which already
+is a huge simplification of the driver.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> > @@ -1200,8 +1200,11 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+> >  	}
+> >  
+> >  	/* use legacy irq if allowed */
+> > -	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1)
+> > +	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1) {
+> > +		pci_intx(dev, 1);
+> 
+> It would rather called pci_intx_for_msi() here. But because it is
+> a generic code I am not sure what implications it has for all
+> drivers out there.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12afce1..d09f376 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -657,8 +657,8 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	return ret;
- }
- 
--static int dw_pcie_valid_config(struct pcie_port *pp,
--				struct pci_bus *bus, int dev)
-+static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
-+				int dev)
- {
- 	/* If there is no link, then there is no device */
- 	if (bus->number != pp->root_bus_nr) {
-@@ -685,7 +685,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- {
- 	struct pcie_port *pp = bus->sysdata;
- 
--	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
-+	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn))) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
-@@ -701,7 +701,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- {
- 	struct pcie_port *pp = bus->sysdata;
- 
--	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
-+	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn)))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	if (bus->number == pp->root_bus_nr)
-
+It probably should be pci_intx_for_msi.  For now I'm not touching
+drivers that need the quirk, so how about getting the intx in
+now so that the conversion can start, and I'll send a follow on
+to convert to pci_intx_for_msi with Cc to all the relevant parties
+for the quirk as a follow on?
