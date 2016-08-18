@@ -1,131 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0076.outbound.protection.outlook.com ([104.47.41.76]:42273
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750914AbcHaJ4L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 31 Aug 2016 05:56:11 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        Soren Brinkmann <sorenb@xilinx.com>,
-        Michal Simek <michals@xilinx.com>,
-        "arnd@arndb.de" <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
- device for legacy interrupts.
-Date: Wed, 31 Aug 2016 09:56:02 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
- <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
- <57C57975.7040306@arm.com>
- <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57C59FE8.30307@arm.com>
-In-Reply-To: <57C59FE8.30307@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:59466 "EHLO
+	mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753511AbcHRH3f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Aug 2016 03:29:35 -0400
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [PATCH V3 1/3] pci: Extend PCI IOV API
+Date: Thu, 18 Aug 2016 10:29:15 +0300
+Message-Id: <1471505357-78110-2-git-send-email-ilyal@mellanox.com>
+In-Reply-To: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
+References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- > On 30/08/16 15:13, Bharat Kumar Gogada wrote:
-> >> Hi Bharat,
-> >>> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct
-> >>> nwl_pcie
-> >> *pcie)
-> >>>     }
-> >>>
-> >>>     pcie->legacy_irq_domain =3D irq_domain_add_linear(legacy_intc_nod=
-e,
-> >>> -                                                   INTX_NUM,
-> >>> +                                                   INTX_NUM + 1,
-> >>>                                                     &legacy_domain_op=
-s,
-> >>>                                                     pcie);
-> >>
-> >> This feels like the wrong thing to do. You have INTX_NUM irqs, so the
-> >> domain allocation should reflect this. On the other hand, the way the
-> >> driver currently deals with mappings is quite broken (consistently add=
-ing 1 to
-> the HW interrupt).
-> >>
-> > Hi Marc,
-> >
-> > Without above change I get following crash in kernel while booting.
-> >
-> > [    2.441684] error: hwirq 0x4 is too large for dummy
-> >
-> > [    2.441694] ------------[ cut here ]------------
-> >
-> > [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
-> >
-> > [    2.441702] Modules linked in:
-> >
-> > [    2.441706]
-> >
-> > [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0 #8
-> >
-> > [    2.441718] Hardware name: xlnx,zynqmp (DT)
-> >
-> > [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 task.ti:
-> ffffffc071888000
-> >
-> > [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
-> >
-> > [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
-> >
-> > In kernel/irq/irqdomain.c function irq_domain_associate
-> >
-> > if (WARN(hwirq >=3D domain->hwirq_max,
-> >                  "error: hwirq 0x%x is too large for %s\n", (int)hwirq,=
- domain->name))
-> >                 return -EINVAL;
-> >
-> > Here the hwirq and hwirq_max are equal to 4 without the above condition
-> (INTX_NUM + 1) due to which crash is coming.
-> > This is happening as the legacy interrupts are starting from 1 (INTA).
->=20
-> I understood that. I'm still persisting in saying that you have the wrong=
- fix.
->=20
-> Your domain should always allocate many interrupts as you have interrupt
-> sources. These interrupts (hwirq) should be numbered from 0 to (n-1).
+1. Add pci_enable_sriov_with_override to allow
+enabling sriov with a driver override
+on the VFs.
 
-Agreed, but here comes the problem the hwirq for legacy interrupts will sta=
-rt at 0x1 to 0x4 (INTA to INTD) and=20
-these values are as per PCIe specification for legacy interrupts.
-So these cannot be numbered from 0. So when 0x4 (INTD) for a multi-function=
- device comes the crash occurs.
-=09
->=20
-> > And I'm  consistently adding 1 to the HW interrupt as in
-> > nwl_pcie_leg_handler I get 0th bit set from MSGF_LEG_STATUS if INTA
-> > interrupt is raised but my hwirq number being mapped for INTA is 0x1
-> > so that's I'm adding 1 to obtain correct virtual irq. Same case in
-> > nwl_pcie_free_irq_domain since hwirq starts from one I'm adding 1 to
-> > obtain virtual irq and free it.
->=20
-> I can see that. Nonetheless, this is wrong. Can you please test the patch=
- I
-> provided in my reply and report what happens?
+2. Expose pci_iov_set_numvfs and pci_iov_resource_size
+to make them available for other modules
 
-Can you be more specific on what is the wrong, I'm adding one since the hwi=
-rq starts from 0x1 as mentioned=20
-above.
-I did try your suggestion with Ethernet card, but kernel hangs (it does not=
- show any crash also, just hangs) when I do=20
-interface up (without bit + 1, using only bit position in handler). This is=
- not working because in the legacy domain virq mapping
-starts with hwirq 0x1, there is no mapping for 0x0 in the domain, so EP int=
-errupt is not serviced since virq being returned is zero.
+Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
+Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+Signed-off-by: Haggai Eran <haggaie@mellanox.com>
+---
+ drivers/pci/iov.c   | 41 +++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h | 13 ++++++++++++-
+ 2 files changed, 45 insertions(+), 9 deletions(-)
 
-Thanks & Regards,
-Bharat
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2194b44..98f6f10 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -41,7 +41,7 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
+  *
+  * Update iov->offset and iov->stride when NumVFs is written.
+  */
+-static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
++void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+ {
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+@@ -49,6 +49,7 @@ static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn)
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_OFFSET, &iov->offset);
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_STRIDE, &iov->stride);
+ }
++EXPORT_SYMBOL(pci_iov_set_numvfs);
+ 
+ /*
+  * The PF consumes one bus number.  NumVFs, First VF Offset, and VF Stride
+@@ -112,8 +113,10 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+ }
++EXPORT_SYMBOL(pci_iov_resource_size);
+ 
+-int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
++int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset,
++		       char *driver_override)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -154,14 +157,20 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+ 		rc = request_resource(res, &virtfn->resource[i]);
+ 		BUG_ON(rc);
+ 	}
+-
+ 	if (reset)
+ 		__pci_reset_function(virtfn);
+ 
+ 	pci_device_add(virtfn, virtfn->bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
+ 
++	if (driver_override) {
++		virtfn->driver_override = kstrdup(driver_override, GFP_KERNEL);
++		if (!virtfn->driver_override)
++			goto failed1;
++	}
++
+ 	pci_bus_add_device(virtfn);
++
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+ 	if (rc)
+@@ -235,7 +244,8 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+ 	return 0;
+ }
+ 
+-static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
++static int sriov_enable(struct pci_dev *dev, int nr_virtfn,
++			char *driver_override)
+ {
+ 	int rc;
+ 	int i;
+@@ -321,7 +331,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	}
+ 
+ 	for (i = 0; i < initial; i++) {
+-		rc = pci_iov_add_virtfn(dev, i, 0);
++		rc = pci_iov_add_virtfn(dev, i, 0, driver_override);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -622,20 +632,35 @@ int pci_iov_bus_range(struct pci_bus *bus)
+ }
+ 
+ /**
+- * pci_enable_sriov - enable the SR-IOV capability
++ * pci_enable_sriov_with_override - enable the SR-IOV capability
+  * @dev: the PCI device
+  * @nr_virtfn: number of virtual functions to enable
++ * @driver_override: driver override for VFs
+  *
+  * Returns 0 on success, or negative on failure.
+  */
+-int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
++int pci_enable_sriov_with_override(struct pci_dev *dev, int nr_virtfn,
++				   char *driver_override)
+ {
+ 	might_sleep();
+ 
+ 	if (!dev->is_physfn)
+ 		return -ENOSYS;
+ 
+-	return sriov_enable(dev, nr_virtfn);
++	return sriov_enable(dev, nr_virtfn, driver_override);
++}
++EXPORT_SYMBOL_GPL(pci_enable_sriov_with_override);
++
++/**
++ * pci_enable_sriov - enable the SR-IOV capability
++ * @dev: the PCI device
++ * @nr_virtfn: number of virtual functions to enable
++ *
++ * Returns 0 on success, or negative on failure.
++ */
++int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
++{
++	return pci_enable_sriov_with_override(dev, nr_virtfn, NULL);
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_sriov);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b67e4df..54b3059 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1739,15 +1739,20 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
+ int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
+ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
++int pci_enable_sriov_with_override(struct pci_dev *dev, int nr_virtfn,
++				   char *driver_override);
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
+-int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset);
++int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset,
++		       char *driver_override);
+ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
++
++void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn);
+ #else
+ static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+ {
+@@ -1757,6 +1762,11 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+ {
+ 	return -ENOSYS;
+ }
++
++static inline int pci_enable_sriov_with_override(struct pci_dev *dev,
++						 int nr_virtfn,
++						 char *driver_override)
++{ return -ENODEV; }
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+@@ -1775,6 +1785,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
+ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ { return 0; }
++static inline void pci_iov_set_numvfs(struct pci_dev *dev, int nr_virtfn) { }
+ #endif
+ 
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+-- 
+1.8.3.1
 
-
-
-=20
