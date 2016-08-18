@@ -1,129 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0041.outbound.protection.outlook.com ([104.47.38.41]:6512
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751128AbcHaGuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 31 Aug 2016 02:50:55 -0400
-From: Po Liu <po.liu@nxp.com>
-To: <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        "Marc Zyngier" <marc.zyngier@arm.com>,
-        Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Stuart Yoder <stuart.yoder@nxp.com>,
-        Yang-Leo Li <leoyang.li@nxp.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Minghuan Lian <minghuan.lian@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>, Po Liu <po.liu@nxp.com>
-Subject: [PATCH v4 2/2] pci:aer: add support aer interrupt with none MSI/MSI-X/INTx mode
-Date: Wed, 31 Aug 2016 14:37:22 +0800
-Message-ID: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
-In-Reply-To: <1472625442-23309-1-git-send-email-po.liu@nxp.com>
-References: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
- <1472625442-23309-1-git-send-email-po.liu@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: Support for configurable PCIe endpoint
+To: Mingkai Hu <mingkai.hu@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, Jingoo Han
+ <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>
+References: <57A18927.9070003@ti.com>
+ <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com> <57A31299.2040805@ti.com>
+ <VI1PR04MB14544C83482106ABF1067D5F8E140@VI1PR04MB1454.eurprd04.prod.outlook.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57B5A919.6000809@ti.com>
+Date: Thu, 18 Aug 2016 17:54:57 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <VI1PR04MB14544C83482106ABF1067D5F8E140@VI1PR04MB1454.eurprd04.prod.outlook.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>, Simon Horman <horms@verge.net.au>,
+ David Daney <david.daney@cavium.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Richard Zhu <Richard.Zhu@freescale.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Ley Foon Tan <lftan@altera.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ Roy Zang <tie-fei.zang@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
-When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
-maybe there is interrupt line for aer pme etc. Search the interrupt
-number in the fdt file. Then fixup the dev->irq with it.
+Hi,
 
-Signed-off-by: Po Liu <po.liu@nxp.com>
----
-Changes for v4:
-	- re-use the patch changes in the root port driver;
-	- add binding information;
+On Wednesday 17 August 2016 03:19 PM, Mingkai Hu wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Kishon Vijay Abraham I [mailto:kishon@ti.com]
+>> Sent: Thursday, August 04, 2016 6:02 PM
+>> To: Joao Pinto <Joao.Pinto@synopsys.com>; bhelgaas@google.com; linux-
+>> pci@vger.kernel.org; arnd@arndb.de; Jingoo Han <jingoohan1@gmail.com>;
+>> Pratyush Anand <pratyush.anand@gmail.com>
+>> Cc: Ley Foon Tan <lftan@altera.com>; Rob Herring <robh@kernel.org>;
+>> Tanmay Inamdar <tinamdar@apm.com>; Roy Zang <tie-
+>> fei.zang@freescale.com>; Mingkai Hu <mingkai.hu@freescale.com>;
+>> Minghuan Lian <minghuan.Lian@freescale.com>; Richard Zhu
+>> <Richard.Zhu@freescale.com>; Lucas Stach <l.stach@pengutronix.de>;
+>> Murali Karicheri <m-karicheri2@ti.com>; Thomas Petazzoni
+>> <thomas.petazzoni@free-electrons.com>; Jason Cooper
+>> <jason@lakedaemon.net>; Thierry Reding <thierry.reding@gmail.com>;
+>> Simon Horman <horms@verge.net.au>; Zhou Wang
+>> <wangzhou1@hisilicon.com>; Gabriele Paoloni
+>> <gabriele.paoloni@huawei.com>; Stanimir Varbanov <svarbanov@mm-
+>> sol.com>; David Daney <david.daney@cavium.com>; linux-
+>> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+>> omap@vger.kernel.org; Carlos Palminha
+>> <CARLOS.PALMINHA@synopsys.com>
+>> Subject: Re: Support for configurable PCIe endpoint
+>>
+>> Hi,
+>>
+>> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
+>>> Hi Kishon,
+>>>
+>>> On 8/3/2016 7:03 AM, Kishon Vijay Abraham I wrote:
+>>>> Hi,
+>>>>
+>>>> The PCIe controller present in TI's DRA7 SoC is capable of operating
+>>>> either in Root Complex mode or Endpoint mode. (It uses Synopsys
+>>>> Designware Core). I'd assume most of the PCIe controllers on other
+>>>> platforms that use Designware core should also be capable to operate
+>>>> in endpoint mode. But linux kernel right now supports only RC mode.
+>>>>
+>>>> PCIe endpoint support discussion came up briefly before [1] but it
+>>>> was felt the practical use case will find firmware more suitable and
+>>>> endpoint support in kernel can be used only for validation or demo.
+>>>>
+>>>> *) Modify platform driver to support EP mode (in my case pci-dra7xx.c).
+>>>>
+>>>> *) dt binding specific to EP mode should be created.
+>>>>
+>>>> Once I complete the implementation and start posting RFC patches, a
+>>>> lot of these will become clear. But I want to check if this sounds
+>>>> okay to you guys before starting the implementation.
+>>>>
+>>>> Let me know if you have some other ideas too.
+>>>>
+>>>> Cheers
+>>>> Kishon
+>>>>
+>>>> [1] -> http://www.spinics.net/lists/linux-pci/msg26026.html
+>>>>
+>>>
+>>> You are rising a topic that we are also addressing in Synopsys.
+>>>
+>>> For the PCIe RC hardware validation we are currently using the
+>>> standard pcie-designware and pcie-designware-plat drivers.
+>>>
+>>> For the Endpoint we have to use an internal software package. Its main
+>>> purpose is to initialize the IP registers, eDMA channels and make data
+>>> transfer to prove that the everything is working properly. This is
+>>> done in 2 levels, a custom driver built and loaded and an application
+>>> that makes some ioctl to the driver executing some interesting
+>>> functions to check the Endpoint status and make some data exchange.
+>>
+>> hmm.. the platform I have doesn't have a DMA in PCIe IP
+>> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does
+>> the EP access RC memory? i.e the driver in the RC allocates memory from it's
+>> DDR and gives it's DDR address to the EP. The EP then transfers data to this
+>> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
+>> simple with configurable EPs. I'd like to know more about your testing though.
+>>
+> 
+> Hi Kishon,
+> 
+> This is a typical user case for EP to use DMA transfer data to/from RC memory.
+> In our case, we implement ring (like BD ring) or register in EP to communicate
+> The address allocated in RC memory, then EP can transfer data to/from RC memory.
 
- .../devicetree/bindings/pci/layerscape-pci.txt     |  4 +--
- drivers/pci/pcie/portdrv_core.c                    | 31 +++++++++++++++++++---
- 2 files changed, 30 insertions(+), 5 deletions(-)
+Initially I had some confusion w.r.t this because the address allocated in RC
+memory can also be an address in EP system. For example let's assume we connect
+two similar systems one configured as RC and the other configured as EP. The
+PCI driver in the RC allocates memory in it's DDR (say 0x80000000) and programs
+this address in the EP. Since it's a similar system, 0x80000000 will also be an
+address in the EPs DDR. This will result in EP transferring data to it's own
+DDR (at 0x80000000) instead of the same address in RC.
 
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index 41e9f55..1dfb1da 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -19,7 +19,7 @@ Required properties:
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
- - interrupt-names: Must include the following entries:
--  "intr": The interrupt that is asserted for controller interrupts
-+  "aer": The interrupt that is asserted for aer interrupts
- - fsl,pcie-scfg: Must include two entries.
-   The first entry must be a link to the SCFG device node
-   The second entry must be '0' or '1' based on physical PCIe controller index.
-@@ -36,7 +36,7 @@ Example:
- 		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
- 		reg-names = "regs", "config";
- 		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
--		interrupt-names = "intr";
-+		interrupt-names = "aer";
- 		fsl,pcie-scfg = <&scfg 0>;
- 		#address-cells = <3>;
- 		#size-cells = <2>;
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index e9270b4..7c4943d 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -16,6 +16,7 @@
- #include <linux/slab.h>
- #include <linux/pcieport_if.h>
- #include <linux/aer.h>
-+#include <linux/of_irq.h>
- 
- #include "../pci.h"
- #include "portdrv.h"
-@@ -200,6 +201,28 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
- static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- {
- 	int i, irq = -1;
-+	int ret;
-+	struct device_node *np = NULL;
-+
-+	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-+		irqs[i] = 0;
-+
-+	if (dev->bus->dev.of_node)
-+		np = dev->bus->dev.of_node;
-+
-+	/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
-+	 * request irq for aer
-+	 */
-+	if (IS_ENABLED(CONFIG_OF_IRQ) && np &&
-+			(mask & PCIE_PORT_SERVICE_PME)) {
-+		ret = of_irq_get_byname(np, "aer");
-+		if (ret > 0) {
-+			irqs[PCIE_PORT_SERVICE_AER_SHIFT] = ret;
-+			if (dev->irq)
-+				irq = dev->irq;
-+			goto no_msi;
-+		}
-+	}
- 
- 	/*
- 	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
-@@ -225,11 +248,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 		irq = dev->irq;
- 
-  no_msi:
--	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
--		irqs[i] = irq;
-+	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
-+		if (!irqs[i])
-+			irqs[i] = irq;
-+	}
- 	irqs[PCIE_PORT_SERVICE_VC_SHIFT] = -1;
- 
--	if (irq < 0)
-+	if (irq < 0 && irqs[PCIE_PORT_SERVICE_AER_SHIFT] < 0)
- 		return -ENODEV;
- 	return 0;
- }
--- 
-2.1.0.27.g96db324
+But later realized instead of directly using the DDR address given by RC, this
+address should only be used to program the outbound window. That way the target
+of the outbound window can be an address given by the RC and source should be
+an address from the address space in the EP's system.
 
+Do you also use the RC memory address to program the outbound window?
+
+Thanks
+Kishon
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
