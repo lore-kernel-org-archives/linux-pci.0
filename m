@@ -1,74 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Amir Levy <amir.jer.levy@intel.com>
-To: andreas.noever@gmail.com, gregkh@linuxfoundation.org,
-	bhelgaas@google.com, corbet@lwn.net
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-	thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-	tomas.winkler@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v6 3/8] thunderbolt: Kconfig for Thunderbolt(TM) networking
-Date: Mon,  1 Aug 2016 15:23:48 +0300
-Message-Id: <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
-References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:41925 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1947173AbcHRNQN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Aug 2016 09:16:13 -0400
+Subject: Re: Support for configurable PCIe endpoint
+To: Arnd Bergmann <arnd@arndb.de>
+References: <57A18927.9070003@ti.com>
+ <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com> <57A31299.2040805@ti.com>
+ <2422602.ltmdGR0pWX@wuerfel>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Rob Herring <robh@kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	David Daney <david.daney@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57B5B4A1.9030308@ti.com>
+Date: Thu, 18 Aug 2016 18:44:09 +0530
+MIME-Version: 1.0
+In-Reply-To: <2422602.ltmdGR0pWX@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updating the Kconfig Thunderbolt(TM) description.
+Hi Arnd,
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  2 +-
- 2 files changed, 22 insertions(+), 5 deletions(-)
+On Thursday 04 August 2016 04:43 PM, Arnd Bergmann wrote:
+> On Thursday, August 4, 2016 3:32:01 PM CEST Kishon Vijay Abraham I wrote:
+>> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
+>>>
+>>> You are rising a topic that we are also addressing in Synopsys.
+>>>
+>>> For the PCIe RC hardware validation we are currently using the standard
+>>> pcie-designware and pcie-designware-plat drivers.
+>>>
+>>> For the Endpoint we have to use an internal software package. Its main purpose
+>>> is to initialize the IP registers, eDMA channels and make data transfer to prove
+>>> that the everything is working properly. This is done in 2 levels, a custom
+>>> driver built and loaded and an application that makes some ioctl to the driver
+>>> executing some interesting functions to check the Endpoint status and make some
+>>> data exchange.
+>>
+>> hmm.. the platform I have doesn't have a DMA in PCIe IP
+>> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does the
+>> EP access RC memory? i.e the driver in the RC allocates memory from it's DDR
+>> and gives it's DDR address to the EP. The EP then transfers data to this
+>> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
+>> simple with configurable EPs. I'd like to know more about your testing though.
+> 
+> 
+> What's the difference between using the EDMA on that chip or a DMA engine
+> that is part of the PCIe bridge?
 
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..d34b0f5 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,30 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt(TM) support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt(TM) Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt(TM) Networking"
-+	help
-+	  This driver is required if you want Thunderbolt(TM) Networking on
-+	  non-Apple hardware.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..7a85bd1 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
--- 
-2.7.4
+Do you mean the difference between using DMA on an EP (like ethernet card or
+sata card) and DMA on PCI RC system? or is it the difference between eDMA
+within the PCIe IP and system DMA?
+
+Thanks
+Kishon
