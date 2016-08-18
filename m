@@ -1,67 +1,73 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Thu, 18 Aug 2016 16:02:13 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 0/3] Limiting pci access requests
-Message-ID: <20160818140213.GA10631@wunner.de>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
- <20160809173633.GF27301@localhost>
- <20160809185654.GA32692@localhost.localdomain>
- <20160809185628.GA6729@wunner.de>
- <20160817210539.GA25146@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160817210539.GA25146@localhost.localdomain>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Chen Yu <yu.c.chen@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Chen Yu <yu.c.chen@intel.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+Subject: [PATCH][RFC v2] PCI: Workaround to enable poweroff on Mac Pro 11
+Date: Fri, 19 Aug 2016 01:44:52 +0800
+Message-Id: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 17, 2016 at 05:05:40PM -0400, Keith Busch wrote:
-> On Tue, Aug 09, 2016 at 08:56:28PM +0200, Lukas Wunner wrote:
-> > On Tue, Aug 09, 2016 at 02:56:54PM -0400, Keith Busch wrote:
-> > > There are still more places that we can remove unnecessary config and
-> > > MMIO, though they're just micro-improvements compared to this series.
-> > > Even those just repeat the same pattern of looking for a -1 completion
-> > > or false return from "pci_device_is_present". So the "fixes" do look
-> > > tedious and piecemeal, but I didn't see how else we could do it. Any
-> > > thoughts or guidance is much appreciated.
-> > 
-> > FWIW, similar checks were added to pciehp with commit 1469d17dd341
-> > ("PCI: pciehp: Handle invalid data when reading from non-existent
-> > devices"). So the general idea to handle such faults is already
-> > present in the kernel, the only improvement I could see here would
-> > be to harmonize (i.e. make identical everywhere) the way this is
-> > coded (check for ~0) as well as the message logged with KERN_INFO
-> > (your patches do not log a message at all AFAICS).
-> 
-> AFAICT, the only thing we can do is have every caller of
-> pci_read_config_*, pci_bus_read_config_*, and pcie_capability_read_*
-> check for ~0 completion, and handle accordingly. Is that what you mean
-> by making this identical everywhere?  That is a lot of places to fix! :)
+People reported that they can not do a poweroff nor a
+suspend to memory on their Mac Pro 11. After some investigations
+it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
+mm windows([mem 0x7fa00000-0x7fbfffff] and
+[mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+io resource 0x1804 becomes unaccessible immediately, where the
+ACPI Sleep register is located, as a result neither poweroff(S5)
+nor suspend to memory(S3) works.
 
-Littering the code with such checks won't improve its readability
-so we ought to put that where it's really needed. I just meant that
-the way the check is written in the code and the accompanying log
-message should probably be made identical to improve readability
-and clarity.
+As suggested by Bjorn, further testing shows that, there is an
+unreported device may be (using) conflict with above aperture,
+so if we reassign the memory aperture to other place, the poweroff
+works again.
 
-TBH I don't understand exactly how you trigger these errors. Re-reading
-patch [1/3], I can only guess that pci_find_next_ext_capability() might
-be called from aerdrv via pci_find_ext_capability(). The other patches
-concern aerdrv, so that guess seems plausible. Explaining the call stack
-would be helpful.
+As we did not find any resource declared in _CRS which contain above
+memory aperture, thus we choose a simple workaround to clear the hotplug
+flag(suggested by Yinghai Lu), thus do not allocate any resource for
+this pci bridge.
 
-How is it possible that a device is accessed that no longer exists?
-Are these (native) pciehp ports and the attached pci_dev isn't torn
-down quickly enough? Do we need some kind of locking or an atomic flag
-that prevents accesses to devices until they're torn down completely?
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rafael J. Wysocki <rafael@kernel.org>
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+---
+ drivers/pci/quirks.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-Since your patches pertain to aerdrv, do we need synchronization between
-the pciehp and aer drivers so that aer doesn't touch a device for which
-pciehp has sensed removal? (Is the interrupt shared between pciehp and
-aerdrv?)
-
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 37ff015..47b303a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2776,6 +2776,27 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+ 
+ /*
++ * Apple: Avoid programming the memory/io aperture of 00:1c.0
++ *
++ * BIOS does not declare any resource for 00:1c.0, but with
++ * hotplug flag set, thus OS allocate:
++ * [mem 0x7fa00000 - 0x7fbfffff]
++ * [mem 0x7fc00000-0x7fdfffff 64bit pref]
++ * which is conflict with an unreported device, which
++ * causes unpredictable result such as accessing io port.
++ * So clear the hotplug flag to work around it.
++ */
++static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
++{
++	if (dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") &&
++	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
++	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
++		dev->is_hotplug_bridge = 0;
++}
++
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
++
++/*
+  * This is a quirk for the Ricoh MMC controller found as a part of
+  * some mulifunction chips.
+ 
+-- 
+2.7.4
