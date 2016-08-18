@@ -1,63 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33077 "EHLO
-	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759179AbcHDWsv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Aug 2016 18:48:51 -0400
-Received: by mail-qk0-f196.google.com with SMTP id x189so14009621qkd.0
-        for <linux-pci@vger.kernel.org>; Thu, 04 Aug 2016 15:48:30 -0700 (PDT)
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Thu, 18 Aug 2016 12:05:16 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 0/3] Limiting pci access requests
+Message-ID: <20160818160516.GB27538@localhost.localdomain>
+References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+ <20160809173633.GF27301@localhost>
+ <20160809185654.GA32692@localhost.localdomain>
+ <20160809185628.GA6729@wunner.de>
+ <20160817210539.GA25146@localhost.localdomain>
+ <20160818140213.GA10631@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
-References: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
-From: Myron Stowe <myron.stowe@gmail.com>
-Date: Thu, 4 Aug 2016 16:48:29 -0600
-Message-ID: <CAL-B5D2H96XyvXUYxq23BVvHeb-UMi3hYzw6u_mRNPR_S5xYXQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] vmd: Fix infinite loop executing irq's
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160818140213.GA10631@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 4, 2016 at 4:09 PM, Keith Busch <keith.busch@intel.com> wrote:
-> We can't initialize the list head on deletion as this causes the node
-> to point to itself, looping infinitely if the vmd IRQ handler happens
-> to be servicing that node.
->
-> The list initialization supposed to fix a bug from multiple calls to
-> disable the same IRQ. We can fix this instead just checking if the
-> previous pointer indicates it was already deleted.
->
+On Thu, Aug 18, 2016 at 04:02:13PM +0200, Lukas Wunner wrote:
+> TBH I don't understand exactly how you trigger these errors. Re-reading
+> patch [1/3], I can only guess that pci_find_next_ext_capability() might
+> be called from aerdrv via pci_find_ext_capability(). The other patches
+> concern aerdrv, so that guess seems plausible. Explaining the call stack
+> would be helpful.
 
-Should this have one or possibly more"fixes" lines here?
+Yes, I believe the majority of what we observed in protocol traces did
+originate from the aer driver.
 
-???Fixes: 97e9230 ("x86/PCI: VMD: Initialize list item in IRQ disable")???
+pci_find_capability already breaks early on an all 1's, so patch 1/3
+just provides the same benefit to searching the extended capabilities.
 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  arch/x86/pci/vmd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-> index e88b417..2294907 100644
-> --- a/arch/x86/pci/vmd.c
-> +++ b/arch/x86/pci/vmd.c
-> @@ -136,8 +136,8 @@ static void vmd_irq_disable(struct irq_data *data)
->         data->chip->irq_mask(data);
->
->         raw_spin_lock_irqsave(&list_lock, flags);
-> -       list_del_rcu(&vmdirq->node);
-> -       INIT_LIST_HEAD_RCU(&vmdirq->node);
-> +       if (vmdirq->node.prev != LIST_POISON2)
-> +               list_del_rcu(&vmdirq->node);
->         raw_spin_unlock_irqrestore(&list_lock, flags);
->  }
->
-> --
-> 2.7.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Caching the AER capability may obviate the immediate benefit of 1/3,
+but I think it's still a good change.
+ 
+> How is it possible that a device is accessed that no longer exists?
+
+Surprise hot removal.
+
+> Are these (native) pciehp ports and the attached pci_dev isn't torn
+> down quickly enough? Do we need some kind of locking or an atomic flag
+> that prevents accesses to devices until they're torn down completely?
+
+Tearing down a device and unbinding it from a driver generates lots of
+additional accesses. Patch 2/3 removes MSI-x teardown which was one of
+the larger sources of config and MMIO access to a non-existent device.
+
+There are others, too. Heck, even checking if the device is present
+(pci_device_is_present) generates config access to the removed device. :)
+
+What do you think about adding a state to the pci_dev to say that it is
+removed? The state can be set by pciehp or pcie-dpc if either detects
+removal or link down, or on the first ~0 completion. Then have the
+teardown check for the removal state before doing orderly device removal.
+
+> Since your patches pertain to aerdrv, do we need synchronization between
+> the pciehp and aer drivers so that aer doesn't touch a device for which
+> pciehp has sensed removal? (Is the interrupt shared between pciehp and
+> aerdrv?)
+
+pciehp and aerdrv can share an interrupt on root ports, but that's it.
+The aer driver, though, does access every device in its sub-tree.
+There's also pciehp and pcie-dpc that could benifit from coordination.
+
+I can look into these, but it's much less trivial than these incremental
+improvements. I'm hoping we can clean up these biggest offenders first
+before attempting a more risky synchronization among the different
+services.
+
+I have a v2 series ready that addresses Bjorn's comment on caching AER cap
+position, but that's the only difference I've accumulated so far from v1.
+
+Thanks,
+ Keith
