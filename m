@@ -1,66 +1,114 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Tue, 23 Aug 2016 13:10:18 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160823171018.GB10224@localhost.localdomain>
-References: <1470687542-30155-2-git-send-email-keith.busch@intel.com>
- <20160815174002.GB9790@localhost>
- <20160815192316.GB18083@localhost.localdomain>
- <20160817213745.GE27353@localhost>
- <20160817230951.GD25146@localhost.localdomain>
- <20160818195656.GH27353@localhost>
- <20160818224610.GA28276@localhost.localdomain>
- <20160822165524.GC18628@localhost>
- <20160822211536.GE28276@localhost.localdomain>
- <20160823133913.GN18628@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42040 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754560AbcHSBGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Aug 2016 21:06:14 -0400
+Date: Thu, 18 Aug 2016 15:19:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Ley Foon Tan <lftan.linux@gmail.com>
+Subject: Re: [PATCH] PCI: altera: Poll for link training status after
+ retraining the link
+Message-ID: <20160818201900.GJ27353@localhost>
+References: <1471241162-23021-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160823133913.GN18628@localhost>
+In-Reply-To: <1471241162-23021-1-git-send-email-lftan@altera.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 23, 2016 at 08:39:13AM -0500, Bjorn Helgaas wrote:
-> On Mon, Aug 22, 2016 at 05:15:36PM -0400, Keith Busch wrote:
+On Mon, Aug 15, 2016 at 02:06:02PM +0800, Ley Foon Tan wrote:
+> Poll for link training status is cleared before poll for link up status.
+> This can help to get the reliable link up status, especially when PCIe
+> is in Gen 3 speed.
 > 
-> The other IBPI states (fail, rebuild, predicted failure, hotspare,
-> degraded, failed) all seem like storage-related things without an
-> obvious connection to pciehp.  I would expect a kernel driver like md
-> to manage those states.
+> Signed-off-by: Ley Foon Tan <lftan@altera.com>
 
-Yes, that's fairly accurate on how this works with other storage
-transports. While md doesn't directly affect LED states, 'ledmon'
-subscribes to md events and executes an appropriate LED control method
-specific to that transport.
+Applied to pci/host-altera for v4.9, thanks!
 
-It just happens that this quirky hardware chose to re-purpose the Slot
-Control commands for the PCIe transport specific method to get feature
-parity with other storage fabrics.
- 
-> PCIe hotplug is designed with a 1:1:1 relationship between the
-> Downstream Port, the slot, and a replaceable device.  It's not obvious
-> to me how the IBPI signaling maps into that.  The first diagram on the
-> IBPI wikipedia page shows a single iPass cable (e.g., a single PCIe
-> slot connection) connected to an enclosure of four drives.  Each drive
-> has three LEDs, so we couldn't control all twelve of those LEDs using
-> the single Slot Control of the Downstream Port.
-
-For a PCIe storage transport, each drive has its own slot, and the
-relationship with the downstream port and its replaceable device is still
-preserved; connections to each drive provide individual Slot Control.
- 
-> > Would it be more palatable if I modify the quirk such that when set,
-> > pciehp provides a sysfs entry allowing arbitrary user defined Slot Control
-> > commands? That removes the dangerous direct access from user space.
+> ---
+>  drivers/pci/host/pcie-altera.c | 45 ++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 37 insertions(+), 8 deletions(-)
 > 
-> Maybe, I dunno.  So far, it still seems like an unrelated wart on pciehp.
-
-It's superficially related to pciehp only because that's the only module
-that touches Slot Control, and this particular hardware interprets
-pciehp's control commands differently than the specification.
-
-Since the hardware can't be changed, is there any guidance you can
-recommend we follow to appropriately fence off pciehp from attention and
-power indicator control? I initially attempted the least invasive method,
-but I'm happy to explore other possibilities.
+> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> index 2b78376..58eef99 100644
+> --- a/drivers/pci/host/pcie-altera.c
+> +++ b/drivers/pci/host/pcie-altera.c
+> @@ -61,7 +61,8 @@
+>  #define TLP_LOOP			500
+>  #define RP_DEVFN			0
+>  
+> -#define LINK_UP_TIMEOUT			5000
+> +#define LINK_UP_TIMEOUT			HZ
+> +#define LINK_RETRAIN_TIMEOUT		HZ
+>  
+>  #define INTX_NUM			4
+>  
+> @@ -99,11 +100,44 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
+>  	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
+>  }
+>  
+> +static void altera_wait_link_retrain(struct pci_dev *dev)
+> +{
+> +	u16 reg16;
+> +	unsigned long start_jiffies;
+> +	struct altera_pcie *pcie = dev->bus->sysdata;
+> +
+> +	/* Wait for link training end. */
+> +	start_jiffies = jiffies;
+> +	for (;;) {
+> +		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
+> +		if (!(reg16 & PCI_EXP_LNKSTA_LT))
+> +			break;
+> +
+> +		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
+> +			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
+> +			break;
+> +		}
+> +		udelay(100);
+> +	}
+> +
+> +	/* Wait for link is up */
+> +	start_jiffies = jiffies;
+> +	for (;;) {
+> +		if (altera_pcie_link_is_up(pcie))
+> +			break;
+> +
+> +		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
+> +			dev_err(&pcie->pdev->dev, "link up timeout\n");
+> +			break;
+> +		}
+> +		udelay(100);
+> +	}
+> +}
+> +
+>  static void altera_pcie_retrain(struct pci_dev *dev)
+>  {
+>  	u16 linkcap, linkstat;
+>  	struct altera_pcie *pcie = dev->bus->sysdata;
+> -	int timeout =  0;
+>  
+>  	if (!altera_pcie_link_is_up(pcie))
+>  		return;
+> @@ -121,12 +155,7 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+>  	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
+>  		pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
+>  					 PCI_EXP_LNKCTL_RL);
+> -		while (!altera_pcie_link_is_up(pcie)) {
+> -			timeout++;
+> -			if (timeout > LINK_UP_TIMEOUT)
+> -				break;
+> -			udelay(5);
+> -		}
+> +		altera_wait_link_retrain(dev);
+>  	}
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
+> -- 
+> 1.8.2.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
