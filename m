@@ -1,74 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hpe.com ([15.241.32.99]:5587 "EHLO
-        g9t1613g.houston.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751198AbcHWX30 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Aug 2016 19:29:26 -0400
-Received: from g4t3428.houston.hpe.com (g4t3428.houston.hpe.com [15.241.140.76])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by g9t1613g.houston.hpe.com (Postfix) with ESMTPS id D9E7661151
-        for <linux-pci@vger.kernel.org>; Tue, 23 Aug 2016 23:29:25 +0000 (UTC)
-Received: from g9t2301.houston.hpecorp.net (g9t2301.houston.hpecorp.net [16.220.97.129])
-        by g4t3428.houston.hpe.com (Postfix) with ESMTP id 03E2F5B
-        for <linux-pci@vger.kernel.org>; Tue, 23 Aug 2016 23:28:45 +0000 (UTC)
-Received: from div_linux.localnet (unknown [16.93.61.14])
-        by g9t2301.houston.hpecorp.net (Postfix) with ESMTP id E63314C
-        for <linux-pci@vger.kernel.org>; Tue, 23 Aug 2016 23:28:44 +0000 (UTC)
-From: divakar <divakar.chitturi@hpe.com>
-To: linux-pci@vger.kernel.org
-Subject: pci_enable_device error
-Date: Tue, 23 Aug 2016 16:24:37 -0700
-Message-ID: <2771432.urgYcWSoQk@div_linux>
+Received: from foss.arm.com ([217.140.101.70]:37776 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754011AbcHSRBo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Aug 2016 13:01:44 -0400
+Date: Fri, 19 Aug 2016 17:55:06 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v3 2/4] PCI: Allow driver-specific data in host bridge
+Message-ID: <20160819165506.GA11823@red-moon>
+References: <20160815153647.1075-1-thierry.reding@gmail.com>
+ <20160815153647.1075-2-thierry.reding@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160815153647.1075-2-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
+On Mon, Aug 15, 2016 at 05:36:45PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> Provide a way to allocate driver-specific data along with a PCI host
+> bridge structure. The bridge's ->private field points to this data.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
+>  drivers/pci/probe.c | 9 ++++++---
+>  include/linux/pci.h | 1 +
+>  2 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 93583b389058..ecf543014da3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -521,16 +521,19 @@ static void pci_release_host_bridge_dev(struct device *dev)
+>  	kfree(bridge);
+>  }
+>  
+> -static struct pci_host_bridge *pci_alloc_host_bridge(void)
+> +static struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+>  {
+>  	struct pci_host_bridge *bridge;
+>  
+> -	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> +	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
+>  	if (!bridge)
+>  		return NULL;
+>  
+>  	INIT_LIST_HEAD(&bridge->windows);
+>  
+> +	if (priv)
+> +		bridge->private = &bridge[1];
 
-I am trying to enable the pci device in the driver by calling the 
-function, pci_enable_device and i get the below error. 
+How about making private a zero length array ?
 
-fpga_pci_uio_driver 0000:4e:00.0: can't enable device: BAR 0 [mem 
-0x00000000-0x000fffff 64bit pref] not claimed
-fpga_pci_uio_driver 0000:4e:00.0: Failed to enable fpga_pci_uio device 
-rc=-22
-fpga_pci_uio_driver: probe of 0000:4e:00.0 failed with error -22
+Lorenzo
 
-I am guessing its coming from pci_enable_resource function in 
-pci_setup.c. ( trying to setup debug env to trace exact location)
-if (!r->parent) {
-                         dev_err(&dev->dev, "can't enable device: BAR %d 
-%pR not claimed\n",
-                                 i, r);
-                         return -EINVAL;
-           	}
-
-I am not sure why this condition is false. I am running kernel 3.19 and 
-this is a pcie endpoint device sitting on one of the port of the pcie 
-switch. Below is the dmesg output for the pcie switch port. 
-
-[   13.586987] pci 0000:4b:04.0: PCI bridge to [bus 4e]
-[   13.591069] pci 0000:4b:04.0:   bridge window [mem 0xc7c00000-0xc7ffffff 
-64bit pref]
-
-lspci output for my device
-lspci -v -s 4e:00.0
-4e:00.0 Non-VGA unclassified device:  Company Device 0180 
-(rev 01)
-        Flags: fast devsel
-        Memory at <unassigned> (64-bit, prefetchable) [size=1M]
-        Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
-        Capabilities: [78] Power Management version 3
-        Capabilities: [80] Express Endpoint, MSI 00
-        Capabilities: [100] Multi-Function Virtual Channel <?>
-
-The other device on different port of the switch work fine. That device 
-driver also calls pci_enable_device(dev).
-
-I found a thread http://www.spinics.net/lists/linux-pci/msg49725.html 
-discussing something similar. Should i apply any patch to solve it? or 
-am i missing something?
-
-Thanks
-
+> +
+>  	return bridge;
+>  }
+>  
+> @@ -2249,7 +2252,7 @@ static struct pci_bus *pci_create_root_bus_msi(struct device *parent,
+>  	int error;
+>  	struct pci_host_bridge *bridge;
+>  
+> -	bridge = pci_alloc_host_bridge();
+> +	bridge = pci_alloc_host_bridge(0);
+>  	if (!bridge)
+>  		return NULL;
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index ccf298fad9e7..3aa7240800c8 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -421,6 +421,7 @@ struct pci_host_bridge {
+>  			resource_size_t start,
+>  			resource_size_t size,
+>  			resource_size_t align);
+> +	void *private;
+>  };
+>  
+>  #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+> -- 
+> 2.9.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
