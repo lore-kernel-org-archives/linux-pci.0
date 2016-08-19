@@ -1,63 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from static.146.197.76.144.clients.your-server.de ([144.76.197.146]:36433
-        "EHLO desertbit.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756858AbcHWJpA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Aug 2016 05:45:00 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by desertbit.com (Postfix) with ESMTP id EB47475A10A5
-        for <linux-pci@vger.kernel.org>; Tue, 23 Aug 2016 11:24:49 +0200 (CEST)
-Received: from desertbit.com ([127.0.0.1])
-        by localhost (mail.desertbit.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Uc9p44w5LYWq for <linux-pci@vger.kernel.org>;
-        Tue, 23 Aug 2016 11:24:48 +0200 (CEST)
-To: linux-pci@vger.kernel.org
-From: Roland Singer <roland.singer@desertbit.com>
-Subject: Kernel Freeze with American Megatrends BIOS
-Message-ID: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
-Date: Tue, 23 Aug 2016 11:23:45 +0200
+Return-Path: <lftan.linux@gmail.com>
+Return-Path: <lftan.linux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: lftan.linux@gmail.com
+In-Reply-To: <20160818201900.GJ27353@localhost>
+References: <1471241162-23021-1-git-send-email-lftan@altera.com> <20160818201900.GJ27353@localhost>
+From: Ley Foon Tan <lftan@altera.com>
+Date: Fri, 19 Aug 2016 15:55:35 +0800
+Message-ID: <CAFiDJ58j--v3B+YtpkzQAw6xPfogdsR9OEcY=hsavqNv+Mh5iw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: altera: Poll for link training status after
+ retraining the link
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Fri, Aug 19, 2016 at 4:19 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Mon, Aug 15, 2016 at 02:06:02PM +0800, Ley Foon Tan wrote:
+>> Poll for link training status is cleared before poll for link up status.
+>> This can help to get the reliable link up status, especially when PCIe
+>> is in Gen 3 speed.
+>>
+>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>
+> Applied to pci/host-altera for v4.9, thanks!
 
-hope somebody can help me fix this kernel problem which affects the following machines:
+Thanks, Bjorn.
 
-- Clevo P651RA (i7-6700HQ/GTX 965M, part of the P6xxRx family which are also affected)
-- MSI GE62 Apache Pro (i7-6700HQ/GTX 960M)
-- Gigabyte P35V5 (i7-6700HQ/GTX 970M)
-- Razer Blade 14" (2016) (i7-6700HQ/GTX 970M) (BIOS 5.11, 04/07/2016)
-
-
-The kernel freezes if the graphical user session (Xorg & Wayland) is
-started with a switched off discrete GPU card (NVIDIA).
-If the discrete GPU is switched off after the graphical session start,
-then everything works as expected, until the graphical session is restarted.
-
-This problem seams to be linked to specific BIOS settings. If the computer
-is started with the following command line:
-
-acpi_osi=! acpi_osi="Windows 2009"
-
-then the kernel freeze does not occur anymore. However this required a special
-ACPI DSDT firmware patch for the Razer Blade 2016 laptop:
-
-https://github.com/m4ng0squ4sh/razer_blade_14_2016_acpi_dsdt
-
-I strongly recommend to fix this in the kernel and I am ready to help and solve
-this problem with some help.
-
-Here is a link to the GitHub issue with further information:
-
-https://github.com/Bumblebee-Project/Bumblebee/issues/764#issuecomment-241212595
-
-Here are some more detailed information:
-
-https://github.com/Lekensteyn/acpi-stuff/blob/master/Clevo-P651RA/notes.txt
-
-Hope somebody can help.
-
-Thanks!
-
-Roland Singer
+>
+>> ---
+>>  drivers/pci/host/pcie-altera.c | 45 ++++++++++++++++++++++++++++++++++--------
+>>  1 file changed, 37 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+>> index 2b78376..58eef99 100644
+>> --- a/drivers/pci/host/pcie-altera.c
+>> +++ b/drivers/pci/host/pcie-altera.c
+>> @@ -61,7 +61,8 @@
+>>  #define TLP_LOOP                     500
+>>  #define RP_DEVFN                     0
+>>
+>> -#define LINK_UP_TIMEOUT                      5000
+>> +#define LINK_UP_TIMEOUT                      HZ
+>> +#define LINK_RETRAIN_TIMEOUT         HZ
+>>
+>>  #define INTX_NUM                     4
+>>
+>> @@ -99,11 +100,44 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
+>>       return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
+>>  }
+>>
+>> +static void altera_wait_link_retrain(struct pci_dev *dev)
+>> +{
+>> +     u16 reg16;
+>> +     unsigned long start_jiffies;
+>> +     struct altera_pcie *pcie = dev->bus->sysdata;
+>> +
+>> +     /* Wait for link training end. */
+>> +     start_jiffies = jiffies;
+>> +     for (;;) {
+>> +             pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
+>> +             if (!(reg16 & PCI_EXP_LNKSTA_LT))
+>> +                     break;
+>> +
+>> +             if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
+>> +                     dev_err(&pcie->pdev->dev, "link retrain timeout\n");
+>> +                     break;
+>> +             }
+>> +             udelay(100);
+>> +     }
+>> +
+>> +     /* Wait for link is up */
+>> +     start_jiffies = jiffies;
+>> +     for (;;) {
+>> +             if (altera_pcie_link_is_up(pcie))
+>> +                     break;
+>> +
+>> +             if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
+>> +                     dev_err(&pcie->pdev->dev, "link up timeout\n");
+>> +                     break;
+>> +             }
+>> +             udelay(100);
+>> +     }
+>> +}
+>> +
+>>  static void altera_pcie_retrain(struct pci_dev *dev)
+>>  {
+>>       u16 linkcap, linkstat;
+>>       struct altera_pcie *pcie = dev->bus->sysdata;
+>> -     int timeout =  0;
+>>
+>>       if (!altera_pcie_link_is_up(pcie))
+>>               return;
+>> @@ -121,12 +155,7 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+>>       if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
+>>               pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
+>>                                        PCI_EXP_LNKCTL_RL);
+>> -             while (!altera_pcie_link_is_up(pcie)) {
+>> -                     timeout++;
+>> -                     if (timeout > LINK_UP_TIMEOUT)
+>> -                             break;
+>> -                     udelay(5);
+>> -             }
+>> +             altera_wait_link_retrain(dev);
+>>       }
+>>  }
+>>  DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
+>> --
+>> 1.8.2.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
