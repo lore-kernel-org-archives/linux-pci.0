@@ -1,73 +1,91 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Fri, 26 Aug 2016 10:08:13 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, patches <patches@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Punit Agrawal <punit.agrawal@arm.com>, okaya@codeaurora.org
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-Message-ID: <20160826090813.GA1038@red-moon>
-References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
- <20160824142723.GA25843@red-moon>
- <20160824193000.GE23914@localhost>
- <20160824213005.1a9300ef@arm.com>
- <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
- <20160825121825.322d8450@arm.com>
- <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
- <20160825195917.0e75a8db@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:50533 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755650AbcHSHVA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Aug 2016 03:21:00 -0400
+Date: Fri, 19 Aug 2016 09:21:40 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Chen Yu <yu.c.chen@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH][RFC v2] PCI: Workaround to enable poweroff on Mac Pro 11
+Message-ID: <20160819072140.GA10854@wunner.de>
+References: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160825195917.0e75a8db@arm.com>
+In-Reply-To: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[ +Sinan ]
-
-On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
-
-[...]
-
-> > Thanks, Marc! It works, I tested on current X-Gene platforms that uses
-> > GICv2 and GICv2m.
-> > 
-> > Will you commit this change? It will be a huge help as going with
-> > interrupt link will require firmware change.
+On Fri, Aug 19, 2016 at 01:44:52AM +0800, Chen Yu wrote:
+> People reported that they can not do a poweroff nor a
+> suspend to memory on their Mac Pro 11. After some investigations
+> it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
+> mm windows([mem 0x7fa00000-0x7fbfffff] and
+> [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+> io resource 0x1804 becomes unaccessible immediately, where the
+> ACPI Sleep register is located, as a result neither poweroff(S5)
+> nor suspend to memory(S3) works.
 > 
-> Not for the time being. We now have an understanding of *why* things do
-> not work, but Lorenzo seems to have a good grasp on what we can do to
-> address it correctly, and we should explore this first. If (and only if)
-> there is a consensus that firmware already does all it should, then
-> I'll turn this hack into a proper series.
+> As suggested by Bjorn, further testing shows that, there is an
+> unreported device may be (using) conflict with above aperture,
+> so if we reassign the memory aperture to other place, the poweroff
+> works again.
+> 
+> As we did not find any resource declared in _CRS which contain above
+> memory aperture, thus we choose a simple workaround to clear the hotplug
+> flag(suggested by Yinghai Lu), thus do not allocate any resource for
+> this pci bridge.
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rafael J. Wysocki <rafael@kernel.org>
+> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+> ---
+>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 37ff015..47b303a 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2776,6 +2776,27 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+>  
+>  /*
+> + * Apple: Avoid programming the memory/io aperture of 00:1c.0
+> + *
+> + * BIOS does not declare any resource for 00:1c.0, but with
+> + * hotplug flag set, thus OS allocate:
+> + * [mem 0x7fa00000 - 0x7fbfffff]
+> + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
+> + * which is conflict with an unreported device, which
+> + * causes unpredictable result such as accessing io port.
+> + * So clear the hotplug flag to work around it.
+> + */
+> +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
+> +{
+> +	if (dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") &&
+> +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
+> +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
 
-For the records, it is a discussion that already took place:
+&& has higher precedence than ||, so you would need parentheses here.
+However I don't think there's another vendor using those product names,
+so it's probably safe to drop the check for the vendor altogether.
 
-https://lkml.org/lkml/2016/3/14/923
+Best regards,
 
-As I have said there are already ARM64 systems with ACPI tables
-out there using PCI interrupt links; I doubt that Qualcomm systems
-allow to reconfigure the GIC interrupt pin allocated to legacy PCI
-IRQs through interrupt links _SRS (hey it is *empty* :)),
-therefore:
+Lukas
 
-a) Some (the above is just an example from the mailing lists I am not
-   picking on anyone it is just for the sake of this discussion, I have
-   not dumped all ARM partners _PRT from their ACPI tables to check)
-   ACPI tables must be rewritten because they are not FW compliant
-
-OR
-
-b) We allow PCI interrupt links to be used for static interrupt
-   configurations
-
-OR
-
-c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
-   how GIC code can detect from which part of the kernel the interrupt
-   request is coming, unless we implement an ACPI-PCI-legacy-IRQ-special
-   gem)
-
-Comments ?
-
-Lorenzo
+> +		dev->is_hotplug_bridge = 0;
+> +}
+> +
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
+> +
+> +/*
+>   * This is a quirk for the Ricoh MMC controller found as a part of
+>   * some mulifunction chips.
+>  
+> -- 
+> 2.7.4
