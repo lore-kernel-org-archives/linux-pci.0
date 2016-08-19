@@ -1,114 +1,285 @@
-Return-Path: <mayurkumar.patel@intel.com>
-Return-Path: <mayurkumar.patel@intel.com>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: 'Bjorn Helgaas' <helgaas@kernel.org>
-CC: 'Rajat Jain' <rajatja@google.com>, "'bhelgaas@google.com'"
-	<bhelgaas@google.com>, "'linux-pci@vger.kernel.org'"
-	<linux-pci@vger.kernel.org>, "Wysocki, Rafael J"
-	<rafael.j.wysocki@intel.com>, "'mika.westerberg@linux.intel.com'"
-	<mika.westerberg@linux.intel.com>, "Busch, Keith" <keith.busch@intel.com>,
-	"Tarazona-Duarte, Luis Antonio" <luis.antonio.tarazona-duarte@intel.com>,
-	'Rajat Jain' <rajatxjain@gmail.com>, 'Andy Shevchenko'
-	<andriy.shevchenko@linux.intel.com>, "Patel, Mayurkumar"
-	<mayurkumar.patel@intel.com>
-Subject: RE: [PATCH v1 1/2] PCI: pciehp: Fix presence detect change
- interrupt handling
-Date: Tue, 23 Aug 2016 08:58:51 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B28466598F18@IRSMSX101.ger.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Omer Khaliq <okhaliq@caviumnetworks.com>
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-crypto@vger.kernel.org>, <linux-arm-kernel@vger.kernel.org>,
+        <bhelgaas@google.com>, <mpm@selenic.com>,
+        <herbert@gondor.apana.org.au>, <Ananth.Jasty@cavium.com>,
+        <david.daney@cavium.com>
+CC: Omer Khaliq <okhaliq@caviumnetworks.com>
+Subject: [PATCH 2/2] hwrng: thunderx: Add Cavium HWRNG driver for ThunderX SoC.
+Date: Fri, 19 Aug 2016 15:32:13 -0700
+Message-ID: <1471645933-3643-3-git-send-email-okhaliq@caviumnetworks.com>
+In-Reply-To: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
+References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
 MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, if very fast hotplug removal and insertion event comes
-as following
+The Cavium ThunderX SoC has a hardware random number generator.
+This driver provides support using the HWRNG framework.
 
-[  608.823412] pciehp 0000:00:1c.1:pcie04: Card not present on Slot(1)
-[  608.835249] pciehp 0000:00:1c.1:pcie04: Card present on Slot(1)
-
-In this case following scenario happens,
-
-While removal:
-pcie_isr() -> pciehp_queue_interrupt_event() -> triggers queue_work().
-work invokes interrupt_event_handler() -> case INT_PRESENCE_OFF
-and calls handle_surprise_event().
-
-handle_surprise_event() again calls pciehp_get_adapter_status()
-and reads slot status which might have been changed
-already due to PCI_EXP_SLTSTA_PDC event for hotplug insertion
-has happened. So it queues, ENABLE_REQ for both removal
-and insertion interrupt based on latest slot status.
-
-In this case, PCIe device can not be hot-add again because
-it was never removed due to which device can not get enabled.
-
-handle_surprise_event() can be removed and pciehp_queue_power_work()
-can be directly triggered based on INT_PRESENCE_ON and INT_PRESENCE_OFF
-from the switch case exist in interrupt_event_hanlder().
-
-The patch ensures the pciehp_queue_power_work() processes
-presence detect change for removal and insertion correctly.
-
-Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
-Acked-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
+Signed-off-by: Ananth Jasty <Ananth.Jasty@cavium.com>
+Acked-by: David Daney <david.daney@cavium.com>
 ---
-Resending the patch with another patch which has pcie_isr() correct
-event handling proposal
+ drivers/char/hw_random/Kconfig         |  13 +++++
+ drivers/char/hw_random/Makefile        |   1 +
+ drivers/char/hw_random/cavium-rng-vf.c | 102 ++++++++++++++++++++++++++++++++
+ drivers/char/hw_random/cavium-rng.c    | 103 +++++++++++++++++++++++++++++++++
+ 4 files changed, 219 insertions(+)
+ create mode 100644 drivers/char/hw_random/cavium-rng-vf.c
+ create mode 100644 drivers/char/hw_random/cavium-rng.c
 
- drivers/pci/hotplug/pciehp_ctrl.c |   18 ++----------------
- 1 file changed, 2 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp=
-_ctrl.c
-index 880978b..87c5bea 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -301,20 +301,6 @@ static void handle_button_press_event(struct slot *p_s=
-lot)
- /*
-  * Note: This function must be called with slot->lock held
-  */
--static void handle_surprise_event(struct slot *p_slot)
--{
--	u8 getstatus;
--
--	pciehp_get_adapter_status(p_slot, &getstatus);
--	if (!getstatus)
--		pciehp_queue_power_work(p_slot, DISABLE_REQ);
--	else
--		pciehp_queue_power_work(p_slot, ENABLE_REQ);
--}
--
--/*
-- * Note: This function must be called with slot->lock held
-- */
- static void handle_link_event(struct slot *p_slot, u32 event)
- {
- 	struct controller *ctrl =3D p_slot->ctrl;
-@@ -377,14 +363,14 @@ static void interrupt_event_handler(struct work_struc=
-t *work)
- 		pciehp_green_led_off(p_slot);
- 		break;
- 	case INT_PRESENCE_ON:
--		handle_surprise_event(p_slot);
-+		pciehp_queue_power_work(p_slot, ENABLE_REQ);
- 		break;
- 	case INT_PRESENCE_OFF:
- 		/*
- 		 * Regardless of surprise capability, we need to
- 		 * definitely remove a card that has been pulled out!
- 		 */
--		handle_surprise_event(p_slot);
-+		pciehp_queue_power_work(p_slot, DISABLE_REQ);
- 		break;
- 	case INT_LINK_UP:
- 	case INT_LINK_DOWN:
---
-1.7.9.5
-
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
+diff --git a/drivers/char/hw_random/Kconfig b/drivers/char/hw_random/Kconfig
+index 56ad5a5..fb9c7ad 100644
+--- a/drivers/char/hw_random/Kconfig
++++ b/drivers/char/hw_random/Kconfig
+@@ -410,6 +410,19 @@ config HW_RANDOM_MESON
+ 
+ 	  If unsure, say Y.
+ 
++config HW_RANDOM_CAVIUM
++       tristate "Cavium ThunderX Random Number Generator support"
++       depends on HW_RANDOM && PCI && (ARM64 || (COMPILE_TEST && 64BIT))
++       default HW_RANDOM
++       ---help---
++         This driver provides kernel-side support for the Random Number
++         Generator hardware found on Cavium SoCs.
++
++         To compile this driver as a module, choose M here: the
++         module will be called cavium_rng.
++
++         If unsure, say Y.
++
+ endif # HW_RANDOM
+ 
+ config UML_RANDOM
+diff --git a/drivers/char/hw_random/Makefile b/drivers/char/hw_random/Makefile
+index 04bb0b0..5f52b1e 100644
+--- a/drivers/char/hw_random/Makefile
++++ b/drivers/char/hw_random/Makefile
+@@ -35,3 +35,4 @@ obj-$(CONFIG_HW_RANDOM_XGENE) += xgene-rng.o
+ obj-$(CONFIG_HW_RANDOM_STM32) += stm32-rng.o
+ obj-$(CONFIG_HW_RANDOM_PIC32) += pic32-rng.o
+ obj-$(CONFIG_HW_RANDOM_MESON) += meson-rng.o
++obj-$(CONFIG_HW_RANDOM_CAVIUM) += cavium-rng.o cavium-rng-vf.o
+diff --git a/drivers/char/hw_random/cavium-rng-vf.c b/drivers/char/hw_random/cavium-rng-vf.c
+new file mode 100644
+index 0000000..8e80bce
+--- /dev/null
++++ b/drivers/char/hw_random/cavium-rng-vf.c
+@@ -0,0 +1,102 @@
++/*
++ * Hardware Random Number Generator support for Cavium, Inc.
++ * Thunder processor family.
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * Copyright (C) 2016 Cavium, Inc.
++ */
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/device.h>
++#include <linux/hw_random.h>
++#include <linux/io.h>
++#include <linux/pci_ids.h>
++#include <linux/gfp.h>
++#include <linux/pci.h>
++#include <linux/init.h>
++
++struct cavium_rng {
++	struct hwrng ops;
++	void __iomem *result;
++};
++
++/* Read data from the RNG unit */
++static int cavium_rng_read(struct hwrng *rng, void *dat, size_t max, bool wait)
++{
++	struct cavium_rng *p = container_of(rng, struct cavium_rng, ops);
++	unsigned int size = max;
++
++	while (size >= 8) {
++		*((u64 *)dat) = readq(p->result);
++		size -= 8;
++		dat += 8;
++	}
++	while (size > 0) {
++		*((u8 *)dat) = readb(p->result);
++		size--;
++		dat++;
++	}
++	return max;
++}
++
++/* Map Cavium RNG to an HWRNG object */
++static int cavium_rng_probe_vf(struct	pci_dev		*pdev,
++			 const struct	pci_device_id	*id)
++{
++	struct	cavium_rng *rng;
++	int	ret;
++
++	rng = devm_kzalloc(&pdev->dev, sizeof(*rng), GFP_KERNEL);
++	if (!rng)
++		return -ENOMEM;
++
++	/* Map the RNG result */
++	rng->result = pcim_iomap(pdev, 0, 0);
++	if (!rng->result) {
++		dev_err(&pdev->dev, "Error iomap failed retrieving result.\n");
++		return -ENOMEM;
++	}
++
++	rng->ops.name    = "cavium rng";
++	rng->ops.read    = cavium_rng_read;
++	rng->ops.quality = 1000;
++
++	pci_set_drvdata(pdev, rng);
++
++	ret = hwrng_register(&rng->ops);
++	if (ret) {
++		dev_err(&pdev->dev, "Error registering device as HWRNG.\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++/* Remove the VF */
++void  cavium_rng_remove_vf(struct pci_dev *pdev)
++{
++	struct cavium_rng *rng;
++
++	rng = pci_get_drvdata(pdev);
++	hwrng_unregister(&rng->ops);
++}
++
++static const struct pci_device_id cavium_rng_vf_id_table[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_CAVIUM, 0xa033), 0, 0, 0},
++	{0,},
++};
++MODULE_DEVICE_TABLE(pci, cavium_rng_vf_id_table);
++
++static struct pci_driver cavium_rng_vf_driver = {
++	.name		= "cavium_rng_vf",
++	.id_table	= cavium_rng_vf_id_table,
++	.probe		= cavium_rng_probe_vf,
++	.remove		= cavium_rng_remove_vf,
++};
++module_pci_driver(cavium_rng_vf_driver);
++
++MODULE_AUTHOR("Omer Khaliq");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/char/hw_random/cavium-rng.c b/drivers/char/hw_random/cavium-rng.c
+new file mode 100644
+index 0000000..7f09ee4
+--- /dev/null
++++ b/drivers/char/hw_random/cavium-rng.c
+@@ -0,0 +1,103 @@
++/*
++ * Hardware Random Number Generator support for Cavium Inc.
++ * Thunder processor family.
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * Copyright (C) 2016 Cavium, Inc.
++ */
++
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/device.h>
++#include <linux/hw_random.h>
++#include <linux/io.h>
++#include <linux/pci_ids.h>
++#include <linux/gfp.h>
++#include <linux/pci.h>
++#include <linux/init.h>
++#include <linux/pci-ats.h>
++
++#define THUNDERX_RNM_ENT_EN     0x1
++#define THUNDERX_RNM_RNG_EN     0x2
++
++struct cavium_rng_pf {
++	void __iomem *control_status;
++};
++
++
++/* Enable the RNG hardware and activate the VF */
++static int cavium_rng_probe(struct pci_dev *pdev,
++				 const struct pci_device_id *id)
++{
++	struct	cavium_rng_pf *rng;
++	int	iov_err;
++
++
++	rng = devm_kzalloc(&pdev->dev, sizeof(*rng), GFP_KERNEL);
++	if (!rng)
++		return -ENOMEM;
++
++	/*Map the RNG control */
++	rng->control_status = pcim_iomap(pdev, 0, 0);
++	if (!rng->control_status) {
++		dev_err(&pdev->dev,
++			"Error iomap failed retrieving control_status.\n");
++		return -ENOMEM;
++	}
++
++	/* Enable the RNG hardware and entropy source */
++	writeq(THUNDERX_RNM_RNG_EN | THUNDERX_RNM_ENT_EN,
++		rng->control_status);
++
++	pci_set_drvdata(pdev, rng);
++
++	/* Fix for improper link id reported for cn88XX */
++	if (pdev->subsystem_device == 0xa118)
++		pci_sriov_fdl_override(pdev, pdev->devfn);
++
++	/* Enable the Cavium RNG as a VF */
++	iov_err = pci_enable_sriov(pdev, 1);
++	if (iov_err != 0) {
++		dev_err(&pdev->dev,
++			"Error initializing RNG virtual function,(%i).\n",
++			iov_err);
++		return iov_err;
++	}
++
++	return 0;
++}
++
++/* Disable VF and RNG Hardware */
++void  cavium_rng_remove(struct pci_dev *pdev)
++{
++	struct cavium_rng_pf *rng;
++
++	rng = pci_get_drvdata(pdev);
++
++	/* Remove the VF */
++	pci_disable_sriov(pdev);
++
++	/* Disable the RNG hardware and entropy source */
++	writeq(0, rng->control_status);
++}
++
++static const struct pci_device_id cavium_rng_pf_id_table[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_CAVIUM, 0xa018), 0, 0, 0}, /* Thunder RNM */
++	{0,},
++};
++
++MODULE_DEVICE_TABLE(pci, cavium_rng_pf_id_table);
++
++static struct pci_driver cavium_rng_pf_driver = {
++	.name		= "cavium_rng_pf",
++	.id_table	= cavium_rng_pf_id_table,
++	.probe		= cavium_rng_probe,
++	.remove		= cavium_rng_remove,
++};
++
++module_pci_driver(cavium_rng_pf_driver);
++MODULE_AUTHOR("Omer Khaliq");
++MODULE_LICENSE("GPL");
+-- 
+1.9.1
