@@ -1,158 +1,76 @@
-Return-Path: <rajatja@google.com>
-Return-Path: <rajatja@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0055.outbound.protection.outlook.com ([104.47.33.55]:36621
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755223AbcHTBFy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Aug 2016 21:05:54 -0400
+From: Omer Khaliq <okhaliq@caviumnetworks.com>
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-crypto@vger.kernel.org>, <linux-arm-kernel@vger.kernel.org>,
+        <bhelgaas@google.com>, <mpm@selenic.com>,
+        <herbert@gondor.apana.org.au>, <Ananth.Jasty@cavium.com>,
+        <david.daney@cavium.com>
+CC: Omer Khaliq <okhaliq@caviumnetworks.com>
+Subject: [PATCH 1/2] PCI/IOV: Add function to allow Function Dependency Link override.
+Date: Fri, 19 Aug 2016 15:32:12 -0700
+Message-ID: <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com>
+In-Reply-To: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
+References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <20160817171225.GA27353@localhost>
-References: <92EBB4272BF81E4089A7126EC1E7B284665970B5@IRSMSX101.ger.corp.intel.com>
- <20160817171225.GA27353@localhost>
-From: Rajat Jain <rajatja@google.com>
-Date: Wed, 17 Aug 2016 10:54:12 -0700
-Message-ID: <CACK8Z6H2G1cA6W+7timaKdeK2wuPNQfdLeZQCx=C8VkBESUOfQ@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: pciehp: Fix presence detect change interrupt handling
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	"mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
-	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>, "Busch, Keith" <keith.busch@intel.com>,
-	"Tarazona-Duarte, Luis Antonio" <luis.antonio.tarazona-duarte@intel.com>, Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 17, 2016 at 10:12 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> Hi Mayurkumar,
->
-> On Wed, Aug 17, 2016 at 01:42:18PM +0000, Patel, Mayurkumar wrote:
-> > Currently, if very fast hotplug removal and insertion event comes
-> > as following
-> >
-> > [  608.823412] pciehp 0000:00:1c.1:pcie04: Card not present on Slot(1)
-> > [  608.835249] pciehp 0000:00:1c.1:pcie04: Card present on Slot(1)
-> >
-> > In this case following scenario happens,
-> >
-> > While removal:
-> > pcie_isr() -> pciehp_queue_interrupt_event() -> triggers queue_work().
-> > work invokes interrupt_event_handler() -> case INT_PRESENCE_OFF
-> > and calls handle_surprise_event().
-> >
-> > handle_surprise_event() again calls pciehp_get_adapter_status()
-> > and reads slot status which might have been changed
-> > already due to PCI_EXP_SLTSTA_PDC event for hotplug insertion
-> > has happened. So it queues, ENABLE_REQ for both removal
-> > and insertion interrupt based on latest slot status.
-> >
-> > In this case, PCIe device can not be hot-add again because
-> > it was never removed due to which device can not get enabled.
-> >
-> > handle_surprise_event() can be removed and pciehp_queue_power_work()
-> > can be directly triggered based on INT_PRESENCE_ON and INT_PRESENCE_OFF
-> > from the switch case exist in interrupt_event_hanlder().
-> >
-> > The patch ensures the pciehp_queue_power_work() processes
-> > presence detect change for removal and insertion correctly.
-> >
-> > Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
+From: David Daney <david.daney@cavium.com>
 
-Acked-by: Rajat Jain <rajatxjain@gmail.com>
+Some hardware presents an incorrect SR-IOV Function Dependency Link,
+add a function to allow this to be overridden in the PF driver for
+such devices.
 
->
-> > ---
-> >  Resending the patch addressing to PCI Maintainer Bjorn Helgaas.
-> >
-> >  drivers/pci/hotplug/pciehp_ctrl.c |   18 ++----------------
-> >  1 file changed, 2 insertions(+), 16 deletions(-)
-> >
-> > diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> > index 880978b..87c5bea 100644
-> > --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> > @@ -301,20 +301,6 @@ static void handle_button_press_event(struct slot *p_slot)
-> >  /*
-> >   * Note: This function must be called with slot->lock held
-> >   */
-> > -static void handle_surprise_event(struct slot *p_slot)
-> > -{
-> > -     u8 getstatus;
-> > -
-> > -     pciehp_get_adapter_status(p_slot, &getstatus);
-> > -     if (!getstatus)
-> > -             pciehp_queue_power_work(p_slot, DISABLE_REQ);
-> > -     else
-> > -             pciehp_queue_power_work(p_slot, ENABLE_REQ);
-> > -}
-> > -
-> > -/*
-> > - * Note: This function must be called with slot->lock held
-> > - */
-> >  static void handle_link_event(struct slot *p_slot, u32 event)
-> >  {
-> >       struct controller *ctrl = p_slot->ctrl;
-> > @@ -377,14 +363,14 @@ static void interrupt_event_handler(struct work_struct *work)
-> >               pciehp_green_led_off(p_slot);
-> >               break;
-> >       case INT_PRESENCE_ON:
-> > -             handle_surprise_event(p_slot);
-> > +             pciehp_queue_power_work(p_slot, ENABLE_REQ);
-> >               break;
-> >       case INT_PRESENCE_OFF:
-> >               /*
-> >                * Regardless of surprise capability, we need to
-> >                * definitely remove a card that has been pulled out!
-> >                */
-> > -             handle_surprise_event(p_slot);
-> > +             pciehp_queue_power_work(p_slot, DISABLE_REQ);
-> >               break;
-> >       case INT_LINK_UP:
-> >       case INT_LINK_DOWN:
->
-> Thanks a lot for this.  I think other people have seen the same issue.
->
-> Even with this fix, don't we have essentially the same problem one
-> layer back?  The first thing pcie_isr() does is read PCI_EXP_SLTSTA,
-> then few lines down, we call pciehp_get_adapter_status(), which reads
-> PCI_EXP_SLTSTA *again*.  So I think the window is smaller but still
-> there.
->
-> I think what we really should do is read the status registers
-> (PCI_EXP_SLTSTA and probably also PCI_EXP_LNKSTA) *once* in
-> pcie_isr(), before we write PCI_EXP_SLTSTA to clear the RW1C bits
-> there, and then queue up events based on those values, without
-> re-reading the registers.
->
-> What do you think?
+Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
+---
+ drivers/pci/iov.c   | 14 ++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 15 insertions(+)
 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2194b44..81f0672 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -640,6 +640,20 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ EXPORT_SYMBOL_GPL(pci_enable_sriov);
+ 
+ /**
++ * pci_sriov_fdl_override - fix incorrect Function Dependency Link
++ * @dev: the PCI device
++ * @fdl: the corrected Function Dependency Link value
++ *
++ * For hardware presenting an incorrect Function Dependency Link in
++ * the SR-IOV Extended Capability, allow a driver to override it.
++ */
++void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl)
++{
++	dev->sriov->link = fdl;
++}
++EXPORT_SYMBOL_GPL(pci_sriov_fdl_override);
++
++/**
+  * pci_disable_sriov - disable the SR-IOV capability
+  * @dev: the PCI device
+  */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2599a98..da8a5b3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1823,6 +1823,7 @@ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ #else
+ static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+-- 
+1.9.1
 
-Yes, I agree. We need to do something about that *in addition * to the
-above patch to cover the
-whole story. However I think there still will be a room for some
-interrupt misses because we are
-collecting the interrupts in intr_loc, and theoretically we could be
-in a situation where in the pcie_isr, the
-
-do {
-    ...
-} while(detected)
-
-loop gets a removal->insertion->removal all while in the same
-invocation of pcie_isr().
-If this happens, the intr_loc will have recorded a single insertion
-and a single removal, and
-the final result will depend on the order in which we decide to
-process the events in intr_loc.
-
-Or, may be we can make the calls to pciehp_queue_interrupt_event()
-before clearing the
-RW1C in the slot status register (in the loop)?
-
-Thanks,
-
-rajat
-
->
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
