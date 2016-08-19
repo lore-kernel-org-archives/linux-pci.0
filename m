@@ -1,99 +1,179 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-Subject: Re: [RFC PATCH V2 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon
- SoCs Host Controllers
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
- <1472644094-82731-4-git-send-email-liudongdong3@huawei.com>
- <2194589.LrAdKSkzcT@vostro.rjw.lan>
-CC: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
-        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
-        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <hanjun.guo@linaro.org>, <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <57C79F3E.4050405@huawei.com>
-Date: Thu, 1 Sep 2016 11:23:42 +0800
-MIME-Version: 1.0
-In-Reply-To: <2194589.LrAdKSkzcT@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Doug Anderson <dianders@chromium.org>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v10 1/2] Documentation: bindings: add dt doc for Rockchip PCIe controller
+Date: Fri, 19 Aug 2016 09:34:31 +0800
+Message-Id: <1471570471-3239-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch adds a binding that describes the Rockchip PCIe controller
+found on Rockchip SoCs PCIe interface.
 
-在 2016/9/1 6:56, Rafael J. Wysocki 写道:
-> On Wednesday, August 31, 2016 07:48:14 PM Dongdong Liu wrote:
->> Add specific quirks for PCI config space accessors.This involves:
->> 1. New initialization call hisi_pcie_acpi_init() to get RC config resource
->> with hardcoded range address and setup ecam mapping.
->> 2. New entry in common quirk array.
->>
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->
-> Well, what exactly is the ACPI support you're adding?  Is it the ECAM part only
-> or is there anything more to it?
->
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Hi Rafael, thanks for replying.
+Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
 
-Our host bridge is non ECAM only for the RC bus config space;
-for any other bus underneath the root bus we support ECAM access.
+Changes in v10:
+- fix broken description of msi-map
+- s/pcie/PCIe for description
 
-In our case we cannot use the standard MCFG object to pass the RC itself config space addresses.
-The more discuss information can be found:
-https://lkml.org/lkml/2016/2/22/1087
-[...]
-I have looked into this and in our case we cannot use the
-standard MCFG object to pass the RC config space addresses.
+Changes in v9: None
+Changes in v8:
+- add Brian's review-tag
 
-The reason is that in our HW we have the config base addresses of the
-root complex ports that are less than 0x100000 byte distant one from
-the other as we only map the first 0x10000 bytes.
-Now the MCFG acpi framework always fix the MCFG resource size to 0x100000
-for each bus; therefore if we pass our RC addresses through MCFG we end
-up with a resource conflict.
-To give you a practical example we are in a situation where we have:
+Changes in v7:
+- move optional properties ahead of interrupt subnode
+- use 0-base index for INTx
 
-port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
-port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
-port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
-port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
-So if we pass the base addresses through MCFG the resources
-will overlap as MCFG will consider 0x100000 size for each base
-address of the root complex (only the RC bus uses that address)
-So far I do not see many option other than using _DSD to pass
-these RC config base addresses.
+Changes in v6:
+- add ack tag from Rob
 
-Thanks and Regards
+Changes in v5:
+- fix wrong example reported by Marc
+- add seperate section to describe the interrupt controller child
+  node
 
-Gab
-[...]
+Changes in v4:
+- fix example of adding intermediate interrupt controller for pcie
+  legacy interrrupt
 
-and
+Changes in v3:
+- fix example dts code suggested by Rob and Marc
+- remove driver's behaviour of regulator
 
-https://patchwork.kernel.org/patch/9178791/
-[...]
-Furthermore, I suspect we do not even need a way to pass the
-non-ECAM compliant config space resources to the OS (ie we can't
-change FW anymore anyway in some platforms) so the quirks hooks
-are likely to hardcode the required config space addresses for
-the respective MCFG match.
+Changes in v2:
+- fix lots clk/reset stuff suggested by Heiko
+- remove msi-parent and add msi-map suggested by Marc
+- drop phy related stuff
+- some others minor fixes
 
-......
-Thanks !
-Lorenzo
-[...]
+ .../devicetree/bindings/pci/rockchip-pcie.txt      | 106 +++++++++++++++++++++
+ 1 file changed, 106 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
 
-So we hard code with our RC itself config resource.
-
-Thanks
-Dongdong
-
-> Thanks,
-> Rafael
->
->
-> .
->
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+new file mode 100644
+index 0000000..ba67b39
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -0,0 +1,106 @@
++* Rockchip AXI PCIe Root Port Bridge DT description
++
++Required properties:
++- #address-cells: Address representation for root ports, set to <3>
++- #size-cells: Size representation for root ports, set to <2>
++- #interrupt-cells: specifies the number of cells needed to encode an
++		interrupt source. The value must be 1.
++- compatible: Should contain "rockchip,rk3399-pcie"
++- reg: Two register ranges as listed in the reg-names property
++- reg-names: Must include the following names
++	- "axi-base"
++	- "apb-base"
++- clocks: Must contain an entry for each entry in clock-names.
++		See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++	- "aclk"
++	- "aclk-perf"
++	- "hclk"
++	- "pm"
++- msi-map: Maps a Requester ID to an MSI controller and associated
++	msi-specifier data. See ./pci-msi.txt
++- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
++- phy-names:  MUST be "pcie-phy".
++- interrupts: Three interrupt entries must be specified.
++- interrupt-names: Must include the following names
++	- "sys"
++	- "legacy"
++	- "client"
++- resets: Must contain five entries for each entry in reset-names.
++	   See ../reset/reset.txt for details.
++- reset-names: Must include the following names
++	- "core"
++	- "mgmt"
++	- "mgmt-sticky"
++	- "pipe"
++- pinctrl-names : The pin control state names
++- pinctrl-0: The "default" pinctrl state
++- #interrupt-cells: specifies the number of cells needed to encode an
++	interrupt source. The value must be 1.
++- interrupt-map-mask and interrupt-map: standard PCI properties
++
++Optional Property:
++- ep-gpios: contain the entry for pre-reset gpio
++- num-lanes: number of lanes to use
++- vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
++- vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
++- vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
++
++*Interrupt controller child node*
++The core controller provides a single interrupt for legacy INTx. The PCIe node
++should contain an interrupt controller node as a target for the PCI
++'interrupt-map' property. This node represents the domain at which the four
++INTx interrupts are decoded and routed.
++
++
++Required properties for Interrupt controller child node:
++- interrupt-controller: identifies the node as an interrupt controller
++- #address-cells: specifies the number of cells needed to encode an
++	address. The value must be 0.
++- #interrupt-cells: specifies the number of cells needed to encode an
++	interrupt source. The value must be 1.
++
++Example:
++
++pcie0: pcie@f8000000 {
++	compatible = "rockchip,rk3399-pcie";
++	#address-cells = <3>;
++	#size-cells = <2>;
++	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
++		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
++	clock-names = "aclk", "aclk-perf",
++		      "hclk", "pm";
++	bus-range = <0x0 0x1>;
++	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
++		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
++		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
++	interrupt-names = "sys", "legacy", "client";
++	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
++	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
++	assigned-clock-rates = <100000000>;
++	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
++	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
++		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
++	num-lanes = <4>;
++	msi-map = <0x0 &its 0x0 0x1000>;
++	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0xfd000000 0x0 0x1000000>;
++	reg-names = "axi-base", "apb-base";
++	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
++		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
++	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
++	phys = <&pcie_phy>;
++	phy-names = "pcie-phy";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie_clkreq>;
++	#interrupt-cells = <1>;
++	interrupt-map-mask = <0 0 0 7>;
++	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
++			<0 0 0 2 &pcie0_intc 1>,
++			<0 0 0 3 &pcie0_intc 2>,
++			<0 0 0 4 &pcie0_intc 3>;
++	pcie0_intc: interrupt-controller {
++		interrupt-controller;
++		#address-cells = <0>;
++		#interrupt-cells = <1>;
++	};
++};
+-- 
+2.3.7
