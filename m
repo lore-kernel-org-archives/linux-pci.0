@@ -1,187 +1,328 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Thu, 18 Aug 2016 10:46:31 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, helgaas@kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci: use positive flags in pci_alloc_irq_vectors
-Message-ID: <20160818084630.GC27949@agordeev.lab.eng.brq.redhat.com>
-References: <1470924665-25860-1-git-send-email-hch@lst.de>
- <1470924665-25860-2-git-send-email-hch@lst.de>
+Return-Path: <dennis.chen@arm.com>
+Return-Path: <dennis.chen@arm.com>
+Date: Fri, 19 Aug 2016 11:39:13 +0800
+From: Dennis Chen <dennis.chen@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Tomasz Nowicki <tn@semihalf.com>, <marc.zyngier@arm.com>,
+	<tglx@linutronix.de>, <jason@lakedaemon.net>, <rjw@rjwysocki.net>,
+	<helgaas@kernel.org>, <rafael@kernel.org>, <will.deacon@arm.com>,
+	<catalin.marinas@arm.com>, <hanjun.guo@linaro.org>, <shijie.huang@arm.com>,
+	<robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linaro-acpi@lists.linaro.org>, <andrea.gallo@linaro.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<al.stone@linaro.org>, <graeme.gregory@linaro.org>, <ddaney.cavm@gmail.com>,
+	<okaya@codeaurora.org>, <nd@arm.com>
+Subject: Re: [PATCH V8 1/8] ACPI: I/O Remapping Table (IORT) initial support
+Message-ID: <20160819033911.GA4027@arm.com>
+References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+ <1470909998-16710-2-git-send-email-tn@semihalf.com>
+ <20160818105549.GB20404@arm.com>
+ <20160818111419.GB8982@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470924665-25860-2-git-send-email-hch@lst.de>
+In-Reply-To: <20160818111419.GB8982@red-moon>
+Content-Type: text/plain; charset=WINDOWS-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 11, 2016 at 07:11:04AM -0700, Christoph Hellwig wrote:
-> Instead of using PCI_IRQ_NO* to disable behavior in pci_alloc_irq_vectors
-> switch to passing the inverted flags to enable each of them individually.
-> 
-> This is based on a number of pending driver conversions that just happend
-> to be a whole more obvious to read this way, and given that we have no
-> users in the tree yet it can still easily be done.
-> 
-> I've also added a PCI_IRQ_ALL_TYPES catchall to keep the case of accepting
-> all interrupt types very simple.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  Documentation/PCI/MSI-HOWTO.txt | 21 +++++++++------------
->  drivers/pci/msi.c               | 15 +++++++--------
->  include/linux/pci.h             | 10 ++++++----
->  3 files changed, 22 insertions(+), 24 deletions(-)
-> 
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index c55df29..8faf14a 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -94,14 +94,11 @@ has a requirements for a minimum number of vectors the driver can pass a
->  min_vecs argument set to this limit, and the PCI core will return -ENOSPC
->  if it can't meet the minimum number of vectors.
->  
-> -The flags argument should normally be set to 0, but can be used to pass the
-> -PCI_IRQ_NOMSI and PCI_IRQ_NOMSIX flag in case a device claims to support
-> -MSI or MSI-X, but the support is broken, or to pass PCI_IRQ_NOLEGACY in
-> -case the device does not support legacy interrupt lines.
-> -
-> -By default this function will spread the interrupts around the available
-> -CPUs, but this feature can be disabled by passing the PCI_IRQ_NOAFFINITY
-> -flag.
-> +The flags argument is used to specify which type of interrupt can be used
-> +by the device and the driver (PCI_IRQ_LEGACY, PCI_IRQ_MSI, PCI_IRQ_MSIX).
-> +A conveniant short-hand (PCI_IRQ_ALL_TYPES) is also avaiable to ask for
-> +any possible kind of interrupt. If the PCI_IRQ_NOAFFINITY flag is set,
-> +pci_alloc_irq_vectors will spread the interrupts around the available CPUs.
->  
->  To get the Linux IRQ numbers passed to request_irq() and free_irq() and the
->  vectors, use the following function:
-> @@ -131,7 +128,7 @@ larger than the number supported by the device it will automatically be
->  capped to the supported limit, so there is no need to query the number of
->  vectors supported beforehand:
->  
-> -	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, 0);
-> +	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_ALL_TYPES)
->  	if (nvec < 0)
->  		goto out_err;
->  
-> @@ -140,7 +137,7 @@ interrupts it can request a particular number of interrupts by passing that
->  number to pci_alloc_irq_vectors() function as both 'min_vecs' and
->  'max_vecs' parameters:
->  
-> -	ret = pci_alloc_irq_vectors(pdev, nvec, nvec, 0);
-> +	ret = pci_alloc_irq_vectors(pdev, nvec, nvec, PCI_IRQ_ALL_TYPES);
->  	if (ret < 0)
->  		goto out_err;
->  
-> @@ -148,7 +145,7 @@ The most notorious example of the request type described above is enabling
->  the single MSI mode for a device.  It could be done by passing two 1s as
->  'min_vecs' and 'max_vecs':
->  
-> -	ret = pci_alloc_irq_vectors(pdev, 1, 1, 0);
-> +	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
->  	if (ret < 0)
->  		goto out_err;
->  
-> @@ -156,7 +153,7 @@ Some devices might not support using legacy line interrupts, in which case
->  the PCI_IRQ_NOLEGACY flag can be used to fail the request if the platform
->  can't provide MSI or MSI-X interrupts:
->  
-> -	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_NOLEGACY);
-> +	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_MSI | PCI_IRQ_MSIX);
->  	if (nvec < 0)
->  		goto out_err;
->  
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a02981e..9233e7f 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1069,7 +1069,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
->  		nvec = maxvec;
->  
->  	for (;;) {
-> -		if (!(flags & PCI_IRQ_NOAFFINITY)) {
-> +		if (flags & PCI_IRQ_AFFINITY) {
->  			dev->irq_affinity = irq_create_affinity_mask(&nvec);
->  			if (nvec < minvec)
->  				return -ENOSPC;
-> @@ -1105,7 +1105,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
->   **/
->  int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
->  {
-> -	return __pci_enable_msi_range(dev, minvec, maxvec, PCI_IRQ_NOAFFINITY);
-> +	return __pci_enable_msi_range(dev, minvec, maxvec, 0);
->  }
->  EXPORT_SYMBOL(pci_enable_msi_range);
->  
-> @@ -1120,7 +1120,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
->  		return -ERANGE;
->  
->  	for (;;) {
-> -		if (!(flags & PCI_IRQ_NOAFFINITY)) {
-> +		if (flags & PCI_IRQ_AFFINITY) {
->  			dev->irq_affinity = irq_create_affinity_mask(&nvec);
->  			if (nvec < minvec)
->  				return -ENOSPC;
-> @@ -1160,8 +1160,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
->  int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
->  		int minvec, int maxvec)
->  {
-> -	return __pci_enable_msix_range(dev, entries, minvec, maxvec,
-> -			PCI_IRQ_NOAFFINITY);
-> +	return __pci_enable_msix_range(dev, entries, minvec, maxvec, 0);
->  }
->  EXPORT_SYMBOL(pci_enable_msix_range);
->  
-> @@ -1187,21 +1186,21 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->  {
->  	int vecs = -ENOSPC;
->  
-> -	if (!(flags & PCI_IRQ_NOMSIX)) {
-> +	if (flags & PCI_IRQ_MSIX) {
->  		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
->  				flags);
->  		if (vecs > 0)
->  			return vecs;
->  	}
->  
-> -	if (!(flags & PCI_IRQ_NOMSI)) {
-> +	if (flags & PCI_IRQ_MSI) {
->  		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, flags);
->  		if (vecs > 0)
->  			return vecs;
->  	}
->  
->  	/* use legacy irq if allowed */
-> -	if (!(flags & PCI_IRQ_NOLEGACY) && min_vecs == 1)
-> +	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1)
->  		return 1;
->  	return vecs;
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2599a98..fbc1fa6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1251,10 +1251,12 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
->  int pci_set_vga_state(struct pci_dev *pdev, bool decode,
->  		      unsigned int command_bits, u32 flags);
->  
-> -#define PCI_IRQ_NOLEGACY	(1 << 0) /* don't use legacy interrupts */
-> -#define PCI_IRQ_NOMSI		(1 << 1) /* don't use MSI interrupts */
-> -#define PCI_IRQ_NOMSIX		(1 << 2) /* don't use MSI-X interrupts */
-> -#define PCI_IRQ_NOAFFINITY	(1 << 3) /* don't auto-assign affinity */
-> +#define PCI_IRQ_LEGACY		(1 << 0) /* allow legacy interrupts */
-> +#define PCI_IRQ_MSI		(1 << 1) /* allow MSI interrupts */
-> +#define PCI_IRQ_MSIX		(1 << 2) /* allow MSI-X interrupts */
-> +#define PCI_IRQ_AFFINITY	(1 << 3) /* auto-assign affinity */
-> +#define PCI_IRQ_ALL_TYPES \
-> +	(PCI_IRQ_LEGACY | PCI_IRQ_MSI | PCI_IRQ_MSIX)
->  
->  /* kmem_cache style wrapper around pci_alloc_consistent() */
->  
+On Thu, Aug 18, 2016 at 12:14:20PM +0100, Lorenzo Pieralisi wrote:
+> On Thu, Aug 18, 2016 at 06:55:50PM +0800, Dennis Chen wrote:
+>=20
+> [...]
+>=20
+> > > +static struct acpi_iort_node *
+> > > +iort_scan_node(enum acpi_iort_node_type type,
+> > > +=09       iort_find_node_callback callback, void *context)
+> > > +{
+> > > +=09struct acpi_iort_node *iort_node, *iort_end;
+> > > +=09struct acpi_table_iort *iort;
+> > > +=09int i;
+> > > +
+> > > +=09/* Get the first IORT node */
+> > > +=09iort =3D (struct acpi_table_iort *)iort_table;
+> > >
+> > Here, the same as I comments on Lorenzo's patch. If IORT is missed in
+> > the firmware, then iort_table will be NULL, result in kernel panic in
+> > the codes followed.
+>=20
+> The pointer is checked in the functions that are visible to
+> other compilation units before calling this function:
+>=20
+> iort_msi_map_rid()
+> iort_get_device_domain()
+>=20
+> I missed to check it when I added iort_node_match() and
+> iort_iommu_configure() though, which makes me think that it is probably
+> better to move the iort_table pointer check to iort_scan_node() so that
+> it is done in one single place instead of adding it to all given
+> external interfaces.
+>
+Agree to check this in iort_scan_node(). Also, given some duplicate codes b=
+etween
+iort_scan_node() and iort_smmu_init(), so maybe we can think about to refac=
+tor
+iort_match_callback() as the way to implement the function of iort_smmu_int=
+(),
+thus we can call iort_node_match(ACPI_IORT_NODE_SMMU_V3)...
 
-Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
-
-> -- 
-> 2.1.4
-> 
+Thanks,
+Dennis
+>=20
+> Lorenzo
+>=20
+> >=20
+> > Thanks,
+> > Dennis
+> > > +=09iort_node =3D ACPI_ADD_PTR(struct acpi_iort_node, iort,
+> > > +=09=09=09=09 iort->node_offset);
+> > > +=09iort_end =3D ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
+> > > +=09=09=09=09iort_table->length);
+> > > +
+> > > +=09for (i =3D 0; i < iort->node_count; i++) {
+> > > +=09=09if (WARN_TAINT(iort_node >=3D iort_end, TAINT_FIRMWARE_WORKARO=
+UND,
+> > > +=09=09=09       "IORT node pointer overflows, bad table!\n"))
+> > > +=09=09=09return NULL;
+> > > +
+> > > +=09=09if (iort_node->type =3D=3D type) {
+> > > +=09=09=09if (ACPI_SUCCESS(callback(iort_node, context)))
+> > > +=09=09=09=09return iort_node;
+> > > +=09=09}
+> > > +
+> > > +=09=09iort_node =3D ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
+> > > +=09=09=09=09=09 iort_node->length);
+> > > +=09}
+> > > +
+> > > +=09return NULL;
+> > > +}
+> > > +
+> > > +static acpi_status
+> > > +iort_match_node_callback(struct acpi_iort_node *node, void *context)
+> > > +{
+> > > +=09struct device *dev =3D context;
+> > > +
+> > > +=09switch (node->type) {
+> > > +=09case ACPI_IORT_NODE_NAMED_COMPONENT: {
+> > > +=09=09struct acpi_buffer buffer =3D { ACPI_ALLOCATE_BUFFER, NULL };
+> > > +=09=09struct acpi_device *adev =3D to_acpi_device_node(dev->fwnode);
+> > > +=09=09struct acpi_iort_named_component *ncomp;
+> > > +
+> > > +=09=09if (!adev)
+> > > +=09=09=09break;
+> > > +
+> > > +=09=09ncomp =3D (struct acpi_iort_named_component *)node->node_data;
+> > > +
+> > > +=09=09if (ACPI_FAILURE(acpi_get_name(adev->handle,
+> > > +=09=09=09=09=09       ACPI_FULL_PATHNAME, &buffer))) {
+> > > +=09=09=09dev_warn(dev, "Can't get device full path name\n");
+> > > +=09=09} else {
+> > > +=09=09=09int match;
+> > > +
+> > > +=09=09=09match =3D !strcmp(ncomp->device_name, buffer.pointer);
+> > > +=09=09=09acpi_os_free(buffer.pointer);
+> > > +
+> > > +=09=09=09if (match)
+> > > +=09=09=09=09return AE_OK;
+> > > +=09=09}
+> > > +
+> > > +=09=09break;
+> > > +=09}
+> > > +=09case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
+> > > +=09=09struct acpi_iort_root_complex *pci_rc;
+> > > +=09=09struct pci_bus *bus;
+> > > +
+> > > +=09=09bus =3D to_pci_bus(dev);
+> > > +=09=09pci_rc =3D (struct acpi_iort_root_complex *)node->node_data;
+> > > +
+> > > +=09=09/*
+> > > +=09=09 * It is assumed that PCI segment numbers maps one-to-one
+> > > +=09=09 * with root complexes. Each segment number can represent only
+> > > +=09=09 * one root complex.
+> > > +=09=09 */
+> > > +=09=09if (pci_rc->pci_segment_number =3D=3D pci_domain_nr(bus))
+> > > +=09=09=09return AE_OK;
+> > > +
+> > > +=09=09break;
+> > > +=09}
+> > > +=09}
+> > > +
+> > > +=09return AE_NOT_FOUND;
+> > > +}
+> > > +
+> > > +static int
+> > > +iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in, u=
+32 *rid_out)
+> > > +{
+> > > +=09/* Single mapping does not care for input id */
+> > > +=09if (map->flags & ACPI_IORT_ID_SINGLE_MAPPING) {
+> > > +=09=09if (type =3D=3D ACPI_IORT_NODE_NAMED_COMPONENT ||
+> > > +=09=09    type =3D=3D ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
+> > > +=09=09=09*rid_out =3D map->output_base;
+> > > +=09=09=09return 0;
+> > > +=09=09}
+> > > +
+> > > +=09=09pr_warn(FW_BUG "[map %p] SINGLE MAPPING flag not allowed for n=
+ode type %d, skipping ID map\n",
+> > > +=09=09=09map, type);
+> > > +=09=09return -ENXIO;
+> > > +=09}
+> > > +
+> > > +=09if (rid_in < map->input_base ||
+> > > +=09    (rid_in >=3D map->input_base + map->id_count))
+> > > +=09=09return -ENXIO;
+> > > +
+> > > +=09*rid_out =3D map->output_base + (rid_in - map->input_base);
+> > > +=09return 0;
+> > > +}
+> > > +
+> > > +static struct acpi_iort_node *
+> > > +iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
+> > > +=09=09  u32 *rid_out, u8 type)
+> > > +{
+> > > +=09u32 rid =3D rid_in;
+> > > +
+> > > +=09/* Parse the ID mapping tree to find specified node type */
+> > > +=09while (node) {
+> > > +=09=09struct acpi_iort_id_mapping *map;
+> > > +=09=09int i;
+> > > +
+> > > +=09=09if (node->type =3D=3D type) {
+> > > +=09=09=09if (rid_out)
+> > > +=09=09=09=09*rid_out =3D rid;
+> > > +=09=09=09return node;
+> > > +=09=09}
+> > > +
+> > > +=09=09if (!node->mapping_offset || !node->mapping_count)
+> > > +=09=09=09goto fail_map;
+> > > +
+> > > +=09=09map =3D ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
+> > > +=09=09=09=09   node->mapping_offset);
+> > > +
+> > > +=09=09/* Firmware bug! */
+> > > +=09=09if (!map->output_reference) {
+> > > +=09=09=09pr_err(FW_BUG "[node %p type %d] ID map has NULL parent ref=
+erence\n",
+> > > +=09=09=09       node, node->type);
+> > > +=09=09=09goto fail_map;
+> > > +=09=09}
+> > > +
+> > > +=09=09/* Do the RID translation */
+> > > +=09=09for (i =3D 0; i < node->mapping_count; i++, map++) {
+> > > +=09=09=09if (!iort_id_map(map, node->type, rid, &rid))
+> > > +=09=09=09=09break;
+> > > +=09=09}
+> > > +
+> > > +=09=09if (i =3D=3D node->mapping_count)
+> > > +=09=09=09goto fail_map;
+> > > +
+> > > +=09=09node =3D ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
+> > > +=09=09=09=09    map->output_reference);
+> > > +=09}
+> > > +
+> > > +fail_map:
+> > > +=09/* Map input RID to output RID unchanged on mapping failure*/
+> > > +=09if (rid_out)
+> > > +=09=09*rid_out =3D rid_in;
+> > > +
+> > > +=09return NULL;
+> > > +}
+> > > +
+> > > +static struct acpi_iort_node *
+> > > +iort_find_dev_node(struct device *dev)
+> > > +{
+> > > +=09struct pci_bus *pbus;
+> > > +
+> > > +=09if (!dev_is_pci(dev))
+> > > +=09=09return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> > > +=09=09=09=09      iort_match_node_callback, dev);
+> > > +
+> > > +=09/* Find a PCI root bus */
+> > > +=09pbus =3D to_pci_dev(dev)->bus;
+> > > +=09while (!pci_is_root_bus(pbus))
+> > > +=09=09pbus =3D pbus->parent;
+> > > +
+> > > +=09return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> > > +=09=09=09      iort_match_node_callback, &pbus->dev);
+> > > +}
+> > > +
+> > > +void __init iort_table_detect(void)
+> > > +{
+> > > +=09acpi_status status;
+> > > +
+> > > +=09status =3D acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
+> > > +=09if (ACPI_FAILURE(status) && status !=3D AE_NOT_FOUND) {
+> > > +=09=09const char *msg =3D acpi_format_exception(status);
+> > > +=09=09pr_err("Failed to get table, %s\n", msg);
+> > > +=09}
+> > > +}
+> > > diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+> > > index 85b7d07..55a84da 100644
+> > > --- a/drivers/acpi/bus.c
+> > > +++ b/drivers/acpi/bus.c
+> > > @@ -36,6 +36,7 @@
+> > >  #ifdef CONFIG_X86
+> > >  #include <asm/mpspec.h>
+> > >  #endif
+> > > +#include <linux/iort.h>
+> > >  #include <linux/pci.h>
+> > >  #include <acpi/apei.h>
+> > >  #include <linux/dmi.h>
+> > > @@ -1186,6 +1187,7 @@ static int __init acpi_init(void)
+> > >  =09}
+> > > =20
+> > >  =09pci_mmcfg_late_init();
+> > > +=09iort_table_detect();
+> > >  =09acpi_scan_init();
+> > >  =09acpi_ec_init();
+> > >  =09acpi_debugfs_init();
+> > > diff --git a/include/linux/iort.h b/include/linux/iort.h
+> > > new file mode 100644
+> > > index 0000000..cde6809
+> > > --- /dev/null
+> > > +++ b/include/linux/iort.h
+> > > @@ -0,0 +1,30 @@
+> > > +/*
+> > > + * Copyright (C) 2016, Semihalf
+> > > + *=09Author: Tomasz Nowicki <tn@semihalf.com>
+> > > + *
+> > > + * This program is free software; you can redistribute it and/or mod=
+ify it
+> > > + * under the terms and conditions of the GNU General Public License,
+> > > + * version 2, as published by the Free Software Foundation.
+> > > + *
+> > > + * This program is distributed in the hope it will be useful, but WI=
+THOUT
+> > > + * ANY WARRANTY; without even the implied warranty of MERCHANTABILIT=
+Y or
+> > > + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Lic=
+ense for
+> > > + * more details.
+> > > + *
+> > > + * You should have received a copy of the GNU General Public License=
+ along with
+> > > + * this program; if not, write to the Free Software Foundation, Inc.=
+, 59 Temple
+> > > + * Place - Suite 330, Boston, MA 02111-1307 USA.
+> > > + */
+> > > +
+> > > +#ifndef __IORT_H__
+> > > +#define __IORT_H__
+> > > +
+> > > +#include <linux/acpi.h>
+> > > +
+> > > +#ifdef CONFIG_IORT_TABLE
+> > > +void iort_table_detect(void);
+> > > +#else
+> > > +static inline void iort_table_detect(void) { }
+> > > +#endif
+> > > +
+> > > +#endif /* __IORT_H__ */
+> > > --=20
+> > > 1.9.1
+> > >=20
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" =
+in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > >=20
+>=20
