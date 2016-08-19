@@ -1,46 +1,42 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Mon, 22 Aug 2016 17:15:36 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160822211536.GE28276@localhost.localdomain>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
- <1470687542-30155-2-git-send-email-keith.busch@intel.com>
- <20160815174002.GB9790@localhost>
- <20160815192316.GB18083@localhost.localdomain>
- <20160817213745.GE27353@localhost>
- <20160817230951.GD25146@localhost.localdomain>
- <20160818195656.GH27353@localhost>
- <20160818224610.GA28276@localhost.localdomain>
- <20160822165524.GC18628@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Ley Foon Tan <lftan.linux@gmail.com>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+Date: Fri, 19 Aug 2016 16:24:38 +0800
+Message-ID: <1471595078-26297-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160822165524.GC18628@localhost>
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 22, 2016 at 11:55:24AM -0500, Bjorn Helgaas wrote:
-> I was imagining these LEDs as some sort of extension to the PCIe
-> hotplug model, but I think that was a mistake: logically, they have
-> nothing to do with hotplug, and the only reason they're currently
-> associated with hotplug is because you chose to re-use a bus (VPP)
-> that happens to be connected to the Slot Control registers.
-> 
-> From an architectural point of view, these LEDs seem device-specific
-> or storage-specific, with no connection to PCIe at all, so I don't
-> know why we would put them in the PCIe spec or teach pciehp about
-> them.
+Altera PCIe IP can be configured as rootport or device and they might have
+same vendor ID. It will cause the system hang issue if Altera PCIe is in
+endpoint mode and work with other PCIe rootport that from other vendors.
+So, add the rootport mode checking in link retrain fixup function.
 
-It's not entirely for hotplug scenarios, but it does help with user pain
-points locating devices they intend to hot remove.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+---
+ drivers/pci/host/pcie-altera.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-I hear many vendors are for the concept of proposing new status
-and location indicator definitions to PCIe. I don't think anyone is
-suggesting the implementation requiring this patch be made standard;
-this generation of hardware is just a non-standard implementation that
-needs a quirk to help fill the gap.
-
-Would it be more palatable if I modify the quirk such that when set,
-pciehp provides a sysfs entry allowing arbitrary user defined Slot Control
-commands? That removes the dangerous direct access from user space.
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 58eef99..33b6968 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+ 	u16 linkcap, linkstat;
+ 	struct altera_pcie *pcie = dev->bus->sysdata;
+ 
++	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
++		return;
++
+ 	if (!altera_pcie_link_is_up(pcie))
+ 		return;
+ 
+-- 
+1.8.2.1
