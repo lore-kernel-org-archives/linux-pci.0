@@ -1,93 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41958 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590AbcHOQv3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 12:51:29 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: [PATCH 4/6] drivers: pci: host: rcar: fix pci_remap_iospace() failure path
-Date: Mon, 15 Aug 2016 17:50:44 +0100
-Message-Id: <1471279854-11916-5-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <lftan.linux@gmail.com>
+Return-Path: <lftan.linux@gmail.com>
+MIME-Version: 1.0
+Sender: lftan.linux@gmail.com
+In-Reply-To: <20160818201843.GI27353@localhost>
+References: <1471250179-24198-1-git-send-email-lftan@altera.com> <20160818201843.GI27353@localhost>
+From: Ley Foon Tan <lftan@altera.com>
+Date: Fri, 19 Aug 2016 15:54:54 +0800
+Message-ID: <CAFiDJ5_o9TuZirR8=2-HE6mcXhHcu3cskqMv9rufoY8G8R_mGQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: altera: Retrain link in rootport mode only
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM/ARM64 architectures, PCI IO ports are emulated through memory
-mapped IO, by reserving a chunk of virtual address space starting at
-PCI_IOBASE and by mapping the PCI host bridges memory address space
-driving PCI IO cycles to it.
+On Fri, Aug 19, 2016 at 4:18 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Mon, Aug 15, 2016 at 04:36:19PM +0800, Ley Foon Tan wrote:
+> > Altera PCIe IP can be configured as rootport or device and they might have
+> > same vendor ID. It will cause the system hang issue if Altera PCIe is in
+> > endpoint mode and work with other PCIe rootport that from other vendors.
+> > So, add the rootport mode checking in link retrain fixup function.
+> >
+> > Signed-off-by: Ley Foon Tan <lftan@altera.com>
+> > ---
+> >  drivers/pci/host/pcie-altera.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> >
+> > diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> > index 58eef99..6477738 100644
+> > --- a/drivers/pci/host/pcie-altera.c
+> > +++ b/drivers/pci/host/pcie-altera.c
+> > @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+> >       u16 linkcap, linkstat;
+> >       struct altera_pcie *pcie = dev->bus->sysdata;
+> >
+> > +     if (!pci_is_root_bus(dev->bus))
+> > +             return;
+>
+> It seems like it would be more direct to check for
+> "pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT"?
+Okay, will change in next version.
 
-PCI host bridge drivers that enable downstream PCI IO cycles map the
-host bridge memory address responding to PCI IO cycles to the fixed
-virtual address space through the pci_remap_iospace() API.
-
-This means that if the pci_remap_iospace() function fails, the
-corresponding host bridge PCI IO resource must be considered invalid, in
-that there is no way for the kernel to actually drive PCI IO
-transactions if the memory addresses responding to PCI
-IO cycles cannot be mapped into the CPU virtual address space.
-
-The PCI rcar host bridge driver does not remove the PCI IO
-resource from the host bridge resource windows if the
-pci_remap_iospace() call fails; this is an actual bug in that the
-PCI host bridge would consider the PCI IO resource valid (and possibly
-assign it to downstream devices) even if the kernel was not able
-to map the PCI host bridge memory address driving IO cycle to the
-CPU virtual address space (ie pci_remap_iospace() failures).
-
-Fix the PCI host bridge driver pci_remap_iospace() failure path, by
-destroying the PCI host bridge PCI IO resources retrieved through
-firmware when the pci_remap_iospace() function call fails, therefore
-preventing the kernel from adding the respective PCI IO resource to the
-list of PCI host bridge valid resources, fixing the issue.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Fixes: 5d2917d469fa ("PCI: rcar: Convert to DT resource parsing API")
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
----
- drivers/pci/host/pcie-rcar.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 65db7a2..5f7fcc9 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -945,7 +945,7 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
- 	struct device *dev = pci->dev;
- 	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
--	struct resource_entry *win;
-+	struct resource_entry *win, *tmp;
- 
- 	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources, &iobase);
- 	if (err)
-@@ -955,14 +955,17 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
- 	if (err)
- 		goto out_release_res;
- 
--	resource_list_for_each_entry(win, &pci->resources) {
-+	resource_list_for_each_entry_safe(win, tmp, &pci->resources) {
- 		struct resource *res = win->res;
- 
- 		if (resource_type(res) == IORESOURCE_IO) {
- 			err = pci_remap_iospace(res, iobase);
--			if (err)
-+			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
-+
-+				resource_list_destroy_entry(win);
-+			}
- 		}
- 	}
- 
--- 
-2.6.4
-
+>
+> >       if (!altera_pcie_link_is_up(pcie))
+> >               return;
+> >
+> > --
+> > 1.8.2.1
+> >
