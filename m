@@ -1,56 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:50833 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756082AbcHaGQi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 02:16:38 -0400
-Message-Id: <9f9152c11c6178bbac53fd3d0ef0d38173ad4b0b.1472554278.git.lukas@wunner.de>
-In-Reply-To: <cover.1472554278.git.lukas@wunner.de>
-References: <cover.1472554278.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 31 Aug 2016 08:15:18 +0200
-Subject: [PATCH 4/4] PCI: Avoid unnecessary resume on shutdown
-To: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 19 Aug 2016 16:01:59 +0800
+From: Chen Yu <yu.c.chen@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH][RFC v2] PCI: Workaround to enable poweroff on Mac Pro 11
+Message-ID: <20160819080159.GA28999@sharon>
+References: <1471542292-17554-1-git-send-email-yu.c.chen@intel.com>
+ <20160819072140.GA10854@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160819072140.GA10854@wunner.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We currently perform a mandatory runtime resume of all PCI devices on
-->shutdown.  However it is pointless to wake devices only to immediately
-power them down afterwards.  (Or have the firmware reset them, in case
-of a reboot.)
+On Fri, Aug 19, 2016 at 09:21:40AM +0200, Lukas Wunner wrote:
+> On Fri, Aug 19, 2016 at 01:44:52AM +0800, Chen Yu wrote:
+> > People reported that they can not do a poweroff nor a
+> > suspend to memory on their Mac Pro 11. After some investigations
+> > it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
+> > mm windows([mem 0x7fa00000-0x7fbfffff] and
+> > [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+> > io resource 0x1804 becomes unaccessible immediately, where the
+> > ACPI Sleep register is located, as a result neither poweroff(S5)
+> > nor suspend to memory(S3) works.
+> > 
+> > As suggested by Bjorn, further testing shows that, there is an
+> > unreported device may be (using) conflict with above aperture,
+> > so if we reassign the memory aperture to other place, the poweroff
+> > works again.
+> > 
+> > As we did not find any resource declared in _CRS which contain above
+> > memory aperture, thus we choose a simple workaround to clear the hotplug
+> > flag(suggested by Yinghai Lu), thus do not allocate any resource for
+> > this pci bridge.
+> > 
+> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rafael J. Wysocki <rafael@kernel.org>
+> > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+> > ---
+> >  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+> >  1 file changed, 21 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 37ff015..47b303a 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -2776,6 +2776,27 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+> >  
+> >  /*
+> > + * Apple: Avoid programming the memory/io aperture of 00:1c.0
+> > + *
+> > + * BIOS does not declare any resource for 00:1c.0, but with
+> > + * hotplug flag set, thus OS allocate:
+> > + * [mem 0x7fa00000 - 0x7fbfffff]
+> > + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
+> > + * which is conflict with an unreported device, which
+> > + * causes unpredictable result such as accessing io port.
+> > + * So clear the hotplug flag to work around it.
+> > + */
+> > +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
+> > +{
+> > +	if (dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") &&
+> > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
+> > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
+> 
+> && has higher precedence than ||, so you would need parentheses here.
+> However I don't think there's another vendor using those product names,
+> so it's probably safe to drop the check for the vendor altogether.
+>
+You are right, will send another version. thanks!
 
-It seems there are only two cases when a runtime resume is actually
-necessary:  If the driver has declared a ->shutdown callback or if kexec
-is in progress.
-
-Constrain resume of a device to these cases and let it slumber
-otherwise, thereby conserving energy and speeding up shutdown.
-
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci-driver.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index fd4b9c4..09a4e56 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -459,6 +459,11 @@ static void pci_device_shutdown(struct device *dev)
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	struct pci_driver *drv = pci_dev->driver;
- 
-+	/* Fast path for suspended devices */
-+	if (pm_runtime_suspended(dev) && (!drv || !drv->shutdown) &&
-+	    !kexec_in_progress)
-+		return;
-+
- 	pm_runtime_resume(dev);
- 
- 	if (drv && drv->shutdown)
--- 
-2.8.1
-
+Yu 
