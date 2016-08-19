@@ -1,34 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33648 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752578AbcHaL3K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 07:29:10 -0400
-Date: Wed, 31 Aug 2016 13:29:14 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Amir Levy <amir.jer.levy@intel.com>
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-        tomas.winkler@intel.com
-Subject: Re: [PATCH v6 3/8] thunderbolt: Kconfig for Thunderbolt(TM)
- networking
-Message-ID: <20160831112914.GC17607@kroah.com>
-References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
- <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
+Return-Path: <shawn.lin@rock-chips.com>
+Return-Path: <shawn.lin@rock-chips.com>
+Subject: Re: [PATCH v9 2/2] PCI: Rockchip: Add Rockchip PCIe controller
+ support
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1470297128-6213-1-git-send-email-shawn.lin@rock-chips.com>
+ <1470297128-6213-2-git-send-email-shawn.lin@rock-chips.com>
+ <20160818212444.GQ27353@localhost>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, Heiko Stuebner <heiko@sntech.de>,
+ Doug Anderson <dianders@chromium.org>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+ Brian Norris <briannorris@chromium.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <4a09c742-053b-7a16-efd1-a3c972d7c9a8@rock-chips.com>
+Date: Fri, 19 Aug 2016 09:20:42 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160818212444.GQ27353@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 01, 2016 at 03:23:48PM +0300, Amir Levy wrote:
-> Updating the Kconfig Thunderbolt(TM) description.
+在 2016/8/19 5:24, Bjorn Helgaas 写道:
+> Hi Shawn,
+>
+> On Thu, Aug 04, 2016 at 03:52:08PM +0800, Shawn Lin wrote:
+>> This patch adds Rockchip PCIe controller support found
+>> on RK3399 Soc platform.
+>
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -264,4 +264,15 @@ config PCIE_ARTPEC6
+>>  	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+>>  	  SoCs.  This PCIe controller uses the DesignWare core.
+>>
+>> +config PCIE_ROCKCHIP
+>> +	bool "Rockchip PCIe controller"
+>> +	depends on ARM64 && ARCH_ROCKCHIP
+>
+> I don't see any actual ARM64 dependencies in the code (which is a very
+> good thing!).  Can we remove the "depends on ARM64" part?
 
-Why are you inserting a (TM) in here?  Do you see that in any other
-kernel Kconfig file?  Please don't start adding it here, it's not
-needed from what I can tell.
+sure, we could. Actually we are going to use this controller for
+arm32 as well, so yes, I will remove it.
 
-thanks,
+>
+>> +	depends on OF
+>> +	depends on PCI_MSI_IRQ_DOMAIN
+>> +	select MFD_SYSCON
+>> +	help
+>> +	  Say Y here if you want internal PCI support on Rockchip SoC.
+>> +	  There is 1 internal PCIe port available to support GEN2 with
+>> +	  4 slots.
+>
+>
+>
 
-greg k-h
+
+-- 
+Best Regards
+Shawn Lin
