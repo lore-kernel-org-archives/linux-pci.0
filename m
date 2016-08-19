@@ -1,49 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19424 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752618AbcHHTOa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Aug 2016 15:14:30 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Zhang <wzhang@fb.com>, Jens Axboe <axboe@fb.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 1/3] pcie: Don't search capabilities on removed devices
-Date: Mon,  8 Aug 2016 13:14:25 -0600
-Message-Id: <1470683667-28418-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+Received: from mga09.intel.com ([134.134.136.24]:36995 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750850AbcHSIXS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Aug 2016 04:23:18 -0400
+From: Chen Yu <yu.c.chen@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Chen Yu <yu.c.chen@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: [PATCH][RFC v3] PCI: Workaround to enable poweroff on Mac Pro 11
+Date: Fri, 19 Aug 2016 16:30:25 +0800
+Message-Id: <1471595425-1752-1-git-send-email-yu.c.chen@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch returns immediately if trying to find a pcie capability
-on a removed device, as seen with an all 1's completion from config
-read. Previously this function would iterate the maximum 480 times to
-search for a capability at position 0xffc. There is never a case where
-we'd expect all 1's to a successful config read on a capability register,
-so this is a safe criteria to check before bailing on the device.
+People reported that they can not do a poweroff nor a
+suspend to ram on their Mac Pro 11. After some investigations
+it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
+mm windows to ([mem 0x7fa00000-0x7fbfffff] and
+[mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+io resource 0x1804 becomes unaccessible immediately, where the
+ACPI Sleep register is located, as a result neither poweroff(S5)
+nor suspend to ram(S3) works.
 
-While accessing a removed device shouldn't be fatal, it's doesn't
-accomplish anything. Instead, the code was testing completion synthesis
-capabilities which is observed to cause distruption to normal operations.
+As suggested by Bjorn, further testing shows that, there is an
+unreported device may be (using) conflict with above aperture,
+which brings unpredictable result such as the failure of accessing
+the io port, which blocks the poweroff(S5). Besides if we reassign
+the memory aperture to the other place, the poweroff works again.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+As we do not find any resource declared in _CRS which contain above
+memory aperture, and Mac OS does not use this pci bridge neither, we
+choose a simple workaround to clear the hotplug flag(suggested by
+Yinghai Lu), thus do not allocate any resource for this pci bridge,
+and thereby no conflict anymore.
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rafael J. Wysocki <rafael@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
 ---
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/quirks.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d51..e884608 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -331,7 +331,7 @@ int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
- 	if (header == 0)
- 		return 0;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 37ff015..04bbdba 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2776,6 +2776,26 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
  
--	while (ttl-- > 0) {
-+	while (ttl-- > 0 && header != -1) {
- 		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
- 			return pos;
+ /*
++ * Apple: Avoid programming the memory/io aperture of 00:1c.0
++ *
++ * BIOS does not declare any resource for 00:1c.0, but with
++ * hotplug flag set, thus the OS allocates:
++ * [mem 0x7fa00000 - 0x7fbfffff]
++ * [mem 0x7fc00000-0x7fdfffff 64bit pref]
++ * which is conflict with an unreported device, which
++ * causes unpredictable result such as accessing io port.
++ * So clear the hotplug flag to work around it.
++ */
++static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
++{
++	if (dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
++	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
++		dev->is_hotplug_bridge = 0;
++}
++
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
++
++/*
+  * This is a quirk for the Ricoh MMC controller found as a part of
+  * some mulifunction chips.
  
 -- 
-2.7.2
+2.7.4
 
