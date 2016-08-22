@@ -1,97 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Nate Watterson <nwatters@codeaurora.org>,
-	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 05/15] drivers: platform: add fwnode base platform devices retrieval
-Date: Mon, 15 Aug 2016 16:23:30 +0100
-Message-Id: <1471274620-20754-6-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail5.windriver.com ([192.103.53.11]:32912 "EHLO mail5.wrs.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756666AbcHVWAZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 18:00:25 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 6/8] PCI: designware: make host support explicitly non-modular
+Date: Mon, 22 Aug 2016 17:59:46 -0400
+Message-ID: <20160822215948.27251-7-paul.gortmaker@windriver.com>
+In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The platform device kernel API does not provide functions to
-retrieve a platform device through the corresponding struct
-device fwnode pointer.
+The Kconfig entry controlling compilation of this code is:
 
-Implement the fwnode platform_device look-up in drivers core
-code by using the bus_find_device() API and a corresponding
-matching function. The OF equivalent (eg of_find_device_by_node())
-will reuse the newly introduced function when OF code will
-take care of setting up the device->fwnode value that is
-currently left dangling for platform devices instantiated out
-of device tree nodes.
+drivers/pci/host/Kconfig:config PCIE_DW
+drivers/pci/host/Kconfig:       bool
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+...meaning that it currently is not being built as a module by anyone.
+
+Lets remove the couple traces of modular infrastructure use, so that
+when reading the driver there is no doubt it is builtin-only.
+
+We delete the MODULE_LICENSE tag etc. since all that information
+is already contained at the top of the file in the comments.
+
+We don't end up adding init.h to this file, since it isn't actually
+using __init or any initcalls directly.
+
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- drivers/base/platform.c         | 23 +++++++++++++++++++++++
- include/linux/platform_device.h |  3 +++
- 2 files changed, 26 insertions(+)
+ drivers/pci/host/pcie-designware.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index 6482d47..3ef150d 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -760,6 +760,29 @@ err_out:
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12afce19890b..16374202cb8b 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -14,7 +14,6 @@
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -802,7 +801,3 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
  }
- EXPORT_SYMBOL_GPL(__platform_create_bundle);
- 
-+static int fwnode_dev_match(struct device *dev, void *data)
-+{
-+	return dev->fwnode == data;
-+}
-+
-+/**
-+ * platform_find_device_by_fwnode() - Find the platform_device associated
-+ *				      with a fwnode
-+ * @fwnode: Pointer to firmware node
-+ *
-+ * Returns platform_device pointer, or NULL if not found
-+ */
-+struct platform_device *
-+platform_find_device_by_fwnode(struct fwnode_handle *fwnode)
-+{
-+	struct device *dev;
-+
-+	dev = bus_find_device(&platform_bus_type, NULL, fwnode,
-+			      fwnode_dev_match);
-+	return dev ? to_platform_device(dev) : NULL;
-+}
-+EXPORT_SYMBOL(platform_find_device_by_fwnode);
-+
- /**
-  * __platform_register_drivers - register an array of platform drivers
-  * @drivers: an array of drivers to register
-diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
-index 98c2a7c..01a3eb2 100644
---- a/include/linux/platform_device.h
-+++ b/include/linux/platform_device.h
-@@ -276,6 +276,9 @@ extern struct platform_device *__platform_create_bundle(
- 	struct resource *res, unsigned int n_res,
- 	const void *data, size_t size, struct module *module);
- 
-+extern struct platform_device *
-+platform_find_device_by_fwnode(struct fwnode_handle *fwnode);
-+
- int __platform_register_drivers(struct platform_driver * const *drivers,
- 				unsigned int count, struct module *owner);
- void platform_unregister_drivers(struct platform_driver * const *drivers,
+-
+-MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+-MODULE_DESCRIPTION("Designware PCIe host controller driver");
+-MODULE_LICENSE("GPL v2");
 -- 
-2.6.4
+2.8.4
 
