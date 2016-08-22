@@ -1,36 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 8 Aug 2016 15:22:51 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55658 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752817AbcHVOgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 10:36:42 -0400
+Date: Mon, 22 Aug 2016 09:36:37 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rui Wang <rui.y.wang@intel.com>
-Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-	bhelgaas@google.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V5 1/3] x86/ioapic: Support hot-removal of IOAPICs
- present during boot
-Message-ID: <20160808202251.GB6129@localhost>
-References: <20160623173445.GF17987@localhost>
- <1466912697-3498-1-git-send-email-rui.y.wang@intel.com>
+To: Omer Khaliq <okhaliq@caviumnetworks.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-arm-kernel@vger.kernel.org,
+        bhelgaas@google.com, mpm@selenic.com, herbert@gondor.apana.org.au,
+        Ananth.Jasty@cavium.com, david.daney@cavium.com
+Subject: Re: [PATCH 1/2] PCI/IOV: Add function to allow Function Dependency
+ Link override.
+Message-ID: <20160822143637.GA18628@localhost>
+References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
+ <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466912697-3498-1-git-send-email-rui.y.wang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 26, 2016 at 11:44:57AM +0800, Rui Wang wrote:
-> v5: Remove #ifdef CONFIG_X86 from setup-bus.c, making it neutral to archs.
-> v4: Add comments explaining when to call acpi_ioapic_add().
-> v3: Previous versions break mips. This version fixes it.
+Hi David & Omer,
+
+On Fri, Aug 19, 2016 at 03:32:12PM -0700, Omer Khaliq wrote:
+> From: David Daney <david.daney@cavium.com>
 > 
-> IOAPICs present during system boot aren't added to ioapic_list,
-> thus are unable to be hot-removed. Fix it by calling
-> acpi_ioapic_add() during root bus enumeration.
+> Some hardware presents an incorrect SR-IOV Function Dependency Link,
+> add a function to allow this to be overridden in the PF driver for
+> such devices.
 > 
-> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
+> ---
+>  drivers/pci/iov.c   | 14 ++++++++++++++
+>  include/linux/pci.h |  1 +
+>  2 files changed, 15 insertions(+)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 2194b44..81f0672 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -640,6 +640,20 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>  EXPORT_SYMBOL_GPL(pci_enable_sriov);
+>  
+>  /**
+> + * pci_sriov_fdl_override - fix incorrect Function Dependency Link
+> + * @dev: the PCI device
+> + * @fdl: the corrected Function Dependency Link value
+> + *
+> + * For hardware presenting an incorrect Function Dependency Link in
+> + * the SR-IOV Extended Capability, allow a driver to override it.
+> + */
+> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl)
+> +{
+> +	dev->sriov->link = fdl;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_sriov_fdl_override);
 
-Hi Rui,
+We usually use quirks to work around problems in config space.  That's
+a nice mechanism because we don't have to add new PCI core interfaces
+and it makes it clear that we're working around a hardware problem.
 
-Where are we at with this?  If there's anything that still needs to be
-merged, can you rebase it to v4.8-rc1 and post a new, complete,
-series?
+Can you use a quirk here?  We allocate dev->sriov in the
+pci_init_capabilities() path, so it looks like a pci_fixup_final quirk
+should work.
 
-Bjorn
+> +
+> +/**
+>   * pci_disable_sriov - disable the SR-IOV capability
+>   * @dev: the PCI device
+>   */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2599a98..da8a5b3 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1823,6 +1823,7 @@ int pci_num_vf(struct pci_dev *dev);
+>  int pci_vfs_assigned(struct pci_dev *dev);
+>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl);
+>  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+>  #else
+>  static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
