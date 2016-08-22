@@ -1,41 +1,50 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Baole Ni <baolex.ni@intel.com>
-To: bhelgaas@google.com, paulus@samba.org, mpe@ellerman.id.au,
-	sbranden@broadcom.com, m.chehab@samsung.com, pawel@osciak.com,
-	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
-	k.kozlowski@samsung.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com
-Subject: [PATCH 0826/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:50:10 +0800
-Message-Id: <20160802115010.5044-1-baolex.ni@intel.com>
+Subject: [PATCH] PCI: rcar: Consolidate register space lookup and ioremap
+To: Simon Horman <horms@verge.net.au>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Mon, 22 Aug 2016 14:27:28 -0500
+Message-ID: <20160822192728.5055.58901.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+Move the devm_ioremap_resource() of R-Car register space next to the
+of_address_to_resource() that extracts the resource.  No functional change
+intended.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-rcar.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c8b4dbd..3f583ad 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4897,7 +4897,7 @@ static ssize_t pci_resource_alignment_store(struct bus_type *bus,
- 	return pci_set_resource_alignment_param(buf, count);
- }
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 65db7a2..e58bbbc 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -775,6 +775,10 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+ 	if (err)
+ 		return err;
  
--BUS_ATTR(resource_alignment, 0644, pci_resource_alignment_show,
-+BUS_ATTR(resource_alignment, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, pci_resource_alignment_show,
- 					pci_resource_alignment_store);
++	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
++	if (IS_ERR(pcie->base))
++		return PTR_ERR(pcie->base);
++
+ 	pcie->clk = devm_clk_get(&pdev->dev, "pcie");
+ 	if (IS_ERR(pcie->clk)) {
+ 		dev_err(pcie->dev, "cannot get platform clock\n");
+@@ -810,12 +814,6 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+ 	}
+ 	pcie->msi.irq2 = i;
  
- static int __init pci_resource_alignment_sysfs_init(void)
--- 
-2.9.2
+-	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
+-	if (IS_ERR(pcie->base)) {
+-		err = PTR_ERR(pcie->base);
+-		goto err_map_reg;
+-	}
+-
+ 	return 0;
+ 
+ err_map_reg:
