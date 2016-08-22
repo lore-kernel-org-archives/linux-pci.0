@@ -1,48 +1,63 @@
-Return-Path: <benh@kernel.crashing.org>
-Return-Path: <benh@kernel.crashing.org>
-Message-ID: <1470787179.3015.78.camel@kernel.crashing.org>
-Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>, Bjorn Helgaas
- <helgaas@kernel.org>,
-        Hannes Reinecke <hare@suse.de>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Babu Moger <babu.moger@oracle.com>,
-        Paul
- Mackerras <paulus@samba.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Date: Wed, 10 Aug 2016 09:59:39 +1000
-In-Reply-To: <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
-	 <1452684335-46107-4-git-send-email-hare@suse.de>
-	 <20160209210458.GB32530@localhost>
-	 <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 22 Aug 2016 14:33:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: Re: [PATCH -next] PCI: keystone: Fix error return code in
+ ks_add_pcie_port()
+Message-ID: <20160822193315.GJ18628@localhost>
+References: <1469722578-14863-1-git-send-email-weiyj.lk@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <1469722578-14863-1-git-send-email-weiyj.lk@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Murali Karicheri <m-karicheri2@ti.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Tue, 2016-08-09 at 22:54 +1000, Alexey Kardashevskiy wrote:
-> The cxgb3 driver is reading the second bit starting from 0xc00 but since
-> the size is wrongly detected as 0x7c, VFIO blocks access beyond it and the
-> guest driver fails to probe.
+On Thu, Jul 28, 2016 at 04:16:18PM +0000, Wei Yongjun wrote:
+> Fix to return a negative error code from the request IRQ error
+> handling case instead of 0, as done elsewhere in this function.
 > 
-> I also cannot find a clause in the PCI 3.0 spec saying that there must be
-> just a single block, is it there?
+> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+
+Applied with Murali's ack to pci/host-keystone for v4.9, thanks!
+
+> ---
+>  drivers/pci/host/pci-keystone.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> What would the correct fix be? Scanning all 32k of VPD is not an option I
-> suppose as this is what this patch is trying to avoid. Thanks.
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 8ba2883..82b461b 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -334,8 +334,9 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+>  	if (ks_pcie->error_irq <= 0)
+>  		dev_info(&pdev->dev, "no error IRQ defined\n");
+>  	else {
+> -		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
+> -				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
+> +		ret = request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
+> +				  IRQF_SHARED, "pcie-error-irq", ks_pcie);
+> +		if (ret < 0) {
+>  			dev_err(&pdev->dev, "failed to request error IRQ %d\n",
+>  				ks_pcie->error_irq);
+>  			return ret;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Additionally, Hannes, Alex, I argue that for platforms with proper HW isolation
-(such as ppc with EEH), we shouldn't have VFIO try to virtualize that stuff.
-
-It's the same problem with the bloody MSIs. Just let the guest config space
-accesses go straight through. Its drivers knows better what the HW needs and
-if it crashes the card, too bad for that guest.
-
-That being said, we don't have fine grained per-device PERST control on
-all systems so there may not be recovery from that but on the other hand,
-our constant attempts at "filtering" what the guest does to the HW is
-imho, doomed.
-
-Cheers,
-Ben.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
