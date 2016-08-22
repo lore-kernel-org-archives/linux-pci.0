@@ -1,85 +1,52 @@
-Return-Path: <shawn.lin@rock-chips.com>
-Return-Path: <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: Correct the register value for clearing
- client interrupts
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Brian Norris <briannorris@chromium.org>
-References: <1472505251-122204-1-git-send-email-briannorris@chromium.org>
- <20160829235742.GB14177@localhost>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org, Brian Norris <computersforpeace@gmail.com>,
- Wenrui Li <wenrui.li@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <1a689435-c336-ff81-a231-4c17e19fa2f5@rock-chips.com>
-Date: Wed, 31 Aug 2016 08:58:43 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53464 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752364AbcHVQ7R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 12:59:17 -0400
+Date: Mon, 22 Aug 2016 11:59:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCH] pciehp: Clear attention LED on device add
+Message-ID: <20160822165912.GD18628@localhost>
+References: <1470266985-28906-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160829235742.GB14177@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470266985-28906-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/8/30 7:57, Bjorn Helgaas wrote:
-> On Mon, Aug 29, 2016 at 02:14:11PM -0700, Brian Norris wrote:
->> I'm pretty sure the bitwise 'or' was meant for the value parameter, not
->> the register parameter.
->>
->> This resolves an interrupt storm, where if we receive any client IRQs
->> (e.g., correctable errors), we fail to ever clear them properly, so they
->> reoccur indefinitely.
->>
->> Fixes: 199410f6270e ("PCI: rockchip: Add Rockchip PCIe controller support")
->> Signed-off-by: Brian Norris <briannorris@chromium.org>
->> Cc: Shawn Lin <shawn.lin@rock-chips.com>
->
-> Shawn, please confirm.  If this patch is correct, I'll fold it into
-> the initial commit that adds the driver.
+On Wed, Aug 03, 2016 at 05:29:45PM -0600, Keith Busch wrote:
+> This patch clears the LED attention status after a successful device
+> add. It is possible the attention LED was on from a previous power fault
+> or link failure, and a subsequent successful device inserted in the slot
+> should clear it.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-yes, Brian's patch is correct. I probably didn't notice this as
-the client interrput on EVB-rev1 board which I was using is broken, so
-my SSD didn't actually yelled at this irqstorm.
+Applied to pci/hotplug for v4.9, thanks, Keith!
 
-
-Brain, thanks for fixing this.
-
->
->> ---
->> Patched against git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-rockchip
->>
->>  drivers/pci/host/pcie-rockchip.c | 7 ++++---
->>  1 file changed, 4 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->> index 8fb47ee9eaee..e77aec3cc869 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -689,9 +689,10 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
->>  			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
->>  			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
->>  			      PCIE_CLIENT_INT_NFATAL_ERR |
->> -			      PCIE_CLIENT_INT_CORR_ERR),
->> -			      PCIE_CLIENT_INT_STATUS |
->> -			      PCIE_CLIENT_INT_PHY);
->> +			      PCIE_CLIENT_INT_CORR_ERR |
->> +			      PCIE_CLIENT_INT_PHY),
->> +		   PCIE_CLIENT_INT_STATUS);
->> +
->>  	return IRQ_HANDLED;
->>  }
->>
->> --
->> 2.8.0.rc3.226.g39d4020
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+>  drivers/pci/hotplug/pciehp_ctrl.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 880978b..7ea3e61 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -120,6 +120,7 @@ static int board_added(struct slot *p_slot)
+>  	}
+>  
+>  	pciehp_green_led_on(p_slot);
+> +	pciehp_set_attention_status(p_slot, 0);
+>  	return 0;
+>  
+>  err_exit:
+> -- 
+> 2.7.2
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
--- 
-Best Regards
-Shawn Lin
