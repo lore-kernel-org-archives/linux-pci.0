@@ -1,61 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:47388 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751914AbcHILYv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Aug 2016 07:24:51 -0400
-Date: Tue, 9 Aug 2016 13:22:30 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-cc: x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Jan Kiszka <jan.kiszka@siemens.com>,
-	Benedikt Spranger <b.spranger@linutronix.de>
-Subject: x86/PCI: Scan all functions during probing
-Message-ID: <alpine.DEB.2.20.1608091318530.5388@nanos>
+Received: from mail1.windriver.com ([147.11.146.13]:60477 "EHLO
+        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755306AbcHVWAl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2016 18:00:41 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 8/8] PCI: generic: make host-common explicitly non-modular
+Date: Mon, 22 Aug 2016 17:59:48 -0400
+Message-ID: <20160822215948.27251-9-paul.gortmaker@windriver.com>
+In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Benedikt Spranger <b.spranger@linutronix.de>
+The Kconfig currently controlling compilation of this code is:
 
-PCI and PCIBIOS probing only scans devices at function number 0/8/16/...
-Subdevices (e.g. multiqueue) have function numbers which are not a
-multiple of 8.
+drivers/pci/host/Kconfig:config PCI_HOST_COMMON
+drivers/pci/host/Kconfig:       bool
 
-Simple hypervisors (e.g. Jailhouse) pass subdevices directly w/o providing
-virtual PCI mappings like KVM. As a consequence a simple PCI passthrough from
-Jailhouse to a linux guest is not able to detect such devices.
+...meaning that it currently is not being built as a module by anyone.
 
-Changing the probe functions to scan all function numbers makes it work. This
-has no side effects and there is no reason to force the 0/8/16... probing
-scheme.
+Lets remove the couple trivial modular references, so that when reading
+the code there is no doubt it is builtin-only.
 
-Signed-off-by: Benedikt Spranger <b.spranger@linutronix.de>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+There are no modular init calls in this code, so no init ordering
+issues to be concerned with here.
+
+We don't replace module.h with init.h since the file does not have
+any functions marked with the __init prefix.
+
+We delete the MODULE_LICENSE tag etc. since all that information
+was (or is now) contained at the top of the file in the comments.
+
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- arch/x86/pci/legacy.c |    2 +-
- drivers/pci/probe.c   |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-host-common.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -42,7 +42,7 @@ void pcibios_scan_specific_bus(int busn)
- 	if (pci_find_bus(0, busn))
- 		return;
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 9d9d34e959b6..946382fd4ea1 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -1,4 +1,6 @@
+ /*
++ * Generic PCI host driver common code
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+@@ -17,7 +19,6 @@
+  */
  
--	for (devfn = 0; devfn < 256; devfn += 8) {
-+	for (devfn = 0; devfn < 256; devfn++) {
- 		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
- 		    l != 0x0000 && l != 0xffff) {
- 			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2063,7 +2063,7 @@ unsigned int pci_scan_child_bus(struct p
- 	dev_dbg(&bus->dev, "scanning bus\n");
- 
- 	/* Go find them, Rover! */
--	for (devfn = 0; devfn < 0x100; devfn += 8)
-+	for (devfn = 0; devfn < 0x100; devfn++)
- 		pci_scan_slot(bus, devfn);
- 
- 	/* Reserve buses for SR-IOV capability. */
+ #include <linux/kernel.h>
+-#include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci-ecam.h>
+@@ -162,7 +163,3 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ }
+-
+-MODULE_DESCRIPTION("Generic PCI host driver common code");
+-MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+-MODULE_LICENSE("GPL v2");
+-- 
+2.8.4
+
