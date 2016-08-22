@@ -1,94 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37776 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754011AbcHSRBo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Aug 2016 13:01:44 -0400
-Date: Fri, 19 Aug 2016 17:55:06 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v3 2/4] PCI: Allow driver-specific data in host bridge
-Message-ID: <20160819165506.GA11823@red-moon>
-References: <20160815153647.1075-1-thierry.reding@gmail.com>
- <20160815153647.1075-2-thierry.reding@gmail.com>
+Received: from mail-sn1nam02on0042.outbound.protection.outlook.com ([104.47.36.42]:10464
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753882AbcHVPEe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 11:04:34 -0400
+Message-ID: <57BB10E5.1050506@caviumnetworks.com>
+Date: Mon, 22 Aug 2016 07:49:09 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160815153647.1075-2-thierry.reding@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Omer Khaliq <okhaliq@caviumnetworks.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-crypto@vger.kernel.org>, <linux-arm-kernel@vger.kernel.org>,
+        <bhelgaas@google.com>, <mpm@selenic.com>,
+        <herbert@gondor.apana.org.au>, <Ananth.Jasty@cavium.com>,
+        <david.daney@cavium.com>
+Subject: Re: [PATCH 1/2] PCI/IOV: Add function to allow Function Dependency
+ Link override.
+References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com> <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com> <20160822143637.GA18628@localhost>
+In-Reply-To: <20160822143637.GA18628@localhost>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 15, 2016 at 05:36:45PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> Provide a way to allocate driver-specific data along with a PCI host
-> bridge structure. The bridge's ->private field points to this data.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
->  drivers/pci/probe.c | 9 ++++++---
->  include/linux/pci.h | 1 +
->  2 files changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 93583b389058..ecf543014da3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -521,16 +521,19 @@ static void pci_release_host_bridge_dev(struct device *dev)
->  	kfree(bridge);
->  }
->  
-> -static struct pci_host_bridge *pci_alloc_host_bridge(void)
-> +static struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
->  {
->  	struct pci_host_bridge *bridge;
->  
-> -	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-> +	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
->  	if (!bridge)
->  		return NULL;
->  
->  	INIT_LIST_HEAD(&bridge->windows);
->  
-> +	if (priv)
-> +		bridge->private = &bridge[1];
+On 08/22/2016 07:36 AM, Bjorn Helgaas wrote:
+> Hi David & Omer,
+>
+> On Fri, Aug 19, 2016 at 03:32:12PM -0700, Omer Khaliq wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> Some hardware presents an incorrect SR-IOV Function Dependency Link,
+>> add a function to allow this to be overridden in the PF driver for
+>> such devices.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
+>> ---
+>>   drivers/pci/iov.c   | 14 ++++++++++++++
+>>   include/linux/pci.h |  1 +
+>>   2 files changed, 15 insertions(+)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 2194b44..81f0672 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -640,6 +640,20 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>>   EXPORT_SYMBOL_GPL(pci_enable_sriov);
+>>
+>>   /**
+>> + * pci_sriov_fdl_override - fix incorrect Function Dependency Link
+>> + * @dev: the PCI device
+>> + * @fdl: the corrected Function Dependency Link value
+>> + *
+>> + * For hardware presenting an incorrect Function Dependency Link in
+>> + * the SR-IOV Extended Capability, allow a driver to override it.
+>> + */
+>> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl)
+>> +{
+>> +	dev->sriov->link = fdl;
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_sriov_fdl_override);
+>
+> We usually use quirks to work around problems in config space.  That's
+> a nice mechanism because we don't have to add new PCI core interfaces
+> and it makes it clear that we're working around a hardware problem.
+>
+> Can you use a quirk here?  We allocate dev->sriov in the
+> pci_init_capabilities() path, so it looks like a pci_fixup_final quirk
+> should work.
+>
 
-How about making private a zero length array ?
+The struct pci_sriov definition is private to drivers/pci, so in order 
+to use a quirk to fix this, we would have to put it in 
+drivers/pci/quirks.c.  I was trying to keep this very device specific 
+code in the driver, which requires an accessor to be able to manipulate 
+the dev->sriov->link field.
 
-Lorenzo
+If you prefer a quirk in drivers/pci/quirks.c, we can certainly do that 
+instead.
 
-> +
->  	return bridge;
->  }
->  
-> @@ -2249,7 +2252,7 @@ static struct pci_bus *pci_create_root_bus_msi(struct device *parent,
->  	int error;
->  	struct pci_host_bridge *bridge;
->  
-> -	bridge = pci_alloc_host_bridge();
-> +	bridge = pci_alloc_host_bridge(0);
->  	if (!bridge)
->  		return NULL;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index ccf298fad9e7..3aa7240800c8 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -421,6 +421,7 @@ struct pci_host_bridge {
->  			resource_size_t start,
->  			resource_size_t size,
->  			resource_size_t align);
-> +	void *private;
->  };
->  
->  #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-> -- 
-> 2.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Thanks for taking the time to look at this,
+David Daney
+
+
+
+
+>> +
+>> +/**
+>>    * pci_disable_sriov - disable the SR-IOV capability
+>>    * @dev: the PCI device
+>>    */
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 2599a98..da8a5b3 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1823,6 +1823,7 @@ int pci_num_vf(struct pci_dev *dev);
+>>   int pci_vfs_assigned(struct pci_dev *dev);
+>>   int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>>   int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl);
+>>   resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+>>   #else
+>>   static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+>> --
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
