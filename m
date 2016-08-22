@@ -1,105 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0075.outbound.protection.outlook.com ([104.47.34.75]:31809
-	"EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752073AbcHOJgd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 05:36:33 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Ley Foon Tan <lftan.linux@gmail.com>,
-	Ley Foon Tan <lftan@altera.com>
-Subject: [PATCH] PCI: altera: Poll for link training status after retraining the link
-Date: Mon, 15 Aug 2016 14:06:02 +0800
-Message-ID: <1471241162-23021-1-git-send-email-lftan@altera.com>
+Received: from mail1.windriver.com ([147.11.146.13]:60465 "EHLO
+        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756610AbcHVWAW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2016 18:00:22 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 5/8] PCI: spear13xx: make it explicitly non-modular
+Date: Mon, 22 Aug 2016 17:59:45 -0400
+Message-ID: <20160822215948.27251-6-paul.gortmaker@windriver.com>
+In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Poll for link training status is cleared before poll for link up status.
-This can help to get the reliable link up status, especially when PCIe
-is in Gen 3 speed.
+The Kconfig currently controlling compilation of this code is:
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+drivers/pci/host/Kconfig:config PCIE_SPEAR13XX
+drivers/pci/host/Kconfig:       bool "STMicroelectronics SPEAr PCIe controller"
+
+...meaning that it currently is not being built as a module by anyone.
+
+Lets remove the couple instances of modular code usage, so that
+when reading the driver there is no doubt it is builtin-only.
+
+Since module_init translates to device_initcall in the non-modular
+case, the init ordering remains unchanged with this commit.
+
+Also note that MODULE_DEVICE_TABLE is a no-op for non-modular code.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+is already contained at the top of the file in the comments.
+
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- drivers/pci/host/pcie-altera.c | 45 ++++++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 8 deletions(-)
+ drivers/pci/host/pcie-spear13xx.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 2b78376..58eef99 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -61,7 +61,8 @@
- #define TLP_LOOP			500
- #define RP_DEVFN			0
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index a4060b85ab23..09aed85f275a 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -15,7 +15,7 @@
+ #include <linux/clk.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/of.h>
+ #include <linux/pci.h>
+ #include <linux/phy/phy.h>
+@@ -355,7 +355,6 @@ static const struct of_device_id spear13xx_pcie_of_match[] = {
+ 	{ .compatible = "st,spear1340-pcie", },
+ 	{},
+ };
+-MODULE_DEVICE_TABLE(of, spear13xx_pcie_of_match);
  
--#define LINK_UP_TIMEOUT			5000
-+#define LINK_UP_TIMEOUT			HZ
-+#define LINK_RETRAIN_TIMEOUT		HZ
+ static struct platform_driver spear13xx_pcie_driver = {
+ 	.probe		= spear13xx_pcie_probe,
+@@ -365,14 +364,8 @@ static struct platform_driver spear13xx_pcie_driver = {
+ 	},
+ };
  
- #define INTX_NUM			4
- 
-@@ -99,11 +100,44 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
- 	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
- }
- 
-+static void altera_wait_link_retrain(struct pci_dev *dev)
-+{
-+	u16 reg16;
-+	unsigned long start_jiffies;
-+	struct altera_pcie *pcie = dev->bus->sysdata;
-+
-+	/* Wait for link training end. */
-+	start_jiffies = jiffies;
-+	for (;;) {
-+		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
-+		if (!(reg16 & PCI_EXP_LNKSTA_LT))
-+			break;
-+
-+		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
-+			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
-+			break;
-+		}
-+		udelay(100);
-+	}
-+
-+	/* Wait for link is up */
-+	start_jiffies = jiffies;
-+	for (;;) {
-+		if (altera_pcie_link_is_up(pcie))
-+			break;
-+
-+		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
-+			dev_err(&pcie->pdev->dev, "link up timeout\n");
-+			break;
-+		}
-+		udelay(100);
-+	}
-+}
-+
- static void altera_pcie_retrain(struct pci_dev *dev)
+-/* SPEAr13xx PCIe driver does not allow module unload */
+-
+ static int __init spear13xx_pcie_init(void)
  {
- 	u16 linkcap, linkstat;
- 	struct altera_pcie *pcie = dev->bus->sysdata;
--	int timeout =  0;
- 
- 	if (!altera_pcie_link_is_up(pcie))
- 		return;
-@@ -121,12 +155,7 @@ static void altera_pcie_retrain(struct pci_dev *dev)
- 	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
- 		pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
- 					 PCI_EXP_LNKCTL_RL);
--		while (!altera_pcie_link_is_up(pcie)) {
--			timeout++;
--			if (timeout > LINK_UP_TIMEOUT)
--				break;
--			udelay(5);
--		}
-+		altera_wait_link_retrain(dev);
- 	}
+ 	return platform_driver_register(&spear13xx_pcie_driver);
  }
- DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
+-module_init(spear13xx_pcie_init);
+-
+-MODULE_DESCRIPTION("ST Microelectronics SPEAr13xx PCIe host controller driver");
+-MODULE_AUTHOR("Pratyush Anand <pratyush.anand@gmail.com>");
+-MODULE_LICENSE("GPL v2");
++device_initcall(spear13xx_pcie_init);
 -- 
-1.8.2.1
+2.8.4
 
