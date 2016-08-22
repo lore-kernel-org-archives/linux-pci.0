@@ -1,88 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38550 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755916AbcH3MSC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Aug 2016 08:18:02 -0400
-Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
- device for legacy interrupts.
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        robh@kernel.org, bhelgaas@google.com, colin.king@canonical.com,
-        soren.brinkmann@xilinx.com, michal.simek@xilinx.com, arnd@arndb.de
-References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
- <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, rgummal@xilinx.com,
-        Bharat Kumar Gogada <bharatku@xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <57C57975.7040306@arm.com>
-Date: Tue, 30 Aug 2016 13:17:57 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 22 Aug 2016 10:47:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Ley Foon Tan <lftan.linux@gmail.com>
+Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+Message-ID: <20160822154738.GB18628@localhost>
+References: <1471595078-26297-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1471595078-26297-1-git-send-email-lftan@altera.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bharat,
-
-On 30/08/16 11:39, Bharat Kumar Gogada wrote:
-> PCIe legacy interrupts start at 1, not at 0.
-> When testing with multi function device "error: hwirq 0x4 is too large for
-> dummy" error comes.
-> So adding one addtional interrupt when creating irq domain.
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
+> Altera PCIe IP can be configured as rootport or device and they might have
+> same vendor ID. It will cause the system hang issue if Altera PCIe is in
+> endpoint mode and work with other PCIe rootport that from other vendors.
+> So, add the rootport mode checking in link retrain fixup function.
+>
+> Signed-off-by: Ley Foon Tan <lftan@altera.com>
 > ---
->  drivers/pci/host/pcie-xilinx-nwl.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+> ---
+>  drivers/pci/host/pcie-altera.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-> index d8d43e6..9f04411 100644
-> --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
->  	}
+> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> index 58eef99..33b6968 100644
+> --- a/drivers/pci/host/pcie-altera.c
+> +++ b/drivers/pci/host/pcie-altera.c
+> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+>  	u16 linkcap, linkstat;
+>  	struct altera_pcie *pcie = dev->bus->sysdata;
 >  
->  	pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
-> -							INTX_NUM,
-> +							INTX_NUM + 1,
->  							&legacy_domain_ops,
->  							pcie);
+> +	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+> +		return;
+> +
+>  	if (!altera_pcie_link_is_up(pcie))
+>  		return;
 
-This feels like the wrong thing to do. You have INTX_NUM irqs, so the
-domain allocation should reflect this. On the other hand, the way the
-driver currently deals with mappings is quite broken (consistently
-adding 1 to the HW interrupt).
+Instead of making this a PCI fixup, can you make an
+altera_pcie_host_init() function, call it from altera_pcie_probe(),
+and do the link retrain there?  Then you wouldn't need to worry about
+whether this is a Root Port or an Endpoint, plus it would make the
+altera driver structure more like the other drivers.
 
-How about something like this instead?
+You would call altera_pcie_host_init() before pci_scan_root_bus(), so
+you wouldn't have a pci_dev yet, so you wouldn't be able to use
+pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
+assume there's some device-dependent way to access it using
+cra_writel()?
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 0b597d9..72b159f 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -314,8 +314,7 @@ static void nwl_pcie_leg_handler(struct irq_desc *desc)
- 	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
- 				MSGF_LEG_SR_MASKALL) != 0) {
- 		for_each_set_bit(bit, &status, INTX_NUM) {
--			virq = irq_find_mapping(pcie->legacy_irq_domain,
--						bit + 1);
-+			virq = irq_find_mapping(pcie->legacy_irq_domain, bit);
- 			if (virq)
- 				generic_handle_irq(virq);
- 		}
-@@ -483,7 +482,7 @@ static void nwl_pcie_free_irq_domain(struct nwl_pcie *pcie)
- 	u32 irq;
- 
- 	for (i = 0; i < INTX_NUM; i++) {
--		irq = irq_find_mapping(pcie->legacy_irq_domain, i + 1);
-+		irq = irq_find_mapping(pcie->legacy_irq_domain, i);
- 		if (irq > 0)
- 			irq_dispose_mapping(irq);
- 	}
-
-I may have missed a few things, but you'll get the idea.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Bjorn
