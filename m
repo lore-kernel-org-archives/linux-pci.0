@@ -1,181 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:55402 "EHLO
-	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808AbcHDHzw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Aug 2016 03:55:52 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	Heiko Stuebner <heiko@sntech.de>,
-	Doug Anderson <dianders@chromium.org>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v9 1/2] Documentation: bindings: add dt doc for Rockchip PCIe controller
-Date: Thu,  4 Aug 2016 15:52:07 +0800
-Message-Id: <1470297128-6213-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.136]:52958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932538AbcHVQzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 12:55:35 -0400
+Date: Mon, 22 Aug 2016 11:55:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160822165524.GC18628@localhost>
+References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+ <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+ <20160815174002.GB9790@localhost>
+ <20160815192316.GB18083@localhost.localdomain>
+ <20160817213745.GE27353@localhost>
+ <20160817230951.GD25146@localhost.localdomain>
+ <20160818195656.GH27353@localhost>
+ <20160818224610.GA28276@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160818224610.GA28276@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a binding that describes the Rockchip PCIe controller
-found on Rockchip SoCs PCIe interface.
+On Thu, Aug 18, 2016 at 06:46:10PM -0400, Keith Busch wrote:
+> On Thu, Aug 18, 2016 at 02:56:56PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Aug 17, 2016 at 07:09:51PM -0400, Keith Busch wrote:
+> > > We've augmented 'ledmon' with libpci and toggles these indicators very
+> > > similar to how 'setpci' can change PCI config registers. It is done only
+> > > after the storage device is up and registered, which is well outside
+> > > the time when pciehp is actively using the slot control.
+> > 
+> > I assume this means ledmon writes Slot Control to manage the LEDs.
+> 
+> Correct, the registers that are defined for AttnCtrl and PwrCtrl are
+> what's being redefined for the new pattern.
+> 
+> We are definitely not dead set on requiring we let ledmon have direct
+> access to SlotCtl through libpci. That's just the one way we thought of
+> that didn't require new kernel dependencies.
+> 
+> > That sounds pretty scary to me because it's impossible to enforce the
+> > assumption that ledmon only uses Slot Control when pciehp isn't using
+> > it.  Hotplug includes surprise events, and I think pciehp is entitled
+> > to assume it is the sole owner of Slot Control.
+> 
+> I understand the concern here. You don't want independent programs
+> vying to mask/unmask bits in SlotCtl and end up with a state neither
+> intended. The only scenario that I can come up with where that could
+> happen is if ledmon changes the LED on a slot at the same time the drive
+> is removed, but there is no MRL or attention buttons on this hardware,
+> and the rest that we do care about looks totally harmless on these slots.
+> 
+> This condition also isn't really new. While probably not recommended,
+> I could blink the standard Attn and Pwr LED's like this (user, of course,
+> assumes all the risks):
+> 
+>   # setpci -s <B:D.f> CAP_EXP+18.w=280:3c0
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Definitely not recommended.  If you use setpci, all bets are off and
+we can't really support the system afterwards.  In fact, we probably
+should taint the kernel when users write to config space.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
+If we tainted the kernel and put something in dmesg on the first user
+config space write, I might be OK with the original quirk to make
+pciehp ignore the attention and power indicators.
 
-Changes in v9: None
-Changes in v8:
-- add Brian's review-tag
+The only reason I suggest a dmesg note is because while we can't
+*imagine* a scenario where pciehp and ledmon stomp on each other, that
+doesn't mean such a scenario doesn't exist, and a problem would be
+hard to reproduce and hard to debug.
 
-Changes in v7:
-- move optional properties ahead of interrupt subnode
-- use 0-base index for INTx
+> > I wonder if there's some way to implement the LED control in pciehp,
+> > e.g., by enhancing pciehp_set_attention_status().  I assume the
+> > desired indicator state is coming from some in-kernel storage driver,
+> > and ledmon learns about that somehow, then fiddles with Slot Control
+> > behind the kernel's back?  That looping from kernel to user and back
+> > to kernel sounds a little dodgy and fragile.
+> 
+> That is definitely an interesting possibility if you are open to
+> this. We'd "just" need the kernel to comprehend these vendor specific
+> bit patterns for this particular generation of hardware.
+> 
+> If you're okay with that, then I'm more than happy to propose a patch
+> for consideration. We can then have ledmon subscribe to the sysfs entry
+> point instead of going through libpci, no problem.
 
-Changes in v6:
-- add ack tag from Rob
+I was imagining these LEDs as some sort of extension to the PCIe
+hotplug model, but I think that was a mistake: logically, they have
+nothing to do with hotplug, and the only reason they're currently
+associated with hotplug is because you chose to re-use a bus (VPP)
+that happens to be connected to the Slot Control registers.
 
-Changes in v5:
-- fix wrong example reported by Marc
-- add seperate section to describe the interrupt controller child
-  node
+>From an architectural point of view, these LEDs seem device-specific
+or storage-specific, with no connection to PCIe at all, so I don't
+know why we would put them in the PCIe spec or teach pciehp about
+them.
 
-Changes in v4:
-- fix example of adding intermediate interrupt controller for pcie
-  legacy interrrupt
+> > Can you share any details about how you plan to implement this on the
+> > next generation of devices?  Maybe we can enhance pciehp indicator
+> > control in a way that supports both Sky Lake and future devices.
+> 
+> One possibility is to define through PCI-SIG
+> SlotCap2 and SlotCtl2 with this kind of LED control.
+> 
+> Another possibilities I hear about through the NVMe-MI working group
+> is creating similar type of devices as SES (SCSI Enclosure Services)
+> for PCIe SSD enclosures.
 
-Changes in v3:
-- fix example dts code suggested by Rob and Marc
-- remove driver's behaviour of regulator
+> Since these are specific to VMD domains, there are folks at Intel who
+> want to see the VMD driver mask off these capabilities from the driver.
+> There is never a case where a slot in this domain should advertise these,
+> so masking off the bits at the config read level would achieve the desired
+> result. It'd be isolated to the VMD driver, and the quirk wouldn't need
+> to be maintained as addtional vendor devices implementing the same quirk
+> are made.
 
-Changes in v2:
-- fix lots clk/reset stuff suggested by Heiko
-- remove msi-parent and add msi-map suggested by Marc
-- drop phy related stuff
-- some others minor fixes
+My biggest concern is the ownership problem, and this strategy doesn't
+address that.
 
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 106 +++++++++++++++++++++
- 1 file changed, 106 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-new file mode 100644
-index 0000000..3f74c87
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -0,0 +1,106 @@
-+* Rockchip AXI PCIe Root Port Bridge DT description
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+		interrupt source. The value must be 1.
-+- compatible: Should contain "rockchip,rk3399-pcie"
-+- reg: Two register ranges as listed in the reg-names property
-+- reg-names: Must include the following names
-+	- "axi-base"
-+	- "apb-base"
-+- clocks: Must contain an entry for each entry in clock-names.
-+		See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+	- "aclk"
-+	- "aclk-perf"
-+	- "hclk"
-+	- "pm"
-+- msi-map: Maps a Requester ID to an MSI controller and associated.
-+		See ./pci-msi.txt
-+- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-+- phy-names:  MUST be "pcie-phy".
-+- interrupts: Three interrupt entries must be specified.
-+- interrupt-names: Must include the following names
-+	- "sys"
-+	- "legacy"
-+	- "client"
-+- resets: Must contain five entries for each entry in reset-names.
-+	   See ../reset/reset.txt for details.
-+- reset-names: Must include the following names
-+	- "core"
-+	- "mgmt"
-+	- "mgmt-sticky"
-+	- "pipe"
-+- pinctrl-names : The pin control state names
-+- pinctrl-0: The "default" pinctrl state
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+
-+Optional Property:
-+- ep-gpios: contain the entry for pre-reset gpio
-+- num-lanes: number of lanes to use
-+- vpcie3v3-supply: The phandle to the 3.3v regulator to use for pcie.
-+- vpcie1v8-supply: The phandle to the 1.8v regulator to use for pcie.
-+- vpcie0v9-supply: The phandle to the 0.9v regulator to use for pcie.
-+
-+*Interrupt controller child node*
-+The core controller provides a single interrupt for legacy INTx. The pcie node
-+should contain an interrupt controller node as a target for the PCI
-+'interrupt-map' property. This node represents the domain at which the four
-+INTx interrupts are decoded and routed.
-+
-+
-+Required properties for Interrupt controller child node:
-+- interrupt-controller: identifies the node as an interrupt controller
-+- #address-cells: specifies the number of cells needed to encode an
-+	address. The value must be 0.
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+
-+Example:
-+
-+pcie0: pcie@f8000000 {
-+	compatible = "rockchip,rk3399-pcie";
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-+		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-+	clock-names = "aclk", "aclk-perf",
-+		      "hclk", "pm";
-+	bus-range = <0x0 0x1>;
-+	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
-+		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
-+		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
-+	interrupt-names = "sys", "legacy", "client";
-+	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
-+	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
-+	assigned-clock-rates = <100000000>;
-+	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
-+	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
-+		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
-+	num-lanes = <4>;
-+	msi-map = <0x0 &its 0x0 0x1000>;
-+	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0xfd000000 0x0 0x1000000>;
-+	reg-names = "axi-base", "apb-base";
-+	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-+	phys = <&pcie_phy>;
-+	phy-names = "pcie-phy";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_clkreq>;
-+	#interrupt-cells = <1>;
-+	interrupt-map-mask = <0 0 0 7>;
-+	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
-+			<0 0 0 2 &pcie0_intc 1>,
-+			<0 0 0 3 &pcie0_intc 2>,
-+			<0 0 0 4 &pcie0_intc 3>;
-+	pcie0_intc: interrupt-controller {
-+		interrupt-controller;
-+		#address-cells = <0>;
-+		#interrupt-cells = <1>;
-+	};
-+};
--- 
-2.3.7
-
-
+> ---
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index b73da50..aa2791f 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -452,6 +452,7 @@ static int vmd_pci_read(struct pci_bus *bus,
+> unsigned int devfn, int reg,
+>  {
+>  	struct vmd_dev *vmd = vmd_from_bus(bus);
+>  	char __iomem *addr = vmd_cfg_addr(vmd, bus, devfn, reg, len);
+> +	struct pci_dev *dev;
+>  	unsigned long flags;
+>  	int ret = 0;
+>  
+> @@ -474,6 +475,17 @@ static int vmd_pci_read(struct pci_bus *bus,
+> unsigned int devfn, int reg,
+>  		break;
+>  	}
+>  	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
+> +
+> +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> +		if (dev->devfn == devfn) {
+> +			if (dev->pcie_cap &&
+> +					reg == dev->pcie_cap + PCI_EXP_SLTCAP)
+> +				*value &= ~(PCI_EXP_SLTCAP_AIP |
+> +					    PCI_EXP_SLTCAP_PIP);
+> +			break;
+> +		}
+> +	}
+> +
+>  	return ret;
+>  }
+>  
+> --
