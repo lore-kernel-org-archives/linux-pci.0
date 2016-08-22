@@ -1,52 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>, <bhelgaas@google.com>,
- <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 0/2] PCI: designware: let dw_pcie_link_up() beware of LTSSM
- training bit
-Date: Wed, 10 Aug 2016 13:31:17 +0800
-Message-ID: <1470807079-366-1-git-send-email-jszhang@marvell.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43544 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756316AbcHVTZ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 15:25:59 -0400
+Subject: [PATCH] PCI: altera: Remove redundant platform_get_resource()
+ return value check
+To: Ley Foon Tan <lftan@altera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org,
+        linux-kernel@vger.kernel.org
+Date: Mon, 22 Aug 2016 14:25:55 -0500
+Message-ID: <20160822192555.4824.11845.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jisheng Zhang <jszhang@marvell.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-patch1 is a trivial clean up: move the parameters for wait for link
-into the core pcie-designware.c
+devm_ioremap_resource() fails gracefully when given a NULL resource
+pointer, so we don't need to check separately for failure from
+platform_get_resource_byname().  Remove the redundant check.
 
-Since link may be UP but still in link training, if so, we can't think
-the link is up and operating correctly. So patch2 teaches
-dw_pcie_link_up() beware of the PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING bit.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-altera-msi.c |   10 ----------
+ 1 file changed, 10 deletions(-)
 
-Since v1:
-  - add Joao's Ack
-  - rebased on v4.8-rc1
+diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
+index 99177f4..0629ae1 100644
+--- a/drivers/pci/host/pcie-altera-msi.c
++++ b/drivers/pci/host/pcie-altera-msi.c
+@@ -237,11 +237,6 @@ static int altera_msi_probe(struct platform_device *pdev)
+ 	msi->pdev = pdev;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
+-	if (!res) {
+-		dev_err(&pdev->dev, "no csr memory resource defined\n");
+-		return -ENODEV;
+-	}
+-
+ 	msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
+ 	if (IS_ERR(msi->csr_base)) {
+ 		dev_err(&pdev->dev, "failed to map csr memory\n");
+@@ -250,11 +245,6 @@ static int altera_msi_probe(struct platform_device *pdev)
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+ 					   "vector_slave");
+-	if (!res) {
+-		dev_err(&pdev->dev, "no vector_slave memory resource defined\n");
+-		return -ENODEV;
+-	}
+-
+ 	msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
+ 	if (IS_ERR(msi->vector_base)) {
+ 		dev_err(&pdev->dev, "failed to map vector_slave memory\n");
 
-Jisheng Zhang (2):
-  PCI: designware: mv parameters for wait for link into
-    pcie-designware.c
-  PCI: designware: let dw_pcie_link_up() beware of LTSSM training bit
-
- drivers/pci/host/pcie-designware.c | 11 +++++++++--
- drivers/pci/host/pcie-designware.h |  5 -----
- 2 files changed, 9 insertions(+), 7 deletions(-)
-
--- 
-2.8.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
