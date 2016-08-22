@@ -1,67 +1,41 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH V5 4/5] ARM64/PCI: Start using quirks handling for ACPI based PCI host controller
-Date: Mon,  8 Aug 2016 15:05:40 +0200
-Message-Id: <1470661541-26270-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38724 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753010AbcHVStU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 14:49:20 -0400
+Date: Mon, 22 Aug 2016 13:49:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Pratyush Anand <panand@redhat.com>
+Cc: dongbo4@huawei.com, bhelgaas@google.com, jingoohan1@gmail.com,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/2] pcie/designware: Viewport assignment update
+Message-ID: <20160822184915.GH18628@localhost>
+References: <cover.1467647958.git.panand@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1467647958.git.panand@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since there are platforms which have non-compliant ECAM space we need to
-override these accessors prior to PCI buses enumeration. In order to do
-that we call pci_mcfg_match_quirks() to retrieve custom
-pci_config_window structure. If no correlated quirk on list, use
-fully ECAM compliant generic PCI config accessors.
+On Mon, Jul 04, 2016 at 09:44:41PM +0530, Pratyush Anand wrote:
+> Most of the designware PCIe platforms have more than 2 viewports. So, patch
+> 1/2 allows to fix viewport-2 for IO transaction for such cases.
+> When we have only two viewports, then patch 2/2 exchange viewport
+> assignment of memory and cfg transaction. It helps to fix a possibility of
+> corruption for memory transaction. However, there still exist possibility
+> of an IO transaction to be corrupted. We can not do much for <=2 viewports.
+> See, patch log for detail.
+> 
+> Dong Bo (1):
+>   pcie/designware: Exchange viewport of `MEMORYs' and `CFGs/IOs'
+> 
+> Pratyush Anand (1):
+>   pcie/designware: Keep viewport fixed for IO transaction if
+>     num_viewport > 2
+> 
+>  .../devicetree/bindings/pci/designware-pcie.txt    |  3 ++
+>  drivers/pci/host/pcie-designware.c                 | 32 +++++++++++++++-------
+>  drivers/pci/host/pcie-designware.h                 |  1 +
+>  3 files changed, 26 insertions(+), 10 deletions(-)
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- arch/arm64/kernel/pci.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 2e7bed4..aa734bd 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -139,8 +139,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (!ri)
- 		return NULL;
- 
--	ri->cfg = pci_acpi_setup_ecam_mapping(root,
--					      &pci_generic_ecam_ops.pci_ops);
-+	ri->cfg = pci_mcfg_match_quirks(root);
- 	if (!ri->cfg) {
- 		kfree(ri);
- 		return NULL;
--- 
-1.9.1
+Applied (with Rob's ack on 1/2) to pci/host-designware for v4.9, thanks!
