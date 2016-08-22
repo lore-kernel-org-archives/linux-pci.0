@@ -1,102 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41947 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590AbcHOQv0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 12:51:26 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: [PATCH 2/6] drivers: pci: host: designware: fix pci_remap_iospace() failure path
-Date: Mon, 15 Aug 2016 17:50:42 +0100
-Message-Id: <1471279854-11916-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail.kernel.org ([198.145.29.136]:54446 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752172AbcHVRFT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Aug 2016 13:05:19 -0400
+Date: Mon, 22 Aug 2016 12:05:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Will Deacon <will.deacon@arm.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci: Add support for unbinding the generic PCI host
+ controller
+Message-ID: <20160822170515.GF18628@localhost>
+References: <57698276.6050606@siemens.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57698276.6050606@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM/ARM64 architectures, PCI IO ports are emulated through memory
-mapped IO, by reserving a chunk of virtual address space starting at
-PCI_IOBASE and by mapping the PCI host bridges memory address space
-driving PCI IO cycles to it.
+Hi Jan,
 
-PCI host bridge drivers that enable downstream PCI IO cycles map the
-host bridge memory address responding to PCI IO cycles to the fixed
-virtual address space through the pci_remap_iospace() API.
+On Tue, Jun 21, 2016 at 08:07:50PM +0200, Jan Kiszka wrote:
+> Particularly useful when working in virtual environments where the
+> controller may come and go, but possibly not only there.
 
-This means that if the pci_remap_iospace() function fails, the
-corresponding host bridge PCI IO resource must be considered invalid, in
-that there is no way for the kernel to actually drive PCI IO
-transactions if the memory addresses responding to PCI
-IO cycles cannot be mapped into the CPU virtual address space.
+I'm not sure where we're at with this.  Will had a few questions about
+the tear-down paths, and I couldn't tell what the resolution was.
 
-The PCI designware host bridge driver does not remove the PCI IO
-resource from the host bridge resource windows if the
-pci_remap_iospace() call fails; this is an actual bug in that the
-PCI host bridge would consider the PCI IO resource valid (and possibly
-assign it to downstream devices) even if the kernel was not able
-to map the PCI host bridge memory address driving IO cycle to the
-CPU virtual address space (ie pci_remap_iospace() failures).
-
-Fix the PCI host bridge driver pci_remap_iospace() failure path, by
-destroying the PCI host bridge PCI IO resources retrieved through
-firmware when the pci_remap_iospace() function call fails, therefore
-preventing the kernel from adding the respective PCI IO resource to the
-list of PCI host bridge valid resources, fixing the issue.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pcie-designware.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12afce1..2a500f2 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -436,7 +436,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct resource *cfg_res;
- 	int i, ret;
- 	LIST_HEAD(res);
--	struct resource_entry *win;
-+	struct resource_entry *win, *tmp;
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
-@@ -457,17 +457,20 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		goto error;
- 
- 	/* Get the I/O and memory ranges from DT */
--	resource_list_for_each_entry(win, &res) {
-+	resource_list_for_each_entry_safe(win, tmp, &res) {
- 		switch (resource_type(win->res)) {
- 		case IORESOURCE_IO:
--			pp->io = win->res;
--			pp->io->name = "I/O";
--			pp->io_size = resource_size(pp->io);
--			pp->io_bus_addr = pp->io->start - win->offset;
--			ret = pci_remap_iospace(pp->io, pp->io_base);
--			if (ret)
-+			ret = pci_remap_iospace(win->res, pp->io_base);
-+			if (ret) {
- 				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
--					 ret, pp->io);
-+					 ret, win->res);
-+				resource_list_destroy_entry(win);
-+			} else {
-+				pp->io = win->res;
-+				pp->io->name = "I/O";
-+				pp->io_size = resource_size(pp->io);
-+				pp->io_bus_addr = pp->io->start - win->offset;
-+			}
- 			break;
- 		case IORESOURCE_MEM:
- 			pp->mem = win->res;
--- 
-2.6.4
-
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> ---
+>  drivers/pci/ecam.h                  |  1 +
+>  drivers/pci/host/pci-host-common.c  | 13 +++++++++++++
+>  drivers/pci/host/pci-host-generic.c |  1 +
+>  3 files changed, 15 insertions(+)
+> 
+> diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
+> index 9878beb..5a5f607 100644
+> --- a/drivers/pci/ecam.h
+> +++ b/drivers/pci/ecam.h
+> @@ -63,5 +63,6 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
+>  /* for DT-based PCI controllers that support ECAM */
+>  int pci_host_common_probe(struct platform_device *pdev,
+>  			  struct pci_ecam_ops *ops);
+> +int pci_host_common_remove(struct platform_device *pdev);
+>  #endif
+>  #endif
+> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+> index 8cba7ab..c0ff4b1 100644
+> --- a/drivers/pci/host/pci-host-common.c
+> +++ b/drivers/pci/host/pci-host-common.c
+> @@ -164,6 +164,19 @@ int pci_host_common_probe(struct platform_device *pdev,
+>  	}
+>  
+>  	pci_bus_add_devices(bus);
+> +	platform_set_drvdata(pdev, bus);
+> +	return 0;
+> +}
+> +
+> +int pci_host_common_remove(struct platform_device *pdev)
+> +{
+> +	struct pci_bus *bus = platform_get_drvdata(pdev);
+> +
+> +	pci_lock_rescan_remove();
+> +	pci_stop_root_bus(bus);
+> +	pci_remove_root_bus(bus);
+> +	pci_unlock_rescan_remove();
+> +
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 6eaceab..0a2e75b 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -65,6 +65,7 @@ static struct platform_driver gen_pci_driver = {
+>  		.of_match_table = gen_pci_of_match,
+>  	},
+>  	.probe = gen_pci_probe,
+> +	.remove = pci_host_common_remove,
+>  };
+>  module_platform_driver(gen_pci_driver);
+>  
+> -- 
+> 2.1.4
