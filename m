@@ -1,72 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56324 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932523AbcHORkI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 13:40:08 -0400
-Date: Mon, 15 Aug 2016 12:40:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160815174002.GB9790@localhost>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
- <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+Received: from mail.windriver.com ([147.11.1.11]:50008 "EHLO
+        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756511AbcHVWAM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2016 18:00:12 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <rfi@lists.rocketboards.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/8] PCI: altera: make msi explicitly non-modular
+Date: Mon, 22 Aug 2016 17:59:41 -0400
+Message-ID: <20160822215948.27251-2-paul.gortmaker@windriver.com>
+In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 08, 2016 at 02:19:02PM -0600, Keith Busch wrote:
-> This adds a quirk for certain devices that require ignoring attention
-> and power indicators.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/quirks.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b69321c..b5bd7a0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4427,3 +4427,18 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
->  	}
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-> +
-> +/*
-> + * The PCIe slot capabilities for Intel compatible Hot-swap backplane advertise
-> + * attention and power indicators, but will do the wrong thing if used in a
-> + * standard way. Ignore these.
-> + */
+The Kconfig currently controlling compilation of this code is:
 
-Hmm.  So I guess you're saying these devices are defective?  Is there
-an erratum we can reference?
+drivers/pci/host/Kconfig:config PCIE_ALTERA_MSI
+drivers/pci/host/Kconfig:       bool "Altera PCIe MSI feature"
 
-What exactly does "do the wrong thing" mean?  These are indicators, so
-the only thing we really do is turn them on and off.  I think we do
-that with pcie_write_cmd_nowait(), and all the synchronization there
-is a little messy.  Maybe we got that wrong somehow?
+...meaning that it currently is not being built as a module by anyone.
 
-It's hard to believe something as simple as controlling an LED is
-broken.  If it *is* broken, I would think the breakage would be
-platform-dependent, not just device-dependent, i.e., I would suspect
-something wrong with motherboard wiring or firmware.
+Lets remove the couple traces of modular infrastructure use, so that
+when reading the driver there is no doubt it is builtin-only.
 
-> +static void quirk_hsbp(struct pci_dev *pdev)
-> +{
-> +	pdev->ignore_aip = 1;
-> +	pdev->ignore_pip = 1;
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_hsbp);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_hsbp);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_hsbp);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_hsbp);
-> -- 
-> 2.7.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We also delete the MODULE_LICENSE tag etc. since all that information
+was (or is now) contained at the top of the file in the comments.
+
+Cc: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: rfi@lists.rocketboards.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pcie-altera-msi.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
+index 99177f4ccde2..369e033449c6 100644
+--- a/drivers/pci/host/pcie-altera-msi.c
++++ b/drivers/pci/host/pcie-altera-msi.c
+@@ -1,4 +1,8 @@
+ /*
++ * Altera PCIe MSI support
++ *
++ * Author: Ley Foon Tan <lftan@altera.com>
++ *
+  * Copyright Altera Corporation (C) 2013-2015. All rights reserved
+  *
+  * This program is free software; you can redistribute it and/or modify it
+@@ -16,7 +20,7 @@
+ 
+ #include <linux/interrupt.h>
+ #include <linux/irqchip/chained_irq.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+@@ -308,7 +312,3 @@ static int __init altera_msi_init(void)
+ 	return platform_driver_register(&altera_msi_driver);
+ }
+ subsys_initcall(altera_msi_init);
+-
+-MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
+-MODULE_DESCRIPTION("Altera PCIe MSI support");
+-MODULE_LICENSE("GPL v2");
+-- 
+2.8.4
+
