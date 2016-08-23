@@ -1,99 +1,133 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Fri, 12 Aug 2016 18:16:09 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
- system sleep
-Message-ID: <20160812161609.GA8060@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
- <CAJZ5v0hPbeaUotiFxg_BbkS86HEz=u0ThkdwJju5WyXOuDgd6A@mail.gmail.com>
- <20160807090347.GA5679@wunner.de>
- <2182119.Z8Tk7onsTO@vostro.rjw.lan>
- <20160811132003.GA7369@wunner.de>
- <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:37103 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752059AbcHWNti (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Aug 2016 09:49:38 -0400
+Date: Tue, 23 Aug 2016 14:49:38 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org, rjw@rjwysocki.net
+Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v4 01/15] drivers: iommu: add FWNODE_IOMMU fwnode type
+Message-ID: <20160823134938.GA9953@red-moon>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1471274620-20754-2-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0g86L+nL6SxfBMQ84NNpUzz0X83bvP=E5WdSs1TozpY8w@mail.gmail.com>
+In-Reply-To: <1471274620-20754-2-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 12, 2016 at 02:50:04AM +0200, Rafael J. Wysocki wrote:
-> On Thu, Aug 11, 2016 at 3:20 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > So I would like to find a common ground and something you feel
-> > comfortable to ack. The problem I see with your suggested approach
-> > of subclassing struct dev_pm_domain in a struct pci_pm_domain is
-> > that I can easily envision Apple putting some custom methods in the
-> > DSDT to power a non-PCI device up and down. They're starting to use
-> > SPI and UART to attach devices in newer machines.
+Hi Rafael,
+
+On Mon, Aug 15, 2016 at 04:23:26PM +0100, Lorenzo Pieralisi wrote:
+> On systems booting with a device tree, every struct device is
+> associated with a struct device_node, that represents its DT
+> representation. The device node can be used in generic kernel
+> contexts (eg IRQ translation, IOMMU streamid mapping), to
+> retrieve the properties associated with the device and carry
+> out kernel operation accordingly. Owing to the 1:1 relationship
+> between the device and its device_node, the device_node can also
+> be used as a look-up token for the device (eg looking up a device
+> through its device_node), to retrieve the device in kernel paths
+> where the device_node is available.
 > 
-> Those devices have no standard power state definitions.
+> On systems booting with ACPI, the same abstraction provided by
+> the device_node is required to provide look-up functionality.
 > 
-> The problem you have here really is PCI-specific, because you want to
-> use PCI PM along with the non-standard methods.
-
-If I introduce a struct pci_pm_domain like you suggested, it would mean
-that *all* PCI devices using dev_pm_domain_set() have to be changed,
-else the container_of() wouldn't work. The resulting code bloat alone
-inhibits me from implementing this. Plus, it's a tripwire for anyone
-wishing to assign a dev_pm_domain to their PCI device.
-
-> > Hence my suggestion to add a flag to struct dev_pm_domain, even
-> > though at the moment that flag would only be queried by the PCI core.
-> > I don't care if this is called can_power_off or power_manageable or
-> > whatever.
+> Therefore, mirroring the approach implemented in the IRQ domain
+> kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
 > 
-> struct dev_pm_domain is way too generic for that though, as I'm sure
-> there are users of it where the can_power_off thing wouldn't make any
-> sense whatever.
+> This patch also implements a glue kernel layer that allows to
+> allocate/free FWNODE_IOMMU fwnode_handle structures and associate
+> them with IOMMU devices.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>  include/linux/fwnode.h |  1 +
+>  include/linux/iommu.h  | 25 +++++++++++++++++++++++++
+>  2 files changed, 26 insertions(+)
+> 
+> diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
+> index 8516717..6e10050 100644
+> --- a/include/linux/fwnode.h
+> +++ b/include/linux/fwnode.h
+> @@ -19,6 +19,7 @@ enum fwnode_type {
+>  	FWNODE_ACPI_DATA,
+>  	FWNODE_PDATA,
+>  	FWNODE_IRQCHIP,
+> +	FWNODE_IOMMU,
+>  };
 
-That seems like a small tradeoff compared to introducing a struct
-pci_pm_domain.
+Are you ok with this fwnode usage ? It is quite key to the rest
+of this series and I would need to know in order to make progress
+on it please.
 
-If you dislike a can_power_off flag in struct dev_pm_domain, that only
-leaves the option to add a one-liner to pci_target_state(), unless I'm
-missing something.
+Platform devices created out of IORT tables are not ACPI devices
+(I could create fake ones as we do for FADT power button, I do not
+see any particular reason to prefer that approach over this one) and
+in order to identify the device through a fwnode_handle (that, as for
+IRQCHIP is nothing but a token used for look-up) that's what I came
+up with.
 
-BTW there seems to be a contradiction in your statements on wakeup devices:
+Any feedback on the rest of the series is very welcome and needed
+too, thanks.
 
-On Mon, Aug 08, 2016 at 01:32:54AM +0200, Rafael J. Wysocki wrote:
-> On Sunday, August 07, 2016 11:03:47 AM Lukas Wunner wrote:
-> > The reasoning is that going from D3cold to D3hot before system sleep
-> > just never makes sense, no matter if the device got there by standard
-> > or nonstandard means.
->
-> That may not be true in theory.
->
-> If this is a wakeup device, it may not be able to generate wakeup signals
-> from D3cold while the system is in the target system state, although it might
-> be able to generate those signals when the system is in S0 (in the ACPI case).
+Lorenzo
 
-However earlier you wrote:
-
-On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
-> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
-> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
-> > > Is there a reason you don't want to do this check for devices that
-> > > may wakeup?
-> >
-> > Fear of breaking things. It would mean that a device would be left in
-> > D3cold even though it may not be able to signal wakeup from that power
-> > state.
->
-> Then it should not be put into D3_cold at run time too if it is wakeup-capable.
-
-So on the one hand, you warn that a wakeup-capable device may have been
-put into D3cold at runtime but needs to be woken before system sleep
-because it might otherwise not be able to signal wakeup.
-
-On the other hand you say that such devices should not be put into D3cold
-at runtime at all.
-
-Which one is it?
-
-Thanks,
-
-Lukas
+>  struct fwnode_handle {
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index a35fb8b..6f703cb 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -38,6 +38,7 @@ struct bus_type;
+>  struct device;
+>  struct iommu_domain;
+>  struct notifier_block;
+> +struct fwnode_handle;
+>  
+>  /* iommu fault flags */
+>  #define IOMMU_FAULT_READ	0x0
+> @@ -543,4 +544,28 @@ static inline void iommu_device_unlink(struct device *dev, struct device *link)
+>  
+>  #endif /* CONFIG_IOMMU_API */
+>  
+> +/* IOMMU fwnode handling */
+> +static inline bool is_fwnode_iommu(struct fwnode_handle *fwnode)
+> +{
+> +	return fwnode && fwnode->type == FWNODE_IOMMU;
+> +}
+> +
+> +static inline struct fwnode_handle *iommu_alloc_fwnode(void)
+> +{
+> +	struct fwnode_handle *fwnode;
+> +
+> +	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_ATOMIC);
+> +	fwnode->type = FWNODE_IOMMU;
+> +
+> +	return fwnode;
+> +}
+> +
+> +static inline void iommu_free_fwnode(struct fwnode_handle *fwnode)
+> +{
+> +	if (WARN_ON(!is_fwnode_iommu(fwnode)))
+> +		return;
+> +
+> +	kfree(fwnode);
+> +}
+> +
+>  #endif /* __LINUX_IOMMU_H */
+> -- 
+> 2.6.4
+> 
