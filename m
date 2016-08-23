@@ -1,94 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:50902 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbcHCNm3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Aug 2016 09:42:29 -0400
-Subject: Re: Support for configurable PCIe endpoint
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"arnd@arndb.de" <arnd@arndb.de>, Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-References: <57A18927.9070003@ti.com>
-CC: Ley Foon Tan <lftan@altera.com>, Rob Herring <robh@kernel.org>,
-	"Tanmay Inamdar" <tinamdar@apm.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"Mingkai Hu" <mingkai.hu@freescale.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	"Thomas Petazzoni" <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"Simon Horman" <horms@verge.net.au>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	David Daney <david.daney@cavium.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com>
-Date: Wed, 3 Aug 2016 14:39:00 +0100
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Tue, 23 Aug 2016 13:10:18 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160823171018.GB10224@localhost.localdomain>
+References: <1470687542-30155-2-git-send-email-keith.busch@intel.com>
+ <20160815174002.GB9790@localhost>
+ <20160815192316.GB18083@localhost.localdomain>
+ <20160817213745.GE27353@localhost>
+ <20160817230951.GD25146@localhost.localdomain>
+ <20160818195656.GH27353@localhost>
+ <20160818224610.GA28276@localhost.localdomain>
+ <20160822165524.GC18628@localhost>
+ <20160822211536.GE28276@localhost.localdomain>
+ <20160823133913.GN18628@localhost>
 MIME-Version: 1.0
-In-Reply-To: <57A18927.9070003@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160823133913.GN18628@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+On Tue, Aug 23, 2016 at 08:39:13AM -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 22, 2016 at 05:15:36PM -0400, Keith Busch wrote:
+> 
+> The other IBPI states (fail, rebuild, predicted failure, hotspare,
+> degraded, failed) all seem like storage-related things without an
+> obvious connection to pciehp.  I would expect a kernel driver like md
+> to manage those states.
 
-On 8/3/2016 7:03 AM, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> The PCIe controller present in TI's DRA7 SoC is capable of operating either in
-> Root Complex mode or Endpoint mode. (It uses Synopsys Designware Core). I'd
-> assume most of the PCIe controllers on other platforms that use Designware core
-> should also be capable to operate in endpoint mode. But linux kernel right now
-> supports only RC mode.
-> 
-> PCIe endpoint support discussion came up briefly before [1] but it was felt the
-> practical use case will find firmware more suitable and endpoint support in
-> kernel can be used only for validation or demo.
-> 
-> *) Modify platform driver to support EP mode (in my case pci-dra7xx.c).
-> 
-> *) dt binding specific to EP mode should be created.
-> 
-> Once I complete the implementation and start posting RFC patches, a lot of
-> these will become clear. But I want to check if this sounds okay to you guys
-> before starting the implementation.
-> 
-> Let me know if you have some other ideas too.
-> 
-> Cheers
-> Kishon
-> 
-> [1] -> http://www.spinics.net/lists/linux-pci/msg26026.html
-> 
+Yes, that's fairly accurate on how this works with other storage
+transports. While md doesn't directly affect LED states, 'ledmon'
+subscribes to md events and executes an appropriate LED control method
+specific to that transport.
 
-You are rising a topic that we are also addressing in Synopsys.
+It just happens that this quirky hardware chose to re-purpose the Slot
+Control commands for the PCIe transport specific method to get feature
+parity with other storage fabrics.
+ 
+> PCIe hotplug is designed with a 1:1:1 relationship between the
+> Downstream Port, the slot, and a replaceable device.  It's not obvious
+> to me how the IBPI signaling maps into that.  The first diagram on the
+> IBPI wikipedia page shows a single iPass cable (e.g., a single PCIe
+> slot connection) connected to an enclosure of four drives.  Each drive
+> has three LEDs, so we couldn't control all twelve of those LEDs using
+> the single Slot Control of the Downstream Port.
 
-For the PCIe RC hardware validation we are currently using the standard
-pcie-designware and pcie-designware-plat drivers.
+For a PCIe storage transport, each drive has its own slot, and the
+relationship with the downstream port and its replaceable device is still
+preserved; connections to each drive provide individual Slot Control.
+ 
+> > Would it be more palatable if I modify the quirk such that when set,
+> > pciehp provides a sysfs entry allowing arbitrary user defined Slot Control
+> > commands? That removes the dangerous direct access from user space.
+> 
+> Maybe, I dunno.  So far, it still seems like an unrelated wart on pciehp.
 
-For the Endpoint we have to use an internal software package. Its main purpose
-is to initialize the IP registers, eDMA channels and make data transfer to prove
-that the everything is working properly. This is done in 2 levels, a custom
-driver built and loaded and an application that makes some ioctl to the driver
-executing some interesting functions to check the Endpoint status and make some
-data exchange.
+It's superficially related to pciehp only because that's the only module
+that touches Slot Control, and this particular hardware interprets
+pciehp's control commands differently than the specification.
 
-We are very interest in the subject and we are available to participate in the
-development.
-
-I would suggest that also the IP eDMA initialization and manipulation be
-included in the framework and maybe produce a standard tool to test the endpoint.
-
-Thanks
-Joao
+Since the hardware can't be changed, is there any guidance you can
+recommend we follow to appropriately fence off pciehp from attention and
+power indicator control? I initially attempted the least invasive method,
+but I'm happy to explore other possibilities.
