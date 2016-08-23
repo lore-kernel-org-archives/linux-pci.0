@@ -1,80 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34474 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932342AbcHIQyd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Aug 2016 12:54:33 -0400
-Date: Tue, 9 Aug 2016 11:54:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jszhang@marvell.com
-Subject: Re: [PATCH v4 3/3] pcie-designware: fix typo
-Message-ID: <20160809165428.GB27301@localhost>
-References: <cover.1470758382.git.jpinto@synopsys.com>
- <bba00c66a124b80c2bc259b3d2f78e561c3df27a.1470758382.git.jpinto@synopsys.com>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Tue, 23 Aug 2016 16:44:21 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160823204421.GA10993@localhost.localdomain>
+References: <20160817230951.GD25146@localhost.localdomain>
+ <20160818195656.GH27353@localhost>
+ <20160818224610.GA28276@localhost.localdomain>
+ <20160822165524.GC18628@localhost>
+ <20160822211536.GE28276@localhost.localdomain>
+ <20160823133913.GN18628@localhost>
+ <20160823171018.GB10224@localhost.localdomain>
+ <eed69a47-633b-0c0c-e5c1-663bf37a9ec3@codeaurora.org>
+ <20160823192330.GA10866@localhost.localdomain>
+ <20160823195221.GA3725@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bba00c66a124b80c2bc259b3d2f78e561c3df27a.1470758382.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160823195221.GA3725@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
-
-On Tue, Aug 09, 2016 at 05:35:34PM +0100, Joao Pinto wrote:
-> Simple fix typo.
-
-This patch actually does more than fix a typo.  Not sure if you
-intended to split this into separate patches, or to write a better
-changelog for this one.  If these code changes are related and we have
-a good changelog, I don't mind if the typo fix is included as an
-incidental change.
-
-Bjorn
-
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
-> changes v1->v4:
-> - Nothing changed. Just to keep up patch set version.
+On Tue, Aug 23, 2016 at 02:52:21PM -0500, Bjorn Helgaas wrote:
+> Everybody probably knows this, but the problem is not with LED control
+> per se.  The problem is multiple writers to the Slot Control register.
+> Each write to Slot Control is a "command", and software is responsible
+> for waiting for one command to complete before writing another (see
+> PCIe r3.0, sec 6.7.3.2).
 > 
->  drivers/pci/host/pcie-designware.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+> It's no problem to make pciehp keep its mitts off the LEDs; the
+> problem is if ledmon writes Slot Control for the indicators, and
+> pciehp writes Slot Control for some other reason at about the same
+> time.
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 3fb9036..7731eda 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -36,7 +36,7 @@
->  #define LINK_WAIT_IATU_MIN		9000
->  #define LINK_WAIT_IATU_MAX		10000
->  
-> -/* Synopsis specific PCIE configuration registers */
-> +/* Synopsys specific PCIE configuration registers */
->  #define PCIE_PORT_LINK_CONTROL		0x710
->  #define PORT_LINK_MODE_MASK		(0x3f << 16)
->  #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
-> @@ -253,7 +253,7 @@ static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
->  		}
->  
->  		if (val == PCIE_ATU_ENABLE)
-> -			break;
-> +			return;
->  
->  		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
->  	}
-> @@ -646,11 +646,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		}
->  	}
->  
-> +	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
-> +
->  	if (pp->ops->host_init)
->  		pp->ops->host_init(pp);
->  
-> -	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
-> -
->  	pp->root_bus_nr = pp->busn->start;
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
->  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
-> -- 
-> 1.8.1.5
+> Sinan has a very interesting idea...  Maybe we can work with that.
+> Hmm, it looks like if we have an attention indicator, we already put
+> an "attention" file in sysfs (see attention_write_file()).  That
+> should eventually call into pciehp_set_attention_status(), where we
+> currently only support off/on/blink states.
 > 
+> What if you made a quirk that replaced pciehp_set_attention_status()
+> with a special version that supported the extra states you need and
+> made ledmon use that sysfs file instead of writing Slot Control
+> directly?  Would everything just work?
+
+I'm on board with this idea. I'll get some testing started and send a
+new version if/when successful.
