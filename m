@@ -1,141 +1,289 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 29 Aug 2016 18:54:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Roland Singer <roland.singer@desertbit.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, dri-devel@lists.freedesktop.org
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-Message-ID: <20160829235403.GA14177@localhost>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost>
- <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost>
- <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Omer Khaliq <okhaliq@caviumnetworks.com>
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-crypto@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <bhelgaas@google.com>, <mpm@selenic.com>, <herbert@gondor.apana.org.au>,
+ <Ananth.Jasty@cavium.com>, <David.Daney@cavium.com>,
+ <clabbe.montjoie@gmail.com>
+Subject: [PATCH v2 2/2] HWRNG: thunderx: Add Cavium HWRNG driver for ThunderX
+ SoC.
+Date: Tue, 23 Aug 2016 16:27:15 -0700
+Message-ID: <1471994835-2423-3-git-send-email-okhaliq@caviumnetworks.com>
+In-Reply-To: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
+References: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Omer Khaliq <okhaliq@caviumnetworks.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 29, 2016 at 09:55:56PM +0200, Roland Singer wrote:
-> Just tried it and the system didn't freeze. However it will freeze
-> after some time (few minutes while working).
-> 
-> Seams to be pci_read_config_dword. Where is this exactly defined?
+The Cavium ThunderX SoC has a hardware random number generator.
+This driver provides support using the HWRNG framework.
 
-pci_read_config_dword() is defined in include/linux/pci.h.  It calls
-pci_bus_read_config_dword() which is defined by the PCI_OP_READ() macro
-in drivers/pci/access.c.
+Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
+Signed-off-by: Ananth Jasty <Ananth.Jasty@cavium.com>
+Acked-by: David Daney <david.daney@cavium.com>
+---
+ drivers/char/hw_random/Kconfig         | 13 +++++
+ drivers/char/hw_random/Makefile        |  1 +
+ drivers/char/hw_random/cavium-rng-vf.c | 99 ++++++++++++++++++++++++++++++++++
+ drivers/char/hw_random/cavium-rng.c    | 94 ++++++++++++++++++++++++++++++++
+ 4 files changed, 207 insertions(+)
+ create mode 100644 drivers/char/hw_random/cavium-rng-vf.c
+ create mode 100644 drivers/char/hw_random/cavium-rng.c
 
-If I understand correctly, this:
+diff --git a/drivers/char/hw_random/Kconfig b/drivers/char/hw_random/Kconfig
+index 56ad5a5..fb9c7ad 100644
+--- a/drivers/char/hw_random/Kconfig
++++ b/drivers/char/hw_random/Kconfig
+@@ -410,6 +410,19 @@ config HW_RANDOM_MESON
+ 
+ 	  If unsure, say Y.
+ 
++config HW_RANDOM_CAVIUM
++       tristate "Cavium ThunderX Random Number Generator support"
++       depends on HW_RANDOM && PCI && (ARM64 || (COMPILE_TEST && 64BIT))
++       default HW_RANDOM
++       ---help---
++         This driver provides kernel-side support for the Random Number
++         Generator hardware found on Cavium SoCs.
++
++         To compile this driver as a module, choose M here: the
++         module will be called cavium_rng.
++
++         If unsure, say Y.
++
+ endif # HW_RANDOM
+ 
+ config UML_RANDOM
+diff --git a/drivers/char/hw_random/Makefile b/drivers/char/hw_random/Makefile
+index 04bb0b0..5f52b1e 100644
+--- a/drivers/char/hw_random/Makefile
++++ b/drivers/char/hw_random/Makefile
+@@ -35,3 +35,4 @@ obj-$(CONFIG_HW_RANDOM_XGENE) += xgene-rng.o
+ obj-$(CONFIG_HW_RANDOM_STM32) += stm32-rng.o
+ obj-$(CONFIG_HW_RANDOM_PIC32) += pic32-rng.o
+ obj-$(CONFIG_HW_RANDOM_MESON) += meson-rng.o
++obj-$(CONFIG_HW_RANDOM_CAVIUM) += cavium-rng.o cavium-rng-vf.o
+diff --git a/drivers/char/hw_random/cavium-rng-vf.c b/drivers/char/hw_random/cavium-rng-vf.c
+new file mode 100644
+index 0000000..066ae0e
+--- /dev/null
++++ b/drivers/char/hw_random/cavium-rng-vf.c
+@@ -0,0 +1,99 @@
++/*
++ * Hardware Random Number Generator support for Cavium, Inc.
++ * Thunder processor family.
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * Copyright (C) 2016 Cavium, Inc.
++ */
++
++#include <linux/hw_random.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/pci_ids.h>
++
++struct cavium_rng {
++	struct hwrng ops;
++	void __iomem *result;
++};
++
++/* Read data from the RNG unit */
++static int cavium_rng_read(struct hwrng *rng, void *dat, size_t max, bool wait)
++{
++	struct cavium_rng *p = container_of(rng, struct cavium_rng, ops);
++	unsigned int size = max;
++
++	while (size >= 8) {
++		*((u64 *)dat) = readq(p->result);
++		size -= 8;
++		dat += 8;
++	}
++	while (size > 0) {
++		*((u8 *)dat) = readb(p->result);
++		size--;
++		dat++;
++	}
++	return max;
++}
++
++/* Map Cavium RNG to an HWRNG object */
++static int cavium_rng_probe_vf(struct	pci_dev		*pdev,
++			 const struct	pci_device_id	*id)
++{
++	struct	cavium_rng *rng;
++	int	ret;
++
++	rng = devm_kzalloc(&pdev->dev, sizeof(*rng), GFP_KERNEL);
++	if (!rng)
++		return -ENOMEM;
++
++	/* Map the RNG result */
++	rng->result = pcim_iomap(pdev, 0, 0);
++	if (!rng->result) {
++		dev_err(&pdev->dev, "Error iomap failed retrieving result.\n");
++		return -ENOMEM;
++	}
++
++	rng->ops.name    = "cavium rng";
++	rng->ops.read    = cavium_rng_read;
++	rng->ops.quality = 1000;
++
++	pci_set_drvdata(pdev, rng);
++
++	ret = hwrng_register(&rng->ops);
++	if (ret) {
++		dev_err(&pdev->dev, "Error registering device as HWRNG.\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++/* Remove the VF */
++void  cavium_rng_remove_vf(struct pci_dev *pdev)
++{
++	struct cavium_rng *rng;
++
++	rng = pci_get_drvdata(pdev);
++	hwrng_unregister(&rng->ops);
++}
++
++static const struct pci_device_id cavium_rng_vf_id_table[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_CAVIUM, 0xa033), 0, 0, 0},
++	{0,},
++};
++MODULE_DEVICE_TABLE(pci, cavium_rng_vf_id_table);
++
++static struct pci_driver cavium_rng_vf_driver = {
++	.name		= "cavium_rng_vf",
++	.id_table	= cavium_rng_vf_id_table,
++	.probe		= cavium_rng_probe_vf,
++	.remove		= cavium_rng_remove_vf,
++};
++module_pci_driver(cavium_rng_vf_driver);
++
++MODULE_AUTHOR("Omer Khaliq <okhaliq@caviumnetworks.com>");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/char/hw_random/cavium-rng.c b/drivers/char/hw_random/cavium-rng.c
+new file mode 100644
+index 0000000..a944e0a
+--- /dev/null
++++ b/drivers/char/hw_random/cavium-rng.c
+@@ -0,0 +1,94 @@
++/*
++ * Hardware Random Number Generator support for Cavium Inc.
++ * Thunder processor family.
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * Copyright (C) 2016 Cavium, Inc.
++ */
++
++#include <linux/hw_random.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/pci_ids.h>
++
++#define THUNDERX_RNM_ENT_EN     0x1
++#define THUNDERX_RNM_RNG_EN     0x2
++
++struct cavium_rng_pf {
++	void __iomem *control_status;
++};
++
++/* Enable the RNG hardware and activate the VF */
++static int cavium_rng_probe(struct pci_dev *pdev,
++			const struct pci_device_id *id)
++{
++	struct	cavium_rng_pf *rng;
++	int	iov_err;
++
++	rng = devm_kzalloc(&pdev->dev, sizeof(*rng), GFP_KERNEL);
++	if (!rng)
++		return -ENOMEM;
++
++	/*Map the RNG control */
++	rng->control_status = pcim_iomap(pdev, 0, 0);
++	if (!rng->control_status) {
++		dev_err(&pdev->dev,
++			"Error iomap failed retrieving control_status.\n");
++		return -ENOMEM;
++	}
++
++	/* Enable the RNG hardware and entropy source */
++	writeq(THUNDERX_RNM_RNG_EN | THUNDERX_RNM_ENT_EN,
++		rng->control_status);
++
++	pci_set_drvdata(pdev, rng);
++
++	/* Enable the Cavium RNG as a VF */
++	iov_err = pci_enable_sriov(pdev, 1);
++	if (iov_err != 0) {
++		/* Disable the RNG hardware and entropy source */
++		writeq(0, rng->control_status);
++		dev_err(&pdev->dev,
++			"Error initializing RNG virtual function,(%i).\n",
++			iov_err);
++		return iov_err;
++	}
++
++	return 0;
++}
++
++/* Disable VF and RNG Hardware */
++void  cavium_rng_remove(struct pci_dev *pdev)
++{
++	struct cavium_rng_pf *rng;
++
++	rng = pci_get_drvdata(pdev);
++
++	/* Remove the VF */
++	pci_disable_sriov(pdev);
++
++	/* Disable the RNG hardware and entropy source */
++	writeq(0, rng->control_status);
++}
++
++static const struct pci_device_id cavium_rng_pf_id_table[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_CAVIUM, 0xa018), 0, 0, 0}, /* Thunder RNM */
++	{0,},
++};
++
++MODULE_DEVICE_TABLE(pci, cavium_rng_pf_id_table);
++
++static struct pci_driver cavium_rng_pf_driver = {
++	.name		= "cavium_rng_pf",
++	.id_table	= cavium_rng_pf_id_table,
++	.probe		= cavium_rng_probe,
++	.remove		= cavium_rng_remove,
++};
++
++module_pci_driver(cavium_rng_pf_driver);
++MODULE_AUTHOR("Omer Khaliq <okhaliq@caviumnetworks.com>");
++MODULE_LICENSE("GPL");
+-- 
+1.9.1
 
-  dis_dev_get();
-  pci_read_config_dword(dis_dev, 0, &cfg_word);
-  dis_dev_put();
 
-causes an immediate system hang, but if you only do this:
-
-  dis_dev_get();
-  dis_dev_put();
-
-the system hangs a few minutes later.  Right?
-
-> Am 29.08.2016 um 21:07 schrieb Bjorn Helgaas:
-> > On Mon, Aug 29, 2016 at 08:46:17PM +0200, Roland Singer wrote:
-> >> Hi Bjorn,
-> >>
-> >> I am using the bbswitch kernel module to switch off/on the GPU and
-> >> to obtain the GPU power state.
-> >> Obtaining the GPU state immediately after starting the graphical user
-> >> session freezes the system.
-> >>
-> >> This code triggers something, which is responsible for the freeze.
-> >>
-> >> ---
-> >> // Returns 1 if the card is disabled, 0 if enabled
-> >> static int is_card_disabled(void) {
-> >>     u32 cfg_word;
-> >>     // read first config word which contains Vendor and Device ID. If all bits
-> >>     // are enabled, the device is assumed to be off
-> >>     pci_read_config_dword(dis_dev, 0, &cfg_word);
-> >>     // if one of the bits is not enabled (the card is enabled), the inverted
-> >>     // result will be non-zero and hence logical not will make it 0 ("false")
-> >>     return !~cfg_word;
-> >> }
-> >>
-> >> static int bbswitch_proc_show(struct seq_file *seqfp, void *p) {
-> >>     // show the card state. Example output: 0000:01:00:00 ON
-> >>     dis_dev_get();
-> >>     seq_printf(seqfp, "%s %s\n", dev_name(&dis_dev->dev),
-> >>              is_card_disabled() ? "OFF" : "ON");
-> >>     dis_dev_put();
-> >>     return 0;
-> >> }
-> >> ---
-> >>
-> >> Either dis_dev_get or pci_read_config_dword is the trigger.
-> > 
-> > What happens if you remove the call to is_card_disabled()?  Does the
-> > system still freeze if you only do the dis_dev_get()/dis_dev_put()?
-> > 
-> >> Link to the bbswitch module source code:
-> >> https://github.com/Bumblebee-Project/bbswitch/blob/master/bbswitch.c#L333
-> >>
-> >>
-> >> Am 29.08.2016 um 18:02 schrieb Bjorn Helgaas:
-> >>> [+cc linux-acpi, linux-kernel, dri-devel]
-> >>>
-> >>> Hi Roland,
-> >>>
-> >>> I have no idea how to debug this problem.  Are you seeing something
-> >>> that suggests it may be a PCI problem?
-> >>>
-> >>> On Tue, Aug 23, 2016 at 11:23:45AM +0200, Roland Singer wrote:
-> >>>> Hi,
-> >>>>
-> >>>> hope somebody can help me fix this kernel problem which affects the following machines:
-> >>>>
-> >>>> - Clevo P651RA (i7-6700HQ/GTX 965M, part of the P6xxRx family which are also affected)
-> >>>> - MSI GE62 Apache Pro (i7-6700HQ/GTX 960M)
-> >>>> - Gigabyte P35V5 (i7-6700HQ/GTX 970M)
-> >>>> - Razer Blade 14" (2016) (i7-6700HQ/GTX 970M) (BIOS 5.11, 04/07/2016)
-> >>>>
-> >>>>
-> >>>> The kernel freezes if the graphical user session (Xorg & Wayland) is
-> >>>> started with a switched off discrete GPU card (NVIDIA).
-> >>>> If the discrete GPU is switched off after the graphical session start,
-> >>>> then everything works as expected, until the graphical session is restarted.
-> >>>>
-> >>>> This problem seams to be linked to specific BIOS settings. If the computer
-> >>>> is started with the following command line:
-> >>>>
-> >>>> acpi_osi=! acpi_osi="Windows 2009"
-> >>>>
-> >>>> then the kernel freeze does not occur anymore. However this required a special
-> >>>> ACPI DSDT firmware patch for the Razer Blade 2016 laptop:
-> >>>>
-> >>>> https://github.com/m4ng0squ4sh/razer_blade_14_2016_acpi_dsdt
-> >>>>
-> >>>> I strongly recommend to fix this in the kernel and I am ready to help and solve
-> >>>> this problem with some help.
-> >>>>
-> >>>> Here is a link to the GitHub issue with further information:
-> >>>>
-> >>>> https://github.com/Bumblebee-Project/Bumblebee/issues/764#issuecomment-241212595
-> >>>>
-> >>>> Here are some more detailed information:
-> >>>>
-> >>>> https://github.com/Lekensteyn/acpi-stuff/blob/master/Clevo-P651RA/notes.txt
-> >>>>
-> >>>> Hope somebody can help.
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
