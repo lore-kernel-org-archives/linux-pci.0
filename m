@@ -1,75 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:57740 "EHLO vps0.lunn.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751872AbcH3NLh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Aug 2016 09:11:37 -0400
-Date: Tue, 30 Aug 2016 15:11:31 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Joao Pinto <jpinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Ian Campbell <ijc+devicetree@hellion.org.uk>,
-        Pawel Moll <pawel.moll@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kumar Gala <galak@codeaurora.org>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 2/3] pci: pcie-designware: add support for external MSI
- controller
-Message-ID: <20160830131131.GA8295@lunn.ch>
-References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1472561830-20932-3-git-send-email-thomas.petazzoni@free-electrons.com>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Tue, 23 Aug 2016 15:23:31 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
+Message-ID: <20160823192330.GA10866@localhost.localdomain>
+References: <20160815192316.GB18083@localhost.localdomain>
+ <20160817213745.GE27353@localhost>
+ <20160817230951.GD25146@localhost.localdomain>
+ <20160818195656.GH27353@localhost>
+ <20160818224610.GA28276@localhost.localdomain>
+ <20160822165524.GC18628@localhost>
+ <20160822211536.GE28276@localhost.localdomain>
+ <20160823133913.GN18628@localhost>
+ <20160823171018.GB10224@localhost.localdomain>
+ <eed69a47-633b-0c0c-e5c1-663bf37a9ec3@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472561830-20932-3-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <eed69a47-633b-0c0c-e5c1-663bf37a9ec3@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 02:57:09PM +0200, Thomas Petazzoni wrote:
-> The Designware PCIe controllers have a built-in MSI controller, which is
-> already supported by the existing. However, in some situations, it might
-
-                                   ^ driver.
-
-> be a better choice to use an external MSI controller, especially when it
-> provides a higher number of MSI interrupts than the built-in one.
+On Tue, Aug 23, 2016 at 01:14:03PM -0400, Sinan Kaya wrote:
+> On 8/23/2016 1:10 PM, Keith Busch wrote:
+> > It's superficially related to pciehp only because that's the only module
+> > that touches Slot Control, and this particular hardware interprets
+> > pciehp's control commands differently than the specification.
+> > 
+> > Since the hardware can't be changed, is there any guidance you can
+> > recommend we follow to appropriately fence off pciehp from attention and
+> > power indicator control? I initially attempted the least invasive method,
+> > but I'm happy to explore other possibilities.
 > 
-> Therefore, this commit extends the pcie-designware driver to support the
-> "msi-parent" DT property, already used by other drivers. It contains a
-> phandle pointing to the external MSI controller to be used.
-> 
-> Following this commit, the pcie-designware code supports three
-> possibilities, in this order:
-> 
->  1. If msi-parent is provided, then the MSI controller pointed by this
+> Most other non-standard HW require an LED driver for hotplug in the kernel. 
+> IBM has one. It sound like you need another one.
 
-                                                                 ^ to  
-
->     property is used.
-
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -		if (!pp->ops->msi_host_init) {
-> +		if (of_find_property(pp->dev->of_node, "msi-parent", NULL)) {
-> +			struct device_node *msi_node;
-> +
-> +			msi_node = of_parse_phandle(pp->dev->of_node,
-> +						    "msi-parent", 0);
-> +			if (!msi_node)
-> +				return -ENODEV;
-> +
-> +			msi = of_pci_find_msi_chip_by_node(msi_node);
-
-By this point, device tree tells us the external MSI controller
-should exist. So if we get a NULL here, should we not return
--EPROBE_DIFFERED?
-
-	Andrew
+We'd still need to fence off pciehp from LED control since it manipulates
+these in response to hot plug events handled by that driver.
