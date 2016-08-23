@@ -1,45 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0043.outbound.protection.outlook.com ([104.47.2.43]:21408
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752522AbcHBHWy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Aug 2016 03:22:54 -0400
-From: Haggai Eran <haggaie@mellanox.com>
-To: "hch@infradead.org" <hch@infradead.org>
-CC: Leon Romanovsky <leonro@mellanox.com>,
-	Kovalyov Artemy <artemyko@mellanox.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	Yishai Hadas <yishaih@mellanox.com>,
-	"stephen.bates@microsemi.com" <stephen.bates@microsemi.com>,
-	"j.glisse@gmail.com" <j.glisse@gmail.com>,
-	"jonathan.derrick@intel.com" <jonathan.derrick@intel.com>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	Liran Liss <liranl@mellanox.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [RFC 6/7] NVMe: Use genalloc to allocate CMB regions
-Date: Tue, 2 Aug 2016 06:48:36 +0000
-Message-ID: <1470120518.20129.2.camel@mellanox.com>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
-	 <1470034653-9097-7-git-send-email-haggaie@mellanox.com>
-	 <20160801155348.GB23224@infradead.org>
-In-Reply-To: <20160801155348.GB23224@infradead.org>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <jonathan.yong@intel.com>
+Return-Path: <jonathan.yong@intel.com>
+Message-ID: <57BB9537.6040002@intel.com>
+Date: Tue, 23 Aug 2016 08:13:43 +0800
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ intel-wired-lan@lists.osuosl.org,
+ Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 1/3] PCI: Add Precision Time Measurement (PTM) support
+References: <20160613185945.12503.32760.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20160613190534.12503.18923.stgit@bhelgaas-glaptop2.roam.corp.google.com> <57AA984E.8040308@intel.com> <20160815185931.GD9790@localhost> <57B2C90F.8010109@intel.com> <20160816133715.GA30825@localhost> <20160822170110.GE18628@localhost>
+In-Reply-To: <20160822170110.GE18628@localhost>
+Content-Type: text/plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-T24g15EnLCAyMDE2LTA4LTAxIGF0IDA4OjUzIC0wNzAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gT24gTW9uLCBBdWcgMDEsIDIwMTYgYXQgMDk6NTc6MzJBTSArMDMwMCwgSGFnZ2FpIEVy
-YW4gd3JvdGU6DQo+ID4gDQo+ID4gUmVnaXN0ZXIgdGhlIENNQiBpbiBhIGdlbl9wb29sIGRlZGlj
-YXRlZCB0byBtYW5hZ2UgQ01CIHJlZ2lvbnMuIFVzZQ0KPiA+IHRoZQ0KPiA+IHBvb2wgdG8gYWxs
-b2NhdGUgdGhlIFNRcyB0byBtYWtlIHN1cmUgdGhleSBhcmUgcmVnaXN0ZXJlZC4NCj4gQW5kIHdo
-eSB3b3VsZCB0aGUgTlZNZSBkcml2ZXIgY2FyZSBpZiAidGhleSBhcmUgcmVnaXN0ZXJlZCI/DQpJ
-IGp1c3QgbWVhbnQgdGhhdCB0aGV5IGFyZSBhbGxvY2F0ZWQgdGhyb3VnaCBnZW5hbGxvYyBzbyB0
-aGF0IGl0DQpkb2Vzbid0IGFsbG9jYXRlIHRoZSBzYW1lIGJ1ZmZlciBhZ2Fpbi4NCg0KPiANCj4g
-T25jZSB3ZSBzdGFydCBhbGxvd2luZyBkaXZlcnNlIENNQiB1c2VzICh3aGF0IGhhcHBlbmVkIHRv
-IEpvbidzDQo+IHBhdGNoZXMNCj4gYnR3PykgZ2VuYWxsb2MgbWlnaHQgYmUgYSBnb29kIGJhY2tl
-bmQgYWxsb2NhdG9yLCBidXQgd2l0aG91dCB0aGF0DQo+IGl0J3MgZW50aXJlbHkgcG9pbnRsZXNz
-LsKgwqANCkkgbWlzc2VkIEpvbidzIHBhdGNoZXMuIEknbGwgaGF2ZSBhIGxvb2suIFRoZSBwb2lu
-dCBpbiB0aGlzIHBhdGNoIHdhcw0KdG8gYWxsb3cgdGhpcyBkaXZlcnNlIHVzZSBpbiB0aGUgbmV4
-dCBwYXRjaC4NCg0KPiBBbHNvIHBsZWFzZSBkb24ndCBpbnRyb2R1Y2UgdXNlbGVzcyBoZWFkZXIN
-Cj4gZmlsZXMuDQpGYWlyIGVub3VnaC4NCg0KVGhhbmtzLA0KSGFnZ2Fp
+On 08/23/2016 01:01, Bjorn Helgaas wrote:
+> On Tue, Aug 16, 2016 at 08:37:15AM -0500, Bjorn Helgaas wrote:
+>> On Tue, Aug 16, 2016 at 04:04:31PM +0800, Yong, Jonathan wrote:
+>>> On 08/16/2016 02:59, Bjorn Helgaas wrote:
+>>>>
+>>>> I guess I was hoping you could test these patches.  Do you have any
+>>>> way to do that?
+>>>>
+>>>
+>>> No real hardware with this feature yet, so testing is entirely on software.
+>>
+>> OK, let me know the results of your software testing with these patches.
+> 
+> Do you have some software testing you can do on these patches?
+> 
+
+Yes, they're entirely synthetic however and do not reflect real hardware.
+
+At the moment, they're hooks to pci_scan_bus and providing a fake config
+space for the driver to manipulate, inspected with lspci.
+
+The PTM bits are set properly as far as I can tell.
