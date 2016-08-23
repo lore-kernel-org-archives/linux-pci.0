@@ -1,91 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joe Perches <joe@perches.com>
-To: Andrew Morton <akpm@linux-foundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Whitcroft <apw@canonical.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] treewide: Remove references to the now unnecessary DEFINE_PCI_DEVICE_TABLE
-Date: Wed, 31 Aug 2016 09:19:29 -0700
-Message-Id: <076eff466fd7edb550c25c8b25d76924ca0eba62.1472660229.git.joe@perches.com>
-In-Reply-To: <cover.1472660229.git.joe@perches.com>
-References: <cover.1472660229.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33132 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932176AbcHWVTV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Aug 2016 17:19:21 -0400
+Date: Tue, 23 Aug 2016 16:19:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Peter Chen <peter.chen@nxp.com>
+Cc: minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 1/1] pci: host: pci-layerscape: add missing of_node_put
+ after calling of_parse_phandle
+Message-ID: <20160823211916.GB5838@localhost>
+References: <1470965681-30496-1-git-send-email-peter.chen@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470965681-30496-1-git-send-email-peter.chen@nxp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It's been eliminated from the sources, remove it from everywhere else.
+Hi Peter,
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- Documentation/PCI/pci.txt | 1 -
- include/linux/pci.h       | 9 ---------
- scripts/checkpatch.pl     | 9 ---------
- scripts/tags.sh           | 1 -
- 4 files changed, 20 deletions(-)
+On Fri, Aug 12, 2016 at 09:34:41AM +0800, Peter Chen wrote:
+> of_node_put needs to be called when the device node which is got
+> from of_parse_phandle has finished using.
+> 
+> Cc: Minghuan Lian <minghuan.Lian@freescale.com>
+> Cc: Mingkai Hu <mingkai.hu@freescale.com>
+> Cc: Roy Zang <tie-fei.zang@freescale.com>
+> Signed-off-by: Peter Chen <peter.chen@nxp.com>
+> ---
+>  drivers/pci/host/pci-layerscape.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 114ba81..573b996 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -173,6 +173,8 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+>  		return -EINVAL;
+>  	}
+>  
+> +	of_node_put(msi_node);
+> +
 
-diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
-index 123881f..77f49dc 100644
---- a/Documentation/PCI/pci.txt
-+++ b/Documentation/PCI/pci.txt
-@@ -124,7 +124,6 @@ initialization with a pointer to a structure describing the driver
- 
- The ID table is an array of struct pci_device_id entries ending with an
- all-zero entry.  Definitions with static const are generally preferred.
--Use of the deprecated macro DEFINE_PCI_DEVICE_TABLE should be avoided.
- 
- Each entry consists of:
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fbc1fa6..0ab8359 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -683,15 +683,6 @@ struct pci_driver {
- #define	to_pci_driver(drv) container_of(drv, struct pci_driver, driver)
- 
- /**
-- * DEFINE_PCI_DEVICE_TABLE - macro used to describe a pci device table
-- * @_table: device table name
-- *
-- * This macro is deprecated and should not be used in new code.
-- */
--#define DEFINE_PCI_DEVICE_TABLE(_table) \
--	const struct pci_device_id _table[]
--
--/**
-  * PCI_DEVICE - macro used to describe a specific pci device
-  * @vend: the 16 bit PCI Vendor ID
-  * @dev: the 16 bit PCI Device ID
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index 8946904..1c82b01 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -3610,15 +3610,6 @@ sub process {
- 			}
- 		}
- 
--# check for uses of DEFINE_PCI_DEVICE_TABLE
--		if ($line =~ /\bDEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=/) {
--			if (WARN("DEFINE_PCI_DEVICE_TABLE",
--				 "Prefer struct pci_device_id over deprecated DEFINE_PCI_DEVICE_TABLE\n" . $herecurr) &&
--			    $fix) {
--				$fixed[$fixlinenr] =~ s/\b(?:static\s+|)DEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=\s*/static const struct pci_device_id $1\[\] = /;
--			}
--		}
--
- # check for new typedefs, only function parameters and sparse annotations
- # make sense.
- 		if ($line =~ /\btypedef\s/ &&
-diff --git a/scripts/tags.sh b/scripts/tags.sh
-index ed7eef2..b3775a9 100755
---- a/scripts/tags.sh
-+++ b/scripts/tags.sh
-@@ -206,7 +206,6 @@ regex_c=(
- 	'/\<DEFINE_PER_CPU_SHARED_ALIGNED([^,]*, *\([[:alnum:]_]*\)/\1/v/'
- 	'/\<DECLARE_WAIT_QUEUE_HEAD(\([[:alnum:]_]*\)/\1/v/'
- 	'/\<DECLARE_\(TASKLET\|WORK\|DELAYED_WORK\)(\([[:alnum:]_]*\)/\2/v/'
--	'/\<DEFINE_PCI_DEVICE_TABLE(\([[:alnum:]_]*\)/\1/v/'
- 	'/\(^\s\)OFFSET(\([[:alnum:]_]*\)/\2/v/'
- 	'/\(^\s\)DEFINE(\([[:alnum:]_]*\)/\2/v/'
- 	'/\<DEFINE_HASHTABLE(\([[:alnum:]_]*\)/\1/v/'
--- 
-2.10.0.rc2.1.gb2aa91d
+Can you please look for and fix similar errors in other drivers in
+drivers/pci/host/*?
+
+For example:
+
+  advk_pcie_probe() and iproc_pcie_msi_enable() call
+  of_parse_phandle() but don't call of_node_put() in failure paths.
+
+  dra7xx_pcie_init_irq_domain(), nwl_pcie_init_irq_domain(), and
+  xilinx_pcie_init_irq_domain() call of_get_next_child() but don't
+  call of_node_put() in failure paths.
+
+  ks_pcie_get_irq_controller_info() calls of_find_node_by_name().
+
+I think there may be others, e.g., the pci_host_bridge_msi_domain()
+path calls of_parse_phandle(), but I'm not sure of_node_put() is
+called on failure paths.
+
+When we find bugs like this, it's nice to fix one occurrence, but it's
+really great if we can squash similar bugs nearby so the bug isn't
+copied into new drivers.
+
+>  	return 0;
+>  }
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
