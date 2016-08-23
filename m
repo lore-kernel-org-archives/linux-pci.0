@@ -1,68 +1,53 @@
-Return-Path: <Paul.Gortmaker@windriver.com>
-Return-Path: <Paul.Gortmaker@windriver.com>
-Date: Mon, 22 Aug 2016 18:12:56 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Keith Busch <keith.busch@intel.com>, <linux-kernel@vger.kernel.org>,
-        Bjorn
- Helgaas <bhelgaas@google.com>,
-        Mika Westerberg
-	<mika.westerberg@linux.intel.com>,
-        <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular
-Message-ID: <20160822221256.GA6006@windriver.com>
-References: <20160728193303.12945-1-paul.gortmaker@windriver.com>
- <20160728202859.GA2420@localhost.localdomain>
- <20160728212801.GY11410@windriver.com>
- <20160822194427.GM18628@localhost>
-MIME-Version: 1.0
+Return-Path: <decui@microsoft.com>
+Return-Path: <decui@microsoft.com>
+From: Dexuan Cui <decui@microsoft.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "gregkh@linuxfoundation.org"
+	<gregkh@linuxfoundation.org>, KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
+	"jasowang@redhat.com" <jasowang@redhat.com>, "vkuznets@redhat.com"
+	<vkuznets@redhat.com>, Haiyang Zhang <haiyangz@microsoft.com>, Hadden Hoppert
+	<haddenh@microsoft.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Stephen
+ Hemminger" <sthemmin@microsoft.com>
+Subject: [PATCH 5/5] PCI: hv: hv_pci_generic_compl(): handle the error case
+Date: Tue, 23 Aug 2016 04:49:22 +0000
+Message-ID: <MWHPR03MB2669E217046A38470D7E8A27BFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20160822194427.GM18628@localhost>
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-[Re: [PATCH -next] PCI/PCIe: make DPC explicitly non-modular] On 22/08/2016 (Mon 14:44) Bjorn Helgaas wrote:
 
-> Hi Paul,
-> 
-> On Thu, Jul 28, 2016 at 05:28:02PM -0400, Paul Gortmaker wrote:
+'completetion_status' is used in some places, e.g.,
+hv_pci_protocol_negotiation(), so we should make sure it's initialized in
+error case too, though the error is unlikely here.
 
-[...]
+I didn't get a real issue.
 
-> > 
-> > Yep, not to worry, I've still got the following patches pending for-4.9:
-> > 
-> > $ grep PCI series 
-> > # PCI
-> > PCI-aerdrv-make-it-explicitly-non-modular.patch
-> > PCI-altera-make-it-explicitly-non-modular.patch
-> > PCI-dra7xx-make-it-explicitly-non-modular.patch
-> > PCI-imx6-make-it-explicitly-non-modular.patch
-> > PCI-pme-make-it-explicitly-non-modular.patch
-> > PCI-qcom-make-it-explicitly-non-modular.patch
-> > PCI-spear13xx-make-it-explicitly-non-modular.patch
-> > PCI-xilinx-make-it-explicitly-non-modular.patch
-> > PCI-xilinx-nwl-make-it-eplicitly-non-modular.patch
-> > PCI-portdrv-make-it-explicitly-non-modular.patch
-> > PCI-PCIe-make-dpc-explicitly-non-modular.patch
-> > PCI-generic-make-host-common-explicitly-non-modular.patch
-> > PCI-hotplug_core-make-it-explicitly-non-modular.patch
-> > PCI-hotplug-make-core-code-explicitly-non-modular.patch
-> 
-> Were you planning to post the patches above?  If so, I'll bundle them
-> all up along with this DPC one.
+Cc: Jake Oshins <jakeo@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Ha, too funny; I'd just split the remaining patches into two lots and
-sent lot #1 (the binary equivalent ones) before seeing this.
-
-The DPC one got put in lot #2 since it had __exit and/or .remove
-functions, so the change isn't strictly binary equivalent anymore.
-
-I'll send along lot #2 once you've had a chance to digest lot #1.
-So feel free to ignore the earlier copy of the DPC one.
-
-Thanks,
-Paul.
---
-
-> 
-> Bjorn
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index f337239..a93bd5d 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -456,6 +456,9 @@ hv_pci_generic_compl(void *context, struct pci_response=
+ *resp,
+=20
+ 	if (resp_packet_size >=3D offsetofend(struct pci_response, status))
+ 		comp_pkt->completion_status =3D resp->status;
++	else
++		comp_pkt->completion_status =3D -1;
++
+ 	complete(&comp_pkt->host_event);
+ }
+=20
+--=20
+2.7.4
