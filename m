@@ -1,90 +1,74 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Tue, 30 Aug 2016 11:08:34 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Duc Dang <dhdang@apm.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, patches <patches@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Punit Agrawal <punit.agrawal@arm.com>
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-Message-ID: <20160830100834.GA368@red-moon>
-References: <20160824213005.1a9300ef@arm.com>
- <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
- <20160825121825.322d8450@arm.com>
- <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
- <20160825195917.0e75a8db@arm.com>
- <20160826090813.GA1038@red-moon>
- <20160826130832.2fde2327@arm.com>
- <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
- <20160826170615.GC23885@red-moon>
- <66f94732-7ce4-e577-9bec-52f0dc8e6ddb@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g9t1613g.houston.hpe.com ([15.241.32.99]:5587 "EHLO
+        g9t1613g.houston.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751198AbcHWX30 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Aug 2016 19:29:26 -0400
+Received: from g4t3428.houston.hpe.com (g4t3428.houston.hpe.com [15.241.140.76])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by g9t1613g.houston.hpe.com (Postfix) with ESMTPS id D9E7661151
+        for <linux-pci@vger.kernel.org>; Tue, 23 Aug 2016 23:29:25 +0000 (UTC)
+Received: from g9t2301.houston.hpecorp.net (g9t2301.houston.hpecorp.net [16.220.97.129])
+        by g4t3428.houston.hpe.com (Postfix) with ESMTP id 03E2F5B
+        for <linux-pci@vger.kernel.org>; Tue, 23 Aug 2016 23:28:45 +0000 (UTC)
+Received: from div_linux.localnet (unknown [16.93.61.14])
+        by g9t2301.houston.hpecorp.net (Postfix) with ESMTP id E63314C
+        for <linux-pci@vger.kernel.org>; Tue, 23 Aug 2016 23:28:44 +0000 (UTC)
+From: divakar <divakar.chitturi@hpe.com>
+To: linux-pci@vger.kernel.org
+Subject: pci_enable_device error
+Date: Tue, 23 Aug 2016 16:24:37 -0700
+Message-ID: <2771432.urgYcWSoQk@div_linux>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <66f94732-7ce4-e577-9bec-52f0dc8e6ddb@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 26, 2016 at 06:53:29PM -0400, Sinan Kaya wrote:
-> 
-> >> Let me throw option d here.
-> >>
-> >> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
-> >> can't we override this in an arch specific way (arm64's pci.c) while
-> >> creating the root bridge? 
-> > 
-> > On what basis ? You were not copied in from the beginning, but that
-> > is not different from Duc's initial proposal, which Marc discarded
-> > because it should not be done at arch level, it depends on the interrupt
-> > controller.
-> 
-> I happen to watch the linux-pci and linux-acpi mail-lists. I also saw
-> Duc's initial proposal. 
-> 
-> I can't imagine someone building an ACPI compliant ARM64 platform
-> without a GIC interrupt controller. 
-> 
-> The SBSA spec already mentions what kind of compatibility should be
-> maintained with respect to GIC. You can't have an ACPI system that's
-> SBSA compliant and not using GIC. 
-> 
-> Can't we just hard code this to ACTIVE_HIGH in arch directory if ACPI
-> is defined.  Why do we have to reach out to the interrupt controller?
+Hi
 
-Patch below (horrible but no solution will be shiny either).
+I am trying to enable the pci device in the driver by calling the 
+function, pci_enable_device and i get the below error. 
 
-> https://lists.linaro.org/pipermail/linaro-acpi/2015-November/005973.html
+fpga_pci_uio_driver 0000:4e:00.0: can't enable device: BAR 0 [mem 
+0x00000000-0x000fffff 64bit pref] not claimed
+fpga_pci_uio_driver 0000:4e:00.0: Failed to enable fpga_pci_uio device 
+rc=-22
+fpga_pci_uio_driver: probe of 0000:4e:00.0 failed with error -22
 
-[...]
+I am guessing its coming from pci_enable_resource function in 
+pci_setup.c. ( trying to setup debug env to trace exact location)
+if (!r->parent) {
+                         dev_err(&dev->dev, "can't enable device: BAR %d 
+%pR not claimed\n",
+                                 i, r);
+                         return -EINVAL;
+           	}
 
-> If you look at my email above, I tried getting rid of PCI Link object
-> and I couldn't. I sticked to only thing that works.
+I am not sure why this condition is false. I am running kernel 3.19 and 
+this is a pcie endpoint device sitting on one of the port of the pcie 
+switch. Below is the dmesg output for the pcie switch port. 
 
-That's what I object to. If the ACPI bindings do not work for ARM
-we do not work around issues, we upgrade the specs because what may work
-for you has to work on all ARM platforms (and all FW developers have
-to be aware of that). Granted, this is a tiny snag, but the point is
-that no one knows what's the correct way of describing PCI legacy IRQs
-on ARM and we need that rectified.
+[   13.586987] pci 0000:4b:04.0: PCI bridge to [bus 4e]
+[   13.591069] pci 0000:4b:04.0:   bridge window [mem 0xc7c00000-0xc7ffffff 
+64bit pref]
 
-This does the trick for me (I can turn it into a function/look-up
-that returns the polarity), I am sure it will ruffle feathers but
-we have to find a solution so here it is (that acpi_irq_model gem
-is already used in generic code drivers/acpi/pci_link.c ;-))
+lspci output for my device
+lspci -v -s 4e:00.0
+4e:00.0 Non-VGA unclassified device:  Company Device 0180 
+(rev 01)
+        Flags: fast devsel
+        Memory at <unassigned> (64-bit, prefetchable) [size=1M]
+        Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+        Capabilities: [78] Power Management version 3
+        Capabilities: [80] Express Endpoint, MSI 00
+        Capabilities: [100] Multi-Function Virtual Channel <?>
 
--- >8 --
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 2c45dd3..c9b8c85 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -411,7 +411,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 	int gsi;
- 	u8 pin;
- 	int triggering = ACPI_LEVEL_SENSITIVE;
--	int polarity = ACPI_ACTIVE_LOW;
-+	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
-+				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
- 	char *link = NULL;
- 	char link_desc[16];
- 	int rc;
+The other device on different port of the switch work fine. That device 
+driver also calls pci_enable_device(dev).
+
+I found a thread http://www.spinics.net/lists/linux-pci/msg49725.html 
+discussing something similar. Should i apply any patch to solve it? or 
+am i missing something?
+
+Thanks
+
