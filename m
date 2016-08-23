@@ -1,115 +1,41 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH V5 1/5] PCI: Embed pci_ecam_ops in pci_config_window structure
-Date: Mon,  8 Aug 2016 15:05:37 +0200
-Message-Id: <1470661541-26270-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Tue, 23 Aug 2016 18:10:43 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, g@localhost.localdomain
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH v2] vmd: Fix infinite loop executing irq's
+Message-ID: <20160823221042.GA11049@localhost.localdomain>
+References: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
+ <20160823213605.GC5838@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160823213605.GC5838@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_config_window keeps pointer to pci_ecam_ops and every time
-we want to deallocate pci_config_window (pci_ecam_free()) we need to make
-sure to free pci_ecam_ops in case it was dynamically allocated prior to
-pci_ecam_create() call.
+On Tue, Aug 23, 2016 at 04:36:05PM -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 08, 2016 at 09:47:51AM -0600, Keith Busch wrote:
+> > We can't initialize the list head on deletion as this causes the node
+> > to point to itself, looping infinitely if the vmd IRQ handler happened
+> > to be servicing that node.
+> > 
+> > The list initialization was trying fix a bug from multiple calls to
+> > disable the same IRQ. We can fix this instead by having the vmd driver
+> > track if the interrupt is enabled.
+> > 
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > Cc: Jon Derrick <jonathan.derrick@intel.com>
+> > Reported-by: Grzegorz Koczot <grzegorz.koczot@intel.com>
+> > Tested-by: Miroslaw Drost <miroslaw.drost@intel.com>
+> 
+> I assume you want
+> 
+>   Fixes: 97e923063575 ("x86/PCI: VMD: Initialize list item in IRQ disable")
+> 
+> and you want this in for-linus so it goes in v4.8 instead of v4.9.
+> 
+> I did that for you, so let me know if it's not right.
 
-To avoid that extra effort, embed pci_ecam_ops in pci_config_window,
-instead of just a pointer.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-To: Jayachandran C <jchandra@broadcom.com>
----
- arch/arm64/kernel/pci.c  | 2 +-
- drivers/pci/ecam.c       | 6 +++---
- include/linux/pci-ecam.h | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index acf3872..981e828 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -183,7 +183,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 	}
- 
--	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
-+	acpi_pci_root_ops.pci_ops = &ri->cfg->ops.pci_ops;
- 	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
- 				   ri->cfg);
- 	if (!bus)
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 43ed08d..24242f0 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -52,7 +52,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
- 		return ERR_PTR(-ENOMEM);
- 
- 	cfg->parent = dev;
--	cfg->ops = ops;
-+	cfg->ops = *ops;
- 	cfg->busr.start = busr->start;
- 	cfg->busr.end = busr->end;
- 	cfg->busr.flags = IORESOURCE_BUS;
-@@ -138,7 +138,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where)
- {
- 	struct pci_config_window *cfg = bus->sysdata;
--	unsigned int devfn_shift = cfg->ops->bus_shift - 8;
-+	unsigned int devfn_shift = cfg->ops.bus_shift - 8;
- 	unsigned int busn = bus->number;
- 	void __iomem *base;
- 
-@@ -149,7 +149,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- 	if (per_bus_mapping)
- 		base = cfg->winp[busn];
- 	else
--		base = cfg->win + (busn << cfg->ops->bus_shift);
-+		base = cfg->win + (busn << cfg->ops.bus_shift);
- 	return base + (devfn << devfn_shift) + where;
- }
- 
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 7adad20..0ce2920 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -39,7 +39,7 @@ struct pci_config_window {
- 	struct resource			res;
- 	struct resource			busr;
- 	void				*priv;
--	struct pci_ecam_ops		*ops;
-+	struct pci_ecam_ops		ops;
- 	union {
- 		void __iomem		*win;	/* 64-bit single mapping */
- 		void __iomem		**winp; /* 32-bit per-bus mapping */
--- 
-1.9.1
+Yes, that was our intention. Thank you for setting the "Fixes" and
+staging for 4.8.
