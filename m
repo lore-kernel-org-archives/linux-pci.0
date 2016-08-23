@@ -1,68 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:57276 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbcHKPJd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Aug 2016 11:09:33 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: Question about dma-ranges property for PCI host controllers
-Date: Thu, 11 Aug 2016 17:09:23 +0200
-Message-ID: <2867793.PfGZpZFyEJ@wuerfel>
-In-Reply-To: <HK2PR0601MB1393CA771AB65556D4E2F0B9F51E0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <HK2PR0601MB1393CA771AB65556D4E2F0B9F51E0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-MIME-Version: 1.0
+Return-Path: <decui@microsoft.com>
+Return-Path: <decui@microsoft.com>
+From: Dexuan Cui <decui@microsoft.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "gregkh@linuxfoundation.org"
+	<gregkh@linuxfoundation.org>, KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
+	"jasowang@redhat.com" <jasowang@redhat.com>, "vkuznets@redhat.com"
+	<vkuznets@redhat.com>, Haiyang Zhang <haiyangz@microsoft.com>, Hadden Hoppert
+	<haddenh@microsoft.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Stephen
+ Hemminger" <sthemmin@microsoft.com>
+Subject: [PATCH 3/5] PCI: hv: remove the unused 'wrk' in struct
+ hv_pcibus_device
+Date: Tue, 23 Aug 2016 04:47:23 +0000
+Message-ID: <MWHPR03MB2669B3E02C848820740880E4BFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, August 11, 2016 3:00:42 PM CEST Phil Edworthy wrote:
-> Hi,
-> 
-> A few PCI host controllers use the "dma-ranges" property to specify the
-> mapping from PCI bus addresses to physical addresses.
-> 
-> In the case of R-Car PCIe Host controllers, the intention was to set this
-> property as a 1 to 1 mapping for all DDR that could be addressed by the
-> device. However, there are some limitations for the R-Car controller which
-> meant that we could only map a subset of the DDR range - this limitation
-> has prompted us to work on enabling the IOMMU behind the PCI controller.
-> 
-> When there is an IOMMU behind the PCI controller, the "dma-ranges"
-> property specifies the mapping from PCI bus addresses to an IOVA address.
-> So should the property map all address space?
-> 
-> Note that this is not actually possible with the R-Car hardware, but I
-> found that the IOVA address space is outside of the DDR address space
-> that we were using so had change it.
 
-It's a bit tricky: the dma-ranges properties are walked recursively,
-and a PCI bus may be behind a few other bridges that each have a
-nontrivial mapping, and the IOMMU may not be on the address space that
-the PCI host sees.
+The member is not used.
 
-In the past, we have said that the dma-ranges property should reflect
-the address space that is used when programming the bridge registers
-in the PCI host bridge itself.
+Cc: Jake Oshins <jakeo@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-I think we have also made the assumption that a PCI host bridge
-with an IOMMU uses a flat 32-bit DMA address space that goes through
-the IOMMU (possibly a separate address space per PCI function,
-depending on the type of IOMMU).
-
-One corner case that doesn't really fit in that model is a PCI host
-bridge that requires the bridge register to be programmed in a special
-way for the IOMMU to work (e.g. away from the RAM to the address that
-is routed to the IOMMU).
-
-Another tricky case is a PCI host that uses the IOMMU only for 32-bit
-DMA masters but that does have a dma-ranges property that can be
-used for direct mapping of all RAM through a nonzero offset that
-gets set up according to dma-ranges.
-
-Can you be more specific which of those cases you actually have here?
-
-	Arnd
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index cdbadea5..aef2e1e 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -374,7 +374,6 @@ struct hv_pcibus_device {
+=20
+ 	struct list_head children;
+ 	struct list_head dr_list;
+-	struct work_struct wrk;
+=20
+ 	struct msi_domain_info msi_info;
+ 	struct msi_controller msi_chip;
+--=20
+2.7.4
