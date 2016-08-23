@@ -1,220 +1,105 @@
-Return-Path: <Nicolas.FERRE@atmel.com>
-Return-Path: <Nicolas.FERRE@atmel.com>
-Subject: Re: [RFT PATCH v2 2/3] ARM: Fix *MIGHT_HAVE_PCI* config from being
- selected redundantly
-To: Kishon Vijay Abraham I <kishon@ti.com>, Tony Lindgren <tony@atomide.com>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>, "Jean-Christophe
- Plagniol-Villard" <plagnioj@jcrosoft.com>, Krzysztof Halasa
-	<khalasa@piap.pl>, Kukjin Kim <kgene@kernel.org>, Krzysztof Kozlowski
-	<k.kozlowski@samsung.com>, Shawn Guo <shawnguo@kernel.org>, Sascha Hauer
-	<kernel@pengutronix.de>, Santosh Shilimkar <ssantosh@kernel.org>, Daniel Mack
-	<daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert
- Jarzmik <robert.jarzmik@free.fr>, Simon Horman <horms@verge.net.au>, Magnus
- Damm <magnus.damm@gmail.com>, Viresh Kumar <vireshk@kernel.org>, Shiraz
- Hashim <shiraz.linux.kernel@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-References: <1470049950-4697-1-git-send-email-kishon@ti.com>
- <1470049950-4697-3-git-send-email-kishon@ti.com>
-CC: <helgaas@kernel.org>, Benoit Cousson <bcousson@baylibre.com>, Rob Herring
-	<robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King
-	<linux@armlinux.org.uk>, Fabio Estevam <fabio.estevam@nxp.com>, Greg Ungerer
-	<gerg@uclinux.org>, <linux-samsung-soc@vger.kernel.org>,
-	<linux-renesas-soc@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>, <nsekhar@ti.com>
-From: Nicolas Ferre <nicolas.ferre@atmel.com>
-Message-ID: <579F6FAF.7010001@atmel.com>
-Date: Mon, 1 Aug 2016 17:50:07 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36206 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753156AbcHWVqO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Aug 2016 17:46:14 -0400
+Date: Tue, 23 Aug 2016 16:36:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH v2] vmd: Fix infinite loop executing irq's
+Message-ID: <20160823213605.GC5838@localhost>
+References: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1470049950-4697-3-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470671271-22465-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Le 01/08/2016 13:12, Kishon Vijay Abraham I a écrit :
-> *MIGHT_HAVE_PCI* config is already selected in ARCH_MULTIPLATFORM.
-> Fix it from getting redundantly selected in all
-> ARCH_MULTIPLATFORM based machines.
+Hi Keith,
 
-And what happens if we select just one platform independently?
-
-Bye,
-
+On Mon, Aug 08, 2016 at 09:47:51AM -0600, Keith Busch wrote:
+> We can't initialize the list head on deletion as this causes the node
+> to point to itself, looping infinitely if the vmd IRQ handler happened
+> to be servicing that node.
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> The list initialization was trying fix a bug from multiple calls to
+> disable the same IRQ. We can fix this instead by having the vmd driver
+> track if the interrupt is enabled.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Cc: Jon Derrick <jonathan.derrick@intel.com>
+> Reported-by: Grzegorz Koczot <grzegorz.koczot@intel.com>
+> Tested-by: Miroslaw Drost <miroslaw.drost@intel.com>
+
+I assume you want
+
+  Fixes: 97e923063575 ("x86/PCI: VMD: Initialize list item in IRQ disable")
+
+and you want this in for-linus so it goes in v4.8 instead of v4.9.
+
+I did that for you, so let me know if it's not right.
+
 > ---
->  arch/arm/Kconfig                 |    2 --
->  arch/arm/mach-at91/Kconfig       |    1 -
->  arch/arm/mach-axxia/Kconfig      |    1 -
->  arch/arm/mach-exynos/Kconfig     |    1 -
->  arch/arm/mach-integrator/Kconfig |    1 -
->  arch/arm/mach-keystone/Kconfig   |    1 -
->  arch/arm/mach-ks8695/Kconfig     |    5 -----
->  arch/arm/mach-pxa/Kconfig        |    1 -
->  arch/arm/mach-spear/Kconfig      |    1 -
->  arch/arm/mach-versatile/Kconfig  |    1 -
->  10 files changed, 15 deletions(-)
+> v1 -> v2:
 > 
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index 90542db..538b032 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -474,7 +474,6 @@ config ARCH_IXP4XX
->  	select CPU_XSCALE
->  	select DMABOUNCE if PCI
->  	select GENERIC_CLOCKEVENTS
-> -	select MIGHT_HAVE_PCI
->  	select NEED_MACH_IO_H
->  	select USB_EHCI_BIG_ENDIAN_DESC
->  	select USB_EHCI_BIG_ENDIAN_MMIO
-> @@ -486,7 +485,6 @@ config ARCH_DOVE
->  	select ARCH_REQUIRE_GPIOLIB
->  	select CPU_PJ4
->  	select GENERIC_CLOCKEVENTS
-> -	select MIGHT_HAVE_PCI
->  	select MULTI_IRQ_HANDLER
->  	select MVEBU_MBUS
->  	select PINCTRL
-> diff --git a/arch/arm/mach-at91/Kconfig b/arch/arm/mach-at91/Kconfig
-> index 08047af..4013427 100644
-> --- a/arch/arm/mach-at91/Kconfig
-> +++ b/arch/arm/mach-at91/Kconfig
-> @@ -55,7 +55,6 @@ config SOC_AT91RM9200
->  	select ATMEL_ST
->  	select CPU_ARM920T
->  	select HAVE_AT91_USB_CLK
-> -	select MIGHT_HAVE_PCI
->  	select PINCTRL_AT91
->  	select SOC_SAM_V4_V5
->  	select SRAM if PM
-> diff --git a/arch/arm/mach-axxia/Kconfig b/arch/arm/mach-axxia/Kconfig
-> index 6c6d5e7..ee2e131 100644
-> --- a/arch/arm/mach-axxia/Kconfig
-> +++ b/arch/arm/mach-axxia/Kconfig
-> @@ -7,7 +7,6 @@ config ARCH_AXXIA
->  	select ARM_TIMER_SP804
->  	select HAVE_ARM_ARCH_TIMER
->  	select MFD_SYSCON
-> -	select MIGHT_HAVE_PCI
->  	select PCI_DOMAINS if PCI
->  	select ZONE_DMA
->  	help
-> diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
-> index 20dcf6e..a03daf5 100644
-> --- a/arch/arm/mach-exynos/Kconfig
-> +++ b/arch/arm/mach-exynos/Kconfig
-> @@ -125,7 +125,6 @@ config SOC_EXYNOS5440
->  	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
->  	select HAVE_ARM_ARCH_TIMER
->  	select AUTO_ZRELADDR
-> -	select MIGHT_HAVE_PCI
->  	select PCI_DOMAINS if PCI
->  	select PINCTRL_EXYNOS5440
->  	select PM_OPP
-> diff --git a/arch/arm/mach-integrator/Kconfig b/arch/arm/mach-integrator/Kconfig
-> index b2a85ba..4ed202c 100644
-> --- a/arch/arm/mach-integrator/Kconfig
-> +++ b/arch/arm/mach-integrator/Kconfig
-> @@ -21,7 +21,6 @@ if ARCH_INTEGRATOR
->  config ARCH_INTEGRATOR_AP
->  	bool "Support Integrator/AP and Integrator/PP2 platforms"
->  	select CLKSRC_MMIO
-> -	select MIGHT_HAVE_PCI
->  	select SERIAL_AMBA_PL010 if TTY
->  	select SERIAL_AMBA_PL010_CONSOLE if TTY
->  	select SOC_BUS
-> diff --git a/arch/arm/mach-keystone/Kconfig b/arch/arm/mach-keystone/Kconfig
-> index ea955f6db..6bd14da 100644
-> --- a/arch/arm/mach-keystone/Kconfig
-> +++ b/arch/arm/mach-keystone/Kconfig
-> @@ -9,7 +9,6 @@ config ARCH_KEYSTONE
->  	select COMMON_CLK_KEYSTONE
->  	select ARCH_SUPPORTS_BIG_ENDIAN
->  	select ZONE_DMA if ARM_LPAE
-> -	select MIGHT_HAVE_PCI
->  	select PCI_DOMAINS if PCI
->  	help
->  	  Support for boards based on the Texas Instruments Keystone family of
-> diff --git a/arch/arm/mach-ks8695/Kconfig b/arch/arm/mach-ks8695/Kconfig
-> index a545976..4ef06bc 100644
-> --- a/arch/arm/mach-ks8695/Kconfig
-> +++ b/arch/arm/mach-ks8695/Kconfig
-> @@ -4,7 +4,6 @@ menu "Kendin/Micrel KS8695 Implementations"
->  
->  config MACH_KS8695
->  	bool "KS8695 development board"
-> -	select MIGHT_HAVE_PCI
->  	help
->  	  Say 'Y' here if you want your kernel to run on the original
->  	  Kendin-Micrel KS8695 development board.
-> @@ -52,7 +51,6 @@ config MACH_CM4002
->  
->  config MACH_CM4008
->  	bool "OpenGear CM4008"
-> -	select MIGHT_HAVE_PCI
->  	help
->  	  Say 'Y' here if you want your kernel to support the OpenGear
->  	  CM4008 Console Server. See http://www.opengear.com for more
-> @@ -60,7 +58,6 @@ config MACH_CM4008
->  
->  config MACH_CM41xx
->  	bool "OpenGear CM41xx"
-> -	select MIGHT_HAVE_PCI
->  	help
->  	  Say 'Y' here if you want your kernel to support the OpenGear
->  	  CM4016 or CM4048 Console Servers. See http://www.opengear.com for
-> @@ -68,7 +65,6 @@ config MACH_CM41xx
->  
->  config MACH_IM4004
->  	bool "OpenGear IM4004"
-> -	select MIGHT_HAVE_PCI
->  	help
->  	  Say 'Y' here if you want your kernel to support the OpenGear
->  	  IM4004 Secure Access Server. See http://www.opengear.com for
-> @@ -76,7 +72,6 @@ config MACH_IM4004
->  
->  config MACH_IM42xx
->  	bool "OpenGear IM42xx"
-> -	select MIGHT_HAVE_PCI
->  	help
->  	  Say 'Y' here if you want your kernel to support the OpenGear
->  	  IM4216 or IM4248 Console Servers. See http://www.opengear.com for
-> diff --git a/arch/arm/mach-pxa/Kconfig b/arch/arm/mach-pxa/Kconfig
-> index cd894d6..39f7755 100644
-> --- a/arch/arm/mach-pxa/Kconfig
-> +++ b/arch/arm/mach-pxa/Kconfig
-> @@ -113,7 +113,6 @@ config MACH_ARMCORE
->  	bool "CompuLab CM-X255/CM-X270 modules"
->  	select ARCH_HAS_DMA_SET_COHERENT_MASK if PCI
->  	select IWMMXT
-> -	select MIGHT_HAVE_PCI
->  	select NEED_MACH_IO_H if PCI
->  	select PXA25x
->  	select PXA27x
-> diff --git a/arch/arm/mach-spear/Kconfig b/arch/arm/mach-spear/Kconfig
-> index ea9ea95..f8af720 100644
-> --- a/arch/arm/mach-spear/Kconfig
-> +++ b/arch/arm/mach-spear/Kconfig
-> @@ -20,7 +20,6 @@ config ARCH_SPEAR13XX
->  	select HAVE_ARM_TWD if SMP
->  	select PINCTRL
->  	select MFD_SYSCON
-> -	select MIGHT_HAVE_PCI
->  	help
->  	  Supports for ARM's SPEAR13XX family
->  
-> diff --git a/arch/arm/mach-versatile/Kconfig b/arch/arm/mach-versatile/Kconfig
-> index b0cc262..c257d40 100644
-> --- a/arch/arm/mach-versatile/Kconfig
-> +++ b/arch/arm/mach-versatile/Kconfig
-> @@ -9,7 +9,6 @@ config ARCH_VERSATILE
->  	select CPU_ARM926T
->  	select ICST
->  	select MFD_SYSCON
-> -	select MIGHT_HAVE_PCI
->  	select PLAT_VERSATILE
->  	select POWER_RESET
->  	select POWER_RESET_VERSATILE
+>   Removed check for poisioned list pointer. This is abusing knowledge
+>   internal to the list api, so we need another way to know if the child
+>   irq is enabled. This patch uses a driver controlled boolean for this.
 > 
-
-
--- 
-Nicolas Ferre
+>   Added tags for the bug reporter and tester.
+> 
+>  arch/x86/pci/vmd.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index e88b417..4b85837 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -41,6 +41,7 @@ static DEFINE_RAW_SPINLOCK(list_lock);
+>   * @node:	list item for parent traversal.
+>   * @rcu:	RCU callback item for freeing.
+>   * @irq:	back pointer to parent.
+> + * @enabled:	true if driver enabled irq
+>   * @virq:	the virtual IRQ value provided to the requesting driver.
+>   *
+>   * Every MSI/MSI-X IRQ requested for a device in a VMD domain will be mapped to
+> @@ -50,6 +51,7 @@ struct vmd_irq {
+>  	struct list_head	node;
+>  	struct rcu_head		rcu;
+>  	struct vmd_irq_list	*irq;
+> +	bool			enabled;
+>  	unsigned int		virq;
+>  };
+>  
+> @@ -122,7 +124,9 @@ static void vmd_irq_enable(struct irq_data *data)
+>  	unsigned long flags;
+>  
+>  	raw_spin_lock_irqsave(&list_lock, flags);
+> +	WARN_ON(vmdirq->enabled);
+>  	list_add_tail_rcu(&vmdirq->node, &vmdirq->irq->irq_list);
+> +	vmdirq->enabled = true;
+>  	raw_spin_unlock_irqrestore(&list_lock, flags);
+>  
+>  	data->chip->irq_unmask(data);
+> @@ -136,8 +140,10 @@ static void vmd_irq_disable(struct irq_data *data)
+>  	data->chip->irq_mask(data);
+>  
+>  	raw_spin_lock_irqsave(&list_lock, flags);
+> -	list_del_rcu(&vmdirq->node);
+> -	INIT_LIST_HEAD_RCU(&vmdirq->node);
+> +	if (vmdirq->enabled) {
+> +		list_del_rcu(&vmdirq->node);
+> +		vmdirq->enabled = false;
+> +	}
+>  	raw_spin_unlock_irqrestore(&list_lock, flags);
+>  }
+>  
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
