@@ -1,78 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33132 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932176AbcHWVTV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Aug 2016 17:19:21 -0400
-Date: Tue, 23 Aug 2016 16:19:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Peter Chen <peter.chen@nxp.com>
-Cc: minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 1/1] pci: host: pci-layerscape: add missing of_node_put
- after calling of_parse_phandle
-Message-ID: <20160823211916.GB5838@localhost>
-References: <1470965681-30496-1-git-send-email-peter.chen@nxp.com>
+Return-Path: <decui@microsoft.com>
+Return-Path: <decui@microsoft.com>
+From: Dexuan Cui <decui@microsoft.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "gregkh@linuxfoundation.org"
+	<gregkh@linuxfoundation.org>, KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
+	"jasowang@redhat.com" <jasowang@redhat.com>, "vkuznets@redhat.com"
+	<vkuznets@redhat.com>, Haiyang Zhang <haiyangz@microsoft.com>, Hadden Hoppert
+	<haddenh@microsoft.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Stephen
+ Hemminger" <sthemmin@microsoft.com>
+Subject: [PATCH 2/5] PCI: hv: use pci_function_description[0] in struct
+ definitions
+Date: Tue, 23 Aug 2016 04:46:39 +0000
+Message-ID: <MWHPR03MB26690A6775AA12D58E6770E1BFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470965681-30496-1-git-send-email-peter.chen@nxp.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Peter,
 
-On Fri, Aug 12, 2016 at 09:34:41AM +0800, Peter Chen wrote:
-> of_node_put needs to be called when the device node which is got
-> from of_parse_phandle has finished using.
-> 
-> Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-> Cc: Mingkai Hu <mingkai.hu@freescale.com>
-> Cc: Roy Zang <tie-fei.zang@freescale.com>
-> Signed-off-by: Peter Chen <peter.chen@nxp.com>
-> ---
->  drivers/pci/host/pci-layerscape.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-> index 114ba81..573b996 100644
-> --- a/drivers/pci/host/pci-layerscape.c
-> +++ b/drivers/pci/host/pci-layerscape.c
-> @@ -173,6 +173,8 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
->  		return -EINVAL;
->  	}
->  
-> +	of_node_put(msi_node);
-> +
+The 2 structs can use a zero-length array here, because dynamic memory of
+the correct size is allocated in hv_pci_devices_present() and we don't
+need this extra element.
 
-Can you please look for and fix similar errors in other drivers in
-drivers/pci/host/*?
+No functional change.
 
-For example:
+Cc: Jake Oshins <jakeo@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  advk_pcie_probe() and iproc_pcie_msi_enable() call
-  of_parse_phandle() but don't call of_node_put() in failure paths.
-
-  dra7xx_pcie_init_irq_domain(), nwl_pcie_init_irq_domain(), and
-  xilinx_pcie_init_irq_domain() call of_get_next_child() but don't
-  call of_node_put() in failure paths.
-
-  ks_pcie_get_irq_controller_info() calls of_find_node_by_name().
-
-I think there may be others, e.g., the pci_host_bridge_msi_domain()
-path calls of_parse_phandle(), but I'm not sure of_node_put() is
-called on failure paths.
-
-When we find bugs like this, it's nice to fix one occurrence, but it's
-really great if we can squash similar bugs nearby so the bug isn't
-copied into new drivers.
-
->  	return 0;
->  }
->  
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 78758e9..cdbadea5 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -259,7 +259,7 @@ struct pci_bus_d0_entry {
+ struct pci_bus_relations {
+ 	struct pci_incoming_message incoming;
+ 	u32 device_count;
+-	struct pci_function_description func[1];
++	struct pci_function_description func[0];
+ } __packed;
+=20
+ struct pci_q_res_req_response {
+@@ -394,7 +394,7 @@ struct hv_dr_work {
+ struct hv_dr_state {
+ 	struct list_head list_entry;
+ 	u32 device_count;
+-	struct pci_function_description func[1];
++	struct pci_function_description func[0];
+ };
+=20
+ enum hv_pcichild_state {
+--=20
+2.7.4
