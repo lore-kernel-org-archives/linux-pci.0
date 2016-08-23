@@ -1,56 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43544 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756316AbcHVTZ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 15:25:59 -0400
-Subject: [PATCH] PCI: altera: Remove redundant platform_get_resource()
- return value check
-To: Ley Foon Tan <lftan@altera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org,
-        linux-kernel@vger.kernel.org
-Date: Mon, 22 Aug 2016 14:25:55 -0500
-Message-ID: <20160822192555.4824.11845.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <decui@microsoft.com>
+Return-Path: <decui@microsoft.com>
+From: Dexuan Cui <decui@microsoft.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "gregkh@linuxfoundation.org"
+	<gregkh@linuxfoundation.org>, KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
+	"jasowang@redhat.com" <jasowang@redhat.com>, "vkuznets@redhat.com"
+	<vkuznets@redhat.com>, Haiyang Zhang <haiyangz@microsoft.com>, Hadden Hoppert
+	<haddenh@microsoft.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Stephen
+ Hemminger" <sthemmin@microsoft.com>
+Subject: [PATCH 4/5] PCI: hv: hv_compose_msi_msg: handle the 'ret' value
+Date: Tue, 23 Aug 2016 04:48:11 +0000
+Message-ID: <MWHPR03MB266954FABD2DD49DC19CF106BFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-devm_ioremap_resource() fails gracefully when given a NULL resource
-pointer, so we don't need to check separately for failure from
-platform_get_resource_byname().  Remove the redundant check.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+I happened to find this when reading the code.
+I didn't get a real issue however.
+
+Cc: Jake Oshins <jakeo@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
 ---
- drivers/pci/host/pcie-altera-msi.c |   10 ----------
- 1 file changed, 10 deletions(-)
+ drivers/pci/host/pci-hyperv.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
-index 99177f4..0629ae1 100644
---- a/drivers/pci/host/pcie-altera-msi.c
-+++ b/drivers/pci/host/pcie-altera-msi.c
-@@ -237,11 +237,6 @@ static int altera_msi_probe(struct platform_device *pdev)
- 	msi->pdev = pdev;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
--	if (!res) {
--		dev_err(&pdev->dev, "no csr memory resource defined\n");
--		return -ENODEV;
--	}
--
- 	msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
- 	if (IS_ERR(msi->csr_base)) {
- 		dev_err(&pdev->dev, "failed to map csr memory\n");
-@@ -250,11 +245,6 @@ static int altera_msi_probe(struct platform_device *pdev)
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
- 					   "vector_slave");
--	if (!res) {
--		dev_err(&pdev->dev, "no vector_slave memory resource defined\n");
--		return -ENODEV;
--	}
--
- 	msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
- 	if (IS_ERR(msi->vector_base)) {
- 		dev_err(&pdev->dev, "failed to map vector_slave memory\n");
-
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index aef2e1e..f337239 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -893,8 +893,10 @@ static void hv_compose_msi_msg(struct irq_data *data, =
+struct msi_msg *msg)
+ 			       sizeof(*int_pkt), (unsigned long)&ctxt.pkt,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+-	if (!ret)
+-		wait_for_completion(&comp.comp_pkt.host_event);
++	if (ret)
++		goto free_int_desc;
++
++	wait_for_completion(&comp.comp_pkt.host_event);
+=20
+ 	if (comp.comp_pkt.completion_status < 0) {
+ 		dev_err(&hbus->hdev->device,
+--=20
+2.7.4
