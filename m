@@ -1,239 +1,142 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Fri, 12 Aug 2016 17:42:35 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	rjw@rjwysocki.net, helgaas@kernel.org, rafael@kernel.org,
-	will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
-	shijie.huang@arm.com, robert.richter@caviumnetworks.com,
-	mw@semihalf.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, al.stone@linaro.org,
-	graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org
-Subject: Re: [PATCH V8 2/8] ACPI: Add new IORT functions to support MSI
- domain handling
-Message-ID: <20160812164234.GB17734@red-moon>
-References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
- <1470909998-16710-3-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.windriver.com ([147.11.146.13]:34176 "EHLO
+        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932622AbcHXU6f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 16:58:35 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 7/9] PCI: PCIe xilinx-nwl: make host code explicitly non-modular
+Date: Wed, 24 Aug 2016 16:57:50 -0400
+Message-ID: <20160824205752.12024-8-paul.gortmaker@windriver.com>
+In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470909998-16710-3-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 11, 2016 at 12:06:32PM +0200, Tomasz Nowicki wrote:
+The Kconfig currently controlling compilation of this code is:
 
-[...]
+drivers/pci/host/Kconfig:config PCIE_XILINX_NWL
+drivers/pci/host/Kconfig:       bool "NWL PCIe Core"
 
-> +/**
-> + * iort_register_domain_token() - register domain token and related ITS ID
-> + * to the list from where we can get it back later on.
-> + * @trans_id: ITS ID.
-> + * @fw_node: Domain token.
-> + *
-> + * Returns: 0 on success, -ENOMEM if no memory when allocating list element
-> + */
-> +int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
-> +{
-> +	struct iort_its_msi_chip *its_msi_chip;
-> +
-> +	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
+...meaning that it currently is not being built as a module by anyone.
 
-I spotted this while reworking my ARM SMMU series, this may sleep
-and that's no good given that we call it within the acpi_probe_lock.
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.
 
-Same goes for irq_domain_alloc_fwnode() (that we call in
-gic_v2_acpi_init()), we have got to fix this usage, I will see with
-Marc what's the best way to do it.
+We explicitly disallow a driver unbind, since that doesn't have a
+sensible use case anyway, and it allows us to drop the ".remove"
+code for non-modular drivers.  Several functions only used by the
+remove function are also deleted here.
 
-Lorenzo
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
 
-> +	if (!its_msi_chip)
-> +		return -ENOMEM;
-> +
-> +	its_msi_chip->fw_node = fw_node;
-> +	its_msi_chip->translation_id = trans_id;
-> +
-> +	spin_lock(&iort_msi_chip_lock);
-> +	list_add(&its_msi_chip->list, &iort_msi_chip_list);
-> +	spin_unlock(&iort_msi_chip_lock);
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * iort_deregister_domain_token() - Deregister domain token based on ITS ID
-> + * @trans_id: ITS ID.
-> + *
-> + * Returns: none.
-> + */
-> +void iort_deregister_domain_token(int trans_id)
-> +{
-> +	struct iort_its_msi_chip *its_msi_chip, *t;
-> +
-> +	spin_lock(&iort_msi_chip_lock);
-> +	list_for_each_entry_safe(its_msi_chip, t, &iort_msi_chip_list, list) {
-> +		if (its_msi_chip->translation_id == trans_id) {
-> +			list_del(&its_msi_chip->list);
-> +			kfree(its_msi_chip);
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&iort_msi_chip_lock);
-> +}
-> +
-> +/**
-> + * iort_find_domain_token() - Find domain token based on given ITS ID
-> + * @trans_id: ITS ID.
-> + *
-> + * Returns: domain token when find on the list, NULL otherwise
-> + */
-> +struct fwnode_handle *iort_find_domain_token(int trans_id)
-> +{
-> +	struct fwnode_handle *fw_node = NULL;
-> +	struct iort_its_msi_chip *its_msi_chip;
-> +
-> +	spin_lock(&iort_msi_chip_lock);
-> +	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
-> +		if (its_msi_chip->translation_id == trans_id) {
-> +			fw_node = its_msi_chip->fw_node;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&iort_msi_chip_lock);
-> +
-> +	return fw_node;
-> +}
-> +
->  static struct acpi_iort_node *
->  iort_scan_node(enum acpi_iort_node_type type,
->  	       iort_find_node_callback callback, void *context)
-> @@ -206,6 +285,96 @@ iort_find_dev_node(struct device *dev)
->  			      iort_match_node_callback, &pbus->dev);
->  }
->  
-> +/**
-> + * iort_msi_map_rid() - Map a MSI requester ID for a device
-> + * @dev: The device for which the mapping is to be done.
-> + * @req_id: The device requester ID.
-> + *
-> + * Returns: mapped MSI RID on success, input requester ID otherwise
-> + */
-> +u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-> +{
-> +	struct acpi_iort_node *node;
-> +	u32 dev_id;
-> +
-> +	if (!iort_table)
-> +		return req_id;
-> +
-> +	node = iort_find_dev_node(dev);
-> +	if (!node) {
-> +		dev_err(dev, "can't find related IORT node\n");
-> +		return req_id;
-> +	}
-> +
-> +	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-> +	return dev_id;
-> +}
-> +
-> +/**
-> + * iort_dev_find_its_id() - Find the ITS identifier for a device
-> + * @dev: The device.
-> + * @idx: Index of the ITS identifier list.
-> + * @its_id: ITS identifier.
-> + *
-> + * Returns: 0 on success, appropriate error value otherwise
-> + */
-> +static int
-> +iort_dev_find_its_id(struct device *dev, u32 req_id, unsigned int idx,
-> +		     int *its_id)
-> +{
-> +	struct acpi_iort_its_group *its;
-> +	struct acpi_iort_node *node;
-> +
-> +	node = iort_find_dev_node(dev);
-> +	if (!node) {
-> +		dev_err(dev, "can't find related IORT node\n");
-> +		return -ENXIO;
-> +	}
-> +
-> +	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-> +	if (!node) {
-> +		dev_err(dev, "can't find related ITS node\n");
-> +		return -ENXIO;
-> +	}
-> +
-> +	/* Move to ITS specific data */
-> +	its = (struct acpi_iort_its_group *)node->node_data;
-> +	if (idx > its->its_count) {
-> +		dev_err(dev, "requested ITS ID index [%d] is greater than available [%d]\n",
-> +			idx, its->its_count);
-> +		return -ENXIO;
-> +	}
-> +
-> +	*its_id = its->identifiers[idx];
-> +	return 0;
-> +}
-> +
-> +/**
-> + * iort_get_device_domain() - Find MSI domain related to a device
-> + * @dev: The device.
-> + * @req_id: Requester ID for the device.
-> + *
-> + * Returns: the MSI domain for this device, NULL otherwise
-> + */
-> +struct irq_domain *
-> +iort_get_device_domain(struct device *dev, u32 req_id)
-> +{
-> +	static struct fwnode_handle *handle;
-> +	int its_id;
-> +
-> +	if (!iort_table)
-> +		return NULL;
-> +
-> +	if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
-> +		return NULL;
-> +
-> +	handle = iort_find_domain_token(its_id);
-> +	if (!handle)
-> +		return NULL;
-> +
-> +	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
-> +}
-> +
->  void __init iort_table_detect(void)
->  {
->  	acpi_status status;
-> diff --git a/include/linux/iort.h b/include/linux/iort.h
-> index cde6809..d7daba1 100644
-> --- a/include/linux/iort.h
-> +++ b/include/linux/iort.h
-> @@ -20,11 +20,22 @@
->  #define __IORT_H__
->  
->  #include <linux/acpi.h>
-> +#include <linux/fwnode.h>
-> +#include <linux/irqdomain.h>
->  
-> +int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
-> +void iort_deregister_domain_token(int trans_id);
-> +struct fwnode_handle *iort_find_domain_token(int trans_id);
->  #ifdef CONFIG_IORT_TABLE
->  void iort_table_detect(void);
-> +u32 iort_msi_map_rid(struct device *dev, u32 req_id);
-> +struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
->  #else
->  static inline void iort_table_detect(void) { }
-> +static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-> +{ return req_id; }
-> +static inline struct irq_domain *
-> +iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
->  #endif
->  
->  #endif /* __IORT_H__ */
-> -- 
-> 1.9.1
-> 
+We also delete the MODULE_LICENSE tag etc. since all that information
+is already contained at the top of the file in the comments.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c | 53 +++-----------------------------------
+ 1 file changed, 3 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 0b597d9190b4..df7fb8b69658 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -15,7 +15,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -459,40 +459,6 @@ static const struct irq_domain_ops dev_msi_domain_ops = {
+ 	.free   = nwl_irq_domain_free,
+ };
+ 
+-static void nwl_msi_free_irq_domain(struct nwl_pcie *pcie)
+-{
+-	struct nwl_msi *msi = &pcie->msi;
+-
+-	if (msi->irq_msi0)
+-		irq_set_chained_handler_and_data(msi->irq_msi0, NULL, NULL);
+-	if (msi->irq_msi1)
+-		irq_set_chained_handler_and_data(msi->irq_msi1, NULL, NULL);
+-
+-	if (msi->msi_domain)
+-		irq_domain_remove(msi->msi_domain);
+-	if (msi->dev_domain)
+-		irq_domain_remove(msi->dev_domain);
+-
+-	kfree(msi->bitmap);
+-	msi->bitmap = NULL;
+-}
+-
+-static void nwl_pcie_free_irq_domain(struct nwl_pcie *pcie)
+-{
+-	int i;
+-	u32 irq;
+-
+-	for (i = 0; i < INTX_NUM; i++) {
+-		irq = irq_find_mapping(pcie->legacy_irq_domain, i + 1);
+-		if (irq > 0)
+-			irq_dispose_mapping(irq);
+-	}
+-	if (pcie->legacy_irq_domain)
+-		irq_domain_remove(pcie->legacy_irq_domain);
+-
+-	nwl_msi_free_irq_domain(pcie);
+-}
+-
+ static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
+ {
+ #ifdef CONFIG_PCI_MSI
+@@ -867,25 +833,12 @@ error:
+ 	return err;
+ }
+ 
+-static int nwl_pcie_remove(struct platform_device *pdev)
+-{
+-	struct nwl_pcie *pcie = platform_get_drvdata(pdev);
+-
+-	nwl_pcie_free_irq_domain(pcie);
+-	platform_set_drvdata(pdev, NULL);
+-	return 0;
+-}
+-
+ static struct platform_driver nwl_pcie_driver = {
+ 	.driver = {
+ 		.name = "nwl-pcie",
++		.suppress_bind_attrs = true,
+ 		.of_match_table = nwl_pcie_of_match,
+ 	},
+ 	.probe = nwl_pcie_probe,
+-	.remove = nwl_pcie_remove,
+ };
+-module_platform_driver(nwl_pcie_driver);
+-
+-MODULE_AUTHOR("Xilinx, Inc");
+-MODULE_DESCRIPTION("NWL PCIe driver");
+-MODULE_LICENSE("GPL");
++builtin_platform_driver(nwl_pcie_driver);
+-- 
+2.8.4
+
