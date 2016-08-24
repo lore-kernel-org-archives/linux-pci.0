@@ -1,58 +1,85 @@
-Return-Path: <benh@kernel.crashing.org>
-Return-Path: <benh@kernel.crashing.org>
-Message-ID: <1472524565.2388.26.camel@kernel.crashing.org>
-Subject: Re: [PATCH] cxl: use pcibios_free_controller_deferred() when
- removing vPHBs
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-Cc: clombard@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-        mrochs@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
-        fbarrat@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com,
-        helgaas@kernel.org, imunsie@au1.ibm.com, felix@linux.vnet.ibm.com,
-        ukrishn@linux.vnet.ibm.com, stable@vger.kernel.org
-Date: Tue, 30 Aug 2016 12:36:05 +1000
-In-Reply-To: <3049096a-97ea-9549-ee29-ae937708cf45@au1.ibm.com>
-References: <1471505714-30049-1-git-send-email-andrew.donnellan@au1.ibm.com>
-	 <3049096a-97ea-9549-ee29-ae937708cf45@au1.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 24 Aug 2016 17:34:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-kernel@vger.kernel.org,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        kristen.c.accardi@intel.com, Marc Zyngier <marc.zyngier@arm.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Scott Murray <scott@spiteful.org>,
+        =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Tom Long Nguyen <tom.l.nguyen@intel.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/9] PCI: final demodularization of non-modular code
+Message-ID: <20160824223418.GL23914@localhost>
+References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-08-30 at 11:58 +1000, Andrew Donnellan wrote:
-> Hi stable team,
+On Wed, Aug 24, 2016 at 04:57:43PM -0400, Paul Gortmaker wrote:
+> This final (assuming more new instances don't leak back in) series
+> ensures all the PCI code out there that remains using module.h is
+> actually modular or containing some use of modular infrastructure.
 > 
-> The following patch, which ended up upstream as 
-> 6f38a8b9a45833495dc878c335c5431cd98a16ed:
+> These last commits are slightly more involved than some of the
+> earlier ones since we are actually removing orphaned __exit functions
+> and some ".remove" functions as well.  So we can't claim binary
+> equivalence here, but the overall runtime should remain unchanged.
 > 
-> On 18/08/16 17:35, Andrew Donnellan wrote:
-> > 
-> > When cxl removes a vPHB, it's possible that the pci_controller may be freed
-> > before all references to the devices on the vPHB have been released. This
-> > in turn causes an invalid memory access when the devices are eventually
-> > released, as pcibios_release_device() attempts to call the phb's
-> > release_device hook.
-> > 
-> > In cxl_pci_vphb_remove(), remove the existing call to
-> > pcibios_free_controller(). Instead, use
-> > pcibios_free_controller_deferred() to free the pci_controller after all
-> > devices have been released. Export pci_set_host_bridge_release() so we can
-> > do this.
-> > 
-> > Cc: stable@vger.kernel.org
-> > > > Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-> > 
-> > ---
-> > 
-> > > > This patch requires http://patchwork.ozlabs.org/patch/658324/. It should go
-> > through the powerpc tree.
+> To that end, we have remained with the existing initcall levels
+> even though some of the hotplug infrastructural ones might make
+> better sense to be listed as subsys_initcall or similar.
 > 
-> This depends on 2dd9c11b9d4dfbd6c070eab7b81197f65e82f1a0 which didn't 
-> end up being tagged as cc: stable. It also ended up being applied in the 
-> wrong order in the powerpc/fixes tree...
+> Build tested with allmodconfig on all the major architectures.
+> 
+> Paul.
+> ---
+> 
+> Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Keith Busch <keith.busch@intel.com>
+> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+> Cc: kristen.c.accardi@intel.com
+> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> Cc: Michal Simek <michal.simek@xilinx.com>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Scott Murray <scott@spiteful.org>
+> Cc: "S�ren Brinkmann" <soren.brinkmann@xilinx.com>
+> Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
+> Cc: linux-omap@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> 
+> Paul Gortmaker (9):
+>   PCI: PCIe dpc: make it explicitly non-modular
+>   PCI: PCIe pme: make it explicitly non-modular
+>   PCI: PCIe aerdrv: make it explicitly non-modular
+>   PCI: dra7xx: make host code explicitly non-modular
+>   PCI: PCIe qcom: make host code explicitly non-modular
+>   PCI: PCIe xilinx: make host code explicitly non-modular
+>   PCI: PCIe xilinx-nwl: make host code explicitly non-modular
+>   PCI: hotplug_core: make it explicitly non-modular
+>   PCI: hotplug: make PCIe core code explicitly non-modular
+> 
+>  drivers/pci/host/pci-dra7xx.c           | 31 ++-----------------
+>  drivers/pci/host/pcie-qcom.c            | 28 +++++------------
+>  drivers/pci/host/pcie-xilinx-nwl.c      | 53 ++-------------------------------
+>  drivers/pci/host/pcie-xilinx.c          | 53 ++-------------------------------
+>  drivers/pci/hotplug/cpci_hotplug.h      |  2 --
+>  drivers/pci/hotplug/cpci_hotplug_core.c | 10 -------
+>  drivers/pci/hotplug/pci_hotplug_core.c  | 18 ++++-------
+>  drivers/pci/hotplug/pciehp_core.c       | 20 ++++---------
+>  drivers/pci/pcie/aer/aerdrv.c           | 18 +----------
+>  drivers/pci/pcie/pcie-dpc.c             | 18 +++--------
+>  drivers/pci/pcie/pme.c                  | 16 +---------
+>  11 files changed, 32 insertions(+), 235 deletions(-)
 
-My fault. Best at this point is to also apply 2dd9c11b9d4dfbd6c070eab7b81197f65e82f1a0
-to stable.
-
-Cheers,
-Ben.
+Applied to pci/demodularize for v4.9, thanks a lot, Paul!
