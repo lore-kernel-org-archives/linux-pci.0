@@ -1,68 +1,89 @@
-Return-Path: <roland.singer@desertbit.com>
-Return-Path: <roland.singer@desertbit.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Emil Velikov <emil.l.velikov@gmail.com>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost>
- <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost>
- <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
- <20160829235403.GA14177@localhost>
- <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
- <20160830130634.GA16426@localhost>
- <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
- <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
- <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
- <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
- <CACvgo52qA9YyaskNObO_f_gg51MqBZHN7mubshJhDUcgO8SZaQ@mail.gmail.com>
- <CACvgo51OodZGqnrBCusXGycdibR8PY4wBfUZOjEhQ=1TyPenrg@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
- ML dri-devel <dri-devel@lists.freedesktop.org>, linux-acpi@vger.kernel.org,
- Ilia Mirkin <imirkin@alum.mit.edu>, peter@lekensteyn.nl
-From: Roland Singer <roland.singer@desertbit.com>
-Message-ID: <58415a73-5405-531e-ccd0-a413b7a8eb63@desertbit.com>
-Date: Wed, 31 Aug 2016 12:51:59 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.windriver.com ([147.11.146.13]:34150 "EHLO
+        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751465AbcHXU6O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 16:58:14 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/9] PCI: PCIe dpc: make it explicitly non-modular
+Date: Wed, 24 Aug 2016 16:57:44 -0400
+Message-ID: <20160824205752.12024-2-paul.gortmaker@windriver.com>
+In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-In-Reply-To: <CACvgo51OodZGqnrBCusXGycdibR8PY4wBfUZOjEhQ=1TyPenrg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 30.08.2016 um 20:09 schrieb Emil Velikov:
-> I second Ilia here. Using bbswitch in conjunction with any driver (be
-> that nouveau or the proprietary one) is a bad idea.
->
+The Kconfig currently controlling compilation of this code is:
 
-I removed bbswitch from my system and will use vgaswitcheroo to check
-the GPU power state from now.
+drivers/pci/pcie/Kconfig:config PCIE_DPC
+drivers/pci/pcie/Kconfig:       bool "PCIe Downstream Port Containment support"
 
-> (If Ilia's suggestions does not help) Confirm if the freeze is due
-> to/as the GPU is powered on or off.
->
+...meaning that it currently is not being built as a module by anyone.
 
-Yeah, the freeze is caused by the switched off GPU.
-Waited for the nouveau driver to switch it off, before starting
-the graphical user interface...
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.
 
-> Out of curiosity: how did you force X to ignore the device ?
->
+Since module_init translates to device_initcall in the non-modular
+case, the init ordering remains unchanged with this commit.
 
-I tried to tell X11 to ignore the device with the following
-configuration:
+We also delete the MODULE_LICENSE tag etc. since all that information
+was (or is now) contained at the top of the file in the comments.
 
-  Section "Device"
-      Identifier  "Nvidia"
-      VendorName  "NVIDIA Corporation"
-      Option      "Ignore" "true"
-  EndSection
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/pcie/pcie-dpc.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
-> You can check if it's the boot_vga assumption with
-> cat /sys/class/drm/card*/device/{boot_vga,vendor}
-> If the output changes them my assumption holds true.
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 250f87861786..9811b14d9ad8 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -1,5 +1,7 @@
+ /*
+  * PCI Express Downstream Port Containment services driver
++ * Author: Keith Busch <keith.busch@intel.com>
++ *
+  * Copyright (C) 2016 Intel Corp.
+  *
+  * This file is subject to the terms and conditions of the GNU General Public
+@@ -9,7 +11,7 @@
+ 
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/pcieport_if.h>
+ 
+@@ -143,16 +145,4 @@ static int __init dpc_service_init(void)
+ {
+ 	return pcie_port_service_register(&dpcdriver);
+ }
+-
+-static void __exit dpc_service_exit(void)
+-{
+-	pcie_port_service_unregister(&dpcdriver);
+-}
+-
+-MODULE_DESCRIPTION("PCI Express Downstream Port Containment driver");
+-MODULE_AUTHOR("Keith Busch <keith.busch@intel.com>");
+-MODULE_LICENSE("GPL");
+-MODULE_VERSION("0.1");
+-
+-module_init(dpc_service_init);
+-module_exit(dpc_service_exit);
++device_initcall(dpc_service_init);
+-- 
+2.8.4
 
-Output did not change:
-
-  1
-  0x8086
-
-0x8086 is the vendor ID of intel. So that's ok...
