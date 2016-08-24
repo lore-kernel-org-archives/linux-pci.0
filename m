@@ -1,113 +1,51 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH V5 1/5] PCI: Embed pci_ecam_ops in pci_config_window structure
-Date: Mon,  8 Aug 2016 14:56:38 +0200
-Message-Id: <1470661002-26213-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1470661002-26213-1-git-send-email-tn@semihalf.com>
-References: <1470661002-26213-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from faith.sw1v.org ([109.74.200.146]:35810 "EHLO faith.sw1v.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752038AbcHXRBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Aug 2016 13:01:11 -0400
+Received: from hindenburg.openmarket.com ([83.166.71.24] helo=[192.168.26.176])
+        by faith.sw1v.org (envelope-from <linux@rvanderhoff.org.uk>)
+        with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        id 1bcbEU-0001MK-QV
+        for linux-pci@vger.kernel.org; Wed, 24 Aug 2016 17:40:54 +0100
+To: linux-pci@vger.kernel.org
+From: Richard van der Hoff <linux@rvanderhoff.org.uk>
+Subject: Hotplug not working for USB 3.1 docking station on Dell XPS 13
+Message-ID: <57BDCE15.4080201@rvanderhoff.org.uk>
+Date: Wed, 24 Aug 2016 17:40:53 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_config_window keeps pointer to pci_ecam_ops and every time
-we want to deallocate pci_config_window (pci_ecam_free()) we need to make
-sure to free pci_ecam_ops in case it was dynamically allocated prior to
-pci_ecam_create() call.
+Hi,
 
-To avoid that extra effort, embed pci_ecam_ops in pci_config_window,
-instead of just a pointer.
+I'm having problems with a Plugable USB-C docking station, with my 
+laptop, a Dell XPS 13 (9350). If the docking station is plugged in at 
+boot, it works correctly; however, when I hotplug it after boot, the USB 
+devices are not detected until I force a rescan of the PCI bus.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-To: Jayachandran C <jchandra@broadcom.com>
----
- arch/arm64/kernel/pci.c  | 2 +-
- drivers/pci/ecam.c       | 6 +++---
- include/linux/pci-ecam.h | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+I have also raised this as a bug at 
+https://bugzilla.kernel.org/show_bug.cgi?id=151261. There are some dmesg 
+traces and lspci logs attached to that bug.
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index acf3872..981e828 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -183,7 +183,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 	}
- 
--	acpi_pci_root_ops.pci_ops = &ri->cfg->ops->pci_ops;
-+	acpi_pci_root_ops.pci_ops = &ri->cfg->ops.pci_ops;
- 	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, &ri->common,
- 				   ri->cfg);
- 	if (!bus)
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 43ed08d..24242f0 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -52,7 +52,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
- 		return ERR_PTR(-ENOMEM);
- 
- 	cfg->parent = dev;
--	cfg->ops = ops;
-+	cfg->ops = *ops;
- 	cfg->busr.start = busr->start;
- 	cfg->busr.end = busr->end;
- 	cfg->busr.flags = IORESOURCE_BUS;
-@@ -138,7 +138,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where)
- {
- 	struct pci_config_window *cfg = bus->sysdata;
--	unsigned int devfn_shift = cfg->ops->bus_shift - 8;
-+	unsigned int devfn_shift = cfg->ops.bus_shift - 8;
- 	unsigned int busn = bus->number;
- 	void __iomem *base;
- 
-@@ -149,7 +149,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- 	if (per_bus_mapping)
- 		base = cfg->winp[busn];
- 	else
--		base = cfg->win + (busn << cfg->ops->bus_shift);
-+		base = cfg->win + (busn << cfg->ops.bus_shift);
- 	return base + (devfn << devfn_shift) + where;
- }
- 
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index 7adad20..0ce2920 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -39,7 +39,7 @@ struct pci_config_window {
- 	struct resource			res;
- 	struct resource			busr;
- 	void				*priv;
--	struct pci_ecam_ops		*ops;
-+	struct pci_ecam_ops		ops;
- 	union {
- 		void __iomem		*win;	/* 64-bit single mapping */
- 		void __iomem		**winp; /* 32-bit per-bus mapping */
--- 
-1.9.1
+The lspci output suggests a chain of three PCI bridges (00:1c.0, 
+01:00.0, 02:02.0) before a PCI->USB bridge (05:00.0 or 39:00.0). If I 
+boot without the docking station plugged in, 01:00.0 and beyond do not 
+appear, and nor do they appear on hotplug. However, if I hotplug the 
+docking station and then force a rescan with "echo 1 > 
+/sys/bus/pci/devices/0000:00:1c.0/rescan", the PCI bridges and USB 
+devices appear and spring into life.
+
+My impression, and feedback from the linux-usb mailing list, is 
+therefore that this is a PCI hotplug problem.
+
+There are some ACPI errors in the dmesg at hotplug but they don't really 
+mean much to me.
+
+I'd really appreciate any suggestions on how to proceed with this.
+
+Thanks
+
+Richard van der Hoff
