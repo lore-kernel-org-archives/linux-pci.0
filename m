@@ -1,140 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
-Date: Mon, 22 Aug 2016 10:09:18 +0000
-Message-ID: <VI1PR0401MB170958461E597D1BC7D280FF92E80@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-2-git-send-email-po.liu@nxp.com>
- <20160729224154.GC13632@localhost>
-In-Reply-To: <20160729224154.GC13632@localhost>
+Return-Path: <tglx@linutronix.de>
+Return-Path: <tglx@linutronix.de>
+Date: Wed, 24 Aug 2016 19:23:46 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+cc: Bjorn Helgaas <helgaas@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+    x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+    linux-pci@vger.kernel.org, Benedikt Spranger <b.spranger@linutronix.de>,
+    Lukas Wunner <lukas@wunner.de>
+Subject: Re: x86/PCI: Scan all functions during probing
+In-Reply-To: <73341fe4-9017-7dcb-7ae3-a993428c11fc@siemens.com>
+Message-ID: <alpine.DEB.2.20.1608241923190.5714@nanos>
+References: <alpine.DEB.2.20.1608091318530.5388@nanos> <20160809134452.GA27301@localhost> <20160818203348.GK27353@localhost> <alpine.DEB.2.20.1608241037510.5714@nanos> <73341fe4-9017-7dcb-7ae3-a993428c11fc@siemens.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Marc Zyngier <marc.zyngier@arm.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>, Bjorn
- Helgaas <bhelgaas@google.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Shawn Guo <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Wed, 24 Aug 2016, Jan Kiszka wrote:
+> On 2016-08-24 04:39, Thomas Gleixner wrote:
+> > On Thu, 18 Aug 2016, Bjorn Helgaas wrote:
+> >> I looked up the spec: PCI (not PCIe) r3.0, sec 3.2.2.3.4, says:
+> >>
+> >>   A single-function device may optionally respond to all function
+> >>   numbers as the same function or may ... respond only to function 0
+> >>   and not respond to the other function numbers.
+> >>
+> >> I'm concerned that a single-function device that responds to all
+> >> function numbers might break with this patch.
+> >>
+> >>   [multi-function devices] are also required to always implement
+> >>   function 0 in the device.
+> >>
+> >> Here's the reason we can advance by 8 in the "Go find them" loop.
+> >>
+> >>   If a single function device is detected (i.e., bit 7 in the Header
+> >>   Type register of function 0 is 0), no more functions for that Device
+> >>   Number will be checked.  If a multi-function device is detected
+> >>   (i.e., bit 7 in the Header Type register of function 0 is 1), then
+> >>   all remaining Function Numbers will be checked.
+> >>
+> >> This patch does the opposite of what the first sentence recommends.
+> > 
+> > Fair enough. We'll need to find a way to deal with that in jailhouse then.
+> 
+> Wouldn't it also be an option to have this fine-grained scanning only
+> activated if we detect to run over Jailhouse (which we have to anyway)?
+> Such code hasn't been proposed for upstream yet, but we will eventually.
 
-Sorry for late reply.
+That might be an option.
 
-I checked the updated kernel with Dongdong mentioned ACPI patch which was truly affected my quirk patch uploaded. So I suppose the quirk patch is not qualify to fix the bug.
+Thanks,
 
-I were keep thinking what your "explicitly checking for a root port device" meaning. Do you mean I should upload again the first version patch which fix it in the portdrv_core.c ? I would upload again if yes. 
-
-Thanks!
-
-
-Best regards,
-Liu Po
-
->  -----Original Message-----
->  From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->  Sent: Saturday, July 30, 2016 6:42 AM
->  To: Po Liu
->  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Roy Zang; Arnd
->  Bergmann; Marc Zyngier; Stuart Yoder; Yang-Leo Li; Minghuan Lian; Murali
->  Karicheri; Bjorn Helgaas; Shawn Guo; Mingkai Hu
->  Subject: Re: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
->  
->  On Tue, Jun 14, 2016 at 04:24:05PM +0800, Po Liu wrote:
->  > On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
->  > When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
->  > maybe there is interrupt line for aer pme etc. Search the interrupt
->  > number in the fdt file. Then fixup the dev->irq with it.
->  >
->  > Signed-off-by: Po Liu <po.liu@nxp.com>
->  
->  I'm not sure where we're at with this.  Dongdong had some issue
->  (possibly with a version of the quirk on a different platform?), and I
->  think the suggestion of explicitly checking for a root port device was a
->  good one.
->  
->  So please update and repost this for next cycle.
->  
->  > ---
->  > changes for V3:
->  > 	- Move to quirk;
->  > 	- Only correct the irq in RC mode;
->  >
->  >  drivers/pci/quirks.c | 29 +++++++++++++++++++++++++++++
->  >  1 file changed, 29 insertions(+)
->  >
->  > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
->  > ee72ebe..8b39cce 100644
->  > --- a/drivers/pci/quirks.c
->  > +++ b/drivers/pci/quirks.c
->  > @@ -25,6 +25,7 @@
->  >  #include <linux/sched.h>
->  >  #include <linux/ktime.h>
->  >  #include <linux/mm.h>
->  > +#include <linux/of_irq.h>
->  >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->  >  #include "pci.h"
->  >
->  > @@ -4419,3 +4420,31 @@ static void quirk_intel_qat_vf_cap(struct
->  pci_dev *pdev)
->  >  	}
->  >  }
->  >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443,
->  > quirk_intel_qat_vf_cap);
->  > +
->  > +/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
->  > + * but use standalone irq. Read the device tree for the aer
->  > + * interrupt number.
->  > + */
->  > +static void quirk_aer_interrupt(struct pci_dev *dev) {
->  > +	int ret;
->  > +	u8 header_type;
->  > +	struct device_node *np = NULL;
->  > +
->  > +	/* Only for the RC mode device */
->  > +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
->  > +	if ((header_type & 0x7F) != PCI_HEADER_TYPE_BRIDGE)
->  > +		return;
->  > +
->  > +	if (dev->bus->dev.of_node)
->  > +		np = dev->bus->dev.of_node;
->  > +
->  > +	if (IS_ENABLED(CONFIG_OF_IRQ) && np) {
->  > +		ret = of_irq_get_byname(np, "aer");
->  > +		if (ret > 0) {
->  > +			dev->no_msi = 1;
->  > +			dev->irq = ret;
->  > +		}
->  > +	}
->  > +}
->  > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
->  > +quirk_aer_interrupt);
->  > --
->  > 2.1.0.27.g96db324
->  >
->  >
->  > _______________________________________________
->  > linux-arm-kernel mailing list
->  > linux-arm-kernel@lists.infradead.org
->  > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	tglx
