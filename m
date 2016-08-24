@@ -1,65 +1,99 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH V5 4/5] ARM64/PCI: Start using quirks handling for ACPI based PCI host controller
-Date: Mon,  8 Aug 2016 14:56:41 +0200
-Message-Id: <1470661002-26213-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1470661002-26213-1-git-send-email-tn@semihalf.com>
-References: <1470661002-26213-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail5.windriver.com ([192.103.53.11]:36388 "EHLO mail5.wrs.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754012AbcHXU6Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Aug 2016 16:58:16 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 2/9] PCI: PCIe pme: make it explicitly non-modular
+Date: Wed, 24 Aug 2016 16:57:45 -0400
+Message-ID: <20160824205752.12024-3-paul.gortmaker@windriver.com>
+In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since there are platforms which have non-compliant ECAM space we need to
-override these accessors prior to PCI buses enumeration. In order to do
-that we call pci_mcfg_match_quirks() to retrieve custom
-pci_config_window structure. If no correlated quirk on list, use
-fully ECAM compliant generic PCI config accessors.
+The Kconfig for this option is currently:
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+config PCIE_PME
+        def_bool y
+        depends on PCIEPORTBUS && PM
+
+...where both dependencies are also bool items.  That means it currently
+ is not being built as a module by anyone.  Lets remove all traces of
+modularity, so that when reading the code, there is no doubt it is
+builtin-only.
+
+As part of that, we delete the .remove function, since that doesn't
+seem to have a sensible use case.  With "normal" endpoint drivers,
+we have in the past set the suppress_bind_attrs bit to make it clear
+that the use of ".remove" in a built-in driver was deleted, but here
+for PCI, it would seem to be overkill to jump through the
+pcie_port_service_driver and into the struct device_driver in order
+to finally try and do something similar with the bind setting.
+
+Since module_init translates to device_initcall in the non-modular
+case, the init ordering remains unchanged with this commit.
+
+We don't exchange module.h for init.h since this file already has it.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- arch/arm64/kernel/pci.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/pcie/pme.c | 16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 2e7bed4..aa734bd 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -139,8 +139,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (!ri)
- 		return NULL;
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 1ae4c73e7a3c..884bad5320f8 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -10,7 +10,6 @@
+  * for more details.
+  */
  
--	ri->cfg = pci_acpi_setup_ecam_mapping(root,
--					      &pci_generic_ecam_ops.pci_ops);
-+	ri->cfg = pci_mcfg_match_quirks(root);
- 	if (!ri->cfg) {
- 		kfree(ri);
- 		return NULL;
+-#include <linux/module.h>
+ #include <linux/pci.h>
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+@@ -449,17 +448,6 @@ static int pcie_pme_resume(struct pcie_device *srv)
+ 	return 0;
+ }
+ 
+-/**
+- * pcie_pme_remove - Prepare PCIe PME service device for removal.
+- * @srv - PCIe service device to remove.
+- */
+-static void pcie_pme_remove(struct pcie_device *srv)
+-{
+-	pcie_pme_suspend(srv);
+-	free_irq(srv->irq, srv);
+-	kfree(get_service_data(srv));
+-}
+-
+ static struct pcie_port_service_driver pcie_pme_driver = {
+ 	.name		= "pcie_pme",
+ 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+@@ -468,7 +456,6 @@ static struct pcie_port_service_driver pcie_pme_driver = {
+ 	.probe		= pcie_pme_probe,
+ 	.suspend	= pcie_pme_suspend,
+ 	.resume		= pcie_pme_resume,
+-	.remove		= pcie_pme_remove,
+ };
+ 
+ /**
+@@ -478,5 +465,4 @@ static int __init pcie_pme_service_init(void)
+ {
+ 	return pcie_port_service_register(&pcie_pme_driver);
+ }
+-
+-module_init(pcie_pme_service_init);
++device_initcall(pcie_pme_service_init);
 -- 
-1.9.1
+2.8.4
+
