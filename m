@@ -1,99 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:36388 "EHLO mail5.wrs.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754012AbcHXU6Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Aug 2016 16:58:16 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Paul Gortmaker <paul.gortmaker@windriver.com>
 To: <linux-kernel@vger.kernel.org>
 CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 2/9] PCI: PCIe pme: make it explicitly non-modular
-Date: Wed, 24 Aug 2016 16:57:45 -0400
-Message-ID: <20160824205752.12024-3-paul.gortmaker@windriver.com>
+        <kristen.c.accardi@intel.com>, <linux-pci@vger.kernel.org>
+Subject: [PATCH 9/9] PCI: hotplug: make PCIe core code explicitly non-modular
+Date: Wed, 24 Aug 2016 16:57:52 -0400
+Message-ID: <20160824205752.12024-10-paul.gortmaker@windriver.com>
 In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
 References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig for this option is currently:
+The Makefile fragments currently controlling compilation of this code are:
 
-config PCIE_PME
-        def_bool y
-        depends on PCIEPORTBUS && PM
+obj-$(CONFIG_HOTPLUG_PCI_PCIE)          += pciehp.o
+ [...]
+pciehp-objs                             := pciehp_core.o   \
 
-...where both dependencies are also bool items.  That means it currently
- is not being built as a module by anyone.  Lets remove all traces of
-modularity, so that when reading the code, there is no doubt it is
-builtin-only.
+The Kconfig currently controlling compilation of this code is:
 
-As part of that, we delete the .remove function, since that doesn't
-seem to have a sensible use case.  With "normal" endpoint drivers,
-we have in the past set the suppress_bind_attrs bit to make it clear
-that the use of ".remove" in a built-in driver was deleted, but here
-for PCI, it would seem to be overkill to jump through the
-pcie_port_service_driver and into the struct device_driver in order
-to finally try and do something similar with the bind setting.
+drivers/pci/pcie/Kconfig:config HOTPLUG_PCI_PCIE
+drivers/pci/pcie/Kconfig:       bool "PCI Express Hotplug driver"
+
+...meaning that it currently is not being built as a module by anyone.
+
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.
 
 Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.
+case, the init ordering remains unchanged with this commit.  However
+one could argue that we should use subsys_initcall() here, but for
+now we stick with runtime equivalence.
 
-We don't exchange module.h for init.h since this file already has it.
+We delete module.h but we keep the moduleparam.h include, since we are
+keeping the module_param() that the file has as-is for now.
+
+We also delete the MODULE_LICENSE tag etc since all that information
+is still contained higher up in the file via the DEFINE lines which
+now serve as documentation only.
 
 Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: kristen.c.accardi@intel.com
 Cc: linux-pci@vger.kernel.org
 Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- drivers/pci/pcie/pme.c | 16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+ drivers/pci/hotplug/pciehp_core.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 1ae4c73e7a3c..884bad5320f8 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -10,7 +10,6 @@
-  * for more details.
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index ac531e674a05..fb0f86335158 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -27,7 +27,6 @@
+  *
   */
  
 -#include <linux/module.h>
- #include <linux/pci.h>
+ #include <linux/moduleparam.h>
  #include <linux/kernel.h>
- #include <linux/errno.h>
-@@ -449,17 +448,6 @@ static int pcie_pme_resume(struct pcie_device *srv)
- 	return 0;
- }
+ #include <linux/slab.h>
+@@ -47,10 +46,10 @@ static bool pciehp_force;
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+ #define DRIVER_DESC	"PCI Express Hot Plug Controller Driver"
  
--/**
-- * pcie_pme_remove - Prepare PCIe PME service device for removal.
-- * @srv - PCIe service device to remove.
-- */
--static void pcie_pme_remove(struct pcie_device *srv)
+-MODULE_AUTHOR(DRIVER_AUTHOR);
+-MODULE_DESCRIPTION(DRIVER_DESC);
+-MODULE_LICENSE("GPL");
+-
++/*
++ * not really modular, but the easiest way to keep compat with existing
++ * bootargs behaviour is to continue using module_param here.
++ */
+ module_param(pciehp_debug, bool, 0644);
+ module_param(pciehp_poll_mode, bool, 0644);
+ module_param(pciehp_poll_time, int, 0644);
+@@ -337,13 +336,4 @@ static int __init pcied_init(void)
+ 
+ 	return retval;
+ }
+-
+-static void __exit pcied_cleanup(void)
 -{
--	pcie_pme_suspend(srv);
--	free_irq(srv->irq, srv);
--	kfree(get_service_data(srv));
+-	dbg("unload_pciehpd()\n");
+-	pcie_port_service_unregister(&hpdriver_portdrv);
+-	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
 -}
 -
- static struct pcie_port_service_driver pcie_pme_driver = {
- 	.name		= "pcie_pme",
- 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-@@ -468,7 +456,6 @@ static struct pcie_port_service_driver pcie_pme_driver = {
- 	.probe		= pcie_pme_probe,
- 	.suspend	= pcie_pme_suspend,
- 	.resume		= pcie_pme_resume,
--	.remove		= pcie_pme_remove,
- };
- 
- /**
-@@ -478,5 +465,4 @@ static int __init pcie_pme_service_init(void)
- {
- 	return pcie_port_service_register(&pcie_pme_driver);
- }
--
--module_init(pcie_pme_service_init);
-+device_initcall(pcie_pme_service_init);
+-module_init(pcied_init);
+-module_exit(pcied_cleanup);
++device_initcall(pcied_init);
 -- 
 2.8.4
-
