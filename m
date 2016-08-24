@@ -1,100 +1,135 @@
-Return-Path: <roland.singer@desertbit.com>
-Return-Path: <roland.singer@desertbit.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Emil Velikov <emil.l.velikov@gmail.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost>
- <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost>
- <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
- <20160829235403.GA14177@localhost>
- <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
- <20160830130634.GA16426@localhost>
- <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
-Cc: linux-pci@vger.kernel.org,
- "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
- ML dri-devel <dri-devel@lists.freedesktop.org>, linux-acpi@vger.kernel.org
-From: Roland Singer <roland.singer@desertbit.com>
-Message-ID: <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
-Date: Tue, 30 Aug 2016 17:25:50 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail5.windriver.com ([192.103.53.11]:36402 "EHLO mail5.wrs.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933064AbcHXU60 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Aug 2016 16:58:26 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Scott Murray <scott@spiteful.org>,
+        <kristen.c.accardi@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 8/9] PCI: hotplug_core: make it explicitly non-modular
+Date: Wed, 24 Aug 2016 16:57:51 -0400
+Message-ID: <20160824205752.12024-9-paul.gortmaker@windriver.com>
+In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-In-Reply-To: <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I tried these scenarios:
+The Makefile bits currently controlling compilation of this code are:
 
-1. Booted the system without the bbswitch module. The nouveau module
-   was loaded and is responsible for the power management of the GPU.
-   The graphical session freezes after some minutes...
+obj-$(CONFIG_HOTPLUG_PCI)           += pci_hotplug.o
+  [...]
+pci_hotplug-objs                    := pci_hotplug_core.o
 
-2. Booted the system without bbswitch and with nouveau blacklisted.
-   Manually loaded bbswitch to switch off the discrete GPU.
-   Same freeze after a while or by explicitly obtaining the GPU state.
+and the Kconfig is:
 
-Is there a possibility to switch off the discrete card without bbswitch?
-If this is possible, then I could test this without nouveau and bbswitch
-at all. If the system hangs, then it is not the video driver nor bbswitch.
+drivers/pci/hotplug/Kconfig:menuconfig HOTPLUG_PCI
+drivers/pci/hotplug/Kconfig:    bool "Support for PCI Hotplug"
 
-Am 30.08.2016 um 16:08 schrieb Emil Velikov:
-> On 30 August 2016 at 14:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Tue, Aug 30, 2016 at 12:08:57PM +0200, Roland Singer wrote:
->>> Thanks for pointing it out.
->>>
->>> Yeah that's right. The system will hang randomly a few minutes later,
->>> because some certain actions in the graphical user session will trigger
->>> the freeze.
->>>
->>> I had a look at the function body of pci_read_config_dword:
->>>
->>>   #define PCI_OP_READ(size, type, len) \
->>>   int pci_bus_read_config_##size \
->>>       (struct pci_bus *bus, unsigned int devfn, int pos, type *value) \
->>>   {                                                                   \
->>>       int res;                                                        \
->>>       unsigned long flags;                                            \
->>>       u32 data = 0;                                                   \
->>>       if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;       \
->>>       raw_spin_lock_irqsave(&pci_lock, flags);                        \
->>>       res = bus->ops->read(bus, devfn, pos, len, &data);              \
->>>       *value = (type)data;                                            \
->>>       raw_spin_unlock_irqrestore(&pci_lock, flags);           \
->>>       return res;                                                     \
->>>   }
->>>
->>> I guess, that bus->ops->read(...) might be the trigger.
->>> Any hints how to continue debugging?
->>
->> It's not likely that the problem is in the bus->ops->read() path.  That
->> is used by every device driver, so a problem there would cause more
->> serious problems than what you're seeing.
->>
->> My guess would be some problem in the video driver or the bbswitch
->> thing.
->>
-> FWIW I'm inclined to call it a bbswitch bug. It can (and does when
-> needed) power off the dedicated GPU.
-> 
-> Depending on the platform different methods are used:
-> 
-> Sometimes the GPU driver will get 0xffffffff (or similar) when trying
-> to read from the device mmio space. While one can say that the driver
-> should attribute for this, IMHO it's a bad idea to have two drivers
-> controlling the same hardware, let alone without any coordination
-> between them.
-> 
-> IIRC in some cases the device can disappear from the PCI bus (not 100%
-> sure this one). In which case a simple read can lead to a wide range
-> of fireworks.
-> 
-> Disclaimer: it's been a while since I've looked into bbswitch so
-> things might have changed/improved.
-> 
-> Regards,
-> Emil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+...meaning that it currently is not being built as a module by anyone.
+
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.
+
+This makes an exit function in cpci_hotplug_core.c orphaned, so we
+remove it here at the same time.
+
+Since module_init translates to device_initcall in the non-modular
+case, the init ordering remains unchanged with this commit.  However
+one could argue that we should use subsys_initcall() here, but for
+now we stick with runtime equivalence.
+
+We would delete module.h and just keep the moduleparam.h include (since
+the file does use module_param), but there is a try_module_get and
+module_put pairing that prevents us from doing that.
+
+We also delete the MODULE_LICENSE tag etc since all that information
+is already contained higher up in the file.
+
+Cc: Scott Murray <scott@spiteful.org>
+Cc: kristen.c.accardi@intel.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/hotplug/cpci_hotplug.h      |  2 --
+ drivers/pci/hotplug/cpci_hotplug_core.c | 10 ----------
+ drivers/pci/hotplug/pci_hotplug_core.c  | 18 ++++++------------
+ 3 files changed, 6 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/pci/hotplug/cpci_hotplug.h b/drivers/pci/hotplug/cpci_hotplug.h
+index 555bcde3b196..60e66e027ebc 100644
+--- a/drivers/pci/hotplug/cpci_hotplug.h
++++ b/drivers/pci/hotplug/cpci_hotplug.h
+@@ -101,10 +101,8 @@ int cpci_unconfigure_slot(struct slot *slot);
+ 
+ #ifdef CONFIG_HOTPLUG_PCI_CPCI
+ int cpci_hotplug_init(int debug);
+-void cpci_hotplug_exit(void);
+ #else
+ static inline int cpci_hotplug_init(int debug) { return 0; }
+-static inline void cpci_hotplug_exit(void) { }
+ #endif
+ 
+ #endif	/* _CPCI_HOTPLUG_H */
+diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+index 7d3866c47312..7ec8a8f72c69 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_core.c
++++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+@@ -719,13 +719,3 @@ cpci_hotplug_init(int debug)
+ 	cpci_debug = debug;
+ 	return 0;
+ }
+-
+-void __exit
+-cpci_hotplug_exit(void)
+-{
+-	/*
+-	 * Clean everything up.
+-	 */
+-	cpci_hp_stop();
+-	cpci_hp_unregister_controller(controller);
+-}
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 9acd1997c6fe..fea0b8b33589 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -25,7 +25,7 @@
+  *
+  */
+ 
+-#include <linux/module.h>
++#include <linux/module.h>	/* try_module_get & module_put */
+ #include <linux/moduleparam.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+@@ -537,17 +537,11 @@ static int __init pci_hotplug_init(void)
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+ 	return result;
+ }
++device_initcall(pci_hotplug_init);
+ 
+-static void __exit pci_hotplug_exit(void)
+-{
+-	cpci_hotplug_exit();
+-}
+-
+-module_init(pci_hotplug_init);
+-module_exit(pci_hotplug_exit);
+-
+-MODULE_AUTHOR(DRIVER_AUTHOR);
+-MODULE_DESCRIPTION(DRIVER_DESC);
+-MODULE_LICENSE("GPL");
++/*
++ * not really modular, but the easiest way to keep compat with existing
++ * bootargs behaviour is to continue using module_param here.
++ */
+ module_param(debug, bool, 0644);
+ MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
+-- 
+2.8.4
+
