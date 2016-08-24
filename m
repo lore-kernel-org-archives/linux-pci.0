@@ -1,153 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: Support for configurable PCIe endpoint
-To: Mingkai Hu <mingkai.hu@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, Jingoo Han
- <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>
-References: <57A18927.9070003@ti.com>
- <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com> <57A31299.2040805@ti.com>
- <VI1PR04MB14544C83482106ABF1067D5F8E140@VI1PR04MB1454.eurprd04.prod.outlook.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <57B5A919.6000809@ti.com>
-Date: Thu, 18 Aug 2016 17:54:57 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54811 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752808AbcHXP4V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 11:56:21 -0400
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vikram Sethi <vikrams@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: PCI CRS Support
+Message-ID: <f114c582-8e55-ee1a-a72d-864483077fd0@codeaurora.org>
+Date: Wed, 24 Aug 2016 11:56:18 -0400
 MIME-Version: 1.0
-In-Reply-To: <VI1PR04MB14544C83482106ABF1067D5F8E140@VI1PR04MB1454.eurprd04.prod.outlook.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>, Simon Horman <horms@verge.net.au>,
- David Daney <david.daney@cavium.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Richard Zhu <Richard.Zhu@freescale.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Ley Foon Tan <lftan@altera.com>, Mingkai Hu <mingkai.hu@freescale.com>,
- "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
- Roy Zang <tie-fei.zang@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Bjorn,
+I see that the kernel has support for Configuration Request Retry Status (CRS) visibility
+support and it gets discovered and enabled as part of the probe function.
 
-On Wednesday 17 August 2016 03:19 PM, Mingkai Hu wrote:
-> 
-> 
->> -----Original Message-----
->> From: Kishon Vijay Abraham I [mailto:kishon@ti.com]
->> Sent: Thursday, August 04, 2016 6:02 PM
->> To: Joao Pinto <Joao.Pinto@synopsys.com>; bhelgaas@google.com; linux-
->> pci@vger.kernel.org; arnd@arndb.de; Jingoo Han <jingoohan1@gmail.com>;
->> Pratyush Anand <pratyush.anand@gmail.com>
->> Cc: Ley Foon Tan <lftan@altera.com>; Rob Herring <robh@kernel.org>;
->> Tanmay Inamdar <tinamdar@apm.com>; Roy Zang <tie-
->> fei.zang@freescale.com>; Mingkai Hu <mingkai.hu@freescale.com>;
->> Minghuan Lian <minghuan.Lian@freescale.com>; Richard Zhu
->> <Richard.Zhu@freescale.com>; Lucas Stach <l.stach@pengutronix.de>;
->> Murali Karicheri <m-karicheri2@ti.com>; Thomas Petazzoni
->> <thomas.petazzoni@free-electrons.com>; Jason Cooper
->> <jason@lakedaemon.net>; Thierry Reding <thierry.reding@gmail.com>;
->> Simon Horman <horms@verge.net.au>; Zhou Wang
->> <wangzhou1@hisilicon.com>; Gabriele Paoloni
->> <gabriele.paoloni@huawei.com>; Stanimir Varbanov <svarbanov@mm-
->> sol.com>; David Daney <david.daney@cavium.com>; linux-
->> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
->> omap@vger.kernel.org; Carlos Palminha
->> <CARLOS.PALMINHA@synopsys.com>
->> Subject: Re: Support for configurable PCIe endpoint
->>
->> Hi,
->>
->> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
->>> Hi Kishon,
->>>
->>> On 8/3/2016 7:03 AM, Kishon Vijay Abraham I wrote:
->>>> Hi,
->>>>
->>>> The PCIe controller present in TI's DRA7 SoC is capable of operating
->>>> either in Root Complex mode or Endpoint mode. (It uses Synopsys
->>>> Designware Core). I'd assume most of the PCIe controllers on other
->>>> platforms that use Designware core should also be capable to operate
->>>> in endpoint mode. But linux kernel right now supports only RC mode.
->>>>
->>>> PCIe endpoint support discussion came up briefly before [1] but it
->>>> was felt the practical use case will find firmware more suitable and
->>>> endpoint support in kernel can be used only for validation or demo.
->>>>
->>>> *) Modify platform driver to support EP mode (in my case pci-dra7xx.c).
->>>>
->>>> *) dt binding specific to EP mode should be created.
->>>>
->>>> Once I complete the implementation and start posting RFC patches, a
->>>> lot of these will become clear. But I want to check if this sounds
->>>> okay to you guys before starting the implementation.
->>>>
->>>> Let me know if you have some other ideas too.
->>>>
->>>> Cheers
->>>> Kishon
->>>>
->>>> [1] -> http://www.spinics.net/lists/linux-pci/msg26026.html
->>>>
->>>
->>> You are rising a topic that we are also addressing in Synopsys.
->>>
->>> For the PCIe RC hardware validation we are currently using the
->>> standard pcie-designware and pcie-designware-plat drivers.
->>>
->>> For the Endpoint we have to use an internal software package. Its main
->>> purpose is to initialize the IP registers, eDMA channels and make data
->>> transfer to prove that the everything is working properly. This is
->>> done in 2 levels, a custom driver built and loaded and an application
->>> that makes some ioctl to the driver executing some interesting
->>> functions to check the Endpoint status and make some data exchange.
->>
->> hmm.. the platform I have doesn't have a DMA in PCIe IP
->> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does
->> the EP access RC memory? i.e the driver in the RC allocates memory from it's
->> DDR and gives it's DDR address to the EP. The EP then transfers data to this
->> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
->> simple with configurable EPs. I'd like to know more about your testing though.
->>
-> 
-> Hi Kishon,
-> 
-> This is a typical user case for EP to use DMA transfer data to/from RC memory.
-> In our case, we implement ring (like BD ring) or register in EP to communicate
-> The address allocated in RC memory, then EP can transfer data to/from RC memory.
+Let's assume a system with CRS capability and have its visibility set as above.
+I do not see any code in the failure/reset path to support the CRS requests
+returned by the endpoint.
 
-Initially I had some confusion w.r.t this because the address allocated in RC
-memory can also be an address in EP system. For example let's assume we connect
-two similar systems one configured as RC and the other configured as EP. The
-PCI driver in the RC allocates memory in it's DDR (say 0x80000000) and programs
-this address in the EP. Since it's a similar system, 0x80000000 will also be an
-address in the EPs DDR. This will result in EP transferring data to it's own
-DDR (at 0x80000000) instead of the same address in RC.
+An endpoint is allowed to return CRS after several reset types. I'm pasting the part of
+the spec for you at 2.3.1 Request Handling Rules of 3.1 spec.
 
-But later realized instead of directly using the DDR address given by RC, this
-address should only be used to program the outbound window. That way the target
-of the outbound window can be an address given by the RC and source should be
-an address from the address space in the EP's system.
+"For Configuration Requests only, following reset it is possible for a device to terminate the request 
+but indicate that it is temporarily unable to process the Request, but will be able to process the Request 
+in the future – in this case, the Configuration Request Retry 10 Status (CRS) Completion Status is used 
+(see Section 6.6). Valid reset conditions after which a device is permitted to return CRS are:
 
-Do you also use the RC memory address to program the outbound window?
+- Cold, Warm, and Hot Resets
+- FLRs
+- A reset initiated in response to a D3hot to D0uninitialized device state transition."
 
-Thanks
-Kishon
+I have identified the following functions that have problems for warm and hot resets.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Some callers of pci_reset_bridge_secondary_bus such as pciehp_reset_slot, aer_root_reset.
+Other higher level callers such as pci_bus_reset, pci_try_reset_bus and their callers from VFIO.
+All these places are impacted by a CRS call. They do the secondary bus reset but do not wait for the
+endpoint to respond. Waiting for 1 second is not a guarantee that the endpoint will start responding
+immediately. A CRS capable OS needs to interpret the incoming CRS response and poll longer
+since CRS visibility is et.
+
+All of this was warm and hot reset.
+
+I also see another problem in the FLR path too. There is some best effort wait up to 1 second in
+pci_flr_wait.
+
+Where do we go from here? I was thinking of putting something deep down into the reset secondary
+bus function but I'm afraid it will break things especially when we wait up to 60 seconds.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
