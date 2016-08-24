@@ -1,93 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41944 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590AbcHOQvX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 12:51:23 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 1/6] drivers: pci: host: aardvark: fix pci_remap_iospace() failure path
-Date: Mon, 15 Aug 2016 17:50:41 +0100
-Message-Id: <1471279854-11916-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
+MIME-Version: 1.0
+In-Reply-To: <20160824213005.1a9300ef@arm.com>
+References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
+ <20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost> <20160824213005.1a9300ef@arm.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Wed, 24 Aug 2016 15:19:21 -0700
+Message-ID: <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	patches <patches@apm.com>, Bjorn Helgaas <bhelgaas@google.com>, punit.agrawal@arm.com
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM/ARM64 architectures, PCI IO ports are emulated through memory
-mapped IO, by reserving a chunk of virtual address space starting at
-PCI_IOBASE and by mapping the PCI host bridges memory address space
-driving PCI IO cycles to it.
+On Wed, Aug 24, 2016 at 1:30 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On Wed, 24 Aug 2016 14:30:00 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+>> On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:
+>> > [ +Bjorn, Punit]
+>> >
+>> > On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:
+>> > > [Resend in plain text mode]
+>> > >
+>> > > Hi Lorenzo, Rafael,
+>> > >
+>> > > ACPI 6.1 spec does not specify how to set interrupt polarity and
+>> > > trigger mode in _PRT when the interrupts are static (hardwired to
+>> > > specific interrupt inputs in interrupt controller). In current
+>> > > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
+>> > > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
+>> > > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
+>> > > GICv3 controllers and will cause failures in PCIe AER, PME services
+>> > > (on X-Gene platforms).
+>>
+>> PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
+>> and defined as 'level sensitive,' asserted low."
+>>
+>> I've heard before that ARM64 does this differently, but I still don't
+>> understand the difference.  Obviously if you plug a legacy PCI card
+>> into an ARM64 system, it's still going to pull INTA# low to assert an
+>> interrupt.  So is there something special about ARM64 that inverts
+>> that, or what?
+>
+> There is certainly an inverter somewhere on the interrupt path, because
+> the GIC triggers on level high, not level low. But I don't think that's
+> the issue Duc is trying to outline here, because that's not something
+> SW can fix. I'm worried that in his system, the interrupt is edge
+> triggered instead.
 
-PCI host bridge drivers that enable downstream PCI IO cycles map the
-host bridge memory address responding to PCI IO cycles to the fixed
-virtual address space through the pci_remap_iospace() API.
+Yes, there is an inverter in the interrupt path to deliver interrupt to the GIC
+as level-high. X-Gene GIC uses level high for PCI INTx. I myself has been
+lucky when using trigger-rising for PCI INTx in DT boot mode.
 
-This means that if the pci_remap_iospace() function fails, the
-corresponding host bridge PCI IO resource must be considered invalid, in
-that there is no way for the kernel to actually drive PCI IO
-transactions if the memory addresses responding to PCI
-IO cycles cannot be mapped into the CPU virtual address space.
+>
+>>
+>> > > Is there any way to specify polarity and trigger mode for static
+>> > > interrupts in _PRT?
+>>
+>> There is no way I'm aware of in _PRT to specify polarity and trigger
+>> mode.  I don't know the history, but my guess is that it would be seen
+>> as superfluous given that the PCI spec requires level, active low.
 
-The PCI aardvark host bridge driver does not remove the PCI IO
-resource from the host bridge resource windows if the
-pci_remap_iospace() call fails; this is an actual bug in that the
-PCI host bridge would consider the PCI IO resource valid (and possibly
-assign it to downstream devices) even if the kernel was not able
-to map the PCI host bridge memory address driving IO cycle to the
-CPU virtual address space (ie pci_remap_iospace() failures).
+The device still pulls the INTx pin low to trigger interrupt, but the
+interrupt delivered
+to interrupt controller (GIC in this case) is not necessarily to be
+level-low. Current code
+assume level-low mode to program to the interrupt controller for INTx,
+and fails for
+GIC, GICv2m and GICv3.
 
-Fix the PCI host bridge driver pci_remap_iospace() failure path, by
-destroying the PCI host bridge PCI IO resources retrieved through
-firmware when the pci_remap_iospace() function call fails, therefore
-preventing the kernel from adding the respective PCI IO resource to the
-list of PCI host bridge valid resources, fixing the issue.
+>>
+>> Obviously I'm missing something important.
+>
+> Same here, unless the HW is not PCI compliant...
+>
+> Thanks,
+>
+>         M.
+> --
+> Jazz is not dead. It just smells funny.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Fixes: 8c39d710363c ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-aardvark.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index ef9893f..4f5e567 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -848,7 +848,7 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 	int err, res_valid = 0;
- 	struct device *dev = &pcie->pdev->dev;
- 	struct device_node *np = dev->of_node;
--	struct resource_entry *win;
-+	struct resource_entry *win, *tmp;
- 	resource_size_t iobase;
- 
- 	INIT_LIST_HEAD(&pcie->resources);
-@@ -862,7 +862,7 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 	if (err)
- 		goto out_release_res;
- 
--	resource_list_for_each_entry(win, &pcie->resources) {
-+	resource_list_for_each_entry_safe(win, tmp, &pcie->resources) {
- 		struct resource *res = win->res;
- 
- 		switch (resource_type(res)) {
-@@ -874,9 +874,11 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 					     lower_32_bits(res->start),
- 					     OB_PCIE_IO);
- 			err = pci_remap_iospace(res, iobase);
--			if (err)
-+			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
-+				resource_list_destroy_entry(win);
-+			}
- 			break;
- 		case IORESOURCE_MEM:
- 			advk_pcie_set_ob_win(pcie, 0,
--- 
-2.6.4
-
+Regards,
+Duc Dang.
