@@ -1,202 +1,73 @@
-Return-Path: <msalter@redhat.com>
-Return-Path: <msalter@redhat.com>
-Message-ID: <1470670477.3551.35.camel@redhat.com>
-Subject: Re: [RFC PATCH V5 3/5] PCI: Check platform specific ECAM quirks
-From: Mark Salter <msalter@redhat.com>
-To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org, arnd@arndb.de,
-        will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-        Lorenzo.Pieralisi@arm.com
-Cc: hanjun.guo@linaro.org, okaya@codeaurora.org, jchandra@broadcom.com,
-        cov@codeaurora.org, dhdang@apm.com, ard.biesheuvel@linaro.org,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, wangyijing@huawei.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
-        jeremy.linton@arm.com, liudongdong3@huawei.com,
-        gabriele.paoloni@huawei.com, jhugo@codeaurora.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 08 Aug 2016 11:34:37 -0400
-In-Reply-To: <1470661541-26270-4-git-send-email-tn@semihalf.com>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
-	 <1470661541-26270-4-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <marc.zyngier@arm.com>
+Return-Path: <marc.zyngier@arm.com>
+Date: Wed, 24 Aug 2016 21:30:05 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Duc Dang
+ <dhdang@apm.com>, Rafael Wysocki <rafael@kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>, patches
+ <patches@apm.com>, <bhelgaas@google.com>, <punit.agrawal@arm.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in
+ _PRT
+Message-ID: <20160824213005.1a9300ef@arm.com>
+In-Reply-To: <20160824193000.GE23914@localhost>
+References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
+	<20160824142723.GA25843@red-moon>
+	<20160824193000.GE23914@localhost>
+Sender: marc.zyngier@foss.arm.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2016-08-08 at 15:05 +0200, Tomasz Nowicki wrote:
-> Some platforms may not be fully compliant with generic set of PCI config
-> accessors. For these cases we implement the way to overwrite accessors
-> set. Algorithm traverses available quirk list (static array),
-> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
-> returns pci_config_window structure with fancy PCI config ops.
-> oem_id, oem_table_id and rev come from MCFG table standard header.
-> 
-> It is possible to define custom init call which is responsible for
-> setting up PCI configuration access accordingly to quirk requirements.
-> If custom init call is not defined, use standard pci_acpi_setup_ecam_mapping().
-> 
-> pci_generic_ecam_ops will be used for platforms free from quirks.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> Signed-off-by: Christopher Covington <cov@codeaurora.org>
-> ---
->  drivers/pci/host/Makefile      |  1 +
->  drivers/pci/host/mcfg-quirks.c | 86 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/host/mcfg-quirks.h | 20 ++++++++++
->  include/linux/pci-acpi.h       |  2 +
->  4 files changed, 109 insertions(+)
->  create mode 100644 drivers/pci/host/mcfg-quirks.c
->  create mode 100644 drivers/pci/host/mcfg-quirks.h
-> 
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 8843410..500cf78 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -31,3 +31,4 @@ obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
->  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
->  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
->  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> +obj-$(CONFIG_ACPI_MCFG) += mcfg-quirks.o
-> diff --git a/drivers/pci/host/mcfg-quirks.c b/drivers/pci/host/mcfg-quirks.c
-> new file mode 100644
-> index 0000000..aa9907b
-> --- /dev/null
-> +++ b/drivers/pci/host/mcfg-quirks.c
-> @@ -0,0 +1,86 @@
-> +/*
-> + * Copyright (C) 2016 Semihalf
-> + *	Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/ioport.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci-acpi.h>
-> +#include <linux/pci-ecam.h>
-> +
-> +#include "mcfg-quirks.h"
-> +
-> +struct pci_cfg_fixup {
-> +	char oem_id[ACPI_OEM_ID_SIZE + 1];
-> +	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
-> +	u32 oem_revision;
-> +	struct resource domain_range;
-> +	struct resource bus_range;
-> +	struct pci_ops *ops;
-> +	struct pci_config_window *(*init)(struct acpi_pci_root *root,
-> +					  struct pci_ops *ops);
-> +};
-> +
-> +#define MCFG_DOM_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
-> +						((end) - (start) + 1), NULL, 0)
-> +#define MCFG_DOM_ANY			MCFG_DOM_RANGE(0x0, 0xffff)
-> +#define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
-> +						((end) - (start) + 1),	\
-> +						NULL, IORESOURCE_BUS)
-> +#define MCFG_BUS_ANY			MCFG_BUS_RANGE(0x0, 0xff)
-> +
-> +static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
-                                             ^^^^^^^^^^^^^^
+On Wed, 24 Aug 2016 14:30:00 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-I get section warnings because pci_cfg_fixup_match() is not
-an init function.
+> On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:
+> > [ +Bjorn, Punit]
+> > 
+> > On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:  
+> > > [Resend in plain text mode]
+> > > 
+> > > Hi Lorenzo, Rafael,
+> > > 
+> > > ACPI 6.1 spec does not specify how to set interrupt polarity and
+> > > trigger mode in _PRT when the interrupts are static (hardwired to
+> > > specific interrupt inputs in interrupt controller). In current
+> > > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
+> > > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
+> > > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
+> > > GICv3 controllers and will cause failures in PCIe AER, PME services
+> > > (on X-Gene platforms).  
+> 
+> PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
+> and defined as 'level sensitive,' asserted low."
+> 
+> I've heard before that ARM64 does this differently, but I still don't
+> understand the difference.  Obviously if you plug a legacy PCI card
+> into an ARM64 system, it's still going to pull INTA# low to assert an
+> interrupt.  So is there something special about ARM64 that inverts
+> that, or what?
 
-WARNING: vmlinux.o(.text+0x3f6c74): Section mismatch in reference from the function pci_mcfg_match_quirks() to the variable .init.rodata:$d
-The function pci_mcfg_match_quirks() references
-the variable __initconst $d.
-This is often because pci_mcfg_match_quirks lacks a __initconst 
-annotation or the annotation of $d is wrong.
+There is certainly an inverter somewhere on the interrupt path, because
+the GIC triggers on level high, not level low. But I don't think that's
+the issue Duc is trying to outline here, because that's not something
+SW can fix. I'm worried that in his system, the interrupt is edge
+triggered instead. 
 
-> +/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook }, */
-> +};
-> +
-> +static bool pci_mcfg_fixup_match(struct pci_cfg_fixup *f,
-> +				 struct acpi_table_header *mcfg_header)
-> +{
-> +	return (!memcmp(f->oem_id, mcfg_header->oem_id, ACPI_OEM_ID_SIZE) &&
-> +		!memcmp(f->oem_table_id, mcfg_header->oem_table_id,
-> +			ACPI_OEM_TABLE_ID_SIZE) &&
-> +		f->oem_revision == mcfg_header->oem_revision);
-> +}
-> +
-> +struct pci_config_window *pci_mcfg_match_quirks(struct acpi_pci_root *root)
-> +{
-> +	struct resource dom_res = MCFG_DOM_RANGE(root->segment, root->segment);
-> +	struct resource *bus_res = &root->secondary;
-> +	struct pci_cfg_fixup *f = mcfg_quirks;
-> +	struct acpi_table_header *mcfg_header;
-> +	acpi_status status;
-> +	int i;
-> +
-> +	status = acpi_get_table(ACPI_SIG_MCFG, 0, &mcfg_header);
-> +	if (ACPI_FAILURE(status))
-> +		return NULL;
-> +
-> +	/*
-> +	 * First match against PCI topology <domain:bus> then use OEM ID, OEM
-> +	 * table ID, and OEM revision from MCFG table standard header.
-> +	 */
-> +	for (i = 0; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
-> +		if (resource_contains(&f->domain_range, &dom_res) &&
-> +		    resource_contains(&f->bus_range, bus_res) &&
-> +		    pci_mcfg_fixup_match(f, mcfg_header)) {
-> +			dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
-> +				 f->oem_id, f->oem_table_id, f->oem_revision);
-> +			return f->init ? f->init(root, f->ops) :
-> +				pci_acpi_setup_ecam_mapping(root, f->ops);
-> +		}
-> +	}
-> +	return pci_acpi_setup_ecam_mapping(root, &pci_generic_ecam_ops.pci_ops);
-> +}
-> diff --git a/drivers/pci/host/mcfg-quirks.h b/drivers/pci/host/mcfg-quirks.h
-> new file mode 100644
-> index 0000000..45cbd16
-> --- /dev/null
-> +++ b/drivers/pci/host/mcfg-quirks.h
-> @@ -0,0 +1,20 @@
-> +/*
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +
-> +#ifndef __MCFG_QUIRKS_H__
-> +#define __MCFG_QUIRKS_H__
-> +
-> +/* MCFG quirks initialize call list */
-> +
-> +#endif /* __MCFG_QUIRKS_H__ */
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index e9bfe00..28cdce4 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -25,6 +25,8 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
->  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
->  
->  extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
-> +extern struct pci_config_window *
-> +pci_mcfg_match_quirks(struct acpi_pci_root *root);
->  
->  extern struct pci_config_window *
->  pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
+> 
+> > > Is there any way to specify polarity and trigger mode for static
+> > > interrupts in _PRT?   
+> 
+> There is no way I'm aware of in _PRT to specify polarity and trigger
+> mode.  I don't know the history, but my guess is that it would be seen
+> as superfluous given that the PCI spec requires level, active low.
+> 
+> Obviously I'm missing something important.
+
+Same here, unless the HW is not PCI compliant...
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny.
