@@ -1,48 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:34170 "EHLO
-        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752513AbcIABRa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 21:17:30 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+        <linux-pci@vger.kernel.org>
+Subject: [PATCH 6/9] PCI: PCIe xilinx: make host code explicitly non-modular
+Date: Wed, 24 Aug 2016 16:57:49 -0400
+Message-ID: <20160824205752.12024-7-paul.gortmaker@windriver.com>
+In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1472176045-27815-1-git-send-email-lftan@altera.com>
-References: <1472176045-27815-1-git-send-email-lftan@altera.com>
-From: Ley Foon Tan <lftan.linux@gmail.com>
-Date: Thu, 1 Sep 2016 09:17:27 +0800
-Message-ID: <CAFiDJ5-q9=+aLOuHuMtRMnx2Ep3P6h+LXqfeM26Ku1oHbZVQfw@mail.gmail.com>
-Subject: Re: [PATCH v4 0/2] PCI: altera: Retrain link in rootport mode only
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Ley Foon Tan <lftan.linux@gmail.com>,
-        Ley Foon Tan <lftan@altera.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 26, 2016 at 9:47 AM, Ley Foon Tan <lftan@altera.com> wrote:
-> Altera PCIe IP can be configured as rootport or device and they might have
-> same vendor ID. It will cause the system hang issue if Altera PCIe is in
-> endpoint mode and work with other PCIe rootport that from other vendors.
->
-> This series of patch rework configs accessors and move retrain function
-> from _FIXUP to altera_pcie_host_init().
->
-> History:
-> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
-> v3: Move retrain function to before pci_scan_root_bus and remove _FIXUP
-> v4: Split patch to 2 patches
->
-> Ley Foon Tan (2):
->   PCI: altera: Rework configs accessors
->   PCI: altera: Move retrain from _FIXUP to altera_pcie_host_init()
->
->  drivers/pci/host/pcie-altera.c | 215 +++++++++++++++++++++++++----------------
->  1 file changed, 132 insertions(+), 83 deletions(-)
->
-Hi Bjorn
+The Kconfig currently controlling compilation of this code is:
 
-Do you have further comment on this patch series?
-Thanks.
+drivers/pci/host/Kconfig:config PCIE_XILINX
+drivers/pci/host/Kconfig:       bool "Xilinx AXI PCIe host bridge support"
 
-Regards
-Ley Foon
+...meaning that it currently is not being built as a module by anyone.
+
+Lets remove the modular code that is essentially orphaned, so that
+when reading the driver there is no doubt it is builtin-only.  This
+makes xilinx_pcie_free_irq_domain orphaned so we remove it too.
+
+We don't have to worry about disallowing a driver unbind, since this
+driver already does that.
+
+Since module_platform_driver() uses the same init level priority as
+builtin_platform_driver() the init ordering remains unchanged with
+this commit.
+
+We also delete the MODULE_LICENSE tag etc. since all that information
+is already contained at the top of the file in the comments.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/pcie-xilinx.c | 53 ++----------------------------------------
+ 1 file changed, 2 insertions(+), 51 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index a30e01639557..7b7dbd22bccc 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -18,7 +18,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+-#include <linux/module.h>
++#include <linux/init.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -506,35 +506,6 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ }
+ 
+ /**
+- * xilinx_pcie_free_irq_domain - Free IRQ domain
+- * @port: PCIe port information
+- */
+-static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
+-{
+-	int i;
+-	u32 irq, num_irqs;
+-
+-	/* Free IRQ Domain */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-
+-		free_pages(port->msi_pages, 0);
+-
+-		num_irqs = XILINX_NUM_MSI_IRQS;
+-	} else {
+-		/* INTx */
+-		num_irqs = 4;
+-	}
+-
+-	for (i = 0; i < num_irqs; i++) {
+-		irq = irq_find_mapping(port->irq_domain, i);
+-		if (irq > 0)
+-			irq_dispose_mapping(irq);
+-	}
+-
+-	irq_domain_remove(port->irq_domain);
+-}
+-
+-/**
+  * xilinx_pcie_init_irq_domain - Initialize IRQ domain
+  * @port: PCIe port information
+  *
+@@ -724,21 +695,6 @@ error:
+ 	return err;
+ }
+ 
+-/**
+- * xilinx_pcie_remove - Remove function
+- * @pdev: Platform device pointer
+- *
+- * Return: '0' always
+- */
+-static int xilinx_pcie_remove(struct platform_device *pdev)
+-{
+-	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
+-
+-	xilinx_pcie_free_irq_domain(port);
+-
+-	return 0;
+-}
+-
+ static struct of_device_id xilinx_pcie_of_match[] = {
+ 	{ .compatible = "xlnx,axi-pcie-host-1.00.a", },
+ 	{}
+@@ -751,10 +707,5 @@ static struct platform_driver xilinx_pcie_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = xilinx_pcie_probe,
+-	.remove = xilinx_pcie_remove,
+ };
+-module_platform_driver(xilinx_pcie_driver);
+-
+-MODULE_AUTHOR("Xilinx Inc");
+-MODULE_DESCRIPTION("Xilinx AXI PCIe driver");
+-MODULE_LICENSE("GPL v2");
++builtin_platform_driver(xilinx_pcie_driver);
+-- 
+2.8.4
