@@ -1,61 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:46041 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488AbcHLQia (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 12:38:30 -0400
-Date: Fri, 12 Aug 2016 18:39:10 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 11/13] PM / sleep: Allow opt-out from runtime resume
- after direct-complete
-Message-ID: <20160812163910.GA8111@wunner.de>
-References: <20160807095627.GB5679@wunner.de>
- <Pine.LNX.4.44L0.1608071105360.31680-100000@netrider.rowland.org>
+Received: from mail.windriver.com ([147.11.1.11]:51850 "EHLO
+        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933191AbcHXU62 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 16:58:28 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        <kristen.c.accardi@intel.com>, Marc Zyngier <marc.zyngier@arm.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Scott Murray <scott@spiteful.org>,
+        =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Tom Long Nguyen <tom.l.nguyen@intel.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH 0/9] PCI: final demodularization of non-modular code
+Date: Wed, 24 Aug 2016 16:57:43 -0400
+Message-ID: <20160824205752.12024-1-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1608071105360.31680-100000@netrider.rowland.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 07, 2016 at 11:33:17AM -0400, Alan Stern wrote:
-> On Sun, 7 Aug 2016, Lukas Wunner wrote:
-> 
-> > Normally the device hierarchy is traversed bottom-up during suspend
-> > and top-down during resume. However ->prepare and ->complete do it
-> > the other way round. In the case of ->prepare, this is even documented
-> > in Documentation/power/devices.txt but the reason thereof is not.
-> > Could you explain this please?
-> 
-> The purpose of ->prepare is to tell drivers that a system sleep is
-> beginning and accordingly they should stop registering new children.  
-> This is necessary for the PM core to be able to traverse the entire
-> device tree safely; we want to avoid races where a new child is added
-> below a device concurrently with that device being suspended.  (Or if
-> you want to be more precise, races in which a new child is added below
-> a device while the PM core is acquiring the device's lock just prior to
-> invoking its ->suspend callback.)
-> 
-> Telling drivers to stop registering new children below a device has to
-> be done top-down, because if it were done bottom-up then it would be
-> subject to the same race described above.  Doing it top-down avoids 
-> problems; if a device registers new children while the PM core is 
-> acquiring its lock prior to invoking ->prepare, it doesn't matter.  The
-> new children will be handled later, right along with the existing ones.
+This final (assuming more new instances don't leak back in) series
+ensures all the PCI code out there that remains using module.h is
+actually modular or containing some use of modular infrastructure.
 
-Thank you for explaining the motivation to carry out ->prepare top-down.
-However my problem is really that ->complete is carried out bottom-up.
-What's the motivation for that? Merely to mirror the behaviour of
-->prepare? Would it be possible to change it to top-down? Note that
-re-enablement of device addition is already allowed in ->resume,
-which is called top-down.
+These last commits are slightly more involved than some of the
+earlier ones since we are actually removing orphaned __exit functions
+and some ".remove" functions as well.  So we can't claim binary
+equivalence here, but the overall runtime should remain unchanged.
 
-By the way, neither the PCI nor USB bus-level ->prepare callbacks perform
-any action that would stop device addition. Same for the pciehp driver
-(we don't even have a ->prepare callback defined for PCIe port services.
-So it *is* possible to hotplug PCI devices after ->prepare.
+To that end, we have remained with the existing initcall levels
+even though some of the hotplug infrastructural ones might make
+better sense to be listed as subsys_initcall or similar.
 
-Best regards,
+Build tested with allmodconfig on all the major architectures.
 
-Lukas
+Paul.
+---
+
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: kristen.c.accardi@intel.com
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Scott Murray <scott@spiteful.org>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
+Cc: linux-omap@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+Paul Gortmaker (9):
+  PCI: PCIe dpc: make it explicitly non-modular
+  PCI: PCIe pme: make it explicitly non-modular
+  PCI: PCIe aerdrv: make it explicitly non-modular
+  PCI: dra7xx: make host code explicitly non-modular
+  PCI: PCIe qcom: make host code explicitly non-modular
+  PCI: PCIe xilinx: make host code explicitly non-modular
+  PCI: PCIe xilinx-nwl: make host code explicitly non-modular
+  PCI: hotplug_core: make it explicitly non-modular
+  PCI: hotplug: make PCIe core code explicitly non-modular
+
+ drivers/pci/host/pci-dra7xx.c           | 31 ++-----------------
+ drivers/pci/host/pcie-qcom.c            | 28 +++++------------
+ drivers/pci/host/pcie-xilinx-nwl.c      | 53 ++-------------------------------
+ drivers/pci/host/pcie-xilinx.c          | 53 ++-------------------------------
+ drivers/pci/hotplug/cpci_hotplug.h      |  2 --
+ drivers/pci/hotplug/cpci_hotplug_core.c | 10 -------
+ drivers/pci/hotplug/pci_hotplug_core.c  | 18 ++++-------
+ drivers/pci/hotplug/pciehp_core.c       | 20 ++++---------
+ drivers/pci/pcie/aer/aerdrv.c           | 18 +----------
+ drivers/pci/pcie/pcie-dpc.c             | 18 +++--------
+ drivers/pci/pcie/pme.c                  | 16 +---------
+ 11 files changed, 32 insertions(+), 235 deletions(-)
+
+-- 
+2.8.4
+
