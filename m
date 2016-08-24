@@ -1,183 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36487 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753152AbcHHTRd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Aug 2016 15:17:33 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
-	Andy Lutomirski <luto@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Brian Gerst <brgerst@gmail.com>,
-	Denys Vlasenko <dvlasenk@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Josh Poimboeuf <jpoimboe@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH 4.6 03/96] x86/quirks: Reintroduce scanning of secondary buses
-Date: Mon,  8 Aug 2016 21:10:26 +0200
-Message-Id: <20160808180244.049417468@linuxfoundation.org>
-In-Reply-To: <20160808180243.898163389@linuxfoundation.org>
-References: <20160808180243.898163389@linuxfoundation.org>
+Received: from mail.kernel.org ([198.145.29.136]:43618 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754030AbcHXQug (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Aug 2016 12:50:36 -0400
+Date: Wed, 24 Aug 2016 11:50:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: divakar <divakar.chitturi@hpe.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: pci_enable_device error
+Message-ID: <20160824165031.GB23914@localhost>
+References: <2771432.urgYcWSoQk@div_linux>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2771432.urgYcWSoQk@div_linux>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.6-stable review patch.  If anyone has any objections, please let me know.
+On Tue, Aug 23, 2016 at 04:24:37PM -0700, divakar wrote:
+> Hi
+> 
+> I am trying to enable the pci device in the driver by calling the 
+> function, pci_enable_device and i get the below error. 
+> 
+> fpga_pci_uio_driver 0000:4e:00.0: can't enable device: BAR 0 [mem 
+> 0x00000000-0x000fffff 64bit pref] not claimed
+> fpga_pci_uio_driver 0000:4e:00.0: Failed to enable fpga_pci_uio device 
+> rc=-22
+> fpga_pci_uio_driver: probe of 0000:4e:00.0 failed with error -22
+> 
+> I am guessing its coming from pci_enable_resource function in 
+> pci_setup.c. ( trying to setup debug env to trace exact location)
+> if (!r->parent) {
+>                          dev_err(&dev->dev, "can't enable device: BAR %d 
+> %pR not claimed\n",
+>                                  i, r);
+>                          return -EINVAL;
+>            	}
+> 
+> I am not sure why this condition is false. I am running kernel 3.19 and 
+> this is a pcie endpoint device sitting on one of the port of the pcie 
+> switch. Below is the dmesg output for the pcie switch port. 
+> 
+> [   13.586987] pci 0000:4b:04.0: PCI bridge to [bus 4e]
+> [   13.591069] pci 0000:4b:04.0:   bridge window [mem 0xc7c00000-0xc7ffffff 
+> 64bit pref]
+> 
+> lspci output for my device
+> lspci -v -s 4e:00.0
+> 4e:00.0 Non-VGA unclassified device:  Company Device 0180 
+> (rev 01)
+>         Flags: fast devsel
+>         Memory at <unassigned> (64-bit, prefetchable) [size=1M]
+>         Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+>         Capabilities: [78] Power Management version 3
+>         Capabilities: [80] Express Endpoint, MSI 00
+>         Capabilities: [100] Multi-Function Virtual Channel <?>
+> 
+> The other device on different port of the switch work fine. That device 
+> driver also calls pci_enable_device(dev).
+> 
+> I found a thread http://www.spinics.net/lists/linux-pci/msg49725.html 
+> discussing something similar. Should i apply any patch to solve it? or 
+> am i missing something?
 
-------------------
+There's no address space assigned for BAR 0 of the 4e:00.0 device, so
+we can't enable it.  A full dmesg log will show whether this is
+because we ran out of address space or some other cause.
 
-From: Lukas Wunner <lukas@wunner.de>
-
-commit 850c321027c2e31d0afc71588974719a4b565550 upstream.
-
-We used to scan secondary buses until the following commit that
-was applied in 2009:
-
-  8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
-
-which commit constrained early quirks to the root bus only. Its
-motivation was to prevent application of the nvidia_bugs quirk
-on secondary buses.
-
-We're about to add a quirk to reset the Broadcom 4331 wireless card on
-2011/2012 Macs, which is located on a secondary bus behind a PCIe root
-port. To facilitate that, reintroduce scanning of secondary buses.
-
-The commit message of 8659c406ade3 notes that scanning only the root bus
-"saves quite some unnecessary scanning work". The algorithm used prior
-to 8659c406ade3 was particularly time consuming because it scanned
-buses 0 to 31 brute force. To avoid lengthening boot time, employ a
-recursive strategy which only scans buses that are actually reachable
-from the root bus.
-
-Yinghai Lu pointed out that the secondary bus number read from a
-bridge's config space may be invalid, in particular a value of 0 would
-cause an infinite loop. The PCI core goes beyond that and recurses to a
-child bus only if its bus number is greater than the parent bus number
-(see pci_scan_bridge()). Since the root bus is numbered 0, this implies
-that secondary buses may not be 0. Do the same on early scanning.
-
-If this algorithm is found to significantly impact boot time or cause
-infinite loops on broken hardware, it would be possible to limit its
-recursion depth: The Broadcom 4331 quirk applies at depth 1, all others
-at depth 0, so the bus need not be scanned deeper than that for now. An
-alternative approach would be to revert to scanning only the root bus,
-and apply the Broadcom 4331 quirk to the root ports 8086:1c12, 8086:1e12
-and 8086:1e16. Apple always positioned the card behind either of these
-three ports. The quirk would then check presence of the card in slot 0
-below the root port and do its deed.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Andy Lutomirski <luto@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Brian Gerst <brgerst@gmail.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Link: http://lkml.kernel.org/r/f0daa70dac1a9b2483abdb31887173eb6ab77bdf.1465690253.git.lukas@wunner.de
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- arch/x86/kernel/early-quirks.c |   34 +++++++++++++++++++++-------------
- 1 file changed, 21 insertions(+), 13 deletions(-)
-
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -610,12 +610,6 @@ struct chipset {
- 	void (*f)(int num, int slot, int func);
- };
- 
--/*
-- * Only works for devices on the root bus. If you add any devices
-- * not on bus 0 readd another loop level in early_quirks(). But
-- * be careful because at least the Nvidia quirk here relies on
-- * only matching on bus 0.
-- */
- static struct chipset early_qrk[] __initdata = {
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
-@@ -648,6 +642,8 @@ static struct chipset early_qrk[] __init
- 	{}
- };
- 
-+static void __init early_pci_scan_bus(int bus);
-+
- /**
-  * check_dev_quirk - apply early quirks to a given PCI device
-  * @num: bus number
-@@ -656,7 +652,7 @@ static struct chipset early_qrk[] __init
-  *
-  * Check the vendor & device ID against the early quirks table.
-  *
-- * If the device is single function, let early_quirks() know so we don't
-+ * If the device is single function, let early_pci_scan_bus() know so we don't
-  * poke at this device again.
-  */
- static int __init check_dev_quirk(int num, int slot, int func)
-@@ -665,6 +661,7 @@ static int __init check_dev_quirk(int nu
- 	u16 vendor;
- 	u16 device;
- 	u8 type;
-+	u8 sec;
- 	int i;
- 
- 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
-@@ -692,25 +689,36 @@ static int __init check_dev_quirk(int nu
- 
- 	type = read_pci_config_byte(num, slot, func,
- 				    PCI_HEADER_TYPE);
-+
-+	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
-+		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
-+		if (sec > num)
-+			early_pci_scan_bus(sec);
-+	}
-+
- 	if (!(type & 0x80))
- 		return -1;
- 
- 	return 0;
- }
- 
--void __init early_quirks(void)
-+static void __init early_pci_scan_bus(int bus)
- {
- 	int slot, func;
- 
--	if (!early_pci_allowed())
--		return;
--
- 	/* Poor man's PCI discovery */
--	/* Only scan the root bus */
- 	for (slot = 0; slot < 32; slot++)
- 		for (func = 0; func < 8; func++) {
- 			/* Only probe function 0 on single fn devices */
--			if (check_dev_quirk(0, slot, func))
-+			if (check_dev_quirk(bus, slot, func))
- 				break;
- 		}
- }
-+
-+void __init early_quirks(void)
-+{
-+	if (!early_pci_allowed())
-+		return;
-+
-+	early_pci_scan_bus(0);
-+}
-
-
+Bjorn
