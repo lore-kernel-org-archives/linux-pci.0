@@ -1,135 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:36402 "EHLO mail5.wrs.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933064AbcHXU60 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Aug 2016 16:58:26 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Scott Murray <scott@spiteful.org>,
-        <kristen.c.accardi@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 8/9] PCI: hotplug_core: make it explicitly non-modular
-Date: Wed, 24 Aug 2016 16:57:51 -0400
-Message-ID: <20160824205752.12024-9-paul.gortmaker@windriver.com>
-In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+Return-Path: <lftan.linux@gmail.com>
+Return-Path: <lftan.linux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: lftan.linux@gmail.com
+In-Reply-To: <20160822154738.GB18628@localhost>
+References: <1471595078-26297-1-git-send-email-lftan@altera.com> <20160822154738.GB18628@localhost>
+From: Ley Foon Tan <lftan@altera.com>
+Date: Wed, 24 Aug 2016 15:07:52 +0800
+Message-ID: <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-The Makefile bits currently controlling compilation of this code are:
+On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
+>> Altera PCIe IP can be configured as rootport or device and they might have
+>> same vendor ID. It will cause the system hang issue if Altera PCIe is in
+>> endpoint mode and work with other PCIe rootport that from other vendors.
+>> So, add the rootport mode checking in link retrain fixup function.
+>>
+>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>> ---
+>> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+>> ---
+>>  drivers/pci/host/pcie-altera.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+>> index 58eef99..33b6968 100644
+>> --- a/drivers/pci/host/pcie-altera.c
+>> +++ b/drivers/pci/host/pcie-altera.c
+>> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+>>       u16 linkcap, linkstat;
+>>       struct altera_pcie *pcie = dev->bus->sysdata;
+>>
+>> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+>> +             return;
+>> +
+>>       if (!altera_pcie_link_is_up(pcie))
+>>               return;
+>
+> Instead of making this a PCI fixup, can you make an
+> altera_pcie_host_init() function, call it from altera_pcie_probe(),
+> and do the link retrain there?  Then you wouldn't need to worry about
+> whether this is a Root Port or an Endpoint, plus it would make the
+> altera driver structure more like the other drivers.
+>
+> You would call altera_pcie_host_init() before pci_scan_root_bus(), so
+> you wouldn't have a pci_dev yet, so you wouldn't be able to use
+> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
+> assume there's some device-dependent way to access it using
+> cra_writel()?
+We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit. We can use
+pci_bus_find_capability() and pci_bus_read_config_word() with struct
+pci_bus instead.
+But this only can be called after pci_scan_root_bus(). Found
+iproc_pcie_check_link() have similar implementation.
+Tested this method is working. Do you think it is okay? If yes, then I
+will send in next revision.
 
-obj-$(CONFIG_HOTPLUG_PCI)           += pci_hotplug.o
-  [...]
-pci_hotplug-objs                    := pci_hotplug_core.o
+Thanks.
 
-and the Kconfig is:
-
-drivers/pci/hotplug/Kconfig:menuconfig HOTPLUG_PCI
-drivers/pci/hotplug/Kconfig:    bool "Support for PCI Hotplug"
-
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the modular code that is essentially orphaned, so that
-when reading the driver there is no doubt it is builtin-only.
-
-This makes an exit function in cpci_hotplug_core.c orphaned, so we
-remove it here at the same time.
-
-Since module_init translates to device_initcall in the non-modular
-case, the init ordering remains unchanged with this commit.  However
-one could argue that we should use subsys_initcall() here, but for
-now we stick with runtime equivalence.
-
-We would delete module.h and just keep the moduleparam.h include (since
-the file does use module_param), but there is a try_module_get and
-module_put pairing that prevents us from doing that.
-
-We also delete the MODULE_LICENSE tag etc since all that information
-is already contained higher up in the file.
-
-Cc: Scott Murray <scott@spiteful.org>
-Cc: kristen.c.accardi@intel.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/hotplug/cpci_hotplug.h      |  2 --
- drivers/pci/hotplug/cpci_hotplug_core.c | 10 ----------
- drivers/pci/hotplug/pci_hotplug_core.c  | 18 ++++++------------
- 3 files changed, 6 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/pci/hotplug/cpci_hotplug.h b/drivers/pci/hotplug/cpci_hotplug.h
-index 555bcde3b196..60e66e027ebc 100644
---- a/drivers/pci/hotplug/cpci_hotplug.h
-+++ b/drivers/pci/hotplug/cpci_hotplug.h
-@@ -101,10 +101,8 @@ int cpci_unconfigure_slot(struct slot *slot);
- 
- #ifdef CONFIG_HOTPLUG_PCI_CPCI
- int cpci_hotplug_init(int debug);
--void cpci_hotplug_exit(void);
- #else
- static inline int cpci_hotplug_init(int debug) { return 0; }
--static inline void cpci_hotplug_exit(void) { }
- #endif
- 
- #endif	/* _CPCI_HOTPLUG_H */
-diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
-index 7d3866c47312..7ec8a8f72c69 100644
---- a/drivers/pci/hotplug/cpci_hotplug_core.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_core.c
-@@ -719,13 +719,3 @@ cpci_hotplug_init(int debug)
- 	cpci_debug = debug;
- 	return 0;
- }
--
--void __exit
--cpci_hotplug_exit(void)
--{
--	/*
--	 * Clean everything up.
--	 */
--	cpci_hp_stop();
--	cpci_hp_unregister_controller(controller);
--}
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index 9acd1997c6fe..fea0b8b33589 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -25,7 +25,7 @@
-  *
-  */
- 
--#include <linux/module.h>
-+#include <linux/module.h>	/* try_module_get & module_put */
- #include <linux/moduleparam.h>
- #include <linux/kernel.h>
- #include <linux/types.h>
-@@ -537,17 +537,11 @@ static int __init pci_hotplug_init(void)
- 	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
- 	return result;
- }
-+device_initcall(pci_hotplug_init);
- 
--static void __exit pci_hotplug_exit(void)
--{
--	cpci_hotplug_exit();
--}
--
--module_init(pci_hotplug_init);
--module_exit(pci_hotplug_exit);
--
--MODULE_AUTHOR(DRIVER_AUTHOR);
--MODULE_DESCRIPTION(DRIVER_DESC);
--MODULE_LICENSE("GPL");
-+/*
-+ * not really modular, but the easiest way to keep compat with existing
-+ * bootargs behaviour is to continue using module_param here.
-+ */
- module_param(debug, bool, 0644);
- MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
--- 
-2.8.4
-
+Regards
+Ley Foon
