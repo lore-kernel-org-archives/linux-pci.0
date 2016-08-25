@@ -1,100 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41171 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753240AbcHOPXz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 11:23:55 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Nate Watterson <nwatters@codeaurora.org>,
-	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 03/15] drivers: acpi: iort: introduce linker section for IORT entries probing
-Date: Mon, 15 Aug 2016 16:23:28 +0100
-Message-Id: <1471274620-20754-4-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <punit.agrawal@arm.com>
+Return-Path: <punit.agrawal@arm.com>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Duc Dang <dhdang@apm.com>, Rafael Wysocki <rafael@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        patches <patches@apm.com>, <bhelgaas@google.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
+	<20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost>
+	<20160824213005.1a9300ef@arm.com>
+Date: Thu, 25 Aug 2016 11:04:02 +0100
+In-Reply-To: <20160824213005.1a9300ef@arm.com> (Marc Zyngier's message of
+	"Wed, 24 Aug 2016 21:30:05 +0100")
+Message-ID: <87pooxqi5p.fsf@e105922-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit e647b532275b ("ACPI: Add early device probing
-infrastructure") the kernel has gained the infrastructure that allows
-adding linker script section entries to execute ACPI driver callbacks
-(ie probe routines) for all subsystems that register a table entry
-in the respective kernel section (eg clocksource, irqchip).
+Marc Zyngier <marc.zyngier@arm.com> writes:
 
-Since ARM IOMMU devices data is described through IORT tables when
-booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
-callback routines that are called to probe IORT entries and initialize
-the respective IOMMU devices.
+> On Wed, 24 Aug 2016 14:30:00 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+>> On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:
+>> > [ +Bjorn, Punit]
+>> > 
+>> > On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:  
+>> > > [Resend in plain text mode]
+>> > > 
+>> > > Hi Lorenzo, Rafael,
+>> > > 
+>> > > ACPI 6.1 spec does not specify how to set interrupt polarity and
+>> > > trigger mode in _PRT when the interrupts are static (hardwired to
+>> > > specific interrupt inputs in interrupt controller). In current
+>> > > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
+>> > > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
+>> > > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
+>> > > GICv3 controllers and will cause failures in PCIe AER, PME services
+>> > > (on X-Gene platforms).  
+>> 
+>> PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
+>> and defined as 'level sensitive,' asserted low."
+>> 
+>> I've heard before that ARM64 does this differently, but I still don't
+>> understand the difference.  Obviously if you plug a legacy PCI card
+>> into an ARM64 system, it's still going to pull INTA# low to assert an
+>> interrupt.  So is there something special about ARM64 that inverts
+>> that, or what?
+>
+> There is certainly an inverter somewhere on the interrupt path, because
+> the GIC triggers on level high, not level low. But I don't think that's
+> the issue Duc is trying to outline here, because that's not something
+> SW can fix. I'm worried that in his system, the interrupt is edge
+> triggered instead. 
+>
+>> 
+>> > > Is there any way to specify polarity and trigger mode for static
+>> > > interrupts in _PRT?   
+>> 
+>> There is no way I'm aware of in _PRT to specify polarity and trigger
+>> mode.  I don't know the history, but my guess is that it would be seen
+>> as superfluous given that the PCI spec requires level, active low.
+>> 
+>> Obviously I'm missing something important.
+>
+> Same here, unless the HW is not PCI compliant...
 
-To avoid adding driver specific hooks into IORT table initialization
-code (breaking therefore code modularity - ie ACPI IORT code must be made
-aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
-that allows ARM SMMU drivers to take advantage of the ACPI early probing
-infrastructure, so that they can add linker script section entries
-containing drivers callback to be executed on IORT tables detection.
+I had faced this issue on Juno r2[0] a few months back - though AFAICS,
+it wasn't preventing anything to work but printed an annoying message on
+boot.
 
-Since IORT nodes are differentiated by a type, the callback routines
-can easily parse the IORT table entries, check the IORT nodes and
-carry out some actions whenever the IORT node type associated with
-the driver specific callback is matched.
+[ 1.353696] genirq: Setting trigger mode 8 for irq 9 failed (gic_set_type+0x0/0x5c)
+[ 1.478286] genirq: Setting trigger mode 8 for irq 17 failed (gic_set_type+0x0/0x5c)
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/acpi/arm64/iort.c         | 2 ++
- include/asm-generic/vmlinux.lds.h | 1 +
- include/linux/iort.h              | 3 +++
- 3 files changed, 6 insertions(+)
+The ACPI code in the kernel (drivers/acpi/pci_irq.c) is behaving as per
+spec, so nothing to be done there IMHO. The problem arises due to the
+integration of two mismatched components - PCI is level low and the GIC
+supports only level high - making it necessary to introduce glue
+elements like the inverter.
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 2543f60..cad7d1d 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -383,4 +383,6 @@ void __init iort_table_detect(void)
- 		const char *msg = acpi_format_exception(status);
- 		pr_err("Failed to get table, %s\n", msg);
- 	}
-+
-+	acpi_probe_device_table(iort);
- }
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 2456397..7ee4e0c 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -546,6 +546,7 @@
- 	IRQCHIP_OF_MATCH_TABLE()					\
- 	ACPI_PROBE_TABLE(irqchip)					\
- 	ACPI_PROBE_TABLE(clksrc)					\
-+	ACPI_PROBE_TABLE(iort)						\
- 	EARLYCON_TABLE()
- 
- #define INIT_TEXT							\
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index d7daba1..9bb30c5 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -38,4 +38,7 @@ static inline struct irq_domain *
- iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
- #endif
- 
-+#define IORT_ACPI_DECLARE(name, table_id, fn)		\
-+	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
-+
- #endif /* __IORT_H__ */
--- 
-2.6.4
+This would all be OK if ACPI had a mechanism to specify the interrupt
+type (trigger and polarity). As an alternative, for Juno I created a
+link device (as Lorenzo suggests) to provide this information to the
+kernel.
 
+With this fix the warnings went away and I suspect this will address
+Duc's issue as well. But that is playing naughty with the spec (ACPI 6.1
+Section. 6.2.13).
+
+If there are no good reason to restrict using link devices to
+configurable interrupts, perhaps the spec needs an update.
+
+Perhaps Rafael knows why is there a restriction on using link devices
+for fixed interrupts in the ACPI spec...
+
+[0] https://lists.linaro.org/pipermail/linaro-acpi/2016-May/006880.html
+
+>
+> Thanks,
+>
+> 	M.
