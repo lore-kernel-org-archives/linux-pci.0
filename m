@@ -1,251 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:34928 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752999AbcHOPhD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Aug 2016 11:37:03 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Tomasz Nowicki <tn@semihalf.com>,
-	Liviu Dudau <liviu.dudau@arm.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH v3 4/4] PCI: tegra: Use new pci_register_host_bridge() interface
-Date: Mon, 15 Aug 2016 17:36:47 +0200
-Message-Id: <20160815153647.1075-4-thierry.reding@gmail.com>
-In-Reply-To: <20160815153647.1075-1-thierry.reding@gmail.com>
-References: <20160815153647.1075-1-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
+MIME-Version: 1.0
+In-Reply-To: <20160825121825.322d8450@arm.com>
+References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
+ <20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost>
+ <20160824213005.1a9300ef@arm.com> <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+ <20160825121825.322d8450@arm.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 25 Aug 2016 09:52:56 -0700
+Message-ID: <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	patches <patches@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Punit Agrawal <punit.agrawal@arm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Thu, Aug 25, 2016 at 4:18 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On Wed, 24 Aug 2016 15:19:21 -0700
+> Duc Dang <dhdang@apm.com> wrote:
+>
+>> On Wed, Aug 24, 2016 at 1:30 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> > On Wed, 24 Aug 2016 14:30:00 -0500
+>> > Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> >
+>> >> On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:
+>> >> > [ +Bjorn, Punit]
+>> >> >
+>> >> > On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:
+>> >> > > [Resend in plain text mode]
+>> >> > >
+>> >> > > Hi Lorenzo, Rafael,
+>> >> > >
+>> >> > > ACPI 6.1 spec does not specify how to set interrupt polarity and
+>> >> > > trigger mode in _PRT when the interrupts are static (hardwired to
+>> >> > > specific interrupt inputs in interrupt controller). In current
+>> >> > > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
+>> >> > > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
+>> >> > > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
+>> >> > > GICv3 controllers and will cause failures in PCIe AER, PME services
+>> >> > > (on X-Gene platforms).
+>> >>
+>> >> PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
+>> >> and defined as 'level sensitive,' asserted low."
+>> >>
+>> >> I've heard before that ARM64 does this differently, but I still don't
+>> >> understand the difference.  Obviously if you plug a legacy PCI card
+>> >> into an ARM64 system, it's still going to pull INTA# low to assert an
+>> >> interrupt.  So is there something special about ARM64 that inverts
+>> >> that, or what?
+>> >
+>> > There is certainly an inverter somewhere on the interrupt path, because
+>> > the GIC triggers on level high, not level low. But I don't think that's
+>> > the issue Duc is trying to outline here, because that's not something
+>> > SW can fix. I'm worried that in his system, the interrupt is edge
+>> > triggered instead.
+>>
+>> Yes, there is an inverter in the interrupt path to deliver interrupt to the GIC
+>> as level-high. X-Gene GIC uses level high for PCI INTx. I myself has been
+>> lucky when using trigger-rising for PCI INTx in DT boot mode.
+>>
+>> >
+>> >>
+>> >> > > Is there any way to specify polarity and trigger mode for static
+>> >> > > interrupts in _PRT?
+>> >>
+>> >> There is no way I'm aware of in _PRT to specify polarity and trigger
+>> >> mode.  I don't know the history, but my guess is that it would be seen
+>> >> as superfluous given that the PCI spec requires level, active low.
+>>
+>> The device still pulls the INTx pin low to trigger interrupt, but the
+>> interrupt delivered
+>> to interrupt controller (GIC in this case) is not necessarily to be
+>> level-low. Current code
+>> assume level-low mode to program to the interrupt controller for INTx,
+>> and fails for
+>> GIC, GICv2m and GICv3.
+>
+> Well, there's nothing that can't be fixed. The GIC doesn't have a
+> programmatic notion of what is high or low. It only knows about level
+> interrupts. But the HW only knows about level_high. Obviously, for
+> things to work, the integrator has to put an inverter on the line to
+> cope with level_low.
+>
+> If the driver code insist on using level_low, we can address this
+> pretty easily, and just warn about the oddity:
+>
+> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+> index 6fc56c3..b3755a3 100644
+> --- a/drivers/irqchip/irq-gic-v3.c
+> +++ b/drivers/irqchip/irq-gic-v3.c
+> @@ -306,9 +306,16 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
+>                 return -EINVAL;
+>
+>         /* SPIs have restrictions on the supported types */
+> -       if (irq >= 32 && type != IRQ_TYPE_LEVEL_HIGH &&
+> -                        type != IRQ_TYPE_EDGE_RISING)
+> -               return -EINVAL;
+> +       if (irq >= 32) {
+> +               unsigned int tmp = type;
+> +               if (type == IRQ_TYPE_LEVEL_LOW)
+> +                       type = IRQ_TYPE_LEVEL_HIGH;
+> +               if (type == IRQ_TYPE_EDGE_FALLING)
+> +                       type = IRQ_TYPE_EDGE_RISING;
+> +               if (tmp != type)
+> +                       pr_warn("Overriding IRQ%d type from %d to %d\n",
+> +                               d->irq, tmp, type);
+> +       }
+>
+>         if (gic_irq_in_rdist(d)) {
+>                 base = gic_data_rdist_sgi_base();
+> diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
+> index c2cab57..0d187dc 100644
+> --- a/drivers/irqchip/irq-gic.c
+> +++ b/drivers/irqchip/irq-gic.c
+> @@ -280,9 +280,16 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
+>                 return -EINVAL;
+>
+>         /* SPIs have restrictions on the supported types */
+> -       if (gicirq >= 32 && type != IRQ_TYPE_LEVEL_HIGH &&
+> -                           type != IRQ_TYPE_EDGE_RISING)
+> -               return -EINVAL;
+> +       if (gicirq >= 32) {
+> +               unsigned int tmp = type;
+> +               if (type == IRQ_TYPE_LEVEL_LOW)
+> +                       type = IRQ_TYPE_LEVEL_HIGH;
+> +               if (type == IRQ_TYPE_EDGE_FALLING)
+> +                       type = IRQ_TYPE_EDGE_RISING;
+> +               if (tmp != type)
+> +                       pr_warn("Overriding IRQ%d type from %d to %d\n",
+> +                               d->irq, tmp, type);
+> +       }
+>
+>         return gic_configure_irq(gicirq, type, base, NULL);
+>  }
+>
+>
+>
+> Does this work for you?
 
-Tegra is one of the remaining platforms that still use the traditional
-pci_common_init_dev() interface for probing PCI host bridges.
+Thanks, Marc! It works, I tested on current X-Gene platforms that uses
+GICv2 and GICv2m.
 
-This demonstrates how to convert it to the pci_register_host interface
-I just added in a previous patch. This leads to a more linear probe
-sequence that can handle errors better because we avoid callbacks into
-the driver, and it makes the driver architecture independent.
+Will you commit this change? It will be a huge help as going with
+interrupt link will require firmware change.
 
-As a side note, I should mention that I noticed this driver does not
-register any IORESOURCE_IO resource with the bus, but instead registers
-the I/O port window as a memory resource, which is surely a bug.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 99 +++++++++++++++++++++++---------------------
- 1 file changed, 52 insertions(+), 47 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 2d520755b1d7..6737d1be9798 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -260,6 +260,7 @@ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
- }
- 
- struct tegra_pcie {
-+	struct pci_host_bridge *bridge;
- 	struct device *dev;
- 
- 	void __iomem *pads;
-@@ -322,11 +323,6 @@ struct tegra_pcie_bus {
- 	unsigned int nr;
- };
- 
--static inline struct tegra_pcie *sys_to_pcie(struct pci_sys_data *sys)
--{
--	return sys->private_data;
--}
--
- static inline void afi_writel(struct tegra_pcie *pcie, u32 value,
- 			      unsigned long offset)
- {
-@@ -430,7 +426,8 @@ free:
- 
- static int tegra_pcie_add_bus(struct pci_bus *bus)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-+	struct tegra_pcie *pcie = host->private;
- 	struct tegra_pcie_bus *b;
- 
- 	b = tegra_pcie_bus_alloc(pcie, bus->number);
-@@ -444,7 +441,8 @@ static int tegra_pcie_add_bus(struct pci_bus *bus)
- 
- static void tegra_pcie_remove_bus(struct pci_bus *child)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(child->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(child);
-+	struct tegra_pcie *pcie = host->private;
- 	struct tegra_pcie_bus *bus, *tmp;
- 
- 	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
-@@ -461,7 +459,8 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
- 					unsigned int devfn,
- 					int where)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-+	struct tegra_pcie *pcie = host->private;
- 	void __iomem *addr = NULL;
- 
- 	if (bus->number == 0) {
-@@ -609,35 +608,29 @@ static void tegra_pcie_relax_enable(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
- 
--static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
-+static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(sys);
-+	struct list_head *windows = &pcie->bridge->windows;
- 	int err;
- 
--	sys->mem_offset = pcie->offset.mem;
--	sys->io_offset = pcie->offset.io;
--
--	err = devm_request_resource(pcie->dev, &iomem_resource, &pcie->io);
--	if (err < 0)
--		return err;
--
--	pci_add_resource_offset(&sys->resources, &pcie->pio, sys->io_offset);
--	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
--	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
--				sys->mem_offset);
--	pci_add_resource(&sys->resources, &pcie->busn);
-+	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
-+	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
-+	pci_add_resource_offset(windows, &pcie->prefetch, pcie->offset.mem);
-+	pci_add_resource(windows, &pcie->busn);
- 
--	err = devm_request_pci_bus_resources(pcie->dev, &sys->resources);
-+	err = devm_request_pci_bus_resources(pcie->dev, windows);
- 	if (err < 0)
- 		return err;
- 
- 	pci_remap_iospace(&pcie->pio, pcie->io.start);
--	return 1;
-+
-+	return 0;
- }
- 
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(pdev->bus->sysdata);
-+	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
-+	struct tegra_pcie *pcie = host->private;
- 	int irq;
- 
- 	tegra_cpuidle_pcie_irqs_in_use();
-@@ -1544,6 +1537,8 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- 	reg |= AFI_INTR_MASK_MSI_MASK;
- 	afi_writel(pcie, reg, AFI_INTR_MASK);
- 
-+	pcie->bridge->msi = &msi->chip;
-+
- 	return 0;
- 
- err:
-@@ -2006,10 +2001,9 @@ retry:
- 	return false;
- }
- 
--static int tegra_pcie_enable(struct tegra_pcie *pcie)
-+static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- {
- 	struct tegra_pcie_port *port, *tmp;
--	struct hw_pci hw;
- 
- 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
- 		dev_info(pcie->dev, "probing port %u, using %u lanes\n",
-@@ -2025,22 +2019,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 		tegra_pcie_port_disable(port);
- 		tegra_pcie_port_free(port);
- 	}
--
--	memset(&hw, 0, sizeof(hw));
--
--#ifdef CONFIG_PCI_MSI
--	hw.msi_ctrl = &pcie->msi.chip;
--#endif
--
--	hw.nr_controllers = 1;
--	hw.private_data = (void **)&pcie;
--	hw.setup = tegra_pcie_setup;
--	hw.map_irq = tegra_pcie_map_irq;
--	hw.ops = &tegra_pcie_ops;
--
--	pci_common_init_dev(pcie->dev, &hw);
--
--	return 0;
- }
- 
- static const struct tegra_pcie_soc tegra20_pcie = {
-@@ -2201,13 +2179,18 @@ remove:
- 
- static int tegra_pcie_probe(struct platform_device *pdev)
- {
-+	struct pci_host_bridge *bridge;
- 	struct tegra_pcie *pcie;
-+	struct pci_bus *child;
- 	int err;
- 
--	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
--	if (!pcie)
-+	bridge = pci_alloc_host_bridge(sizeof(*pcie));
-+	if (!bridge)
- 		return -ENOMEM;
- 
-+	pcie = bridge->private;
-+	pcie->bridge = bridge;
-+
- 	pcie->soc = of_device_get_match_data(&pdev->dev);
- 	INIT_LIST_HEAD(&pcie->buses);
- 	INIT_LIST_HEAD(&pcie->ports);
-@@ -2227,6 +2210,10 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		goto put_resources;
- 
-+	err = tegra_pcie_request_resources(pcie);
-+	if (err)
-+		goto put_resources;
-+
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
- 
-@@ -2240,12 +2227,30 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	err = tegra_pcie_enable(pcie);
-+	tegra_pcie_enable_ports(pcie);
-+
-+	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-+	bridge->busnr = pcie->busn.start;
-+	bridge->dev.parent = &pdev->dev;
-+	bridge->ops = &tegra_pcie_ops;
-+
-+	err = pci_register_host_bridge(bridge);
- 	if (err < 0) {
--		dev_err(&pdev->dev, "failed to enable PCIe ports: %d\n", err);
-+		dev_err(&pdev->dev, "failed to register host: %d\n", err);
- 		goto disable_msi;
- 	}
- 
-+	pci_scan_child_bus(bridge->bus);
-+
-+	pci_fixup_irqs(pci_common_swizzle, tegra_pcie_map_irq);
-+	pci_bus_size_bridges(bridge->bus);
-+	pci_bus_assign_resources(bridge->bus);
-+
-+	list_for_each_entry(child, &bridge->bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+	pci_bus_add_devices(bridge->bus);
-+
- 	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
- 		err = tegra_pcie_debugfs_init(pcie);
- 		if (err < 0)
--- 
-2.9.0
-
+>
+> Thanks,
+>
+>         M.
+> --
+> Jazz is not dead. It just smells funny.
+Regards,
+Duc Dang.
