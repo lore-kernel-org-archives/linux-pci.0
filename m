@@ -1,173 +1,62 @@
-Return-Path: <gwshan@linux.vnet.ibm.com>
-Return-Path: <gwshan@linux.vnet.ibm.com>
-Date: Mon, 25 Jul 2016 11:24:46 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: "Koehrer Mathias (ETAS/ESW5)" <mathias.koehrer@etas.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>, xyjxie@linux.vnet.ibm.com
-Subject: Re: [PATCH resend v2] Extending kernel option pci=resource_alignment
- to be able to specify PCI device/vendor IDs
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <14535ddd929448b4b8a9f8f2f58439a6@FE-MBX1012.de.bosch.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39174 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933435AbcHYNPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Aug 2016 09:15:46 -0400
+Date: Thu, 25 Aug 2016 08:15:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Richard van der Hoff <linux@rvanderhoff.org.uk>
+Cc: linux-pci@vger.kernel.org,
+        Andreas Noever <andreas.noever@gmail.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: Hotplug not working for USB 3.1 docking station on Dell XPS 13
+Message-ID: <20160825131536.GA9554@localhost>
+References: <57BDCE15.4080201@rvanderhoff.org.uk>
+ <20160824201511.GF23914@localhost>
+ <57BEE0E7.7020300@rvanderhoff.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <14535ddd929448b4b8a9f8f2f58439a6@FE-MBX1012.de.bosch.com>
-Message-Id: <20160725012446.GA11609@gwshan>
+In-Reply-To: <57BEE0E7.7020300@rvanderhoff.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 22, 2016 at 10:41:59AM +0000, Koehrer Mathias (ETAS/ESW5) wrote:
->Some uio based PCI drivers (e.g. uio_cif) do not work if the assigned 
->PCI memory resources are not page aligned.
->By using the kernel option "pci=resource_alignment" it is possible to force
->single PCI boards to use page alignment for their memory resources.
->However, this is fairly cumbersome if multiple of these boards are in use as 
->the specification of the cards has to be done via PCI bus/slot/function number
->which might change e.g. by adding another board.
->This patch extends the kernel option "pci=resource_alignment" to allow to
->specify the relevant boards via PCI device/vendor (and subdevice/subvendor) ids.
->The specification of the devices via device/vendor is indicated by a leading
->string "pci:" as argument to "pci=resource_alignment".
->The format of the specification is
->  pci:<vendor>:<device>[:<subvendor>:<subdevice>]
->
->Examples: 
->  pci=resource_alignment=4096@pci:1234:abcd:1234:bcde
->  pci=resource_alignment=pci:1234:abcd
->
->Signed-off-by: Mathias Koehrer <mathias.koehrer@etas.com>
->
+On Thu, Aug 25, 2016 at 01:13:27PM +0100, Richard van der Hoff wrote:
+> On 24/08/16 21:15, Bjorn Helgaas wrote:
+> >[+cc Andreas, linux-kernel]
+> >
+> >On Wed, Aug 24, 2016 at 05:40:53PM +0100, Richard van der Hoff wrote:
+> >>I'm having problems with a Plugable USB-C docking station, with my
+> >>laptop, a Dell XPS 13 (9350).  ...
+> >>My impression, and feedback from the linux-usb mailing list, is
+> >>therefore that this is a PCI hotplug problem.
+> >
+> >Please include a pointer to the linux-usb analysis.
+> 
+> For the record, here:
+> http://marc.info/?l=linux-usb&m=147204147226274&w=2, however:
 
-Mathias, The code change would conflict with Yongji's patch where the wildcard introduced
-to identify PCI devices.
+Huh, turns out you and Oliver were right about it being a PCI problem.
+But it would have saved some time to know how Oliver decided that.
+Otherwise it's just "he said, she said."
 
-https://patchwork.ozlabs.org/patch/642473/
+> > From the kernel's point of view, plugging in the dock would be a PCIe
+> >hotplug event on 00:1c.0 that should be handled by pciehp.  Do you
+> >have pciehp included in your kernel?
+> 
+> I did not; now I do, and it works perfectly. Thank you! A case of it
+> being incredibly obvious once you know what you are looking for.
+> 
+> >01:00.0 and 02:02.0 are ports of a Thunderbolt switch. Since they
+> >don't appear when you boot without the docking station, the dock
+> >connection must be between 00:1c.0 and 01:00.0.
+> 
+> This would strike me as surprising - the dock bills itself as a
+> USB-C device, and the Thunderbolt devices look like they are part of
+> the laptop chipset to me. To me it seems more likely that those PCI
+> devices are part of the laptop, but are powered down until something
+> is plugged into the USB-C port.
 
->---
-> Documentation/kernel-parameters.txt |    2 +
-> drivers/pci/pci.c                   |   66 +++++++++++++++++++++++++-----------
-> 2 files changed, 49 insertions(+), 19 deletions(-)
->
->Index: linux-4.7-rc1/Documentation/kernel-parameters.txt
->===================================================================
->--- linux-4.7-rc1.orig/Documentation/kernel-parameters.txt
->+++ linux-4.7-rc1/Documentation/kernel-parameters.txt
->@@ -2998,12 +2998,17 @@ bytes respectively. Such letter suffixes
-> 		resource_alignment=
-> 				Format:
-> 				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
->+				[<order of align>@]pci:<vendor>:<device>\
->+						[:<subvendor>:<subdevice>][; ...]
-> 				Specifies alignment and device to reassign
-> 				aligned memory resources.
-> 				If <order of align> is not specified,
-> 				PAGE_SIZE is used as alignment.
-> 				PCI-PCI bridge can be specified, if resource
-> 				windows need to be expanded.
->+				To specify the alignment for certain types of devices, the
->+				PCI vendor/device (and subvendor/subdevice) may be
->+				specified. E.g. 4096@pci:1234:abcd:1234:bcde
-> 		ecrc=		Enable/disable PCIe ECRC (transaction layer
-> 				end-to-end CRC checking).
-> 				bios: Use BIOS/firmware settings. This is the
->Index: linux-4.7-rc1/drivers/pci/pci.c
->===================================================================
->--- linux-4.7-rc1.orig/drivers/pci/pci.c
->+++ linux-4.7-rc1/drivers/pci/pci.c
->@@ -4755,6 +4755,7 @@ static DEFINE_SPINLOCK(resource_alignmen
-> static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> {
-> 	int seg, bus, slot, func, align_order, count;
->+	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-> 	resource_size_t align = 0;
-> 	char *p;
->
->@@ -4768,28 +4769,55 @@ static resource_size_t pci_specified_res
-> 		} else {
-> 			align_order = -1;
-> 		}
->-		if (sscanf(p, "%x:%x:%x.%x%n",
->-			&seg, &bus, &slot, &func, &count) != 4) {
->-			seg = 0;
->-			if (sscanf(p, "%x:%x.%x%n",
->-					&bus, &slot, &func, &count) != 3) {
->-				/* Invalid format */
->-				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
->-					p);
->+		if (strncmp(p, "pci:", 4) == 0) {
->+			/* PCI vendor/device (subvendor/subdevice) ids are specified */
->+			p += 4;
->+			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
->+				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
->+				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
->+					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
->+						p);
->+					break;
->+				}
->+				subsystem_vendor = subsystem_device = 0;
+Yep, I agree, that sounds like a better theory.  Glad it's working
+now.
 
-"pci:" is used as the prefix here. I'm not sure "id:" might be more indicative?
-
-No consecutive calls to sscanf() isn't needed if I'm correct enough. The return value
-from first sscanf() call is cached and it can be used to check how many parameters
-have been scaned successfully.
-
->+			}
->+			p += count;
->+			if ((!vendor || (vendor == dev->vendor)) &&
->+				(!device || (device == dev->device)) &&
->+				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
->+				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
->+				if (align_order == -1)
->+					align = PAGE_SIZE;
->+				else
->+					align = 1 << align_order;
->+				/* Found */
-
-Unnecessary comment as the it's obvious from the code.
-
-> 				break;
-> 			}
-> 		}
->-		p += count;
->-		if (seg == pci_domain_nr(dev->bus) &&
->-			bus == dev->bus->number &&
->-			slot == PCI_SLOT(dev->devfn) &&
->-			func == PCI_FUNC(dev->devfn)) {
->-			if (align_order == -1)
->-				align = PAGE_SIZE;
->-			else
->-				align = 1 << align_order;
->-			/* Found */
->-			break;
->+		else {
->+			if (sscanf(p, "%x:%x:%x.%x%n",
->+				&seg, &bus, &slot, &func, &count) != 4) {
->+				seg = 0;
->+				if (sscanf(p, "%x:%x.%x%n",
->+						&bus, &slot, &func, &count) != 3) {
->+					/* Invalid format */
->+					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
->+						p);
->+					break;
->+				}
->+			}
->+			p += count;
->+			if (seg == pci_domain_nr(dev->bus) &&
->+				bus == dev->bus->number &&
->+				slot == PCI_SLOT(dev->devfn) &&
->+				func == PCI_FUNC(dev->devfn)) {
->+				if (align_order == -1)
->+					align = PAGE_SIZE;
->+				else
->+					align = 1 << align_order;
->+				/* Found */
->+				break;
->+			}
-> 		}
-> 		if (*p != ';' && *p != ',') {
-> 			/* End of param or invalid format */
-
-Thanks,
-Gavin
+Bjorn
