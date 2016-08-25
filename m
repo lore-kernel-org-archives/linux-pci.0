@@ -1,102 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 24 Aug 2016 15:50:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Po Liu <po.liu@nxp.com>
-Subject: Re: [PATCH v1] arm64:pci: fix the IOV device enabled crash issue in
- designware
-Message-ID: <20160824205059.GG23914@localhost>
-References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
-MIME-Version: 1.0
-In-Reply-To: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
- Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- linux-pci@vger.kernel.org, Pratyush Anand <pratyush.anand@gmail.com>,
- Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Mingkai Hu <mingkai.hu@nxp.com>, Jingoo Han <jingoohan1@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Ley Foon Tan <lftan@altera.com>,
- Michal Simek <michal.simek@xilinx.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 1/2] PCI: rockchip: fix broken ASPM due to incorrect L1PwrOnSc/Val
+Date: Thu, 25 Aug 2016 16:03:34 +0800
+Message-Id: <1472112214-31550-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo, Pratyush, Michal, S=F6ren, Ley]
+This is a bug of controller found recently which makes the
+default values of L1PwrOnSc and L1PwrOnVal unreliable when
+enabling ASPM. We could work around this by reading L1 substate
+control 2 register and then write back the value again.
 
-On Tue, Aug 23, 2016 at 02:01:12PM +0800, Po Liu wrote:
-> When echo a number to /sys/bus/pci/devices/xxx/sriov_numvfs to enable the
-> VF devices. A crash log occurred. This found to be access the IOV devices
-> config space failure issue.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-What was the actual crash?  The mere fact that we made a config read fail
-should not cause a crash.  We might erroneously prevent access to VF
-devices, but it shouldn't crash.  So maybe there's another bug elsewhere
-that we should fix first.
+ drivers/pci/host/pcie-rockchip.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-> The read/write config space from host would judge the pcie device plugin
-> or not by:
-> =
-
-> if (bus->primary =3D=3D pp->root_bus_nr && dev > 0)
->     return 0;
-
-I'm guessing other drivers have the same issue, e.g.,
-altera_pcie_valid_config(), xilinx_pcie_valid_device().
-
-Can you look through them and fix them all at once?
-
-> Although all pcie devices for dev(coming from the device and function
-> number) is zero. But the dev is not zero for VF. So remove the
-> condition.
-> =
-
-> Signed-off-by: Po Liu <po.liu@nxp.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 7 -------
->  1 file changed, 7 deletions(-)
-> =
-
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-d=
-esignware.c
-> index 12afce1..dd20eb2 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -670,13 +670,6 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
->  	if (bus->number =3D=3D pp->root_bus_nr && dev > 0)
->  		return 0;
->  =
-
-> -	/*
-> -	 * do not read more than one device on the bus directly attached
-> -	 * to RC's (Virtual Bridge's) DS side.
-> -	 */
-> -	if (bus->primary =3D=3D pp->root_bus_nr && dev > 0)
-> -		return 0;
-> -
->  	return 1;
->  }
->  =
-
-> -- =
-
-> 2.1.0.27.g96db324
-> =
-
-> =
-
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 1671d02..ed782b51 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -40,6 +40,7 @@
+ #define PCIE_CLIENT_BASE			0x0
+ #define PCIE_RC_CONFIG_NORMAL_BASE		0x800000
+ #define PCIE_RC_CONFIG_BASE			0xa00000
++#define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2	0x90c
+ #define PCIE_RC_CONFIG_LCSR			0xd0
+ #define  PCIE_RC_CONFIG_LCSR_LBMIE		BIT(10)
+ #define  PCIE_RC_CONFIG_LCSR_LABIE		BIT(11)
+@@ -477,6 +478,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 		return err;
+ 	}
+ 
++	/*
++	 * We need to read/write PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2
++	 * before enabling ASPM. Otherwise L1PwrOnSc and L1PwrOnVal isn't
++	 * reliable which makes the controller in broken state when
++	 * enabling ASPM. This is a controller's bug we need to work
++	 * around.
++	 */
++	status = pcie_read(port,  PCIE_RC_CONFIG_BASE +
++				  PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
++	pcie_write(port, status,  PCIE_RC_CONFIG_BASE +
++				  PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
++
+ 	/* Enable Gen1 training */
+ 	pcie_write(port,
+ 		   HIWORD_UPDATE(PCIE_CLIENT_LINK_TRAIN_ENABLE,
+-- 
+2.3.7
