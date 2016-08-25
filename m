@@ -1,227 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 31 Aug 2016 13:39:46 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Amir Levy <amir.jer.levy@intel.com>
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        thunderbolt-linux@intel.com, mika.westerberg@intel.com,
-        tomas.winkler@intel.com
-Subject: Re: [PATCH v6 7/8] thunderbolt: Networking doc
-Message-ID: <20160831113946.GG17607@kroah.com>
-References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
- <1470054233-4309-8-git-send-email-amir.jer.levy@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470054233-4309-8-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 1/2] pci/aer: Add bus flag to skip source id matching
+Date: Thu, 25 Aug 2016 17:26:10 -0600
+Message-Id: <1472167571-11123-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 01, 2016 at 03:23:52PM +0300, Amir Levy wrote:
-> Adding Thunderbolt(TM) networking documentation.
-> 
-> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-> ---
->  Documentation/00-INDEX                   |   2 +
->  Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
+Allow root port buses to choose to skip source id matching when finding
+the faulting device. Certain root port devices may return an incorrect
+source id and recommend to scan child device registers for aer
+notifications.
 
-Documentation/thunderbolt/networking.txt?
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/pcie/aer/aerdrv_core.c | 7 +++++--
+ include/linux/pci.h                | 5 +++--
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
->  2 files changed, 137 insertions(+)
->  create mode 100644 Documentation/thunderbolt-networking.txt
-> 
-> diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
-> index cb9a6c6..80a6706 100644
-> --- a/Documentation/00-INDEX
-> +++ b/Documentation/00-INDEX
-> @@ -439,6 +439,8 @@ this_cpu_ops.txt
->  	- List rationale behind and the way to use this_cpu operations.
->  thermal/
->  	- directory with information on managing thermal issues (CPU/temp)
-> +thunderbolt-networking.txt
-> +	- Thunderbolt(TM) Networking driver description.
->  trace/
->  	- directory with info on tracing technologies within linux
->  unaligned-memory-access.txt
-> diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
-> new file mode 100644
-> index 0000000..e112313
-> --- /dev/null
-> +++ b/Documentation/thunderbolt-networking.txt
-> @@ -0,0 +1,135 @@
-> +Intel Thunderbolt(TM) Linux driver
-> +==================================
-> +
-> +Copyright(c) 2013 - 2016 Intel Corporation.
-> +
-> +Contact Information:
-> +Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
-> +Edited by Michael Jamet <michael.jamet@intel.com>
-> +
-> +Overview
-> +========
-> +
-> +Thunderbolt(TM) Networking mode is introduced with this driver.
-
-What is "this driver"?
-
-> +This kernel code creates an ethernet device utilized in computer to computer
-> +communication over a Thunderbolt cable.
-
-What kernel code?
-
-> +This driver has been added on the top of the existing thunderbolt driver
-> +for systems with firwmare (FW) based Thunderbolt controllers supporting
-> +Thunderbolt Networking.
-
-How do I know if my hardware supports this or not?
-
-> +
-> +Files
-> +=====
-> +
-> +- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
-> +		In addition, they create an interface for netlink communication with
-> +		a user space daemon.
-> +
-> +- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
-> +		networking.
-
-Where are these files?  Not in this documentation directory :(
-
-> +
-> +Interface to user space
-> +=======================
-> +
-> +The interface to the user space module is implemented through a Generic Netlink.
-> +In order to be accessed by the user space module, both kernel and user space
-> +modules have to register with the same GENL_NAME. In our case, this is
-> +simply "thunderbolt".
-> +The registration is done at driver initialization time for all instances of
-> +the Thunderbolt controllers.
-> +The communication is then carried through pre-defined Thunderbolt messages.
-> +Each specific message has a callback function that is called when
-> +the related message is received.
-> +
-> +The messages are defined as follows:
-> +* NHI_CMD_UNSPEC: Not used.
-> +* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
-> +  communication channel.
-> +* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
-> +  to close communication channel.
-> +* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
-> +  driver version, FW version offset, number of ports in the controller
-> +  and DMA port.
-> +* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
-> +* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
-> +* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
-> +  changes or disconnect path.
-> +* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
-> +  module to FW to establish path.
-> +* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
-
-I want an ack from the network maintainers that this is an acceptable
-way to configure a network device, and that you aren't just
-reimplementing something that can already be done with existing tools.
-
-Creating new apis seems really strange to me, you will have to really
-convince me why you are "special" and need one.
-
-
-> +
-> +Communication with ICM (Firmware)
-> +=================================
-> +
-> +The communication with ICM is principally achieved through
-> +a DMA mechanism on Ring 0.
-
-Where is this ring 0?
-
-Why does a user/developer care about it?
-
-> +The driver allocates a shared memory that is physically mapped onto
-> +the DMA physical space at Ring 0.
-
-Again ring 0?
-
-> +
-> +Interrupts
-> +==========
-> +
-> +Thunderbolt relies on MSI-X interrupts.
-> +The MSI-X vector is allocated as follows:
-> +ICM
-> +     - Tx: MSI-X vector index 0
-> +     - Rx: MSI-X vector index 1
-> +
-> +Port 0
-> +     - Tx: MSI-X vector index 2
-> +     - Rx: MSI-X vector index 3
-> +
-> +Port 1
-> +     - Tx: MSI-X vector index 4
-> +     - Rx: MSI-X vector index 5
-> +
-> +ICM interrupts are used for communication with ICM only.
-> +Port 0 and Port 1 interrupts are used for Thunderbolt Networking
-> +communications.
-> +In case MSI-X is not available, the driver requests to enable MSI only.
-
-
-Is this section even really needed?  What can anyone do with it?
-
-> +
-> +Mutexes, semaphores and spinlocks
-> +=================================
-> +
-> +The driver should be able to operate in an environment where hardware
-> +is asynchronously accessed by multiple entities such as netlink,
-> +multiple controllers etc.
-> +
-> +* send_sem: This semaphore enforces unique sender (one sender at a time)
-> +  to avoid wrong impairing with responses. FW may process one message
-> +  at the time.
-> +* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
-> +  to avoid continuing to send messages to FW.
-> +* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
-> +  avoid continuing to send commands to mailbox.
-> +* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
-> +  for the mailbox command.
-> +  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
-> +  to get the command response.
-> +* lock: This spinlock protects from simultaneous changes during
-> +  disable/enable interrupts.
-> +* state_lock: This mutex comes to protect changes during net device state
-> +  changes and net_device operations.
-> +* controllers_list_mutex: This mutex syncs the access to the controllers
-> +  list when there are multiple controllers in the system.
-
-Why aren't these locks documented in the code itself?  Having it out
-here makes no sense as it will get out of date and will never be looked
-at.  Put it in the code please.
-
-
-> +
-> +FW path enablement
-> +==================
-> +
-> +In order to SW to communicate with the FW, the driver needs to send to FW
-> +the PDF driver ready command and receive response from FW.
-
-PDF?  What does that mean?  This is the first time I've seen that term
-in this file.
-
-> +The driver ready command PDF value is 12 and the response is 13.
-
-Ok, so?
-
-> +Once the exchange is completed, the user space module should be able to send
-> +messages through the driver to the FW and FW starts to send notifications
-> +about HW/FW events.
-
-What does userspace have to do with this?  Why do they care?
-
-This documentation is really confusing, and I thought I understood how
-thunderbolt systems worked :(
-
-greg k-h
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 521e39c..3a0d839 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -132,7 +132,9 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 	 * When bus id is equal to 0, it might be a bad id
+ 	 * reported by root port.
+ 	 */
+-	if (!nosourceid && (PCI_BUS_NUM(e_info->id) != 0)) {
++	if (!nosourceid &&
++	    (PCI_BUS_NUM(e_info->id) != 0) &&
++	    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
+ 		/* Device ID match? */
+ 		if (e_info->id == ((dev->bus->number << 8) | dev->devfn))
+ 			return true;
+@@ -147,7 +149,8 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 	 *      1) nosourceid==y;
+ 	 *      2) bus id is equal to 0. Some ports might lose the bus
+ 	 *              id of error source id;
+-	 *      3) There are multiple errors and prior id comparing fails;
++	 *      3) bus flag PCI_BUS_FLAGS_NO_AERSID is set
++	 *      4) There are multiple errors and prior id comparing fails;
+ 	 * We check AER status registers to find possible reporter.
+ 	 */
+ 	if (atomic_read(&dev->enable_cnt) == 0)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b7d3aa2..5c08137 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -183,8 +183,9 @@ enum pci_irq_reroute_variant {
+ 
+ typedef unsigned short __bitwise pci_bus_flags_t;
+ enum pci_bus_flags {
+-	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+-	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
++	PCI_BUS_FLAGS_NO_MSI	= (__force pci_bus_flags_t) 1,
++	PCI_BUS_FLAGS_NO_MMRBC	= (__force pci_bus_flags_t) 2,
++	PCI_BUS_FLAGS_NO_AERSID	= (__force pci_bus_flags_t) 4,
+ };
+ 
+ /* These values come from the PCI Express Spec */
+-- 
+1.8.3.1
