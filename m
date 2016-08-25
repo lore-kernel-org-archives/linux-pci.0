@@ -1,78 +1,331 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34846 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752483AbcHWNjS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Aug 2016 09:39:18 -0400
-Date: Tue, 23 Aug 2016 08:39:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] pci: Add ignore indicator quirk for devices
-Message-ID: <20160823133913.GN18628@localhost>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
- <1470687542-30155-2-git-send-email-keith.busch@intel.com>
- <20160815174002.GB9790@localhost>
- <20160815192316.GB18083@localhost.localdomain>
- <20160817213745.GE27353@localhost>
- <20160817230951.GD25146@localhost.localdomain>
- <20160818195656.GH27353@localhost>
- <20160818224610.GA28276@localhost.localdomain>
- <20160822165524.GC18628@localhost>
- <20160822211536.GE28276@localhost.localdomain>
+Received: from mail-bn3nam01on0074.outbound.protection.outlook.com ([104.47.33.74]:26720
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755878AbcHYGdY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Aug 2016 02:33:24 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Ley Foon Tan <lftan.linux@gmail.com>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH v3] PCI: altera: Retrain link in rootport mode only
+Date: Thu, 25 Aug 2016 13:59:56 +0800
+Message-ID: <1472104796-20737-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160822211536.GE28276@localhost.localdomain>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 22, 2016 at 05:15:36PM -0400, Keith Busch wrote:
-> On Mon, Aug 22, 2016 at 11:55:24AM -0500, Bjorn Helgaas wrote:
-> > I was imagining these LEDs as some sort of extension to the PCIe
-> > hotplug model, but I think that was a mistake: logically, they have
-> > nothing to do with hotplug, and the only reason they're currently
-> > associated with hotplug is because you chose to re-use a bus (VPP)
-> > that happens to be connected to the Slot Control registers.
-> > 
-> > From an architectural point of view, these LEDs seem device-specific
-> > or storage-specific, with no connection to PCIe at all, so I don't
-> > know why we would put them in the PCIe spec or teach pciehp about
-> > them.
-> 
-> It's not entirely for hotplug scenarios, but it does help with user pain
-> points locating devices they intend to hot remove.
-> 
-> I hear many vendors are for the concept of proposing new status
-> and location indicator definitions to PCIe. I don't think anyone is
-> suggesting the implementation requiring this patch be made standard;
-> this generation of hardware is just a non-standard implementation that
-> needs a quirk to help fill the gap.
+Altera PCIe IP can be configured as rootport or device and they might have
+same vendor ID. It will cause the system hang issue if Altera PCIe is in
+endpoint mode and work with other PCIe rootport that from other vendors.
+Moved retrain function to before pci_scan_root_bus and removed _FIXUP.
+Add _altera_pcie_cfg_read() and _altera_pcie_cfg_write() to use struct
+altera_pcie as argument instead of struct pci_bus.
 
-I'm still not buying the hotplug connection.  The existing Attention
-Indicator is already defined for the purpose of locating a device
-(PCIe r3.0, sec 6.7.1.1.1):
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+v3: Move retrain function to before pci_scan_root_bus and remove _FIXUP
+---
+ drivers/pci/host/pcie-altera.c | 217 +++++++++++++++++++++++++----------------
+ 1 file changed, 134 insertions(+), 83 deletions(-)
 
-  A blinking Attention Indicator indicates that system software is
-  identifying this slot for a human operator to find. This behavior is
-  controlled by a user (for example, from a software user interface or
-  management tool).
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 58eef99..4ce6d86 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -43,6 +43,8 @@
+ #define RP_LTSSM_MASK			0x1f
+ #define LTSSM_L0			0xf
+ 
++#define PCIE_CAP_OFFSET			0x80
++
+ /* TLP configuration type 0 and 1 */
+ #define TLP_FMTTYPE_CFGRD0		0x04	/* Configuration Read Type 0 */
+ #define TLP_FMTTYPE_CFGWR0		0x44	/* Configuration Write Type 0 */
+@@ -100,66 +102,6 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
+ 	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
+ }
+ 
+-static void altera_wait_link_retrain(struct pci_dev *dev)
+-{
+-	u16 reg16;
+-	unsigned long start_jiffies;
+-	struct altera_pcie *pcie = dev->bus->sysdata;
+-
+-	/* Wait for link training end. */
+-	start_jiffies = jiffies;
+-	for (;;) {
+-		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
+-		if (!(reg16 & PCI_EXP_LNKSTA_LT))
+-			break;
+-
+-		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
+-			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
+-			break;
+-		}
+-		udelay(100);
+-	}
+-
+-	/* Wait for link is up */
+-	start_jiffies = jiffies;
+-	for (;;) {
+-		if (altera_pcie_link_is_up(pcie))
+-			break;
+-
+-		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
+-			dev_err(&pcie->pdev->dev, "link up timeout\n");
+-			break;
+-		}
+-		udelay(100);
+-	}
+-}
+-
+-static void altera_pcie_retrain(struct pci_dev *dev)
+-{
+-	u16 linkcap, linkstat;
+-	struct altera_pcie *pcie = dev->bus->sysdata;
+-
+-	if (!altera_pcie_link_is_up(pcie))
+-		return;
+-
+-	/*
+-	 * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
+-	 * current speed is 2.5 GB/s.
+-	 */
+-	pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &linkcap);
+-
+-	if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
+-		return;
+-
+-	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &linkstat);
+-	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
+-		pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
+-					 PCI_EXP_LNKCTL_RL);
+-		altera_wait_link_retrain(dev);
+-	}
+-}
+-DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
+-
+ /*
+  * Altera PCIe port uses BAR0 of RC's configuration space as the translation
+  * from PCI bus to native BUS.  Entire DDR region is mapped into PCIe space
+@@ -330,22 +272,14 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+-				int where, int size, u32 *value)
++static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8 busno,
++				 unsigned int devfn, int where, int size,
++				 u32 *value)
+ {
+-	struct altera_pcie *pcie = bus->sysdata;
+ 	int ret;
+ 	u32 data;
+ 	u8 byte_en;
+ 
+-	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
+-		*value = 0xffffffff;
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-	}
+-
+ 	switch (size) {
+ 	case 1:
+ 		byte_en = 1 << (where & 3);
+@@ -358,7 +292,7 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+ 		break;
+ 	}
+ 
+-	ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
++	ret = tlp_cfg_dword_read(pcie, busno, devfn,
+ 				 (where & ~DWORD_MASK), byte_en, &data);
+ 	if (ret != PCIBIOS_SUCCESSFUL)
+ 		return ret;
+@@ -378,20 +312,14 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+-				 int where, int size, u32 value)
++static int _altera_pcie_cfg_write(struct altera_pcie *pcie, u8 busno,
++				  unsigned int devfn, int where, int size,
++				  u32 value)
+ {
+-	struct altera_pcie *pcie = bus->sysdata;
+ 	u32 data32;
+ 	u32 shift = 8 * (where & 3);
+ 	u8 byte_en;
+ 
+-	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+ 	switch (size) {
+ 	case 1:
+ 		data32 = (value & 0xff) << shift;
+@@ -407,8 +335,40 @@ static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+ 		break;
+ 	}
+ 
+-	return tlp_cfg_dword_write(pcie, bus->number, devfn,
+-		(where & ~DWORD_MASK), byte_en, data32);
++	return tlp_cfg_dword_write(pcie, busno, devfn, (where & ~DWORD_MASK),
++				   byte_en, data32);
++}
++
++static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 *value)
++{
++	struct altera_pcie *pcie = bus->sysdata;
++
++	if (altera_pcie_hide_rc_bar(bus, devfn, where))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
++		*value = 0xffffffff;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	return _altera_pcie_cfg_read(pcie, bus->number, devfn, where, size,
++				     value);
++}
++
++static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
++				 int where, int size, u32 value)
++{
++	struct altera_pcie *pcie = bus->sysdata;
++
++	if (altera_pcie_hide_rc_bar(bus, devfn, where))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	return _altera_pcie_cfg_write(pcie, bus->number, devfn, where, size,
++				     value);
+ }
+ 
+ static struct pci_ops altera_pcie_ops = {
+@@ -416,6 +376,90 @@ static struct pci_ops altera_pcie_ops = {
+ 	.write = altera_pcie_cfg_write,
+ };
+ 
++static int altera_read_cap_word(struct altera_pcie *pcie, u8 busno,
++				unsigned int devfn, int offset, u16 *value)
++{
++	u32 data;
++	int ret;
++
++	ret = _altera_pcie_cfg_read(pcie, busno, devfn,
++				    PCIE_CAP_OFFSET + offset, sizeof(*value),
++				    &data);
++	*value = data;
++	return ret;
++}
++
++static int altera_write_cap_word(struct altera_pcie *pcie, u8 busno,
++				 unsigned int devfn, int offset, u16 value)
++{
++	return _altera_pcie_cfg_write(pcie, busno, devfn,
++				      PCIE_CAP_OFFSET + offset, sizeof(value),
++				      value);
++}
++
++static void altera_wait_link_retrain(struct altera_pcie *pcie)
++{
++	u16 reg16;
++	unsigned long start_jiffies;
++
++	/* Wait for link training end. */
++	start_jiffies = jiffies;
++	for (;;) {
++		altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
++				     PCI_EXP_LNKSTA, &reg16);
++		if (!(reg16 & PCI_EXP_LNKSTA_LT))
++			break;
++
++		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
++			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
++			break;
++		}
++		udelay(100);
++	}
++
++	/* Wait for link is up */
++	start_jiffies = jiffies;
++	for (;;) {
++		if (altera_pcie_link_is_up(pcie))
++			break;
++
++		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
++			dev_err(&pcie->pdev->dev, "link up timeout\n");
++			break;
++		}
++		udelay(100);
++	}
++}
++
++static void altera_pcie_retrain(struct altera_pcie *pcie)
++{
++	u16 linkcap, linkstat, linkctl;
++
++	if (!altera_pcie_link_is_up(pcie))
++		return;
++
++	/*
++	 * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
++	 * current speed is 2.5 GB/s.
++	 */
++	altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN, PCI_EXP_LNKCAP,
++			     &linkcap);
++	if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
++		return;
++
++	altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN, PCI_EXP_LNKSTA,
++			     &linkstat);
++	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
++		altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
++				     PCI_EXP_LNKCTL, &linkctl);
++		linkctl |= PCI_EXP_LNKCTL_RL;
++		altera_write_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
++				      PCI_EXP_LNKCTL, linkctl);
++
++		altera_wait_link_retrain(pcie);
++	}
++}
++
+ static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ 				irq_hw_number_t hwirq)
+ {
+@@ -537,6 +581,11 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void altera_pcie_host_init(struct altera_pcie *pcie)
++{
++	altera_pcie_retrain(pcie);
++}
++
+ static int altera_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct altera_pcie *pcie;
+@@ -575,6 +624,8 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 	/* enable all interrupts */
+ 	cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
+ 
++	altera_pcie_host_init(pcie);
++
+ 	bus = pci_scan_root_bus(&pdev->dev, pcie->root_bus_nr, &altera_pcie_ops,
+ 				pcie, &pcie->resources);
+ 	if (!bus)
+-- 
+1.8.2.1
 
-The other IBPI states (fail, rebuild, predicted failure, hotspare,
-degraded, failed) all seem like storage-related things without an
-obvious connection to pciehp.  I would expect a kernel driver like md
-to manage those states.
-
-PCIe hotplug is designed with a 1:1:1 relationship between the
-Downstream Port, the slot, and a replaceable device.  It's not obvious
-to me how the IBPI signaling maps into that.  The first diagram on the
-IBPI wikipedia page shows a single iPass cable (e.g., a single PCIe
-slot connection) connected to an enclosure of four drives.  Each drive
-has three LEDs, so we couldn't control all twelve of those LEDs using
-the single Slot Control of the Downstream Port.
-
-> Would it be more palatable if I modify the quirk such that when set,
-> pciehp provides a sysfs entry allowing arbitrary user defined Slot Control
-> commands? That removes the dangerous direct access from user space.
-
-Maybe, I dunno.  So far, it still seems like an unrelated wart on pciehp.
-
-Bjorn
