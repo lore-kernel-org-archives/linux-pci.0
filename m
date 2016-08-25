@@ -1,92 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41960 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590AbcHOQvb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 12:51:31 -0400
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Thu, 25 Aug 2016 12:14:25 +0100
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: [PATCH 5/6] drivers: pci: host: common: fix pci_remap_iospace() failure path
-Date: Mon, 15 Aug 2016 17:50:45 +0100
-Message-Id: <1471279854-11916-6-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Punit Agrawal <punit.agrawal@arm.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Duc Dang <dhdang@apm.com>, Rafael Wysocki <rafael@kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	patches <patches@apm.com>, bhelgaas@google.com
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+Message-ID: <20160825111424.GA9244@red-moon>
+References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
+ <20160824142723.GA25843@red-moon>
+ <20160824193000.GE23914@localhost>
+ <20160824213005.1a9300ef@arm.com>
+ <87pooxqi5p.fsf@e105922-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87pooxqi5p.fsf@e105922-lin.cambridge.arm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM/ARM64 architectures, PCI IO ports are emulated through memory
-mapped IO, by reserving a chunk of virtual address space starting at
-PCI_IOBASE and by mapping the PCI host bridges memory address space
-driving PCI IO cycles to it.
+On Thu, Aug 25, 2016 at 11:04:02AM +0100, Punit Agrawal wrote:
+> Marc Zyngier <marc.zyngier@arm.com> writes:
+> 
+> > On Wed, 24 Aug 2016 14:30:00 -0500
+> > Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> >> On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:
+> >> > [ +Bjorn, Punit]
+> >> > 
+> >> > On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:  
+> >> > > [Resend in plain text mode]
+> >> > > 
+> >> > > Hi Lorenzo, Rafael,
+> >> > > 
+> >> > > ACPI 6.1 spec does not specify how to set interrupt polarity and
+> >> > > trigger mode in _PRT when the interrupts are static (hardwired to
+> >> > > specific interrupt inputs in interrupt controller). In current
+> >> > > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
+> >> > > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
+> >> > > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
+> >> > > GICv3 controllers and will cause failures in PCIe AER, PME services
+> >> > > (on X-Gene platforms).  
+> >> 
+> >> PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
+> >> and defined as 'level sensitive,' asserted low."
+> >> 
+> >> I've heard before that ARM64 does this differently, but I still don't
+> >> understand the difference.  Obviously if you plug a legacy PCI card
+> >> into an ARM64 system, it's still going to pull INTA# low to assert an
+> >> interrupt.  So is there something special about ARM64 that inverts
+> >> that, or what?
+> >
+> > There is certainly an inverter somewhere on the interrupt path, because
+> > the GIC triggers on level high, not level low. But I don't think that's
+> > the issue Duc is trying to outline here, because that's not something
+> > SW can fix. I'm worried that in his system, the interrupt is edge
+> > triggered instead. 
 
-PCI host bridge drivers that enable downstream PCI IO cycles map the
-host bridge memory address responding to PCI IO cycles to the fixed
-virtual address space through the pci_remap_iospace() API.
+It would be nice if Duc reported the "failures" he is noticing,
+instead of us having to guess them.
 
-This means that if the pci_remap_iospace() function fails, the
-corresponding host bridge PCI IO resource must be considered invalid, in
-that there is no way for the kernel to actually drive PCI IO
-transactions if the memory addresses responding to PCI
-IO cycles cannot be mapped into the CPU virtual address space.
+> >> > > Is there any way to specify polarity and trigger mode for static
+> >> > > interrupts in _PRT?   
+> >> 
+> >> There is no way I'm aware of in _PRT to specify polarity and trigger
+> >> mode.  I don't know the history, but my guess is that it would be seen
+> >> as superfluous given that the PCI spec requires level, active low.
+> >> 
+> >> Obviously I'm missing something important.
+> >
+> > Same here, unless the HW is not PCI compliant...
+> 
+> I had faced this issue on Juno r2[0] a few months back - though AFAICS,
+> it wasn't preventing anything to work but printed an annoying message on
+> boot.
+> 
+> [ 1.353696] genirq: Setting trigger mode 8 for irq 9 failed (gic_set_type+0x0/0x5c)
+> [ 1.478286] genirq: Setting trigger mode 8 for irq 17 failed (gic_set_type+0x0/0x5c)
 
-The PCI common host bridge driver does not remove the PCI IO
-resource from the host bridge resource windows if the
-pci_remap_iospace() call fails; this is an actual bug in that the
-PCI host bridge would consider the PCI IO resource valid (and possibly
-assign it to downstream devices) even if the kernel was not able
-to map the PCI host bridge memory address driving IO cycle to the
-CPU virtual address space (ie pci_remap_iospace() failures).
+This is not just annoying, that's the kernel failing to set-up legacy
+IRQs IIUC and unless we have a way to specify interrupt polarity that's
+going to happen on all ARM64 platforms booting with ACPI having a GIC
+interrupt controller.
 
-Fix the PCI host bridge driver pci_remap_iospace() failure path, by
-destroying the PCI host bridge PCI IO resources retrieved through
-firmware when the pci_remap_iospace() function call fails, therefore
-preventing the kernel from adding the respective PCI IO resource to the
-list of PCI host bridge valid resources, fixing the issue.
+I suspect most of ARM partners are already using interrupt links to
+work around this and Duc was the first one reporting the issue
+with the ACPI specs (ie interrupt links should just be used for
+configurable interrupt pins - which, I will say it again - it is
+likely to be a consequence of how x86 and their APIC works).
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for
-use by other drivers")
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Will Deacon <will.deacon@arm.com>
----
- drivers/pci/host/pci-host-common.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+> The ACPI code in the kernel (drivers/acpi/pci_irq.c) is behaving as per
+> spec, so nothing to be done there IMHO. The problem arises due to the
+> integration of two mismatched components - PCI is level low and the GIC
+> supports only level high - making it necessary to introduce glue
+> elements like the inverter.
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index 9d9d34e..61eb4d4 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -29,7 +29,7 @@ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
- 	int err, res_valid = 0;
- 	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
--	struct resource_entry *win;
-+	struct resource_entry *win, *tmp;
- 
- 	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
- 	if (err)
-@@ -39,15 +39,17 @@ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
- 	if (err)
- 		return err;
- 
--	resource_list_for_each_entry(win, resources) {
-+	resource_list_for_each_entry_safe(win, tmp, resources) {
- 		struct resource *res = win->res;
- 
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
- 			err = pci_remap_iospace(res, iobase);
--			if (err)
-+			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
-+				resource_list_destroy_entry(win);
-+			}
- 			break;
- 		case IORESOURCE_MEM:
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
--- 
-2.6.4
+That glue can well be the interrupt link. I reiterate my point:
+I will start dumping x86 ACPI tables and peruse the _PRT on x86 systems,
+but in principle even on x86 the legacy PCI interrupt can be re-routed
+and their polarity specified through interrupt links. It is not a
+given that the legacy IRQs are active low at interrupt controller
+level even on x86, at least that's not ruled out by ACPI specs.
 
+Am I wrong ?
+
+The inverter you and Marc mentioned can be described through an
+interrupt link defining the interrupt polarity. On x86 there is
+probably an IRQ router sitting downstream the ACPI that allows
+to a) configure the IOAPIC pin for the legacy IRQ and b) control
+the polarity, but as I mentioned I do not have enough x86 knowledge,
+so I am just guessing.
+
+> This would all be OK if ACPI had a mechanism to specify the interrupt
+> type (trigger and polarity). As an alternative, for Juno I created a
+> link device (as Lorenzo suggests) to provide this information to the
+> kernel.
+> 
+> With this fix the warnings went away and I suspect this will address
+> Duc's issue as well. But that is playing naughty with the spec (ACPI 6.1
+> Section. 6.2.13).
+
+ACPI specs were written for x86 boxes, there is nothing naughty
+in asking for them to be updated and work on other architectures.
+
+The only issue I see with interrupt links is that they may allow
+reprogramming through the _SRS method, which is optional BTW.
+
+> If there are no good reason to restrict using link devices to
+> configurable interrupts, perhaps the spec needs an update.
+
+Yes and that's what I am going to ask if nobody complains.
+
+> Perhaps Rafael knows why is there a restriction on using link devices
+> for fixed interrupts in the ACPI spec...
+
+See above, I do not know why that restriction is there given that
+to me an interrupt link is a superset of static values, I do not
+see why they should be prevented for non-configurable interrupts,
+I am happy to be corrected if there is something we are missing.
+
+Lorenzo
