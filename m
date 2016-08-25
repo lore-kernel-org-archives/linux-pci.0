@@ -1,82 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41963 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590AbcHOQvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 12:51:32 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <treding@nvidia.com>
-Subject: [PATCH 6/6] drivers: pci: host: tegra: fix pci_remap_iospace() failure path
-Date: Mon, 15 Aug 2016 17:50:46 +0100
-Message-Id: <1471279854-11916-7-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <prvs=0045beefe5=linux@rvanderhoff.org.uk>
+Return-Path: <prvs=0045beefe5=linux@rvanderhoff.org.uk>
+Subject: Re: Hotplug not working for USB 3.1 docking station on Dell XPS 13
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <57BDCE15.4080201@rvanderhoff.org.uk>
+ <20160824201511.GF23914@localhost>
+Cc: linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
+ linux-kernel@vger.kernel.org
+From: Richard van der Hoff <linux@rvanderhoff.org.uk>
+Message-ID: <57BEE0E7.7020300@rvanderhoff.org.uk>
+Date: Thu, 25 Aug 2016 13:13:27 +0100
+MIME-Version: 1.0
+In-Reply-To: <20160824201511.GF23914@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM/ARM64 architectures, PCI IO ports are emulated through memory
-mapped IO, by reserving a chunk of virtual address space starting at
-PCI_IOBASE and by mapping the PCI host bridges memory address space
-driving PCI IO cycles to it.
+On 24/08/16 21:15, Bjorn Helgaas wrote:
+> [+cc Andreas, linux-kernel]
+>
+> On Wed, Aug 24, 2016 at 05:40:53PM +0100, Richard van der Hoff wrote:
+>> I'm having problems with a Plugable USB-C docking station, with my
+>> laptop, a Dell XPS 13 (9350).  ...
+>> My impression, and feedback from the linux-usb mailing list, is
+>> therefore that this is a PCI hotplug problem.
+>
+> Please include a pointer to the linux-usb analysis.
 
-PCI host bridge drivers that enable downstream PCI IO cycles map the
-host bridge memory address responding to PCI IO cycles to the fixed
-virtual address space through the pci_remap_iospace() API.
+For the record, here: 
+http://marc.info/?l=linux-usb&m=147204147226274&w=2, however:
 
-This means that if the pci_remap_iospace() function fails, the
-corresponding host bridge PCI IO resource must be considered invalid, in
-that there is no way for the kernel to actually drive PCI IO
-transactions if the memory addresses responding to PCI
-IO cycles cannot be mapped into the CPU virtual address space.
+>  From the kernel's point of view, plugging in the dock would be a PCIe
+> hotplug event on 00:1c.0 that should be handled by pciehp.  Do you
+> have pciehp included in your kernel?
 
-The PCI tegra host bridge driver adds the PCI IO resource retrieved
-from firmware to the host bridge resource windows even if the
-pci_remap_iospace() call fails; this is an actual bug in that the PCI
-host bridge would consider the PCI IO resource valid (and possibly
-assign it to downstream devices) even if the kernel was not able to map
-the PCI host bridge memory address driving IO cycle to the CPU virtual
-address space (ie pci_remap_iospace() failures).
+I did not; now I do, and it works perfectly. Thank you! A case of it 
+being incredibly obvious once you know what you are looking for.
 
-Add the PCI host bridge driver pci_remap_iospace() failure path and
-do not add the corresponding PCI host bridge PCI IO resources
-retrieved through firmware when the pci_remap_iospace() function
-call fails, fixing the issue.
+> 01:00.0 and 02:02.0 are ports of a Thunderbolt switch. Since they
+> don't appear when you boot without the docking station, the dock
+> connection must be between 00:1c.0 and 01:00.0.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Fixes: e6e9f471f5fe ("PCI: tegra: Use generic pci_remap_iospace() rather than ARM32-specific one")
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+This would strike me as surprising - the dock bills itself as a USB-C 
+device, and the Thunderbolt devices look like they are part of the 
+laptop chipset to me. To me it seems more likely that those PCI devices 
+are part of the laptop, but are powered down until something is plugged 
+into the USB-C port.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 6de0757..8c2590d 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -621,7 +621,11 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- 	if (err < 0)
- 		return err;
- 
--	pci_add_resource_offset(&sys->resources, &pcie->pio, sys->io_offset);
-+	err = pci_remap_iospace(&pcie->pio, pcie->io.start);
-+	if (!err)
-+		pci_add_resource_offset(&sys->resources, &pcie->pio,
-+					sys->io_offset);
-+
- 	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
- 	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
- 				sys->mem_offset);
-@@ -631,7 +635,6 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- 	if (err < 0)
- 		return err;
- 
--	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 	return 1;
- }
- 
--- 
-2.6.4
+Still, this is splitting hairs; the point is that they are hotplugged 
+PCI devices which need pciehp.
 
+Thanks again for the pointer.
+
+Best regards
+
+Richard
