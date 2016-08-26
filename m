@@ -1,106 +1,109 @@
-Return-Path: <hare@suse.de>
-Return-Path: <hare@suse.de>
-Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
-To: Alexander Duyck <alexander.duyck@gmail.com>,
- Alexey Kardashevskiy <aik@ozlabs.ru>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
- <1452684335-46107-4-git-send-email-hare@suse.de>
- <20160209210458.GB32530@localhost>
- <bc3c39b1-cbff-99a5-8fe7-9add14f2c6f5@ozlabs.ru>
- <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Babu Moger <babu.moger@oracle.com>, Paul Mackerras <paulus@samba.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>, santosh@chelsio.com,
- Netdev <netdev@vger.kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
-Date: Wed, 10 Aug 2016 08:23:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAKgT0Udm0a08v34zU11ckjk4DCq2uxjPxmhLmgiKozY676Hruw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 2/2] x86/vmd: Add PCI domain specific LED option
+Date: Fri, 26 Aug 2016 11:23:02 -0600
+Message-Id: <1472232182-1448-3-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1472232182-1448-1-git-send-email-keith.busch@intel.com>
+References: <1472232182-1448-1-git-send-email-keith.busch@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/09/2016 08:12 PM, Alexander Duyck wrote:
-> On Tue, Aug 9, 2016 at 5:54 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
->> On 10/02/16 08:04, Bjorn Helgaas wrote:
->>> On Wed, Jan 13, 2016 at 12:25:34PM +0100, Hannes Reinecke wrote:
->>>> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
->>>> be smaller than that. To figure out the actual size one has to read
->>>> the VPD area until the 'end marker' is reached.
->>>> Trying to read VPD data beyond that marker results in 'interesting'
->>>> effects, from simple read errors to crashing the card. And to make
->>>> matters worse not every PCI card implements this properly, leaving
->>>> us with no 'end' marker or even completely invalid data.
->>>> This path tries to determine the size of the VPD data.
->>>> If no valid data can be read an I/O error will be returned when
->>>> reading the sysfs attribute.
->>
->>
->> I have a problem with this particular feature as today VFIO uses this
->> pci_vpd_xxxx API to virtualize access to VPD and the existing code assumes
->> there is just one VPD block with 0x2 start and 0xf end. However I have at
->> least one device where this is not true - "10 Gigabit Ethernet-SR PCI
->> Express Adapter" - it has 2 blocks (made a script to read/parse it as
->> /sys/bus/pci/devices/0001\:03\:00.0/vpd shows it wrong):
-> 
-> The PCI spec is what essentially assumes that there is only one block.
-> If I am not mistaken in the case of this device the second block here
-> actually contains device configuration data, not actual VPD data.  The
-> issue here is that the second block is being accessed as VPD when it
-> isn't.
-> 
->> #0000 Large item 42 bytes; name 0x2 Identifier String
->> #002d Large item 74 bytes; name 0x10
->> #007a Small item 1 bytes; name 0xf End Tag
->> ---
->> #0c00 Large item 16 bytes; name 0x2 Identifier String
->> #0c13 Large item 234 bytes; name 0x10
->> #0d00 Large item 252 bytes; name 0x11
->> #0dff Small item 0 bytes; name 0xf End Tag
-> 
-> The second block here is driver proprietary setup bits.
-> 
->> The cxgb3 driver is reading the second bit starting from 0xc00 but since
->> the size is wrongly detected as 0x7c, VFIO blocks access beyond it and the
->> guest driver fails to probe.
->>
->> I also cannot find a clause in the PCI 3.0 spec saying that there must be
->> just a single block, is it there?
-> 
-> The problem is we need to be able to parse it.  The spec defines a
-> series of tags that can be used starting at offset 0.  That is how we
-> are supposed to get around through the VPD data.  The problem is we
-> can't have more than one end tag and what appears to be happening here
-> is that we are defining a second block of data which uses the same
-> formatting as VPD but is not VPD.
-> 
->> What would the correct fix be? Scanning all 32k of VPD is not an option I
->> suppose as this is what this patch is trying to avoid. Thanks.
-> 
-> I adding the current cxgb3 maintainer and netdev list to the Cc.  This
-> is something that can probably be addressed via a PCI quirk as what
-> needs to happen is that we need to extend the VPD in the case of this
-> part in order to include this second block.  As long as we can read
-> the VPD data all the way out to 0xdff odds are we could probably just
-> have the size arbitrarily increased to 0xe00 via the quirk and then
-> you would be able to access all of the VPD for the device.  We already
-> have code making other modifications to drivers/pci/quirks.c for
-> several Broadcom devices and probably just need something similar to
-> allow extended access in the case of these devices.
-> 
-Yes, that's what I think, too.
-The Broadcom quirk should work here, too.
-(Didn't we do that already?)
+This patch adds a new function to set PCI domain specific options as
+devices are added. The usage included in this patch is for LED indicator
+control in VMD domains, but may be extended in the future as new domain
+specific options are required.
 
-Cheers,
+PCIe LED Slot Control in a VMD domain is repurposed to a non-standard
+implementation. As such, all devices in a VMD domain will be flagged so
+that pciehp does not attempt to use LED indicators. This user_led flag
+has pciehp provide a different sysfs entry for user exclusive control
+over the domain's slot indicators.
 
-Hannes
+In order to determine if a bus is within a PCI domain, the patch appends
+a bool to the pci_sysdata structure that the VMD driver sets during
+initialization.
+
+Requested-by: Kapil Karkra <kapil.karkra@intel.com>
+Tested-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ arch/x86/include/asm/pci.h | 14 ++++++++++++++
+ arch/x86/pci/common.c      |  7 +++++++
+ arch/x86/pci/vmd.c         |  1 +
+ 3 files changed, 22 insertions(+)
+
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 9ab7507..1411dbe 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -23,6 +23,9 @@ struct pci_sysdata {
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ 	void		*fwnode;	/* IRQ domain for MSI assignment */
+ #endif
++#if IS_ENABLED(CONFIG_VMD)
++	bool vmd_domain;		/* True if in Intel VMD domain */
++#endif
+ };
+ 
+ extern int pci_routeirq;
+@@ -56,6 +59,17 @@ static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+ #define pci_root_bus_fwnode	_pci_root_bus_fwnode
+ #endif
+ 
++static inline bool is_vmd(struct pci_bus *bus)
++{
++#if IS_ENABLED(CONFIG_VMD)
++	struct pci_sysdata *sd = bus->sysdata;
++
++	return sd->vmd_domain;
++#else
++	return false;
++#endif
++}
++
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+    or architectures with incomplete PCI setup by the loader */
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 7b6a9d1..ccf696c 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -677,6 +677,12 @@ static void set_dma_domain_ops(struct pci_dev *pdev)
+ static void set_dma_domain_ops(struct pci_dev *pdev) {}
+ #endif
+ 
++static void set_dev_domain_options(struct pci_dev *pdev)
++{
++	if (is_vmd(pdev->bus))
++		pdev->user_leds = 1;
++}
++
+ int pcibios_add_device(struct pci_dev *dev)
+ {
+ 	struct setup_data *data;
+@@ -707,6 +713,7 @@ int pcibios_add_device(struct pci_dev *dev)
+ 		iounmap(data);
+ 	}
+ 	set_dma_domain_ops(dev);
++	set_dev_domain_options(dev);
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+index b73da50..3014f8e 100644
+--- a/arch/x86/pci/vmd.c
++++ b/arch/x86/pci/vmd.c
+@@ -604,6 +604,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 		.parent = res,
+ 	};
+ 
++	sd->vmd_domain = true;
+ 	sd->domain = vmd_find_free_domain();
+ 	if (sd->domain < 0)
+ 		return sd->domain;
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.7.2
