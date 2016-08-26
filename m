@@ -1,70 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:32912 "EHLO mail5.wrs.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756666AbcHVWAZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 18:00:25 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH 6/8] PCI: designware: make host support explicitly non-modular
-Date: Mon, 22 Aug 2016 17:59:46 -0400
-Message-ID: <20160822215948.27251-7-paul.gortmaker@windriver.com>
-In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+Return-Path: <lftan.linux@gmail.com>
+Return-Path: <lftan.linux@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: lftan.linux@gmail.com
+In-Reply-To: <20160825135650.GB11257@localhost>
+References: <1472104796-20737-1-git-send-email-lftan@altera.com> <20160825135650.GB11257@localhost>
+From: Ley Foon Tan <lftan@altera.com>
+Date: Fri, 26 Aug 2016 08:42:53 +0800
+Message-ID: <CAFiDJ5_-HwgH+SBap+akHmtCG8GF8KuXWfsbULuk5xMFqCWO5g@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: altera: Retrain link in rootport mode only
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig entry controlling compilation of this code is:
+On Thu, Aug 25, 2016 at 9:56 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Aug 25, 2016 at 01:59:56PM +0800, Ley Foon Tan wrote:
+>> Altera PCIe IP can be configured as rootport or device and they might have
+>> same vendor ID. It will cause the system hang issue if Altera PCIe is in
+>> endpoint mode and work with other PCIe rootport that from other vendors.
+>> Moved retrain function to before pci_scan_root_bus and removed _FIXUP.
+>> Add _altera_pcie_cfg_read() and _altera_pcie_cfg_write() to use struct
+>> altera_pcie as argument instead of struct pci_bus.
+>
+> I think this makes sense.  Can you split this into two patches:
+>
+>   - Rework the config accessors
+>   - Move retrain from the quirk to altera_pcie_host_init()
+Okay, will resend this.
+Thanks.
 
-drivers/pci/host/Kconfig:config PCIE_DW
-drivers/pci/host/Kconfig:       bool
-
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the couple traces of modular infrastructure use, so that
-when reading the driver there is no doubt it is builtin-only.
-
-We delete the MODULE_LICENSE tag etc. since all that information
-is already contained at the top of the file in the comments.
-
-We don't end up adding init.h to this file, since it isn't actually
-using __init or any initcalls directly.
-
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-designware.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 12afce19890b..16374202cb8b 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -14,7 +14,6 @@
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
--#include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -802,7 +801,3 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	val |= PORT_LOGIC_SPEED_CHANGE;
- 	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
- }
--
--MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
--MODULE_DESCRIPTION("Designware PCIe host controller driver");
--MODULE_LICENSE("GPL v2");
--- 
-2.8.4
-
+> I also want to look through the other host bridge drivers and see if
+> there's any consistency in naming and structure of the config accessors.
+> The pattern of a wrapper that takes "struct pci_bus *, unsigned int devfn,
+> ..." that calls an internal function that takes the driver structure
+> instead of the "struct pci_bus *" might be useful in other drivers as well.
