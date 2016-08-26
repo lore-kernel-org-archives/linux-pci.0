@@ -1,50 +1,138 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] PCI: rcar: Consolidate register space lookup and ioremap
-To: Simon Horman <horms@verge.net.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Mon, 22 Aug 2016 14:27:28 -0500
-Message-ID: <20160822192728.5055.58901.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0069.outbound.protection.outlook.com ([104.47.41.69]:49804
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756575AbcHZBtM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Aug 2016 21:49:12 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Ley Foon Tan <lftan.linux@gmail.com>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH v4 1/2] PCI: altera: Rework configs accessors
+Date: Fri, 26 Aug 2016 09:47:24 +0800
+Message-ID: <1472176045-27815-2-git-send-email-lftan@altera.com>
+In-Reply-To: <1472176045-27815-1-git-send-email-lftan@altera.com>
+References: <1472176045-27815-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the devm_ioremap_resource() of R-Car register space next to the
-of_address_to_resource() that extracts the resource.  No functional change
-intended.
+Rework configs accessors so a future patch can use them in _probe()
+with struct altera_pcie instead of struct pci_bus.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/pci/host/pcie-rcar.c |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/pci/host/pcie-altera.c | 64 +++++++++++++++++++++++++++---------------
+ 1 file changed, 41 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 65db7a2..e58bbbc 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -775,6 +775,10 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
- 	if (err)
- 		return err;
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 58eef99..34e6258 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -330,22 +330,14 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
  
-+	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
-+	if (IS_ERR(pcie->base))
-+		return PTR_ERR(pcie->base);
-+
- 	pcie->clk = devm_clk_get(&pdev->dev, "pcie");
- 	if (IS_ERR(pcie->clk)) {
- 		dev_err(pcie->dev, "cannot get platform clock\n");
-@@ -810,12 +814,6 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
- 	}
- 	pcie->msi.irq2 = i;
+-static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+-				int where, int size, u32 *value)
++static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8 busno,
++				 unsigned int devfn, int where, int size,
++				 u32 *value)
+ {
+-	struct altera_pcie *pcie = bus->sysdata;
+ 	int ret;
+ 	u32 data;
+ 	u8 byte_en;
  
--	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
--	if (IS_ERR(pcie->base)) {
--		err = PTR_ERR(pcie->base);
--		goto err_map_reg;
+-	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
+-		*value = 0xffffffff;
+-		return PCIBIOS_DEVICE_NOT_FOUND;
 -	}
 -
- 	return 0;
+ 	switch (size) {
+ 	case 1:
+ 		byte_en = 1 << (where & 3);
+@@ -358,7 +350,7 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+ 		break;
+ 	}
  
- err_map_reg:
+-	ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
++	ret = tlp_cfg_dword_read(pcie, busno, devfn,
+ 				 (where & ~DWORD_MASK), byte_en, &data);
+ 	if (ret != PCIBIOS_SUCCESSFUL)
+ 		return ret;
+@@ -378,20 +370,14 @@ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+-				 int where, int size, u32 value)
++static int _altera_pcie_cfg_write(struct altera_pcie *pcie, u8 busno,
++				  unsigned int devfn, int where, int size,
++				  u32 value)
+ {
+-	struct altera_pcie *pcie = bus->sysdata;
+ 	u32 data32;
+ 	u32 shift = 8 * (where & 3);
+ 	u8 byte_en;
+ 
+-	if (altera_pcie_hide_rc_bar(bus, devfn, where))
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+ 	switch (size) {
+ 	case 1:
+ 		data32 = (value & 0xff) << shift;
+@@ -407,8 +393,40 @@ static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+ 		break;
+ 	}
+ 
+-	return tlp_cfg_dword_write(pcie, bus->number, devfn,
+-		(where & ~DWORD_MASK), byte_en, data32);
++	return tlp_cfg_dword_write(pcie, busno, devfn, (where & ~DWORD_MASK),
++				   byte_en, data32);
++}
++
++static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 *value)
++{
++	struct altera_pcie *pcie = bus->sysdata;
++
++	if (altera_pcie_hide_rc_bar(bus, devfn, where))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
++		*value = 0xffffffff;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	return _altera_pcie_cfg_read(pcie, bus->number, devfn, where, size,
++				     value);
++}
++
++static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
++				 int where, int size, u32 value)
++{
++	struct altera_pcie *pcie = bus->sysdata;
++
++	if (altera_pcie_hide_rc_bar(bus, devfn, where))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	return _altera_pcie_cfg_write(pcie, bus->number, devfn, where, size,
++				     value);
+ }
+ 
+ static struct pci_ops altera_pcie_ops = {
+-- 
+1.8.2.1
+
