@@ -1,88 +1,129 @@
-Return-Path: <roland.singer@desertbit.com>
-Return-Path: <roland.singer@desertbit.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Peter Wu <peter@lekensteyn.nl>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost> <20160830195337.GA18805@al>
- <e7318236-9737-518e-c360-398c66220961@desertbit.com>
- <20160831114639.GD19420@al>
- <1b91b281-3c71-f02f-ff27-51957af92275@desertbit.com>
- <20160831123444.GE19420@al>
- <e19456cb-3076-c8f1-c9ec-fbfbd9bb6112@desertbit.com>
- <310ac56e-94bf-35de-79c7-29b0b4b6e2a8@desertbit.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- dri-devel@lists.freedesktop.org, emil.l.velikov@gmail.com,
- "imirkin@alum.mit.edu >> Ilia Mirkin" <imirkin@alum.mit.edu>
-From: Roland Singer <roland.singer@desertbit.com>
-Message-ID: <e50b350c-c6d1-22ef-527e-3590425dede2@desertbit.com>
-Date: Wed, 31 Aug 2016 22:16:25 +0200
-MIME-Version: 1.0
-In-Reply-To: <310ac56e-94bf-35de-79c7-29b0b4b6e2a8@desertbit.com>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 1/2] pciehp: Let user control LED status
+Date: Fri, 26 Aug 2016 11:23:01 -0600
+Message-Id: <1472232182-1448-2-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1472232182-1448-1-git-send-email-keith.busch@intel.com>
+References: <1472232182-1448-1-git-send-email-keith.busch@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/31/16 22:06, Roland Singer wrote:
-> Here is Peter Wu's reply, which was not send to the mailing list, because
-> I had to resend my e-mail to him due to a failure...
-> 
-> 
-> -------- Forwarded Message --------
-> Subject: Re: Fwd: Re: Kernel Freeze with American Megatrends BIOS
-> Date: Wed, 31 Aug 2016 18:08:53 +0200
-> From: Peter Wu <peter@lekensteyn.nl>
-> To: Roland Singer <roland.singer@desertbit.com>
-> 
-> On Wed, Aug 31, 2016 at 05:56:18PM +0200, Roland Singer wrote:
-> 
->>> If you look at my notes.txt, you will see that _OFF always executes the
->>> same code. PGON differs. When the problem occurs, "Q0L0" somehow always
->>> reads back as non-zero and LNKS < 7.
->>>
->>
->> Oh you're Lekensteyn ^^
-> 
-> Yes, that's me :) I wrote bbswitch, did the Optimus and PR3 ACPI support
-> in nouveau so I am fairly certain what happens behind the scenes.
-> 
+This patch adds a new flag to the pci_dev structure instructing pciehp to
+ignore PCIe slot LED indicators. The pciehp driver will instead provide
+exclusive attention control to the user by setting the slot control
+exactly as the user requested with out interpreting the input. This is
+preparing for domain devices that repurpose these for non-standard use.
 
-Awesome! Thanks for all your efforts! Great work :)
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/hotplug/pciehp.h      |  1 +
+ drivers/pci/hotplug/pciehp_core.c | 26 ++++++++++++++++++++++++++
+ drivers/pci/hotplug/pciehp_hpc.c  |  6 +++++-
+ include/linux/pci.h               |  1 +
+ 4 files changed, 33 insertions(+), 1 deletion(-)
 
-
->> I don't have LNKS and no while loop after calling LKEN ?!
-> 
-> Yes that is what I said in
-> https://www.spinics.net/lists/linux-pci/msg53694.html:
-> 
-> "Other affected devices have similar code, differences are small:
-> No check for LNKS (avoids the infinite loop, but device is still off)"
->
-
-Ah ok, missed that.
-
-
->> It might be, that lspci does not only power the GPU on, but triggers
->> another pci action which causes the race condition.
->> Does this have something to do with your quote about the retrain bit?
-> 
-> That is an interesting hypothesis. Even if you invoke `lspci -s01:00.0`
-> for example, it will always probe for all devices. So maybe interaction
-> with its parent device (PCI root port 00:02.0) causes issues.
-> 
-> However I also tested without lspci before, and the problem still
-> exists. You can trigger runtime resume via (as root):
-> 
->     echo > /sys/bus/pci/0000:01:00.0/power/control on
-> 
-> Set it to "auto" to make it sleep again.
-> 
-
-Just tried it over and over again. I don't have any problems switching the GPU power state
-with bbswitch. So, switching the GPU on is just fine. There must be something else, which
-does not cooperate well while switching it on (lspci)...
-
-I can confirm,, that `lspci -s01:00.0` also freezes the system.
-
-Trying to trigger runtime resume with `/sys/bus/pci/0000:01:00.0/power/control`
-did not work for me. The GPU just stayed off.
-Any hints how to get some more information?
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index e764918..ed62645 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -151,6 +151,7 @@ int pciehp_check_link_status(struct controller *ctrl);
+ bool pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+ int pciehp_reset_slot(struct slot *slot, int probe);
++void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask);
+ 
+ static inline const char *slot_name(struct slot *slot)
+ {
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index ac531e6..ad19b33 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -70,6 +70,8 @@ static int get_attention_status(struct hotplug_slot *slot, u8 *value);
+ static int get_latch_status(struct hotplug_slot *slot, u8 *value);
+ static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
+ static int reset_slot(struct hotplug_slot *slot, int probe);
++static int set_user_led_status(struct hotplug_slot *slot, u8 value);
++static int get_user_led_status(struct hotplug_slot *slot, u8 *value);
+ 
+ /**
+  * release_slot - free up the memory used by a slot
+@@ -114,6 +116,9 @@ static int init_slot(struct controller *ctrl)
+ 	if (ATTN_LED(ctrl)) {
+ 		ops->get_attention_status = get_attention_status;
+ 		ops->set_attention_status = set_attention_status;
++	} else if (ctrl->pcie->port->user_leds) {
++		ops->get_attention_status = get_user_led_status;
++		ops->set_attention_status = set_user_led_status;
+ 	}
+ 
+ 	/* register this slot with the hotplug pci core */
+@@ -142,6 +147,27 @@ static void cleanup_slot(struct controller *ctrl)
+ 	pci_hp_deregister(ctrl->slot->hotplug_slot);
+ }
+ 
++static int get_user_led_status(struct hotplug_slot *hotplug_slot, u8 *value)
++{
++	u16 slot_ctrl;
++	struct slot *slot = hotplug_slot->private;
++	struct pci_dev *pdev = slot->ctrl->pcie->port;
++
++	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
++	*value = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
++
++	return 0;
++}
++
++static int set_user_led_status(struct hotplug_slot *hotplug_slot, u8 status)
++{
++	struct slot *slot = hotplug_slot->private;
++
++	pcie_write_cmd_nowait(slot->ctrl, status << 6,
++			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
++	return 0;
++}
++
+ /*
+  * set_attention_status - Turns the Amber LED for a slot on, off or blink
+  */
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 08e84d6..51cfc96 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -228,7 +228,7 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ }
+ 
+ /* Same as above without waiting for the hardware to latch */
+-static void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
++void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
+ {
+ 	pcie_do_write_cmd(ctrl, cmd, mask, false);
+ }
+@@ -804,6 +804,10 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	}
+ 	ctrl->pcie = dev;
+ 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
++
++	if (pdev->user_leds)
++		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
++
+ 	ctrl->slot_cap = slot_cap;
+ 	mutex_init(&ctrl->ctrl_lock);
+ 	init_waitqueue_head(&ctrl->queue);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bbca681..a8ba7d7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -309,6 +309,7 @@ struct pci_dev {
+ 						   powered on/off by the
+ 						   corresponding bridge */
+ 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
++	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
+-- 
+2.7.2
