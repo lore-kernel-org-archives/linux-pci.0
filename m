@@ -1,73 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:34280 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754607AbcH3QGh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2016 12:06:37 -0400
-Date: Tue, 30 Aug 2016 18:06:33 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: "Jingoo Han" <jingoohan1@gmail.com>
-Cc: "'Joao Pinto'" <jpinto@synopsys.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        "'Pratyush Anand'" <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        "'Rob Herring'" <robh+dt@kernel.org>,
-        "'Ian Campbell'" <ijc+devicetree@hellion.org.uk>,
-        "'Pawel Moll'" <pawel.moll@arm.com>,
-        "'Mark Rutland'" <mark.rutland@arm.com>,
-        "'Kumar Gala'" <galak@codeaurora.org>,
-        "'Jason Cooper'" <jason@lakedaemon.net>,
-        "'Andrew Lunn'" <andrew@lunn.ch>,
-        "'Sebastian Hesselbarth'" <sebastian.hesselbarth@gmail.com>,
-        "'Gregory Clement'" <gregory.clement@free-electrons.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        "'Yehuda Yitschak'" <yehuday@marvell.com>,
-        "'Shadi Ammouri'" <shadi@marvell.com>,
-        "'Nadav Haklai'" <nadavh@marvell.com>,
-        "'Marc Zyngier'" <marc.zyngier@arm.com>
-Subject: Re: [PATCH 0/3] pcie-designware: support for external MSI
- controller
-Message-ID: <20160830180633.67d6479d@free-electrons.com>
-In-Reply-To: <000c01d202d5$a3809bd0$ea81d370$@gmail.com>
-References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
-        <20160830172447.65d10772@free-electrons.com>
-        <000c01d202d5$a3809bd0$ea81d370$@gmail.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 26 Aug 2016 07:04:32 -0400
+From: okaya@codeaurora.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Duc Dang <dhdang@apm.com>, Bjorn
+ Helgaas <helgaas@kernel.org>, Rafael Wysocki <rafael@kernel.org>,
+ linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, patches
+ <patches@apm.com>, Bjorn Helgaas <bhelgaas@google.com>, Punit Agrawal
+ <punit.agrawal@arm.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+In-Reply-To: <20160826090813.GA1038@red-moon>
+References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
+ <20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost>
+ <20160824213005.1a9300ef@arm.com>
+ <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+ <20160825121825.322d8450@arm.com>
+ <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+ <20160825195917.0e75a8db@arm.com> <20160826090813.GA1038@red-moon>
+Message-ID: <38d7a30f5acfbb96f9d1567194209216@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Tue, 30 Aug 2016 11:46:13 -0400, Jingoo Han wrote:
-
-> > Please discard this patch series, it's just pure crap. No changes at all
-> > are needed on the pcie-designware driver, using the msi-parent property
-> > already works, and my new code does nothing good.
-> > 
-> > The of_pci_find_msi_chip_by_node() API is on its way to being removed, and
-> > it doesn't return anything useful.
-> > 
-> > Only PATCH 3/3 is needed, which I'll resubmit separately.
-> > 
-> > Sorry for the noise.  
+On 2016-08-26 05:08, Lorenzo Pieralisi wrote:
+> [ +Sinan ]
 > 
-> Oh, good.
-> The support for External MSI controller is really necessary.
-> Thank you for your patch!
+> On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
+> 
+> [...]
+> 
+>> > Thanks, Marc! It works, I tested on current X-Gene platforms that uses
+>> > GICv2 and GICv2m.
+>> >
+>> > Will you commit this change? It will be a huge help as going with
+>> > interrupt link will require firmware change.
+>> 
+>> Not for the time being. We now have an understanding of *why* things 
+>> do
+>> not work, but Lorenzo seems to have a good grasp on what we can do to
+>> address it correctly, and we should explore this first. If (and only 
+>> if)
+>> there is a consensus that firmware already does all it should, then
+>> I'll turn this hack into a proper series.
+> 
+> For the records, it is a discussion that already took place:
+> 
+> https://lkml.org/lkml/2016/3/14/923
+> 
+> As I have said there are already ARM64 systems with ACPI tables
+> out there using PCI interrupt links; I doubt that Qualcomm systems
+> allow to reconfigure the GIC interrupt pin allocated to legacy PCI
+> IRQs through interrupt links _SRS (hey it is *empty* :)),
+> therefore:
+> 
+> a) Some (the above is just an example from the mailing lists I am not
+>    picking on anyone it is just for the sake of this discussion, I have
+>    not dumped all ARM partners _PRT from their ACPI tables to check)
+>    ACPI tables must be rewritten because they are not FW compliant
+> 
+> OR
+> 
+> b) We allow PCI interrupt links to be used for static interrupt
+>    configurations
+> 
+> OR
+> 
+> c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
+>    how GIC code can detect from which part of the kernel the interrupt
+>    request is coming, unless we implement an 
+> ACPI-PCI-legacy-IRQ-special
+>    gem)
+> 
+> Comments ?
+> 
+> Lorenzo
 
-Well, no change in the driver is needed to use an external MSI
-controller. Just specify:
+I complained about active low assumption before when reviewing the 
+series from Tomasz too. The above discussion took place when refactoring 
+the pci link code.
 
-	msi-parent = <&....>
+ From Acpi spec perspective, both types of declarations are valid.
 
-in the DT description of your Designware PCIe controller. And that's
-it. I've tested it with the GIC v2m MSI controller on an ARM64
-platform, and it works as expected.
+It is just one syntax doesn't work on arm64. The other syntax is more 
+expressive and it works. That is the reason why link objects are used in 
+QCOM platforms.
 
-Best regards,
+I think we need to fix the code by either changing the active low 
+assumption or the gic code.
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+Changing it at the gic level opens door for bugs that wouldn't be 
+otherwise caught. I would make this change in pci code.
