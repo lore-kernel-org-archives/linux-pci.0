@@ -1,151 +1,110 @@
-Return-Path: <marc.zyngier@arm.com>
-Return-Path: <marc.zyngier@arm.com>
-Date: Thu, 25 Aug 2016 12:18:25 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Duc Dang <dhdang@apm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi
- <lorenzo.pieralisi@arm.com>, Rafael Wysocki <rafael@kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>, patches
- <patches@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- <punit.agrawal@arm.com>
-Subject: Re: Defining polarity and trigger mode for static interrupts in
- _PRT
-Message-ID: <20160825121825.322d8450@arm.com>
-In-Reply-To: <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+To: Marc Zyngier <marc.zyngier@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
-	<20160824142723.GA25843@red-moon>
-	<20160824193000.GE23914@localhost>
-	<20160824213005.1a9300ef@arm.com>
-	<CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
-Sender: marc.zyngier@foss.arm.com
+ <20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost>
+ <20160824213005.1a9300ef@arm.com>
+ <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+ <20160825121825.322d8450@arm.com>
+ <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+ <20160825195917.0e75a8db@arm.com> <20160826090813.GA1038@red-moon>
+ <20160826130832.2fde2327@arm.com>
+Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, patches <patches@apm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Punit Agrawal <punit.agrawal@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
+Date: Fri, 26 Aug 2016 10:07:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20160826130832.2fde2327@arm.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 24 Aug 2016 15:19:21 -0700
-Duc Dang <dhdang@apm.com> wrote:
-
-> On Wed, Aug 24, 2016 at 1:30 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> > On Wed, 24 Aug 2016 14:30:00 -0500
-> > Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >  
-> >> On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:  
-> >> > [ +Bjorn, Punit]
-> >> >
-> >> > On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:  
-> >> > > [Resend in plain text mode]
-> >> > >
-> >> > > Hi Lorenzo, Rafael,
-> >> > >
-> >> > > ACPI 6.1 spec does not specify how to set interrupt polarity and
-> >> > > trigger mode in _PRT when the interrupts are static (hardwired to
-> >> > > specific interrupt inputs in interrupt controller). In current
-> >> > > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
-> >> > > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
-> >> > > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
-> >> > > GICv3 controllers and will cause failures in PCIe AER, PME services
-> >> > > (on X-Gene platforms).  
-> >>
-> >> PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
-> >> and defined as 'level sensitive,' asserted low."
-> >>
-> >> I've heard before that ARM64 does this differently, but I still don't
-> >> understand the difference.  Obviously if you plug a legacy PCI card
-> >> into an ARM64 system, it's still going to pull INTA# low to assert an
-> >> interrupt.  So is there something special about ARM64 that inverts
-> >> that, or what?  
-> >
-> > There is certainly an inverter somewhere on the interrupt path, because
-> > the GIC triggers on level high, not level low. But I don't think that's
-> > the issue Duc is trying to outline here, because that's not something
-> > SW can fix. I'm worried that in his system, the interrupt is edge
-> > triggered instead.  
+On 8/26/2016 8:08 AM, Marc Zyngier wrote:
+> On Fri, 26 Aug 2016 10:08:13 +0100
+> Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
 > 
-> Yes, there is an inverter in the interrupt path to deliver interrupt to the GIC
-> as level-high. X-Gene GIC uses level high for PCI INTx. I myself has been
-> lucky when using trigger-rising for PCI INTx in DT boot mode.
+>> [ +Sinan ]
+>>
+>> On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
+>>
+>> [...]
+>>
+>>>> Thanks, Marc! It works, I tested on current X-Gene platforms that uses
+>>>> GICv2 and GICv2m.
+>>>>
+>>>> Will you commit this change? It will be a huge help as going with
+>>>> interrupt link will require firmware change.  
+>>>
+>>> Not for the time being. We now have an understanding of *why* things do
+>>> not work, but Lorenzo seems to have a good grasp on what we can do to
+>>> address it correctly, and we should explore this first. If (and only if)
+>>> there is a consensus that firmware already does all it should, then
+>>> I'll turn this hack into a proper series.  
+>>
+>> For the records, it is a discussion that already took place:
+>>
+>> https://lkml.org/lkml/2016/3/14/923
+>>
+>> As I have said there are already ARM64 systems with ACPI tables
+>> out there using PCI interrupt links; I doubt that Qualcomm systems
+>> allow to reconfigure the GIC interrupt pin allocated to legacy PCI
+>> IRQs through interrupt links _SRS (hey it is *empty* :)),
+>> therefore:
+>>
+>> a) Some (the above is just an example from the mailing lists I am not
+>>    picking on anyone it is just for the sake of this discussion, I have
+>>    not dumped all ARM partners _PRT from their ACPI tables to check)
+>>    ACPI tables must be rewritten because they are not FW compliant
+>>
+>> OR
+>>
+>> b) We allow PCI interrupt links to be used for static interrupt
+>>    configurations
+>>
+>> OR
+>>
+>> c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
+>>    how GIC code can detect from which part of the kernel the interrupt
+>>    request is coming, unless we implement an ACPI-PCI-legacy-IRQ-special
+>>    gem)
+>>
+>> Comments ?
 > 
-> >  
-> >>  
-> >> > > Is there any way to specify polarity and trigger mode for static
-> >> > > interrupts in _PRT?  
-> >>
-> >> There is no way I'm aware of in _PRT to specify polarity and trigger
-> >> mode.  I don't know the history, but my guess is that it would be seen
-> >> as superfluous given that the PCI spec requires level, active low.  
+> I'm not overly keen on (c), as it is pretty hard to find out where the
+> request is coming from (and the hack I previously posted opens the door
+> to all kind of undetected misconfiguration). We *could* use a stacked
+> irqchip to represent the inverter, but it feels like using a car sized
+> hammer to squash a tiny fly.
 > 
-> The device still pulls the INTx pin low to trigger interrupt, but the
-> interrupt delivered
-> to interrupt controller (GIC in this case) is not necessarily to be
-> level-low. Current code
-> assume level-low mode to program to the interrupt controller for INTx,
-> and fails for
-> GIC, GICv2m and GICv3.
+> (b) seems like the right thing to do, but I cannot comment on whether
+> or not this is compliant with the specification.
+> 
+> Thanks,
+> 
+> 	M.
+> 
 
-Well, there's nothing that can't be fixed. The GIC doesn't have a
-programmatic notion of what is high or low. It only knows about level
-interrupts. But the HW only knows about level_high. Obviously, for
-things to work, the integrator has to put an inverter on the line to
-cope with level_low.
+Let me throw option d here.
 
-If the driver code insist on using level_low, we can address this
-pretty easily, and just warn about the oddity:
+I know Bjorn wants to keep ACTIVE_LOW in the code for common code but can't
+we override this in an arch specific way (arm64's pci.c) while creating the root
+bridge? 
 
-diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
-index 6fc56c3..b3755a3 100644
---- a/drivers/irqchip/irq-gic-v3.c
-+++ b/drivers/irqchip/irq-gic-v3.c
-@@ -306,9 +306,16 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
- 		return -EINVAL;
- 
- 	/* SPIs have restrictions on the supported types */
--	if (irq >= 32 && type != IRQ_TYPE_LEVEL_HIGH &&
--			 type != IRQ_TYPE_EDGE_RISING)
--		return -EINVAL;
-+	if (irq >= 32) {
-+		unsigned int tmp = type;
-+		if (type == IRQ_TYPE_LEVEL_LOW)
-+			type = IRQ_TYPE_LEVEL_HIGH;
-+		if (type == IRQ_TYPE_EDGE_FALLING)
-+			type = IRQ_TYPE_EDGE_RISING;
-+		if (tmp != type)
-+			pr_warn("Overriding IRQ%d type from %d to %d\n",
-+				d->irq, tmp, type);
-+	}
- 
- 	if (gic_irq_in_rdist(d)) {
- 		base = gic_data_rdist_sgi_base();
-diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-index c2cab57..0d187dc 100644
---- a/drivers/irqchip/irq-gic.c
-+++ b/drivers/irqchip/irq-gic.c
-@@ -280,9 +280,16 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
- 		return -EINVAL;
- 
- 	/* SPIs have restrictions on the supported types */
--	if (gicirq >= 32 && type != IRQ_TYPE_LEVEL_HIGH &&
--			    type != IRQ_TYPE_EDGE_RISING)
--		return -EINVAL;
-+	if (gicirq >= 32) {
-+		unsigned int tmp = type;
-+		if (type == IRQ_TYPE_LEVEL_LOW)
-+			type = IRQ_TYPE_LEVEL_HIGH;
-+		if (type == IRQ_TYPE_EDGE_FALLING)
-+			type = IRQ_TYPE_EDGE_RISING;
-+		if (tmp != type)
-+			pr_warn("Overriding IRQ%d type from %d to %d\n",
-+				d->irq, tmp, type);
-+	}
- 
- 	return gic_configure_irq(gicirq, type, base, NULL);
- }
+If the ARCH override doesn't exist, ACTIVE LOW still remains the default. There could
+be another arch that could have the same problem in the future.
+
+This way, we don't need to touch irqchip (GIC) driver or introduce a new API and/or
+introduce bugs for the rest of the non-PCI code.
+
+>From what I see in the ACPI spec, both _PRT approaches are correct and they need to
+be supported by Linux. 
 
 
-
-Does this work for you?
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny.
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
