@@ -1,65 +1,41 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Mon, 29 Aug 2016 13:55:58 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: helgaas@kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] vmd: convert to use pci_alloc_irq_vectors api
-Message-ID: <20160829175558.GG19986@localhost.localdomain>
-References: <1472491142-13783-1-git-send-email-jonathan.derrick@intel.com>
- <1472491142-13783-2-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:56516
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756503AbcHZBtM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Aug 2016 21:49:12 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Ley Foon Tan <lftan.linux@gmail.com>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH v4 0/2] PCI: altera: Retrain link in rootport mode only
+Date: Fri, 26 Aug 2016 09:47:23 +0800
+Message-ID: <1472176045-27815-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472491142-13783-2-git-send-email-jonathan.derrick@intel.com>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 29, 2016 at 11:19:02AM -0600, Jon Derrick wrote:
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Altera PCIe IP can be configured as rootport or device and they might have
+same vendor ID. It will cause the system hang issue if Altera PCIe is in
+endpoint mode and work with other PCIe rootport that from other vendors.
 
-Nice simplification, looks good.
+This series of patch rework configs accessors and move retrain function
+from _FIXUP to altera_pcie_host_init().
 
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+History:
+v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+v3: Move retrain function to before pci_scan_root_bus and remove _FIXUP
+v4: Split patch to 2 patches
 
+Ley Foon Tan (2):
+  PCI: altera: Rework configs accessors
+  PCI: altera: Move retrain from _FIXUP to altera_pcie_host_init()
 
+ drivers/pci/host/pcie-altera.c | 215 +++++++++++++++++++++++++----------------
+ 1 file changed, 132 insertions(+), 83 deletions(-)
 
-> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-> index 514b446..4c0eac7 100644
-> --- a/arch/x86/pci/vmd.c
-> +++ b/arch/x86/pci/vmd.c
-> @@ -78,7 +78,6 @@ struct vmd_dev {
->  	char __iomem		*cfgbar;
->  
->  	int msix_count;
-> -	struct msix_entry	*msix_entries;
->  	struct vmd_irq_list	*irqs;
->  
->  	struct pci_sysdata	sysdata;
-> @@ -679,16 +678,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  	if (vmd->msix_count < 0)
->  		return -ENODEV;
->  
-> -	vmd->msix_entries = devm_kcalloc(&dev->dev, vmd->msix_count,
-> -					 sizeof(*vmd->msix_entries),
-> -					 GFP_KERNEL);
-> -	if (!vmd->msix_entries)
-> -		return -ENOMEM;
-> -	for (i = 0; i < vmd->msix_count; i++)
-> -		vmd->msix_entries[i].entry = i;
-> -
-> -	vmd->msix_count = pci_enable_msix_range(vmd->dev, vmd->msix_entries, 1,
-> -						vmd->msix_count);
-> +	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
-> +					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
->  	if (vmd->msix_count < 0)
->  		return vmd->msix_count;
->  
-> @@ -699,7 +690,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  
->  	for (i = 0; i < vmd->msix_count; i++) {
->  		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
-> -		vmd->irqs[i].vmd_vector = vmd->msix_entries[i].vector;
-> +		vmd->irqs[i].vmd_vector = pci_irq_vector(dev, i);
->  		vmd->irqs[i].index = i;
->  
->  		err = devm_request_irq(&dev->dev, vmd->irqs[i].vmd_vector,
-> -- 
+-- 
+1.8.2.1
+
