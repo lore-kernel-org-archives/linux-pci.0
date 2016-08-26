@@ -1,129 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 1/2] pciehp: Let user control LED status
-Date: Fri, 26 Aug 2016 11:23:01 -0600
-Message-Id: <1472232182-1448-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1472232182-1448-1-git-send-email-keith.busch@intel.com>
-References: <1472232182-1448-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Fri, 26 Aug 2016 18:06:15 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Duc Dang <dhdang@apm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, patches <patches@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Punit Agrawal <punit.agrawal@arm.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+Message-ID: <20160826170615.GC23885@red-moon>
+References: <20160824142723.GA25843@red-moon>
+ <20160824193000.GE23914@localhost>
+ <20160824213005.1a9300ef@arm.com>
+ <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+ <20160825121825.322d8450@arm.com>
+ <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+ <20160825195917.0e75a8db@arm.com>
+ <20160826090813.GA1038@red-moon>
+ <20160826130832.2fde2327@arm.com>
+ <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new flag to the pci_dev structure instructing pciehp to
-ignore PCIe slot LED indicators. The pciehp driver will instead provide
-exclusive attention control to the user by setting the slot control
-exactly as the user requested with out interpreting the input. This is
-preparing for domain devices that repurpose these for non-standard use.
+On Fri, Aug 26, 2016 at 10:07:31AM -0400, Sinan Kaya wrote:
+> On 8/26/2016 8:08 AM, Marc Zyngier wrote:
+> > On Fri, 26 Aug 2016 10:08:13 +0100
+> > Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> > 
+> >> [ +Sinan ]
+> >>
+> >> On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
+> >>
+> >> [...]
+> >>
+> >>>> Thanks, Marc! It works, I tested on current X-Gene platforms that uses
+> >>>> GICv2 and GICv2m.
+> >>>>
+> >>>> Will you commit this change? It will be a huge help as going with
+> >>>> interrupt link will require firmware change.  
+> >>>
+> >>> Not for the time being. We now have an understanding of *why* things do
+> >>> not work, but Lorenzo seems to have a good grasp on what we can do to
+> >>> address it correctly, and we should explore this first. If (and only if)
+> >>> there is a consensus that firmware already does all it should, then
+> >>> I'll turn this hack into a proper series.  
+> >>
+> >> For the records, it is a discussion that already took place:
+> >>
+> >> https://lkml.org/lkml/2016/3/14/923
+> >>
+> >> As I have said there are already ARM64 systems with ACPI tables
+> >> out there using PCI interrupt links; I doubt that Qualcomm systems
+> >> allow to reconfigure the GIC interrupt pin allocated to legacy PCI
+> >> IRQs through interrupt links _SRS (hey it is *empty* :)),
+> >> therefore:
+> >>
+> >> a) Some (the above is just an example from the mailing lists I am not
+> >>    picking on anyone it is just for the sake of this discussion, I have
+> >>    not dumped all ARM partners _PRT from their ACPI tables to check)
+> >>    ACPI tables must be rewritten because they are not FW compliant
+> >>
+> >> OR
+> >>
+> >> b) We allow PCI interrupt links to be used for static interrupt
+> >>    configurations
+> >>
+> >> OR
+> >>
+> >> c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
+> >>    how GIC code can detect from which part of the kernel the interrupt
+> >>    request is coming, unless we implement an ACPI-PCI-legacy-IRQ-special
+> >>    gem)
+> >>
+> >> Comments ?
+> > 
+> > I'm not overly keen on (c), as it is pretty hard to find out where the
+> > request is coming from (and the hack I previously posted opens the door
+> > to all kind of undetected misconfiguration). We *could* use a stacked
+> > irqchip to represent the inverter, but it feels like using a car sized
+> > hammer to squash a tiny fly.
+> > 
+> > (b) seems like the right thing to do, but I cannot comment on whether
+> > or not this is compliant with the specification.
+> > 
+> > Thanks,
+> > 
+> > 	M.
+> > 
+> 
+> Let me throw option d here.
+> 
+> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
+> can't we override this in an arch specific way (arm64's pci.c) while
+> creating the root bridge? 
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp.h      |  1 +
- drivers/pci/hotplug/pciehp_core.c | 26 ++++++++++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  |  6 +++++-
- include/linux/pci.h               |  1 +
- 4 files changed, 33 insertions(+), 1 deletion(-)
+On what basis ? You were not copied in from the beginning, but that
+is not different from Duc's initial proposal, which Marc discarded
+because it should not be done at arch level, it depends on the interrupt
+controller.
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index e764918..ed62645 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -151,6 +151,7 @@ int pciehp_check_link_status(struct controller *ctrl);
- bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
- int pciehp_reset_slot(struct slot *slot, int probe);
-+void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask);
- 
- static inline const char *slot_name(struct slot *slot)
- {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ac531e6..ad19b33 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -70,6 +70,8 @@ static int get_attention_status(struct hotplug_slot *slot, u8 *value);
- static int get_latch_status(struct hotplug_slot *slot, u8 *value);
- static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
- static int reset_slot(struct hotplug_slot *slot, int probe);
-+static int set_user_led_status(struct hotplug_slot *slot, u8 value);
-+static int get_user_led_status(struct hotplug_slot *slot, u8 *value);
- 
- /**
-  * release_slot - free up the memory used by a slot
-@@ -114,6 +116,9 @@ static int init_slot(struct controller *ctrl)
- 	if (ATTN_LED(ctrl)) {
- 		ops->get_attention_status = get_attention_status;
- 		ops->set_attention_status = set_attention_status;
-+	} else if (ctrl->pcie->port->user_leds) {
-+		ops->get_attention_status = get_user_led_status;
-+		ops->set_attention_status = set_user_led_status;
- 	}
- 
- 	/* register this slot with the hotplug pci core */
-@@ -142,6 +147,27 @@ static void cleanup_slot(struct controller *ctrl)
- 	pci_hp_deregister(ctrl->slot->hotplug_slot);
- }
- 
-+static int get_user_led_status(struct hotplug_slot *hotplug_slot, u8 *value)
-+{
-+	u16 slot_ctrl;
-+	struct slot *slot = hotplug_slot->private;
-+	struct pci_dev *pdev = slot->ctrl->pcie->port;
-+
-+	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-+	*value = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
-+
-+	return 0;
-+}
-+
-+static int set_user_led_status(struct hotplug_slot *hotplug_slot, u8 status)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+
-+	pcie_write_cmd_nowait(slot->ctrl, status << 6,
-+			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
-+	return 0;
-+}
-+
- /*
-  * set_attention_status - Turns the Amber LED for a slot on, off or blink
-  */
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 08e84d6..51cfc96 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -228,7 +228,7 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- }
- 
- /* Same as above without waiting for the hardware to latch */
--static void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
-+void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
- {
- 	pcie_do_write_cmd(ctrl, cmd, mask, false);
- }
-@@ -804,6 +804,10 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	}
- 	ctrl->pcie = dev;
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-+
-+	if (pdev->user_leds)
-+		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
-+
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
- 	init_waitqueue_head(&ctrl->queue);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index bbca681..a8ba7d7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -309,6 +309,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
--- 
-2.7.2
+Possibly a hook to be called from GIC code to override the default
+ACPI PCI IRQ polarity, I think that's _horrible_ but if we want to
+successfully boot APM's platforms that are $SUBJECT of this thread
+something has to be done (and it is not patching FW because we
+can't).
+
+> If the ARCH override doesn't exist, ACTIVE LOW still remains the
+> default. There could be another arch that could have the same problem
+> in the future.
+
+See above.
+
+> This way, we don't need to touch irqchip (GIC) driver or introduce a
+> new API and/or introduce bugs for the rest of the non-PCI code.
+> 
+> From what I see in the ACPI spec, both _PRT approaches are correct and
+> they need to be supported by Linux.
+
+They are; ..but the spec says that your ACPI tables are buggy, because
+you are using a PCI interrupt link for an interrupt that is not
+configurable (frankly I still do not understand why as I explained).
+
+And then there is FW that has already shipped and we can't patch
+and it is not using PCI interrupt links so we have to quirk it in
+the kernel somehow (ie I am not sure APM platforms are the only ones
+containing _PRT with static PCI legacy IRQ entries, unfortunately).
+
+Lorenzo
