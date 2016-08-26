@@ -1,70 +1,225 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Support for configurable PCIe endpoint
-Date: Wed, 03 Aug 2016 21:38:23 +0200
-Message-ID: <8897954.gERmznGCsN@wuerfel>
-In-Reply-To: <20160803172736.GA12989@infradead.org>
-References: <57A18927.9070003@ti.com> <2460140.yVuTYYqBTX@wuerfel>
- <20160803172736.GA12989@infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0074.outbound.protection.outlook.com ([104.47.34.74]:12928
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751393AbcHZCCQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Aug 2016 22:02:16 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Ley Foon Tan <lftan.linux@gmail.com>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH v4 2/2] PCI: altera: Move retrain from _FIXUP to altera_pcie_host_init()
+Date: Fri, 26 Aug 2016 09:47:25 +0800
+Message-ID: <1472176045-27815-3-git-send-email-lftan@altera.com>
+In-Reply-To: <1472176045-27815-1-git-send-email-lftan@altera.com>
+References: <1472176045-27815-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- David Daney <david.daney@cavium.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Joao Pinto <jpinto@synopsys.com>, Pratyush Anand <pratyush.anand@gmail.com>,
- Kishon Vijay Abraham I <kishon@ti.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Jason Cooper <jason@lakedaemon.net>, Simon Horman <horms@verge.net.au>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Richard Zhu <Richard.Zhu@freescale.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, jdmason@kudzu.us,
- Ley Foon Tan <lftan@altera.com>, Roy Zang <tie-fei.zang@freescale.com>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 3, 2016 10:27:36 AM CEST Christoph Hellwig wrote:
-> On Wed, Aug 03, 2016 at 06:03:54PM +0200, Arnd Bergmann wrote:
-> > drivers/ntb seems like a reasonable start, while an alternative
-> > approach that we have discussed in the past would be based on top
-> > of virtio, so we could use the existing front-end drivers (net, block,
-> > v9fs, console, ...).
-> 
-> I don't really think either is a good aproach for the lowest level
-> interface.  To be useful the EP driver needs to be able to implement
-> any (reasonable) thing a PCIe device could do.  Both NTB and virtio
-> can sit on top of that, though.
+Altera PCIe IP can be configured as rootport or device and they might have
+same vendor ID. It will cause the system hang issue if Altera PCIe is in
+endpoint mode and work with other PCIe rootport that from other vendors.
 
-Good point. NTB tries to be the low-level interface, but I guess
-you are right that it really isn't (I have not looked in a long
-time, maybe Jon can comment).
+Move link retrain function from _FIXUP to altera_pcie_host_init().
 
-While virtio transport over PCI would be great as the way to
-implement a lot of things on top of endpoint devices, it can't
-be the lowest level in the stack (see drivers/remoteproc) and
-building it on top of something that is useful for other things
-sounds like a good idea.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ drivers/pci/host/pcie-altera.c | 151 +++++++++++++++++++++++++----------------
+ 1 file changed, 91 insertions(+), 60 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 34e6258..4ca50a2 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -43,6 +43,7 @@
+ #define RP_LTSSM_MASK			0x1f
+ #define LTSSM_L0			0xf
+ 
++#define PCIE_CAP_OFFSET			0x80
+ /* TLP configuration type 0 and 1 */
+ #define TLP_FMTTYPE_CFGRD0		0x04	/* Configuration Read Type 0 */
+ #define TLP_FMTTYPE_CFGWR0		0x44	/* Configuration Write Type 0 */
+@@ -100,66 +101,6 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
+ 	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
+ }
+ 
+-static void altera_wait_link_retrain(struct pci_dev *dev)
+-{
+-	u16 reg16;
+-	unsigned long start_jiffies;
+-	struct altera_pcie *pcie = dev->bus->sysdata;
+-
+-	/* Wait for link training end. */
+-	start_jiffies = jiffies;
+-	for (;;) {
+-		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
+-		if (!(reg16 & PCI_EXP_LNKSTA_LT))
+-			break;
+-
+-		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
+-			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
+-			break;
+-		}
+-		udelay(100);
+-	}
+-
+-	/* Wait for link is up */
+-	start_jiffies = jiffies;
+-	for (;;) {
+-		if (altera_pcie_link_is_up(pcie))
+-			break;
+-
+-		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
+-			dev_err(&pcie->pdev->dev, "link up timeout\n");
+-			break;
+-		}
+-		udelay(100);
+-	}
+-}
+-
+-static void altera_pcie_retrain(struct pci_dev *dev)
+-{
+-	u16 linkcap, linkstat;
+-	struct altera_pcie *pcie = dev->bus->sysdata;
+-
+-	if (!altera_pcie_link_is_up(pcie))
+-		return;
+-
+-	/*
+-	 * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
+-	 * current speed is 2.5 GB/s.
+-	 */
+-	pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &linkcap);
+-
+-	if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
+-		return;
+-
+-	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &linkstat);
+-	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
+-		pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
+-					 PCI_EXP_LNKCTL_RL);
+-		altera_wait_link_retrain(dev);
+-	}
+-}
+-DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
+-
+ /*
+  * Altera PCIe port uses BAR0 of RC's configuration space as the translation
+  * from PCI bus to native BUS.  Entire DDR region is mapped into PCIe space
+@@ -434,6 +375,90 @@ static struct pci_ops altera_pcie_ops = {
+ 	.write = altera_pcie_cfg_write,
+ };
+ 
++static int altera_read_cap_word(struct altera_pcie *pcie, u8 busno,
++				unsigned int devfn, int offset, u16 *value)
++{
++	u32 data;
++	int ret;
++
++	ret = _altera_pcie_cfg_read(pcie, busno, devfn,
++				    PCIE_CAP_OFFSET + offset, sizeof(*value),
++				    &data);
++	*value = data;
++	return ret;
++}
++
++static int altera_write_cap_word(struct altera_pcie *pcie, u8 busno,
++				 unsigned int devfn, int offset, u16 value)
++{
++	return _altera_pcie_cfg_write(pcie, busno, devfn,
++				      PCIE_CAP_OFFSET + offset, sizeof(value),
++				      value);
++}
++
++static void altera_wait_link_retrain(struct altera_pcie *pcie)
++{
++	u16 reg16;
++	unsigned long start_jiffies;
++
++	/* Wait for link training end. */
++	start_jiffies = jiffies;
++	for (;;) {
++		altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
++				     PCI_EXP_LNKSTA, &reg16);
++		if (!(reg16 & PCI_EXP_LNKSTA_LT))
++			break;
++
++		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
++			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
++			break;
++		}
++		udelay(100);
++	}
++
++	/* Wait for link is up */
++	start_jiffies = jiffies;
++	for (;;) {
++		if (altera_pcie_link_is_up(pcie))
++			break;
++
++		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
++			dev_err(&pcie->pdev->dev, "link up timeout\n");
++			break;
++		}
++		udelay(100);
++	}
++}
++
++static void altera_pcie_retrain(struct altera_pcie *pcie)
++{
++	u16 linkcap, linkstat, linkctl;
++
++	if (!altera_pcie_link_is_up(pcie))
++		return;
++
++	/*
++	 * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
++	 * current speed is 2.5 GB/s.
++	 */
++	altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN, PCI_EXP_LNKCAP,
++			     &linkcap);
++	if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
++		return;
++
++	altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN, PCI_EXP_LNKSTA,
++			     &linkstat);
++	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
++		altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
++				     PCI_EXP_LNKCTL, &linkctl);
++		linkctl |= PCI_EXP_LNKCTL_RL;
++		altera_write_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
++				      PCI_EXP_LNKCTL, linkctl);
++
++		altera_wait_link_retrain(pcie);
++	}
++}
++
+ static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ 				irq_hw_number_t hwirq)
+ {
+@@ -555,6 +580,11 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void altera_pcie_host_init(struct altera_pcie *pcie)
++{
++	altera_pcie_retrain(pcie);
++}
++
+ static int altera_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct altera_pcie *pcie;
+@@ -592,6 +622,7 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
+ 	/* enable all interrupts */
+ 	cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
++	altera_pcie_host_init(pcie);
+ 
+ 	bus = pci_scan_root_bus(&pdev->dev, pcie->root_bus_nr, &altera_pcie_ops,
+ 				pcie, &pcie->resources);
+-- 
+1.8.2.1
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
