@@ -1,76 +1,92 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com
-Subject: [PATCH v3 2/5] x86/ioapic: Support hot-removal of IOAPICs present during boot
-Date: Wed, 10 Aug 2016 12:01:55 +0800
-Message-Id: <1470801718-29004-3-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
-References: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <marc.zyngier@arm.com>
+Return-Path: <marc.zyngier@arm.com>
+Date: Fri, 26 Aug 2016 13:08:32 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <helgaas@kernel.org>, "Rafael
+ Wysocki" <rafael@kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>, patches <patches@apm.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Punit Agrawal <punit.agrawal@arm.com>,
+ <okaya@codeaurora.org>
+Subject: Re: Defining polarity and trigger mode for static interrupts in
+ _PRT
+Message-ID: <20160826130832.2fde2327@arm.com>
+In-Reply-To: <20160826090813.GA1038@red-moon>
+References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
+	<20160824142723.GA25843@red-moon>
+	<20160824193000.GE23914@localhost>
+	<20160824213005.1a9300ef@arm.com>
+	<CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+	<20160825121825.322d8450@arm.com>
+	<CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+	<20160825195917.0e75a8db@arm.com>
+	<20160826090813.GA1038@red-moon>
+Sender: marc.zyngier@foss.arm.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-IOAPICs present during system boot aren't added to ioapic_list,
-thus are unable to be hot-removed. Fix it by calling
-acpi_ioapic_add() during root bus enumeration.
+On Fri, 26 Aug 2016 10:08:13 +0100
+Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/pci_root.c | 10 ++++++++++
- drivers/pci/setup-bus.c |  5 ++++-
- 2 files changed, 14 insertions(+), 1 deletion(-)
+> [ +Sinan ]
+> 
+> On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
+> 
+> [...]
+> 
+> > > Thanks, Marc! It works, I tested on current X-Gene platforms that uses
+> > > GICv2 and GICv2m.
+> > > 
+> > > Will you commit this change? It will be a huge help as going with
+> > > interrupt link will require firmware change.  
+> > 
+> > Not for the time being. We now have an understanding of *why* things do
+> > not work, but Lorenzo seems to have a good grasp on what we can do to
+> > address it correctly, and we should explore this first. If (and only if)
+> > there is a consensus that firmware already does all it should, then
+> > I'll turn this hack into a proper series.  
+> 
+> For the records, it is a discussion that already took place:
+> 
+> https://lkml.org/lkml/2016/3/14/923
+> 
+> As I have said there are already ARM64 systems with ACPI tables
+> out there using PCI interrupt links; I doubt that Qualcomm systems
+> allow to reconfigure the GIC interrupt pin allocated to legacy PCI
+> IRQs through interrupt links _SRS (hey it is *empty* :)),
+> therefore:
+> 
+> a) Some (the above is just an example from the mailing lists I am not
+>    picking on anyone it is just for the sake of this discussion, I have
+>    not dumped all ARM partners _PRT from their ACPI tables to check)
+>    ACPI tables must be rewritten because they are not FW compliant
+> 
+> OR
+> 
+> b) We allow PCI interrupt links to be used for static interrupt
+>    configurations
+> 
+> OR
+> 
+> c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
+>    how GIC code can detect from which part of the kernel the interrupt
+>    request is coming, unless we implement an ACPI-PCI-legacy-IRQ-special
+>    gem)
+> 
+> Comments ?
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index b07eda1..bf601d4 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -614,6 +614,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (hotadd) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_root_bus_resources(root->bus);
-+		/*
-+		 * This is only called for the hotadd case. For the boot-time
-+		 * case, we need to wait until after PCI initialization in
-+		 * order to deal with IOAPICs mapped in on a PCI BAR.
-+		 *
-+		 * This is currently x86-specific, because acpi_ioapic_add()
-+		 * is an empty function without CONFIG_ACPI_HOTPLUG_IOAPIC.
-+		 * And CONFIG_ACPI_HOTPLUG_IOAPIC depends on CONFIG_X86_IO_APIC
-+		 * (see drivers/acpi/Kconfig).
-+		 */
- 		acpi_ioapic_add(root->device->handle);
- 	}
- 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c74059e..ec538d3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -25,6 +25,7 @@
- #include <linux/ioport.h>
- #include <linux/cache.h>
- #include <linux/slab.h>
-+#include <linux/acpi.h>
- #include "pci.h"
- 
- unsigned int pci_flags;
-@@ -1852,8 +1853,10 @@ void __init pci_assign_unassigned_resources(void)
- {
- 	struct pci_bus *root_bus;
- 
--	list_for_each_entry(root_bus, &pci_root_buses, node)
-+	list_for_each_entry(root_bus, &pci_root_buses, node) {
- 		pci_assign_unassigned_root_bus_resources(root_bus);
-+		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
-+	}
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+I'm not overly keen on (c), as it is pretty hard to find out where the
+request is coming from (and the hack I previously posted opens the door
+to all kind of undetected misconfiguration). We *could* use a stacked
+irqchip to represent the inverter, but it feels like using a car sized
+hammer to squash a tiny fly.
+
+(b) seems like the right thing to do, but I cannot comment on whether
+or not this is compliant with the specification.
+
+Thanks,
+
+	M.
 -- 
-1.8.3.1
+Jazz is not dead. It just smells funny.
