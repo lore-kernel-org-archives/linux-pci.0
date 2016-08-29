@@ -1,133 +1,59 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Fri, 26 Aug 2016 18:06:15 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Duc Dang <dhdang@apm.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, patches <patches@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Punit Agrawal <punit.agrawal@arm.com>
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-Message-ID: <20160826170615.GC23885@red-moon>
-References: <20160824142723.GA25843@red-moon>
- <20160824193000.GE23914@localhost>
- <20160824213005.1a9300ef@arm.com>
- <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
- <20160825121825.322d8450@arm.com>
- <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
- <20160825195917.0e75a8db@arm.com>
- <20160826090813.GA1038@red-moon>
- <20160826130832.2fde2327@arm.com>
- <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:32775 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755468AbcH2VOm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Aug 2016 17:14:42 -0400
+Received: by mail-pf0-f182.google.com with SMTP id y134so48333pfg.0
+        for <linux-pci@vger.kernel.org>; Mon, 29 Aug 2016 14:14:41 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] PCI: rockchip: Correct the register value for clearing client interrupts
+Date: Mon, 29 Aug 2016 14:14:11 -0700
+Message-Id: <1472505251-122204-1-git-send-email-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 26, 2016 at 10:07:31AM -0400, Sinan Kaya wrote:
-> On 8/26/2016 8:08 AM, Marc Zyngier wrote:
-> > On Fri, 26 Aug 2016 10:08:13 +0100
-> > Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> > 
-> >> [ +Sinan ]
-> >>
-> >> On Thu, Aug 25, 2016 at 07:59:17PM +0100, Marc Zyngier wrote:
-> >>
-> >> [...]
-> >>
-> >>>> Thanks, Marc! It works, I tested on current X-Gene platforms that uses
-> >>>> GICv2 and GICv2m.
-> >>>>
-> >>>> Will you commit this change? It will be a huge help as going with
-> >>>> interrupt link will require firmware change.  
-> >>>
-> >>> Not for the time being. We now have an understanding of *why* things do
-> >>> not work, but Lorenzo seems to have a good grasp on what we can do to
-> >>> address it correctly, and we should explore this first. If (and only if)
-> >>> there is a consensus that firmware already does all it should, then
-> >>> I'll turn this hack into a proper series.  
-> >>
-> >> For the records, it is a discussion that already took place:
-> >>
-> >> https://lkml.org/lkml/2016/3/14/923
-> >>
-> >> As I have said there are already ARM64 systems with ACPI tables
-> >> out there using PCI interrupt links; I doubt that Qualcomm systems
-> >> allow to reconfigure the GIC interrupt pin allocated to legacy PCI
-> >> IRQs through interrupt links _SRS (hey it is *empty* :)),
-> >> therefore:
-> >>
-> >> a) Some (the above is just an example from the mailing lists I am not
-> >>    picking on anyone it is just for the sake of this discussion, I have
-> >>    not dumped all ARM partners _PRT from their ACPI tables to check)
-> >>    ACPI tables must be rewritten because they are not FW compliant
-> >>
-> >> OR
-> >>
-> >> b) We allow PCI interrupt links to be used for static interrupt
-> >>    configurations
-> >>
-> >> OR
-> >>
-> >> c) We ignore the polarity flag (only for PCI legacy IRQs ? I wonder
-> >>    how GIC code can detect from which part of the kernel the interrupt
-> >>    request is coming, unless we implement an ACPI-PCI-legacy-IRQ-special
-> >>    gem)
-> >>
-> >> Comments ?
-> > 
-> > I'm not overly keen on (c), as it is pretty hard to find out where the
-> > request is coming from (and the hack I previously posted opens the door
-> > to all kind of undetected misconfiguration). We *could* use a stacked
-> > irqchip to represent the inverter, but it feels like using a car sized
-> > hammer to squash a tiny fly.
-> > 
-> > (b) seems like the right thing to do, but I cannot comment on whether
-> > or not this is compliant with the specification.
-> > 
-> > Thanks,
-> > 
-> > 	M.
-> > 
-> 
-> Let me throw option d here.
-> 
-> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
-> can't we override this in an arch specific way (arm64's pci.c) while
-> creating the root bridge? 
+I'm pretty sure the bitwise 'or' was meant for the value parameter, not
+the register parameter.
 
-On what basis ? You were not copied in from the beginning, but that
-is not different from Duc's initial proposal, which Marc discarded
-because it should not be done at arch level, it depends on the interrupt
-controller.
+This resolves an interrupt storm, where if we receive any client IRQs
+(e.g., correctable errors), we fail to ever clear them properly, so they
+reoccur indefinitely.
 
-Possibly a hook to be called from GIC code to override the default
-ACPI PCI IRQ polarity, I think that's _horrible_ but if we want to
-successfully boot APM's platforms that are $SUBJECT of this thread
-something has to be done (and it is not patching FW because we
-can't).
+Fixes: 199410f6270e ("PCI: rockchip: Add Rockchip PCIe controller support")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
+---
+Patched against git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-rockchip
 
-> If the ARCH override doesn't exist, ACTIVE LOW still remains the
-> default. There could be another arch that could have the same problem
-> in the future.
+ drivers/pci/host/pcie-rockchip.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-See above.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 8fb47ee9eaee..e77aec3cc869 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -689,9 +689,10 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ 			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
+ 			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
+ 			      PCIE_CLIENT_INT_NFATAL_ERR |
+-			      PCIE_CLIENT_INT_CORR_ERR),
+-			      PCIE_CLIENT_INT_STATUS |
+-			      PCIE_CLIENT_INT_PHY);
++			      PCIE_CLIENT_INT_CORR_ERR |
++			      PCIE_CLIENT_INT_PHY),
++		   PCIE_CLIENT_INT_STATUS);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+2.8.0.rc3.226.g39d4020
 
-> This way, we don't need to touch irqchip (GIC) driver or introduce a
-> new API and/or introduce bugs for the rest of the non-PCI code.
-> 
-> From what I see in the ACPI spec, both _PRT approaches are correct and
-> they need to be supported by Linux.
-
-They are; ..but the spec says that your ACPI tables are buggy, because
-you are using a PCI interrupt link for an interrupt that is not
-configurable (frankly I still do not understand why as I explained).
-
-And then there is FW that has already shipped and we can't patch
-and it is not using PCI interrupt links so we have to quirk it in
-the kernel somehow (ie I am not sure APM platforms are the only ones
-containing _PRT with static PCI legacy IRQ entries, unfortunately).
-
-Lorenzo
