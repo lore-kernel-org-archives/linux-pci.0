@@ -1,44 +1,66 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com,
-	x86@kernel.org
-Subject: [PATCH v4 3/5] x86/ioapic: Fix setup_res() failing to get resource
-Date: Wed, 17 Aug 2016 16:00:35 +0800
-Message-Id: <1471420837-31003-4-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
-References: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:55030 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752958AbcH2QHs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Aug 2016 12:07:48 -0400
+Date: Mon, 29 Aug 2016 10:07:31 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] vmd: Synchronize with RCU freeing msi irq descs
+Message-ID: <20160829160730.GA13728@localhost.localdomain>
+References: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
+ <1470348549-10855-2-git-send-email-keith.busch@intel.com>
+ <20160808164721.GA1792@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160808164721.GA1792@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpi_dev_filter_resource_type() returns 0 on success, and 1 on failure.
-A return value of zero means there's a matching resource, so we should
-continue within setup_res() to get the resource.
+Hi Bjorn,
+Any chance of pulling this one in?
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/ioapic.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Jon
 
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index 2449377..8ab6d42 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -46,7 +46,7 @@ static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
- 	struct resource_win win;
- 
- 	res->flags = 0;
--	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM) == 0)
-+	if (acpi_dev_filter_resource_type(acpi_res, IORESOURCE_MEM))
- 		return AE_OK;
- 
- 	if (!acpi_dev_resource_memory(acpi_res, res)) {
--- 
-1.8.3.1
+On Mon, Aug 08, 2016 at 10:47:21AM -0600, Jon Derrick wrote:
+> This one's fine
+> 
+> Acked-by Jon Derrick: <jonathan.derrick@intel.com>
+> 
+> 
+> On Thu, Aug 04, 2016 at 04:09:09PM -0600, Keith Busch wrote:
+> > This patch fixes a potential race when disabling MSI/MSI-x on a VMD domain
+> > device. If the vmd interrupt service is running, it may see a disabled
+> > irq. We can synchronize rcu just before freeing the msi descriptor. This
+> > is safe since the irq_desc lock isn't held, and the descriptor is valid
+> > even though it is disabled. After vmd_msi_free, though, the handler is
+> > reinitialiazed to handle_bad_irq, so we can't let the vmd isr's list
+> > iteration see the disabled irq after this.
+> > 
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> >  arch/x86/pci/vmd.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> > index 2294907..e3c9b9e 100644
+> > --- a/arch/x86/pci/vmd.c
+> > +++ b/arch/x86/pci/vmd.c
+> > @@ -213,6 +213,8 @@ static void vmd_msi_free(struct irq_domain *domain,
+> >  	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
+> >  	unsigned long flags;
+> >  
+> > +	synchronize_rcu();
+> > +
+> >  	/* XXX: Potential optimization to rebalance */
+> >  	raw_spin_lock_irqsave(&list_lock, flags);
+> >  	vmdirq->irq->count--;
+> > -- 
+> > 2.7.2
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
