@@ -1,78 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Nate Watterson <nwatters@codeaurora.org>,
-	Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 11/15] drivers: iommu: arm-smmu-v3: enable ACPI driver initialization
-Date: Mon, 15 Aug 2016 16:23:36 +0100
-Message-Id: <1471274620-20754-12-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:37984 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbcH2Ra4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Aug 2016 13:30:56 -0400
+Subject: Re: [PATCH] xen: Remove event channel notification through Xen PCI
+ platform device
+To: KarimAllah Ahmed <karahmed@amazon.de>,
+        linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+References: <1472248536-2063-1-git-send-email-karahmed@amazon.de>
+Cc: David Vrabel <david.vrabel@citrix.com>,
+        Juergen Gross <jgross@suse.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+        Julien Grall <julien.grall@citrix.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <28aa68f6-7115-bc34-54a5-38d1995f157d@oracle.com>
+Date: Mon, 29 Aug 2016 13:29:09 -0400
+MIME-Version: 1.0
+In-Reply-To: <1472248536-2063-1-git-send-email-karahmed@amazon.de>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On systems booting with ACPI that enable the ARM SMMU components
-in the kernel config options, the ARM SMMU v3 init function
-(ie arm_smmu_init(), that registers the driver and sets-up bus
-iommu operations) does not run only because the device tree interface
-(of_find_matching_node()) fails to find the respective device tree
-nodes for ARM SMMU devices.
+On 08/26/2016 05:55 PM, KarimAllah Ahmed wrote:
+> Ever since commit 254d1a3f02eb ("xen/pv-on-hvm kexec: shutdown watches
+> from old kernel") using the INTx interrupt from Xen PCI platform device for
+> event channel notification would just lockup the guest during bootup.
+> postcore_initcall now calls xs_reset_watches which will eventually try to read
+> a value from XenStore and will get stuck on read_reply at XenBus forever since
+> the platform driver is not probed yet and its INTx interrupt handler is not
+> registered yet. That means that the guest can not be notified at this moment of
+> any pending event channels and none of the per-event handlers will ever be
+> invoked (including the XenStore one) and the reply will never be picked up by
+> the kernel.
+>
+> The exact stack where things get stuck during xenbus_init:
+>
+> -xenbus_init
+>  -xs_init
+>   -xs_reset_watches
+>    -xenbus_scanf
+>     -xenbus_read
+>      -xs_single
+>       -xs_single
+>        -xs_talkv
+>
+> Vector callbacks have always been the favourite event notification mechanism
+> since their introduction in commit 38e20b07efd5 ("x86/xen: event channels
+> delivery on HVM.") and the vector callback feature has always been advertised
+> for quite some time by Xen that's why INTx was broken for several years now
+> without impacting anyone.
+>
+> Luckily this also means that event channel notification through INTx is
+> basically dead-code which can be safely removed without impacting anybody since
+> it has been effectively disabled for more than 4 years with nobody complaining
+> about it (at least as far as I'm aware of).
+>
+> This commit removes event channel notification through Xen PCI platform device.
+>
+> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> Cc: David Vrabel <david.vrabel@citrix.com>
+> Cc: Juergen Gross <jgross@suse.com>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Cc: "H. Peter Anvin" <hpa@zytor.com>
+> Cc: x86@kernel.org
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+> Cc: Julien Grall <julien.grall@citrix.com>
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+> Cc: Ross Lagerwall <ross.lagerwall@citrix.com>
+> Cc: xen-devel@lists.xenproject.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: Anthony Liguori <aliguori@amazon.com>
+> Signed-off-by: KarimAllah Ahmed <karahmed@amazon.de>
 
-This works as long as there are no ARM SMMU devices to be probed
-with ACPI. If ARM SMMU v3 components are part of the IORT tables,
-for them to be instantiated and probed the function registering
-the ARM SMMU v3 driver must be able to register the driver and
-initialize the bus IOMMU operations accordingly.
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 
-This patch changes the logic in arm-smmu-v3 init call to allow
-for it to be probed in ACPI systems.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- drivers/iommu/arm-smmu-v3.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 91a7600..75b78f9 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2689,11 +2689,16 @@ static int __init arm_smmu_init(void)
- 	if (registered)
- 		return 0;
- 
--	np = of_find_matching_node(NULL, arm_smmu_of_match);
--	if (!np)
--		return 0;
-+	if (acpi_disabled) {
-+		np = of_find_matching_node(NULL, arm_smmu_of_match);
-+		if (!np)
-+			return 0;
- 
--	of_node_put(np);
-+		of_node_put(np);
-+	} else {
-+		if (!iort_node_match(ACPI_IORT_NODE_SMMU_V3))
-+			return 0;
-+	}
- 
- 	ret = platform_driver_register(&arm_smmu_driver);
- 	if (ret)
--- 
-2.6.4
 
