@@ -1,76 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:50008 "EHLO
-        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756511AbcHVWAM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2016 18:00:12 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <rfi@lists.rocketboards.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 1/8] PCI: altera: make msi explicitly non-modular
-Date: Mon, 22 Aug 2016 17:59:41 -0400
-Message-ID: <20160822215948.27251-2-paul.gortmaker@windriver.com>
-In-Reply-To: <20160822215948.27251-1-paul.gortmaker@windriver.com>
-References: <20160822215948.27251-1-paul.gortmaker@windriver.com>
+Received: from mail.kernel.org ([198.145.29.136]:47326 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756203AbcH2X5t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Aug 2016 19:57:49 -0400
+Date: Mon, 29 Aug 2016 18:57:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Brian Norris <computersforpeace@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH] PCI: rockchip: Correct the register value for clearing
+ client interrupts
+Message-ID: <20160829235742.GB14177@localhost>
+References: <1472505251-122204-1-git-send-email-briannorris@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472505251-122204-1-git-send-email-briannorris@chromium.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Kconfig currently controlling compilation of this code is:
+On Mon, Aug 29, 2016 at 02:14:11PM -0700, Brian Norris wrote:
+> I'm pretty sure the bitwise 'or' was meant for the value parameter, not
+> the register parameter.
+> 
+> This resolves an interrupt storm, where if we receive any client IRQs
+> (e.g., correctable errors), we fail to ever clear them properly, so they
+> reoccur indefinitely.
+> 
+> Fixes: 199410f6270e ("PCI: rockchip: Add Rockchip PCIe controller support")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Cc: Shawn Lin <shawn.lin@rock-chips.com>
 
-drivers/pci/host/Kconfig:config PCIE_ALTERA_MSI
-drivers/pci/host/Kconfig:       bool "Altera PCIe MSI feature"
+Shawn, please confirm.  If this patch is correct, I'll fold it into
+the initial commit that adds the driver.
 
-...meaning that it currently is not being built as a module by anyone.
-
-Lets remove the couple traces of modular infrastructure use, so that
-when reading the driver there is no doubt it is builtin-only.
-
-We also delete the MODULE_LICENSE tag etc. since all that information
-was (or is now) contained at the top of the file in the comments.
-
-Cc: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: rfi@lists.rocketboards.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-altera-msi.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
-index 99177f4ccde2..369e033449c6 100644
---- a/drivers/pci/host/pcie-altera-msi.c
-+++ b/drivers/pci/host/pcie-altera-msi.c
-@@ -1,4 +1,8 @@
- /*
-+ * Altera PCIe MSI support
-+ *
-+ * Author: Ley Foon Tan <lftan@altera.com>
-+ *
-  * Copyright Altera Corporation (C) 2013-2015. All rights reserved
-  *
-  * This program is free software; you can redistribute it and/or modify it
-@@ -16,7 +20,7 @@
- 
- #include <linux/interrupt.h>
- #include <linux/irqchip/chained_irq.h>
--#include <linux/module.h>
-+#include <linux/init.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-@@ -308,7 +312,3 @@ static int __init altera_msi_init(void)
- 	return platform_driver_register(&altera_msi_driver);
- }
- subsys_initcall(altera_msi_init);
--
--MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
--MODULE_DESCRIPTION("Altera PCIe MSI support");
--MODULE_LICENSE("GPL v2");
--- 
-2.8.4
-
+> ---
+> Patched against git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-rockchip
+> 
+>  drivers/pci/host/pcie-rockchip.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 8fb47ee9eaee..e77aec3cc869 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -689,9 +689,10 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+>  			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
+>  			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
+>  			      PCIE_CLIENT_INT_NFATAL_ERR |
+> -			      PCIE_CLIENT_INT_CORR_ERR),
+> -			      PCIE_CLIENT_INT_STATUS |
+> -			      PCIE_CLIENT_INT_PHY);
+> +			      PCIE_CLIENT_INT_CORR_ERR |
+> +			      PCIE_CLIENT_INT_PHY),
+> +		   PCIE_CLIENT_INT_STATUS);
+> +
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -- 
+> 2.8.0.rc3.226.g39d4020
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
