@@ -1,177 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
-	Andy Lutomirski <luto@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Brian Gerst <brgerst@gmail.com>,
-	Denys Vlasenko <dvlasenk@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Josh Poimboeuf <jpoimboe@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH 4.4 03/68] x86/quirks: Reintroduce scanning of secondary buses
-Date: Mon,  8 Aug 2016 21:10:38 +0200
-Message-Id: <20160808180209.841511551@linuxfoundation.org>
-In-Reply-To: <20160808180209.697765393@linuxfoundation.org>
-References: <20160808180209.697765393@linuxfoundation.org>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Mon, 29 Aug 2016 13:55:58 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] vmd: convert to use pci_alloc_irq_vectors api
+Message-ID: <20160829175558.GG19986@localhost.localdomain>
+References: <1472491142-13783-1-git-send-email-jonathan.derrick@intel.com>
+ <1472491142-13783-2-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472491142-13783-2-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
+On Mon, Aug 29, 2016 at 11:19:02AM -0600, Jon Derrick wrote:
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 
-------------------
+Nice simplification, looks good.
 
-From: Lukas Wunner <lukas@wunner.de>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 
-commit 850c321027c2e31d0afc71588974719a4b565550 upstream.
 
-We used to scan secondary buses until the following commit that
-was applied in 2009:
 
-  8659c406ade3 ("x86: only scan the root bus in early PCI quirks")
-
-which commit constrained early quirks to the root bus only. Its
-motivation was to prevent application of the nvidia_bugs quirk
-on secondary buses.
-
-We're about to add a quirk to reset the Broadcom 4331 wireless card on
-2011/2012 Macs, which is located on a secondary bus behind a PCIe root
-port. To facilitate that, reintroduce scanning of secondary buses.
-
-The commit message of 8659c406ade3 notes that scanning only the root bus
-"saves quite some unnecessary scanning work". The algorithm used prior
-to 8659c406ade3 was particularly time consuming because it scanned
-buses 0 to 31 brute force. To avoid lengthening boot time, employ a
-recursive strategy which only scans buses that are actually reachable
-from the root bus.
-
-Yinghai Lu pointed out that the secondary bus number read from a
-bridge's config space may be invalid, in particular a value of 0 would
-cause an infinite loop. The PCI core goes beyond that and recurses to a
-child bus only if its bus number is greater than the parent bus number
-(see pci_scan_bridge()). Since the root bus is numbered 0, this implies
-that secondary buses may not be 0. Do the same on early scanning.
-
-If this algorithm is found to significantly impact boot time or cause
-infinite loops on broken hardware, it would be possible to limit its
-recursion depth: The Broadcom 4331 quirk applies at depth 1, all others
-at depth 0, so the bus need not be scanned deeper than that for now. An
-alternative approach would be to revert to scanning only the root bus,
-and apply the Broadcom 4331 quirk to the root ports 8086:1c12, 8086:1e12
-and 8086:1e16. Apple always positioned the card behind either of these
-three ports. The quirk would then check presence of the card in slot 0
-below the root port and do its deed.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Andy Lutomirski <luto@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Brian Gerst <brgerst@gmail.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Link: http://lkml.kernel.org/r/f0daa70dac1a9b2483abdb31887173eb6ab77bdf.1465690253.git.lukas@wunner.de
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- arch/x86/kernel/early-quirks.c |   34 +++++++++++++++++++++-------------
- 1 file changed, 21 insertions(+), 13 deletions(-)
-
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -609,12 +609,6 @@ struct chipset {
- 	void (*f)(int num, int slot, int func);
- };
- 
--/*
-- * Only works for devices on the root bus. If you add any devices
-- * not on bus 0 readd another loop level in early_quirks(). But
-- * be careful because at least the Nvidia quirk here relies on
-- * only matching on bus 0.
-- */
- static struct chipset early_qrk[] __initdata = {
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
-@@ -647,6 +641,8 @@ static struct chipset early_qrk[] __init
- 	{}
- };
- 
-+static void __init early_pci_scan_bus(int bus);
-+
- /**
-  * check_dev_quirk - apply early quirks to a given PCI device
-  * @num: bus number
-@@ -655,7 +651,7 @@ static struct chipset early_qrk[] __init
-  *
-  * Check the vendor & device ID against the early quirks table.
-  *
-- * If the device is single function, let early_quirks() know so we don't
-+ * If the device is single function, let early_pci_scan_bus() know so we don't
-  * poke at this device again.
-  */
- static int __init check_dev_quirk(int num, int slot, int func)
-@@ -664,6 +660,7 @@ static int __init check_dev_quirk(int nu
- 	u16 vendor;
- 	u16 device;
- 	u8 type;
-+	u8 sec;
- 	int i;
- 
- 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
-@@ -691,25 +688,36 @@ static int __init check_dev_quirk(int nu
- 
- 	type = read_pci_config_byte(num, slot, func,
- 				    PCI_HEADER_TYPE);
-+
-+	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
-+		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
-+		if (sec > num)
-+			early_pci_scan_bus(sec);
-+	}
-+
- 	if (!(type & 0x80))
- 		return -1;
- 
- 	return 0;
- }
- 
--void __init early_quirks(void)
-+static void __init early_pci_scan_bus(int bus)
- {
- 	int slot, func;
- 
--	if (!early_pci_allowed())
--		return;
--
- 	/* Poor man's PCI discovery */
--	/* Only scan the root bus */
- 	for (slot = 0; slot < 32; slot++)
- 		for (func = 0; func < 8; func++) {
- 			/* Only probe function 0 on single fn devices */
--			if (check_dev_quirk(0, slot, func))
-+			if (check_dev_quirk(bus, slot, func))
- 				break;
- 		}
- }
-+
-+void __init early_quirks(void)
-+{
-+	if (!early_pci_allowed())
-+		return;
-+
-+	early_pci_scan_bus(0);
-+}
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index 514b446..4c0eac7 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -78,7 +78,6 @@ struct vmd_dev {
+>  	char __iomem		*cfgbar;
+>  
+>  	int msix_count;
+> -	struct msix_entry	*msix_entries;
+>  	struct vmd_irq_list	*irqs;
+>  
+>  	struct pci_sysdata	sysdata;
+> @@ -679,16 +678,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  	if (vmd->msix_count < 0)
+>  		return -ENODEV;
+>  
+> -	vmd->msix_entries = devm_kcalloc(&dev->dev, vmd->msix_count,
+> -					 sizeof(*vmd->msix_entries),
+> -					 GFP_KERNEL);
+> -	if (!vmd->msix_entries)
+> -		return -ENOMEM;
+> -	for (i = 0; i < vmd->msix_count; i++)
+> -		vmd->msix_entries[i].entry = i;
+> -
+> -	vmd->msix_count = pci_enable_msix_range(vmd->dev, vmd->msix_entries, 1,
+> -						vmd->msix_count);
+> +	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
+> +					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+>  	if (vmd->msix_count < 0)
+>  		return vmd->msix_count;
+>  
+> @@ -699,7 +690,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  
+>  	for (i = 0; i < vmd->msix_count; i++) {
+>  		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+> -		vmd->irqs[i].vmd_vector = vmd->msix_entries[i].vector;
+> +		vmd->irqs[i].vmd_vector = pci_irq_vector(dev, i);
+>  		vmd->irqs[i].index = i;
+>  
+>  		err = devm_request_irq(&dev->dev, vmd->irqs[i].vmd_vector,
+> -- 
