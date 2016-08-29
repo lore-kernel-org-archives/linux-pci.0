@@ -1,87 +1,117 @@
-Return-Path: <dhdang@apm.com>
-Return-Path: <dhdang@apm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Po Liu <po.liu@nxp.com>
+To: <linux-pci@vger.kernel.org>
+Subject: [PATCH v2] arm64:pci: fix the IOV device access config space valid
+ condition
+Date: Mon, 29 Aug 2016 15:26:58 +0800
+Message-ID: <1472455618-17892-1-git-send-email-po.liu@nxp.com>
+In-Reply-To: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
+References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20160824213005.1a9300ef@arm.com>
-References: <CADaLNDm-HmnOsrntDC8zz28bwiQZVv36LG-iMDATqzavY7cXVg@mail.gmail.com>
- <20160824142723.GA25843@red-moon> <20160824193000.GE23914@localhost> <20160824213005.1a9300ef@arm.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Wed, 24 Aug 2016 15:19:21 -0700
-Message-ID: <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	patches <patches@apm.com>, Bjorn Helgaas <bhelgaas@google.com>, punit.agrawal@arm.com
-Content-Type: text/plain; charset=UTF-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: soren.brinkmann@xilinx.com, Roy Zang <roy.zang@nxp.com>,
+ Arnd Bergmann <arnd@arndb.de>, jingoohan1@gmail.com, Po Liu <po.liu@nxp.com>,
+ pratyush.anand@gmail.com, Stuart Yoder <stuart.yoder@nxp.com>,
+ Yang-Leo Li <leoyang.li@nxp.com>, linux-arm-kernel@lists.infradead.org, Bjorn
+ Helgaas <bhelgaas@google.com>, lftan@altera.com, michal.simek@xilinx.com,
+ Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 24, 2016 at 1:30 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> On Wed, 24 Aug 2016 14:30:00 -0500
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
->
->> On Wed, Aug 24, 2016 at 03:27:23PM +0100, Lorenzo Pieralisi wrote:
->> > [ +Bjorn, Punit]
->> >
->> > On Wed, Aug 24, 2016 at 04:06:13AM -0700, Duc Dang wrote:
->> > > [Resend in plain text mode]
->> > >
->> > > Hi Lorenzo, Rafael,
->> > >
->> > > ACPI 6.1 spec does not specify how to set interrupt polarity and
->> > > trigger mode in _PRT when the interrupts are static (hardwired to
->> > > specific interrupt inputs in interrupt controller). In current
->> > > acpi_pci_irq_enable (drivers/acpi/pci_irq.c) implementation, by
->> > > default the trigger mode is set to LEVEL_SENSITIVE, polarity is set to
->> > > ACTIVE_LOW. This default setting won't work for ARM64 GICv2, GICv2m,
->> > > GICv3 controllers and will cause failures in PCIe AER, PME services
->> > > (on X-Gene platforms).
->>
->> PCI (not PCIe) r3.0, sec 2.2.6, says "Interrupts on PCI are optional
->> and defined as 'level sensitive,' asserted low."
->>
->> I've heard before that ARM64 does this differently, but I still don't
->> understand the difference.  Obviously if you plug a legacy PCI card
->> into an ARM64 system, it's still going to pull INTA# low to assert an
->> interrupt.  So is there something special about ARM64 that inverts
->> that, or what?
->
-> There is certainly an inverter somewhere on the interrupt path, because
-> the GIC triggers on level high, not level low. But I don't think that's
-> the issue Duc is trying to outline here, because that's not something
-> SW can fix. I'm worried that in his system, the interrupt is edge
-> triggered instead.
+When echo a number to /sys/bus/pci/devices/xxx/sriov_numvfs to enable the
+VF devices. A crash log occurred. This found to be access the IOV devices
+config space failure issue.
 
-Yes, there is an inverter in the interrupt path to deliver interrupt to the GIC
-as level-high. X-Gene GIC uses level high for PCI INTx. I myself has been
-lucky when using trigger-rising for PCI INTx in DT boot mode.
+The read/write config space from host would judge the pcie device plugin
+or not by(Designware platform as example):
 
->
->>
->> > > Is there any way to specify polarity and trigger mode for static
->> > > interrupts in _PRT?
->>
->> There is no way I'm aware of in _PRT to specify polarity and trigger
->> mode.  I don't know the history, but my guess is that it would be seen
->> as superfluous given that the PCI spec requires level, active low.
+if (bus->primary == pp->root_bus_nr && dev > 0)
+    return 0;
 
-The device still pulls the INTx pin low to trigger interrupt, but the
-interrupt delivered
-to interrupt controller (GIC in this case) is not necessarily to be
-level-low. Current code
-assume level-low mode to program to the interrupt controller for INTx,
-and fails for
-GIC, GICv2m and GICv3.
+Although all PCIe devices for dev(coming from the device and function
+number) is zero. But the dev is not zero for VF devices. So remove the
+condition.
 
->>
->> Obviously I'm missing something important.
->
-> Same here, unless the HW is not PCI compliant...
->
-> Thanks,
->
->         M.
-> --
-> Jazz is not dead. It just smells funny.
+These PCI hosts were changed: designware, altera, xilinx.
 
-Regards,
-Duc Dang.
+Signed-off-by: Po Liu <po.liu@nxp.com>
+---
+changes for v2:
+	- add pci hosts: altera, xilinx;
+
+ drivers/pci/host/pcie-altera.c     | 7 -------
+ drivers/pci/host/pcie-designware.c | 7 -------
+ drivers/pci/host/pcie-xilinx.c     | 7 -------
+ 3 files changed, 21 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 2b78376..edbe0a7 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -171,13 +171,6 @@ static bool altera_pcie_valid_config(struct altera_pcie *pcie,
+ 	if (bus->number == pcie->root_bus_nr && dev > 0)
+ 		return false;
+ 
+-	/*
+-	 * Do not read more than one device on the bus directly attached
+-	 * to root port, root port can only attach to one downstream port.
+-	 */
+-	if (bus->primary == pcie->root_bus_nr && dev > 0)
+-		return false;
+-
+ 	 return true;
+ }
+ 
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12afce1..dd20eb2 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -670,13 +670,6 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
+ 	if (bus->number == pp->root_bus_nr && dev > 0)
+ 		return 0;
+ 
+-	/*
+-	 * do not read more than one device on the bus directly attached
+-	 * to RC's (Virtual Bridge's) DS side.
+-	 */
+-	if (bus->primary == pp->root_bus_nr && dev > 0)
+-		return 0;
+-
+ 	return 1;
+ }
+ 
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index a30e016..75c89db 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -168,13 +168,6 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ 	if (bus->number == port->root_busno && devfn > 0)
+ 		return false;
+ 
+-	/*
+-	 * Do not read more than one device on the bus directly attached
+-	 * to RC.
+-	 */
+-	if (bus->primary == port->root_busno && devfn > 0)
+-		return false;
+-
+ 	return true;
+ }
+ 
+-- 
+2.1.0.27.g96db324
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
