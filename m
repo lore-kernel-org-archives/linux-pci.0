@@ -1,53 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Roy Zang <roy.zang@nxp.com>
-To: Jingoo Han <jingoohan1@gmail.com>, Po Liu <po.liu@nxp.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] arm64:pci: fix the IOV device access config space
- valid condition
-Date: Tue, 30 Aug 2016 16:32:33 +0000
-Message-ID: <HE1PR0402MB2748D18B3A6AD35B0EA2E4518BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
-References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
- <1472455618-17892-1-git-send-email-po.liu@nxp.com>
- <000a01d202d5$3f86e3a0$be94aae0$@gmail.com>
- <HE1PR0402MB2748F7A71F8A0073644EE3568BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
+Return-Path: <andrew.donnellan@au1.ibm.com>
+Return-Path: <andrew.donnellan@au1.ibm.com>
+Subject: Re: [PATCH] cxl: use pcibios_free_controller_deferred() when removing
+ vPHBs
+To: linuxppc-dev@lists.ozlabs.org
+References: <1471505714-30049-1-git-send-email-andrew.donnellan@au1.ibm.com>
+Cc: clombard@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+        mrochs@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
+        fbarrat@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com,
+        helgaas@kernel.org, imunsie@au1.ibm.com, felix@linux.vnet.ibm.com,
+        ukrishn@linux.vnet.ibm.com, stable@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Date: Tue, 30 Aug 2016 11:58:44 +1000
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "soren.brinkmann@xilinx.com" <soren.brinkmann@xilinx.com>, 'Arnd
- Bergmann' <arnd@arndb.de>,
- "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
- Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- 'Bjorn Helgaas' <bhelgaas@google.com>, "lftan@altera.com" <lftan@altera.com>,
- "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
- Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1471505714-30049-1-git-send-email-andrew.donnellan@au1.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Message-Id: <3049096a-97ea-9549-ee29-ae937708cf45@au1.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Acked-by: Roy Zang <roy.zang@nxp.com>
-Roy
-On 08/30/2016 10:54 AM, Roy Zang wrote:
-> On 08/30/2016 10:43 AM, Jingoo Han wrote:
->> I really don't like to modify host driver stuffs.
->> But, if there is no alternatives, this patch looks good.
-> I do not see other good place to fix the bug.
+Hi stable team,
+
+The following patch, which ended up upstream as 
+6f38a8b9a45833495dc878c335c5431cd98a16ed:
+
+On 18/08/16 17:35, Andrew Donnellan wrote:
+> When cxl removes a vPHB, it's possible that the pci_controller may be freed
+> before all references to the devices on the vPHB have been released. This
+> in turn causes an invalid memory access when the devices are eventually
+> released, as pcibios_release_device() attempts to call the phb's
+> release_device hook.
 >
-> Roy Zang <roy.zang@nxp.com>
+> In cxl_pci_vphb_remove(), remove the existing call to
+> pcibios_free_controller(). Instead, use
+> pcibios_free_controller_deferred() to free the pci_controller after all
+> devices have been released. Export pci_set_host_bridge_release() so we can
+> do this.
 >
-> Roy
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 >
+> ---
 >
+> This patch requires http://patchwork.ozlabs.org/patch/658324/. It should go
+> through the powerpc tree.
+
+This depends on 2dd9c11b9d4dfbd6c070eab7b81197f65e82f1a0 which didn't 
+end up being tagged as cc: stable. It also ended up being applied in the 
+wrong order in the powerpc/fixes tree...
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+-- 
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
