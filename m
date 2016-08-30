@@ -1,215 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33288 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030AbcHOPbm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Aug 2016 11:31:42 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 1/2] PCI: tegra: Remove redundant _data suffix
-Date: Mon, 15 Aug 2016 17:31:31 +0200
-Message-Id: <20160815153132.520-1-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <ibmirkin@gmail.com>
+Return-Path: <ibmirkin@gmail.com>
+MIME-Version: 1.0
+Sender: ibmirkin@gmail.com
+In-Reply-To: <CAKb7UvhyCVoFXYL74eX3rXtt=V7nOnBGaTPVdcJT37v38jD8oQ@mail.gmail.com>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost> <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
+ <20160829190737.GA4053@localhost> <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
+ <20160829235403.GA14177@localhost> <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
+ <20160830130634.GA16426@localhost> <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
+ <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com> <CAKb7UvhyCVoFXYL74eX3rXtt=V7nOnBGaTPVdcJT37v38jD8oQ@mail.gmail.com>
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+Date: Tue, 30 Aug 2016 11:48:14 -0400
+Message-ID: <CAKb7UviJ5syj1PveX1ZeMe5PbVz8V5CyVKWSmQKMUm_dHHQjxA@mail.gmail.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Roland Singer <roland.singer@desertbit.com>
+Cc: Emil Velikov <emil.l.velikov@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+	ML dri-devel <dri-devel@lists.freedesktop.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Tue, Aug 30, 2016 at 11:44 AM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
+> On Tue, Aug 30, 2016 at 11:25 AM, Roland Singer
+> <roland.singer@desertbit.com> wrote:
+>> I tried these scenarios:
+>>
+>> 1. Booted the system without the bbswitch module. The nouveau module
+>>    was loaded and is responsible for the power management of the GPU.
+>>    The graphical session freezes after some minutes...
+>>
+>> 2. Booted the system without bbswitch and with nouveau blacklisted.
+>>    Manually loaded bbswitch to switch off the discrete GPU.
+>>    Same freeze after a while or by explicitly obtaining the GPU state.
+>>
+>> Is there a possibility to switch off the discrete card without bbswitch?
+>> If this is possible, then I could test this without nouveau and bbswitch
+>> at all. If the system hangs, then it is not the video driver nor bbswitch.
+>
+> You can use acpi_call (a random search points to
+> https://github.com/mkottman/acpi_call, but I don't know if that's the
+> "official" version) - need to find the right method to call, but
+> that's basically all it takes to acpi-suspend a gpu.
+>
+> Separately, there was a recent fix to ... something, including but not
+> limited to nouveau, involving hangs on gpu suspend on newer laptops. I
+> don't think it's upstream yet. Look for patches from Lukas Wunner.
 
-The struct tegra_pcie_soc_data represents SoC-specific data. The shorter
-name tegra_pcie_soc already describes that accurately enough, so the
-extra five characters are redundant. Also remove the suffix from various
-variable names to shorten the code a little.
+Er oops. Looks like I misremembered. Patches are from Peter Wu, and at
+least one of them is in v4.8-rc1:
 
-This also makes this driver more consistent with the naming used in
-other drivers that use a similar mechanism to differentiate between
-various SoC generations.
+commit 692a17dcc2922a91c6bcf11b3321503a3377b1b1
+Author: Peter Wu <peter@lekensteyn.nl>
+Date:   Fri Jul 15 15:12:18 2016 +0200
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 42 +++++++++++++++++++++---------------------
- 1 file changed, 21 insertions(+), 21 deletions(-)
+    drm/nouveau/acpi: fix lockup with PCIe runtime PM
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 6de0757b11e4..7756a792600c 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -240,7 +240,7 @@ struct tegra_msi {
- };
- 
- /* used to differentiate between Tegra SoC generations */
--struct tegra_pcie_soc_data {
-+struct tegra_pcie_soc {
- 	unsigned int num_ports;
- 	unsigned int msi_base_shift;
- 	u32 pads_pll_ctl;
-@@ -300,7 +300,7 @@ struct tegra_pcie {
- 	struct regulator_bulk_data *supplies;
- 	unsigned int num_supplies;
- 
--	const struct tegra_pcie_soc_data *soc_data;
-+	const struct tegra_pcie_soc *soc;
- 	struct dentry *debugfs;
- };
- 
-@@ -542,8 +542,8 @@ static void tegra_pcie_port_reset(struct tegra_pcie_port *port)
- 
- static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
- {
--	const struct tegra_pcie_soc_data *soc = port->pcie->soc_data;
- 	unsigned long ctrl = tegra_pcie_port_get_pex_ctrl(port);
-+	const struct tegra_pcie_soc *soc = port->pcie->soc;
- 	unsigned long value;
- 
- 	/* enable reference clock */
-@@ -562,8 +562,8 @@ static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
- 
- static void tegra_pcie_port_disable(struct tegra_pcie_port *port)
- {
--	const struct tegra_pcie_soc_data *soc = port->pcie->soc_data;
- 	unsigned long ctrl = tegra_pcie_port_get_pex_ctrl(port);
-+	const struct tegra_pcie_soc *soc = port->pcie->soc;
- 	unsigned long value;
- 
- 	/* assert port reset */
-@@ -774,7 +774,7 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_pll_wait(struct tegra_pcie *pcie, unsigned long timeout)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	u32 value;
- 
- 	timeout = jiffies + msecs_to_jiffies(timeout);
-@@ -790,7 +790,7 @@ static int tegra_pcie_pll_wait(struct tegra_pcie *pcie, unsigned long timeout)
- 
- static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	u32 value;
- 	int err;
- 
-@@ -845,7 +845,7 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_phy_disable(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	u32 value;
- 
- 	/* disable TX/RX data */
-@@ -906,7 +906,7 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
- 
- static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct tegra_pcie_port *port;
- 	int err;
- 
-@@ -974,7 +974,7 @@ static int tegra_pcie_phy_power_off(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct tegra_pcie_port *port;
- 	unsigned long value;
- 	int err;
-@@ -1067,7 +1067,7 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_power_on(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
- 
- 	reset_control_assert(pcie->pcie_xrst);
-@@ -1117,7 +1117,7 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
- 
- static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 
- 	pcie->pex_clk = devm_clk_get(pcie->dev, "pex");
- 	if (IS_ERR(pcie->pex_clk))
-@@ -1234,7 +1234,7 @@ static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
- 
- static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct device_node *np = pcie->dev->of_node;
- 	struct tegra_pcie_port *port;
- 	int err;
-@@ -1486,7 +1486,7 @@ static const struct irq_domain_ops msi_domain_ops = {
- static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- {
- 	struct platform_device *pdev = to_platform_device(pcie->dev);
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct tegra_msi *msi = &pcie->msi;
- 	unsigned long base;
- 	int err;
-@@ -1799,8 +1799,8 @@ static int tegra_pcie_get_regulators(struct tegra_pcie *pcie, u32 lane_mask)
- 
- static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- {
--	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
- 	struct device_node *np = pcie->dev->of_node, *port;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct of_pci_range_parser parser;
- 	struct of_pci_range range;
- 	u32 lanes = 0, mask = 0;
-@@ -2043,7 +2043,7 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
--static const struct tegra_pcie_soc_data tegra20_pcie_data = {
-+static const struct tegra_pcie_soc tegra20_pcie = {
- 	.num_ports = 2,
- 	.msi_base_shift = 0,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
-@@ -2056,7 +2056,7 @@ static const struct tegra_pcie_soc_data tegra20_pcie_data = {
- 	.has_gen2 = false,
- };
- 
--static const struct tegra_pcie_soc_data tegra30_pcie_data = {
-+static const struct tegra_pcie_soc tegra30_pcie = {
- 	.num_ports = 3,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
-@@ -2070,7 +2070,7 @@ static const struct tegra_pcie_soc_data tegra30_pcie_data = {
- 	.has_gen2 = false,
- };
- 
--static const struct tegra_pcie_soc_data tegra124_pcie_data = {
-+static const struct tegra_pcie_soc tegra124_pcie = {
- 	.num_ports = 2,
- 	.msi_base_shift = 8,
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
-@@ -2084,9 +2084,9 @@ static const struct tegra_pcie_soc_data tegra124_pcie_data = {
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
--	{ .compatible = "nvidia,tegra124-pcie", .data = &tegra124_pcie_data },
--	{ .compatible = "nvidia,tegra30-pcie", .data = &tegra30_pcie_data },
--	{ .compatible = "nvidia,tegra20-pcie", .data = &tegra20_pcie_data },
-+	{ .compatible = "nvidia,tegra124-pcie", .data = &tegra124_pcie },
-+	{ .compatible = "nvidia,tegra30-pcie", .data = &tegra30_pcie },
-+	{ .compatible = "nvidia,tegra20-pcie", .data = &tegra20_pcie },
- 	{ },
- };
- 
-@@ -2215,7 +2215,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	INIT_LIST_HEAD(&pcie->buses);
- 	INIT_LIST_HEAD(&pcie->ports);
--	pcie->soc_data = match->data;
-+	pcie->soc = match->data;
- 	pcie->dev = &pdev->dev;
- 
- 	err = tegra_pcie_parse_dt(pcie);
--- 
-2.9.0
+along with a number of other related patches. It's not clear which
+kernel you were trying this with... can you give v4.8-rcN a shot?
 
+  -ilia
