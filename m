@@ -1,92 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:41290 "EHLO
-        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933009AbcH2Lse (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Aug 2016 07:48:34 -0400
-Subject: Re: Support for configurable PCIe endpoint
-To: Arnd Bergmann <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <57A18927.9070003@ti.com> <2422602.ltmdGR0pWX@wuerfel>
- <57B5B4A1.9030308@ti.com> <1944530.NcryPj8uKU@wuerfel>
-CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        David Daney <david.daney@cavium.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Simon Horman <horms@verge.net.au>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Richard Zhu <Richard.Zhu@freescale.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <57C420C4.4000004@ti.com>
-Date: Mon, 29 Aug 2016 17:17:16 +0530
+Return-Path: <roland.singer@desertbit.com>
+Return-Path: <roland.singer@desertbit.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Emil Velikov <emil.l.velikov@gmail.com>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost>
+ <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
+ <20160829190737.GA4053@localhost>
+ <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
+ <20160829235403.GA14177@localhost>
+ <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
+ <20160830130634.GA16426@localhost>
+ <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
+ <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
+ <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+ ML dri-devel <dri-devel@lists.freedesktop.org>, linux-acpi@vger.kernel.org,
+ imirkin@alum.mit.edu
+From: Roland Singer <roland.singer@desertbit.com>
+Message-ID: <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
+Date: Tue, 30 Aug 2016 19:37:22 +0200
 MIME-Version: 1.0
-In-Reply-To: <1944530.NcryPj8uKU@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+I am running 4.7.2, but I also just tried the 4.8.0-rc4 mainline kernel.
+The result is the same. There is no difference if bbswitch of acpi_call
+is used. However I noticed following:
 
-On Thursday 25 August 2016 06:29 PM, Arnd Bergmann wrote:
-> On Thursday, August 18, 2016 6:44:09 PM CEST Kishon Vijay Abraham I wrote:
->> Hi Arnd,
+1. The nouveau driver is broken in both kernel version and is responsible
+   for the freezes while gathering power state information with bbswitch.
+   Sometimes while shutting the system down, everything except the LCD
+   screen is switched off. This only happens with nouveau.
+   I noticed following error log messages:
+
+   kernel: nouveau 0000:01:00.0: fb: 6144 MiB GDDR5
+   kernel: nouveau 0000:01:00.0: priv: HUB0: 10ecc0 ffffffff (1e40822c)
+   kernel: nouveau 0000:01:00.0: DRM: VRAM: 6144 MiB
+   kernel: nouveau 0000:01:00.0: DRM: GART: 1048576 MiB
+   kernel: nouveau 0000:01:00.0: DRM: Pointer to TMDS table invalid
+   kernel: nouveau 0000:01:00.0: DRM: DCB version 4.1
+   kernel: nouveau 0000:01:00.0: DRM: Pointer to flat panel table invalid
+
+2. -> Boot with nouveau module loaded
+   -> switch off the discrete GPU with bbswitch or acpi_call
+   -> start X11
+   -> obtaining power state with bbswitch freezes the system
+   -> or working with the system for some minutes freezes the system
+
+3. -> Boot with nouveau module blacklisted
+   -> switch off the discrete GPU
+   -> start X11
+   -> system immediately freezes
+
+4. -> Boot with nouveau module blacklisted
+   -> switch off the discrete GPU
+   -> start Wayland
+   -> system runs - Note: I tried this for couple of days with 4.6 and 4.7 mainline
+                          and the system freezed randomly after some time.
+                          However I have to test if this is still present with 4.7.2
+                          and 4.8 mainline. Right now it seams to be fine.
+   -> running Xwayland (does not depend on the GPU power state) kills performance!
+      the system freezes for several seconds...
+      So working with Wayland is also no solution.
+
+My conclusion:
+
+1. Nouveau has couple of problems with GTX 9** M Nvidia GPUs.
+   I would love to help here.
+
+2. X11 is just broken and is not capable to start the graphical session
+   if the nvidia GPU is not handled by any video driver (kernel module).
+   Even forcing X11 to ignore the discrete GPU doesn't help.
+
+   Setting the command line arguments to:
+
+     acpi_osi=! acpi_osi="Windows 2009"
+
+   fixes the issues with X11 but other things break...
+   What the hell is going on?! :/
+
+Am 30.08.2016 um 17:48 schrieb Emil Velikov:
+> On 30 August 2016 at 16:25, Roland Singer <roland.singer@desertbit.com> wrote:
+>> I tried these scenarios:
 >>
->> On Thursday 04 August 2016 04:43 PM, Arnd Bergmann wrote:
->>> On Thursday, August 4, 2016 3:32:01 PM CEST Kishon Vijay Abraham I wrote:
->>>> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
->>>>>
->>>>> You are rising a topic that we are also addressing in Synopsys.
->>>>>
->>>>> For the PCIe RC hardware validation we are currently using the standard
->>>>> pcie-designware and pcie-designware-plat drivers.
->>>>>
->>>>> For the Endpoint we have to use an internal software package. Its main purpose
->>>>> is to initialize the IP registers, eDMA channels and make data transfer to prove
->>>>> that the everything is working properly. This is done in 2 levels, a custom
->>>>> driver built and loaded and an application that makes some ioctl to the driver
->>>>> executing some interesting functions to check the Endpoint status and make some
->>>>> data exchange.
->>>>
->>>> hmm.. the platform I have doesn't have a DMA in PCIe IP
->>>> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does the
->>>> EP access RC memory? i.e the driver in the RC allocates memory from it's DDR
->>>> and gives it's DDR address to the EP. The EP then transfers data to this
->>>> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
->>>> simple with configurable EPs. I'd like to know more about your testing though.
->>>
->>>
->>> What's the difference between using the EDMA on that chip or a DMA engine
->>> that is part of the PCIe bridge?
+>> 1. Booted the system without the bbswitch module. The nouveau module
+>>    was loaded and is responsible for the power management of the GPU.
+>>    The graphical session freezes after some minutes...
 >>
->> Do you mean the difference between using DMA on an EP (like ethernet card or
->> sata card) and DMA on PCI RC system? or is it the difference between eDMA
->> within the PCIe IP and system DMA?
+>> 2. Booted the system without bbswitch and with nouveau blacklisted.
+>>    Manually loaded bbswitch to switch off the discrete GPU.
+>>    Same freeze after a while or by explicitly obtaining the GPU state.
+>>
+>> Is there a possibility to switch off the discrete card without bbswitch?
+>> If this is possible, then I could test this without nouveau and bbswitch
+>> at all. If the system hangs, then it is not the video driver nor bbswitch.
+>>
+> As Ilia mentioned acpi_call should do it. You can also check with the
+> nouveau/bbwswitch code to see which ones they use in your case and
+> bash it manually. It might be that the 'wrong one' gets used thus
+> things going horribly wrong.
 > 
-> The latter. You write that there is no DMA in the PCIe IP, but from the
-> perspective of the RC, it should not matter whether the DMA engine is
-> part of the EP logic or behind it.
-
-right, from the RC perspective there is no difference.
-
-What I meant is DMA support in PCIe driver has to be added newly (i.e for
-designware) and the the platform I have doesn't have a DMA in PCIe IP. Anyways,
-we'll come back to this later after I post my RFC series, maybe by this week end.
-
-Thanks
-Kishon
+> Regards,
+> Emil
+> 
