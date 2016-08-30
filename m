@@ -1,57 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43204 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756240AbcHVTXy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 15:23:54 -0400
-Date: Mon, 22 Aug 2016 14:23:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: designware-plat: Remove redundant return
- value check of platform_get_resource()
-Message-ID: <20160822192346.GI18628@localhost>
-References: <1469722494-14701-1-git-send-email-weiyj.lk@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Roy Zang <roy.zang@nxp.com>
+To: Jingoo Han <jingoohan1@gmail.com>, Po Liu <po.liu@nxp.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2] arm64:pci: fix the IOV device access config space
+ valid condition
+Date: Tue, 30 Aug 2016 15:54:43 +0000
+Message-ID: <HE1PR0402MB2748F7A71F8A0073644EE3568BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
+References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
+ <1472455618-17892-1-git-send-email-po.liu@nxp.com>
+ <000a01d202d5$3f86e3a0$be94aae0$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1469722494-14701-1-git-send-email-weiyj.lk@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "soren.brinkmann@xilinx.com" <soren.brinkmann@xilinx.com>, 'Arnd
+ Bergmann' <arnd@arndb.de>,
+ "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ 'Bjorn Helgaas' <bhelgaas@google.com>, "lftan@altera.com" <lftan@altera.com>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
+ Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 28, 2016 at 04:14:54PM +0000, Wei Yongjun wrote:
-> Remove unneeded error handling on the result of a call
-> to platform_get_resource() when the value is passed to
-> devm_ioremap_resource().
-> 
-> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+On 08/30/2016 10:43 AM, Jingoo Han wrote:
+> I really don't like to modify host driver stuffs.
+> But, if there is no alternatives, this patch looks good.
 
-Applied to pci/host-designware for v4.9, thanks!
+I do not see other good place to fix the bug.
 
-I'll also post a similar patch for altera, and a sort-of-similar one
-for rcar.
+Roy Zang <roy.zang@nxp.com>
 
-> ---
->  drivers/pci/host/pcie-designware-plat.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-> index c8079dc..17da005 100644
-> --- a/drivers/pci/host/pcie-designware-plat.c
-> +++ b/drivers/pci/host/pcie-designware-plat.c
-> @@ -100,9 +100,6 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->  	pp->dev = &pdev->dev;
->  
->  	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> -	if (!res)
-> -		return -ENODEV;
-> -
->  	dw_plat_pcie->mem_base = devm_ioremap_resource(&pdev->dev, res);
->  	if (IS_ERR(dw_plat_pcie->mem_base))
->  		return PTR_ERR(dw_plat_pcie->mem_base);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Roy
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
