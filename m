@@ -1,41 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Baole Ni <baolex.ni@intel.com>
-To: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-	rjui@broadcom.com, sbranden@broadcom.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0817/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:49:18 +0800
-Message-Id: <20160802114918.4433-1-baolex.ni@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lekensteyn.nl ([178.21.112.251]:44737 "EHLO lekensteyn.nl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751593AbcH3TVi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Aug 2016 15:21:38 -0400
+Date: Tue, 30 Aug 2016 21:21:12 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Ilia Mirkin <imirkin@alum.mit.edu>
+Cc: Roland Singer <roland.singer@desertbit.com>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+        ML dri-devel <dri-devel@lists.freedesktop.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+Message-ID: <20160830192112.GA18045@al>
+References: <20160829235403.GA14177@localhost>
+ <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
+ <20160830130634.GA16426@localhost>
+ <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
+ <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
+ <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
+ <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
+ <CAKb7UviZ0qKp3PRR+iHr+KiOU9Sadeeb6PyydWN-FUL0RzyCPA@mail.gmail.com>
+ <1c761bab-f82b-3f43-c4f0-c7a8eff94f25@desertbit.com>
+ <CAKb7Uvjzhog27TUPTn5OOqXviyD_z3UV0qvskZDEO8CAB2-i2w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKb7Uvjzhog27TUPTn5OOqXviyD_z3UV0qvskZDEO8CAB2-i2w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Tue, Aug 30, 2016 at 02:13:46PM -0400, Ilia Mirkin wrote:
+> On Tue, Aug 30, 2016 at 2:02 PM, Roland Singer
+> <roland.singer@desertbit.com> wrote:
+> > I configured bbswitch to not set any states automatically...
+> > So it's possible to obtain and verify the GPU power state.
+> >
+> > However I removed the bbswitch module and booted with nouveau.
+> >
+> > Kernel 4.7.2: nouveau switches the discrete GPU off.
+> >               I can't trigger the freeze, because bbswitch is missing.
+> >               I'll work with the system and see if it will freeze.
+> >
+> > Kernel 4.8-rc4: nouveau does not care about the power state and
+> >                 the discrete GPU is never switched off. I will notice
+> >                 this, because the second cooling FAN will stop...
+> >                 Same log messages as send before.
+> 
+> That's surprising. I believe there's an issue with the new logic when
+> there's an HDMI audio subdevice. However that only appears if there's
+> a cable plugged in, at least in the systems Peter tested. You should
+> be able to see whether it's there or not with 'lspci'.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/pci/hotplug/acpi_pcihp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I doubt that the audio device is responsible here, that should only show
+up after following very specific steps (runtime suspend/resume (PCI or
+ACPI magic), remove PCI device, rescan bus).
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index a5e66df..10b6d91 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -223,5 +223,5 @@ int acpi_pci_detect_ejectable(acpi_handle handle)
- }
- EXPORT_SYMBOL_GPL(acpi_pci_detect_ejectable);
- 
--module_param(debug_acpi, bool, 0644);
-+module_param(debug_acpi, bool, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(debug_acpi, "Debugging mode for ACPI enabled or not");
+> You can check for sure by looking in the vgaswitcheroo state. It
+> should say DynOff when it's powered off.
+> 
+> Either way, I think using bbswitch + nouveau isn't supported by
+> anyone, so if you want to use it that way, you're on your own. (You
+> may want to load nouveau with runpm=0 so that nouveau doesn't try to
+> manage the GPU suspend stuff.)
+
+I understood that Roland's intent is to check the power state, not use
+the suspend functionality of bbswitch, if you load bbswitch without
+module options amd do not write to /proc/bbswitch, then it allows you to
+read out the actual status (you could also just use lspci -H1 for that
+though).
 -- 
-2.9.2
-
+Kind regards,
+Peter Wu
+https://lekensteyn.nl
