@@ -1,50 +1,53 @@
-Return-Path: <ibmirkin@gmail.com>
-Return-Path: <ibmirkin@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Roy Zang <roy.zang@nxp.com>
+To: Jingoo Han <jingoohan1@gmail.com>, Po Liu <po.liu@nxp.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2] arm64:pci: fix the IOV device access config space
+ valid condition
+Date: Tue, 30 Aug 2016 16:32:33 +0000
+Message-ID: <HE1PR0402MB2748D18B3A6AD35B0EA2E4518BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
+References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
+ <1472455618-17892-1-git-send-email-po.liu@nxp.com>
+ <000a01d202d5$3f86e3a0$be94aae0$@gmail.com>
+ <HE1PR0402MB2748F7A71F8A0073644EE3568BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
 MIME-Version: 1.0
-Sender: ibmirkin@gmail.com
-In-Reply-To: <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost> <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost> <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
- <20160829235403.GA14177@localhost> <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
- <20160830130634.GA16426@localhost> <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
- <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Date: Tue, 30 Aug 2016 11:44:38 -0400
-Message-ID: <CAKb7UvhyCVoFXYL74eX3rXtt=V7nOnBGaTPVdcJT37v38jD8oQ@mail.gmail.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Roland Singer <roland.singer@desertbit.com>
-Cc: Emil Velikov <emil.l.velikov@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	ML dri-devel <dri-devel@lists.freedesktop.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "soren.brinkmann@xilinx.com" <soren.brinkmann@xilinx.com>, 'Arnd
+ Bergmann' <arnd@arndb.de>,
+ "pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ 'Bjorn Helgaas' <bhelgaas@google.com>, "lftan@altera.com" <lftan@altera.com>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
+ Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 11:25 AM, Roland Singer
-<roland.singer@desertbit.com> wrote:
-> I tried these scenarios:
+Acked-by: Roy Zang <roy.zang@nxp.com>
+Roy
+On 08/30/2016 10:54 AM, Roy Zang wrote:
+> On 08/30/2016 10:43 AM, Jingoo Han wrote:
+>> I really don't like to modify host driver stuffs.
+>> But, if there is no alternatives, this patch looks good.
+> I do not see other good place to fix the bug.
 >
-> 1. Booted the system without the bbswitch module. The nouveau module
->    was loaded and is responsible for the power management of the GPU.
->    The graphical session freezes after some minutes...
+> Roy Zang <roy.zang@nxp.com>
 >
-> 2. Booted the system without bbswitch and with nouveau blacklisted.
->    Manually loaded bbswitch to switch off the discrete GPU.
->    Same freeze after a while or by explicitly obtaining the GPU state.
+> Roy
 >
-> Is there a possibility to switch off the discrete card without bbswitch?
-> If this is possible, then I could test this without nouveau and bbswitch
-> at all. If the system hangs, then it is not the video driver nor bbswitch.
+>
 
-You can use acpi_call (a random search points to
-https://github.com/mkottman/acpi_call, but I don't know if that's the
-"official" version) - need to find the right method to call, but
-that's basically all it takes to acpi-suspend a gpu.
 
-Separately, there was a recent fix to ... something, including but not
-limited to nouveau, involving hangs on gpu suspend on newer laptops. I
-don't think it's upstream yet. Look for patches from Lukas Wunner.
-
-  -ilia
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
