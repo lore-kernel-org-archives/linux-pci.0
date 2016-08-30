@@ -1,69 +1,91 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [RFC 1/2] vmd: eliminate vmd_vector member from list type
-Date: Tue, 30 Aug 2016 15:04:56 -0600
-Message-Id: <1472591097-19712-2-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1472591097-19712-1-git-send-email-jonathan.derrick@intel.com>
-References: <1472591097-19712-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
+MIME-Version: 1.0
+In-Reply-To: <20160830100834.GA368@red-moon>
+References: <20160824213005.1a9300ef@arm.com> <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+ <20160825121825.322d8450@arm.com> <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+ <20160825195917.0e75a8db@arm.com> <20160826090813.GA1038@red-moon>
+ <20160826130832.2fde2327@arm.com> <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
+ <20160826170615.GC23885@red-moon> <66f94732-7ce4-e577-9bec-52f0dc8e6ddb@codeaurora.org>
+ <20160830100834.GA368@red-moon>
+From: Duc Dang <dhdang@apm.com>
+Date: Tue, 30 Aug 2016 08:51:08 -0700
+Message-ID: <CADaLND=DCFZB5KGN+yqdF0pzHhvmDhKHf9fMgZ57c+2GE0n9jQ@mail.gmail.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, patches <patches@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Punit Agrawal <punit.agrawal@arm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Eliminate unused vmd and vector members from vmd_irq_list and discover
-the vector using pci_irq_vector().
+On Tue, Aug 30, 2016 at 3:08 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Fri, Aug 26, 2016 at 06:53:29PM -0400, Sinan Kaya wrote:
+>>
+>> >> Let me throw option d here.
+>> >>
+>> >> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
+>> >> can't we override this in an arch specific way (arm64's pci.c) while
+>> >> creating the root bridge?
+>> >
+>> > On what basis ? You were not copied in from the beginning, but that
+>> > is not different from Duc's initial proposal, which Marc discarded
+>> > because it should not be done at arch level, it depends on the interrupt
+>> > controller.
+>>
+>> I happen to watch the linux-pci and linux-acpi mail-lists. I also saw
+>> Duc's initial proposal.
+>>
+>> I can't imagine someone building an ACPI compliant ARM64 platform
+>> without a GIC interrupt controller.
+>>
+>> The SBSA spec already mentions what kind of compatibility should be
+>> maintained with respect to GIC. You can't have an ACPI system that's
+>> SBSA compliant and not using GIC.
+>>
+>> Can't we just hard code this to ACTIVE_HIGH in arch directory if ACPI
+>> is defined.  Why do we have to reach out to the interrupt controller?
+>
+> Patch below (horrible but no solution will be shiny either).
+>
+>> https://lists.linaro.org/pipermail/linaro-acpi/2015-November/005973.html
+>
+> [...]
+>
+>> If you look at my email above, I tried getting rid of PCI Link object
+>> and I couldn't. I sticked to only thing that works.
+>
+> That's what I object to. If the ACPI bindings do not work for ARM
+> we do not work around issues, we upgrade the specs because what may work
+> for you has to work on all ARM platforms (and all FW developers have
+> to be aware of that). Granted, this is a tiny snag, but the point is
+> that no one knows what's the correct way of describing PCI legacy IRQs
+> on ARM and we need that rectified.
+>
+> This does the trick for me (I can turn it into a function/look-up
+> that returns the polarity), I am sure it will ruffle feathers but
+> we have to find a solution so here it is (that acpi_irq_model gem
+> is already used in generic code drivers/acpi/pci_link.c ;-))
+>
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- arch/x86/pci/vmd.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+Good catch! This acpi_irq_model gem does help X-Gene :)
 
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index 4c0eac7..9320216 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -58,15 +58,12 @@ struct vmd_irq {
- /**
-  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
-  * @irq_list:	the list of irq's the VMD one demuxes to.
-- * @vmd_vector:	the h/w IRQ assigned to the VMD.
-  * @index:	index into the VMD MSI-X table; used for message routing.
-  * @count:	number of child IRQs assigned to this vector; used to track
-  *		sharing.
-  */
- struct vmd_irq_list {
- 	struct list_head	irq_list;
--	struct vmd_dev		*vmd;
--	unsigned int		vmd_vector;
- 	unsigned int		index;
- 	unsigned int		count;
- };
-@@ -207,8 +204,10 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
- 	vmdirq->irq = vmd_next_irq(vmd, desc);
- 	vmdirq->virq = virq;
- 
--	irq_domain_set_info(domain, virq, vmdirq->irq->vmd_vector, info->chip,
--			    vmdirq, handle_untracked_irq, vmd, NULL);
-+	irq_domain_set_info(domain, virq,
-+			    pci_irq_vector(vmd->dev, vmdirq->irq->index),
-+			    info->chip, vmdirq,
-+			    handle_untracked_irq, vmd, NULL);
- 	return 0;
- }
- 
-@@ -690,10 +689,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	for (i = 0; i < vmd->msix_count; i++) {
- 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
--		vmd->irqs[i].vmd_vector = pci_irq_vector(dev, i);
- 		vmd->irqs[i].index = i;
--
--		err = devm_request_irq(&dev->dev, vmd->irqs[i].vmd_vector,
-+		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
- 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
- 		if (err)
- 			return err;
--- 
-1.8.3.1
+> -- >8 --
+> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> index 2c45dd3..c9b8c85 100644
+> --- a/drivers/acpi/pci_irq.c
+> +++ b/drivers/acpi/pci_irq.c
+> @@ -411,7 +411,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>         int gsi;
+>         u8 pin;
+>         int triggering = ACPI_LEVEL_SENSITIVE;
+> -       int polarity = ACPI_ACTIVE_LOW;
+> +       int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
+> +                                     ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
+>         char *link = NULL;
+>         char link_desc[16];
+>         int rc;
+Regards,
+Duc Dang.
