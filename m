@@ -1,92 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55658 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752817AbcHVOgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 10:36:42 -0400
-Date: Mon, 22 Aug 2016 09:36:37 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 30 Aug 2016 12:00:55 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Omer Khaliq <okhaliq@caviumnetworks.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-arm-kernel@vger.kernel.org,
-        bhelgaas@google.com, mpm@selenic.com, herbert@gondor.apana.org.au,
-        Ananth.Jasty@cavium.com, david.daney@cavium.com
-Subject: Re: [PATCH 1/2] PCI/IOV: Add function to allow Function Dependency
- Link override.
-Message-ID: <20160822143637.GA18628@localhost>
-References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
- <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Ley Foon Tan <lftan@altera.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com
+Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+Message-ID: <20160830170055.GA22908@localhost>
+References: <1471595078-26297-1-git-send-email-lftan@altera.com>
+ <20160822154738.GB18628@localhost>
+ <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+ <20160824175431.GC23914@localhost>
+ <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
+ <20160830133747.GB16426@localhost>
+ <a1688079-6a39-3c25-756f-cd1e1256f468@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <a1688079-6a39-3c25-756f-cd1e1256f468@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David & Omer,
-
-On Fri, Aug 19, 2016 at 03:32:12PM -0700, Omer Khaliq wrote:
-> From: David Daney <david.daney@cavium.com>
+On Tue, Aug 30, 2016 at 09:36:52AM -0700, Ray Jui wrote:
 > 
-> Some hardware presents an incorrect SR-IOV Function Dependency Link,
-> add a function to allow this to be overridden in the PF driver for
-> such devices.
 > 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
-> ---
->  drivers/pci/iov.c   | 14 ++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 15 insertions(+)
+> On 8/30/2016 6:37 AM, Bjorn Helgaas wrote:
+> >On Mon, Aug 29, 2016 at 05:37:09PM -0700, Ray Jui wrote:
+> >>Hi Bjorn,
+> >>
+> >>On 8/24/2016 10:54 AM, Bjorn Helgaas wrote:
+> >>>[+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
+> >>>
+> >>>On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
+> >>>>On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >>>>>On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
+> >>>>>>Altera PCIe IP can be configured as rootport or device and they might have
+> >>>>>>same vendor ID. It will cause the system hang issue if Altera PCIe is in
+> >>>>>>endpoint mode and work with other PCIe rootport that from other vendors.
+> >>>>>>So, add the rootport mode checking in link retrain fixup function.
+> >>>>>>
+> >>>>>>Signed-off-by: Ley Foon Tan <lftan@altera.com>
+> >>>>>>---
+> >>>>>>v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+> >>>>>>---
+> >>>>>>drivers/pci/host/pcie-altera.c | 3 +++
+> >>>>>>1 file changed, 3 insertions(+)
+> >>>>>>
+> >>>>>>diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> >>>>>>index 58eef99..33b6968 100644
+> >>>>>>--- a/drivers/pci/host/pcie-altera.c
+> >>>>>>+++ b/drivers/pci/host/pcie-altera.c
+> >>>>>>@@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+> >>>>>>     u16 linkcap, linkstat;
+> >>>>>>     struct altera_pcie *pcie = dev->bus->sysdata;
+> >>>>>>
+> >>>>>>+     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+> >>>>>>+             return;
+> >>>>>>+
+> >>>>>>     if (!altera_pcie_link_is_up(pcie))
+> >>>>>>             return;
+> >>>>>
+> >>>>>Instead of making this a PCI fixup, can you make an
+> >>>>>altera_pcie_host_init() function, call it from altera_pcie_probe(),
+> >>>>>and do the link retrain there?  Then you wouldn't need to worry about
+> >>>>>whether this is a Root Port or an Endpoint, plus it would make the
+> >>>>>altera driver structure more like the other drivers.
+> >>>>>
+> >>>>>You would call altera_pcie_host_init() before pci_scan_root_bus(), so
+> >>>>>you wouldn't have a pci_dev yet, so you wouldn't be able to use
+> >>>>>pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
+> >>>>>assume there's some device-dependent way to access it using
+> >>>>>cra_writel()?
+> >>>>We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
+> >>>
+> >>>Why not?  I don't mean it has to be cra_write(), but isn't there some
+> >>>way you can write that bit before we scan the root bus?  It doesn't
+> >>>make sense that we have to scan the bus before we can train the link.
+> >>>
+> >>>We want to be able to tell the PCI core "all the device-specific root
+> >>>complex initialization has been done, here are the config accessors
+> >>>you need, please scan for devices."  I want to keep device-specific
+> >>>things like this quirk directly in the driver and out of the
+> >>>enumeration process.
+> >>>
+> >>>>We can use
+> >>>>pci_bus_find_capability() and pci_bus_read_config_word() with struct
+> >>>>pci_bus instead.
+> >>>>But this only can be called after pci_scan_root_bus().
+> >>>
+> >>>>Found
+> >>>>iproc_pcie_check_link() have similar implementation.
+> >>>
+> >>>You're right, and I don't like iproc_pcie_check_link() either, for the
+> >>>same reasons.
+> >>>
+> >>>The iproc_pcie_check_link() is a little better because it's called
+> >>>before enumeration:
+> >>>
+> >>> pci_create_root_bus()
+> >>> iproc_pcie_check_link()
+> >>> pci_scan_child_bus()
+> >>>
+> >>>But it would be a lot better if iproc_pcie_check_link() were done
+> >>>first, before pci_create_root_bus().  Then it would be more like the
+> >>>structure of other drivers, and we could use pci_scan_root_bus()
+> >>>instead.
+> >>
+> >>Although not yet tested, I suppose we can do iproc_pcie_check_link
+> >>before calling pci_scan_root_bus so we can get rid of separate calls
+> >>to pci_create_root_bus and pci_scan_child_bus. But then we need to
+> >>create some dummy bus in the iproc_pcie_check_link function to allow
+> >>access to the root bus for link check, which was the primary reason
+> >>why we did pci_create_root_bus before iproc_pcie_check_link, i.e.,
+> >>to avoid the use of dummy root bus.
+> >
+> >I don't want a dummy root bus.
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 2194b44..81f0672 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -640,6 +640,20 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  EXPORT_SYMBOL_GPL(pci_enable_sriov);
->  
->  /**
-> + * pci_sriov_fdl_override - fix incorrect Function Dependency Link
-> + * @dev: the PCI device
-> + * @fdl: the corrected Function Dependency Link value
-> + *
-> + * For hardware presenting an incorrect Function Dependency Link in
-> + * the SR-IOV Extended Capability, allow a driver to override it.
-> + */
-> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl)
-> +{
-> +	dev->sriov->link = fdl;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_sriov_fdl_override);
-
-We usually use quirks to work around problems in config space.  That's
-a nice mechanism because we don't have to add new PCI core interfaces
-and it makes it clear that we're working around a hardware problem.
-
-Can you use a quirk here?  We allocate dev->sriov in the
-pci_init_capabilities() path, so it looks like a pci_fixup_final quirk
-should work.
-
-> +
-> +/**
->   * pci_disable_sriov - disable the SR-IOV capability
->   * @dev: the PCI device
->   */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2599a98..da8a5b3 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1823,6 +1823,7 @@ int pci_num_vf(struct pci_dev *dev);
->  int pci_vfs_assigned(struct pci_dev *dev);
->  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->  int pci_sriov_get_totalvfs(struct pci_dev *dev);
-> +void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl);
->  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
->  #else
->  static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
-> -- 
-> 1.9.1
+> Okay we are on the same page for this.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >There should be some way to structure that code so you can write the
+> >class code and the link status stuff without having a struct pci_bus.
+> >The only reason you need the struct pci_bus in the first place is so
+> >you can extract the struct iproc_pcie *, and you already have that in
+> >iproc_pcie_check_link().
+> >
+> >No, you won't be able to use pci_bus_find_capability(), but presumably
+> >you already *know* where the capability is, since you know exactly
+> >what device this is.
+> 
+> I'll need to review the check link function carefully and do some
+> experiment to see what I can do to determine the link status without
+> accessing any of the configuration registers, which is what you seem
+> to imply here.
+
+No, that's not what I'm trying to say.  You can access the
+configuration registers if you need to.  But you shouldn't need a
+struct pci_bus to do that.  All you do with the struct pci_bus is get
+the corresponding struct iproc_pcie.
+
+It will require some restructuring, of course, e.g., making low-level
+accessors that take the struct iproc_pcie, and wrappers around them
+that take a struct pci_bus.  The usual config accesses can go through
+the wrapper, and the iproc-internal accesses can use the low-level
+accessors directly.
+
+Bjorn
