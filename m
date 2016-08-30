@@ -1,88 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:51850 "EHLO
-        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933191AbcHXU62 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 16:58:28 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        <kristen.c.accardi@intel.com>, Marc Zyngier <marc.zyngier@arm.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Scott Murray <scott@spiteful.org>,
-        =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Tom Long Nguyen <tom.l.nguyen@intel.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 0/9] PCI: final demodularization of non-modular code
-Date: Wed, 24 Aug 2016 16:57:43 -0400
-Message-ID: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+Return-Path: <ibmirkin@gmail.com>
+Return-Path: <ibmirkin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: ibmirkin@gmail.com
+In-Reply-To: <1c761bab-f82b-3f43-c4f0-c7a8eff94f25@desertbit.com>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost> <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
+ <20160829190737.GA4053@localhost> <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
+ <20160829235403.GA14177@localhost> <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
+ <20160830130634.GA16426@localhost> <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
+ <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com> <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
+ <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com> <CAKb7UviZ0qKp3PRR+iHr+KiOU9Sadeeb6PyydWN-FUL0RzyCPA@mail.gmail.com>
+ <1c761bab-f82b-3f43-c4f0-c7a8eff94f25@desertbit.com>
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+Date: Tue, 30 Aug 2016 14:13:46 -0400
+Message-ID: <CAKb7Uvjzhog27TUPTn5OOqXviyD_z3UV0qvskZDEO8CAB2-i2w@mail.gmail.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Roland Singer <roland.singer@desertbit.com>
+Cc: Emil Velikov <emil.l.velikov@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+	ML dri-devel <dri-devel@lists.freedesktop.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, Peter Wu <peter@lekensteyn.nl>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-This final (assuming more new instances don't leak back in) series
-ensures all the PCI code out there that remains using module.h is
-actually modular or containing some use of modular infrastructure.
+On Tue, Aug 30, 2016 at 2:02 PM, Roland Singer
+<roland.singer@desertbit.com> wrote:
+> I configured bbswitch to not set any states automatically...
+> So it's possible to obtain and verify the GPU power state.
+>
+> However I removed the bbswitch module and booted with nouveau.
+>
+> Kernel 4.7.2: nouveau switches the discrete GPU off.
+>               I can't trigger the freeze, because bbswitch is missing.
+>               I'll work with the system and see if it will freeze.
+>
+> Kernel 4.8-rc4: nouveau does not care about the power state and
+>                 the discrete GPU is never switched off. I will notice
+>                 this, because the second cooling FAN will stop...
+>                 Same log messages as send before.
 
-These last commits are slightly more involved than some of the
-earlier ones since we are actually removing orphaned __exit functions
-and some ".remove" functions as well.  So we can't claim binary
-equivalence here, but the overall runtime should remain unchanged.
+That's surprising. I believe there's an issue with the new logic when
+there's an HDMI audio subdevice. However that only appears if there's
+a cable plugged in, at least in the systems Peter tested. You should
+be able to see whether it's there or not with 'lspci'.
 
-To that end, we have remained with the existing initcall levels
-even though some of the hotplug infrastructural ones might make
-better sense to be listed as subsys_initcall or similar.
+You can check for sure by looking in the vgaswitcheroo state. It
+should say DynOff when it's powered off.
 
-Build tested with allmodconfig on all the major architectures.
+Either way, I think using bbswitch + nouveau isn't supported by
+anyone, so if you want to use it that way, you're on your own. (You
+may want to load nouveau with runpm=0 so that nouveau doesn't try to
+manage the GPU suspend stuff.)
 
-Paul.
----
-
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: kristen.c.accardi@intel.com
-Cc: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Scott Murray <scott@spiteful.org>
-Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
-Cc: linux-omap@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-
-Paul Gortmaker (9):
-  PCI: PCIe dpc: make it explicitly non-modular
-  PCI: PCIe pme: make it explicitly non-modular
-  PCI: PCIe aerdrv: make it explicitly non-modular
-  PCI: dra7xx: make host code explicitly non-modular
-  PCI: PCIe qcom: make host code explicitly non-modular
-  PCI: PCIe xilinx: make host code explicitly non-modular
-  PCI: PCIe xilinx-nwl: make host code explicitly non-modular
-  PCI: hotplug_core: make it explicitly non-modular
-  PCI: hotplug: make PCIe core code explicitly non-modular
-
- drivers/pci/host/pci-dra7xx.c           | 31 ++-----------------
- drivers/pci/host/pcie-qcom.c            | 28 +++++------------
- drivers/pci/host/pcie-xilinx-nwl.c      | 53 ++-------------------------------
- drivers/pci/host/pcie-xilinx.c          | 53 ++-------------------------------
- drivers/pci/hotplug/cpci_hotplug.h      |  2 --
- drivers/pci/hotplug/cpci_hotplug_core.c | 10 -------
- drivers/pci/hotplug/pci_hotplug_core.c  | 18 ++++-------
- drivers/pci/hotplug/pciehp_core.c       | 20 ++++---------
- drivers/pci/pcie/aer/aerdrv.c           | 18 +----------
- drivers/pci/pcie/pcie-dpc.c             | 18 +++--------
- drivers/pci/pcie/pme.c                  | 16 +---------
- 11 files changed, 32 insertions(+), 235 deletions(-)
-
--- 
-2.8.4
-
+  -ilia
