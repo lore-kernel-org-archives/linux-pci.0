@@ -1,46 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:10592
-	"EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752308AbcHLDO7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Aug 2016 23:14:59 -0400
-From: Peter Chen <peter.chen@nxp.com>
-To: <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-	<tie-fei.zang@freescale.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Peter Chen <peter.chen@nxp.com>
-Subject: [PATCH 1/1] pci: host: pci-layerscape: add missing of_node_put after calling of_parse_phandle
-Date: Fri, 12 Aug 2016 09:34:41 +0800
-Message-ID: <1470965681-30496-1-git-send-email-peter.chen@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Roy Zang'" <roy.zang@nxp.com>, "'Po Liu'" <po.liu@nxp.com>,
+ <linux-pci@vger.kernel.org>
+References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
+ <1472455618-17892-1-git-send-email-po.liu@nxp.com>
+ <000a01d202d5$3f86e3a0$be94aae0$@gmail.com>
+ <HE1PR0402MB2748F7A71F8A0073644EE3568BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
+In-Reply-To: <HE1PR0402MB2748F7A71F8A0073644EE3568BE00@HE1PR0402MB2748.eurprd04.prod.outlook.com>
+Subject: Re: [PATCH v2] arm64:pci: fix the IOV device access config space
+ valid condition
+Date: Tue, 30 Aug 2016 14:15:00 -0400
+Message-ID: <000401d202ea$6e6d5ef0$4b481cd0$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: soren.brinkmann@xilinx.com, 'Arnd Bergmann' <arnd@arndb.de>,
+ pratyush.anand@gmail.com, 'Stuart Yoder' <stuart.yoder@nxp.com>,
+ 'Yang-Leo Li' <leoyang.li@nxp.com>, linux-arm-kernel@lists.infradead.org,
+ 'Bjorn Helgaas' <bhelgaas@google.com>, lftan@altera.com,
+ michal.simek@xilinx.com, 'Mingkai Hu' <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-of_node_put needs to be called when the device node which is got
-from of_parse_phandle has finished using.
+On Tuesday, August 30, 2016 11:55 AM, Roy Zang wrote:
+> 
+> On 08/30/2016 10:43 AM, Jingoo Han wrote:
+> > I really don't like to modify host driver stuffs.
+> > But, if there is no alternatives, this patch looks good.
+> 
+> I do not see other good place to fix the bug.
 
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
-Signed-off-by: Peter Chen <peter.chen@nxp.com>
----
- drivers/pci/host/pci-layerscape.c | 2 ++
- 1 file changed, 2 insertions(+)
+Hi Roy Zang,
 
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 114ba81..573b996 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -173,6 +173,8 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
- 		return -EINVAL;
- 	}
- 
-+	of_node_put(msi_node);
-+
- 	return 0;
- }
- 
--- 
-1.9.1
+I didn't find other good place, too.
+At that time, I did IOV test with the similar patch like this.
 
+Best regards,
+Jingoo Han
+
+> 
+> Roy Zang <roy.zang@nxp.com>
+> 
+> Roy
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
