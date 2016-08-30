@@ -1,58 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54811 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752808AbcHXP4V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Aug 2016 11:56:21 -0400
-To: Linux PCI <linux-pci@vger.kernel.org>,
+Received: from down.free-electrons.com ([37.187.137.238]:60510 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751590AbcH3PZB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2016 11:25:01 -0400
+Date: Tue, 30 Aug 2016 17:24:47 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Joao Pinto <jpinto@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Vikram Sethi <vikrams@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: PCI CRS Support
-Message-ID: <f114c582-8e55-ee1a-a72d-864483077fd0@codeaurora.org>
-Date: Wed, 24 Aug 2016 11:56:18 -0400
+        Jingoo Han <jingoohan1@gmail.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Ian Campbell <ijc+devicetree@hellion.org.uk>,
+        Pawel Moll <pawel.moll@arm.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kumar Gala <galak@codeaurora.org>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Shadi Ammouri <shadi@marvell.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH 0/3] pcie-designware: support for external MSI
+ controller
+Message-ID: <20160830172447.65d10772@free-electrons.com>
+In-Reply-To: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-I see that the kernel has support for Configuration Request Retry Status (CRS) visibility
-support and it gets discovered and enabled as part of the probe function.
+Hello,
 
-Let's assume a system with CRS capability and have its visibility set as above.
-I do not see any code in the failure/reset path to support the CRS requests
-returned by the endpoint.
+On Tue, 30 Aug 2016 14:57:07 +0200, Thomas Petazzoni wrote:
 
-An endpoint is allowed to return CRS after several reset types. I'm pasting the part of
-the spec for you at 2.3.1 Request Handling Rules of 3.1 spec.
+> Thomas Petazzoni (3):
+>   dt-bindings: designware-pcie: document optional msi-parent property
+>   pci: pcie-designware: add support for external MSI controller
+>   arm64: dts: marvell: enable MSI for PCIe on Armada 7K/8K
 
-"For Configuration Requests only, following reset it is possible for a device to terminate the request 
-but indicate that it is temporarily unable to process the Request, but will be able to process the Request 
-in the future – in this case, the Configuration Request Retry 10 Status (CRS) Completion Status is used 
-(see Section 6.6). Valid reset conditions after which a device is permitted to return CRS are:
+Please discard this patch series, it's just pure crap. No changes at
+all are needed on the pcie-designware driver, using the msi-parent
+property already works, and my new code does nothing good.
 
-- Cold, Warm, and Hot Resets
-- FLRs
-- A reset initiated in response to a D3hot to D0uninitialized device state transition."
+The of_pci_find_msi_chip_by_node() API is on its way to being removed,
+and it doesn't return anything useful.
 
-I have identified the following functions that have problems for warm and hot resets.
+Only PATCH 3/3 is needed, which I'll resubmit separately.
 
-Some callers of pci_reset_bridge_secondary_bus such as pciehp_reset_slot, aer_root_reset.
-Other higher level callers such as pci_bus_reset, pci_try_reset_bus and their callers from VFIO.
-All these places are impacted by a CRS call. They do the secondary bus reset but do not wait for the
-endpoint to respond. Waiting for 1 second is not a guarantee that the endpoint will start responding
-immediately. A CRS capable OS needs to interpret the incoming CRS response and poll longer
-since CRS visibility is et.
+Sorry for the noise.
 
-All of this was warm and hot reset.
-
-I also see another problem in the FLR path too. There is some best effort wait up to 1 second in
-pci_flr_wait.
-
-Where do we go from here? I was thinking of putting something deep down into the reset secondary
-bus function but I'm afraid it will break things especially when we wait up to 60 seconds.
-
+Thomas
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
