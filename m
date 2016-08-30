@@ -1,157 +1,131 @@
-Return-Path: <kishon@ti.com>
-Return-Path: <kishon@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>, Nicolas Ferre <nicolas.ferre@atmel.com>,
-        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-        Jean-Christophe
- Plagniol-Villard <plagnioj@jcrosoft.com>,
-        Krzysztof Halasa <khalasa@piap.pl>, Kukjin Kim <kgene@kernel.org>,
-        Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-        Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <kernel@pengutronix.de>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Robert Jarzmik
-	<robert.jarzmik@free.fr>,
-        Simon Horman <horms@verge.net.au>,
-        Magnus Damm
-	<magnus.damm@gmail.com>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Shiraz Hashim
-	<shiraz.linux.kernel@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>
-CC: <helgaas@kernel.org>, Benoit Cousson <bcousson@baylibre.com>,
-        Rob Herring
-	<robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-        Russell King
-	<linux@armlinux.org.uk>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Greg Ungerer
-	<gerg@uclinux.org>, <linux-samsung-soc@vger.kernel.org>,
-        <linux-renesas-soc@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kishon@ti.com>, <nsekhar@ti.com>
-Subject: [RFT PATCH v2 3/3] ARM: select PCI_DOMAINS config from ARCH_MULTIPLATFORM
-Date: Mon, 1 Aug 2016 16:42:30 +0530
-Message-ID: <1470049950-4697-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1470049950-4697-1-git-send-email-kishon@ti.com>
-References: <1470049950-4697-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55514 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751590AbcH3Nhx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Aug 2016 09:37:53 -0400
+Date: Tue, 30 Aug 2016 08:37:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Ley Foon Tan <lftan@altera.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com
+Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+Message-ID: <20160830133747.GB16426@localhost>
+References: <1471595078-26297-1-git-send-email-lftan@altera.com>
+ <20160822154738.GB18628@localhost>
+ <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+ <20160824175431.GC23914@localhost>
+ <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_DOMAINS config should be selected for any SoCs
-having more than a single PCIe controller. Without PCI_DOMAINS
-config, only one PCIe controller gets registered.
+On Mon, Aug 29, 2016 at 05:37:09PM -0700, Ray Jui wrote:
+> Hi Bjorn,
+> 
+> On 8/24/2016 10:54 AM, Bjorn Helgaas wrote:
+> >[+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
+> >
+> >On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
+> >>On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >>>On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
+> >>>>Altera PCIe IP can be configured as rootport or device and they might have
+> >>>>same vendor ID. It will cause the system hang issue if Altera PCIe is in
+> >>>>endpoint mode and work with other PCIe rootport that from other vendors.
+> >>>>So, add the rootport mode checking in link retrain fixup function.
+> >>>>
+> >>>>Signed-off-by: Ley Foon Tan <lftan@altera.com>
+> >>>>---
+> >>>>v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+> >>>>---
+> >>>> drivers/pci/host/pcie-altera.c | 3 +++
+> >>>> 1 file changed, 3 insertions(+)
+> >>>>
+> >>>>diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> >>>>index 58eef99..33b6968 100644
+> >>>>--- a/drivers/pci/host/pcie-altera.c
+> >>>>+++ b/drivers/pci/host/pcie-altera.c
+> >>>>@@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+> >>>>      u16 linkcap, linkstat;
+> >>>>      struct altera_pcie *pcie = dev->bus->sysdata;
+> >>>>
+> >>>>+     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+> >>>>+             return;
+> >>>>+
+> >>>>      if (!altera_pcie_link_is_up(pcie))
+> >>>>              return;
+> >>>
+> >>>Instead of making this a PCI fixup, can you make an
+> >>>altera_pcie_host_init() function, call it from altera_pcie_probe(),
+> >>>and do the link retrain there?  Then you wouldn't need to worry about
+> >>>whether this is a Root Port or an Endpoint, plus it would make the
+> >>>altera driver structure more like the other drivers.
+> >>>
+> >>>You would call altera_pcie_host_init() before pci_scan_root_bus(), so
+> >>>you wouldn't have a pci_dev yet, so you wouldn't be able to use
+> >>>pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
+> >>>assume there's some device-dependent way to access it using
+> >>>cra_writel()?
+> >>We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
+> >
+> >Why not?  I don't mean it has to be cra_write(), but isn't there some
+> >way you can write that bit before we scan the root bus?  It doesn't
+> >make sense that we have to scan the bus before we can train the link.
+> >
+> >We want to be able to tell the PCI core "all the device-specific root
+> >complex initialization has been done, here are the config accessors
+> >you need, please scan for devices."  I want to keep device-specific
+> >things like this quirk directly in the driver and out of the
+> >enumeration process.
+> >
+> >>We can use
+> >>pci_bus_find_capability() and pci_bus_read_config_word() with struct
+> >>pci_bus instead.
+> >>But this only can be called after pci_scan_root_bus().
+> >
+> >>Found
+> >>iproc_pcie_check_link() have similar implementation.
+> >
+> >You're right, and I don't like iproc_pcie_check_link() either, for the
+> >same reasons.
+> >
+> >The iproc_pcie_check_link() is a little better because it's called
+> >before enumeration:
+> >
+> >  pci_create_root_bus()
+> >  iproc_pcie_check_link()
+> >  pci_scan_child_bus()
+> >
+> >But it would be a lot better if iproc_pcie_check_link() were done
+> >first, before pci_create_root_bus().  Then it would be more like the
+> >structure of other drivers, and we could use pci_scan_root_bus()
+> >instead.
+> 
+> Although not yet tested, I suppose we can do iproc_pcie_check_link
+> before calling pci_scan_root_bus so we can get rid of separate calls
+> to pci_create_root_bus and pci_scan_child_bus. But then we need to
+> create some dummy bus in the iproc_pcie_check_link function to allow
+> access to the root bus for link check, which was the primary reason
+> why we did pci_create_root_bus before iproc_pcie_check_link, i.e.,
+> to avoid the use of dummy root bus.
 
-Select PCI_DOMAINS in ARCH_MULTIPLATFORM if PCI is selected, since
-it doesn't harm even if a platform has a single PCIe port.
-Also remove PCI_DOMAINS being selected from other platform
-specific configs.
+I don't want a dummy root bus.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/Kconfig               |    1 +
- arch/arm/mach-axxia/Kconfig    |    1 -
- arch/arm/mach-cns3xxx/Kconfig  |    1 -
- arch/arm/mach-exynos/Kconfig   |    1 -
- arch/arm/mach-imx/Kconfig      |    2 --
- arch/arm/mach-keystone/Kconfig |    1 -
- arch/arm/mach-shmobile/Kconfig |    1 -
- 7 files changed, 1 insertion(+), 7 deletions(-)
+There should be some way to structure that code so you can write the
+class code and the link status stuff without having a struct pci_bus.
+The only reason you need the struct pci_bus in the first place is so
+you can extract the struct iproc_pcie *, and you already have that in
+iproc_pcie_check_link().
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 538b032..730507a 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -336,6 +336,7 @@ config ARCH_MULTIPLATFORM
- 	select GENERIC_CLOCKEVENTS
- 	select MIGHT_HAVE_PCI
- 	select MULTI_IRQ_HANDLER
-+	select PCI_DOMAINS if PCI
- 	select SPARSE_IRQ
- 	select USE_OF
- 
-diff --git a/arch/arm/mach-axxia/Kconfig b/arch/arm/mach-axxia/Kconfig
-index ee2e131..fe627cb 100644
---- a/arch/arm/mach-axxia/Kconfig
-+++ b/arch/arm/mach-axxia/Kconfig
-@@ -7,7 +7,6 @@ config ARCH_AXXIA
- 	select ARM_TIMER_SP804
- 	select HAVE_ARM_ARCH_TIMER
- 	select MFD_SYSCON
--	select PCI_DOMAINS if PCI
- 	select ZONE_DMA
- 	help
- 	  This enables support for the LSI Axxia devices.
-diff --git a/arch/arm/mach-cns3xxx/Kconfig b/arch/arm/mach-cns3xxx/Kconfig
-index eb14a0f..5fd836b 100644
---- a/arch/arm/mach-cns3xxx/Kconfig
-+++ b/arch/arm/mach-cns3xxx/Kconfig
-@@ -2,7 +2,6 @@ menuconfig ARCH_CNS3XXX
- 	bool "Cavium Networks CNS3XXX family"
- 	depends on ARCH_MULTI_V6
- 	select ARM_GIC
--	select PCI_DOMAINS if PCI
- 	help
- 	  Support for Cavium Networks CNS3XXX platform.
- 
-diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
-index a03daf5..fc0d319 100644
---- a/arch/arm/mach-exynos/Kconfig
-+++ b/arch/arm/mach-exynos/Kconfig
-@@ -125,7 +125,6 @@ config SOC_EXYNOS5440
- 	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	select HAVE_ARM_ARCH_TIMER
- 	select AUTO_ZRELADDR
--	select PCI_DOMAINS if PCI
- 	select PINCTRL_EXYNOS5440
- 	select PM_OPP
- 	help
-diff --git a/arch/arm/mach-imx/Kconfig b/arch/arm/mach-imx/Kconfig
-index dd905b9..c5d73b2 100644
---- a/arch/arm/mach-imx/Kconfig
-+++ b/arch/arm/mach-imx/Kconfig
-@@ -527,7 +527,6 @@ config SOC_IMX6Q
- 	select ARM_ERRATA_764369 if SMP
- 	select HAVE_ARM_SCU if SMP
- 	select HAVE_ARM_TWD
--	select PCI_DOMAINS if PCI
- 	select PINCTRL_IMX6Q
- 	select SOC_IMX6
- 
-@@ -573,7 +572,6 @@ config SOC_LS1021A
- 	bool "Freescale LS1021A support"
- 	select ARM_GIC
- 	select HAVE_ARM_ARCH_TIMER
--	select PCI_DOMAINS if PCI
- 	select ZONE_DMA if ARM_LPAE
- 	help
- 	  This enables support for Freescale LS1021A processor.
-diff --git a/arch/arm/mach-keystone/Kconfig b/arch/arm/mach-keystone/Kconfig
-index 6bd14da..98a156a 100644
---- a/arch/arm/mach-keystone/Kconfig
-+++ b/arch/arm/mach-keystone/Kconfig
-@@ -9,7 +9,6 @@ config ARCH_KEYSTONE
- 	select COMMON_CLK_KEYSTONE
- 	select ARCH_SUPPORTS_BIG_ENDIAN
- 	select ZONE_DMA if ARM_LPAE
--	select PCI_DOMAINS if PCI
- 	help
- 	  Support for boards based on the Texas Instruments Keystone family of
- 	  SoCs.
-diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
-index fe4ccb5..e82a624b 100644
---- a/arch/arm/mach-shmobile/Kconfig
-+++ b/arch/arm/mach-shmobile/Kconfig
-@@ -22,7 +22,6 @@ config ARCH_RCAR_GEN2
- 	select PM_GENERIC_DOMAINS
- 	select RENESAS_IRQC
- 	select SYS_SUPPORTS_SH_CMT
--	select PCI_DOMAINS if PCI
- 
- config ARCH_RMOBILE
- 	bool
--- 
-1.7.9.5
+No, you won't be able to use pci_bus_find_capability(), but presumably
+you already *know* where the capability is, since you know exactly
+what device this is.
+
+Bjorn
