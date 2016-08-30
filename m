@@ -1,102 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:50009 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755841AbcHCM2Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Aug 2016 08:28:25 -0400
-Date: Wed, 3 Aug 2016 14:28:48 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
- system sleep
-Message-ID: <20160803122848.GA4415@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
- <20160617210924.GA12254@localhost>
- <20160617221407.GB1927@wunner.de>
- <2339231.tBO8VQgPAo@vostro.rjw.lan>
+Return-Path: <ibmirkin@gmail.com>
+Return-Path: <ibmirkin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2339231.tBO8VQgPAo@vostro.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: ibmirkin@gmail.com
+In-Reply-To: <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost> <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
+ <20160829190737.GA4053@localhost> <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
+ <20160829235403.GA14177@localhost> <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
+ <20160830130634.GA16426@localhost> <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
+ <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+Date: Tue, 30 Aug 2016 11:44:38 -0400
+Message-ID: <CAKb7UvhyCVoFXYL74eX3rXtt=V7nOnBGaTPVdcJT37v38jD8oQ@mail.gmail.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Roland Singer <roland.singer@desertbit.com>
+Cc: Emil Velikov <emil.l.velikov@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+	ML dri-devel <dri-devel@lists.freedesktop.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
-> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
-> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
-> > > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> > > > There are devices wich are not power-managed by the platform, yet can be
-> > > > runtime suspended to D3cold with some other mechanism.  When putting the
-> > > > system to sleep, we currently handle such devices improperly by trying
-> > > > to transition them from D3cold to D3hot (the default power state defined
-> > > > at the beginning of pci_target_state()).  Avoid that.
-> > > > 
-> > > > An example for devices affected by this are Thunderbolt controllers
-> > > > built into Macs which can be put into D3cold with nonstandard ACPI
-> > > > methods.
-> > > > 
-> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > > 
-> > > This needs an ack from Rafael.
-> > > 
-> > > > ---
-> > > >  drivers/pci/pci.c | 2 ++
-> > > >  1 file changed, 2 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > index 791dfe7..6af9911 100644
-> > > > --- a/drivers/pci/pci.c
-> > > > +++ b/drivers/pci/pci.c
-> > > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
-> > > >  			      && !(dev->pme_support & (1 << target_state)))
-> > > >  				target_state--;
-> > > >  		}
-> > > > +	} else if (dev->current_state == PCI_D3cold) {
-> > > > +		target_state = PCI_D3cold;
-> > > >  	}
-> > > 
-> > > This only covers the case of !device_may_wakeup().  So I guess
-> > > device_may_wakeup() is false for these Thunderbolt controllers.
-> > > Is there a reason you don't want to do this check for devices that
-> > > may wakeup?
-> > 
-> > Fear of breaking things. It would mean that a device would be left in
-> > D3cold even though it may not be able to signal wakeup from that power
-> > state.
-> 
-> Then it should not be put into D3_cold at run time too if it is wakeup-
-> capable.
-> 
-> > That's a change of behaviour the consequences of which I cannot
-> > estimate. Intuitively, I would expect breakage from such a change.
-> 
-> That would have been the case if the device had been capable of signaling
-> wakeup from D3_cold at run time, but not from system sleep.  However, that
-> can only happen when platform_pci_power_manageable() is true AFAICS.
-> 
-> So I'd change the switch () under the platform_pci_power_manageable() check
-> to return "state" in the default case and then do
-> 
-> 	return dev->current_state < target_state ? target_state : dev->current_state;
-> 
-> at the end of the function.
+On Tue, Aug 30, 2016 at 11:25 AM, Roland Singer
+<roland.singer@desertbit.com> wrote:
+> I tried these scenarios:
+>
+> 1. Booted the system without the bbswitch module. The nouveau module
+>    was loaded and is responsible for the power management of the GPU.
+>    The graphical session freezes after some minutes...
+>
+> 2. Booted the system without bbswitch and with nouveau blacklisted.
+>    Manually loaded bbswitch to switch off the discrete GPU.
+>    Same freeze after a while or by explicitly obtaining the GPU state.
+>
+> Is there a possibility to switch off the discrete card without bbswitch?
+> If this is possible, then I could test this without nouveau and bbswitch
+> at all. If the system hangs, then it is not the video driver nor bbswitch.
 
-That suggestion doesn't seem to be correct because there's another
-value besides PCI_D3cold which is also greater than PCI_D3hot,
-namely PCI_UNKNOWN. (If the device is in that state, e.g. after
-pci_device_remove() has been called, and the system goes to sleep,
-we'd leave the device as is and not put it into D3hot as we do now.)
+You can use acpi_call (a random search points to
+https://github.com/mkottman/acpi_call, but I don't know if that's the
+"official" version) - need to find the right method to call, but
+that's basically all it takes to acpi-suspend a gpu.
 
-I will update this patch with Bjorn's suggestion to also leave the
-device in D3cold if it is wakeup-capable. The idea is to just change
-the default state in the first line of the function like this:
+Separately, there was a recent fix to ... something, including but not
+limited to nouveau, involving hangs on gpu suspend on newer laptops. I
+don't think it's upstream yet. Look for patches from Lukas Wunner.
 
--	pci_power_t target_state = PCI_D3hot;
-+	pci_power_t target_state =
-+		dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
-
-Thanks,
-
-Lukas
+  -ilia
