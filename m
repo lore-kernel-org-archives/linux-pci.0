@@ -1,162 +1,139 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:5885 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751259AbcHHJbL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Aug 2016 05:31:11 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>
-Subject: RE: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
-Date: Mon, 8 Aug 2016 09:31:05 +0000
-Message-ID: <HK2PR0601MB1393B3642136B01087628DC9F51B0@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <1467978595-25386-1-git-send-email-phil.edworthy@renesas.com>
- <20160721093514.GA7982@red-moon>
-In-Reply-To: <20160721093514.GA7982@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1471595078-26297-1-git-send-email-lftan@altera.com>
+ <20160822154738.GB18628@localhost>
+ <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+ <20160824175431.GC23914@localhost>
+ <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
+ <20160830133747.GB16426@localhost>
+Cc: Ley Foon Tan <lftan@altera.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <a1688079-6a39-3c25-756f-cd1e1256f468@broadcom.com>
+Date: Tue, 30 Aug 2016 09:36:52 -0700
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160830133747.GB16426@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
 
-Thanks for the link, I'll wait to see how this pans out.
 
-Thanks
-Phil
+On 8/30/2016 6:37 AM, Bjorn Helgaas wrote:
+> On Mon, Aug 29, 2016 at 05:37:09PM -0700, Ray Jui wrote:
+>> Hi Bjorn,
+>>
+>> On 8/24/2016 10:54 AM, Bjorn Helgaas wrote:
+>>> [+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
+>>>
+>>> On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
+>>>> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>>> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
+>>>>>> Altera PCIe IP can be configured as rootport or device and they might have
+>>>>>> same vendor ID. It will cause the system hang issue if Altera PCIe is in
+>>>>>> endpoint mode and work with other PCIe rootport that from other vendors.
+>>>>>> So, add the rootport mode checking in link retrain fixup function.
+>>>>>>
+>>>>>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>>>>>> ---
+>>>>>> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+>>>>>> ---
+>>>>>> drivers/pci/host/pcie-altera.c | 3 +++
+>>>>>> 1 file changed, 3 insertions(+)
+>>>>>>
+>>>>>> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+>>>>>> index 58eef99..33b6968 100644
+>>>>>> --- a/drivers/pci/host/pcie-altera.c
+>>>>>> +++ b/drivers/pci/host/pcie-altera.c
+>>>>>> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+>>>>>>      u16 linkcap, linkstat;
+>>>>>>      struct altera_pcie *pcie = dev->bus->sysdata;
+>>>>>>
+>>>>>> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+>>>>>> +             return;
+>>>>>> +
+>>>>>>      if (!altera_pcie_link_is_up(pcie))
+>>>>>>              return;
+>>>>>
+>>>>> Instead of making this a PCI fixup, can you make an
+>>>>> altera_pcie_host_init() function, call it from altera_pcie_probe(),
+>>>>> and do the link retrain there?  Then you wouldn't need to worry about
+>>>>> whether this is a Root Port or an Endpoint, plus it would make the
+>>>>> altera driver structure more like the other drivers.
+>>>>>
+>>>>> You would call altera_pcie_host_init() before pci_scan_root_bus(), so
+>>>>> you wouldn't have a pci_dev yet, so you wouldn't be able to use
+>>>>> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
+>>>>> assume there's some device-dependent way to access it using
+>>>>> cra_writel()?
+>>>> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
+>>>
+>>> Why not?  I don't mean it has to be cra_write(), but isn't there some
+>>> way you can write that bit before we scan the root bus?  It doesn't
+>>> make sense that we have to scan the bus before we can train the link.
+>>>
+>>> We want to be able to tell the PCI core "all the device-specific root
+>>> complex initialization has been done, here are the config accessors
+>>> you need, please scan for devices."  I want to keep device-specific
+>>> things like this quirk directly in the driver and out of the
+>>> enumeration process.
+>>>
+>>>> We can use
+>>>> pci_bus_find_capability() and pci_bus_read_config_word() with struct
+>>>> pci_bus instead.
+>>>> But this only can be called after pci_scan_root_bus().
+>>>
+>>>> Found
+>>>> iproc_pcie_check_link() have similar implementation.
+>>>
+>>> You're right, and I don't like iproc_pcie_check_link() either, for the
+>>> same reasons.
+>>>
+>>> The iproc_pcie_check_link() is a little better because it's called
+>>> before enumeration:
+>>>
+>>>  pci_create_root_bus()
+>>>  iproc_pcie_check_link()
+>>>  pci_scan_child_bus()
+>>>
+>>> But it would be a lot better if iproc_pcie_check_link() were done
+>>> first, before pci_create_root_bus().  Then it would be more like the
+>>> structure of other drivers, and we could use pci_scan_root_bus()
+>>> instead.
+>>
+>> Although not yet tested, I suppose we can do iproc_pcie_check_link
+>> before calling pci_scan_root_bus so we can get rid of separate calls
+>> to pci_create_root_bus and pci_scan_child_bus. But then we need to
+>> create some dummy bus in the iproc_pcie_check_link function to allow
+>> access to the root bus for link check, which was the primary reason
+>> why we did pci_create_root_bus before iproc_pcie_check_link, i.e.,
+>> to avoid the use of dummy root bus.
+>
+> I don't want a dummy root bus.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Lorenzo Pieralisi
-> Sent: 21 July 2016 10:35
-> To: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; linux-
-> renesas-soc@vger.kernel.org
-> Subject: Re: [RFC] pci: Provide a domain limited version of pdev_fixup_irq
-> 
-> Hi Phil,
-> 
-> On Fri, Jul 08, 2016 at 12:49:55PM +0100, Phil Edworthy wrote:
-> > Hi Bjorn,
-> >
-> > I've marked this as RFC as I guess there might be a better way to do
-> > this, but I'm not sure how. I would appreciate your thoughts on this.
-> 
-> There is a more generic solution to this issue, that has been
-> hanging in the balance for a while:
-> 
-> http://marc.info/?l=linux-pci&m=144557674601373&w=2
-> 
-> We should bring it to completion since pci_fixup_irqs() should
-> really be replaced, this is just another example of the bugs
-> it can trigger.
-> 
-> Thanks,
-> Lorenzo
-> 
-> > Thanks
-> > Phil
-> >
-> > ---
-> > pdev_fixup_irq() performs interrupt swizzling on all PCI devices,
-> > no matter that the device may be on a completely unrelated PCI
-> > Host controller.
-> >
-> > When you have multiple PCI Host controllers, pdev_fixup_irq() can
-> > clobber the dev->irq of devices it should not be changing.
-> > This has been seen when performing suspend/resume on boards with
-> > two R-Car PCIe Host controllers, resulting in a NULL ptr access
-> > in __pci_restore_msi_state. This happens because dev->irq has been
-> > overwritten with 0, and irq_get_msi_desc(dev->irq) returns NULL.
-> >
-> > This patch introduces a new function, pci_fixup_irqs_local(), that
-> > performs the same operation as pdev_fixup_irq(), but only changes
-> > the dev->irq of device on the same domain.
-> >
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > ---
-> >  drivers/pci/setup-irq.c | 25 ++++++++++++++++++++++---
-> >  include/linux/pci.h     |  3 +++
-> >  2 files changed, 25 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> > index 95c225b..90ea8fa 100644
-> > --- a/drivers/pci/setup-irq.c
-> > +++ b/drivers/pci/setup-irq.c
-> > @@ -22,7 +22,8 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int
-> irq)
-> >  	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-> >  }
-> >
-> > -static void pdev_fixup_irq(struct pci_dev *dev,
-> > +static void pdev_fixup_irq(int domain_nr,
-> > +			   struct pci_dev *dev,
-> >  			   u8 (*swizzle)(struct pci_dev *, u8 *),
-> >  			   int (*map_irq)(const struct pci_dev *, u8, u8))
-> >  {
-> > @@ -48,8 +49,15 @@ static void pdev_fixup_irq(struct pci_dev *dev,
-> >  		if (irq == -1)
-> >  			irq = 0;
-> >  	}
-> > -	dev->irq = irq;
-> > +	/* Since pci_fixup_irqs() can be called more than once due to multiple
-> > +	 * host controllers, and we scan all PCI devices, not just those
-> > +	 * attached to this controller, make sure we don't clobber dev->irq
-> > +	 * that has nothing to do with this domain.
-> > +	 */
-> > +	if (domain_nr >= 0 && dev->bus->domain_nr != domain_nr)
-> > +		return;
-> >
-> > +	dev->irq = irq;
-> >  	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
-> >
-> >  	/* Always tell the device, so the driver knows what is
-> > @@ -63,6 +71,17 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
-> >  	struct pci_dev *dev = NULL;
-> >
-> >  	for_each_pci_dev(dev)
-> > -		pdev_fixup_irq(dev, swizzle, map_irq);
-> > +		pdev_fixup_irq(-1, dev, swizzle, map_irq);
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_fixup_irqs);
-> > +
-> > +void pci_fixup_irqs_local(struct pci_bus *bus,
-> > +		    u8 (*swizzle)(struct pci_dev *, u8 *),
-> > +		    int (*map_irq)(const struct pci_dev *, u8, u8))
-> > +{
-> > +	struct pci_dev *dev = NULL;
-> > +
-> > +	for_each_pci_dev(dev)
-> > +		pdev_fixup_irq(bus->domain_nr, dev, swizzle, map_irq);
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_fixup_irqs_local);
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 8badb66..37a97df 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1134,6 +1134,9 @@ void pdev_enable_device(struct pci_dev *);
-> >  int pci_enable_resources(struct pci_dev *, int mask);
-> >  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
-> >  		    int (*)(const struct pci_dev *, u8, u8));
-> > +void pci_fixup_irqs_local(struct pci_bus *,
-> > +		    u8 (*)(struct pci_dev *, u8 *),
-> > +		    int (*)(const struct pci_dev *, u8, u8));
-> >  #define HAVE_PCI_REQ_REGIONS	2
-> >  int __must_check pci_request_regions(struct pci_dev *, const char *);
-> >  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char
-> *);
-> > --
-> > 2.5.0
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Okay we are on the same page for this.
+
+> There should be some way to structure that code so you can write the
+> class code and the link status stuff without having a struct pci_bus.
+> The only reason you need the struct pci_bus in the first place is so
+> you can extract the struct iproc_pcie *, and you already have that in
+> iproc_pcie_check_link().
+>
+> No, you won't be able to use pci_bus_find_capability(), but presumably
+> you already *know* where the capability is, since you know exactly
+> what device this is.
+
+I'll need to review the check link function carefully and do some 
+experiment to see what I can do to determine the link status without 
+accessing any of the configuration registers, which is what you seem to 
+imply here.
+
+Thanks.
+
+>
+> Bjorn
+>
