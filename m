@@ -1,59 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:62103 "HELO
-	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751154AbcHLWfa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 18:35:30 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Alan Stern <stern@rowland.harvard.edu>,
-	Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 11/13] PM / sleep: Allow opt-out from runtime resume after direct-complete
-Date: Sat, 13 Aug 2016 00:40:53 +0200
-Message-ID: <3626566.ZDA5ij4bDD@vostro.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1608121314590.2361-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1608121314590.2361-100000@iolanthe.rowland.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+ "'Joao Pinto'" <jpinto@synopsys.com>,
+ "'Bjorn Helgaas'" <bhelgaas@google.com>,
+ "'Pratyush Anand'" <pratyush.anand@gmail.com>, <linux-pci@vger.kernel.org>
+References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20160830172447.65d10772@free-electrons.com>
+In-Reply-To: <20160830172447.65d10772@free-electrons.com>
+Subject: Re: [PATCH 0/3] pcie-designware: support for external MSI controller
+Date: Tue, 30 Aug 2016 11:46:13 -0400
+Message-ID: <000c01d202d5$a3809bd0$ea81d370$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'Mark Rutland' <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ 'Yehuda Yitschak' <yehuday@marvell.com>, 'Jason Cooper' <jason@lakedaemon.net>,
+ 'Pawel Moll' <pawel.moll@arm.com>,
+ 'Ian Campbell' <ijc+devicetree@hellion.org.uk>,
+ 'Marc Zyngier' <marc.zyngier@arm.com>, 'Nadav Haklai' <nadavh@marvell.com>,
+ 'Rob Herring' <robh+dt@kernel.org>, 'Andrew Lunn' <andrew@lunn.ch>,
+ 'Kumar Gala' <galak@codeaurora.org>,
+ 'Gregory Clement' <gregory.clement@free-electrons.com>,
+ 'Shadi Ammouri' <shadi@marvell.com>, linux-arm-kernel@lists.infradead.org,
+ 'Sebastian Hesselbarth' <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 12, 2016 01:30:04 PM Alan Stern wrote:
-> On Fri, 12 Aug 2016, Lukas Wunner wrote:
+On Tuesday, August 30, 2016 11:25 AM, Thomas Petazzoni wrote:
 > 
-> > Thank you for explaining the motivation to carry out ->prepare top-down.
-> > However my problem is really that ->complete is carried out bottom-up.
-> > What's the motivation for that? Merely to mirror the behaviour of
-> > ->prepare? Would it be possible to change it to top-down? Note that
-> > re-enablement of device addition is already allowed in ->resume,
-> > which is called top-down.
+> Hello,
 > 
-> I'm not aware of any particular reason why making ->complete run
-> top-down wouldn't work.  Of course, if you did then the environment at
-> the start of the ->complete callback wouldn't be the same as it was at
-> the end of the ->prepare callback.
+> On Tue, 30 Aug 2016 14:57:07 +0200, Thomas Petazzoni wrote:
 > 
-> I think originally the idea was just to mirror ->prepare.  Perhaps
-> Rafael will remember something that has escaped me.
-
-Nothing specific from the top of my head.
-
-> > By the way, neither the PCI nor USB bus-level ->prepare callbacks perform
-> > any action that would stop device addition. Same for the pciehp driver
-> > (we don't even have a ->prepare callback defined for PCIe port services.
-> > So it *is* possible to hotplug PCI devices after ->prepare.
-
-Not via ACPI, though.  The ACPI core blocks all hotplug events at the
-beginning of the suspend sequence and releases them at the end of device
-resume.
-
-> I don't know about PCI (although what you describe sounds like a bug).  
+> > Thomas Petazzoni (3):
+> >   dt-bindings: designware-pcie: document optional msi-parent property
+> >   pci: pcie-designware: add support for external MSI controller
+> >   arm64: dts: marvell: enable MSI for PCIe on Armada 7K/8K
 > 
-> USB relies on a freezable workqueue for adding child devices, so it
-> stops adding children even before the prepare phase begins.
+> Please discard this patch series, it's just pure crap. No changes at all
+> are needed on the pcie-designware driver, using the msi-parent property
+> already works, and my new code does nothing good.
+> 
+> The of_pci_find_msi_chip_by_node() API is on its way to being removed, and
+> it doesn't return anything useful.
+> 
+> Only PATCH 3/3 is needed, which I'll resubmit separately.
+> 
+> Sorry for the noise.
 
-Right.
+Oh, good.
+The support for External MSI controller is really necessary.
+Thank you for your patch!
 
-Thanks,
-Rafael
+Best regards,
+Jingoo Han
 
+> 
+> Thomas
+> --
+> Thomas Petazzoni, CTO, Free Electrons
+> Embedded Linux and Kernel engineering
+> http://free-electrons.com
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
