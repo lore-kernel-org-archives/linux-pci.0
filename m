@@ -1,137 +1,117 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 31 Aug 2016 11:05:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        Marc Zyngier <marc.zyngier@arm.com>, Duc Dang <dhdang@apm.com>,
-        Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, patches <patches@apm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Punit Agrawal <punit.agrawal@arm.com>
-Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
-Message-ID: <20160831160510.GC16426@localhost>
-References: <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
- <20160825195917.0e75a8db@arm.com>
- <20160826090813.GA1038@red-moon>
- <20160826130832.2fde2327@arm.com>
- <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
- <20160826170615.GC23885@red-moon>
- <66f94732-7ce4-e577-9bec-52f0dc8e6ddb@codeaurora.org>
- <20160830100834.GA368@red-moon>
- <20160831130506.GB22908@localhost>
- <20160831133454.GA24732@red-moon>
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+To: Bjorn Helgaas <helgaas@kernel.org>, Ley Foon Tan <lftan@altera.com>
+References: <1471595078-26297-1-git-send-email-lftan@altera.com>
+ <20160822154738.GB18628@localhost>
+ <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+ <20160824175431.GC23914@localhost>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
+Date: Mon, 29 Aug 2016 17:37:09 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160831133454.GA24732@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160824175431.GC23914@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 31, 2016 at 02:34:54PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Aug 31, 2016 at 08:05:06AM -0500, Bjorn Helgaas wrote:
-> > On Tue, Aug 30, 2016 at 11:08:34AM +0100, Lorenzo Pieralisi wrote:
-> > > On Fri, Aug 26, 2016 at 06:53:29PM -0400, Sinan Kaya wrote:
-> > > > 
-> > > > >> Let me throw option d here.
-> > > > >>
-> > > > >> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
-> > > > >> can't we override this in an arch specific way (arm64's pci.c) while
-> > > > >> creating the root bridge? 
-> > > > > 
-> > > > > On what basis ? You were not copied in from the beginning, but that
-> > > > > is not different from Duc's initial proposal, which Marc discarded
-> > > > > because it should not be done at arch level, it depends on the interrupt
-> > > > > controller.
-> > > > 
-> > > > I happen to watch the linux-pci and linux-acpi mail-lists. I also saw
-> > > > Duc's initial proposal. 
-> > > > 
-> > > > I can't imagine someone building an ACPI compliant ARM64 platform
-> > > > without a GIC interrupt controller. 
-> > > > 
-> > > > The SBSA spec already mentions what kind of compatibility should be
-> > > > maintained with respect to GIC. You can't have an ACPI system that's
-> > > > SBSA compliant and not using GIC. 
-> > > > 
-> > > > Can't we just hard code this to ACTIVE_HIGH in arch directory if ACPI
-> > > > is defined.  Why do we have to reach out to the interrupt controller?
-> > > 
-> > > Patch below (horrible but no solution will be shiny either).
-> > > 
-> > > > https://lists.linaro.org/pipermail/linaro-acpi/2015-November/005973.html
-> > > 
-> > > [...]
-> > > 
-> > > > If you look at my email above, I tried getting rid of PCI Link object
-> > > > and I couldn't. I sticked to only thing that works.
-> > > 
-> > > That's what I object to. If the ACPI bindings do not work for ARM
-> > > we do not work around issues, we upgrade the specs because what may work
-> > > for you has to work on all ARM platforms (and all FW developers have
-> > > to be aware of that). Granted, this is a tiny snag, but the point is
-> > > that no one knows what's the correct way of describing PCI legacy IRQs
-> > > on ARM and we need that rectified.
-> > > 
-> > > This does the trick for me (I can turn it into a function/look-up
-> > > that returns the polarity), I am sure it will ruffle feathers but
-> > > we have to find a solution so here it is (that acpi_irq_model gem
-> > > is already used in generic code drivers/acpi/pci_link.c ;-))
-> > > 
-> > > -- >8 --
-> > > diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> > > index 2c45dd3..c9b8c85 100644
-> > > --- a/drivers/acpi/pci_irq.c
-> > > +++ b/drivers/acpi/pci_irq.c
-> > > @@ -411,7 +411,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
-> > >  	int gsi;
-> > >  	u8 pin;
-> > >  	int triggering = ACPI_LEVEL_SENSITIVE;
-> > > -	int polarity = ACPI_ACTIVE_LOW;
-> > > +	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
-> > > +				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
-> > >  	char *link = NULL;
-> > >  	char link_desc[16];
-> > >  	int rc;
-> > 
-> > This still seems weird to me.
-> > 
-> > If I understand correctly, this GIC has several inputs, all active
-> > high.  Some of those inputs are connected to inverters and then to PCI
-> > INTx wires.
-> > 
-> > A generic device driver knows about the hardware it drives, including
-> > the properties of its interrupt wires.  PCI drivers and the ACPI/PCI
-> > core know that conventional PCI device INTx wires are active low.
-> > These drivers, being generic, do not know about the GIC inverters.
-> > 
-> > The patch above basically says "if ACPI tells us about a PCI interrupt
-> > connected to a GIC, *assume* there is an inverter on the input."  But
-> > there's no actual description of that inverter anywhere in ACPI or a
-> > device tree.  Shouldn't that be made explicit somewhere?
-> 
-> It is explicit for all IRQs other than PCI legacy IRQs ;-), that's
-> the message I wanted to get across and I failed so far.
-> 
-> For "normal" IRQs we can use Extended Interrupt Descriptors, that allow
-> us to describe polarity. For PCI legacy IRQs we could use extended
-> interrupt descriptors if we were allowed to use PCI interrupt links,
-> except that, according to current ACPI specs, PCI interrupt links can
-> only be used for *configurable* interrupt pins.
-> 
-> So, some ARM vendors stuck to the static/hardwired configuration
-> in the _PRT, that does not give us a chance to describe polarity.
-> 
-> I think that we should be allowed to use interrupt links, but that would
-> not comply with the specs (and on top of that there is FW that is
-> already shipped in ACPI tables that we can't change anymore).
-> 
-> > If we connect a non-PCI device to a GIC, we need to know whether
-> > there's an inverter.  How could we figure that out?
-> 
-> Through an Extended Interrupt Descriptor. How are we solving this ?
+Hi Bjorn,
 
-OK, I think I'm convinced.  What in the spec says you can't use PCI
-Interrupt Links for this case?  I see the example in ACPI 5.0 sec
-6.2.12 that only shows them changing interrupt numbers with Interrupt
-descriptors.  Is there something that prohibits Extended Interrupt
-descriptors for PNP0C0F devices?  Is there something in the code that
-doesn't handle that?
+On 8/24/2016 10:54 AM, Bjorn Helgaas wrote:
+> [+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
+>
+> On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
+>> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
+>>>> Altera PCIe IP can be configured as rootport or device and they might have
+>>>> same vendor ID. It will cause the system hang issue if Altera PCIe is in
+>>>> endpoint mode and work with other PCIe rootport that from other vendors.
+>>>> So, add the rootport mode checking in link retrain fixup function.
+>>>>
+>>>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>>>> ---
+>>>> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+>>>> ---
+>>>>  drivers/pci/host/pcie-altera.c | 3 +++
+>>>>  1 file changed, 3 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+>>>> index 58eef99..33b6968 100644
+>>>> --- a/drivers/pci/host/pcie-altera.c
+>>>> +++ b/drivers/pci/host/pcie-altera.c
+>>>> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct pci_dev *dev)
+>>>>       u16 linkcap, linkstat;
+>>>>       struct altera_pcie *pcie = dev->bus->sysdata;
+>>>>
+>>>> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+>>>> +             return;
+>>>> +
+>>>>       if (!altera_pcie_link_is_up(pcie))
+>>>>               return;
+>>>
+>>> Instead of making this a PCI fixup, can you make an
+>>> altera_pcie_host_init() function, call it from altera_pcie_probe(),
+>>> and do the link retrain there?  Then you wouldn't need to worry about
+>>> whether this is a Root Port or an Endpoint, plus it would make the
+>>> altera driver structure more like the other drivers.
+>>>
+>>> You would call altera_pcie_host_init() before pci_scan_root_bus(), so
+>>> you wouldn't have a pci_dev yet, so you wouldn't be able to use
+>>> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
+>>> assume there's some device-dependent way to access it using
+>>> cra_writel()?
+>> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
+>
+> Why not?  I don't mean it has to be cra_write(), but isn't there some
+> way you can write that bit before we scan the root bus?  It doesn't
+> make sense that we have to scan the bus before we can train the link.
+>
+> We want to be able to tell the PCI core "all the device-specific root
+> complex initialization has been done, here are the config accessors
+> you need, please scan for devices."  I want to keep device-specific
+> things like this quirk directly in the driver and out of the
+> enumeration process.
+>
+>> We can use
+>> pci_bus_find_capability() and pci_bus_read_config_word() with struct
+>> pci_bus instead.
+>> But this only can be called after pci_scan_root_bus().
+>
+>> Found
+>> iproc_pcie_check_link() have similar implementation.
+>
+> You're right, and I don't like iproc_pcie_check_link() either, for the
+> same reasons.
+>
+> The iproc_pcie_check_link() is a little better because it's called
+> before enumeration:
+>
+>   pci_create_root_bus()
+>   iproc_pcie_check_link()
+>   pci_scan_child_bus()
+>
+> But it would be a lot better if iproc_pcie_check_link() were done
+> first, before pci_create_root_bus().  Then it would be more like the
+> structure of other drivers, and we could use pci_scan_root_bus()
+> instead.
+>
+> Comments, iproc folks?
+>
+> Bjorn
+>
+
+Although not yet tested, I suppose we can do iproc_pcie_check_link 
+before calling pci_scan_root_bus so we can get rid of separate calls to 
+pci_create_root_bus and pci_scan_child_bus. But then we need to create 
+some dummy bus in the iproc_pcie_check_link function to allow access to 
+the root bus for link check, which was the primary reason why we did 
+pci_create_root_bus before iproc_pcie_check_link, i.e., to avoid the use 
+of dummy root bus.
+
+Thanks,
+
+Ray
