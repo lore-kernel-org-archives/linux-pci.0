@@ -1,58 +1,98 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Thu, 18 Aug 2016 11:20:07 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, helgaas@kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci: call pci_intx when using legacy interrupts in
- pci_alloc_irq_vectors
-Message-ID: <20160818092007.GD27949@agordeev.lab.eng.brq.redhat.com>
-References: <1470924665-25860-1-git-send-email-hch@lst.de>
- <1470924665-25860-3-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470924665-25860-3-git-send-email-hch@lst.de>
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [RFC 2/2] vmd: eliminate index member from irq list
+Date: Tue, 30 Aug 2016 15:04:57 -0600
+Message-Id: <1472591097-19712-3-git-send-email-jonathan.derrick@intel.com>
+In-Reply-To: <1472591097-19712-1-git-send-email-jonathan.derrick@intel.com>
+References: <1472591097-19712-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 11, 2016 at 07:11:05AM -0700, Christoph Hellwig wrote:
-> ahci currently insists on an explicit call to pci_intx before falling back
-> from MSI or MSI-X to legacy irqs.  As pci_intx is a no-op if the command
-> register already contains the right value is seems safe and useful to add
-> this call to pci_alloc_irq_vectors so that ahci can just use
-> pci_alloc_irq_vectors.
+Use math to discover the irq list index number relative to the irq list
+head.
 
-Looking at ahci_init_interrupts() (and probably at commit d684a90d
-("ahci: per-port msix support")) it looks like pci_alloc_irq_vectors()
-is able to preserve the current AHCI logic?
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ arch/x86/pci/vmd.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/msi.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 9233e7f..593698e 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1200,8 +1200,11 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->  	}
->  
->  	/* use legacy irq if allowed */
-> -	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1)
-> +	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1) {
-> +		pci_intx(dev, 1);
-
-It would rather called pci_intx_for_msi() here. But because it is
-a generic code I am not sure what implications it has for all
-drivers out there.
-
->  		return 1;
-> +	}
-> +
->  	return vecs;
->  }
->  EXPORT_SYMBOL(pci_alloc_irq_vectors);
-> -- 
-> 2.1.4
-> 
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+index 9320216..aa8d74e 100644
+--- a/arch/x86/pci/vmd.c
++++ b/arch/x86/pci/vmd.c
+@@ -58,13 +58,11 @@ struct vmd_irq {
+ /**
+  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
+  * @irq_list:	the list of irq's the VMD one demuxes to.
+- * @index:	index into the VMD MSI-X table; used for message routing.
+  * @count:	number of child IRQs assigned to this vector; used to track
+  *		sharing.
+  */
+ struct vmd_irq_list {
+ 	struct list_head	irq_list;
+-	unsigned int		index;
+ 	unsigned int		count;
+ };
+ 
+@@ -93,6 +91,12 @@ static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
+ 	return container_of(bus->sysdata, struct vmd_dev, sysdata);
+ }
+ 
++static inline unsigned int index_from_irqs(struct vmd_dev *vmd,
++					   struct vmd_irq_list *irqs)
++{
++	return irqs - vmd->irqs;
++}
++
+ /*
+  * Drivers managing a device in a VMD domain allocate their own IRQs as before,
+  * but the MSI entry for the hardware it's driving will be programmed with a
+@@ -105,9 +109,11 @@ static void vmd_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct vmd_irq *vmdirq = data->chip_data;
+ 	struct vmd_irq_list *irq = vmdirq->irq;
++	struct vmd_dev *vmd = irq_data_get_irq_handler_data(data);
+ 
+ 	msg->address_hi = MSI_ADDR_BASE_HI;
+-	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(irq->index);
++	msg->address_lo = MSI_ADDR_BASE_LO |
++			  MSI_ADDR_DEST_ID(index_from_irqs(vmd, irq));
+ 	msg->data = 0;
+ }
+ 
+@@ -196,6 +202,7 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
+ 	struct msi_desc *desc = arg->desc;
+ 	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
+ 	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
++	unsigned int index, vector;
+ 
+ 	if (!vmdirq)
+ 		return -ENOMEM;
+@@ -203,10 +210,10 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
+ 	INIT_LIST_HEAD(&vmdirq->node);
+ 	vmdirq->irq = vmd_next_irq(vmd, desc);
+ 	vmdirq->virq = virq;
++	index = index_from_irqs(vmd, vmdirq->irq);
++	vector = pci_irq_vector(vmd->dev, index);
+ 
+-	irq_domain_set_info(domain, virq,
+-			    pci_irq_vector(vmd->dev, vmdirq->irq->index),
+-			    info->chip, vmdirq,
++	irq_domain_set_info(domain, virq, vector, info->chip, vmdirq,
+ 			    handle_untracked_irq, vmd, NULL);
+ 	return 0;
+ }
+@@ -689,7 +696,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 	for (i = 0; i < vmd->msix_count; i++) {
+ 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+-		vmd->irqs[i].index = i;
+ 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
+ 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
+ 		if (err)
+-- 
+1.8.3.1
