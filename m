@@ -1,133 +1,88 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com
-Subject: [PATCH v3 4/5] x86/ioapic: Fix lost IOAPIC resource after hot-removal and hotadd
-Date: Wed, 10 Aug 2016 12:01:57 +0800
-Message-Id: <1470801718-29004-5-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
-References: <1470801718-29004-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:38550 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755916AbcH3MSC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Aug 2016 08:18:02 -0400
+Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
+ device for legacy interrupts.
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        robh@kernel.org, bhelgaas@google.com, colin.king@canonical.com,
+        soren.brinkmann@xilinx.com, michal.simek@xilinx.com, arnd@arndb.de
+References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+ <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, rgummal@xilinx.com,
+        Bharat Kumar Gogada <bharatku@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57C57975.7040306@arm.com>
+Date: Tue, 30 Aug 2016 13:17:57 +0100
+MIME-Version: 1.0
+In-Reply-To: <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IOAPIC resource at 0xfecxxxxx gets lost from /proc/iomem after
-hot-removing and then hot-adding the IOAPIC device.
+Hi Bharat,
 
-After system boot, in /proc/iomem:
-fec00000-fecfffff : PNP0003:00
-  fec00000-fec003ff : IOAPIC 0
-  fec01000-fec013ff : IOAPIC 1
-  fec40000-fec403ff : IOAPIC 2
-  fec80000-fec803ff : IOAPIC 3
-  fecc0000-fecc03ff : IOAPIC 4
+On 30/08/16 11:39, Bharat Kumar Gogada wrote:
+> PCIe legacy interrupts start at 1, not at 0.
+> When testing with multi function device "error: hwirq 0x4 is too large for
+> dummy" error comes.
+> So adding one addtional interrupt when creating irq domain.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> ---
+>  drivers/pci/host/pcie-xilinx-nwl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+> index d8d43e6..9f04411 100644
+> --- a/drivers/pci/host/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
+>  	}
+>  
+>  	pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
+> -							INTX_NUM,
+> +							INTX_NUM + 1,
+>  							&legacy_domain_ops,
+>  							pcie);
 
-Then hot-remove IOAPIC 2 and hot-add it again:
-fec00000-fecfffff : PNP0003:00
-  fec00000-fec003ff : IOAPIC 0
-  fec01000-fec013ff : IOAPIC 1
-  fec80000-fec803ff : IOAPIC 3
-  fecc0000-fecc03ff : IOAPIC 4
+This feels like the wrong thing to do. You have INTX_NUM irqs, so the
+domain allocation should reflect this. On the other hand, the way the
+driver currently deals with mappings is quite broken (consistently
+adding 1 to the HW interrupt).
 
-The range at 0xfec40000 is lost from /proc/iomem. It is because
-handle_ioapic_add() requests resource from either PCI config BAR or
-ACPI "_CRS", not both. But Intel platforms map the IOxAPIC registers
-both at the PCI config BAR (called MBAR, dynamic), and at the ACPI
-"_CRS" (called ABAR, static). The 0xfecX_YZ00 to 0xfecX_YZFF range
-appears in "_CRS" of each IOAPIC device. Both ranges should be claimed
-from /proc/iomem for exclusive use.
+How about something like this instead?
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/ioapic.c | 36 ++++++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index 8ab6d42..ee20111 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -97,7 +97,7 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
- 	unsigned long long gsi_base;
- 	struct acpi_pci_ioapic *ioapic;
- 	struct pci_dev *dev = NULL;
--	struct resource *res = NULL;
-+	struct resource *res = NULL, *pci_res = NULL, *crs_res;
- 	char *type = NULL;
- 
- 	if (!acpi_is_ioapic(handle, &type))
-@@ -137,23 +137,28 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
- 		pci_set_master(dev);
- 		if (pci_request_region(dev, 0, type))
- 			goto exit_disable;
--		res = &dev->resource[0];
-+		pci_res = &dev->resource[0];
- 		ioapic->pdev = dev;
- 	} else {
- 		pci_dev_put(dev);
- 		dev = NULL;
-+	}
- 
--		res = &ioapic->res;
--		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
--		if (res->flags == 0) {
--			acpi_handle_warn(handle, "failed to get resource\n");
--			goto exit_free;
--		} else if (request_resource(&iomem_resource, res)) {
--			acpi_handle_warn(handle, "failed to insert resource\n");
--			goto exit_free;
--		}
-+	crs_res = &ioapic->res;
-+	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
-+	if (crs_res->flags == 0) {
-+		acpi_handle_warn(handle, "failed to get resource\n");
-+		goto exit_release;
-+	} else if (request_resource(&iomem_resource, crs_res)) {
-+		acpi_handle_warn(handle, "failed to insert resource\n");
-+		goto exit_release;
- 	}
- 
-+	/* try pci resource first, then "_CRS" resource */
-+	res = pci_res;
-+	if (!res || !res->flags)
-+		res = crs_res;
-+
- 	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
- 		acpi_handle_warn(handle, "failed to register IOAPIC\n");
- 		goto exit_release;
-@@ -174,14 +179,13 @@ done:
- exit_release:
- 	if (dev)
- 		pci_release_region(dev, 0);
--	else
--		release_resource(res);
-+	if (ioapic->res.flags && ioapic->res.parent)
-+		release_resource(&ioapic->res);
- exit_disable:
- 	if (dev)
- 		pci_disable_device(dev);
- exit_put:
- 	pci_dev_put(dev);
--exit_free:
- 	kfree(ioapic);
- exit:
- 	mutex_unlock(&ioapic_list_lock);
-@@ -217,9 +221,9 @@ int acpi_ioapic_remove(struct acpi_pci_root *root)
- 			pci_release_region(ioapic->pdev, 0);
- 			pci_disable_device(ioapic->pdev);
- 			pci_dev_put(ioapic->pdev);
--		} else if (ioapic->res.flags && ioapic->res.parent) {
--			release_resource(&ioapic->res);
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 0b597d9..72b159f 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -314,8 +314,7 @@ static void nwl_pcie_leg_handler(struct irq_desc *desc)
+ 	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+ 				MSGF_LEG_SR_MASKALL) != 0) {
+ 		for_each_set_bit(bit, &status, INTX_NUM) {
+-			virq = irq_find_mapping(pcie->legacy_irq_domain,
+-						bit + 1);
++			virq = irq_find_mapping(pcie->legacy_irq_domain, bit);
+ 			if (virq)
+ 				generic_handle_irq(virq);
  		}
-+		if (ioapic->res.flags && ioapic->res.parent)
-+			release_resource(&ioapic->res);
- 		list_del(&ioapic->list);
- 		kfree(ioapic);
+@@ -483,7 +482,7 @@ static void nwl_pcie_free_irq_domain(struct nwl_pcie *pcie)
+ 	u32 irq;
+ 
+ 	for (i = 0; i < INTX_NUM; i++) {
+-		irq = irq_find_mapping(pcie->legacy_irq_domain, i + 1);
++		irq = irq_find_mapping(pcie->legacy_irq_domain, i);
+ 		if (irq > 0)
+ 			irq_dispose_mapping(irq);
  	}
+
+I may have missed a few things, but you'll get the idea.
+
+Thanks,
+
+	M.
 -- 
-1.8.3.1
+Jazz is not dead. It just smells funny...
