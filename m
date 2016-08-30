@@ -1,96 +1,110 @@
-Return-Path: <peter.chen@nxp.com>
-Return-Path: <peter.chen@nxp.com>
-From: Peter Chen <peter.chen@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
-	"mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
-	"tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org"
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH 1/1] pci: host: pci-layerscape: add missing of_node_put
- after calling of_parse_phandle
-Date: Thu, 25 Aug 2016 09:02:58 +0000
-Message-ID: <HE1PR04MB145054CA0F57417EBD9CC0D88BED0@HE1PR04MB1450.eurprd04.prod.outlook.com>
-References: <1470965681-30496-1-git-send-email-peter.chen@nxp.com>
- <20160823211916.GB5838@localhost>
-In-Reply-To: <20160823211916.GB5838@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
+ device for legacy interrupts.
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ Soren Brinkmann <sorenb@xilinx.com>, Michal Simek <michals@xilinx.com>,
+ "arnd@arndb.de" <arnd@arndb.de>
+References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+ <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+ <57C57975.7040306@arm.com>
+ <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57C59FE8.30307@arm.com>
+Date: Tue, 30 Aug 2016 16:02:00 +0100
 MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ravikiran Gummaluri <rgummal@xilinx.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=20
->
->On Fri, Aug 12, 2016 at 09:34:41AM +0800, Peter Chen wrote:
->> of_node_put needs to be called when the device node which is got from
->> of_parse_phandle has finished using.
+On 30/08/16 15:13, Bharat Kumar Gogada wrote:
+>> Hi Bharat,
+>>> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie
+>> *pcie)
+>>>     }
+>>>
+>>>     pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
+>>> -                                                   INTX_NUM,
+>>> +                                                   INTX_NUM + 1,
+>>>                                                     &legacy_domain_ops,
+>>>                                                     pcie);
 >>
->> Cc: Minghuan Lian <minghuan.Lian@freescale.com>
->> Cc: Mingkai Hu <mingkai.hu@freescale.com>
->> Cc: Roy Zang <tie-fei.zang@freescale.com>
->> Signed-off-by: Peter Chen <peter.chen@nxp.com>
->> ---
->>  drivers/pci/host/pci-layerscape.c | 2 ++
->>  1 file changed, 2 insertions(+)
+>> This feels like the wrong thing to do. You have INTX_NUM irqs, so the domain
+>> allocation should reflect this. On the other hand, the way the driver currently
+>> deals with mappings is quite broken (consistently adding 1 to the HW interrupt).
 >>
->> diff --git a/drivers/pci/host/pci-layerscape.c
->> b/drivers/pci/host/pci-layerscape.c
->> index 114ba81..573b996 100644
->> --- a/drivers/pci/host/pci-layerscape.c
->> +++ b/drivers/pci/host/pci-layerscape.c
->> @@ -173,6 +173,8 @@ static int ls_pcie_msi_host_init(struct pcie_port *p=
-p,
->>  		return -EINVAL;
->>  	}
->>
->> +	of_node_put(msi_node);
->> +
->
->Can you please look for and fix similar errors in other drivers in drivers=
-/pci/host/*?
->
->For example:
->
->  advk_pcie_probe() and iproc_pcie_msi_enable() call
->  of_parse_phandle() but don't call of_node_put() in failure paths.
->
->  dra7xx_pcie_init_irq_domain(), nwl_pcie_init_irq_domain(), and
->  xilinx_pcie_init_irq_domain() call of_get_next_child() but don't
->  call of_node_put() in failure paths.
->
->  ks_pcie_get_irq_controller_info() calls of_find_node_by_name().
->
+> Hi Marc,
+> 
+> Without above change I get following crash in kernel while booting.
+> 
+> [    2.441684] error: hwirq 0x4 is too large for dummy
+> 
+> [    2.441694] ------------[ cut here ]------------
+> 
+> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
+> 
+> [    2.441702] Modules linked in:
+> 
+> [    2.441706]
+> 
+> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0 #8
+> 
+> [    2.441718] Hardware name: xlnx,zynqmp (DT)
+> 
+> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 task.ti: ffffffc071888000
+> 
+> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
+> 
+> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
+> 
+> In kernel/irq/irqdomain.c function irq_domain_associate
+> 
+> if (WARN(hwirq >= domain->hwirq_max,
+>                  "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain->name))
+>                 return -EINVAL;
+> 
+> Here the hwirq and hwirq_max are equal to 4 without the above condition (INTX_NUM + 1) due to which crash is coming.
+> This is happening as the legacy interrupts are starting from 1 (INTA).
 
-Would you agree that I fix the issues for drivers that call of_parse_phandl=
-e or of_get_next_child
-or of_find_node_by_name? I can grep the symbols, and check if of_node_put i=
-s called properly.
-I will group all fixed within one patch set.
+I understood that. I'm still persisting in saying that you have the
+wrong fix.
 
->I think there may be others, e.g., the pci_host_bridge_msi_domain() path c=
-alls
->of_parse_phandle(), but I'm not sure of_node_put() is called on failure pa=
-ths.
->
+Your domain should always allocate many interrupts as you have interrupt
+sources. These interrupts (hwirq) should be numbered from 0 to (n-1).
 
-I find pci_host_bridge_msi_domain does not call of_parse_phandle directly, =
-only of_msi_get_domain calls of_parse_phandle, and
-of_node_put is called properly.
+> And I'm  consistently adding 1 to the HW interrupt as in
+> nwl_pcie_leg_handler I get 0th bit set from MSGF_LEG_STATUS if INTA
+> interrupt is raised but my hwirq number being mapped for INTA is 0x1
+> so that's I'm adding 1 to obtain correct virtual irq. Same case in
+> nwl_pcie_free_irq_domain since hwirq starts from one I'm adding 1 to
+> obtain virtual irq and free it.
 
-Peter
+I can see that. Nonetheless, this is wrong. Can you please test the
+patch I provided in my reply and report what happens?
 
+Thanks,
 
->When we find bugs like this, it's nice to fix one occurrence, but it's rea=
-lly great if we
->can squash similar bugs nearby so the bug isn't copied into new drivers.
->
->>  	return 0;
->>  }
->>
->> --
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci"
->> in the body of a message to majordomo@vger.kernel.org More majordomo
->> info at  http://vger.kernel.org/majordomo-info.html
+	M.
+-- 
+Jazz is not dead. It just smells funny...
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
