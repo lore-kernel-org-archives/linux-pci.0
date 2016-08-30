@@ -1,134 +1,109 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com,
-	x86@kernel.org
-Subject: [PATCH v4 4/5] x86/ioapic: Fix lost IOAPIC resource after hot-removal and hotadd
-Date: Wed, 17 Aug 2016 16:00:36 +0800
-Message-Id: <1471420837-31003-5-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
-References: <1471420837-31003-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+To: Duc Dang <dhdang@apm.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20160824213005.1a9300ef@arm.com>
+ <CADaLNDm+edKaveG76h_fbMjM_b==PdranXLoATL8+JrsWRC6BQ@mail.gmail.com>
+ <20160825121825.322d8450@arm.com>
+ <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+ <20160825195917.0e75a8db@arm.com> <20160826090813.GA1038@red-moon>
+ <20160826130832.2fde2327@arm.com>
+ <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
+ <20160826170615.GC23885@red-moon>
+ <66f94732-7ce4-e577-9bec-52f0dc8e6ddb@codeaurora.org>
+ <20160830100834.GA368@red-moon>
+ <CADaLND=DCFZB5KGN+yqdF0pzHhvmDhKHf9fMgZ57c+2GE0n9jQ@mail.gmail.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, patches <patches@apm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Punit Agrawal <punit.agrawal@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <16855e90-43e8-b36b-788a-cf0871261432@codeaurora.org>
+Date: Tue, 30 Aug 2016 13:54:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <CADaLND=DCFZB5KGN+yqdF0pzHhvmDhKHf9fMgZ57c+2GE0n9jQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-IOAPIC resource at 0xfecxxxxx gets lost from /proc/iomem after
-hot-removing and then hot-adding the IOAPIC device.
+On 8/30/2016 11:51 AM, Duc Dang wrote:
+> On Tue, Aug 30, 2016 at 3:08 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+>> On Fri, Aug 26, 2016 at 06:53:29PM -0400, Sinan Kaya wrote:
+>>>
+>>>>> Let me throw option d here.
+>>>>>
+>>>>> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
+>>>>> can't we override this in an arch specific way (arm64's pci.c) while
+>>>>> creating the root bridge?
+>>>>
+>>>> On what basis ? You were not copied in from the beginning, but that
+>>>> is not different from Duc's initial proposal, which Marc discarded
+>>>> because it should not be done at arch level, it depends on the interrupt
+>>>> controller.
+>>>
+>>> I happen to watch the linux-pci and linux-acpi mail-lists. I also saw
+>>> Duc's initial proposal.
+>>>
+>>> I can't imagine someone building an ACPI compliant ARM64 platform
+>>> without a GIC interrupt controller.
+>>>
+>>> The SBSA spec already mentions what kind of compatibility should be
+>>> maintained with respect to GIC. You can't have an ACPI system that's
+>>> SBSA compliant and not using GIC.
+>>>
+>>> Can't we just hard code this to ACTIVE_HIGH in arch directory if ACPI
+>>> is defined.  Why do we have to reach out to the interrupt controller?
+>>
+>> Patch below (horrible but no solution will be shiny either).
+>>
+>>> https://lists.linaro.org/pipermail/linaro-acpi/2015-November/005973.html
+>>
+>> [...]
+>>
+>>> If you look at my email above, I tried getting rid of PCI Link object
+>>> and I couldn't. I sticked to only thing that works.
+>>
+>> That's what I object to. If the ACPI bindings do not work for ARM
+>> we do not work around issues, we upgrade the specs because what may work
+>> for you has to work on all ARM platforms (and all FW developers have
+>> to be aware of that). Granted, this is a tiny snag, but the point is
+>> that no one knows what's the correct way of describing PCI legacy IRQs
+>> on ARM and we need that rectified.
+>>
+>> This does the trick for me (I can turn it into a function/look-up
+>> that returns the polarity), I am sure it will ruffle feathers but
+>> we have to find a solution so here it is (that acpi_irq_model gem
+>> is already used in generic code drivers/acpi/pci_link.c ;-))
+>>
+> 
+> Good catch! This acpi_irq_model gem does help X-Gene :)
+> 
 
-After system boot, in /proc/iomem:
-fec00000-fecfffff : PNP0003:00
-  fec00000-fec003ff : IOAPIC 0
-  fec01000-fec013ff : IOAPIC 1
-  fec40000-fec403ff : IOAPIC 2
-  fec80000-fec803ff : IOAPIC 3
-  fecc0000-fecc03ff : IOAPIC 4
++1 to this too. 
 
-Then hot-remove IOAPIC 2 and hot-add it again:
-fec00000-fecfffff : PNP0003:00
-  fec00000-fec003ff : IOAPIC 0
-  fec01000-fec013ff : IOAPIC 1
-  fec80000-fec803ff : IOAPIC 3
-  fecc0000-fecc03ff : IOAPIC 4
+We don't need to invent some fake API or push stuff to the arch directory.
 
-The range at 0xfec40000 is lost from /proc/iomem. It is because
-handle_ioapic_add() requests resource from either PCI config BAR or
-ACPI "_CRS", not both. But Intel platforms map the IOxAPIC registers
-both at the PCI config BAR (called MBAR, dynamic), and at the ACPI
-"_CRS" (called ABAR, static). The 0xfecX_YZ00 to 0xfecX_YZFF range
-appears in "_CRS" of each IOAPIC device. Both ranges should be claimed
-from /proc/iomem for exclusive use.
+>> -- >8 --
+>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>> index 2c45dd3..c9b8c85 100644
+>> --- a/drivers/acpi/pci_irq.c
+>> +++ b/drivers/acpi/pci_irq.c
+>> @@ -411,7 +411,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>         int gsi;
+>>         u8 pin;
+>>         int triggering = ACPI_LEVEL_SENSITIVE;
+>> -       int polarity = ACPI_ACTIVE_LOW;
+>> +       int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
+>> +                                     ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
+>>         char *link = NULL;
+>>         char link_desc[16];
+>>         int rc;
+> Regards,
+> Duc Dang.
+> 
 
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- drivers/acpi/ioapic.c | 36 ++++++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
-index 8ab6d42..ee20111 100644
---- a/drivers/acpi/ioapic.c
-+++ b/drivers/acpi/ioapic.c
-@@ -97,7 +97,7 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
- 	unsigned long long gsi_base;
- 	struct acpi_pci_ioapic *ioapic;
- 	struct pci_dev *dev = NULL;
--	struct resource *res = NULL;
-+	struct resource *res = NULL, *pci_res = NULL, *crs_res;
- 	char *type = NULL;
- 
- 	if (!acpi_is_ioapic(handle, &type))
-@@ -137,23 +137,28 @@ static acpi_status handle_ioapic_add(acpi_handle handle, u32 lvl,
- 		pci_set_master(dev);
- 		if (pci_request_region(dev, 0, type))
- 			goto exit_disable;
--		res = &dev->resource[0];
-+		pci_res = &dev->resource[0];
- 		ioapic->pdev = dev;
- 	} else {
- 		pci_dev_put(dev);
- 		dev = NULL;
-+	}
- 
--		res = &ioapic->res;
--		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
--		if (res->flags == 0) {
--			acpi_handle_warn(handle, "failed to get resource\n");
--			goto exit_free;
--		} else if (request_resource(&iomem_resource, res)) {
--			acpi_handle_warn(handle, "failed to insert resource\n");
--			goto exit_free;
--		}
-+	crs_res = &ioapic->res;
-+	acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, crs_res);
-+	if (crs_res->flags == 0) {
-+		acpi_handle_warn(handle, "failed to get resource\n");
-+		goto exit_release;
-+	} else if (request_resource(&iomem_resource, crs_res)) {
-+		acpi_handle_warn(handle, "failed to insert resource\n");
-+		goto exit_release;
- 	}
- 
-+	/* try pci resource first, then "_CRS" resource */
-+	res = pci_res;
-+	if (!res || !res->flags)
-+		res = crs_res;
-+
- 	if (acpi_register_ioapic(handle, res->start, (u32)gsi_base)) {
- 		acpi_handle_warn(handle, "failed to register IOAPIC\n");
- 		goto exit_release;
-@@ -174,14 +179,13 @@ done:
- exit_release:
- 	if (dev)
- 		pci_release_region(dev, 0);
--	else
--		release_resource(res);
-+	if (ioapic->res.flags && ioapic->res.parent)
-+		release_resource(&ioapic->res);
- exit_disable:
- 	if (dev)
- 		pci_disable_device(dev);
- exit_put:
- 	pci_dev_put(dev);
--exit_free:
- 	kfree(ioapic);
- exit:
- 	mutex_unlock(&ioapic_list_lock);
-@@ -217,9 +221,9 @@ int acpi_ioapic_remove(struct acpi_pci_root *root)
- 			pci_release_region(ioapic->pdev, 0);
- 			pci_disable_device(ioapic->pdev);
- 			pci_dev_put(ioapic->pdev);
--		} else if (ioapic->res.flags && ioapic->res.parent) {
--			release_resource(&ioapic->res);
- 		}
-+		if (ioapic->res.flags && ioapic->res.parent)
-+			release_resource(&ioapic->res);
- 		list_del(&ioapic->list);
- 		kfree(ioapic);
- 	}
 -- 
-1.8.3.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
