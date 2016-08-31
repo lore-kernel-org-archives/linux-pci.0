@@ -1,67 +1,258 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Rob Herring <robh@kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	David Daney <david.daney@cavium.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
-Subject: Re: Support for configurable PCIe endpoint
-Date: Thu, 04 Aug 2016 13:13:06 +0200
-Message-ID: <2422602.ltmdGR0pWX@wuerfel>
-In-Reply-To: <57A31299.2040805@ti.com>
-References: <57A18927.9070003@ti.com> <7c696488-eb78-d6d9-dc70-49fa5b4e3317@synopsys.com> <57A31299.2040805@ti.com>
+Return-Path: <roland.singer@desertbit.com>
+Return-Path: <roland.singer@desertbit.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Peter Wu <peter@lekensteyn.nl>, Bjorn Helgaas <helgaas@kernel.org>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost> <20160830195337.GA18805@al>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-acpi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ emil.l.velikov@gmail.com,
+ "imirkin@alum.mit.edu >> Ilia Mirkin" <imirkin@alum.mit.edu>
+From: Roland Singer <roland.singer@desertbit.com>
+Message-ID: <e7318236-9737-518e-c360-398c66220961@desertbit.com>
+Date: Wed, 31 Aug 2016 13:27:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160830195337.GA18805@al>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, August 4, 2016 3:32:01 PM CEST Kishon Vijay Abraham I wrote:
-> On Wednesday 03 August 2016 07:09 PM, Joao Pinto wrote:
-> > 
-> > You are rising a topic that we are also addressing in Synopsys.
-> > 
-> > For the PCIe RC hardware validation we are currently using the standard
-> > pcie-designware and pcie-designware-plat drivers.
-> > 
-> > For the Endpoint we have to use an internal software package. Its main purpose
-> > is to initialize the IP registers, eDMA channels and make data transfer to prove
-> > that the everything is working properly. This is done in 2 levels, a custom
-> > driver built and loaded and an application that makes some ioctl to the driver
-> > executing some interesting functions to check the Endpoint status and make some
-> > data exchange.
+Am 30.08.2016 um 21:53 schrieb Peter Wu:
+> On Mon, Aug 29, 2016 at 11:02:10AM -0500, Bjorn Helgaas wrote:
+>> [+cc linux-acpi, linux-kernel, dri-devel]
+>>
+>> Hi Roland,
+>>
+>> I have no idea how to debug this problem.  Are you seeing something
+>> that suggests it may be a PCI problem?
 > 
-> hmm.. the platform I have doesn't have a DMA in PCIe IP
-> (http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf). So in your testing does the
-> EP access RC memory? i.e the driver in the RC allocates memory from it's DDR
-> and gives it's DDR address to the EP. The EP then transfers data to this
-> address. (This is a typical use case with ethernet PCIe cards). IIUC that's not
-> simple with configurable EPs. I'd like to know more about your testing though.
+> Yes I suspect there is an ACPI and/ or PCI problem, possibly
+> device-specific. Steps to reproduce on the affected machines:
+> 
+>  1. Load nouveau.
+>  2. Wait for it to runtime suspend.
+>  2. Invoke 'lspci', this resumes the Nvidia PCI device via nouveau.
+>  3. lspci never returns, few moments later an AML_INFINITE_LOOP is
+>     reported.
+> 
+
+I can confirm this. Same result on my machine.
+
+Here is a link to my ACPI tables:
+https://bugs.launchpad.net/lpbugreporter/+bug/752542/+attachment/4722651/+files/Razer-Blade.tar.gz
+
+The specific source for the NVIDIA card can be found in the ssdt5.dsl file.
 
 
-What's the difference between using the EDMA on that chip or a DMA engine
-that is part of the PCIe bridge?
+    Method (PGON, 1, Serialized)
+    {
+        /* ... */
 
-	Arnd
+        GPPR (PION, One)
+        If ((OSYS == 0x07D9))  /* Is Windows 2009 - In my case, setting to Windows 2009 only works! */
+        {
+            If ((PION == Zero))
+            {
+                P0AP = Zero
+                P0RM = Zero
+            }
+            ElseIf ((PION == One))
+            {
+                P1AP = Zero
+                P1RM = Zero
+            }
+            ElseIf ((PION == 0x02))
+            {
+                P2AP = Zero
+                P2RM = Zero
+            }
+
+            If ((PBGE != Zero))
+            {
+                If (SBDL (PION))
+                {
+                    PUAB (PION)
+                    CBDL = GUBC (PION)
+                    MBDL = GMXB (PION)
+                    If ((CBDL > MBDL))
+                    {
+                        CBDL = MBDL /* \_SB_.PCI0.MBDL */
+                    }
+
+                    PDUB (PION, CBDL)
+                }
+            }
+
+            If ((PION == Zero))
+            {
+                P0LD = Zero
+                P0TR = One
+                TCNT = Zero
+                While ((TCNT < LDLY))
+                {
+                    If ((P0VC == Zero))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    TCNT += 0x10
+                }
+            }
+            ElseIf ((PION == One))
+            {
+                P1LD = Zero
+                P1TR = One
+                TCNT = Zero
+                While ((TCNT < LDLY))
+                {
+                    If ((P1VC == Zero))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    TCNT += 0x10
+                }
+            }
+            ElseIf ((PION == 0x02))
+            {
+                P2LD = Zero
+                P2TR = One
+                TCNT = Zero
+                While ((TCNT < LDLY))
+                {
+                    If ((P2VC == Zero))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    TCNT += 0x10
+                }
+            }
+        }
+        Else
+        {
+            LKEN (PION)
+        }
+
+        /* ... */
+        
+        Return (Zero)
+    }
+
+
+
+If not set to Windows 2009, then this is triggered:
+
+
+    Method (LKEN, 1, NotSerialized)
+    {
+        Local3 = (CPEX & 0x0F)
+        If ((Local3 == Zero))
+        {
+            If ((Arg0 == Zero))
+            {
+                P0L0 = One
+                Sleep (0x10)
+                Local0 = Zero
+                While (P0L0)
+                {
+                    If ((Local0 > 0x04))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    Local0++
+                }
+            }
+            ElseIf ((Arg0 == One))
+            {
+                P1L0 = One
+                Sleep (0x10)
+                Local0 = Zero
+                While (P0L0)
+                {
+                    If ((Local0 > 0x04))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    Local0++
+                }
+            }
+            ElseIf ((Arg0 == 0x02))
+            {
+                P2L0 = One
+                Sleep (0x10)
+                Local0 = Zero
+                While (P0L0)
+                {
+                    If ((Local0 > 0x04))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    Local0++
+                }
+            }
+        }
+        ElseIf ((Local3 != Zero))
+        {
+            If ((Arg0 == Zero))
+            {
+                Q0L0 = One
+                Sleep (0x10)
+                Local0 = Zero
+                While (Q0L0)
+                {
+                    If ((Local0 > 0x04))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    Local0++
+                }
+            }
+            ElseIf ((Arg0 == One))
+            {
+                Q1L0 = One
+                Sleep (0x10)
+                Local0 = Zero
+                While (Q1L0)
+                {
+                    If ((Local0 > 0x04))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    Local0++
+                }
+            }
+            ElseIf ((Arg0 == 0x02))
+            {
+                Q2L0 = One
+                Sleep (0x10)
+                Local0 = Zero
+                While (Q2L0)
+                {
+                    If ((Local0 > 0x04))
+                    {
+                        Break
+                    }
+
+                    Sleep (0x10)
+                    Local0++
+                }
+            }
+        }
+    }
+
+
+Is it possible to override the specific ACPI table functions (SSDT) in the DSDT?
+This way I could try to debug to find some more information...
