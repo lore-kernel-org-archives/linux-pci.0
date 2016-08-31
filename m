@@ -1,30 +1,28 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: helgaas@kernel.org
-Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jszhang@marvell.com,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v5 0/3] pcie-designware: add iATU unroll feature
-Date: Wed, 10 Aug 2016 11:02:37 +0100
-Message-Id: <cover.1470822461.git.jpinto@synopsys.com>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, rafael@kernel.org, Lorenzo.Pieralisi@arm.com, tn@semihalf.com, wangzhou1@hisilicon.com, pratyush.anand@gmail.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, gabriele.paoloni@huawei.com, charles.chenxin@huawei.com, hanjun.guo@linaro.org, linuxarm@huawei.com
+Subject: Re: [RFC PATCH V2 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+Date: Thu, 01 Sep 2016 00:56:33 +0200
+Message-ID: <2194589.LrAdKSkzcT@vostro.rjw.lan>
+In-Reply-To: <1472644094-82731-4-git-send-email-liudongdong3@huawei.com>
+References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com> <1472644094-82731-4-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-The new DWC PCIe Core version (4.80) implements iATU in a different way.
-This new mechanism is called iATU Unroll Mode. The Core still supports
-the "old" mechanism calling it Legacy Mode if configured to do so, but
-the standard way will be using Unroll.
-This patch adds the necessary support for the mechanism and makes
-some minor improvements to the existent one.
+On Wednesday, August 31, 2016 07:48:14 PM Dongdong Liu wrote:
+> Add specific quirks for PCI config space accessors.This involves:
+> 1. New initialization call hisi_pcie_acpi_init() to get RC config resource
+> with hardcoded range address and setup ecam mapping.
+> 2. New entry in common quirk array.
+> 
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-Joao Pinto (3):
-  pci: move definitions from header to pcie-designware.c
-  pci: add iATU Unroll mechanism
-  pcie-designware: fix typo
+Well, what exactly is the ACPI support you're adding?  Is it the ECAM part only
+or is there anything more to it?
 
- drivers/pci/host/pcie-designware.c | 138 ++++++++++++++++++++++++++++++++-----
- drivers/pci/host/pcie-designware.h |   6 +-
- 2 files changed, 122 insertions(+), 22 deletions(-)
-
--- 
-1.8.1.5
+Thanks,
+Rafael
