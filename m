@@ -1,113 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:57085 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755234AbcHDApu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Aug 2016 20:45:50 -0400
-Date: Thu, 4 Aug 2016 02:45:38 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 10/13] PCI: Avoid going from D3cold to D3hot for
- system sleep
-Message-ID: <20160804004538.GA4564@wunner.de>
-References: <cover.1463134231.git.lukas@wunner.de>
- <20160617210924.GA12254@localhost>
- <20160617221407.GB1927@wunner.de>
- <2339231.tBO8VQgPAo@vostro.rjw.lan>
- <20160803122848.GA4415@wunner.de>
- <CAJZ5v0jxQHM=uuvFrpPw0vLbVjF0EQsm=XEZNdtQeYsO0ZobtQ@mail.gmail.com>
+Return-Path: <roland.singer@desertbit.com>
+Return-Path: <roland.singer@desertbit.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Peter Wu <peter@lekensteyn.nl>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost> <20160830195337.GA18805@al>
+ <e7318236-9737-518e-c360-398c66220961@desertbit.com>
+ <20160831114639.GD19420@al>
+ <1b91b281-3c71-f02f-ff27-51957af92275@desertbit.com>
+ <20160831123444.GE19420@al>
+ <e19456cb-3076-c8f1-c9ec-fbfbd9bb6112@desertbit.com>
+ <310ac56e-94bf-35de-79c7-29b0b4b6e2a8@desertbit.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, emil.l.velikov@gmail.com,
+ "imirkin@alum.mit.edu >> Ilia Mirkin" <imirkin@alum.mit.edu>
+From: Roland Singer <roland.singer@desertbit.com>
+Message-ID: <e50b350c-c6d1-22ef-527e-3590425dede2@desertbit.com>
+Date: Wed, 31 Aug 2016 22:16:25 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0jxQHM=uuvFrpPw0vLbVjF0EQsm=XEZNdtQeYsO0ZobtQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <310ac56e-94bf-35de-79c7-29b0b4b6e2a8@desertbit.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 04, 2016 at 01:50:39AM +0200, Rafael J. Wysocki wrote:
-> On Wed, Aug 3, 2016 at 2:28 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > On Mon, Jul 18, 2016 at 03:39:15PM +0200, Rafael J. Wysocki wrote:
-> >> On Saturday, June 18, 2016 12:14:07 AM Lukas Wunner wrote:
-> >> > On Fri, Jun 17, 2016 at 04:09:24PM -0500, Bjorn Helgaas wrote:
-> >> > > On Fri, May 13, 2016 at 01:15:31PM +0200, Lukas Wunner wrote:
-> >> > > > There are devices wich are not power-managed by the platform, yet can be
-> >> > > > runtime suspended to D3cold with some other mechanism.  When putting the
-> >> > > > system to sleep, we currently handle such devices improperly by trying
-> >> > > > to transition them from D3cold to D3hot (the default power state defined
-> >> > > > at the beginning of pci_target_state()).  Avoid that.
-> >> > > >
-> >> > > > An example for devices affected by this are Thunderbolt controllers
-> >> > > > built into Macs which can be put into D3cold with nonstandard ACPI
-> >> > > > methods.
-> >> > > >
-> >> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> >> > >
-> >> > > This needs an ack from Rafael.
-> >> > >
-> >> > > > ---
-> >> > > >  drivers/pci/pci.c | 2 ++
-> >> > > >  1 file changed, 2 insertions(+)
-> >> > > >
-> >> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >> > > > index 791dfe7..6af9911 100644
-> >> > > > --- a/drivers/pci/pci.c
-> >> > > > +++ b/drivers/pci/pci.c
-> >> > > > @@ -1943,6 +1943,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev)
-> >> > > >                               && !(dev->pme_support & (1 << target_state)))
-> >> > > >                                 target_state--;
-> >> > > >                 }
-> >> > > > +       } else if (dev->current_state == PCI_D3cold) {
-> >> > > > +               target_state = PCI_D3cold;
-> >> > > >         }
-> >> > >
-> >> > > This only covers the case of !device_may_wakeup().  So I guess
-> >> > > device_may_wakeup() is false for these Thunderbolt controllers.
-> >> > > Is there a reason you don't want to do this check for devices that
-> >> > > may wakeup?
-> >> >
-> >> > Fear of breaking things. It would mean that a device would be left in
-> >> > D3cold even though it may not be able to signal wakeup from that power
-> >> > state.
-> >>
-> >> Then it should not be put into D3_cold at run time too if it is wakeup-
-> >> capable.
-> >>
-> >> > That's a change of behaviour the consequences of which I cannot
-> >> > estimate. Intuitively, I would expect breakage from such a change.
-> >>
-> >> That would have been the case if the device had been capable of signaling
-> >> wakeup from D3_cold at run time, but not from system sleep.  However, that
-> >> can only happen when platform_pci_power_manageable() is true AFAICS.
-> >>
-> >> So I'd change the switch () under the platform_pci_power_manageable() check
-> >> to return "state" in the default case and then do
-> >>
-> >>       return dev->current_state < target_state ? target_state : dev->current_state;
-> >>
-> >> at the end of the function.
-> >
-> > That suggestion doesn't seem to be correct because there's another
-> > value besides PCI_D3cold which is also greater than PCI_D3hot,
-> > namely PCI_UNKNOWN. (If the device is in that state, e.g. after
-> > pci_device_remove() has been called, and the system goes to sleep,
-> > we'd leave the device as is and not put it into D3hot as we do now.)
+On 08/31/16 22:06, Roland Singer wrote:
+> Here is Peter Wu's reply, which was not send to the mailing list, because
+> I had to resend my e-mail to him due to a failure...
 > 
-> Right, I obviously forgot about PCI_UNKNOWN.
 > 
-> > I will update this patch with Bjorn's suggestion to also leave the
-> > device in D3cold if it is wakeup-capable. The idea is to just change
-> > the default state in the first line of the function like this:
-> >
-> > -       pci_power_t target_state = PCI_D3hot;
-> > +       pci_power_t target_state =
-> > +               dev->current_state == PCI_D3cold ? PCI_D3cold : PCI_D3hot;
+> -------- Forwarded Message --------
+> Subject: Re: Fwd: Re: Kernel Freeze with American Megatrends BIOS
+> Date: Wed, 31 Aug 2016 18:08:53 +0200
+> From: Peter Wu <peter@lekensteyn.nl>
+> To: Roland Singer <roland.singer@desertbit.com>
 > 
-> That should work (even though it is a little clumsy IMO).
+> On Wed, Aug 31, 2016 at 05:56:18PM +0200, Roland Singer wrote:
+> 
+>>> If you look at my notes.txt, you will see that _OFF always executes the
+>>> same code. PGON differs. When the problem occurs, "Q0L0" somehow always
+>>> reads back as non-zero and LNKS < 7.
+>>>
+>>
+>> Oh you're Lekensteyn ^^
+> 
+> Yes, that's me :) I wrote bbswitch, did the Optimus and PR3 ACPI support
+> in nouveau so I am fairly certain what happens behind the scenes.
+> 
 
-Not sure why that is clumsy but happy to use something else if you
-have a suggestion?
+Awesome! Thanks for all your efforts! Great work :)
 
-Thanks,
 
-Lukas
+>> I don't have LNKS and no while loop after calling LKEN ?!
+> 
+> Yes that is what I said in
+> https://www.spinics.net/lists/linux-pci/msg53694.html:
+> 
+> "Other affected devices have similar code, differences are small:
+> No check for LNKS (avoids the infinite loop, but device is still off)"
+>
+
+Ah ok, missed that.
+
+
+>> It might be, that lspci does not only power the GPU on, but triggers
+>> another pci action which causes the race condition.
+>> Does this have something to do with your quote about the retrain bit?
+> 
+> That is an interesting hypothesis. Even if you invoke `lspci -s01:00.0`
+> for example, it will always probe for all devices. So maybe interaction
+> with its parent device (PCI root port 00:02.0) causes issues.
+> 
+> However I also tested without lspci before, and the problem still
+> exists. You can trigger runtime resume via (as root):
+> 
+>     echo > /sys/bus/pci/0000:01:00.0/power/control on
+> 
+> Set it to "auto" to make it sleep again.
+> 
+
+Just tried it over and over again. I don't have any problems switching the GPU power state
+with bbswitch. So, switching the GPU on is just fine. There must be something else, which
+does not cooperate well while switching it on (lspci)...
+
+I can confirm,, that `lspci -s01:00.0` also freezes the system.
+
+Trying to trigger runtime resume with `/sys/bus/pci/0000:01:00.0/power/control`
+did not work for me. The GPU just stayed off.
+Any hints how to get some more information?
