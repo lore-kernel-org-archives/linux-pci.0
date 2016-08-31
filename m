@@ -1,187 +1,129 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH V5 2/5] PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
-Date: Mon,  8 Aug 2016 15:05:38 +0200
-Message-Id: <1470661541-26270-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0041.outbound.protection.outlook.com ([104.47.38.41]:6512
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751128AbcHaGuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 31 Aug 2016 02:50:55 -0400
+From: Po Liu <po.liu@nxp.com>
+To: <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        "Marc Zyngier" <marc.zyngier@arm.com>,
+        Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Stuart Yoder <stuart.yoder@nxp.com>,
+        Yang-Leo Li <leoyang.li@nxp.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Minghuan Lian <minghuan.lian@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>, Po Liu <po.liu@nxp.com>
+Subject: [PATCH v4 2/2] pci:aer: add support aer interrupt with none MSI/MSI-X/INTx mode
+Date: Wed, 31 Aug 2016 14:37:22 +0800
+Message-ID: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
+In-Reply-To: <1472625442-23309-1-git-send-email-po.liu@nxp.com>
+References: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
+ <1472625442-23309-1-git-send-email-po.liu@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_acpi_setup_ecam_mapping() is not really ARM64 specific so move it out
-of arch/arm64/ directory. In preparation for adding MCFG quirk handling
-extend pci_acpi_setup_ecam_mapping() functionality to accept custom
-PCI config accessors (function's argument).
+On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
+When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
+maybe there is interrupt line for aer pme etc. Search the interrupt
+number in the fdt file. Then fixup the dev->irq with it.
 
-For ARM64 ACPI based PCI host controller we still use pci_generic_ecam_ops.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Po Liu <po.liu@nxp.com>
 ---
- arch/arm64/kernel/pci.c  | 41 ++---------------------------------------
- drivers/acpi/pci_mcfg.c  | 40 ++++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h |  3 +++
- 3 files changed, 45 insertions(+), 39 deletions(-)
+Changes for v4:
+	- re-use the patch changes in the root port driver;
+	- add binding information;
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 981e828..2e7bed4 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -114,44 +114,6 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ .../devicetree/bindings/pci/layerscape-pci.txt     |  4 +--
+ drivers/pci/pcie/portdrv_core.c                    | 31 +++++++++++++++++++---
+ 2 files changed, 30 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index 41e9f55..1dfb1da 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -19,7 +19,7 @@ Required properties:
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+ - interrupt-names: Must include the following entries:
+-  "intr": The interrupt that is asserted for controller interrupts
++  "aer": The interrupt that is asserted for aer interrupts
+ - fsl,pcie-scfg: Must include two entries.
+   The first entry must be a link to the SCFG device node
+   The second entry must be '0' or '1' based on physical PCIe controller index.
+@@ -36,7 +36,7 @@ Example:
+ 		       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+ 		reg-names = "regs", "config";
+ 		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
+-		interrupt-names = "intr";
++		interrupt-names = "aer";
+ 		fsl,pcie-scfg = <&scfg 0>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index e9270b4..7c4943d 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -16,6 +16,7 @@
+ #include <linux/slab.h>
+ #include <linux/pcieport_if.h>
+ #include <linux/aer.h>
++#include <linux/of_irq.h>
+ 
+ #include "../pci.h"
+ #include "portdrv.h"
+@@ -200,6 +201,28 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ {
+ 	int i, irq = -1;
++	int ret;
++	struct device_node *np = NULL;
++
++	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
++		irqs[i] = 0;
++
++	if (dev->bus->dev.of_node)
++		np = dev->bus->dev.of_node;
++
++	/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
++	 * request irq for aer
++	 */
++	if (IS_ENABLED(CONFIG_OF_IRQ) && np &&
++			(mask & PCIE_PORT_SERVICE_PME)) {
++		ret = of_irq_get_byname(np, "aer");
++		if (ret > 0) {
++			irqs[PCIE_PORT_SERVICE_AER_SHIFT] = ret;
++			if (dev->irq)
++				irq = dev->irq;
++			goto no_msi;
++		}
++	}
+ 
+ 	/*
+ 	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
+@@ -225,11 +248,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 		irq = dev->irq;
+ 
+  no_msi:
+-	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+-		irqs[i] = irq;
++	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
++		if (!irqs[i])
++			irqs[i] = irq;
++	}
+ 	irqs[PCIE_PORT_SERVICE_VC_SHIFT] = -1;
+ 
+-	if (irq < 0)
++	if (irq < 0 && irqs[PCIE_PORT_SERVICE_AER_SHIFT] < 0)
+ 		return -ENODEV;
  	return 0;
  }
- 
--/*
-- * Lookup the bus range for the domain in MCFG, and set up config space
-- * mapping.
-- */
--static struct pci_config_window *
--pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
--{
--	struct resource *bus_res = &root->secondary;
--	u16 seg = root->segment;
--	struct pci_config_window *cfg;
--	struct resource cfgres;
--	unsigned int bsz;
--
--	/* Use address from _CBA if present, otherwise lookup MCFG */
--	if (!root->mcfg_addr)
--		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
--
--	if (!root->mcfg_addr) {
--		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
--			seg, bus_res);
--		return NULL;
--	}
--
--	bsz = 1 << pci_generic_ecam_ops.bus_shift;
--	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
--	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
--	cfgres.flags = IORESOURCE_MEM;
--	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
--			      &pci_generic_ecam_ops);
--	if (IS_ERR(cfg)) {
--		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
--			seg, bus_res, PTR_ERR(cfg));
--		return NULL;
--	}
--
--	return cfg;
--}
--
- /* release_info: free resources allocated by init_info */
- static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
- {
-@@ -177,7 +139,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (!ri)
- 		return NULL;
- 
--	ri->cfg = pci_acpi_setup_ecam_mapping(root);
-+	ri->cfg = pci_acpi_setup_ecam_mapping(root,
-+					      &pci_generic_ecam_ops.pci_ops);
- 	if (!ri->cfg) {
- 		kfree(ri);
- 		return NULL;
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index b5b376e..331b560 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -22,6 +22,7 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
-+#include <linux/pci-ecam.h>
- 
- /* Structure to hold entries from the MCFG table */
- struct mcfg_entry {
-@@ -52,6 +53,45 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
- 	return 0;
- }
- 
-+/*
-+ * Lookup the bus range for the domain in MCFG, and set up config space
-+ * mapping.
-+ */
-+struct pci_config_window *
-+pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops)
-+{
-+	struct resource *bus_res = &root->secondary;
-+	u16 seg = root->segment;
-+	struct pci_config_window *cfg;
-+	struct resource cfgres;
-+	struct pci_ecam_ops ecam_ops = {
-+			.bus_shift = 20,
-+			.pci_ops = *ops,
-+	};
-+
-+	/* Use address from _CBA if present, otherwise lookup MCFG */
-+	if (!root->mcfg_addr)
-+		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
-+
-+	if (!root->mcfg_addr) {
-+		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
-+			seg, bus_res);
-+		return NULL;
-+	}
-+
-+	cfgres.start = root->mcfg_addr + (bus_res->start << 20);
-+	cfgres.end = cfgres.start + (resource_size(bus_res) << 20) - 1;
-+	cfgres.flags = IORESOURCE_MEM;
-+	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, &ecam_ops);
-+	if (IS_ERR(cfg)) {
-+		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
-+			seg, bus_res, PTR_ERR(cfg));
-+		return NULL;
-+	}
-+
-+	return cfg;
-+}
-+
- static __init int pci_mcfg_parse(struct acpi_table_header *header)
- {
- 	struct acpi_table_mcfg *mcfg;
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 7d63a66..e9bfe00 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -26,6 +26,9 @@ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
- 
- extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
- 
-+extern struct pci_config_window *
-+pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
-+
- static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
- {
- 	struct pci_bus *pbus = pdev->bus;
 -- 
-1.9.1
+2.1.0.27.g96db324
+
