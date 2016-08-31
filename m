@@ -1,45 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37671 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752682AbcHCK6M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Aug 2016 06:58:12 -0400
-Subject: Re: [RFC 7/7] NVMe: CMB on DMA-BUF
-To: Christoph Hellwig <hch@infradead.org>,
-	Haggai Eran <haggaie@mellanox.com>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
- <1470034653-9097-8-git-send-email-haggaie@mellanox.com>
- <20160801155206.GA23224@infradead.org>
-Cc: linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org,
-	Liran Liss <liranl@mellanox.com>, linux-pci@vger.kernel.org,
-	Yishai Hadas <yishaih@mellanox.com>,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	Leon Romanovsky <leonro@mellanox.com>,
-	Artemy Kovalyov <artemyko@mellanox.com>,
-	Jerome Glisse <j.glisse@gmail.com>
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <0c87a1be-96e0-6aa2-920c-53203b5ad9dc@grimberg.me>
-Date: Wed, 3 Aug 2016 13:02:07 +0300
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
+ device for legacy interrupts.
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ Soren Brinkmann <sorenb@xilinx.com>, Michal Simek <michals@xilinx.com>,
+ "arnd@arndb.de" <arnd@arndb.de>
+References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+ <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+ <57C57975.7040306@arm.com>
+ <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57C59FE8.30307@arm.com>
+ <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57C6B7F1.5000001@arm.com>
+Date: Wed, 31 Aug 2016 11:56:49 +0100
 MIME-Version: 1.0
-In-Reply-To: <20160801155206.GA23224@infradead.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ravikiran Gummaluri <rgummal@xilinx.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Christoph, Haggai,
+On 31/08/16 10:56, Bharat Kumar Gogada wrote:
+>  > On 30/08/16 15:13, Bharat Kumar Gogada wrote:
+>>>> Hi Bharat,
+>>>>> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct
+>>>>> nwl_pcie
+>>>> *pcie)
+>>>>>     }
+>>>>>
+>>>>>     pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
+>>>>> -                                                   INTX_NUM,
+>>>>> +                                                   INTX_NUM + 1,
+>>>>>                                                     &legacy_domain_ops,
+>>>>>                                                     pcie);
+>>>>
+>>>> This feels like the wrong thing to do. You have INTX_NUM irqs, so the
+>>>> domain allocation should reflect this. On the other hand, the way the
+>>>> driver currently deals with mappings is quite broken (consistently adding 1 to
+>> the HW interrupt).
+>>>>
+>>> Hi Marc,
+>>>
+>>> Without above change I get following crash in kernel while booting.
+>>>
+>>> [    2.441684] error: hwirq 0x4 is too large for dummy
+>>>
+>>> [    2.441694] ------------[ cut here ]------------
+>>>
+>>> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
+>>>
+>>> [    2.441702] Modules linked in:
+>>>
+>>> [    2.441706]
+>>>
+>>> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0 #8
+>>>
+>>> [    2.441718] Hardware name: xlnx,zynqmp (DT)
+>>>
+>>> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 task.ti:
+>> ffffffc071888000
+>>>
+>>> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
+>>>
+>>> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
+>>>
+>>> In kernel/irq/irqdomain.c function irq_domain_associate
+>>>
+>>> if (WARN(hwirq >= domain->hwirq_max,
+>>>                  "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain->name))
+>>>                 return -EINVAL;
+>>>
+>>> Here the hwirq and hwirq_max are equal to 4 without the above condition
+>> (INTX_NUM + 1) due to which crash is coming.
+>>> This is happening as the legacy interrupts are starting from 1 (INTA).
+>>
+>> I understood that. I'm still persisting in saying that you have the wrong fix.
+>>
+>> Your domain should always allocate many interrupts as you have interrupt
+>> sources. These interrupts (hwirq) should be numbered from 0 to (n-1).
+> 
+> Agreed, but here comes the problem the hwirq for legacy interrupts
+> will start at 0x1 to 0x4 (INTA to INTD) and these values are as per
+> PCIe specification for legacy interrupts. So these cannot be numbered
+> from 0. So when 0x4 (INTD) for a multi-function device comes the
+> crash occurs. 
 
->> Allocate a CMB region to user-space as a DMA-BUF object.
->
-> NACK.  Absolutely no way we're going to export a low-level device
-> specific feature to userspace like that.  If you want to DMA to
-> the CMB do it from the kernel, and for that we'll need a proper
-> block device level API.
+So who provides this hwirq? Who calls irq_domain_associate() with hwirq
+set to 4?
 
-I think that in this patch, Haggai was aiming to demonstrate the use
-of dma_buf for peer2peer transactions with an RDMA device. I agree
-that the CMB example can/should be exposed in the block device level,
-but I also think we'd like to generalize the way we expose a bar space
-of any peer device to another peer device.
+>>
+>>> And I'm  consistently adding 1 to the HW interrupt as in
+>>> nwl_pcie_leg_handler I get 0th bit set from MSGF_LEG_STATUS if INTA
+>>> interrupt is raised but my hwirq number being mapped for INTA is 0x1
+>>> so that's I'm adding 1 to obtain correct virtual irq. Same case in
+>>> nwl_pcie_free_irq_domain since hwirq starts from one I'm adding 1 to
+>>> obtain virtual irq and free it.
+>>
+>> I can see that. Nonetheless, this is wrong. Can you please test the patch I
+>> provided in my reply and report what happens?
+> 
+> Can you be more specific on what is the wrong, I'm adding one since
+> the hwirq starts from 0x1 as mentioned above.
 
-How would you suggest we do that? I think Haggai's proposal is pretty
-solid (considering the fact that the vast majority of RDMA applications
-live in user-space).
+hwirq should always be the value that is reported by the HW. In your
+case, this ranges from 0 to 3, never 4. So if we can understand why you
+get called with 4 as a hwirq, we can fix this properly, for everyone. It
+is also worth noting that other drivers do not have to do this +1 dance.
+
+> I did try your suggestion with Ethernet card, but kernel hangs (it
+> does not show any crash also, just hangs) when I do interface up
+> (without bit + 1, using only bit position in handler). This is not
+> working because in the legacy domain virq mapping starts with hwirq
+> 0x1, there is no mapping for 0x0 in the domain, so EP interrupt is
+> not serviced since virq being returned is zero.
+
+Right. So let's go back to first principles and find out *who* decides
+about the hwirq starting at 1 instead of zero.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
