@@ -1,78 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 8 Aug 2016 16:13:12 +0100
-From: Graeme Gregory <gg@slimlogic.co.uk>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
-	dhdang@apm.com, ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org, jcm@redhat.com,
-	andrea.gallo@linaro.org, jeremy.linton@arm.com,
-	liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH V5 0/5] ECAM quirks handling for ARM64 platforms
-Message-ID: <20160808151312.GG18515@xora-haswell.xora.org.uk>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+Return-Path: <arnd@arndb.de>
+Return-Path: <arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, rafael@kernel.org, Lorenzo.Pieralisi@arm.com, tn@semihalf.com, wangzhou1@hisilicon.com, pratyush.anand@gmail.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, gabriele.paoloni@huawei.com, charles.chenxin@huawei.com, hanjun.guo@linaro.org, linuxarm@huawei.com
+Subject: Re: [RFC PATCH V2 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+Date: Wed, 31 Aug 2016 13:48:16 +0200
+Message-ID: <5406169.iVLlEcSJ8X@wuerfel>
+In-Reply-To: <1472644094-82731-4-git-send-email-liudongdong3@huawei.com>
+References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com> <1472644094-82731-4-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470661541-26270-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 08, 2016 at 03:05:36PM +0200, Tomasz Nowicki wrote:
-> Quirk handling relies on an idea of matching MCFG OEM ID, TABLE ID and
-> revision (the ones from standard header of MCFG table).
-> 
-> Static array is used to keep quirk entries. Each entry consists of
-> mentioned MCFG IDs along with custom pci_ops structure and initialization call.
-> 
-> As an example, the last patch presents quirk handling mechanism usage for
-> ThunderX PEM driver.
-> 
+On Wednesday, August 31, 2016 7:48:14 PM CEST Dongdong Liu wrote:
+> +static struct hisi_rc_res rc_res[] = {
+> +       {
+> +               HIP05,
+> +               {
+> +                       DEFINE_RES_MEM(0xb0070000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xb0080000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xb0090000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xb00a0000, SZ_4K)
+> +               }
+> +       },
+> +       {
+> +               HIP06,
+> +               {
+> +                       DEFINE_RES_MEM(0xa0090000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xa0200000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xa00a0000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xa00b0000, SZ_4K)
+> +               }
+> +       },
+> +       {
+> +               HIP07,
+> +               {
+> +                       DEFINE_RES_MEM(0xa0090000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xa0200000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xa00a0000, SZ_4K),
+> +                       DEFINE_RES_MEM(0xa00b0000, SZ_4K),
+> +                       DEFINE_RES_MEM(0x8a0090000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x8a0200000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x8a00a0000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x8a00b0000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x600a0090000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x600a0200000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x600a00a0000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x600a00b0000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x700a0090000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x700a0200000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x700a00a0000UL, SZ_4K),
+> +                       DEFINE_RES_MEM(0x700a00b0000UL, SZ_4K)
+> +               }
+> +       },
 
-Series looks good to me.
+I don't know much about ACPI, but I'm pretty sure this is not
+the normal way to find MMIO resources. Why not read them from
+the ACPI tables?
 
-Reviewed-by: Graeme Gregory <graeme.gregory@linaro.org>
-
-> v4 -> v5
-> - rebase against v4.8-rc1
-> - rework to exact MCFG OEM ID, TABLE ID, rev match
->   - use memcmp instead of strncmp
->   - no substring match
-> - fix typos and dmesg message
-> 
-> Tomasz Nowicki (5):
->   PCI: Embed pci_ecam_ops in pci_config_window structure
->   PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
->   PCI: Check platform specific ECAM quirks
->   ARM64/PCI: Start using quirks handling for ACPI based PCI host
->     controller
->   PCI: thunder-pem: Support quirky configuration space access for ACPI
->     based PCI host controller
-> 
->  arch/arm64/kernel/pci.c            | 42 +----------------
->  drivers/acpi/pci_mcfg.c            | 40 ++++++++++++++++
->  drivers/pci/ecam.c                 |  6 +--
->  drivers/pci/host/Makefile          |  1 +
->  drivers/pci/host/mcfg-quirks.c     | 93 ++++++++++++++++++++++++++++++++++++
->  drivers/pci/host/mcfg-quirks.h     | 24 ++++++++++
->  drivers/pci/host/pci-thunder-pem.c | 96 ++++++++++++++++++++++++++++++++------
->  include/linux/pci-acpi.h           |  5 ++
->  include/linux/pci-ecam.h           |  2 +-
->  9 files changed, 252 insertions(+), 57 deletions(-)
->  create mode 100644 drivers/pci/host/mcfg-quirks.c
->  create mode 100644 drivers/pci/host/mcfg-quirks.h
-> 
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Arnd
