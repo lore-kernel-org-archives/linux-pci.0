@@ -1,155 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:44995 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751570AbcHLFnU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Aug 2016 01:43:20 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7C5XdbV073173
-	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:38 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24rtx3x38a-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 12 Aug 2016 01:42:38 -0400
-Received: from localhost
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Thu, 11 Aug 2016 23:42:37 -0600
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
-	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
-Subject: [PATCH v4 4/5] PCI: Add a new option for resource_alignment to reassign alignment
-Date: Fri, 12 Aug 2016 13:42:25 +0800
-In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1470980546-2918-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:35031 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753103AbcHaRpy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 13:45:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <57C7100D.3010407@redhat.com>
+References: <20160831155009.3216.93787.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <CAL-B5D1Jb9QGimAar-wojBp--A3TriVtAe_MeZ7vYAOsPyrqsQ@mail.gmail.com> <57C7100D.3010407@redhat.com>
+From: Myron Stowe <myron.stowe@gmail.com>
+Date: Wed, 31 Aug 2016 11:45:52 -0600
+Message-ID: <CAL-B5D17VL5HEmtVpnO5qdf6ThVjkrRuMaP+04u-OVnXu2hC9g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Mark Haswell Power Control Unit as having
+ non-compliant BARs
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Andi Kleen <ak@linux.intel.com>,
+        Myron Stowe <myron.stowe@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using resource_alignment kernel parameter, the current
-implement reassigns the alignment by changing resources' size
-which can potentially break some drivers. For example, the driver
-uses the size to locate some register whose length is related
-to the size.
+On Wed, Aug 31, 2016 at 11:12 AM, Prarit Bhargava <prarit@redhat.com> wrote:
+> On 08/31/2016 12:46 PM, Myron Stowe wrote:
+>> On Wed, Aug 31, 2016 at 9:50 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> The Haswell Power Control Unit has a non-PCI register (CONFIG_TDP_NOMINAL)
+>>> where BAR 0 is supposed to be.  This is erratum HSE43 in the spec update
+>>> referenced below:
+>>>
+>>>   The PCIe* Base Specification indicates that Configuration Space Headers
+>>>   have a base address register at offset 0x10.  Due to this erratum, the
+>>>   Power Control Unit's CONFIG_TDP_NOMINAL CSR (Bus 1; Device 30; Function
+>>>   3; Offset 0x10) is located where a base register is expected.
+>>>
+>>> Mark the PCU as having non-compliant BARs so we don't try to probe any of
+>>> them.  There are no other BARs on this device.
+>>>
+>>> Rename the quirk so it's not Broadwell-specific.
+>>
+>> While it's not a big enough battle to fight it sure is irritating to
+>> see vendors make the same mistakes over and over again.  Wondering if
+>> this an error on the respective vendor's BIOS team's part or is this
+>> is just being inherited over and over again from Intel's Premier BIOS
+>> team reference code?
+>>
+>
+> This isn't a BIOS issue.  The actual hardware is manufactured this
+> way, and the documentation indicates that the hardware has
+> non-compliant BARs.
 
-This patch adds a new option "noresize" for the parameter to
-solve this problem.
+Granted, at the root it is a HW problem, and one that seems Intel
+duplicated forward.  That said, the workaround for the HW is for BIOS
+to "hide" the register which is what was done in the prior instance.
+I've always wondered how BIOS does that so if anyone can explain I'd
+be interested in learning that.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- Documentation/kernel-parameters.txt |    9 ++++++---
- drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
- 2 files changed, 33 insertions(+), 13 deletions(-)
-
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 46c030a..c64e439 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -3023,15 +3023,18 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				window. The default value is 64 megabytes.
- 		resource_alignment=
- 				Format:
--				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
--				[<order of align>@]pci:<vendor>:<device>\
--						[:<subvendor>:<subdevice>][; ...]
-+				[<order of align>@][noresize@][<domain>:]
-+				<bus>:<slot>.<func>[; ...]
-+				[<order of align>@][noresize@]pci:<vendor>:<device>
-+				[:<subvendor>:<subdevice>][; ...]
- 				Specifies alignment and device to reassign
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
-+				noresize: Don't change the resources' sizes when
-+				reassigning alignment.
- 		ecrc=		Enable/disable PCIe ECRC (transaction layer
- 				end-to-end CRC checking).
- 				bios: Use BIOS/firmware settings. This is the
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index caa0894..d895be7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
- /**
-  * pci_specified_resource_alignment - get resource alignment specified by user.
-  * @dev: the PCI device to get
-+ * @resize: whether or not to change resources' size when reassigning alignment
-  *
-  * RETURNS: Resource alignment if it is specified.
-  *          Zero if it is not specified.
-  */
--static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+		bool *resize)
- {
- 	int seg, bus, slot, func, align_order, count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-@@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 		} else {
- 			align_order = -1;
- 		}
-+
-+		if (!strncmp(p, "noresize@", 9)) {
-+			*resize = false;
-+			p += 9;
-+		} else
-+			*resize = true;
-+
- 		if (strncmp(p, "pci:", 4) == 0) {
- 			/* PCI vendor/device (subvendor/subdevice) ids are specified */
- 			p += 4;
-@@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- {
- 	int i;
- 	struct resource *r;
-+	bool resize = true;
- 	resource_size_t align, size;
- 
- 	/*
-@@ -5057,7 +5067,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		return;
- 
- 	/* check if specified PCI is target device to reassign */
--	align = pci_specified_resource_alignment(dev);
-+	align = pci_specified_resource_alignment(dev, &resize);
- 	if (!align)
- 		return;
- 
-@@ -5080,15 +5090,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		}
- 
- 		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
-+		if (resize) {
-+			if (size < align) {
-+				size = align;
-+				dev_info(&dev->dev,
-+					"Rounding up size of resource #%d to %#llx.\n",
-+					i, (unsigned long long)size);
-+			}
-+			r->flags |= IORESOURCE_UNSET;
-+			r->end = size - 1;
-+			r->start = 0;
-+		} else {
-+			r->flags &= ~IORESOURCE_SIZEALIGN;
-+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-+			r->start = max(align, size);
-+			r->end = r->start + size - 1;
- 		}
--		r->flags |= IORESOURCE_UNSET;
--		r->end = size - 1;
--		r->start = 0;
- 	}
- 	/* Need to disable bridge's resource window,
- 	 * to enable the kernel to reassign new resource
--- 
-1.7.9.5
-
+>
+> Testing and reviewing now ...
+>
+> P.
+>
+>
+>
+>>>
+>>> Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
+>>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=153881
+>>> Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>> ---
+>>>  arch/x86/pci/fixup.c |   20 +++++++++++++-------
+>>>  1 file changed, 13 insertions(+), 7 deletions(-)
+>>>
+>>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+>>> index 837ea36..6d52b94 100644
+>>> --- a/arch/x86/pci/fixup.c
+>>> +++ b/arch/x86/pci/fixup.c
+>>> @@ -553,15 +553,21 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+>>>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
+>>>
+>>>  /*
+>>> - * Broadwell EP Home Agent BARs erroneously return non-zero values when read.
+>>> + * Device [8086:2fc0]
+>>> + * Erratum HSE43
+>>> + * CONFIG_TDP_NOMINAL CSR Implemented at Incorrect Offset
+>>> + * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
+>>>   *
+>>> - * See http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
+>>> - * entry BDF2.
+>>> + * Devices [8086:6f60,6fa0,6fc0]
+>>> + * Erratum BDF2
+>>> + * PCI BARs in the Home Agent Will Return Non-Zero Values During Enumeration
+>>> + * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
+>>>   */
+>>> -static void pci_bdwep_bar(struct pci_dev *dev)
+>>> +static void pci_invalid_bar(struct pci_dev *dev)
+>>>  {
+>>>         dev->non_compliant_bars = 1;
+>>>  }
+>>> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_bdwep_bar);
+>>> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_bar);
+>>> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_bar);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
+>>>
+>>
+>> Acked-by: Myron Stowe <myron.stowe@redhat.com>
+>>
+>>
+>
