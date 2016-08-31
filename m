@@ -1,66 +1,66 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] pci/aer: Add bus flag to skip source id matching
-Date: Thu, 25 Aug 2016 17:26:10 -0600
-Message-Id: <1472167571-11123-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-Id: <cover.1472554278.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 31 Aug 2016 08:15:18 +0200
+Subject: [PATCH 0/4] PCI PM refinements
+To: linux-pci@vger.kernel.org
+Cc: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Peter Wu <peter@lekensteyn.nl>,
+        Andreas Noever <andreas.noever@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow root port buses to choose to skip source id matching when finding
-the faulting device. Certain root port devices may return an incorrect
-source id and recommend to scan child device registers for aer
-notifications.
+The following patches are part of my Thunderbolt Runtime PM series.
+I'm posting them separately to split the series into digestible chunks.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/pcie/aer/aerdrv_core.c | 7 +++++--
- include/linux/pci.h                | 5 +++--
- 2 files changed, 8 insertions(+), 4 deletions(-)
+They benefit everyone, not just Thunderbolt, and Thunderbolt works fine
+without them (just not with the same degree of perfection).
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 521e39c..3a0d839 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -132,7 +132,9 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	 * When bus id is equal to 0, it might be a bad id
- 	 * reported by root port.
- 	 */
--	if (!nosourceid && (PCI_BUS_NUM(e_info->id) != 0)) {
-+	if (!nosourceid &&
-+	    (PCI_BUS_NUM(e_info->id) != 0) &&
-+	    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
- 		/* Device ID match? */
- 		if (e_info->id == ((dev->bus->number << 8) | dev->devfn))
- 			return true;
-@@ -147,7 +149,8 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	 *      1) nosourceid==y;
- 	 *      2) bus id is equal to 0. Some ports might lose the bus
- 	 *              id of error source id;
--	 *      3) There are multiple errors and prior id comparing fails;
-+	 *      3) bus flag PCI_BUS_FLAGS_NO_AERSID is set
-+	 *      4) There are multiple errors and prior id comparing fails;
- 	 * We check AER status registers to find possible reporter.
- 	 */
- 	if (atomic_read(&dev->enable_cnt) == 0)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b7d3aa2..5c08137 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -183,8 +183,9 @@ enum pci_irq_reroute_variant {
- 
- typedef unsigned short __bitwise pci_bus_flags_t;
- enum pci_bus_flags {
--	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
--	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-+	PCI_BUS_FLAGS_NO_MSI	= (__force pci_bus_flags_t) 1,
-+	PCI_BUS_FLAGS_NO_MMRBC	= (__force pci_bus_flags_t) 2,
-+	PCI_BUS_FLAGS_NO_AERSID	= (__force pci_bus_flags_t) 4,
- };
- 
- /* These values come from the PCI Express Spec */
+Patch [1/4] affords direct-complete to devices which are not platform-
+power-manageable, yet can be suspended to D3cold with a nonstandard
+mechanism. It does so using a heuristic: If a device's current_state
+is D3cold and it is not power-manageable, it is assumed that a
+nonstandard PM mechanism is at work and the device is left asleep.
+The patch is the outcome of a discussion with Rafael and Alan on
+linux-pci@ and I would like to thank both for tirelessly responding
+to my questions.
+
+Patch [3/4] replaces the unconditional resume after direct-complete with
+a conditional resume by determining if the platform firmware has put the
+device in reset-power-on or not.
+
+Because the D3cold state cannot be determined from the PMCSR, patch [2/4]
+adds a hook to query the platform firmware for its opinion on the device's
+power state.
+
+Finally, patch [4/4] changes the shutdown handling of PCI devices such
+that they are no longer woken without reason.
+
+The result of these patches should be a speedup and decreased power
+consumption for system sleep and system shutdown (both for devices that
+are platform-power-manageable and those that aren't).
+
+If you prefer point & click interfaces, the patches are browsable here:
+https://github.com/l1k/linux/commits/thunderbolt_runpm_v3
+
+Thanks,
+
+Lukas
+
+
+Lukas Wunner (4):
+  PCI: Afford direct-complete to devices with nonstandard pm
+  PCI: Query platform firmware for device power state
+  PCI: Avoid unnecessary resume after direct-complete
+  PCI: Avoid unnecessary resume on shutdown
+
+ drivers/pci/pci-acpi.c   | 23 +++++++++++++++++++++++
+ drivers/pci/pci-driver.c | 20 ++++++++++++++++++--
+ drivers/pci/pci.c        | 38 +++++++++++++++++++++++++++++++-------
+ drivers/pci/pci.h        |  3 +++
+ 4 files changed, 75 insertions(+), 9 deletions(-)
+
 -- 
-1.8.3.1
+2.8.1
+
