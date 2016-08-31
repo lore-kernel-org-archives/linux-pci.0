@@ -1,241 +1,227 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: helgaas@kernel.org
-Cc: jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jszhang@marvell.com,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v5 2/3] pcie-designware: add iATU Unroll feature
-Date: Wed, 10 Aug 2016 11:02:39 +0100
-Message-Id: <e7ad782cee69b1cf722f3e705f447c576cd2b6fe.1470822461.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
-References: <cover.1470822461.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1470822461.git.jpinto@synopsys.com>
-References: <cover.1470822461.git.jpinto@synopsys.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 31 Aug 2016 13:39:46 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+        tomas.winkler@intel.com
+Subject: Re: [PATCH v6 7/8] thunderbolt: Networking doc
+Message-ID: <20160831113946.GG17607@kroah.com>
+References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
+ <1470054233-4309-8-git-send-email-amir.jer.levy@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470054233-4309-8-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the support to the new iATU mechanism that will be used
-from Core version 4.80, which is called iATU Unroll.
-The new Cores can support the iATU Unroll or support the "old" iATU 
-method now called Legacy Mode. The driver is perfectly capable of
-performing well for both.
+On Mon, Aug 01, 2016 at 03:23:52PM +0300, Amir Levy wrote:
+> Adding Thunderbolt(TM) networking documentation.
+> 
+> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> ---
+>  Documentation/00-INDEX                   |   2 +
+>  Documentation/thunderbolt-networking.txt | 135 +++++++++++++++++++++++++++++++
 
-In order to make sure that the iATU is really enabled a for loop was
-introduced in dw_pcie_prog_outbound_atu() to improve reliability.
+Documentation/thunderbolt/networking.txt?
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-changes v4->v5:
-- v4 patch was not done properly
-changes v3->v4:
-- Unroll Mode is now obtained before the host initialization
-- The iATU enable check loop is now returning instead of only
-interrupting the loop
-changes v2->v3 (Bjorn Helgaas):
-- Unused *CTRL3 and *UPPR iATU Unroll registers were removed
-- Inbound addr builder macro was removed to simplifiy the code
-- *readl_unroll and *writel_unroll functions were simplified. Now the
-scope is always outbound.
-- dw_pcie_get_atu_mode changed to return the status
-- iATU enable check routine was improved in dw_pcie_prog_outbound_atu()
-changes v1->v2:
-- Patch was breaking kernel build due to bad definition in macro funtion.
-- Rebased on top of pci/next.
+>  2 files changed, 137 insertions(+)
+>  create mode 100644 Documentation/thunderbolt-networking.txt
+> 
+> diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
+> index cb9a6c6..80a6706 100644
+> --- a/Documentation/00-INDEX
+> +++ b/Documentation/00-INDEX
+> @@ -439,6 +439,8 @@ this_cpu_ops.txt
+>  	- List rationale behind and the way to use this_cpu operations.
+>  thermal/
+>  	- directory with information on managing thermal issues (CPU/temp)
+> +thunderbolt-networking.txt
+> +	- Thunderbolt(TM) Networking driver description.
+>  trace/
+>  	- directory with info on tracing technologies within linux
+>  unaligned-memory-access.txt
+> diff --git a/Documentation/thunderbolt-networking.txt b/Documentation/thunderbolt-networking.txt
+> new file mode 100644
+> index 0000000..e112313
+> --- /dev/null
+> +++ b/Documentation/thunderbolt-networking.txt
+> @@ -0,0 +1,135 @@
+> +Intel Thunderbolt(TM) Linux driver
+> +==================================
+> +
+> +Copyright(c) 2013 - 2016 Intel Corporation.
+> +
+> +Contact Information:
+> +Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
+> +Edited by Michael Jamet <michael.jamet@intel.com>
+> +
+> +Overview
+> +========
+> +
+> +Thunderbolt(TM) Networking mode is introduced with this driver.
 
- drivers/pci/host/pcie-designware.c | 131 ++++++++++++++++++++++++++++++++-----
- drivers/pci/host/pcie-designware.h |   1 +
- 2 files changed, 116 insertions(+), 16 deletions(-)
+What is "this driver"?
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 6fb88de..d239bc9 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -31,6 +31,11 @@
- #define LINK_WAIT_USLEEP_MIN		90000
- #define LINK_WAIT_USLEEP_MAX		100000
- 
-+/* Parameters for the waiting for iATU enabled routine */
-+#define LINK_WAIT_MAX_IATU_RETRIES	5
-+#define LINK_WAIT_IATU_MIN		9000
-+#define LINK_WAIT_IATU_MAX		10000
-+
- /* Synopsis specific PCIE configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
- #define PORT_LINK_MODE_MASK		(0x3f << 16)
-@@ -75,6 +80,26 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
-+/*
-+ * iATU unroll specific registers and definitions
-+ * from 4.80 core version the address translation will be made by unroll
-+ */
-+
-+/* Registers */
-+#define PCIE_ATU_UNR_REGION_CTRL1	0x00
-+#define PCIE_ATU_UNR_REGION_CTRL2	0x01
-+#define PCIE_ATU_UNR_LOWER_BASE		0x02
-+#define PCIE_ATU_UNR_UPPER_BASE		0x03
-+#define PCIE_ATU_UNR_LIMIT		0x04
-+#define PCIE_ATU_UNR_LOWER_TARGET	0x05
-+#define PCIE_ATU_UNR_UPPER_TARGET	0x06
-+
-+/* Register address builder */
-+#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
-+					((0x3 << 20) | (region << 9) |	\
-+					(register << 2))
-+/* End of Unroll specific */
-+
- /* PCIe Port Logic registers */
- #define PLR_OFFSET			0x700
- #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
-@@ -136,6 +161,28 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
- 		writel(val, pp->dbi_base + reg);
- }
- 
-+static inline void dw_pcie_readl_unroll(struct pcie_port *pp,
-+						u32 index, u32 reg, u32 *val)
-+{
-+	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
-+
-+	if (pp->ops->readl_rc)
-+		pp->ops->readl_rc(pp, pp->dbi_base + reg_addr, val);
-+	else
-+		*val = readl(pp->dbi_base + reg_addr);
-+}
-+
-+static inline void dw_pcie_writel_unroll(struct pcie_port *pp,
-+						u32 index, u32 val, u32 reg)
-+{
-+	u32 reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
-+
-+	if (pp->ops->writel_rc)
-+		pp->ops->writel_rc(pp, val, pp->dbi_base + reg_addr);
-+	else
-+		writel(val, pp->dbi_base + reg_addr);
-+}
-+
- static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 			       u32 *val)
- {
-@@ -157,24 +204,61 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
- 		int type, u64 cpu_addr, u64 pci_addr, u32 size)
- {
--	u32 val;
--
--	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
--			  PCIE_ATU_VIEWPORT);
--	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
--	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
--	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
--			  PCIE_ATU_LIMIT);
--	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
--	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
--	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+	u32 val = 0;
-+	u32 retries = 0;
-+
-+	if (pp->iatu_unroll_status) {
-+		dw_pcie_writel_unroll(pp, index,
-+			lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
-+		dw_pcie_writel_unroll(pp, index,
-+			upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
-+		dw_pcie_writel_unroll(pp, index,
-+			lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
-+		dw_pcie_writel_unroll(pp, index,
-+			lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
-+		dw_pcie_writel_unroll(pp, index,
-+			upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
-+		dw_pcie_writel_unroll(pp, index,
-+			type, PCIE_ATU_UNR_REGION_CTRL1);
-+		dw_pcie_writel_unroll(pp, index,
-+			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
-+	} else {
-+		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
-+						PCIE_ATU_VIEWPORT);
-+		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
-+						PCIE_ATU_LOWER_BASE);
-+		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
-+						PCIE_ATU_UPPER_BASE);
-+		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
-+						PCIE_ATU_LIMIT);
-+		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
-+						PCIE_ATU_LOWER_TARGET);
-+		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
-+						PCIE_ATU_UPPER_TARGET);
-+		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
-+		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-+	}
- 
- 	/*
--	 * Make sure ATU enable takes effect before any subsequent config
--	 * and I/O accesses.
--	 */
--	dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
-+	 * Make sure ATU enable takes effect before any subsequent config
-+	 * and I/O accesses.
-+	 */
-+	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-+
-+		if (pp->iatu_unroll_status) {
-+			dw_pcie_readl_unroll(pp, index,
-+					PCIE_ATU_UNR_REGION_CTRL2, &val);
-+		} else {
-+			dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
-+		}
-+
-+		if (val == PCIE_ATU_ENABLE)
-+			return;
-+
-+		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+	}
-+
-+	dev_dbg(pp->dev, "iATU is not being enabled\n");
- }
- 
- static struct irq_chip dw_msi_irq_chip = {
-@@ -433,6 +517,19 @@ static const struct irq_domain_ops msi_domain_ops = {
- 	.map = dw_pcie_msi_map,
- };
- 
-+static u8 dw_pcie_get_atu_mode(struct pcie_port *pp)
-+{
-+	u32 val = 0;
-+
-+	/* Check if the iATU unroll is enabled or not */
-+	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
-+
-+	if (val == 0xFFFFFFFF)
-+		return 1; /* enabled */
-+
-+	return 0; /* disabled */
-+}
-+
- int dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
-@@ -549,6 +646,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
-+	pp->iatu_unroll_status = dw_pcie_get_atu_mode(pp);
-+
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
- 
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 384e79b..354a981 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -48,6 +48,7 @@ struct pcie_port {
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
-+	u8			iatu_unroll_status;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
- 
--- 
-1.8.1.5
+> +This kernel code creates an ethernet device utilized in computer to computer
+> +communication over a Thunderbolt cable.
+
+What kernel code?
+
+> +This driver has been added on the top of the existing thunderbolt driver
+> +for systems with firwmare (FW) based Thunderbolt controllers supporting
+> +Thunderbolt Networking.
+
+How do I know if my hardware supports this or not?
+
+> +
+> +Files
+> +=====
+> +
+> +- icm_nhi.c/h:	These files allow communication with the FW (a.k.a ICM) based controller.
+> +		In addition, they create an interface for netlink communication with
+> +		a user space daemon.
+> +
+> +- net.c/net.h:	These files implement the 'eth' interface for the Thunderbolt(TM)
+> +		networking.
+
+Where are these files?  Not in this documentation directory :(
+
+> +
+> +Interface to user space
+> +=======================
+> +
+> +The interface to the user space module is implemented through a Generic Netlink.
+> +In order to be accessed by the user space module, both kernel and user space
+> +modules have to register with the same GENL_NAME. In our case, this is
+> +simply "thunderbolt".
+> +The registration is done at driver initialization time for all instances of
+> +the Thunderbolt controllers.
+> +The communication is then carried through pre-defined Thunderbolt messages.
+> +Each specific message has a callback function that is called when
+> +the related message is received.
+> +
+> +The messages are defined as follows:
+> +* NHI_CMD_UNSPEC: Not used.
+> +* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
+> +  communication channel.
+> +* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe
+> +  to close communication channel.
+> +* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
+> +  driver version, FW version offset, number of ports in the controller
+> +  and DMA port.
+> +* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
+> +* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
+> +* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
+> +  changes or disconnect path.
+> +* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space
+> +  module to FW to establish path.
+> +* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
+
+I want an ack from the network maintainers that this is an acceptable
+way to configure a network device, and that you aren't just
+reimplementing something that can already be done with existing tools.
+
+Creating new apis seems really strange to me, you will have to really
+convince me why you are "special" and need one.
+
+
+> +
+> +Communication with ICM (Firmware)
+> +=================================
+> +
+> +The communication with ICM is principally achieved through
+> +a DMA mechanism on Ring 0.
+
+Where is this ring 0?
+
+Why does a user/developer care about it?
+
+> +The driver allocates a shared memory that is physically mapped onto
+> +the DMA physical space at Ring 0.
+
+Again ring 0?
+
+> +
+> +Interrupts
+> +==========
+> +
+> +Thunderbolt relies on MSI-X interrupts.
+> +The MSI-X vector is allocated as follows:
+> +ICM
+> +     - Tx: MSI-X vector index 0
+> +     - Rx: MSI-X vector index 1
+> +
+> +Port 0
+> +     - Tx: MSI-X vector index 2
+> +     - Rx: MSI-X vector index 3
+> +
+> +Port 1
+> +     - Tx: MSI-X vector index 4
+> +     - Rx: MSI-X vector index 5
+> +
+> +ICM interrupts are used for communication with ICM only.
+> +Port 0 and Port 1 interrupts are used for Thunderbolt Networking
+> +communications.
+> +In case MSI-X is not available, the driver requests to enable MSI only.
+
+
+Is this section even really needed?  What can anyone do with it?
+
+> +
+> +Mutexes, semaphores and spinlocks
+> +=================================
+> +
+> +The driver should be able to operate in an environment where hardware
+> +is asynchronously accessed by multiple entities such as netlink,
+> +multiple controllers etc.
+> +
+> +* send_sem: This semaphore enforces unique sender (one sender at a time)
+> +  to avoid wrong impairing with responses. FW may process one message
+> +  at the time.
+> +* d0_exit_send_mutex: This mutex protects D0 exit (D3) situation
+> +  to avoid continuing to send messages to FW.
+> +* d0_exit_mailbox_mutex: This mutex protects D0 exit (D3) situation to
+> +  avoid continuing to send commands to mailbox.
+> +* mailbox_mutex: This mutex enforces unique sender (one sender at a time)
+> +  for the mailbox command.
+> +  A mutex is sufficient since the mailbox mechanism uses a polling mechanism
+> +  to get the command response.
+> +* lock: This spinlock protects from simultaneous changes during
+> +  disable/enable interrupts.
+> +* state_lock: This mutex comes to protect changes during net device state
+> +  changes and net_device operations.
+> +* controllers_list_mutex: This mutex syncs the access to the controllers
+> +  list when there are multiple controllers in the system.
+
+Why aren't these locks documented in the code itself?  Having it out
+here makes no sense as it will get out of date and will never be looked
+at.  Put it in the code please.
+
+
+> +
+> +FW path enablement
+> +==================
+> +
+> +In order to SW to communicate with the FW, the driver needs to send to FW
+> +the PDF driver ready command and receive response from FW.
+
+PDF?  What does that mean?  This is the first time I've seen that term
+in this file.
+
+> +The driver ready command PDF value is 12 and the response is 13.
+
+Ok, so?
+
+> +Once the exchange is completed, the user space module should be able to send
+> +messages through the driver to the FW and FW starts to send notifications
+> +about HW/FW events.
+
+What does userspace have to do with this?  Why do they care?
+
+This documentation is really confusing, and I thought I understood how
+thunderbolt systems worked :(
+
+greg k-h
