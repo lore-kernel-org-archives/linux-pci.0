@@ -1,46 +1,50 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
-MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <1471346604.4887.120.camel@linux.intel.com>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
- <3103060.86QBTjSLk3@vostro.rjw.lan> <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
- <3861743.KWBechkp08@vostro.rjw.lan> <CAE2855sk2M_77W7dPUb-G43zaDgiNvH2fwpEUvZKOZCBZ-1UpQ@mail.gmail.com>
- <CAE2855uNKxtSJSGdF9T7LcGV+F6HzqJhmgDEdgAEwrY=HjPnrQ@mail.gmail.com>
- <20160816091502.GB1751@lahna.fi.intel.com> <1471346604.4887.120.camel@linux.intel.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 16 Aug 2016 13:27:41 +0200
-Message-ID: <CAJZ5v0gnuYiA73aKjnwDnfM98Fk7gRA8FEvvxxRMziEaWdkCEA@mail.gmail.com>
-Subject: Re: ACPI device using sub-resource of PCI device
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Aaron Durbin <adurbin@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from laurent.telenet-ops.be ([195.130.137.89]:44421 "EHLO
+        laurent.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932912AbcHaJ2h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 05:28:37 -0400
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Simon Horman <horms@verge.net.au>,
+        Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] PCI: rcar: Don't disable/unprepare clocks on prepare/enable failure
+Date: Wed, 31 Aug 2016 11:28:22 +0200
+Message-Id: <1472635702-26465-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 16, 2016 at 1:23 PM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
-> On Tue, 2016-08-16 at 12:15 +0300, Mika Westerberg wrote:
->> On Fri, Aug 12, 2016 at 11:45:30AM -0500, Aaron Durbin wrote:
->> >
->> > Was anyone able to take a look into a solution for the current
->> > problem?  Again, please feel free to ask if anyone would like help
->> > testing potential solutions.
->>
->> Below is one proposal for fixing the issue. It is just a prototype and
->> I'm not sure if it takes everything needed into account. Would you be
->> able to try it out and let us know if it works for you?
->
-> Just style comments below.
+If clk_prepare_enable() fails, we must not call clk_disable_unprepare()
+in the error path.
 
-Didn't Mika say it was a prototype?  Meaning that it would be cleaned
-up (among other things)?
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/pci/host/pcie-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Why do you have to confuse things by posting style comments on patches
-clearly described as prototypes?  Is there not enough noise on the
-mailing lists already?
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 65db7a2215090ff4..0f5c2b2b4f8dfcd2 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -782,7 +782,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+ 	}
+ 	err = clk_prepare_enable(pcie->clk);
+ 	if (err)
+-		goto fail_clk;
++		return err;
+ 
+ 	pcie->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
+ 	if (IS_ERR(pcie->bus_clk)) {
+@@ -792,7 +792,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+ 	}
+ 	err = clk_prepare_enable(pcie->bus_clk);
+ 	if (err)
+-		goto err_map_reg;
++		goto fail_clk;
+ 
+ 	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
+ 	if (!i) {
+-- 
+1.9.1
 
-Thanks,
-Rafael
