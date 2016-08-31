@@ -1,81 +1,57 @@
-Return-Path: <andrew.donnellan@au1.ibm.com>
-Return-Path: <andrew.donnellan@au1.ibm.com>
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, helgaas@kernel.org, mauricfo@linux.vnet.ibm.com,
-        gwshan@linux.vnet.ibm.com, ruscur@russell.cc,
-        mrochs@linux.vnet.ibm.com, ukrishn@linux.vnet.ibm.com,
-        imunsie@au1.ibm.com, fbarrat@linux.vnet.ibm.com,
-        clombard@linux.vnet.ibm.com, felix@linux.vnet.ibm.com
-Subject: [PATCH] cxl: use pcibios_free_controller_deferred() when removing vPHBs
-Date: Thu, 18 Aug 2016 17:35:14 +1000
-Message-Id: <1471505714-30049-1-git-send-email-andrew.donnellan@au1.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33657 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754570AbcHaLaL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 07:30:11 -0400
+Date: Wed, 31 Aug 2016 13:30:10 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+        tomas.winkler@intel.com
+Subject: Re: [PATCH v6 3/8] thunderbolt: Kconfig for Thunderbolt(TM)
+ networking
+Message-ID: <20160831113010.GD17607@kroah.com>
+References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
+ <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When cxl removes a vPHB, it's possible that the pci_controller may be freed
-before all references to the devices on the vPHB have been released. This
-in turn causes an invalid memory access when the devices are eventually
-released, as pcibios_release_device() attempts to call the phb's
-release_device hook.
+On Mon, Aug 01, 2016 at 03:23:48PM +0300, Amir Levy wrote:
+> Updating the Kconfig Thunderbolt(TM) description.
+> 
+> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> ---
+>  drivers/thunderbolt/Kconfig  | 25 +++++++++++++++++++++----
+>  drivers/thunderbolt/Makefile |  2 +-
+>  2 files changed, 22 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
+> index c121acc..d34b0f5 100644
+> --- a/drivers/thunderbolt/Kconfig
+> +++ b/drivers/thunderbolt/Kconfig
+> @@ -1,13 +1,30 @@
+> -menuconfig THUNDERBOLT
+> -	tristate "Thunderbolt support for Apple devices"
+> +config THUNDERBOLT
+> +	tristate "Thunderbolt(TM) support"
+>  	depends on PCI
+>  	select CRC32
+>  	help
+> -	  Cactus Ridge Thunderbolt Controller driver
+> +	  Thunderbolt(TM) Controller driver
+> +
+> +if THUNDERBOLT
+> +
+> +config THUNDERBOLT_APPLE
+> +	tristate "Apple hardware support"
 
-In cxl_pci_vphb_remove(), remove the existing call to
-pcibios_free_controller(). Instead, use
-pcibios_free_controller_deferred() to free the pci_controller after all
-devices have been released. Export pci_set_host_bridge_release() so we can
-do this.
+Wait, what?  What about my non-apple thunderbolt hardware?  Did that
+just suddenly stop working?  Why rename this option?
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-
----
-
-This patch requires http://patchwork.ozlabs.org/patch/658324/. It should go
-through the powerpc tree.
----
- drivers/misc/cxl/vphb.c   | 10 +++++++++-
- drivers/pci/host-bridge.c |  1 +
- 2 files changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/misc/cxl/vphb.c b/drivers/misc/cxl/vphb.c
-index 7ada5f1..3519ace 100644
---- a/drivers/misc/cxl/vphb.c
-+++ b/drivers/misc/cxl/vphb.c
-@@ -230,6 +230,11 @@ int cxl_pci_vphb_add(struct cxl_afu *afu)
- 	if (phb->bus == NULL)
- 		return -ENXIO;
- 
-+	/* Set release hook on root bus */
-+	pci_set_host_bridge_release(to_pci_host_bridge(phb->bus->bridge),
-+				    pcibios_free_controller_deferred,
-+				    (void *) phb);
-+
- 	/* Claim resources. This might need some rework as well depending
- 	 * whether we are doing probe-only or not, like assigning unassigned
- 	 * resources etc...
-@@ -256,7 +261,10 @@ void cxl_pci_vphb_remove(struct cxl_afu *afu)
- 	afu->phb = NULL;
- 
- 	pci_remove_root_bus(phb->bus);
--	pcibios_free_controller(phb);
-+	/*
-+	 * We don't free phb here - that's handled by
-+	 * pcibios_free_controller_deferred()
-+	 */
- }
- 
- static bool _cxl_pci_is_vphb_device(struct pci_controller *phb)
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 5f4a2e0..add6623 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -44,6 +44,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 	bridge->release_fn = release_fn;
- 	bridge->release_data = release_data;
- }
-+EXPORT_SYMBOL_GPL(pci_set_host_bridge_release);
- 
- void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res)
--- 
-Andrew Donnellan              OzLabs, ADL Canberra
-andrew.donnellan@au1.ibm.com  IBM Australia Limited
+greg k-h
