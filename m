@@ -1,137 +1,144 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V8 4/8] irqchip/gicv3-its: Cleanup for ITS domain initialization
-Date: Thu, 11 Aug 2016 12:06:34 +0200
-Message-Id: <1470909998-16710-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1470909998-16710-1-git-send-email-tn@semihalf.com>
-References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+Return-Path: <peter@lekensteyn.nl>
+Return-Path: <peter@lekensteyn.nl>
+Date: Wed, 31 Aug 2016 14:34:44 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Roland Singer <roland.singer@desertbit.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, emil.l.velikov@gmail.com,
+	"imirkin@alum.mit.edu >> Ilia Mirkin" <imirkin@alum.mit.edu>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+Message-ID: <20160831123444.GE19420@al>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost>
+ <20160830195337.GA18805@al>
+ <e7318236-9737-518e-c360-398c66220961@desertbit.com>
+ <20160831114639.GD19420@al>
+ <1b91b281-3c71-f02f-ff27-51957af92275@desertbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1b91b281-3c71-f02f-ff27-51957af92275@desertbit.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no point to initialize ITS without having msi-controller
-property in corresponding DT node. However, its_probe is checking
-msi-controller presence at the end, so we can save our time and do that
-check prior to its_probe call. Also, for the code clarity purpose,
-we put domain initialization to separate function.
+On Wed, Aug 31, 2016 at 02:21:31PM +0200, Roland Singer wrote:
+> Am 31.08.2016 um 13:46 schrieb Peter Wu:
+> > On Wed, Aug 31, 2016 at 01:27:36PM +0200, Roland Singer wrote:
+> >> Am 30.08.2016 um 21:53 schrieb Peter Wu:
+> >>> On Mon, Aug 29, 2016 at 11:02:10AM -0500, Bjorn Helgaas wrote:
+> >>>> [+cc linux-acpi, linux-kernel, dri-devel]
+> >>>>
+> >>>> Hi Roland,
+> >>>>
+> >>>> I have no idea how to debug this problem.  Are you seeing something
+> >>>> that suggests it may be a PCI problem?
+> >>>
+> >>> Yes I suspect there is an ACPI and/ or PCI problem, possibly
+> >>> device-specific. Steps to reproduce on the affected machines:
+> >>>
+> >>>  1. Load nouveau.
+> >>>  2. Wait for it to runtime suspend.
+> >>>  2. Invoke 'lspci', this resumes the Nvidia PCI device via nouveau.
+> >>>  3. lspci never returns, few moments later an AML_INFINITE_LOOP is
+> >>>     reported.
+> >>>
+> >>
+> >> I can confirm this. Same result on my machine.
+> >>
+> >> Here is a link to my ACPI tables:
+> >> https://bugs.launchpad.net/lpbugreporter/+bug/752542/+attachment/4722651/+files/Razer-Blade.tar.gz
+> >>
+> >> The specific source for the NVIDIA card can be found in the ssdt5.dsl file.
+> >>
+> >>
+> >>     Method (PGON, 1, Serialized)
+> >>     {
+> >>         /* ... */
+> >>
+> >>         GPPR (PION, One)
+> >>         If ((OSYS == 0x07D9))  /* Is Windows 2009 - In my case, setting to Windows 2009 only works! */
+> >>         {
+> > [..]
+> >>         }
+> >>         Else
+> >>         {
+> >>             LKEN (PION)
+> >>         }
+> >>
+> >>         /* ... */
+> >>         
+> >>         Return (Zero)
+> >>     }
+> >>
+> >>
+> >>
+> >> If not set to Windows 2009, then this is triggered:
+> >>
+> >>
+> >>     Method (LKEN, 1, NotSerialized)
+> >>     {
+> > [..]
+> >>     }
+> > 
+> > Yep, this is the same code. I stripped out irrelevant parts from the
+> > previous mail for brevity.
+> > 
+> >> Is it possible to override the specific ACPI table functions (SSDT) in the DSDT?
+> >> This way I could try to debug to find some more information...
+> > 
+> > See Documentation/acpi/initrd_table_override.txt and note that it is
+> > important that the tables are really located at /kernel/firmware/acpi/
+> > in your initrd (which must be the first, even before any possible
+> > microcode updates).
+> > 
+> > What are you trying to do? For ACPI method tracing, see
+> > Documentation/acpi/method-tracing.txt
+> > 
+> 
+> Oh, you're right.
+> 
+> Thanks. Right now I am overriding the DSDT, but I am not able to override
+> the SSDT, because I have to fix and compile all the SSDT files. There
+> are too many compile errors... Wanted to find the exact line which
+> is responsible for the hickup.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/irqchip/irq-gic-v3-its.c | 57 ++++++++++++++++++++++++----------------
- 1 file changed, 34 insertions(+), 23 deletions(-)
+Have you disassembled with externs included? That is,
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 7ceaba8..bd43de1 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1609,13 +1609,37 @@ static void its_enable_quirks(struct its_node *its)
- 	gic_enable_quirks(iidr, its_quirks, its);
- }
- 
-+static int its_init_domain(struct device_node *node, struct its_node *its,
-+			   struct irq_domain *parent)
-+{
-+	struct irq_domain *inner_domain;
-+	struct msi_domain_info *info;
-+
-+	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	if (!info)
-+		return -ENOMEM;
-+
-+	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
-+	if (!inner_domain) {
-+		kfree(info);
-+		return -ENOMEM;
-+	}
-+
-+	inner_domain->parent = parent;
-+	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
-+	info->ops = &its_msi_domain_ops;
-+	info->data = its;
-+	inner_domain->host_data = info;
-+
-+	return 0;
-+}
-+
- static int __init its_probe(struct device_node *node,
- 			    struct irq_domain *parent)
- {
- 	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
--	struct irq_domain *inner_domain;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
-@@ -1707,28 +1731,9 @@ static int __init its_probe(struct device_node *node,
- 	writeq_relaxed(0, its->base + GITS_CWRITER);
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
--	if (of_property_read_bool(node, "msi-controller")) {
--		struct msi_domain_info *info;
--
--		info = kzalloc(sizeof(*info), GFP_KERNEL);
--		if (!info) {
--			err = -ENOMEM;
--			goto out_free_tables;
--		}
--
--		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
--		if (!inner_domain) {
--			err = -ENOMEM;
--			kfree(info);
--			goto out_free_tables;
--		}
--
--		inner_domain->parent = parent;
--		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
--		info->ops = &its_msi_domain_ops;
--		info->data = its;
--		inner_domain->host_data = info;
--	}
-+	err = its_init_domain(node, its, parent);
-+	if (err)
-+		goto out_free_tables;
- 
- 	spin_lock(&its_lock);
- 	list_add(&its->entry, &its_nodes);
-@@ -1779,6 +1784,12 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
- 
- 	for (np = of_find_matching_node(node, its_device_id); np;
- 	     np = of_find_matching_node(np, its_device_id)) {
-+		if (!of_property_read_bool(np, "msi-controller")) {
-+			pr_warn("%s: no msi-controller property, ITS ignored\n",
-+				np->full_name);
-+			continue;
-+		}
-+
- 		its_probe(np, parent_domain);
- 	}
- 
+    iasl -e *.dat -d ssdtX.dat
+
+If you are sure that the remaining errors are harmless, you can use the
+'-f' option to ignore errors. You can also use the `-ve` option to
+suppress warnings and remarks so you can focus on the errors.
+
+If you look at my notes.txt, you will see that _OFF always executes the
+same code. PGON differs. When the problem occurs, "Q0L0" somehow always
+reads back as non-zero and LNKS < 7.
+
+> >>> Yes I suspect there is an ACPI and/ or PCI problem, possibly
+> >>> device-specific. Steps to reproduce on the affected machines:
+> >>>
+> >>>  1. Load nouveau.
+> >>>  2. Wait for it to runtime suspend.
+> >>>  2. Invoke 'lspci', this resumes the Nvidia PCI device via nouveau.
+> >>>  3. lspci never returns, few moments later an AML_INFINITE_LOOP is
+> >>>     reported.
+> 
+> I noticed following:
+> 
+> 1. Blacklist nouveau
+> 2. Boot to GDM login manager (Wayland)
+> 3. Switch to TTY with CTRL+ALT+FN2
+> 4. Load bbswitch
+> 5. Switch off GPU
+> 6. run lspci -> no freeze
+> 7. Switch to GDM
+> 8. Login to a Wayland session (X11 won't work)
+> 9. run lspci in a GUI terminal -> system freezes
+
+Is nouveau somehow loaded anyway? All those extra components (X11,
+Wayland, etc.) are unnecessary to reproduce the core problem. It occurs
+whenever the device is being resumed (either via DSM/_PS0 or via power
+resource PG00._ON).
 -- 
-1.9.1
+Kind regards,
+Peter Wu
+https://lekensteyn.nl
