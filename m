@@ -1,114 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42040 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754560AbcHSBGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:06:14 -0400
-Date: Thu, 18 Aug 2016 15:19:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Ley Foon Tan <lftan.linux@gmail.com>
-Subject: Re: [PATCH] PCI: altera: Poll for link training status after
- retraining the link
-Message-ID: <20160818201900.GJ27353@localhost>
-References: <1471241162-23021-1-git-send-email-lftan@altera.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33648 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752578AbcHaL3K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 07:29:10 -0400
+Date: Wed, 31 Aug 2016 13:29:14 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        thunderbolt-linux@intel.com, mika.westerberg@intel.com,
+        tomas.winkler@intel.com
+Subject: Re: [PATCH v6 3/8] thunderbolt: Kconfig for Thunderbolt(TM)
+ networking
+Message-ID: <20160831112914.GC17607@kroah.com>
+References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
+ <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1471241162-23021-1-git-send-email-lftan@altera.com>
+In-Reply-To: <1470054233-4309-4-git-send-email-amir.jer.levy@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 15, 2016 at 02:06:02PM +0800, Ley Foon Tan wrote:
-> Poll for link training status is cleared before poll for link up status.
-> This can help to get the reliable link up status, especially when PCIe
-> is in Gen 3 speed.
-> 
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+On Mon, Aug 01, 2016 at 03:23:48PM +0300, Amir Levy wrote:
+> Updating the Kconfig Thunderbolt(TM) description.
 
-Applied to pci/host-altera for v4.9, thanks!
+Why are you inserting a (TM) in here?  Do you see that in any other
+kernel Kconfig file?  Please don't start adding it here, it's not
+needed from what I can tell.
 
-> ---
->  drivers/pci/host/pcie-altera.c | 45 ++++++++++++++++++++++++++++++++++--------
->  1 file changed, 37 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> index 2b78376..58eef99 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -61,7 +61,8 @@
->  #define TLP_LOOP			500
->  #define RP_DEVFN			0
->  
-> -#define LINK_UP_TIMEOUT			5000
-> +#define LINK_UP_TIMEOUT			HZ
-> +#define LINK_RETRAIN_TIMEOUT		HZ
->  
->  #define INTX_NUM			4
->  
-> @@ -99,11 +100,44 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
->  	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
->  }
->  
-> +static void altera_wait_link_retrain(struct pci_dev *dev)
-> +{
-> +	u16 reg16;
-> +	unsigned long start_jiffies;
-> +	struct altera_pcie *pcie = dev->bus->sysdata;
-> +
-> +	/* Wait for link training end. */
-> +	start_jiffies = jiffies;
-> +	for (;;) {
-> +		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
-> +		if (!(reg16 & PCI_EXP_LNKSTA_LT))
-> +			break;
-> +
-> +		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
-> +			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
-> +			break;
-> +		}
-> +		udelay(100);
-> +	}
-> +
-> +	/* Wait for link is up */
-> +	start_jiffies = jiffies;
-> +	for (;;) {
-> +		if (altera_pcie_link_is_up(pcie))
-> +			break;
-> +
-> +		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
-> +			dev_err(&pcie->pdev->dev, "link up timeout\n");
-> +			break;
-> +		}
-> +		udelay(100);
-> +	}
-> +}
-> +
->  static void altera_pcie_retrain(struct pci_dev *dev)
->  {
->  	u16 linkcap, linkstat;
->  	struct altera_pcie *pcie = dev->bus->sysdata;
-> -	int timeout =  0;
->  
->  	if (!altera_pcie_link_is_up(pcie))
->  		return;
-> @@ -121,12 +155,7 @@ static void altera_pcie_retrain(struct pci_dev *dev)
->  	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
->  		pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
->  					 PCI_EXP_LNKCTL_RL);
-> -		while (!altera_pcie_link_is_up(pcie)) {
-> -			timeout++;
-> -			if (timeout > LINK_UP_TIMEOUT)
-> -				break;
-> -			udelay(5);
-> -		}
-> +		altera_wait_link_retrain(dev);
->  	}
->  }
->  DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
-> -- 
-> 1.8.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+thanks,
+
+greg k-h
