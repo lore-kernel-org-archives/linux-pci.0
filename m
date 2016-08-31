@@ -1,42 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:8949 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754245AbcHAQsE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Aug 2016 12:48:04 -0400
-Date: Mon, 1 Aug 2016 10:20:58 -0600
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Haggai Eran <haggaie@mellanox.com>, linux-rdma@vger.kernel.org,
-	linux-nvme@lists.infradead.org, Liran Liss <liranl@mellanox.com>,
-	linux-pci@vger.kernel.org, Yishai Hadas <yishaih@mellanox.com>,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	Leon Romanovsky <leonro@mellanox.com>,
-	Artemy Kovalyov <artemyko@mellanox.com>,
-	Jerome Glisse <j.glisse@gmail.com>, Jon Derrick:;
-Subject: Re: [RFC 6/7] NVMe: Use genalloc to allocate CMB regions
-Message-ID: <20160801162057.GA11476@localhost.localdomain>
-References: <1470034653-9097-1-git-send-email-haggaie@mellanox.com>
- <1470034653-9097-7-git-send-email-haggaie@mellanox.com>
- <20160801155348.GB23224@infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 31 Aug 2016 12:55:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Andi Kleen <ak@linux.intel.com>,
+        Myron Stowe <myron.stowe@redhat.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Mark Haswell Power Control Unit as having
+ non-compliant BARs
+Message-ID: <20160831175543.GD16426@localhost>
+References: <20160831155009.3216.93787.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <57C716F5.1080808@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160801155348.GB23224@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <57C716F5.1080808@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 01, 2016 at 08:53:49AM -0700, Christoph Hellwig wrote:
-> On Mon, Aug 01, 2016 at 09:57:32AM +0300, Haggai Eran wrote:
-> > Register the CMB in a gen_pool dedicated to manage CMB regions. Use the
-> > pool to allocate the SQs to make sure they are registered.
+On Wed, Aug 31, 2016 at 01:42:13PM -0400, Prarit Bhargava wrote:
+> On 08/31/2016 11:50 AM, Bjorn Helgaas wrote:
+> > The Haswell Power Control Unit has a non-PCI register (CONFIG_TDP_NOMINAL)
+> > where BAR 0 is supposed to be.  This is erratum HSE43 in the spec update
+> > referenced below:
+> > 
+> >   The PCIe* Base Specification indicates that Configuration Space Headers
+> >   have a base address register at offset 0x10.  Due to this erratum, the
+> >   Power Control Unit's CONFIG_TDP_NOMINAL CSR (Bus 1; Device 30; Function
+> >   3; Offset 0x10) is located where a base register is expected.
+> > 
+> > Mark the PCU as having non-compliant BARs so we don't try to probe any of
+> > them.  There are no other BARs on this device.
+> > 
+> > Rename the quirk so it's not Broadwell-specific.
+> > 
+> > Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=153881
+> > Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  arch/x86/pci/fixup.c |   20 +++++++++++++-------
+> >  1 file changed, 13 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> > index 837ea36..6d52b94 100644
+> > --- a/arch/x86/pci/fixup.c
+> > +++ b/arch/x86/pci/fixup.c
+> > @@ -553,15 +553,21 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
+> >  
+> >  /*
+> > - * Broadwell EP Home Agent BARs erroneously return non-zero values when read.
+> > + * Device [8086:2fc0]
+> > + * Erratum HSE43
+> > + * CONFIG_TDP_NOMINAL CSR Implemented at Incorrect Offset
+> > + * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
+> >   *
 > 
-> And why would the NVMe driver care if "they are registered"?
+> Bjorn,
 > 
-> Once we start allowing diverse CMB uses (what happened to Jon's patches
-> btw?) genalloc might be a good backend allocator, but without that
-> it's entirely pointless.  Also please don't introduce useless header
-> files.
-My concern is using CMB as a generic memory space could lead to invalid uses and untested paths in broken firmware (leading to bricked drives...). The spec defines what it's allowed to be used for, but doesn't really leave it open for general purpose usage outside of that. Because of that I think it needs more hand-holding by the kernel to prevent invalid usage.
+> I really think you should point at this doc:
+> 
+> http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-datasheet-vol-2.html
+> 
+> Section 5.4, Device 30 Function 3
+> 
+> which states (at the bottom of the config space diagram) "Note: The CSR located
+> at offset in Device 30, Function 3, Offset 0x10 is not a Configuration Space
+> Header and SW should not treat it as such."
+> 
+> as it is more informative of the issue.
+> 
+> I'm also slightly concerned about blacklisting the rest of the config space, but
+> I don't see any systems that have non-zero BARs but that's a lesser issue.
+> 
+> Beyond that, testing went well.
 
-What I would like to see is a set of knobs controlling the 'chunks' of memory's usages (controlled through sysfs/configfs?) and the kernel takes care of allocation. My set was going to expose a resource file for WDS/RDS but everything else was unhandled except for its current sqes usage. I think the genalloc could fit into this scheme quite well.
+I added the link to the changelog, but I don't think it really adds
+much about the issue.  It basically says "we screwed up and generic
+PCI BAR sizing SW should magically ignore the register at 0x10."
 
-Thoughts?
+Thanks for testing it; I added your Tested-by.
+
+Bjorn
