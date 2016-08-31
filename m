@@ -1,68 +1,318 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 22 Aug 2016 12:28:21 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: bhelgaas@google.com, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: release pci_host_bridge resource after remove root
- bus
-Message-ID: <20160822172821.GG18628@localhost>
-References: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [RFC PATCH V2 1/3] PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for ACPI
+Date: Wed, 31 Aug 2016 19:48:12 +0800
+Message-ID: <1472644094-82731-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
+References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466682138-25281-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 23, 2016 at 07:42:18PM +0800, Yijing Wang wrote:
-> pci_host_bridge holds the top resources(IO port/Mem/bus),
-> now we release pci_host_bridge resources in
-> acpi_pci_root_release_info() which would be called when
-> pci_host_bridge device refcount reach 0. In some cases,
-> pci_host_bridge refcount cannot reach 0 after we remove
-> pci root bus in pci_remove_root_bus(). 
+re-architect the Hip05/Hip06 host controllers driver to prepare
+for the ACPI based driver.
+The common functions used also by the ACPI driver have been grouped
+into a new "common" file.
 
-Did you figure out *why* the host bridge refcount is non-zero?
-That seems like it could be part of the problem.
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ MAINTAINERS                         |   2 +
+ drivers/pci/host/Makefile           |   2 +-
+ drivers/pci/host/pcie-hisi-common.c |  66 ++++++++++++++++++++++
+ drivers/pci/host/pcie-hisi.c        | 110 ++++++++++--------------------------
+ drivers/pci/host/pcie-hisi.h        |  23 ++++++++
+ 5 files changed, 123 insertions(+), 80 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-hisi-common.c
+ create mode 100644 drivers/pci/host/pcie-hisi.h
 
-You're moving some release_resource() calls from pci_root.c to
-host-bridge.c.  Where are the corresponding insert or request resource
-calls?  It's more maintainable if we keep the insert and remove paths
-close in the code.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 20bb1d0..cdc1bba 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9081,7 +9081,9 @@ M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.h
+ F:	drivers/pci/host/pcie-hisi.c
++F:	drivers/pci/host/pcie-hisi-common.c
+ 
+ PCIE DRIVER FOR QUALCOMM MSM
+ M:     Stanimir Varbanov <svarbanov@mm-sol.com>
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 500cf78..02b498d 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -25,7 +25,7 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+-obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
++obj-$(CONFIG_PCI_HISI) += pcie-hisi.o pcie-hisi-common.o
+ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+ obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+ obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
+diff --git a/drivers/pci/host/pcie-hisi-common.c b/drivers/pci/host/pcie-hisi-common.c
+new file mode 100644
+index 0000000..5a5f269
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi-common.c
+@@ -0,0 +1,66 @@
++/*
++ * PCIe host controller common functions for HiSilicon SoCs
++ *
++ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/pci.h>
++#include "pcie-hisi.h"
++
++/* HipXX PCIe host only supports 32-bit config access */
++int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
++			      u32 *val)
++{
++	u32 reg;
++	u32 reg_val;
++	void *walker = &reg_val;
++
++	walker += (where & 0x3);
++	reg = where & ~0x3;
++	reg_val = readl(reg_base + reg);
++
++	if (size == 1)
++		*val = *(u8 __force *) walker;
++	else if (size == 2)
++		*val = *(u16 __force *) walker;
++	else if (size == 4)
++		*val = reg_val;
++	else
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++/* HipXX PCIe host only supports 32-bit config access */
++int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int  size,
++				u32 val)
++{
++	u32 reg_val;
++	u32 reg;
++	void *walker = &reg_val;
++
++	walker += (where & 0x3);
++	reg = where & ~0x3;
++	if (size == 4)
++		writel(val, reg_base + reg);
++	else if (size == 2) {
++		reg_val = readl(reg_base + reg);
++		*(u16 __force *) walker = val;
++		writel(reg_val, reg_base + reg);
++	} else if (size == 1) {
++		reg_val = readl(reg_base + reg);
++		*(u8 __force *) walker = val;
++		writel(reg_val, reg_base + reg);
++	} else
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	return PCIBIOS_SUCCESSFUL;
++}
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 7ee9dfc..23d74e9 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -21,6 +21,7 @@
+ #include <linux/regmap.h>
+ 
+ #include "pcie-designware.h"
++#include "pcie-hisi.h"
+ 
+ #define PCIE_LTSSM_LINKUP_STATE				0x11
+ #define PCIE_LTSSM_STATE_MASK				0x3F
+@@ -30,12 +31,6 @@
+ 
+ #define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
+ 
+-struct hisi_pcie;
+-
+-struct pcie_soc_ops {
+-	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
+-};
+-
+ struct hisi_pcie {
+ 	struct regmap *subctrl;
+ 	void __iomem *reg_base;
+@@ -44,87 +39,24 @@ struct hisi_pcie {
+ 	struct pcie_soc_ops *soc_ops;
+ };
+ 
+-static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
+-					u32 val, u32 reg)
+-{
+-	writel(val, pcie->reg_base + reg);
+-}
+-
+-static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
+-{
+-	return readl(pcie->reg_base + reg);
+-}
++struct pcie_soc_ops {
++	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
++};
+ 
+-/* HipXX PCIe host only supports 32-bit config access */
+-static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
+-			      u32 *val)
++static inline int hisi_pcie_cfg_read(struct pcie_port *pp, int where,
++		int size, u32 *val)
+ {
+-	u32 reg;
+-	u32 reg_val;
+ 	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+-	void *walker = &reg_val;
+-
+-	walker += (where & 0x3);
+-	reg = where & ~0x3;
+-	reg_val = hisi_pcie_apb_readl(pcie, reg);
+-
+-	if (size == 1)
+-		*val = *(u8 __force *) walker;
+-	else if (size == 2)
+-		*val = *(u16 __force *) walker;
+-	else if (size == 4)
+-		*val = reg_val;
+-	else
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+ 
+-/* HipXX PCIe host only supports 32-bit config access */
+-static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
+-				u32 val)
+-{
+-	u32 reg_val;
+-	u32 reg;
+-	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+-	void *walker = &reg_val;
+-
+-	walker += (where & 0x3);
+-	reg = where & ~0x3;
+-	if (size == 4)
+-		hisi_pcie_apb_writel(pcie, val, reg);
+-	else if (size == 2) {
+-		reg_val = hisi_pcie_apb_readl(pcie, reg);
+-		*(u16 __force *) walker = val;
+-		hisi_pcie_apb_writel(pcie, reg_val, reg);
+-	} else if (size == 1) {
+-		reg_val = hisi_pcie_apb_readl(pcie, reg);
+-		*(u8 __force *) walker = val;
+-		hisi_pcie_apb_writel(pcie, reg_val, reg);
+-	} else
+-		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	return PCIBIOS_SUCCESSFUL;
++	return hisi_pcie_common_cfg_read(pcie->reg_base, where, size, val);
+ }
+ 
+-static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
++static inline int hisi_pcie_cfg_write(struct pcie_port *pp, int where,
++		int size, u32 val)
+ {
+-	u32 val;
+-
+-	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
+-		    0x100 * hisi_pcie->port_id, &val);
+-
+-	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
+-}
+-
+-static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
+-{
+-	u32 val;
+-
+-	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
+-			PCIE_SYS_STATE4);
++	struct hisi_pcie *pcie = to_hisi_pcie(pp);
+ 
+-	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++	return hisi_pcie_common_cfg_write(pcie->reg_base, where, size, val);
+ }
+ 
+ static int hisi_pcie_link_up(struct pcie_port *pp)
+@@ -215,6 +147,26 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
++{
++	u32 val;
++
++	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
++		    0x100 * hisi_pcie->port_id, &val);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
++{
++	u32 val;
++
++	val = readl(hisi_pcie->reg_base + PCIE_HIP06_CTRL_OFF +
++			PCIE_SYS_STATE4);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
+ static struct pcie_soc_ops hip05_ops = {
+ 		&hisi_pcie_link_up_hip05
+ };
+diff --git a/drivers/pci/host/pcie-hisi.h b/drivers/pci/host/pcie-hisi.h
+new file mode 100644
+index 0000000..44fc680
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi.h
+@@ -0,0 +1,23 @@
++/*
++ * PCIe host controller driver for HiSilicon SoCs
++ *
++ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#ifndef PCIE_HISI_H_
++#define PCIE_HISI_H_
++
++
++int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
++			      u32 *val);
++int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int size,
++			       u32 val);
++
++#endif /* PCIE_HISI_H_ */
+-- 
+1.9.1
 
-> Then if we want to
-> hot add pci root bus, we cannot use pci_host_bridge
-> resources because of conflicts with old resources which are
-> still in system. I think this is not reasonable.
-> 
-> 1. For pci devices, we would release their resources in
->    pci_destroy_dev() regardless of pci device refcount.
-> 2. When we try to remove pci root bus, there is no devices
->    need to use the pci_host_bridge resources again, release
->    pci_host_bridge resources is safe.
-> 3. In some cases, users woule make mistake, for example,
->    user get a pci device(increase refcount), but forget to
->    put this device, then if we do hotplug pci root bus,
->    it would make all pci devices cannot work after hot add.
-
-Can you explain this a little more?  Are you talking about a *driver*
-that forgets to put the device?
-
-> I found this issue in the following case:
-> 1. I have a raid pci device in my system;
-> 2. I mount a disk which connect to this raid.
-> 3. hot remove the pci root bus.
-> 4. hot add the pci root bus.
-> 5. found the resource conflicts for the children pci devices under this root bus.
-> 
-> pci_root_bus increase a refcount at pci_host_bridge.
-> pci_root_bus decrease a refcount at pci_host_bridge in
->   release_pcibus_dev() when pci_root_bus device refcount reach 0.
-> 
-> pci_dev increase a refcount at pci_bus in pci_alloc_dev().
-> pci_dev decrease a refcount at pci_bus in pci_release_dev()
-> when pci_dev refcount reach 0.
-> 
-> If any pci device refcount cannot reach 0, then its pci_bus
-> refcount cannot reach 0 too, the result is pci_host_bridge
-> refcount cannot reach 0.
