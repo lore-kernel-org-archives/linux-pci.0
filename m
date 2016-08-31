@@ -1,225 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0074.outbound.protection.outlook.com ([104.47.34.74]:12928
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751393AbcHZCCQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Aug 2016 22:02:16 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Ley Foon Tan <lftan.linux@gmail.com>,
-        Ley Foon Tan <lftan@altera.com>
-Subject: [PATCH v4 2/2] PCI: altera: Move retrain from _FIXUP to altera_pcie_host_init()
-Date: Fri, 26 Aug 2016 09:47:25 +0800
-Message-ID: <1472176045-27815-3-git-send-email-lftan@altera.com>
-In-Reply-To: <1472176045-27815-1-git-send-email-lftan@altera.com>
-References: <1472176045-27815-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH] PCI: Mark Haswell Power Control Unit as having
+ non-compliant BARs
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Prarit Bhargava <prarit@redhat.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>,
+        Andi Kleen <ak@linux.intel.com>,
+        Myron Stowe <myron.stowe@redhat.com>,
+        linux-kernel@vger.kernel.org
+Date: Wed, 31 Aug 2016 10:50:09 -0500
+Message-ID: <20160831155009.3216.93787.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Altera PCIe IP can be configured as rootport or device and they might have
-same vendor ID. It will cause the system hang issue if Altera PCIe is in
-endpoint mode and work with other PCIe rootport that from other vendors.
+The Haswell Power Control Unit has a non-PCI register (CONFIG_TDP_NOMINAL)
+where BAR 0 is supposed to be.  This is erratum HSE43 in the spec update
+referenced below:
 
-Move link retrain function from _FIXUP to altera_pcie_host_init().
+  The PCIe* Base Specification indicates that Configuration Space Headers
+  have a base address register at offset 0x10.  Due to this erratum, the
+  Power Control Unit's CONFIG_TDP_NOMINAL CSR (Bus 1; Device 30; Function
+  3; Offset 0x10) is located where a base register is expected.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Mark the PCU as having non-compliant BARs so we don't try to probe any of
+them.  There are no other BARs on this device.
+
+Rename the quirk so it's not Broadwell-specific.
+
+Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=153881
+Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-altera.c | 151 +++++++++++++++++++++++++----------------
- 1 file changed, 91 insertions(+), 60 deletions(-)
+ arch/x86/pci/fixup.c |   20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 34e6258..4ca50a2 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -43,6 +43,7 @@
- #define RP_LTSSM_MASK			0x1f
- #define LTSSM_L0			0xf
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 837ea36..6d52b94 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -553,15 +553,21 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
  
-+#define PCIE_CAP_OFFSET			0x80
- /* TLP configuration type 0 and 1 */
- #define TLP_FMTTYPE_CFGRD0		0x04	/* Configuration Read Type 0 */
- #define TLP_FMTTYPE_CFGWR0		0x44	/* Configuration Write Type 0 */
-@@ -100,66 +101,6 @@ static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
- 	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
- }
- 
--static void altera_wait_link_retrain(struct pci_dev *dev)
--{
--	u16 reg16;
--	unsigned long start_jiffies;
--	struct altera_pcie *pcie = dev->bus->sysdata;
--
--	/* Wait for link training end. */
--	start_jiffies = jiffies;
--	for (;;) {
--		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &reg16);
--		if (!(reg16 & PCI_EXP_LNKSTA_LT))
--			break;
--
--		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
--			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
--			break;
--		}
--		udelay(100);
--	}
--
--	/* Wait for link is up */
--	start_jiffies = jiffies;
--	for (;;) {
--		if (altera_pcie_link_is_up(pcie))
--			break;
--
--		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
--			dev_err(&pcie->pdev->dev, "link up timeout\n");
--			break;
--		}
--		udelay(100);
--	}
--}
--
--static void altera_pcie_retrain(struct pci_dev *dev)
--{
--	u16 linkcap, linkstat;
--	struct altera_pcie *pcie = dev->bus->sysdata;
--
--	if (!altera_pcie_link_is_up(pcie))
--		return;
--
--	/*
--	 * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
--	 * current speed is 2.5 GB/s.
--	 */
--	pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &linkcap);
--
--	if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
--		return;
--
--	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &linkstat);
--	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
--		pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
--					 PCI_EXP_LNKCTL_RL);
--		altera_wait_link_retrain(dev);
--	}
--}
--DECLARE_PCI_FIXUP_EARLY(0x1172, PCI_ANY_ID, altera_pcie_retrain);
--
  /*
-  * Altera PCIe port uses BAR0 of RC's configuration space as the translation
-  * from PCI bus to native BUS.  Entire DDR region is mapped into PCIe space
-@@ -434,6 +375,90 @@ static struct pci_ops altera_pcie_ops = {
- 	.write = altera_pcie_cfg_write,
- };
- 
-+static int altera_read_cap_word(struct altera_pcie *pcie, u8 busno,
-+				unsigned int devfn, int offset, u16 *value)
-+{
-+	u32 data;
-+	int ret;
-+
-+	ret = _altera_pcie_cfg_read(pcie, busno, devfn,
-+				    PCIE_CAP_OFFSET + offset, sizeof(*value),
-+				    &data);
-+	*value = data;
-+	return ret;
-+}
-+
-+static int altera_write_cap_word(struct altera_pcie *pcie, u8 busno,
-+				 unsigned int devfn, int offset, u16 value)
-+{
-+	return _altera_pcie_cfg_write(pcie, busno, devfn,
-+				      PCIE_CAP_OFFSET + offset, sizeof(value),
-+				      value);
-+}
-+
-+static void altera_wait_link_retrain(struct altera_pcie *pcie)
-+{
-+	u16 reg16;
-+	unsigned long start_jiffies;
-+
-+	/* Wait for link training end. */
-+	start_jiffies = jiffies;
-+	for (;;) {
-+		altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
-+				     PCI_EXP_LNKSTA, &reg16);
-+		if (!(reg16 & PCI_EXP_LNKSTA_LT))
-+			break;
-+
-+		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT)) {
-+			dev_err(&pcie->pdev->dev, "link retrain timeout\n");
-+			break;
-+		}
-+		udelay(100);
-+	}
-+
-+	/* Wait for link is up */
-+	start_jiffies = jiffies;
-+	for (;;) {
-+		if (altera_pcie_link_is_up(pcie))
-+			break;
-+
-+		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
-+			dev_err(&pcie->pdev->dev, "link up timeout\n");
-+			break;
-+		}
-+		udelay(100);
-+	}
-+}
-+
-+static void altera_pcie_retrain(struct altera_pcie *pcie)
-+{
-+	u16 linkcap, linkstat, linkctl;
-+
-+	if (!altera_pcie_link_is_up(pcie))
-+		return;
-+
-+	/*
-+	 * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
-+	 * current speed is 2.5 GB/s.
-+	 */
-+	altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN, PCI_EXP_LNKCAP,
-+			     &linkcap);
-+	if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
-+		return;
-+
-+	altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN, PCI_EXP_LNKSTA,
-+			     &linkstat);
-+	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
-+		altera_read_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
-+				     PCI_EXP_LNKCTL, &linkctl);
-+		linkctl |= PCI_EXP_LNKCTL_RL;
-+		altera_write_cap_word(pcie, pcie->root_bus_nr, RP_DEVFN,
-+				      PCI_EXP_LNKCTL, linkctl);
-+
-+		altera_wait_link_retrain(pcie);
-+	}
-+}
-+
- static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 				irq_hw_number_t hwirq)
+- * Broadwell EP Home Agent BARs erroneously return non-zero values when read.
++ * Device [8086:2fc0]
++ * Erratum HSE43
++ * CONFIG_TDP_NOMINAL CSR Implemented at Incorrect Offset
++ * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
+  *
+- * See http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
+- * entry BDF2.
++ * Devices [8086:6f60,6fa0,6fc0]
++ * Erratum BDF2
++ * PCI BARs in the Home Agent Will Return Non-Zero Values During Enumeration
++ * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
+  */
+-static void pci_bdwep_bar(struct pci_dev *dev)
++static void pci_invalid_bar(struct pci_dev *dev)
  {
-@@ -555,6 +580,11 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
- 	return 0;
+ 	dev->non_compliant_bars = 1;
  }
- 
-+static void altera_pcie_host_init(struct altera_pcie *pcie)
-+{
-+	altera_pcie_retrain(pcie);
-+}
-+
- static int altera_pcie_probe(struct platform_device *pdev)
- {
- 	struct altera_pcie *pcie;
-@@ -592,6 +622,7 @@ static int altera_pcie_probe(struct platform_device *pdev)
- 	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
- 	/* enable all interrupts */
- 	cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
-+	altera_pcie_host_init(pcie);
- 
- 	bus = pci_scan_root_bus(&pdev->dev, pcie->root_bus_nr, &altera_pcie_ops,
- 				pcie, &pcie->resources);
--- 
-1.8.2.1
-
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_bdwep_bar);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_bar);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
