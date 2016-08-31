@@ -1,94 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f173.google.com ([209.85.217.173]:34703 "EHLO
-	mail-ua0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956AbcHNQmc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Aug 2016 12:42:32 -0400
-Received: by mail-ua0-f173.google.com with SMTP id k90so45930969uak.1
-        for <linux-pci@vger.kernel.org>; Sun, 14 Aug 2016 09:42:31 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
+        <linuxarm@huawei.com>
+Subject: [RFC PATCH V2 2/3] PCI: hisi: Add ECAM support for devices that are not RC
+Date: Wed, 31 Aug 2016 19:48:13 +0800
+Message-ID: <1472644094-82731-3-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
+References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1470817968909.9956@dji.com>
-References: <1470817968909.9956@dji.com>
-From: Pratyush Anand <pratyush.anand@gmail.com>
-Date: Sun, 14 Aug 2016 22:12:30 +0530
-Message-ID: <CAHM4w1kxhbbhWi+4_gqNPPPMWZ=0zJEB637pfn-gkytkbaZQ+Q@mail.gmail.com>
-Subject: Re: Synopsys pcie driver question
-To: First Light <xiaoguang.chen@dji.com>
-Cc: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"bhelgaas@gmail.com" <bhelgaas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+This patch modifies the current Hip05/Hip06 PCIe host
+controller driver to add support for 'almost ECAM'
+compliant platforms. Some controllers are ECAM compliant
+for all the devices of the hierarchy except the root
+complex; this patch adds support for such controllers.
 
+This is needed in preparation for the ACPI based driver
+to allow both DT and ACPI drivers to use the same BIOS
+(that configure the Designware iATUs).
+This commit doesn't break backward compatibility with
+previous non-ECAM platforms.
 
-On Wed, Aug 10, 2016 at 2:03 PM, First Light <xiaoguang.chen@dji.com> wrote:
-> Hi, Dear maintainers for sysnopsys pcie driver
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 15 +++++---
+ drivers/pci/host/pcie-designware.c                 |  3 +-
+ drivers/pci/host/pcie-designware.h                 |  2 +
+ drivers/pci/host/pcie-hisi.c                       | 43 ++++++++++++++++++++++
+ 4 files changed, 56 insertions(+), 7 deletions(-)
 
-Please always keep the mailing list in CC, so that you can have
-response from wider audience.
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index 59c2f47..87a597a 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -9,10 +9,13 @@ Additional properties are described here:
+ 
+ Required properties
+ - compatible: Should contain "hisilicon,hip05-pcie" or "hisilicon,hip06-pcie".
+-- reg: Should contain rc_dbi, config registers location and length.
+-- reg-names: Must include the following entries:
++- reg: Should contain rc_dbi and  either config or ecam-cfg registers
++       location and length (it depends on the platform BIOS).
++- reg-names: Must include
+   "rc_dbi": controller configuration registers;
+-  "config": PCIe configuration space registers.
++  and one of the following entries:
++    "config": PCIe configuration space registers for non-ECAM platforms.
++    "ecam-cfg": PCIe configuration space registers for ECAM platforms
+ - msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+ - port-id: Should be 0, 1, 2 or 3.
+ 
+@@ -23,8 +26,10 @@ Optional properties:
+ Hip05 Example (note that Hip06 is the same except compatible):
+ 	pcie@0xb0080000 {
+ 		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+-		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
+-		reg-names = "rc_dbi", "config";
++		reg = <0 0xb0080000 0 0x10000>,
++		      <0x220 0x00000000 0 0x2000>
++		/* or <0x220 0x00100000 0 0x0f00000> for ecam-cfg*/;
++		reg-names = "rc_dbi", "config" /* or "ecam-cfg" */;
+ 		bus-range = <0  15>;
+ 		msi-parent = <&its_pcie>;
+ 		#address-cells = <3>;
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 12afce1..9f5514c 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -75,7 +75,6 @@
+ #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
+ #define PCIE_PHY_DEBUG_R1_LINK_UP	0x00000010
+ 
+-static struct pci_ops dw_pcie_ops;
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+ {
+@@ -710,7 +709,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
+ }
+ 
+-static struct pci_ops dw_pcie_ops = {
++struct pci_ops dw_pcie_ops = {
+ 	.read = dw_pcie_rd_conf,
+ 	.write = dw_pcie_wr_conf,
+ };
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index f437f9b..234f360 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -86,4 +86,6 @@ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+ 
++extern struct pci_ops dw_pcie_ops;
++
+ #endif /* _PCIE_DESIGNWARE_H */
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 23d74e9..81eeaed 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -43,6 +43,18 @@ struct pcie_soc_ops {
+ 	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
+ };
+ 
++static inline int hisi_rd_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
++		unsigned int devfn, int where, int size, u32 *value)
++{
++	return pci_generic_config_read(bus, devfn, where, size, value);
++}
++
++static inline int hisi_wr_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
++		unsigned int devfn, int where, int size, u32 value)
++{
++	return pci_generic_config_write(bus, devfn, where, size, value);
++}
++
+ static inline int hisi_pcie_cfg_read(struct pcie_port *pp, int where,
+ 		int size, u32 *val)
+ {
+@@ -72,6 +84,20 @@ static struct pcie_host_ops hisi_pcie_host_ops = {
+ 	.link_up = hisi_pcie_link_up,
+ };
+ 
++static void __iomem *hisi_pci_map_cfg_bus_cam(struct pci_bus *bus,
++					      unsigned int devfn,
++					      int where)
++{
++	void __iomem *addr;
++	struct pcie_port *pp = bus->sysdata;
++
++	addr = pp->va_cfg1_base - (pp->busn->start << 20) +
++			((bus->number << 20) | (devfn << 12)) +
++			where;
++
++	return addr;
++}
++
+ static int hisi_add_pcie_port(struct pcie_port *pp,
+ 				     struct platform_device *pdev)
+ {
+@@ -136,6 +162,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 
+ 	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
+ 
++	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam-cfg");
++	if (reg) {
++		/* ECAM driver version */
++		hisi_pcie->pp.va_cfg0_base =
++				devm_ioremap_resource(&pdev->dev, reg);
++		if (IS_ERR(hisi_pcie->pp.va_cfg0_base)) {
++			dev_err(pp->dev, "cannot get ecam-cfg\n");
++			return PTR_ERR(hisi_pcie->pp.va_cfg0_base);
++		}
++		hisi_pcie->pp.va_cfg1_base = hisi_pcie->pp.va_cfg0_base;
++
++		dw_pcie_ops.map_bus = hisi_pci_map_cfg_bus_cam;
++
++		hisi_pcie_host_ops.rd_other_conf = hisi_rd_ecam_conf;
++		hisi_pcie_host_ops.wr_other_conf = hisi_wr_ecam_conf;
++	}
++
+ 	ret = hisi_add_pcie_port(pp, pdev);
+ 	if (ret)
+ 		return ret;
+-- 
+1.9.1
 
->
-> I have one question for this driver
->
->
-> we are using synopsys PCIE IP in our platform,and I'm
-> trying to use linux driver(drivers/pci/host/pcie-designware.c) to bring up
-> this IP.
->
-> but I met one issue which I cannot understand whether it is software issue
-> or hardware issue,
-> please help to clearify.  thank you very much!
->
-> In pcie-designware.c, the interface to read config is dw_pcie_rd_conf
-> function, below is part of the code:
->
-> if (bus->number == pp->root_bus_nr)
-> return dw_pcie_rd_own_conf(...)
-> else
-> return dw_pcie_rd_other_conf(...)
->
-> this part of code checks if it is the root bus, if so, read own config
-> registers, otherwise use DBF way to read configs from EPs.
->
-> In our platform, we put one SSD device under bus0 device1. during
-> enumration, when above software code try to read ssd's registers,
->
-> it found the bus is 0, so it reads the RC's register, but not the SSD's
-> register.
->
-
-How do you know that when it tried to read bus 0, it was your SSD
-device? That should always be RC.  Did you check if linkup was OK for
-your endpoint device? Do you see "link up" in your dmesg?
-
-
-> so our ssd is never enumrated.
-
-Which host platform for designware do you use? Is that host driver in mainline?
-Does other standard PCIe card work with your host?
-
-~Pratyush
-
->
-> is there any way to do some hardware or software configuration to make
-> it work? or do we need to change our hardware design?
->
->
-> Thanks
-> Xiaoguang
->
->
->
->
->
-> This email and any attachments thereto may contain private, confidential,
-> and privileged material for the sole use of the intended recipient. Any
-> review, copying, or distribution of this email (or any attachments thereto)
-> by others is strictly prohibited. If you are not the intended recipient,
-> please contact the sender immediately and permanently delete the original
-> and any copies of this email and any attachments thereto.
->
-> 此电子邮件及附件所包含内容具有机密性，且仅限于接收人使用。未经允
-> 许，禁止第三人阅读、复制或传播该电子邮件中的任何信息。如果您不属于以上电子邮件的目标接收者，请您立即通知发送人并删除原电子邮件及其相关的附件。
