@@ -1,197 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54264 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752435AbcHSTeN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Aug 2016 15:34:13 -0400
-Date: Fri, 19 Aug 2016 14:33:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>,
-        Doug Anderson <dianders@chromium.org>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v10 1/2] Documentation: bindings: add dt doc for Rockchip
- PCIe controller
-Message-ID: <20160819193302.GA6308@localhost>
-References: <1471570471-3239-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 31 Aug 2016 23:17:45 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Omer Khaliq <okhaliq@caviumnetworks.com>
+Subject: Re: [PATCH v2 0/2] HWRNG/PCI: Add driver for Cavium Thunder RNG
+Message-ID: <20160831151745.GA28366@gondor.apana.org.au>
+References: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1471570471-3239-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1471994835-2423-1-git-send-email-okhaliq@caviumnetworks.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David.Daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Ananth.Jasty@cavium.com,
+ linux-crypto@vger.kernel.org, mpm@selenic.com, bhelgaas@google.com,
+ clabbe.montjoie@gmail.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 19, 2016 at 09:34:31AM +0800, Shawn Lin wrote:
-> This patch adds a binding that describes the Rockchip PCIe controller
-> found on Rockchip SoCs PCIe interface.
+On Tue, Aug 23, 2016 at 04:27:13PM -0700, Omer Khaliq wrote:
+> There is a hardware error rendering the FDL field incorrect for the some
+> Thunder RNG devices. The first patch adds a PCI quirk to fix the problem.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> The second patch adds the driver.
 > 
-> Acked-by: Rob Herring <robh@kernel.org>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Changes from v1:
+> 	Use PCI quirks as advised.
+> 	Removed unecessary headers
+> 	Format changes as advised
 
-I applied both of these to pci/host-rockchip for v4.9, thanks, Shawn!
+All applied.  Thanks.
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
 
-I made a few whitespace and typo fixes in pcie-rockchip.c, so take a
-look and make sure I didn't break anything.
-
-> ---
-> 
-> Changes in v10:
-> - fix broken description of msi-map
-> - s/pcie/PCIe for description
-> 
-> Changes in v9: None
-> Changes in v8:
-> - add Brian's review-tag
-> 
-> Changes in v7:
-> - move optional properties ahead of interrupt subnode
-> - use 0-base index for INTx
-> 
-> Changes in v6:
-> - add ack tag from Rob
-> 
-> Changes in v5:
-> - fix wrong example reported by Marc
-> - add seperate section to describe the interrupt controller child
->   node
-> 
-> Changes in v4:
-> - fix example of adding intermediate interrupt controller for pcie
->   legacy interrrupt
-> 
-> Changes in v3:
-> - fix example dts code suggested by Rob and Marc
-> - remove driver's behaviour of regulator
-> 
-> Changes in v2:
-> - fix lots clk/reset stuff suggested by Heiko
-> - remove msi-parent and add msi-map suggested by Marc
-> - drop phy related stuff
-> - some others minor fixes
-> 
->  .../devicetree/bindings/pci/rockchip-pcie.txt      | 106 +++++++++++++++++++++
->  1 file changed, 106 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> new file mode 100644
-> index 0000000..ba67b39
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -0,0 +1,106 @@
-> +* Rockchip AXI PCIe Root Port Bridge DT description
-> +
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +		interrupt source. The value must be 1.
-> +- compatible: Should contain "rockchip,rk3399-pcie"
-> +- reg: Two register ranges as listed in the reg-names property
-> +- reg-names: Must include the following names
-> +	- "axi-base"
-> +	- "apb-base"
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +		See ../clocks/clock-bindings.txt for details.
-> +- clock-names: Must include the following entries:
-> +	- "aclk"
-> +	- "aclk-perf"
-> +	- "hclk"
-> +	- "pm"
-> +- msi-map: Maps a Requester ID to an MSI controller and associated
-> +	msi-specifier data. See ./pci-msi.txt
-> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-> +- phy-names:  MUST be "pcie-phy".
-> +- interrupts: Three interrupt entries must be specified.
-> +- interrupt-names: Must include the following names
-> +	- "sys"
-> +	- "legacy"
-> +	- "client"
-> +- resets: Must contain five entries for each entry in reset-names.
-> +	   See ../reset/reset.txt for details.
-> +- reset-names: Must include the following names
-> +	- "core"
-> +	- "mgmt"
-> +	- "mgmt-sticky"
-> +	- "pipe"
-> +- pinctrl-names : The pin control state names
-> +- pinctrl-0: The "default" pinctrl state
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +
-> +Optional Property:
-> +- ep-gpios: contain the entry for pre-reset gpio
-> +- num-lanes: number of lanes to use
-> +- vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
-> +- vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
-> +- vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
-> +
-> +*Interrupt controller child node*
-> +The core controller provides a single interrupt for legacy INTx. The PCIe node
-> +should contain an interrupt controller node as a target for the PCI
-> +'interrupt-map' property. This node represents the domain at which the four
-> +INTx interrupts are decoded and routed.
-> +
-> +
-> +Required properties for Interrupt controller child node:
-> +- interrupt-controller: identifies the node as an interrupt controller
-> +- #address-cells: specifies the number of cells needed to encode an
-> +	address. The value must be 0.
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +
-> +Example:
-> +
-> +pcie0: pcie@f8000000 {
-> +	compatible = "rockchip,rk3399-pcie";
-> +	#address-cells = <3>;
-> +	#size-cells = <2>;
-> +	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-> +		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-> +	clock-names = "aclk", "aclk-perf",
-> +		      "hclk", "pm";
-> +	bus-range = <0x0 0x1>;
-> +	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
-> +		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
-> +		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
-> +	interrupt-names = "sys", "legacy", "client";
-> +	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
-> +	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
-> +	assigned-clock-rates = <100000000>;
-> +	ep-gpios = <&gpio3 13 GPIO_ACTIVE_HIGH>;
-> +	ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x600000
-> +		  0x81000000 0x0 0xfa600000 0x0 0xfa600000 0x0 0x100000>;
-> +	num-lanes = <4>;
-> +	msi-map = <0x0 &its 0x0 0x1000>;
-> +	reg = <0x0 0xf8000000 0x0 0x2000000>, <0x0 0xfd000000 0x0 0x1000000>;
-> +	reg-names = "axi-base", "apb-base";
-> +	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-> +		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>;
-> +	reset-names = "core", "mgmt", "mgmt-sticky", "pipe";
-> +	phys = <&pcie_phy>;
-> +	phy-names = "pcie-phy";
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&pcie_clkreq>;
-> +	#interrupt-cells = <1>;
-> +	interrupt-map-mask = <0 0 0 7>;
-> +	interrupt-map = <0 0 0 1 &pcie0_intc 0>,
-> +			<0 0 0 2 &pcie0_intc 1>,
-> +			<0 0 0 3 &pcie0_intc 2>,
-> +			<0 0 0 4 &pcie0_intc 3>;
-> +	pcie0_intc: interrupt-controller {
-> +		interrupt-controller;
-> +		#address-cells = <0>;
-> +		#interrupt-cells = <1>;
-> +	};
-> +};
-> -- 
-> 2.3.7
-> 
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
