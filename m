@@ -1,344 +1,96 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH v2 1/2] pcie-designware: add iATU Unroll feature
-To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1469193895.git.jpinto@synopsys.com>
- <0ce5678ac78d082afa3df7ad284111afcc03b2a1.1469193895.git.jpinto@synopsys.com>
- <20160725204443.GB15939@localhost>
-CC: <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <jszhang@marvell.com>,
-	<CARLOS.PALMINHA@synopsys.com>, <MiguelFalcao.Sousa@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <e00f4953-eb9f-8b6c-0c16-f6fd1abcb717@synopsys.com>
-Date: Tue, 2 Aug 2016 11:27:45 +0100
+Return-Path: <roland.singer@desertbit.com>
+Return-Path: <roland.singer@desertbit.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Ilia Mirkin <imirkin@alum.mit.edu>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost>
+ <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
+ <20160829190737.GA4053@localhost>
+ <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
+ <20160829235403.GA14177@localhost>
+ <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
+ <20160830130634.GA16426@localhost>
+ <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
+ <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com>
+ <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
+ <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
+ <CAKb7UviZ0qKp3PRR+iHr+KiOU9Sadeeb6PyydWN-FUL0RzyCPA@mail.gmail.com>
+ <1c761bab-f82b-3f43-c4f0-c7a8eff94f25@desertbit.com>
+ <CAKb7Uvjzhog27TUPTn5OOqXviyD_z3UV0qvskZDEO8CAB2-i2w@mail.gmail.com>
+Cc: Emil Velikov <emil.l.velikov@gmail.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+ "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
+ ML dri-devel <dri-devel@lists.freedesktop.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Peter Wu <peter@lekensteyn.nl>
+From: Roland Singer <roland.singer@desertbit.com>
+Message-ID: <ae547108-57bb-11a0-620b-f930ce8bf660@desertbit.com>
+Date: Wed, 31 Aug 2016 13:11:54 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160725204443.GB15939@localhost>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <CAKb7Uvjzhog27TUPTn5OOqXviyD_z3UV0qvskZDEO8CAB2-i2w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/25/2016 9:44 PM, Bjorn Helgaas wrote:
-> On Fri, Jul 22, 2016 at 02:29:38PM +0100, Joao Pinto wrote:
->> This patch adds the support to the new iATU mechanism that will be used
->> from Core version 4.80, which is called iATU Unroll.
->> The new Cores can support the iATU Unroll or support the "old" iATU 
->> method now called Legacy Mode. The driver is perfectly capable of
->> performing well for both.
+Am 30.08.2016 um 20:13 schrieb Ilia Mirkin:
+> On Tue, Aug 30, 2016 at 2:02 PM, Roland Singer
+> <roland.singer@desertbit.com> wrote:
+>> I configured bbswitch to not set any states automatically...
+>> So it's possible to obtain and verify the GPU power state.
 >>
->> In order to make sure that the iATU is really enabled a for loop was
->> introduced in dw_pcie_prog_outbound_atu() to improve reliability.
+>> However I removed the bbswitch module and booted with nouveau.
 >>
->> This patch also moves the sleep definitions to the *.c file like
->> suggested by Jisheng Zhang in a previous patch.
+>> Kernel 4.7.2: nouveau switches the discrete GPU off.
+>>               I can't trigger the freeze, because bbswitch is missing.
+>>               I'll work with the system and see if it will freeze.
 >>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> ---
->> changes v1->v2:
->> - Patch was breaking kernel build due to bad definition in macro funtion.
->> - Rebased on top of pci/next.
->>
->>  drivers/pci/host/pcie-designware.c | 157 +++++++++++++++++++++++++++++++++----
->>  drivers/pci/host/pcie-designware.h |   6 +-
->>  2 files changed, 144 insertions(+), 19 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index 12afce1..9135725 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -26,7 +26,15 @@
->>  
->>  #include "pcie-designware.h"
->>  
->> -/* Synopsis specific PCIE configuration registers */
->> +/* Parameters for the waiting for link up routine */
->> +#define LINK_WAIT_MAX_RETRIES		10
->> +#define LINK_WAIT_MAX_ATU_RETRIES	5
->> +#define LINK_WAIT_USLEEP_MIN		90000
->> +#define LINK_WAIT_USLEEP_MAX		100000
->> +#define LINK_WAIT_IATU_MIN		9000
->> +#define LINK_WAIT_IATU_MAX		10000
+>> Kernel 4.8-rc4: nouveau does not care about the power state and
+>>                 the discrete GPU is never switched off. I will notice
+>>                 this, because the second cooling FAN will stop...
+>>                 Same log messages as send before.
 > 
-> Add an introductory patch that moves definitions from
-> drivers/pci/host/pcie-designware.h to here, then add the new
-> ATU/unroll-related things in this patch.
-
-Makes sense! I will do that!
-
+> That's surprising. I believe there's an issue with the new logic when
+> there's an HDMI audio subdevice. However that only appears if there's
+> a cable plugged in, at least in the systems Peter tested. You should
+> be able to see whether it's there or not with 'lspci'.
 > 
->> +/* Synopsys specific PCIE configuration registers */
->>  #define PCIE_PORT_LINK_CONTROL		0x710
->>  #define PORT_LINK_MODE_MASK		(0x3f << 16)
->>  #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
->> @@ -58,6 +66,7 @@
->>  #define PCIE_ATU_TYPE_IO		(0x2 << 0)
->>  #define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
->>  #define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
->> +
->>  #define PCIE_ATU_CR2			0x908
->>  #define PCIE_ATU_ENABLE			(0x1 << 31)
->>  #define PCIE_ATU_BAR_MODE_ENABLE	(0x1 << 30)
->> @@ -75,6 +84,37 @@
->>  #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
->>  #define PCIE_PHY_DEBUG_R1_LINK_UP	0x00000010
->>  
->> +/*
->> + * iatu unroll specific registers and definitions
->> + * From 4.80 Core version the address translation will be made by unroll
->> + */
->> +
->> +/* Registers */
->> +#define PCIE_ATU_UNR_REGION_CTRL1	0x00
->> +#define PCIE_ATU_UNR_REGION_CTRL2	0x01
->> +#define PCIE_ATU_UNR_LOWER_BASE		0x02
->> +#define PCIE_ATU_UNR_UPPER_BASE		0x03
->> +#define PCIE_ATU_UNR_LIMIT		0x04
->> +#define PCIE_ATU_UNR_LOWER_TARGET	0x05
->> +#define PCIE_ATU_UNR_UPPER_TARGET	0x06
->> +#define PCIE_ATU_UNR_REGION_CTRL3	0x07
->> +#define PCIE_ATU_UNR_UPPR_LIMIT		0x08
+> You can check for sure by looking in the vgaswitcheroo state. It
+> should say DynOff when it's powered off.
 > 
-> Last two items aren't used.
-
-I can take them off, but don't you think it is useful to include them for future
-applications?
-
+> Either way, I think using bbswitch + nouveau isn't supported by
+> anyone, so if you want to use it that way, you're on your own. (You
+> may want to load nouveau with runpm=0 so that nouveau doesn't try to
+> manage the GPU suspend stuff.)
 > 
->> +/* register address builder */
->> +#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
->> +					((0x3 << 20) | (region << 9) |	\
->> +					(0x1 << 8) | (register << 2))
->> +
->> +#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
->> +					((0x3 << 20) | (region << 9) |	\
->> +					(register << 2))
->> +
->> +/* translation types */
->> +#define PCIE_TRANSL_INB			0x1
->> +#define PCIE_TRANSL_OUTB		0x2
->> +
->> +/* end of Unroll specific */
->> +
->>  static struct pci_ops dw_pcie_ops;
->>  
->>  int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
->> @@ -131,6 +171,38 @@ static inline void dw_pcie_writel_rc(struct pcie_port *pp, u32 val, u32 reg)
->>  		writel(val, pp->dbi_base + reg);
->>  }
->>  
->> +static inline void dw_pcie_readl_unroll(struct pcie_port *pp, u32 type,
->> +						u32 index, u32 reg, u32 *val)
->> +{
->> +	u32 reg_addr = 0;
->> +
->> +	if (type == PCIE_TRANSL_OUTB)
->> +		reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
->> +	else if  (type == PCIE_TRANSL_INB)
->> +		reg_addr = PCIE_GET_ATU_INB_UNR_REG_ADDR(index, reg);
-> 
-> PCIE_TRANSL_INB is never used.  In fact, dw_pcie_readl_unroll() is
-> *always* called with PCIE_TRANSL_OUTB, so it's not clear what the
-> value of passing it as an argument is.
-
-I included The Inbound translation mechanism because you can have Inbound or
-Outbound translation in the iATU. The old mechanism also had Inbound properties
-that are not used in the code. I suggest we keep the Inbound mechanism to avoid
-future rework. Agree?
-
-> 
->> +
->> +	if (pp->ops->readl_rc)
->> +		pp->ops->readl_rc(pp, pp->dbi_base + reg_addr, val);
->> +	else
->> +		*val = readl(pp->dbi_base + reg_addr);
->> +}
->> +
->> +static inline void dw_pcie_writel_unroll(struct pcie_port *pp, u32 type,
->> +						u32 index, u32 val, u32 reg)
->> +{
->> +	u32 reg_addr = 0;
->> +
->> +	if (type == PCIE_TRANSL_OUTB)
->> +		reg_addr = PCIE_GET_ATU_OUTB_UNR_REG_ADDR(index, reg);
->> +	else if  (type == PCIE_TRANSL_INB)
->> +		reg_addr = PCIE_GET_ATU_INB_UNR_REG_ADDR(index, reg);
->> +
->> +	if (pp->ops->writel_rc)
->> +		pp->ops->writel_rc(pp, val, pp->dbi_base + reg_addr);
->> +	else
->> +		writel(val, pp->dbi_base + reg_addr);
->> +}
->> +
->>  static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->>  			       u32 *val)
->>  {
->> @@ -152,24 +224,66 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
->>  static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
->>  		int type, u64 cpu_addr, u64 pci_addr, u32 size)
->>  {
->> -	u32 val;
->> -
->> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
->> -			  PCIE_ATU_VIEWPORT);
->> -	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr), PCIE_ATU_LOWER_BASE);
->> -	dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr), PCIE_ATU_UPPER_BASE);
->> -	dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
->> -			  PCIE_ATU_LIMIT);
->> -	dw_pcie_writel_rc(pp, lower_32_bits(pci_addr), PCIE_ATU_LOWER_TARGET);
->> -	dw_pcie_writel_rc(pp, upper_32_bits(pci_addr), PCIE_ATU_UPPER_TARGET);
->> -	dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
->> -	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->> +	u32 val = 0;
->> +	u32 retries = 0;
->> +
->> +	if (pp->iatu_unroll_status) {
->> +		/* outbound translation using Unroll feature*/
->> +		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			lower_32_bits(cpu_addr), PCIE_ATU_UNR_LOWER_BASE);
->> +		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			upper_32_bits(cpu_addr), PCIE_ATU_UNR_UPPER_BASE);
->> +		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			lower_32_bits(cpu_addr + size - 1), PCIE_ATU_UNR_LIMIT);
->> +		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			lower_32_bits(pci_addr), PCIE_ATU_UNR_LOWER_TARGET);
->> +		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			upper_32_bits(pci_addr), PCIE_ATU_UNR_UPPER_TARGET);
->> +		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			type, PCIE_ATU_UNR_REGION_CTRL1);
->> +		dw_pcie_writel_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			PCIE_ATU_ENABLE, PCIE_ATU_UNR_REGION_CTRL2);
->> +		dw_pcie_readl_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +			PCIE_ATU_UNR_REGION_CTRL2, &val);
->> +	} else {
->> +		/* outbound translation using legacy mechanism */
->> +		dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | index,
->> +						PCIE_ATU_VIEWPORT);
->> +		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr),
->> +						PCIE_ATU_LOWER_BASE);
->> +		dw_pcie_writel_rc(pp, upper_32_bits(cpu_addr),
->> +						PCIE_ATU_UPPER_BASE);
->> +		dw_pcie_writel_rc(pp, lower_32_bits(cpu_addr + size - 1),
->> +						PCIE_ATU_LIMIT);
->> +		dw_pcie_writel_rc(pp, lower_32_bits(pci_addr),
->> +						PCIE_ATU_LOWER_TARGET);
->> +		dw_pcie_writel_rc(pp, upper_32_bits(pci_addr),
->> +						PCIE_ATU_UPPER_TARGET);
->> +		dw_pcie_writel_rc(pp, type, PCIE_ATU_CR1);
->> +		dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->> +		dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
->> +	}
->>  
->>  	/*
->>  	 * Make sure ATU enable takes effect before any subsequent config
->>  	 * and I/O accesses.
->>  	 */
-> 
-> Move the PCIE_ATU_UNR_REGION_CTRL2 and PCIE_ATU_CR2 reads down here so
-> everything related to the retry loop is right here.  You can probably
-> even restructure the loop so there's only one call without having to
-> repeat it above then again inside the loop.
-
-Right. I will do that!
-
-> 
->> -	dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
->> +	for (retries = 0; retries < LINK_WAIT_MAX_ATU_RETRIES; retries++) {
->> +
->> +		if (val == PCIE_ATU_ENABLE)
->> +			break;
->> +
->> +		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
->> +
->> +		if (pp->iatu_unroll_status) {
->> +			dw_pcie_readl_unroll(pp, PCIE_TRANSL_OUTB, index,
->> +				PCIE_ATU_UNR_REGION_CTRL2, &val);
->> +		} else {
->> +			dw_pcie_readl_rc(pp, PCIE_ATU_CR2, &val);
->> +		}
->> +	}
-> 
-> This retry loop is not strictly related to unroll, so it could be done
-> in a separate patch.
-
-Right. I will do that!
-
-> 
->> +	dev_dbg(pp->dev, "iATU is not being enabled\n");
->>  }
->>  
->>  static struct irq_chip dw_msi_irq_chip = {
->> @@ -428,6 +542,18 @@ static const struct irq_domain_ops msi_domain_ops = {
->>  	.map = dw_pcie_msi_map,
->>  };
->>  
->> +static void dw_pcie_get_atu_mode(struct pcie_port *pp)
->> +{
->> +	u32 val = 0;
->> +
->> +	/* Check if the iATU unroll is enabled or not */
-> 
-> Refer to "iATU" consistently in comments.  Several occurrences above
-> are "iatu", and below there's "ATU".
-
-Right. I will do that!
-
-> 
->> +	dw_pcie_readl_rc(pp, PCIE_ATU_VIEWPORT, &val);
->> +
->> +	pp->iatu_unroll_status = 0; /* disabled - legacy is used */
->> +	if (val == 0xFFFFFFFF)
->> +		pp->iatu_unroll_status = 1; /* enabled */
->> +}
->> +
->>  int dw_pcie_host_init(struct pcie_port *pp)
->>  {
->>  	struct device_node *np = pp->dev->of_node;
->> @@ -544,6 +670,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>  		}
->>  	}
->>  
->> +	/* get ATU mode */
->> +	dw_pcie_get_atu_mode(pp);
-> 
-> Comment is superfluous since it only repeats the function name.  I
-> prefer the style of:
-> 
->   pp->iatu_unroll = dw_pcie_iatu_unroll_supported(pp);
-> 
-> so the assignment isn't buried inside the function.
+>   -ilia
 > 
 
-Makes sense.
+Kernel 4.8-rc4:
 
->>  	if (pp->ops->host_init)
->>  		pp->ops->host_init(pp);
->>  
->> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
->> index f437f9b..354a981 100644
->> --- a/drivers/pci/host/pcie-designware.h
->> +++ b/drivers/pci/host/pcie-designware.h
->> @@ -22,11 +22,6 @@
->>  #define MAX_MSI_IRQS			32
->>  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
->>  
->> -/* Parameters for the waiting for link up routine */
->> -#define LINK_WAIT_MAX_RETRIES		10
->> -#define LINK_WAIT_USLEEP_MIN		90000
->> -#define LINK_WAIT_USLEEP_MAX		100000
->> -
->>  struct pcie_port {
->>  	struct device		*dev;
->>  	u8			root_bus_nr;
->> @@ -53,6 +48,7 @@ struct pcie_port {
->>  	int			msi_irq;
->>  	struct irq_domain	*irq_domain;
->>  	unsigned long		msi_data;
->> +	u8			iatu_unroll_status;
->>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->>  };
->>  
->> -- 
->> 1.8.1.5
->>
+While running lspci, following kernel log message was printed on the TTY:
 
-Thanks for the review!
+  nouveau: 0000:01:00:0: priv: HUB0: 6013d4 0000573f (1f408200)
+  nouveau: 0000:01:00:0: priv: HUB0: 10ecc0 ffffffff (1940822c)
 
-Joao
+This is my output of lspci:
+
+00:00.0 Host bridge: Intel Corporation Skylake Host Bridge/DRAM Registers (rev 07)
+00:01.0 PCI bridge: Intel Corporation Skylake PCIe Controller (x16) (rev 07)
+00:02.0 VGA compatible controller: Intel Corporation HD Graphics 530 (rev 06)
+00:08.0 System peripheral: Intel Corporation Skylake Gaussian Mixture Model
+00:14.0 USB controller: Intel Corporation Sunrise Point-H USB 3.0 xHCI Controller (rev 31)
+00:14.2 Signal processing controller: Intel Corporation Sunrise Point-H Thermal subsystem (rev 31)
+00:15.0 Signal processing controller: Intel Corporation Sunrise Point-H Serial IO I2C Controller #0 (rev 31)
+00:15.1 Signal processing controller: Intel Corporation Sunrise Point-H Serial IO I2C Controller #1 (rev 31)
+00:16.0 Communication controller: Intel Corporation Sunrise Point-H CSME HECI #1 (rev 31)
+00:1c.0 PCI bridge: Intel Corporation Sunrise Point-H PCI Express Root Port #1 (rev f1)
+00:1c.5 PCI bridge: Intel Corporation Sunrise Point-H PCI Express Root Port #6 (rev f1)
+00:1d.0 PCI bridge: Intel Corporation Sunrise Point-H PCI Express Root Port #9 (rev f1)
+00:1d.4 PCI bridge: Intel Corporation Sunrise Point-H PCI Express Root Port #13 (rev f1)
+00:1e.0 Signal processing controller: Intel Corporation Sunrise Point-H Serial IO UART #0 (rev 31)
+00:1f.0 ISA bridge: Intel Corporation Sunrise Point-H LPC Controller (rev 31)
+00:1f.2 Memory controller: Intel Corporation Sunrise Point-H PMC (rev 31)
+00:1f.3 Audio device: Intel Corporation Sunrise Point-H HD Audio (rev 31)
+00:1f.4 SMBus: Intel Corporation Sunrise Point-H SMBus (rev 31)
+01:00.0 3D controller: NVIDIA Corporation GM204M [GeForce GTX 970M] (rev a1)
+3b:00.0 Network controller: Qualcomm Atheros QCA6174 802.11ac Wireless Network Adapter (rev 32)
+3d:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller (rev 01)
