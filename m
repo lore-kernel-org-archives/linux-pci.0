@@ -1,114 +1,89 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V8 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for ACPI
-Date: Thu, 11 Aug 2016 12:06:37 +0200
-Message-Id: <1470909998-16710-8-git-send-email-tn@semihalf.com>
-In-Reply-To: <1470909998-16710-1-git-send-email-tn@semihalf.com>
-References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
+Return-Path: <roland.singer@desertbit.com>
+Return-Path: <roland.singer@desertbit.com>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+To: Peter Wu <peter@lekensteyn.nl>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost> <20160830195337.GA18805@al>
+ <e7318236-9737-518e-c360-398c66220961@desertbit.com>
+ <20160831114639.GD19420@al>
+ <1b91b281-3c71-f02f-ff27-51957af92275@desertbit.com>
+ <20160831123444.GE19420@al>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, emil.l.velikov@gmail.com,
+ "imirkin@alum.mit.edu >> Ilia Mirkin" <imirkin@alum.mit.edu>
+From: Roland Singer <roland.singer@desertbit.com>
+Message-ID: <e19456cb-3076-c8f1-c9ec-fbfbd9bb6112@desertbit.com>
+Date: Wed, 31 Aug 2016 15:13:50 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160831123444.GE19420@al>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Firmware agnostic code lands in common functions which do necessary
-domain initialization based on unique domain handler. DT specific
-code goes to DT specific init call.
+>>
+>> Thanks. Right now I am overriding the DSDT, but I am not able to override
+>> the SSDT, because I have to fix and compile all the SSDT files. There
+>> are too many compile errors... Wanted to find the exact line which
+>> is responsible for the hickup.
+> 
+> Have you disassembled with externs included? That is,
+> 
+>     iasl -e *.dat -d ssdtX.dat
+> 
+> If you are sure that the remaining errors are harmless, you can use the
+> '-f' option to ignore errors. You can also use the `-ve` option to
+> suppress warnings and remarks so you can focus on the errors.
+> 
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 +++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 15 deletions(-)
+Thanks, I'll try that.
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index aee60ed..d2c2496 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -106,34 +106,48 @@ static struct of_device_id its_device_id[] = {
- 	{},
- };
- 
--static int __init its_pci_msi_init(void)
-+static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
-+				       const char *name)
- {
--	struct device_node *np;
- 	struct irq_domain *parent;
- 
-+	parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
-+	if (!parent || !msi_get_domain_info(parent)) {
-+		pr_err("%s: Unable to locate ITS domain\n", name);
-+		return -ENXIO;
-+	}
-+
-+	if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
-+				       parent)) {
-+		pr_err("%s: Unable to create PCI domain\n", name);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init its_pci_of_msi_init(void)
-+{
-+	struct device_node *np;
-+
- 	for (np = of_find_matching_node(NULL, its_device_id); np;
- 	     np = of_find_matching_node(np, its_device_id)) {
- 		if (!of_property_read_bool(np, "msi-controller"))
- 			continue;
- 
--		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
--		if (!parent || !msi_get_domain_info(parent)) {
--			pr_err("%s: unable to locate ITS domain\n",
--			       np->full_name);
-+		if (its_pci_msi_init_one(of_node_to_fwnode(np), np->full_name))
- 			continue;
--		}
--
--		if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
--					       &its_pci_msi_domain_info,
--					       parent)) {
--			pr_err("%s: unable to create PCI domain\n",
--			       np->full_name);
--			continue;
--		}
- 
- 		pr_info("PCI/MSI: %s domain created\n", np->full_name);
- 	}
- 
- 	return 0;
- }
-+
-+static int __init its_pci_msi_init(void)
-+{
-+	its_pci_of_msi_init();
-+
-+	return 0;
-+}
- early_initcall(its_pci_msi_init);
--- 
-1.9.1
+
+> If you look at my notes.txt, you will see that _OFF always executes the
+> same code. PGON differs. When the problem occurs, "Q0L0" somehow always
+> reads back as non-zero and LNKS < 7.
+> 
+
+Oh you're Lekensteyn ^^
+
+I don't have LNKS and no while loop after calling LKEN ?!
+
+
+>>
+>> I noticed following:
+>>
+>> 1. Blacklist nouveau
+>> 2. Boot to GDM login manager (Wayland)
+>> 3. Switch to TTY with CTRL+ALT+FN2
+>> 4. Load bbswitch
+>> 5. Switch off GPU
+>> 6. run lspci -> no freeze
+>> 7. Switch to GDM
+>> 8. Login to a Wayland session (X11 won't work)
+>> 9. run lspci in a GUI terminal -> system freezes
+> 
+> Is nouveau somehow loaded anyway? All those extra components (X11,
+> Wayland, etc.) are unnecessary to reproduce the core problem. It occurs
+> whenever the device is being resumed (either via DSM/_PS0 or via power
+> resource PG00._ON).
+> 
+
+Sorry that was nonsense. The steps to reproduce the problem are still valid.
+I didn't wait enough to power it down...
+
+But whats interesting:
+
+1. Blacklist nouveau
+2. Load bbswitch
+3. Power off GPU with bbswitch
+4. Power on GPU with bbswitch
+5. Run lspci
+6. Power off GPU with bbswitch
+7. Run lspci -> freeze
+
+So setting the GPU power state with bbswitch works as expected.
+Powering it on is also fine. I did this a couple of times.
+But powering it off and letting lspci powering it on, ends in a race.
+
+It might be, that lspci does not only power the GPU on, but triggers
+another pci action which causes the race condition.
+Does this have something to do with your quote about the retrain bit?
