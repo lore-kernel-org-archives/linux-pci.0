@@ -1,122 +1,131 @@
-Return-Path: <emil.l.velikov@gmail.com>
-Return-Path: <emil.l.velikov@gmail.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Wed, 31 Aug 2016 14:34:54 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Duc Dang <dhdang@apm.com>, Rafael Wysocki <rafael@kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	patches <patches@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Punit Agrawal <punit.agrawal@arm.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+Message-ID: <20160831133454.GA24732@red-moon>
+References: <20160825121825.322d8450@arm.com>
+ <CADaLND=MkDmYNESmL9zLEQQ5NaZp4_aGv4SnQ4=VS4LmFkFG6g@mail.gmail.com>
+ <20160825195917.0e75a8db@arm.com>
+ <20160826090813.GA1038@red-moon>
+ <20160826130832.2fde2327@arm.com>
+ <f747c2c3-096a-f843-908c-3f76238a6acd@codeaurora.org>
+ <20160826170615.GC23885@red-moon>
+ <66f94732-7ce4-e577-9bec-52f0dc8e6ddb@codeaurora.org>
+ <20160830100834.GA368@red-moon>
+ <20160831130506.GB22908@localhost>
 MIME-Version: 1.0
-In-Reply-To: <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
-References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
- <20160829160210.GA24451@localhost> <1cca943f-eab4-4054-4a13-31370d7ae057@desertbit.com>
- <20160829190737.GA4053@localhost> <a0079ace-3062-4792-5c33-3a5e350daac3@desertbit.com>
- <20160829235403.GA14177@localhost> <1d1bfdc2-f23d-9816-e4e3-ae676105dc39@desertbit.com>
- <20160830130634.GA16426@localhost> <CACvgo51b4XLz2PwH1dkcK4_FknfZkSUKsFepYz-AGfPr7ux2kA@mail.gmail.com>
- <735da66c-aaf3-8c27-2d59-f62e8c85d3aa@desertbit.com> <CACvgo51gNzECupX6R7jwQndH-1rX6MN1kPquuikzJrPk3CeZVA@mail.gmail.com>
- <43ce7a5b-8331-fec2-f598-afcb13ba3785@desertbit.com>
-From: Emil Velikov <emil.l.velikov@gmail.com>
-Date: Tue, 30 Aug 2016 19:09:11 +0100
-Message-ID: <CACvgo52qA9YyaskNObO_f_gg51MqBZHN7mubshJhDUcgO8SZaQ@mail.gmail.com>
-Subject: Re: Kernel Freeze with American Megatrends BIOS
-To: Roland Singer <roland.singer@desertbit.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	"Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>,
-	ML dri-devel <dri-devel@lists.freedesktop.org>, linux-acpi@vger.kernel.org,
-	Ilia Mirkin <imirkin@alum.mit.edu>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160831130506.GB22908@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30 August 2016 at 18:37, Roland Singer <roland.singer@desertbit.com> wrote:
-> I am running 4.7.2, but I also just tried the 4.8.0-rc4 mainline kernel.
-> The result is the same. There is no difference if bbswitch of acpi_call
-> is used. However I noticed following:
->
-> 1. The nouveau driver is broken in both kernel version and is responsible
->    for the freezes while gathering power state information with bbswitch.
->    Sometimes while shutting the system down, everything except the LCD
->    screen is switched off. This only happens with nouveau.
->    I noticed following error log messages:
->
-I second Ilia here. Using bbswitch in conjunction with any driver (be
-that nouveau or the proprietary one) is a bad idea.
+On Wed, Aug 31, 2016 at 08:05:06AM -0500, Bjorn Helgaas wrote:
+> On Tue, Aug 30, 2016 at 11:08:34AM +0100, Lorenzo Pieralisi wrote:
+> > On Fri, Aug 26, 2016 at 06:53:29PM -0400, Sinan Kaya wrote:
+> > > 
+> > > >> Let me throw option d here.
+> > > >>
+> > > >> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
+> > > >> can't we override this in an arch specific way (arm64's pci.c) while
+> > > >> creating the root bridge? 
+> > > > 
+> > > > On what basis ? You were not copied in from the beginning, but that
+> > > > is not different from Duc's initial proposal, which Marc discarded
+> > > > because it should not be done at arch level, it depends on the interrupt
+> > > > controller.
+> > > 
+> > > I happen to watch the linux-pci and linux-acpi mail-lists. I also saw
+> > > Duc's initial proposal. 
+> > > 
+> > > I can't imagine someone building an ACPI compliant ARM64 platform
+> > > without a GIC interrupt controller. 
+> > > 
+> > > The SBSA spec already mentions what kind of compatibility should be
+> > > maintained with respect to GIC. You can't have an ACPI system that's
+> > > SBSA compliant and not using GIC. 
+> > > 
+> > > Can't we just hard code this to ACTIVE_HIGH in arch directory if ACPI
+> > > is defined.  Why do we have to reach out to the interrupt controller?
+> > 
+> > Patch below (horrible but no solution will be shiny either).
+> > 
+> > > https://lists.linaro.org/pipermail/linaro-acpi/2015-November/005973.html
+> > 
+> > [...]
+> > 
+> > > If you look at my email above, I tried getting rid of PCI Link object
+> > > and I couldn't. I sticked to only thing that works.
+> > 
+> > That's what I object to. If the ACPI bindings do not work for ARM
+> > we do not work around issues, we upgrade the specs because what may work
+> > for you has to work on all ARM platforms (and all FW developers have
+> > to be aware of that). Granted, this is a tiny snag, but the point is
+> > that no one knows what's the correct way of describing PCI legacy IRQs
+> > on ARM and we need that rectified.
+> > 
+> > This does the trick for me (I can turn it into a function/look-up
+> > that returns the polarity), I am sure it will ruffle feathers but
+> > we have to find a solution so here it is (that acpi_irq_model gem
+> > is already used in generic code drivers/acpi/pci_link.c ;-))
+> > 
+> > -- >8 --
+> > diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> > index 2c45dd3..c9b8c85 100644
+> > --- a/drivers/acpi/pci_irq.c
+> > +++ b/drivers/acpi/pci_irq.c
+> > @@ -411,7 +411,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+> >  	int gsi;
+> >  	u8 pin;
+> >  	int triggering = ACPI_LEVEL_SENSITIVE;
+> > -	int polarity = ACPI_ACTIVE_LOW;
+> > +	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
+> > +				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
+> >  	char *link = NULL;
+> >  	char link_desc[16];
+> >  	int rc;
+> 
+> This still seems weird to me.
+> 
+> If I understand correctly, this GIC has several inputs, all active
+> high.  Some of those inputs are connected to inverters and then to PCI
+> INTx wires.
+> 
+> A generic device driver knows about the hardware it drives, including
+> the properties of its interrupt wires.  PCI drivers and the ACPI/PCI
+> core know that conventional PCI device INTx wires are active low.
+> These drivers, being generic, do not know about the GIC inverters.
+> 
+> The patch above basically says "if ACPI tells us about a PCI interrupt
+> connected to a GIC, *assume* there is an inverter on the input."  But
+> there's no actual description of that inverter anywhere in ACPI or a
+> device tree.  Shouldn't that be made explicit somewhere?
 
->    kernel: nouveau 0000:01:00.0: fb: 6144 MiB GDDR5
->    kernel: nouveau 0000:01:00.0: priv: HUB0: 10ecc0 ffffffff (1e40822c)
->    kernel: nouveau 0000:01:00.0: DRM: VRAM: 6144 MiB
->    kernel: nouveau 0000:01:00.0: DRM: GART: 1048576 MiB
->    kernel: nouveau 0000:01:00.0: DRM: Pointer to TMDS table invalid
->    kernel: nouveau 0000:01:00.0: DRM: DCB version 4.1
->    kernel: nouveau 0000:01:00.0: DRM: Pointer to flat panel table invalid
->
-> 2. -> Boot with nouveau module loaded
->    -> switch off the discrete GPU with bbswitch or acpi_call
->    -> start X11
->    -> obtaining power state with bbswitch freezes the system
->    -> or working with the system for some minutes freezes the system
->
-(If Ilia's suggestions does not help) Confirm if the freeze is due
-to/as the GPU is powered on or off.
+It is explicit for all IRQs other than PCI legacy IRQs ;-), that's
+the message I wanted to get across and I failed so far.
 
-> 3. -> Boot with nouveau module blacklisted
->    -> switch off the discrete GPU
->    -> start X11
->    -> system immediately freezes
->
-It's perfectly possible that the discrete GPU is set as boot one and X
-goes angry since there's no driver/way to bring it up.
+For "normal" IRQs we can use Extended Interrupt Descriptors, that allow
+us to describe polarity. For PCI legacy IRQs we could use extended
+interrupt descriptors if we were allowed to use PCI interrupt links,
+except that, according to current ACPI specs, PCI interrupt links can
+only be used for *configurable* interrupt pins.
 
-> 4. -> Boot with nouveau module blacklisted
->    -> switch off the discrete GPU
->    -> start Wayland
->    -> system runs - Note: I tried this for couple of days with 4.6 and 4.7 mainline
->                           and the system freezed randomly after some time.
->                           However I have to test if this is still present with 4.7.2
->                           and 4.8 mainline. Right now it seams to be fine.
->    -> running Xwayland (does not depend on the GPU power state) kills performance!
->       the system freezes for several seconds...
->       So working with Wayland is also no solution.
->
-> My conclusion:
->
-> 1. Nouveau has couple of problems with GTX 9** M Nvidia GPUs.
->    I would love to help here.
->
-> 2. X11 is just broken and is not capable to start the graphical session
->    if the nvidia GPU is not handled by any video driver (kernel module).
->    Even forcing X11 to ignore the discrete GPU doesn't help.
->
-Out of curiosity: how did you force X to ignore the device ?
+So, some ARM vendors stuck to the static/hardwired configuration
+in the _PRT, that does not give us a chance to describe polarity.
 
->    Setting the command line arguments to:
->
->      acpi_osi=! acpi_osi="Windows 2009"
->
->    fixes the issues with X11 but other things break...
->    What the hell is going on?! :/
->
-You can check if it's the boot_vga assumption with
+I think that we should be allowed to use interrupt links, but that would
+not comply with the specs (and on top of that there is FW that is
+already shipped in ACPI tables that we can't change anymore).
 
-Check wh
+> If we connect a non-PCI device to a GIC, we need to know whether
+> there's an inverter.  How could we figure that out?
 
-You're a victum of the Windows specific fun (quirks?) in
+Through an Extended Interrupt Descriptor. How are we solving this ?
 
-> Am 30.08.2016 um 17:48 schrieb Emil Velikov:
->> On 30 August 2016 at 16:25, Roland Singer <roland.singer@desertbit.com> wrote:
->>> I tried these scenarios:
->>>
->>> 1. Booted the system without the bbswitch module. The nouveau module
->>>    was loaded and is responsible for the power management of the GPU.
->>>    The graphical session freezes after some minutes...
->>>
->>> 2. Booted the system without bbswitch and with nouveau blacklisted.
->>>    Manually loaded bbswitch to switch off the discrete GPU.
->>>    Same freeze after a while or by explicitly obtaining the GPU state.
->>>
->>> Is there a possibility to switch off the discrete card without bbswitch?
->>> If this is possible, then I could test this without nouveau and bbswitch
->>> at all. If the system hangs, then it is not the video driver nor bbswitch.
->>>
->> As Ilia mentioned acpi_call should do it. You can also check with the
->> nouveau/bbwswitch code to see which ones they use in your case and
->> bash it manually. It might be that the 'wrong one' gets used thus
->> things going horribly wrong.
->>
->> Regards,
->> Emil
->>
->
+Thanks,
+Lorenzo
