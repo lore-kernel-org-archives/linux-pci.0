@@ -1,85 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 24 Aug 2016 17:34:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-kernel@vger.kernel.org,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        kristen.c.accardi@intel.com, Marc Zyngier <marc.zyngier@arm.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Scott Murray <scott@spiteful.org>,
-        =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Tom Long Nguyen <tom.l.nguyen@intel.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/9] PCI: final demodularization of non-modular code
-Message-ID: <20160824223418.GL23914@localhost>
-References: <20160824205752.12024-1-paul.gortmaker@windriver.com>
+Return-Path: <peter@lekensteyn.nl>
+Return-Path: <peter@lekensteyn.nl>
+Date: Wed, 31 Aug 2016 13:46:39 +0200
+From: Peter Wu <peter@lekensteyn.nl>
+To: Roland Singer <roland.singer@desertbit.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, emil.l.velikov@gmail.com,
+	"imirkin@alum.mit.edu >> Ilia Mirkin" <imirkin@alum.mit.edu>
+Subject: Re: Kernel Freeze with American Megatrends BIOS
+Message-ID: <20160831114639.GD19420@al>
+References: <004c7dbe-2014-c691-29d1-7a45f3b73dfa@desertbit.com>
+ <20160829160210.GA24451@localhost>
+ <20160830195337.GA18805@al>
+ <e7318236-9737-518e-c360-398c66220961@desertbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160824205752.12024-1-paul.gortmaker@windriver.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e7318236-9737-518e-c360-398c66220961@desertbit.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 24, 2016 at 04:57:43PM -0400, Paul Gortmaker wrote:
-> This final (assuming more new instances don't leak back in) series
-> ensures all the PCI code out there that remains using module.h is
-> actually modular or containing some use of modular infrastructure.
+On Wed, Aug 31, 2016 at 01:27:36PM +0200, Roland Singer wrote:
+> Am 30.08.2016 um 21:53 schrieb Peter Wu:
+> > On Mon, Aug 29, 2016 at 11:02:10AM -0500, Bjorn Helgaas wrote:
+> >> [+cc linux-acpi, linux-kernel, dri-devel]
+> >>
+> >> Hi Roland,
+> >>
+> >> I have no idea how to debug this problem.  Are you seeing something
+> >> that suggests it may be a PCI problem?
+> > 
+> > Yes I suspect there is an ACPI and/ or PCI problem, possibly
+> > device-specific. Steps to reproduce on the affected machines:
+> > 
+> >  1. Load nouveau.
+> >  2. Wait for it to runtime suspend.
+> >  2. Invoke 'lspci', this resumes the Nvidia PCI device via nouveau.
+> >  3. lspci never returns, few moments later an AML_INFINITE_LOOP is
+> >     reported.
+> > 
 > 
-> These last commits are slightly more involved than some of the
-> earlier ones since we are actually removing orphaned __exit functions
-> and some ".remove" functions as well.  So we can't claim binary
-> equivalence here, but the overall runtime should remain unchanged.
+> I can confirm this. Same result on my machine.
 > 
-> To that end, we have remained with the existing initcall levels
-> even though some of the hotplug infrastructural ones might make
-> better sense to be listed as subsys_initcall or similar.
+> Here is a link to my ACPI tables:
+> https://bugs.launchpad.net/lpbugreporter/+bug/752542/+attachment/4722651/+files/Razer-Blade.tar.gz
 > 
-> Build tested with allmodconfig on all the major architectures.
+> The specific source for the NVIDIA card can be found in the ssdt5.dsl file.
 > 
-> Paul.
-> ---
 > 
-> Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> Cc: kristen.c.accardi@intel.com
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Scott Murray <scott@spiteful.org>
-> Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-> Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
-> Cc: linux-omap@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+>     Method (PGON, 1, Serialized)
+>     {
+>         /* ... */
 > 
-> Paul Gortmaker (9):
->   PCI: PCIe dpc: make it explicitly non-modular
->   PCI: PCIe pme: make it explicitly non-modular
->   PCI: PCIe aerdrv: make it explicitly non-modular
->   PCI: dra7xx: make host code explicitly non-modular
->   PCI: PCIe qcom: make host code explicitly non-modular
->   PCI: PCIe xilinx: make host code explicitly non-modular
->   PCI: PCIe xilinx-nwl: make host code explicitly non-modular
->   PCI: hotplug_core: make it explicitly non-modular
->   PCI: hotplug: make PCIe core code explicitly non-modular
+>         GPPR (PION, One)
+>         If ((OSYS == 0x07D9))  /* Is Windows 2009 - In my case, setting to Windows 2009 only works! */
+>         {
+[..]
+>         }
+>         Else
+>         {
+>             LKEN (PION)
+>         }
 > 
->  drivers/pci/host/pci-dra7xx.c           | 31 ++-----------------
->  drivers/pci/host/pcie-qcom.c            | 28 +++++------------
->  drivers/pci/host/pcie-xilinx-nwl.c      | 53 ++-------------------------------
->  drivers/pci/host/pcie-xilinx.c          | 53 ++-------------------------------
->  drivers/pci/hotplug/cpci_hotplug.h      |  2 --
->  drivers/pci/hotplug/cpci_hotplug_core.c | 10 -------
->  drivers/pci/hotplug/pci_hotplug_core.c  | 18 ++++-------
->  drivers/pci/hotplug/pciehp_core.c       | 20 ++++---------
->  drivers/pci/pcie/aer/aerdrv.c           | 18 +----------
->  drivers/pci/pcie/pcie-dpc.c             | 18 +++--------
->  drivers/pci/pcie/pme.c                  | 16 +---------
->  11 files changed, 32 insertions(+), 235 deletions(-)
+>         /* ... */
+>         
+>         Return (Zero)
+>     }
+> 
+> 
+> 
+> If not set to Windows 2009, then this is triggered:
+> 
+> 
+>     Method (LKEN, 1, NotSerialized)
+>     {
+[..]
+>     }
 
-Applied to pci/demodularize for v4.9, thanks a lot, Paul!
+Yep, this is the same code. I stripped out irrelevant parts from the
+previous mail for brevity.
+
+> Is it possible to override the specific ACPI table functions (SSDT) in the DSDT?
+> This way I could try to debug to find some more information...
+
+See Documentation/acpi/initrd_table_override.txt and note that it is
+important that the tables are really located at /kernel/firmware/acpi/
+in your initrd (which must be the first, even before any possible
+microcode updates).
+
+What are you trying to do? For ACPI method tracing, see
+Documentation/acpi/method-tracing.txt
+-- 
+Kind regards,
+Peter Wu
+https://lekensteyn.nl
