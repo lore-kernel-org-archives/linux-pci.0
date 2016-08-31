@@ -1,88 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42842 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:33774 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752876AbcHVQO7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 12:14:59 -0400
-Date: Mon, 22 Aug 2016 11:14:54 -0500
+        id S934161AbcHaNHY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 31 Aug 2016 09:07:24 -0400
+Date: Wed, 31 Aug 2016 08:07:06 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Omer Khaliq <okhaliq@caviumnetworks.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-arm-kernel@vger.kernel.org,
-        bhelgaas@google.com, mpm@selenic.com, herbert@gondor.apana.org.au,
-        Ananth.Jasty@cavium.com, david.daney@cavium.com
-Subject: Re: [PATCH 1/2] PCI/IOV: Add function to allow Function Dependency
- Link override.
-Message-ID: <20160822161454.GA23221@localhost>
-References: <1471645933-3643-1-git-send-email-okhaliq@caviumnetworks.com>
- <1471645933-3643-2-git-send-email-okhaliq@caviumnetworks.com>
- <20160822143637.GA18628@localhost>
- <57BB10E5.1050506@caviumnetworks.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Brian Norris <computersforpeace@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH] PCI: rockchip: Correct the register value for clearing
+ client interrupts
+Message-ID: <20160831130706.GC22908@localhost>
+References: <1472505251-122204-1-git-send-email-briannorris@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57BB10E5.1050506@caviumnetworks.com>
+In-Reply-To: <1472505251-122204-1-git-send-email-briannorris@chromium.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 22, 2016 at 07:49:09AM -0700, David Daney wrote:
-> On 08/22/2016 07:36 AM, Bjorn Helgaas wrote:
-> >Hi David & Omer,
-> >
-> >On Fri, Aug 19, 2016 at 03:32:12PM -0700, Omer Khaliq wrote:
-> >>From: David Daney <david.daney@cavium.com>
-> >>
-> >>Some hardware presents an incorrect SR-IOV Function Dependency Link,
-> >>add a function to allow this to be overridden in the PF driver for
-> >>such devices.
-> >>
-> >>Signed-off-by: David Daney <david.daney@cavium.com>
-> >>Signed-off-by: Omer Khaliq <okhaliq@caviumnetworks.com>
-> >>---
-> >>  drivers/pci/iov.c   | 14 ++++++++++++++
-> >>  include/linux/pci.h |  1 +
-> >>  2 files changed, 15 insertions(+)
-> >>
-> >>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> >>index 2194b44..81f0672 100644
-> >>--- a/drivers/pci/iov.c
-> >>+++ b/drivers/pci/iov.c
-> >>@@ -640,6 +640,20 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
-> >>  EXPORT_SYMBOL_GPL(pci_enable_sriov);
-> >>
-> >>  /**
-> >>+ * pci_sriov_fdl_override - fix incorrect Function Dependency Link
-> >>+ * @dev: the PCI device
-> >>+ * @fdl: the corrected Function Dependency Link value
-> >>+ *
-> >>+ * For hardware presenting an incorrect Function Dependency Link in
-> >>+ * the SR-IOV Extended Capability, allow a driver to override it.
-> >>+ */
-> >>+void pci_sriov_fdl_override(struct pci_dev *dev, u8 fdl)
-> >>+{
-> >>+	dev->sriov->link = fdl;
-> >>+}
-> >>+EXPORT_SYMBOL_GPL(pci_sriov_fdl_override);
-> >
-> >We usually use quirks to work around problems in config space.  That's
-> >a nice mechanism because we don't have to add new PCI core interfaces
-> >and it makes it clear that we're working around a hardware problem.
-> >
-> >Can you use a quirk here?  We allocate dev->sriov in the
-> >pci_init_capabilities() path, so it looks like a pci_fixup_final quirk
-> >should work.
-> >
+On Mon, Aug 29, 2016 at 02:14:11PM -0700, Brian Norris wrote:
+> I'm pretty sure the bitwise 'or' was meant for the value parameter, not
+> the register parameter.
 > 
-> The struct pci_sriov definition is private to drivers/pci, so in
-> order to use a quirk to fix this, we would have to put it in
-> drivers/pci/quirks.c.  I was trying to keep this very device
-> specific code in the driver, which requires an accessor to be able
-> to manipulate the dev->sriov->link field.
+> This resolves an interrupt storm, where if we receive any client IRQs
+> (e.g., correctable errors), we fail to ever clear them properly, so they
+> reoccur indefinitely.
 > 
-> If you prefer a quirk in drivers/pci/quirks.c, we can certainly do
-> that instead.
+> Fixes: 199410f6270e ("PCI: rockchip: Add Rockchip PCIe controller support")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Cc: Shawn Lin <shawn.lin@rock-chips.com>
 
-Oh, I didn't notice that pci_sriov was declared in drivers/pci/pci.h
-instead of linux/pci.h.  I do think I would prefer a quirk, and I
-think it's fine to put it in drivers/pci/quirks.c.
+I folded this into the initial commit, since Shawn confirmed it is correct.
 
-Bjorn
+> ---
+> Patched against git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-rockchip
+> 
+>  drivers/pci/host/pcie-rockchip.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 8fb47ee9eaee..e77aec3cc869 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -689,9 +689,10 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+>  			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
+>  			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
+>  			      PCIE_CLIENT_INT_NFATAL_ERR |
+> -			      PCIE_CLIENT_INT_CORR_ERR),
+> -			      PCIE_CLIENT_INT_STATUS |
+> -			      PCIE_CLIENT_INT_PHY);
+> +			      PCIE_CLIENT_INT_CORR_ERR |
+> +			      PCIE_CLIENT_INT_PHY),
+> +		   PCIE_CLIENT_INT_STATUS);
+> +
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -- 
+> 2.8.0.rc3.226.g39d4020
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
