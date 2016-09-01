@@ -1,164 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50985 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755336AbcIRXxP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Sep 2016 19:53:15 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8INqZOp039447
-        for <linux-pci@vger.kernel.org>; Sun, 18 Sep 2016 19:53:14 -0400
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25hr4hacmu-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Sun, 18 Sep 2016 19:53:14 -0400
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Mon, 19 Sep 2016 09:53:12 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-        by d23dlp03.au.ibm.com (Postfix) with ESMTP id 4095E3578057
-        for <linux-pci@vger.kernel.org>; Mon, 19 Sep 2016 09:53:10 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-        by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8INrANc66715722
-        for <linux-pci@vger.kernel.org>; Mon, 19 Sep 2016 09:53:10 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8INr9g5002414
-        for <linux-pci@vger.kernel.org>; Mon, 19 Sep 2016 09:53:10 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-        mpe@ellerman.id.au, clsoto@us.ibm.com,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH] PCI: Add parameter @mmio_force_on to pci_update_resource()
-Date: Mon, 19 Sep 2016 09:53:30 +1000
-Message-Id: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:56290 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932533AbcIAQn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Sep 2016 12:43:56 -0400
+Subject: [PATCH 0/9] PCI: rockchip: Cleanups against v10
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Thu, 01 Sep 2016 11:43:52 -0500
+Message-ID: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In pci_update_resource(), the PCI device's memory decoding (0x2 in
-PCI_COMMAND) is disabled when 64-bits memory BAR is updated if the
-PCI device's memory space wasn't asked to be always on by @pdev->
-mmio_always_on. The PF's memory decoding might be disabled when
-updating its IOV BARs in the following path. Actually, the PF's
-memory decoding shouldn't be disabled in this scenario as the PF
-has been started to provide services:
+These are cleanups against 2098142ae87d, the current pci/host-rockchip
+head in my tree.  This is basically the v10 driver posting (it's not
+identical because I had already tweaked a few things and squashed in
+Brian's bug fix).
 
-   sriov_numvfs_store
-   pdev->driver->sriov_configure
-   mlx5_core_sriov_configure
-   pci_enable_sriov
-   sriov_enable
-   pcibios_sriov_enable
-   pnv_pci_sriov_enable
-   pnv_pci_vf_resource_shift
-   pci_update_resource
+These haven't been compiled so I'm sure the 0-day builder will find some
+errors.  After fixing those, I intend to squash everything into one commit,
+since this driver hasn't been merged yet.  I'm just posting these split out
+patches in case anybody wants to review them.
 
-This doesn't change the PF's memory decoding in the path by introducing
-additional parameter (@mmio_force_on) to pci_update_resource().
+These address most of Guenter's review comments.  I didn't change anything
+related to -EPROBE_DEFER because it wasn't obvious to me what to do.
 
-Reported-by: Carol Soto <clsoto@us.ibm.com>
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Tested-by: Carol Soto <clsoto@us.ibm.com>
+I also made several other changes -- mostly renaming functions and
+variables so they're more consistent with other PCI host drivers.
+
+These are in git as pci/host-rockchip-wip.
+
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 2 +-
- drivers/pci/iov.c                         | 2 +-
- drivers/pci/pci.c                         | 2 +-
- drivers/pci/setup-res.c                   | 9 +++++----
- include/linux/pci.h                       | 2 +-
- 5 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index bc0c91e..2d6a2b7 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -999,7 +999,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- 		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
- 			 i, &res2, res, (offset > 0) ? "En" : "Dis",
- 			 num_vfs, offset);
--		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
-+		pci_update_resource(dev, i + PCI_IOV_RESOURCES, true);
- 	}
- 	return 0;
- }
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 2194b44..117aae6 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -511,7 +511,7 @@ static void sriov_restore_state(struct pci_dev *dev)
- 		return;
- 
- 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
--		pci_update_resource(dev, i);
-+		pci_update_resource(dev, i, false);
- 
- 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
- 	pci_iov_set_numvfs(dev, iov->num_VFs);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d51..87a33c0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -545,7 +545,7 @@ static void pci_restore_bars(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
--		pci_update_resource(dev, i);
-+		pci_update_resource(dev, i, false);
- }
- 
- static const struct pci_platform_pm_ops *pci_platform_pm;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 66c4d8f..e8a50ff 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -26,7 +26,7 @@
- #include "pci.h"
- 
- 
--void pci_update_resource(struct pci_dev *dev, int resno)
-+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on)
- {
- 	struct pci_bus_region region;
- 	bool disable;
-@@ -81,7 +81,8 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	 * disable decoding so that a half-updated BAR won't conflict
- 	 * with another device.
- 	 */
--	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
-+	disable = (res->flags & IORESOURCE_MEM_64) &&
-+		  !mmio_force_on && !dev->mmio_always_on;
- 	if (disable) {
- 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
- 		pci_write_config_word(dev, PCI_COMMAND,
-@@ -310,7 +311,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	res->flags &= ~IORESOURCE_STARTALIGN;
- 	dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
- 	if (resno < PCI_BRIDGE_RESOURCES)
--		pci_update_resource(dev, resno);
-+		pci_update_resource(dev, resno, false);
- 
- 	return 0;
- }
-@@ -350,7 +351,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	dev_info(&dev->dev, "BAR %d: reassigned %pR (expanded by %#llx)\n",
- 		 resno, res, (unsigned long long) addsize);
- 	if (resno < PCI_BRIDGE_RESOURCES)
--		pci_update_resource(dev, resno);
-+		pci_update_resource(dev, resno, false);
- 
- 	return 0;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0ab8359..99231d1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1039,7 +1039,7 @@ int pci_try_reset_bus(struct pci_bus *bus);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
--void pci_update_resource(struct pci_dev *dev, int resno);
-+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
- int pci_select_bars(struct pci_dev *dev, unsigned long flags);
--- 
-2.1.0
+Bjorn Helgaas (9):
+      Remove unused symbols, unnecessary parens, other minor comments from
+      Rename pcie_read() and pcie_write() to rockchip_pcie_read() and
+      Always use "rockchip" as the pointer to per-device struct.
+      Rename struct rockchip_pcie_port to struct rockchip_pcie.
+      Use a local "dev" to avoid repetition of "rockchip->dev".
+      Add comment about why 32-bit read/modify/write isn't safe.
+      Simplify the confusing HIWORD_UPDATE scheme.
+      Simplify testing of link status and speed testing.
+      Move msleeps to address Guenter's comments.
 
+
+ drivers/pci/host/pcie-rockchip.c |  680 +++++++++++++++++---------------------
+ 1 file changed, 307 insertions(+), 373 deletions(-)
