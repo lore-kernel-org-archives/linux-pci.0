@@ -1,219 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Zhichang Yuan <yuanzhichang@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
-        benh@kernel.crashing.org, minyard@acm.org,
-        linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
-        john.garry@huawei.com, will.deacon@arm.com, xuwei5@hisilicon.com,
-        linux-serial@vger.kernel.org, gregkh@linuxfoundation.org,
-        zourongrong@gmail.com, liviu.dudau@arm.com, kantyzc@163.com,
-        zhichang.yuan02@gmail.com
-Subject: Re: [PATCH V3 1/4] ARM64 LPC: Indirect ISA port IO introduced
-Date: Wed, 14 Sep 2016 14:24:30 +0200
-Message-ID: <8337589.pzGt0MZ9xn@wuerfel>
-In-Reply-To: <1473855354-150093-2-git-send-email-yuanzhichang@hisilicon.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <1473855354-150093-2-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <heiko@sntech.de>
+Return-Path: <heiko@sntech.de>
+From: Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org, Doug Anderson <dianders@chromium.org>, Wenrui Li <wenrui.li@rock-chips.com>, Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [v10,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
+Date: Thu, 01 Sep 2016 19:46:42 +0200
+Message-ID: <3757057.lFUFRYFCvk@diego>
+In-Reply-To: <20160901171400.GA4093@localhost>
+References: <1471570498-3284-1-git-send-email-shawn.lin@rock-chips.com> <20160901163455.GA9471@localhost> <20160901171400.GA4093@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 8:15:51 PM CEST Zhichang Yuan wrote:
-> From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Am Donnerstag, 1. September 2016, 10:14:01 schrieb Brian Norris:
+> On Thu, Sep 01, 2016 at 11:34:55AM -0500, Bjorn Helgaas wrote:
+> > In the interest of making progress, I made most of the changes Guenter
+> > suggested (thanks very much, Guenter!) and made some more of my own on
+> > top of those.
 > 
-> For arm64, there is no I/O space as other architectural platforms, such as
-> X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
-> such as Hip06, when accessing some legacy ISA devices connected to LPC, those
-> known port addresses are used to control the corresponding target devices, for
-> example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
-> normal MMIO mode in using.
+> I'm not sure, but was this change your idea Bjorn?
 > 
-> To drive these devices, this patch introduces a method named indirect-IO.
-> In this method the in/out pair in arch/arm64/include/asm/io.h will be
-> redefined. When upper layer drivers call in/out with those known legacy port
-> addresses to access the peripherals, the hooking functions corrresponding to
-> those target peripherals will be called. Through this way, those upper layer
-> drivers which depend on in/out can run on Hip06 without any changes.
+> commit 88cb3f59d73e261a3cd1957ff392f98c9916a5d1
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu Sep 1 10:27:44 2016 -0500
 > 
-> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-
-Looks ok overall, but I have a couple of comments for details.
-
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index bc3f00f..9579479 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -161,6 +161,12 @@ config ARCH_MMAP_RND_COMPAT_BITS_MIN
->  config ARCH_MMAP_RND_COMPAT_BITS_MAX
->         default 16
->  
-> +config ARM64_INDIRECT_PIO
-> +	def_bool n
-
-'def_bool n' is the same as the shorter and more common 'bool'.
-
-> diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-> index 9b6e408..d3acf1f 100644
-> --- a/arch/arm64/include/asm/io.h
-> +++ b/arch/arm64/include/asm/io.h
-> @@ -34,6 +34,10 @@
->  
->  #include <xen/xen.h>
->  
-> +#ifdef CONFIG_ARM64_INDIRECT_PIO
-> +#include <linux/extio.h>
-> +#endif
-
-No need to guard includes with an #ifdef.
-
-> +#define BUILDS_RW(bwl, type)						\
-> +static inline void reads##bwl(const volatile void __iomem *addr,	\
-> +				void *buffer, unsigned int count)	\
-> +{									\
-> +	if (count) {							\
-> +		type *buf = buffer;					\
-> +									\
-> +		do {							\
-> +			type x = __raw_read##bwl(addr);			\
-> +			*buf++ = x;					\
-> +		} while (--count);					\
-> +	}								\
-> +}									\
-> +									\
-> +static inline void writes##bwl(volatile void __iomem *addr,		\
-> +				const void *buffer, unsigned int count)	\
-> +{									\
-> +	if (count) {							\
-> +		const type *buf = buffer;				\
-> +									\
-> +		do {							\
-> +			__raw_write##bwl(*buf++, addr);			\
-> +		} while (--count);					\
-> +	}								\
-> +}
-> +
-> +BUILDS_RW(b, u8)
-
-Why is this in here?
-
-> @@ -149,6 +185,60 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
->  #define IO_SPACE_LIMIT		(PCI_IO_SIZE - 1)
->  #define PCI_IOBASE		((void __iomem *)PCI_IO_START)
->  
+>     Simplify the confusing HIWORD_UPDATE scheme.
+> 
+> [Which I'll summarize here; you're replacing the macro:
+> 
+> -/*
+> -  * The higher 16-bit of this register is used for write protection
+> -  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
+> -  */
+> -#define HIWORD_UPDATE(val, mask, shift) \
+> -       ((val) << (shift) | (mask) << ((shift) + 16))
+> 
+> with its expansions:
+> 
 > +
 > +/*
-> + * redefine the in(s)b/out(s)b for indirect-IO.
+> + * The higher 16-bit of this register is used for write protection
+> + * only if BIT(x + 16) set to 1 the BIT(x) can be written.
 > + */
-> +#define inb inb
-> +static inline u8 inb(unsigned long addr)
-> +{
-> +#ifdef CONFIG_ARM64_INDIRECT_PIO
-> +	if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
-> +			addr <= arm64_extio_ops->end)
-> +		return extio_inb(addr);
-> +#endif
-> +	return readb(PCI_IOBASE + addr);
-> +}
-> +
+> +#define PCIE_CLIENT_CONF_ENABLE                (0x00010000 | 0x0001)
+> +#define PCIE_CLIENT_LINK_TRAIN_ENABLE  (0x00020000 | 0x0002)
+> +#define PCIE_CLIENT_ARI_ENABLE         (0x00080000 | 0x0008)
+> +#define PCIE_CLIENT_CONF_LANE_NUM(x)   (0x00300000 | (((x >> 1) & 3) << 4)
+> +#define PCIE_CLIENT_MODE_RC            (0x00400000 | 0x0040)
+> +#define PCIE_CLIENT_GEN_SEL(x)         (0x00800000 | ((x & 1) << 7)
+> +#define  PCIE_CLIENT_GEN_SEL_0                 0
+> +#define  PCIE_CLIENT_GEN_SEL_2                 1
+> 
+> Full change can be had by:
+> git fetch git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+> pci/host-rockchip-wip ]
+> 
+> 
+> The use of HIWORD_UPDATE can indeed be a bit confusing, IMO, but this is
+> really a common Rockchip-ism that, once you read several of their
+> drivers, can make a little more sense. If you grep around, it's in at
+> least their clock, ethernet, SDHCI, PHY, and DP/DRM drivers. I might
+> defer to Heiko (upstream maintainer of Rockchip code) for a decision.
+> Maybe there's some intermediate ground where we keep the HIWORK_UPDATE()
+> logic (it does make sure we get the 16-bit shift right, I think) while
+> still refactoring a few other bits (like PCIE_CLIENT_CONF_LANE_NUM() and
+> PCIE_CLIENT_GEN_SEL() for wrapping HIWORK_UPDATE()?).
+> 
+> Anyway, just a thought. If it really is most understandable to write it
+> this way, then maybe it's fine to be different than the other 16
+> rockchip files that have this pattern.
 
-Looks ok, but you only seem to do this for the 8-bit
-accessors, when it should be done for 16-bit and 32-bit
-ones as well for consistency.
+personally I find it nicer to explicitly state, this is the common HIWORD-
+update mechanism we have in a lot of places and not some other register 
+voodoo.
 
-> diff --git a/drivers/bus/extio.c b/drivers/bus/extio.c
-> new file mode 100644
-> index 0000000..1e7a9c5
-> --- /dev/null
-> +++ b/drivers/bus/extio.c
-> @@ -0,0 +1,66 @@
+Because right now, GRF and PMU syscons even contain most registers using that 
+mechanism, but some that don't.
 
-This is in a globally visible directory
+But I guess I won't protest to loudly if you like it differently in your 
+subsystem ;-)
 
-> +
-> +struct extio_ops *arm64_extio_ops;
 
-But the identifier uses an architecture specific prefix. Either
-move the whole file into arch/arm64, or make the naming so that
-it can be used for everything.
-
-> +u8 __weak extio_inb(unsigned long addr)
-> +{
-> +	return arm64_extio_ops->pfin ?
-> +		arm64_extio_ops->pfin(arm64_extio_ops->devpara,
-> +			addr + arm64_extio_ops->ptoffset, NULL,
-> +			sizeof(u8), 1) : -1;
-> +}
-
-No need for the __weak attribute, just make sure that the
-code is always built-in when needed.
-
-Also, it doesn't seem necessary to have an extern function if
-all it does is call the one callback that you have already 
-checked earlier. Either put it all into the inline
-definition in asm/io.h, or put it all into the extern
-version like this.
-
-#ifdef CONFIG_ARM64_INDIRECT_PIO /* otherwise use default from asm-generic */
-#define inb inb
-extern u8 inb(unsigned long addr);
-#endif
-
-u8 inb(unsigned long addr)
-{
-	if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
-			addr <= arm64_extio_ops->end)
-		arm64_extio_ops->pfin(arm64_extio_ops->devpara,addr + arm64_extio_ops->ptoffset, NULL,sizeof(u8), 1) : -1;
-	return extio_inb(addr);
-}
-
-> +#define inb inb
-> +static inline u8 inb(unsigned long addr)
-> +{
-> +#ifdef CONFIG_ARM64_INDIRECT_PIO
-> +	if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
-> +			addr <= arm64_extio_ops->end)
-> +		return extio_inb(addr);
-> +#endif
-> +	return readb(PCI_IOBASE + addr);
-> +}
-
-> diff --git a/include/linux/extio.h b/include/linux/extio.h
-> new file mode 100644
-> index 0000000..08d1fca
-> --- /dev/null
-> +++ b/include/linux/extio.h
-> @@ -0,0 +1,49 @@
-> +/*
-> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
-> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-> + * Author: Zou Rongrong <@huawei.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +
-> +#ifndef __LINUX_EXTIO_H
-> +#define __LINUX_EXTIO_H
-> +
-> +
-> +typedef u64 (*inhook)(void *devobj, unsigned long ptaddr, void *inbuf,
-> +				size_t dlen, unsigned int count);
-> +typedef void (*outhook)(void *devobj, unsigned long ptaddr,
-> +				const void *outbuf, size_t dlen,
-> +				unsigned int count);
-
-I would drop the typedef and just declare the types directly in the
-only place that references them.
-
-	Arnd
+Heiko
