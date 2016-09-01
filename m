@@ -1,75 +1,302 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40712 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756108AbcILU5s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 16:57:48 -0400
-From: Tyler Baicar <tbaicar@codeaurora.org>
-To: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-        matt.fleming@intel.com, paul.gortmaker@windriver.com, bp@suse.de,
-        zjzhang@codeaurora.org, sudipm.mukherjee@gmail.com, axboe@fb.com,
-        izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: Tyler Baicar <tbaicar@codeaurora.org>
-Subject: [PATCH 1/2] PCI/AER: Remove duplicate AER severity translation
-Date: Mon, 12 Sep 2016 14:57:24 -0600
-Message-Id: <1473713845-23613-2-git-send-email-tbaicar@codeaurora.org>
-In-Reply-To: <1473713845-23613-1-git-send-email-tbaicar@codeaurora.org>
-References: <1473713845-23613-1-git-send-email-tbaicar@codeaurora.org>
+Received: from down.free-electrons.com ([37.187.137.238]:49764 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756002AbcIAPiR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Sep 2016 11:38:17 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Ian Campbell <ijc+devicetree@hellion.org.uk>,
+        Pawel Moll <pawel.moll@arm.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kumar Gala <galak@codeaurora.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Nadav Haklai <nadavh@marvell.com>,
+        Shadi Ammouri <shadi@marvell.com>,
+        Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 1/3] pci: pci-aardvark: move to MSI handling using generic MSI support
+Date: Thu,  1 Sep 2016 17:38:02 +0200
+Message-Id: <1472744284-18305-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the AER severity is being translated twice in
-the code flow for PCIe errors. It is first translated in
-ghes_do_proc() before calling into the AER driver. Then it
-is translated again when the AER driver calls cper_print_aer().
-This causes the severity that is used in cper_print_aer() to
-be incorrect. Remove the second translation that is in
-cper_print_aer() since this function is already recieving the
-correct AER severity.
+The MSI support introduced with the initial Aardvark driver was based
+on the msi_controller structure and the of_pci_msi_chip_add() /
+of_pci_find_msi_chip_by_node() API, which are being deprecated in
+favor of the generic MSI support.
 
-Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
+Therefore, this commit updates the Aardvark driver to use the generic
+MSI support.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/pcie/aer/aerdrv_errprint.c | 6 ++----
- include/linux/aer.h                    | 2 +-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/pci/host/pci-aardvark.c | 172 ++++++++++++++++------------------------
+ 1 file changed, 67 insertions(+), 105 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 167fe41..54c4b69 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -219,15 +219,13 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index ef9893f..0675cfa 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -200,10 +200,12 @@ struct advk_pcie {
+ 	struct list_head resources;
+ 	struct irq_domain *irq_domain;
+ 	struct irq_chip irq_chip;
+-	struct msi_controller msi;
+ 	struct irq_domain *msi_domain;
++	struct irq_domain *msi_inner_domain;
++	struct irq_chip msi_bottom_irq_chip;
+ 	struct irq_chip msi_irq_chip;
+-	DECLARE_BITMAP(msi_irq_in_use, MSI_IRQ_NUM);
++	struct msi_domain_info msi_domain_info;
++	DECLARE_BITMAP(msi_used, MSI_IRQ_NUM);
+ 	struct mutex msi_used_lock;
+ 	u16 msi_msg;
+ 	int root_bus_nr;
+@@ -543,93 +545,64 @@ static struct pci_ops advk_pcie_ops = {
+ 	.write = advk_pcie_wr_conf,
+ };
  
--void cper_print_aer(struct pci_dev *dev, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int aer_severity,
- 		    struct aer_capability_regs *aer)
+-static int advk_pcie_alloc_msi(struct advk_pcie *pcie)
++static void advk_msi_irq_compose_msi_msg(struct irq_data *data,
++					 struct msi_msg *msg)
  {
--	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
-+	int layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
+-	int hwirq;
++	struct advk_pcie *pcie = irq_data_get_irq_chip_data(data);
++	phys_addr_t msi_msg = virt_to_phys(&pcie->msi_msg);
  
--	aer_severity = cper_severity_to_aer(cper_severity);
+-	mutex_lock(&pcie->msi_used_lock);
+-	hwirq = find_first_zero_bit(pcie->msi_irq_in_use, MSI_IRQ_NUM);
+-	if (hwirq >= MSI_IRQ_NUM)
+-		hwirq = -ENOSPC;
+-	else
+-		set_bit(hwirq, pcie->msi_irq_in_use);
+-	mutex_unlock(&pcie->msi_used_lock);
 -
- 	if (aer_severity == AER_CORRECTABLE) {
- 		status = aer->cor_status;
- 		mask = aer->cor_mask;
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 1640493..04602cb 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -63,7 +63,7 @@ static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+-	return hwirq;
++	msg->address_lo = lower_32_bits(msi_msg);
++	msg->address_hi = upper_32_bits(msi_msg);
++	msg->data = data->irq;
  }
- #endif
  
--void cper_print_aer(struct pci_dev *dev, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int aer_severity,
- 		    struct aer_capability_regs *aer);
- int cper_severity_to_aer(int cper_severity);
- void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+-static void advk_pcie_free_msi(struct advk_pcie *pcie, int hwirq)
++static int advk_msi_set_affinity(struct irq_data *irq_data,
++				 const struct cpumask *mask, bool force)
+ {
+-	mutex_lock(&pcie->msi_used_lock);
+-	if (!test_bit(hwirq, pcie->msi_irq_in_use))
+-		dev_err(&pcie->pdev->dev, "trying to free unused MSI#%d\n",
+-			hwirq);
+-	else
+-		clear_bit(hwirq, pcie->msi_irq_in_use);
+-	mutex_unlock(&pcie->msi_used_lock);
++	return -EINVAL;
+ }
+ 
+-static int advk_pcie_setup_msi_irq(struct msi_controller *chip,
+-				   struct pci_dev *pdev,
+-				   struct msi_desc *desc)
++static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
++				     unsigned int virq,
++				     unsigned int nr_irqs, void *args)
+ {
+-	struct advk_pcie *pcie = pdev->bus->sysdata;
+-	struct msi_msg msg;
+-	int virq, hwirq;
+-	phys_addr_t msi_msg_phys;
+-
+-	/* We support MSI, but not MSI-X */
+-	if (desc->msi_attrib.is_msix)
+-		return -EINVAL;
+-
+-	hwirq = advk_pcie_alloc_msi(pcie);
+-	if (hwirq < 0)
+-		return hwirq;
++	struct advk_pcie *pcie = domain->host_data;
++	int hwirq, i;
+ 
+-	virq = irq_create_mapping(pcie->msi_domain, hwirq);
+-	if (!virq) {
+-		advk_pcie_free_msi(pcie, hwirq);
+-		return -EINVAL;
++	mutex_lock(&pcie->msi_used_lock);
++	hwirq = bitmap_find_next_zero_area(pcie->msi_used, MSI_IRQ_NUM,
++					   0, nr_irqs, 0);
++	if (hwirq >= MSI_IRQ_NUM) {
++		mutex_unlock(&pcie->msi_used_lock);
++		return -ENOSPC;
+ 	}
+ 
+-	irq_set_msi_desc(virq, desc);
+-
+-	msi_msg_phys = virt_to_phys(&pcie->msi_msg);
+-
+-	msg.address_lo = lower_32_bits(msi_msg_phys);
+-	msg.address_hi = upper_32_bits(msi_msg_phys);
+-	msg.data = virq;
+-
+-	pci_write_msi_msg(virq, &msg);
+-
+-	return 0;
+-}
++	bitmap_set(pcie->msi_used, hwirq, nr_irqs);
++	mutex_unlock(&pcie->msi_used_lock);
+ 
+-static void advk_pcie_teardown_msi_irq(struct msi_controller *chip,
+-				       unsigned int irq)
+-{
+-	struct irq_data *d = irq_get_irq_data(irq);
+-	struct msi_desc *msi = irq_data_get_msi_desc(d);
+-	struct advk_pcie *pcie = msi_desc_to_pci_sysdata(msi);
+-	unsigned long hwirq = d->hwirq;
++	for (i = 0; i < nr_irqs; i++)
++		irq_domain_set_info(domain, virq + i, hwirq + i,
++				    &pcie->msi_bottom_irq_chip,
++				    domain->host_data, handle_simple_irq,
++				    NULL, NULL);
+ 
+-	irq_dispose_mapping(irq);
+-	advk_pcie_free_msi(pcie, hwirq);
++	return hwirq;
+ }
+ 
+-static int advk_pcie_msi_map(struct irq_domain *domain,
+-			     unsigned int virq, irq_hw_number_t hw)
++static void advk_msi_irq_domain_free(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs)
+ {
++	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+ 	struct advk_pcie *pcie = domain->host_data;
+ 
+-	irq_set_chip_and_handler(virq, &pcie->msi_irq_chip,
+-				 handle_simple_irq);
+-
+-	return 0;
++	mutex_lock(&pcie->msi_used_lock);
++	bitmap_clear(pcie->msi_used, d->hwirq, nr_irqs);
++	mutex_unlock(&pcie->msi_used_lock);
+ }
+ 
+-static const struct irq_domain_ops advk_pcie_msi_irq_ops = {
+-	.map = advk_pcie_msi_map,
++static const struct irq_domain_ops advk_msi_domain_ops = {
++	.alloc = advk_msi_irq_domain_alloc,
++	.free = advk_msi_irq_domain_free,
+ };
+ 
+ static void advk_pcie_irq_mask(struct irq_data *d)
+@@ -677,30 +650,25 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+ 	struct device_node *node = dev->of_node;
+-	struct irq_chip *msi_irq_chip;
+-	struct msi_controller *msi;
++	struct irq_chip *bottom_ic, *msi_ic;
++	struct msi_domain_info *msi_di;
+ 	phys_addr_t msi_msg_phys;
+-	int ret;
+-
+-	msi_irq_chip = &pcie->msi_irq_chip;
+ 
+-	msi_irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-msi",
+-					    dev_name(dev));
+-	if (!msi_irq_chip->name)
+-		return -ENOMEM;
++	mutex_init(&pcie->msi_used_lock);
+ 
+-	msi_irq_chip->irq_enable = pci_msi_unmask_irq;
+-	msi_irq_chip->irq_disable = pci_msi_mask_irq;
+-	msi_irq_chip->irq_mask = pci_msi_mask_irq;
+-	msi_irq_chip->irq_unmask = pci_msi_unmask_irq;
++	bottom_ic = &pcie->msi_bottom_irq_chip;
+ 
+-	msi = &pcie->msi;
++	bottom_ic->name = "MSI";
++	bottom_ic->irq_compose_msi_msg = advk_msi_irq_compose_msi_msg;
++	bottom_ic->irq_set_affinity = advk_msi_set_affinity;
+ 
+-	msi->setup_irq = advk_pcie_setup_msi_irq;
+-	msi->teardown_irq = advk_pcie_teardown_msi_irq;
+-	msi->of_node = node;
++	msi_ic = &pcie->msi_irq_chip;
++	msi_ic->name = "advk-MSI";
+ 
+-	mutex_init(&pcie->msi_used_lock);
++	msi_di = &pcie->msi_domain_info;
++	msi_di->flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++		MSI_FLAG_PCI_MSIX;
++	msi_di->chip = msi_ic;
+ 
+ 	msi_msg_phys = virt_to_phys(&pcie->msi_msg);
+ 
+@@ -709,16 +677,18 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
+ 	advk_writel(pcie, upper_32_bits(msi_msg_phys),
+ 		    PCIE_MSI_ADDR_HIGH_REG);
+ 
+-	pcie->msi_domain =
++	pcie->msi_inner_domain =
+ 		irq_domain_add_linear(NULL, MSI_IRQ_NUM,
+-				      &advk_pcie_msi_irq_ops, pcie);
+-	if (!pcie->msi_domain)
++				      &advk_msi_domain_ops, pcie);
++	if (!pcie->msi_inner_domain)
+ 		return -ENOMEM;
+ 
+-	ret = of_pci_msi_chip_add(msi);
+-	if (ret < 0) {
+-		irq_domain_remove(pcie->msi_domain);
+-		return ret;
++	pcie->msi_domain =
++		pci_msi_create_irq_domain(of_node_to_fwnode(node),
++					  msi_di, pcie->msi_inner_domain);
++	if (!pcie->msi_domain) {
++		irq_domain_remove(pcie->msi_inner_domain);
++		return -ENOMEM;
+ 	}
+ 
+ 	return 0;
+@@ -726,8 +696,8 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
+ 
+ static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
+ {
+-	of_pci_msi_chip_remove(&pcie->msi);
+ 	irq_domain_remove(pcie->msi_domain);
++	irq_domain_remove(pcie->msi_inner_domain);
+ }
+ 
+ static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
+@@ -911,8 +881,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	struct advk_pcie *pcie;
+ 	struct resource *res;
+ 	struct pci_bus *bus, *child;
+-	struct msi_controller *msi;
+-	struct device_node *msi_node;
+ 	int ret, irq;
+ 
+ 	pcie = devm_kzalloc(&pdev->dev, sizeof(struct advk_pcie),
+@@ -960,14 +928,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	msi_node = of_parse_phandle(pdev->dev.of_node, "msi-parent", 0);
+-	if (msi_node)
+-		msi = of_pci_find_msi_chip_by_node(msi_node);
+-	else
+-		msi = NULL;
+-
+-	bus = pci_scan_root_bus_msi(&pdev->dev, 0, &advk_pcie_ops,
+-				    pcie, &pcie->resources, &pcie->msi);
++	bus = pci_scan_root_bus(&pdev->dev, 0, &advk_pcie_ops,
++				pcie, &pcie->resources);
+ 	if (!bus) {
+ 		advk_pcie_remove_msi_irq_domain(pcie);
+ 		advk_pcie_remove_irq_domain(pcie);
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+2.7.4
 
