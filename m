@@ -1,35 +1,45 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-Date: Tue, 6 Sep 2016 13:33:26 -0600
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci/aer: Add bus flag to skip source id matching
-Message-ID: <20160906193325.GA14374@localhost.localdomain>
-References: <1472167571-11123-1-git-send-email-jonathan.derrick@intel.com>
- <20160906192344.GD7554@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 6/9] Add comment about why 32-bit read/modify/write isn't
+ safe.
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Thu, 01 Sep 2016 11:44:43 -0500
+Message-ID: <20160901164443.14195.13483.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160906192344.GD7554@localhost>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 06, 2016 at 02:23:44PM -0500, Bjorn Helgaas wrote:
-> On Thu, Aug 25, 2016 at 05:26:10PM -0600, Jon Derrick wrote:
-> > Allow root port buses to choose to skip source id matching when finding
-> > the faulting device. Certain root port devices may return an incorrect
-> > source id and recommend to scan child device registers for aer
-> > notifications.
-> > 
-> > Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-> 
-> Applied both of these to pci/host-vmd for v4.9, thanks!
-Thanks!
 
-> 
-> I think I might even go farther and remove the "nosourceid" module
-> parameter.  Per Documentation/PCI/pcieaer-howto.txt, it's to work
-> around broken hardware, but it's not otherwise documented.  With the
-> flag you're adding, we could add quirks for that broken hardware,
-> which would be far better.  I doubt anybody's actually using that
-> module parameter.
-Yes I'll agree that it makes more sense to call out the nonconforming hardware and have their quirk/fix inbox
+---
+ drivers/pci/host/pcie-rockchip.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 17612e5..33bf2e1 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -282,6 +282,11 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
+ 
+ 	mask = ~(((1 << (size * 8)) - 1) << ((where & 0x3) * 8));
+ 
++	/*
++	 * N.B. This read/modify/write isn't safe in general because it can
++	 * corrupt RW1C bits in adjacent registers.  But the hardware
++	 * doesn't support smaller writes.
++	 */
+ 	tmp = readl(rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset) & mask;
+ 	tmp |= val << ((where & 0x3) * 8);
+ 	writel(tmp, rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset);
