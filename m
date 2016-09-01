@@ -1,92 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41952 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752590AbcHOQv2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Aug 2016 12:51:28 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh@kernel.org>
-Subject: [PATCH 3/6] drivers: pci: host: versatile: fix pci_remap_iospace() failure path
-Date: Mon, 15 Aug 2016 17:50:43 +0100
-Message-Id: <1471279854-11916-4-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1471279854-11916-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <1472455618-17892-1-git-send-email-po.liu@nxp.com>
+References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
+ <1472455618-17892-1-git-send-email-po.liu@nxp.com>
+From: Ley Foon Tan <lftan@altera.com>
+Date: Thu, 1 Sep 2016 08:58:42 +0800
+Message-ID: <CAFiDJ5__WC=GeeA2Hg8LSG5xbQGc7frP6KfHfF_QhBm0=-w9Jw@mail.gmail.com>
+Subject: Re: [PATCH v2] arm64:pci: fix the IOV device access config space
+ valid condition
+To: Po Liu <po.liu@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: =?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+ Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>,
+ Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Michal Simek <michal.simek@xilinx.com>, Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM/ARM64 architectures, PCI IO ports are emulated through memory
-mapped IO, by reserving a chunk of virtual address space starting at
-PCI_IOBASE and by mapping the PCI host bridges memory address space
-driving PCI IO cycles to it.
+On Mon, Aug 29, 2016 at 3:26 PM, Po Liu <po.liu@nxp.com> wrote:
+> When echo a number to /sys/bus/pci/devices/xxx/sriov_numvfs to enable the
+> VF devices. A crash log occurred. This found to be access the IOV devices
+> config space failure issue.
+>
+> The read/write config space from host would judge the pcie device plugin
+> or not by(Designware platform as example):
+>
+> if (bus->primary == pp->root_bus_nr && dev > 0)
+>     return 0;
+>
+> Although all PCIe devices for dev(coming from the device and function
+> number) is zero. But the dev is not zero for VF devices. So remove the
+> condition.
+>
+> These PCI hosts were changed: designware, altera, xilinx.
+>
+> Signed-off-by: Po Liu <po.liu@nxp.com>
+> ---
 
-PCI host bridge drivers that enable downstream PCI IO cycles map the
-host bridge memory address responding to PCI IO cycles to the fixed
-virtual address space through the pci_remap_iospace() API.
+For pcie-altera.c:
+Acked-by: Ley Foon Tan <lftan@altera.com>
 
-This means that if the pci_remap_iospace() function fails, the
-corresponding host bridge PCI IO resource must be considered invalid, in
-that there is no way for the kernel to actually drive PCI IO
-transactions if the memory addresses responding to PCI
-IO cycles cannot be mapped into the CPU virtual address space.
+Thanks.
 
-The PCI versatile host bridge driver does not remove the PCI IO
-resource from the host bridge resource windows if the
-pci_remap_iospace() call fails; this is an actual bug in that the
-PCI host bridge would consider the PCI IO resource valid (and possibly
-assign it to downstream devices) even if the kernel was not able
-to map the PCI host bridge memory address driving IO cycle to the
-CPU virtual address space (ie pci_remap_iospace() failures).
+Regards
+Ley Foon
 
-Fix the PCI host bridge driver pci_remap_iospace() failure path, by
-destroying the PCI host bridge PCI IO resources retrieved through
-firmware when the pci_remap_iospace() function call fails, therefore
-preventing the kernel from adding the respective PCI IO resource to the
-list of PCI host bridge valid resources, fixing the issue.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Fixes: b7e78170efd4 ("PCI: versatile: Add DT-based ARM Versatile PB PCIe
-host driver")
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>
----
- drivers/pci/host/pci-versatile.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-index f2344057..b7dc070 100644
---- a/drivers/pci/host/pci-versatile.c
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -74,7 +74,7 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
- 	int err, mem = 1, res_valid = 0;
- 	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
--	struct resource_entry *win;
-+	struct resource_entry *win, *tmp;
- 
- 	err = of_pci_get_host_bridge_resources(np, 0, 0xff, res, &iobase);
- 	if (err)
-@@ -84,15 +84,17 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
- 	if (err)
- 		goto out_release_res;
- 
--	resource_list_for_each_entry(win, res) {
-+	resource_list_for_each_entry_safe(win, tmp, res) {
- 		struct resource *res = win->res;
- 
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
- 			err = pci_remap_iospace(res, iobase);
--			if (err)
-+			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
-+				resource_list_destroy_entry(win);
-+			}
- 			break;
- 		case IORESOURCE_MEM:
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
--- 
-2.6.4
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
