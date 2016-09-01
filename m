@@ -1,115 +1,127 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [Linaro-acpi] [PATCH V8 1/8] ACPI: I/O Remapping Table (IORT)
- initial support
-To: Fu Wei <fu.wei@linaro.org>
-References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
- <1470909998-16710-2-git-send-email-tn@semihalf.com>
- <CADyBb7u+PMFZ8kbSsxPpe8Ws3ik3HKpYakf066-sFd-9gv8_-w@mail.gmail.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner
- <tglx@linutronix.de>, jason@lakedaemon.net,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, helgaas@kernel.org,
- Rafael Wysocki <rafael@kernel.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon
- <will.deacon@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- okaya@codeaurora.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- robert.richter@caviumnetworks.com, ddaney.cavm@gmail.com,
- linux-pci@vger.kernel.org, shijie.huang@arm.com, mw@semihalf.com,
- Andrea Gallo <andrea.gallo@linaro.org>, linux-arm-kernel@lists.infradead.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <e287da4e-63bd-2d90-4fdd-dccce9b86459@semihalf.com>
-Date: Mon, 5 Sep 2016 08:12:44 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 7/9] Simplify the confusing HIWORD_UPDATE scheme.
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Thu, 01 Sep 2016 11:44:51 -0500
+Message-ID: <20160901164451.14195.61057.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CADyBb7u+PMFZ8kbSsxPpe8Ws3ik3HKpYakf066-sFd-9gv8_-w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.09.2016 13:52, Fu Wei wrote:
-> Hi Tomasz,
->
-> On 11 August 2016 at 18:06, Tomasz Nowicki <tn@semihalf.com> wrote:
->> IORT shows representation of IO topology for ARM based systems.
->> It describes how various components are connected together on
->> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
->> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>
->> Initial support allows to detect IORT table presence and save its
->> root pointer obtained through acpi_get_table(). The pointer validity
->> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
->> is not set while using IORT nodes we would dereference unmapped pointers.
->>
->> For the aforementioned reason call iort_table_detect() from acpi_init()
->> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->>
->> Add generic helpers which are helpful for scanning and retrieving
->> information from IORT table content. List of the most important helpers:
->> - iort_find_dev_node() finds IORT node for a given device
->> - iort_node_map_rid() maps device RID and returns IORT node which provides
->>   final translation
->>
->> IORT support is placed under drivers/acpi/arm64/ new directory due to its
->> ARM64 specific nature. The code there is considered only for ARM64.
->> The long term plan is to keep all ARM64 specific tables support
->> in this place e.g. GTDT table.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->> ---
->>  drivers/acpi/Kconfig        |   5 +
->>  drivers/acpi/Makefile       |   2 +
->>  drivers/acpi/arm64/Kconfig  |   6 ++
->>  drivers/acpi/arm64/Makefile |   1 +
->>  drivers/acpi/arm64/iort.c   | 218 ++++++++++++++++++++++++++++++++++++++++++++
->>  drivers/acpi/bus.c          |   2 +
->>  include/linux/iort.h        |  30 ++++++
->>  7 files changed, 264 insertions(+)
->>  create mode 100644 drivers/acpi/arm64/Kconfig
->>  create mode 100644 drivers/acpi/arm64/Makefile
->>  create mode 100644 drivers/acpi/arm64/iort.c
->>  create mode 100644 include/linux/iort.h
->>
->> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
->> index 445ce28..6cef2d1 100644
->> --- a/drivers/acpi/Kconfig
->> +++ b/drivers/acpi/Kconfig
->> @@ -521,4 +521,9 @@ config ACPI_CONFIGFS
->>           userspace. The configurable ACPI groups will be visible under
->>           /config/acpi, assuming configfs is mounted under /config.
->>
->> +if ARM64
->> +source "drivers/acpi/arm64/Kconfig"
->> +
->> +endif
->> +
->>  endif  # ACPI
->> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
->> index 5ae9d85..e5ada78 100644
->> --- a/drivers/acpi/Makefile
->> +++ b/drivers/acpi/Makefile
->> @@ -105,3 +105,5 @@ obj-$(CONFIG_ACPI_CONFIGFS) += acpi_configfs.o
->>
->>  video-objs                     += acpi_video.o video_detect.o
->>  obj-y                          += dptf/
->> +
->> +obj-$(CONFIG_ARM64)            += arm64/
->> diff --git a/drivers/acpi/arm64/Kconfig b/drivers/acpi/arm64/Kconfig
->> new file mode 100644
->> index 0000000..fc818dc
->> --- /dev/null
->> +++ b/drivers/acpi/arm64/Kconfig
->> @@ -0,0 +1,6 @@
->> +#
->> +# ACPI Configuration for ARM64
->> +#
->> +
->> +config IORT_TABLE
->
-> Sorry for nit-picking, but is that better to use ACPI_IORT
-> or maybe ARM64__IORT ??
 
-ACPI_IORT sounds good.
+---
+ drivers/pci/host/pcie-rockchip.c |   69 +++++++++++++-------------------------
+ 1 file changed, 23 insertions(+), 46 deletions(-)
 
-Tomasz
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 33bf2e1..7f6fe7d 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -115,36 +115,25 @@
+ 	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
+ 	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
+ 
+-/*
+-  * The higher 16-bit of this register is used for write protection
+-  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
+-  */
+-#define HIWORD_UPDATE(val, mask, shift) \
+-	((val) << (shift) | (mask) << ((shift) + 16))
+-
+ #define RC_REGION_0_ADDR_TRANS_H		0x00000000
+ #define RC_REGION_0_ADDR_TRANS_L		0x00000000
+ #define RC_REGION_0_PASS_BITS			(25 - 1)
+ #define MAX_AXI_WRAPPER_REGION_NUM		33
+ #define PCIE_CORE_LCSR_RETRAIN_LINK		BIT(5)
+-#define PCIE_CLIENT_CONF_ENABLE			BIT(0)
+-#define PCIE_CLIENT_CONF_ENABLE_SHIFT		0
+-#define PCIE_CLIENT_CONF_ENABLE_MASK		0x1
+-#define PCIE_CLIENT_LINK_TRAIN_ENABLE		1
+-#define PCIE_CLIENT_LINK_TRAIN_SHIFT		1
+-#define PCIE_CLIENT_LINK_TRAIN_MASK		0x1
+-#define PCIE_CLIENT_ARI_ENABLE			BIT(0)
+-#define PCIE_CLIENT_ARI_ENABLE_SHIFT		3
+-#define PCIE_CLIENT_ARI_ENABLE_MASK		0x1
+-#define PCIE_CLIENT_CONF_LANE_NUM(x)		(x / 2)
+-#define PCIE_CLIENT_CONF_LANE_NUM_SHIFT		4
+-#define PCIE_CLIENT_CONF_LANE_NUM_MASK		0x3
+-#define PCIE_CLIENT_MODE_RC			BIT(0)
+-#define PCIE_CLIENT_MODE_SHIFT			6
+-#define PCIE_CLIENT_MODE_MASK			0x1
+-#define PCIE_CLIENT_GEN_SEL_2			1
+-#define PCIE_CLIENT_GEN_SEL_SHIFT		7
+-#define PCIE_CLIENT_GEN_SEL_MASK		0x1
++
++/*
++ * The higher 16-bit of this register is used for write protection
++ * only if BIT(x + 16) set to 1 the BIT(x) can be written.
++ */
++#define PCIE_CLIENT_CONF_ENABLE		(0x00010000 | 0x0001)
++#define PCIE_CLIENT_LINK_TRAIN_ENABLE	(0x00020000 | 0x0002)
++#define PCIE_CLIENT_ARI_ENABLE		(0x00080000 | 0x0008)
++#define PCIE_CLIENT_CONF_LANE_NUM(x)	(0x00300000 | (((x >> 1) & 3) << 4)
++#define PCIE_CLIENT_MODE_RC		(0x00400000 | 0x0040)
++#define PCIE_CLIENT_GEN_SEL(x)		(0x00800000 | ((x & 1) << 7)
++#define  PCIE_CLIENT_GEN_SEL_0			0
++#define  PCIE_CLIENT_GEN_SEL_2			1
++
+ #define PCIE_CLIENT_LINK_STATUS_UP		0x3
+ #define PCIE_CLIENT_LINK_STATUS_SHIFT		20
+ #define PCIE_CLIENT_LINK_STATUS_MASK		0x3
+@@ -423,22 +412,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	}
+ 
+ 	rockchip_pcie_write(rockchip,
+-		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
+-				 PCIE_CLIENT_CONF_ENABLE_MASK,
+-				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes),
+-				 PCIE_CLIENT_CONF_LANE_NUM_MASK,
+-				 PCIE_CLIENT_CONF_LANE_NUM_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_MODE_RC,
+-				 PCIE_CLIENT_MODE_MASK,
+-				 PCIE_CLIENT_MODE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_ARI_ENABLE,
+-				 PCIE_CLIENT_ARI_ENABLE_MASK,
+-				 PCIE_CLIENT_ARI_ENABLE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_GEN_SEL_2,
+-				 PCIE_CLIENT_GEN_SEL_MASK,
+-				 PCIE_CLIENT_GEN_SEL_SHIFT),
+-		   PCIE_CLIENT_BASE);
++			    PCIE_CLIENT_CONF_ENABLE |
++			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
++			    PCIE_CLIENT_ARI_ENABLE |
++			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
++			    PCIE_CLIENT_MODE_RC |
++			    PCIE_CLIENT_GEN_SEL(PCIE_CLIENT_GEN_SEL_2),
++			    PCIE_CLIENT_BASE);
+ 
+ 	err = phy_power_on(rockchip->phy);
+ 	if (err) {
+@@ -482,11 +462,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 				 PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+ 
+ 	/* Enable Gen1 training */
+-	rockchip_pcie_write(rockchip,
+-		   HIWORD_UPDATE(PCIE_CLIENT_LINK_TRAIN_ENABLE,
+-				 PCIE_CLIENT_LINK_TRAIN_MASK,
+-				 PCIE_CLIENT_LINK_TRAIN_SHIFT),
+-		   PCIE_CLIENT_BASE);
++	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
++			    PCIE_CLIENT_BASE);
+ 
+ 	gpiod_set_value(rockchip->ep_gpio, 1);
+ 
