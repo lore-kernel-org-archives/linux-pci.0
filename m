@@ -1,68 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:20806 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750798AbcIZFWL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 01:22:11 -0400
-Subject: Re: [PATCH v5 16/16] MAINTAINERS: Update for PVRDMA driver
-To: Leon Romanovsky <leon@kernel.org>
-References: <cover.1474759181.git.aditr@vmware.com>
- <fe5e7704757254073963cd40bff5240421b1fce0.1474759181.git.aditr@vmware.com>
- <20160925073010.GW4088@leon.nu>
-CC: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-From: Adit Ranadive <aditr@vmware.com>
-Message-ID: <7ddc5906-6ba8-335e-c0b8-eb60427a1be8@vmware.com>
-Date: Sun, 25 Sep 2016 22:22:02 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>, devicetree@vger.kernel.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH 0/9] PCI: rockchip: Cleanups against v10
+Date: Thu, 01 Sep 2016 22:52:49 +0200
+Message-ID: <6064818.1vCMXWIdYQ@wuerfel>
+In-Reply-To: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20160925073010.GW4088@leon.nu>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 25 2016 at 10:30:10AM +0300, Leon Romanovsky wrote:
-> On Sat, Sep 24, 2016 at 04:21:40PM -0700, Adit Ranadive wrote:
-> > Add maintainer info for the PVRDMA driver.
-> >
-> > Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-> > Reviewed-by: George Zhang <georgezhang@vmware.com>
-> > Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-> > Reviewed-by: Bryan Tan <bryantan@vmware.com>
-> > Signed-off-by: Adit Ranadive <aditr@vmware.com>
-> > ---
-> > Changes v4->v5:
-> >  - Added pvrdma files to common UAPI folder.
-> > ---
-> >  MAINTAINERS | 9 +++++++++
-> >  1 file changed, 9 insertions(+)
-> >
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 87e23cd..5023dc0 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -12615,6 +12615,15 @@ S:	Maintained
-> >  F:	drivers/scsi/vmw_pvscsi.c
-> >  F:	drivers/scsi/vmw_pvscsi.h
-> >
-> > +VMWARE PVRDMA DRIVER
-> > +M:	Adit Ranadive <aditr@vmware.com>
-> > +M:	VMware PV-Drivers <pv-drivers@vmware.com>
-> > +L:	linux-rdma@vger.kernel.org
-> > +S:	Maintained
-> > +F:	drivers/infiniband/hw/pvrdma/
-> > +F:	include/uapi/rdma/pvrdma-abi.h
-> > +F:	include/uapi/rdma/pvrdma-uapi.h
-> 
-> Please remove the last two lines, these files will be maintained by
-> Doug.
-> 
-> Thanks
->
+On Thursday, September 1, 2016 11:43:52 AM CEST Bjorn Helgaas wrote:
+> These are cleanups against 2098142ae87d, the current pci/host-rockchip
+> head in my tree.  This is basically the v10 driver posting (it's not
+> identical because I had already tweaked a few things and squashed in
+> Brian's bug fix).
 
-Ok. Based on your recent patch series on export vendor specific ABIs,
-the ABI files were added to be maintained [1] by individual driver owners. 
-Is that not the case now?
+I looked over the series and everything looks good, I particularly
+like the way that 	patches 7 and 8 make the code so much more readable.
 
-[1] http://marc.info/?l=linux-rdma&m=147455473718235&w=2
+	Arnd
