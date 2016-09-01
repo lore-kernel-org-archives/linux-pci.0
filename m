@@ -1,75 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31990 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752526AbcHMAMV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Aug 2016 20:12:21 -0400
-Date: Fri, 12 Aug 2016 17:03:58 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/2] pci: add option to ignore slot capabilities
-Message-ID: <20160813000358.GA20474@sean.stalley.intel.com>
-References: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "colin.king@canonical.com" <colin.king@canonical.com>,
+        Soren Brinkmann <sorenb@xilinx.com>,
+        Michal Simek <michals@xilinx.com>,
+        "arnd@arndb.de" <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
+ device for legacy interrupts.
+Date: Thu, 1 Sep 2016 05:19:55 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+ <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+ <57C57975.7040306@arm.com>
+ <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57C59FE8.30307@arm.com>
+ <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57C6B7F1.5000001@arm.com>
+In-Reply-To: <57C6B7F1.5000001@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470687542-30155-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+> >>>> Hi Bharat,
+> >>>>> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct
+> >>>>> nwl_pcie
+> >>>> *pcie)
+> >>>>>     }
+> >>>>>
+> >>>>>     pcie->legacy_irq_domain =3D irq_domain_add_linear(legacy_intc_n=
+ode,
+> >>>>> -                                                   INTX_NUM,
+> >>>>> +                                                   INTX_NUM + 1,
+> >>>>>                                                     &legacy_domain_=
+ops,
+> >>>>>                                                     pcie);
+> >>>>
+> >>>> This feels like the wrong thing to do. You have INTX_NUM irqs, so
+> >>>> the domain allocation should reflect this. On the other hand, the
+> >>>> way the driver currently deals with mappings is quite broken
+> >>>> (consistently adding 1 to
+> >> the HW interrupt).
+> >>>>
+> >>> Hi Marc,
+> >>>
+> >>> Without above change I get following crash in kernel while booting.
+> >>>
+> >>> [    2.441684] error: hwirq 0x4 is too large for dummy
+> >>>
+> >>> [    2.441694] ------------[ cut here ]------------
+> >>>
+> >>> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
+> >>>
+> >>> [    2.441702] Modules linked in:
+> >>>
+> >>> [    2.441706]
+> >>>
+> >>> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0 #8
+> >>>
+> >>> [    2.441718] Hardware name: xlnx,zynqmp (DT)
+> >>>
+> >>> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 task.ti:
+> >> ffffffc071888000
+> >>>
+> >>> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
+> >>>
+> >>> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
+> >>>
+> >>> In kernel/irq/irqdomain.c function irq_domain_associate
+> >>>
+> >>> if (WARN(hwirq >=3D domain->hwirq_max,
+> >>>                  "error: hwirq 0x%x is too large for %s\n", (int)hwir=
+q, domain-
+> >name))
+> >>>                 return -EINVAL;
+> >>>
+> >>> Here the hwirq and hwirq_max are equal to 4 without the above
+> >>> condition
+> >> (INTX_NUM + 1) due to which crash is coming.
+> >>> This is happening as the legacy interrupts are starting from 1 (INTA)=
+.
+> >>
+> >> I understood that. I'm still persisting in saying that you have the wr=
+ong fix.
+> >>
+> >> Your domain should always allocate many interrupts as you have
+> >> interrupt sources. These interrupts (hwirq) should be numbered from 0 =
+to (n-
+> 1).
+> >
+> > Agreed, but here comes the problem the hwirq for legacy interrupts
+> > will start at 0x1 to 0x4 (INTA to INTD) and these values are as per
+> > PCIe specification for legacy interrupts. So these cannot be numbered
+> > from 0. So when 0x4 (INTD) for a multi-function device comes the crash
+> > occurs.
+>=20
+> So who provides this hwirq? Who calls irq_domain_associate() with hwirq s=
+et to
+> 4?
+>=20
+PCIe subsystem invokes pcibios_add_device function in arch/arm64/kernel/pci=
+.c for every pci device.
+The purpose of this function is to assign dev->irq using of_irq_parse_and_m=
+ap_pci.
+of_irq_parse_and_map_pci invokes of_irq_parse_pci where it reads PCI_INTERR=
+UPT_PIN from configuration space and saves it
+in parameter of struct of_phandle_args.
+This structure is passed to irq_create_of_mapping where it invokes irq_crea=
+te_fwspec_mapping.
+irq_create_fwspec_mapping invokes irq_domain_translate and gets hwirq, here=
+ the above saved PCI_INTERRUPT_PIN value is assigned=20
+to hwirq (*hwirq =3D fwspec->param[0]).
+And then using this hwirq irq_create_mapping -> irq_domain_associate were i=
+nvoked and mapping is created for virtual irq with this hwirq.
+So for any end point PCI_INTERRUPT_PIN value starts from 0x1 to 0x4 and so =
+hwirq starts from 0x1 to 0x4.
 
-On Mon, Aug 08, 2016 at 02:19:01PM -0600, Keith Busch wrote:
-> This adds flags to struct pci_dev that can be set to request ignoring
-> attention and power indicators. This is in prepration for devices that
-> advertise these capabilities, but do not support it.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 6 ++++++
->  include/linux/pci.h              | 2 ++
->  2 files changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 08e84d6..3e6646c 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -804,6 +804,12 @@ struct controller *pcie_init(struct pcie_device *dev)
->  	}
->  	ctrl->pcie = dev;
->  	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-> +
-> +	if (pdev->ignore_aip)
-> +		slot_cap &= ~PCI_EXP_SLTCAP_AIP;
-> +	if (pdev->ignore_pip)
-> +		slot_cap &= ~PCI_EXP_SLTCAP_PIP;
-> +
+So the values are more generic w.r.t to protocol, that's why hwirq will ran=
+ge from 0x1 to 0x4.=20
+And then if you check pcie-altera.c they are doing this adding one in their=
+ handler and while creating legacy domain.
+=20
+Thanks & Regards,
+Bharat
+=20
 
-I think we should clear these bits after the ctrl_info() below.
-If we clear it immediately, the ctrl_info() will report these bits as cleared,
-even though they may be set in hardware.
-
-I don't think we want to put a value into the log that differs from what hardware reports.
-
->  	ctrl->slot_cap = slot_cap;
->  	mutex_init(&ctrl->ctrl_lock);
->  	init_waitqueue_head(&ctrl->queue);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 9890906..d8bc530 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -308,6 +308,8 @@ struct pci_dev {
->  						   powered on/off by the
->  						   corresponding bridge */
->  	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-> +	unsigned int	ignore_aip:1;		/* Ignore attention indicator */
-> +	unsigned int	ignore_pip:1;		/* Ignore power indicator */
->  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
->  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
->  
-> -- 
-> 2.7.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+=20
