@@ -1,224 +1,248 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [RFC PATCH V5 5/5] PCI: thunder-pem: Support quirky configuration
- space access for ACPI based PCI host controller
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
- <1470661541-26270-6-git-send-email-tn@semihalf.com>
- <20160905023443.GF30488@localhost>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
- rafael@kernel.org, Lorenzo.Pieralisi@arm.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
- dhdang@apm.com, ard.biesheuvel@linaro.org,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
- jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <c41e7def-9c81-5659-d53e-86f04d9a03a7@semihalf.com>
-Date: Tue, 6 Sep 2016 20:01:18 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56438 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934707AbcIAQoO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Sep 2016 12:44:14 -0400
+Subject: [PATCH 2/9] Rename pcie_read() and pcie_write() to
+ rockchip_pcie_read() and
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Thu, 01 Sep 2016 11:44:08 -0500
+Message-ID: <20160901164408.14195.30921.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20160905023443.GF30488@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05.09.2016 04:34, Bjorn Helgaas wrote:
-> On Mon, Aug 08, 2016 at 03:05:41PM +0200, Tomasz Nowicki wrote:
->> Add infrastructure to support ThunderX PEM specific PCI configuration space
->> access for ACPI based PCI host controller. This involves:
->> 1. New initialization call thunder_pem_cfg_init() to create configuration
->> space mapping based on hardcoded range addresses
->> 2. thunder_pem_init() ACPI extension to obtain hardcoded addresses for
->> PEM specific register ranges
->> 3. New quirk entry (for common quirk array) which identifies platform and
->> calls thunder_pem_cfg_init() from [1]
->
-> Is it possible to split this up a little bit?  I *hope* most quirks
-> aren't as complicated as all this.  It'd be nice to make the actual
-> quirk patches as small as possible so they can be easily copied and
-> adapted.
+rockchip_pcie_write().
+---
+ drivers/pci/host/pcie-rockchip.c |   66 +++++++++++++++++++-------------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
 
-Yes this is a complicated quirk example. Next time I will include a 
-simple one as well.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index a7006be..c9d0799 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -200,12 +200,12 @@ struct rockchip_pcie_port {
+ 	struct	irq_domain *irq_domain;
+ };
+ 
+-static inline u32 pcie_read(struct rockchip_pcie_port *port, u32 reg)
++static u32 rockchip_pcie_read(struct rockchip_pcie_port *port, u32 reg)
+ {
+ 	return readl(port->apb_base + reg);
+ }
+ 
+-static inline void pcie_write(struct rockchip_pcie_port *port, u32 val, u32 reg)
++static void rockchip_pcie_write(struct rockchip_pcie_port *port, u32 val, u32 reg)
+ {
+ 	writel(val, port->apb_base + reg);
+ }
+@@ -214,18 +214,18 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *port)
+ {
+ 	u32 status;
+ 
+-	status = pcie_read(port, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
++	status = rockchip_pcie_read(port, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+ 	status |= (PCIE_RC_CONFIG_LCSR_LBMIE | PCIE_RC_CONFIG_LCSR_LABIE);
+-	pcie_write(port, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
++	rockchip_pcie_write(port, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+ }
+ 
+ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *port)
+ {
+ 	u32 status;
+ 
+-	status = pcie_read(port, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
++	status = rockchip_pcie_read(port, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+ 	status |= (PCIE_RC_CONFIG_LCSR_LBMS | PCIE_RC_CONFIG_LCSR_LAMS);
+-	pcie_write(port, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
++	rockchip_pcie_write(port, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+ }
+ 
+ static int rockchip_pcie_valid_device(struct rockchip_pcie_port *pp,
+@@ -417,7 +417,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 		return err;
+ 	}
+ 
+-	pcie_write(port,
++	rockchip_pcie_write(port,
+ 		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
+ 				 PCIE_CLIENT_CONF_ENABLE_MASK,
+ 				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
+@@ -471,13 +471,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 	 * reliable and enabling ASPM doesn't work.  This is a controller
+ 	 * bug we need to work around.
+ 	 */
+-	status = pcie_read(port, PCIE_RC_CONFIG_BASE +
++	status = rockchip_pcie_read(port, PCIE_RC_CONFIG_BASE +
+ 				 PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+-	pcie_write(port, status, PCIE_RC_CONFIG_BASE +
++	rockchip_pcie_write(port, status, PCIE_RC_CONFIG_BASE +
+ 				 PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+ 
+ 	/* Enable Gen1 training */
+-	pcie_write(port,
++	rockchip_pcie_write(port,
+ 		   HIWORD_UPDATE(PCIE_CLIENT_LINK_TRAIN_ENABLE,
+ 				 PCIE_CLIENT_LINK_TRAIN_MASK,
+ 				 PCIE_CLIENT_LINK_TRAIN_SHIFT),
+@@ -489,7 +489,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 	timeout = jiffies + msecs_to_jiffies(500);
+ 
+ 	for (;;) {
+-		status = pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
++		status = rockchip_pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
+ 		if (((status >> PCIE_CLIENT_LINK_STATUS_SHIFT) &
+ 		      PCIE_CLIENT_LINK_STATUS_MASK) ==
+ 		      PCIE_CLIENT_LINK_STATUS_UP) {
+@@ -507,7 +507,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 
+ 	/* Double check gen1 training */
+ 	if (err) {
+-		status = pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
++		status = rockchip_pcie_read(port, PCIE_CLIENT_BASIC_STATUS1);
+ 		err = (((status >> PCIE_CLIENT_LINK_STATUS_SHIFT) &
+ 			PCIE_CLIENT_LINK_STATUS_MASK) ==
+ 			PCIE_CLIENT_LINK_STATUS_UP) ? 0 : -ETIMEDOUT;
+@@ -521,15 +521,15 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 	 * Enable retrain for gen2. This should be configured only after
+ 	 * gen1 finished.
+ 	 */
+-	status = pcie_read(port,
++	status = rockchip_pcie_read(port,
+ 			   PCIE_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
+ 	status |= PCIE_CORE_LCSR_RETRAIN_LINK;
+-	pcie_write(port, status,
++	rockchip_pcie_write(port, status,
+ 		   PCIE_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
+ 
+ 	timeout = jiffies + msecs_to_jiffies(500);
+ 	for (;;) {
+-		status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
++		status = rockchip_pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
+ 		if (((status >> PCIE_CORE_PL_CONF_SPEED_SHIFT) &
+ 		     PCIE_CORE_PL_CONF_SPEED_MASK) ==
+ 		     PCIE_CORE_PL_CONF_SPEED_5G) {
+@@ -547,7 +547,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 
+ 	/* Double check gen2 training */
+ 	if (err) {
+-		status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
++		status = rockchip_pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
+ 		err = (((status >> PCIE_CORE_PL_CONF_SPEED_SHIFT) &
+ 			PCIE_CORE_PL_CONF_SPEED_MASK) ==
+ 			PCIE_CORE_PL_CONF_SPEED_5G) ? 0 : -ETIMEDOUT;
+@@ -556,23 +556,23 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *port)
+ 	}
+ 
+ 	/* Check the final link width from negotiated lane counter from MGMT */
+-	status = pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
++	status = rockchip_pcie_read(port, PCIE_CORE_CTRL_MGMT_BASE);
+ 	status =  0x1 << ((status >> PCIE_CORE_PL_CONF_LANE_SHIFT) &
+ 			   PCIE_CORE_PL_CONF_LANE_MASK);
+ 	dev_dbg(port->dev, "current link width is x%d\n", status);
+ 
+-	pcie_write(port, ROCKCHIP_VENDOR_ID, PCIE_RC_CONFIG_BASE);
+-	pcie_write(port, PCI_CLASS_BRIDGE_PCI << PCIE_CORE_RC_CONF_SCC_SHIFT,
++	rockchip_pcie_write(port, ROCKCHIP_VENDOR_ID, PCIE_RC_CONFIG_BASE);
++	rockchip_pcie_write(port, PCI_CLASS_BRIDGE_PCI << PCIE_CORE_RC_CONF_SCC_SHIFT,
+ 		   PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_RID_CCR);
+-	pcie_write(port, 0x0, PCIE_CORE_CTRL_MGMT_BASE + PCIE_RC_BAR_CONF);
++	rockchip_pcie_write(port, 0x0, PCIE_CORE_CTRL_MGMT_BASE + PCIE_RC_BAR_CONF);
+ 
+-	pcie_write(port, (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
++	rockchip_pcie_write(port, (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
+ 		   PCIE_CORE_AXI_CONF_BASE);
+-	pcie_write(port, RC_REGION_0_ADDR_TRANS_H,
++	rockchip_pcie_write(port, RC_REGION_0_ADDR_TRANS_H,
+ 		   PCIE_CORE_AXI_CONF_BASE + PCIE_CORE_OB_REGION_ADDR1);
+-	pcie_write(port, 0x0080000a,
++	rockchip_pcie_write(port, 0x0080000a,
+ 		   PCIE_CORE_AXI_CONF_BASE + PCIE_CORE_OB_REGION_DESC0);
+-	pcie_write(port, 0x0,
++	rockchip_pcie_write(port, 0x0,
+ 		   PCIE_CORE_AXI_CONF_BASE + PCIE_CORE_OB_REGION_DESC1);
+ 
+ 	return 0;
+@@ -584,10 +584,10 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ 	u32 reg;
+ 	u32 sub_reg;
+ 
+-	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
++	reg = rockchip_pcie_read(pp, PCIE_CLIENT_INT_STATUS);
+ 	if (reg & PCIE_CLIENT_INT_LOCAL) {
+ 		dev_dbg(pp->dev, "local interrupt received\n");
+-		sub_reg = pcie_read(pp, PCIE_CORE_INT_STATUS);
++		sub_reg = rockchip_pcie_read(pp, PCIE_CORE_INT_STATUS);
+ 		if (sub_reg & PCIE_CORE_INT_PRFPE)
+ 			dev_dbg(pp->dev, "parity error detected while reading from the PNP receive FIFO RAM\n");
+ 
+@@ -630,13 +630,13 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ 		if (sub_reg & PCIE_CORE_INT_MMVC)
+ 			dev_dbg(pp->dev, "MSI mask register changes\n");
+ 
+-		pcie_write(pp, sub_reg, PCIE_CORE_INT_STATUS);
++		rockchip_pcie_write(pp, sub_reg, PCIE_CORE_INT_STATUS);
+ 	} else if (reg & PCIE_CLIENT_INT_PHY) {
+ 		dev_dbg(pp->dev, "phy link changes\n");
+ 		rockchip_pcie_clr_bw_int(pp);
+ 	}
+ 
+-	pcie_write(pp, reg & PCIE_CLIENT_INT_LOCAL, PCIE_CLIENT_INT_STATUS);
++	rockchip_pcie_write(pp, reg & PCIE_CLIENT_INT_LOCAL, PCIE_CLIENT_INT_STATUS);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -646,7 +646,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ 	struct rockchip_pcie_port *pp = arg;
+ 	u32 reg;
+ 
+-	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
++	reg = rockchip_pcie_read(pp, PCIE_CLIENT_INT_STATUS);
+ 	if (reg & PCIE_CLIENT_INT_LEGACY_DONE)
+ 		dev_dbg(pp->dev, "legacy done interrupt received\n");
+ 
+@@ -671,7 +671,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ 	if (reg & PCIE_CLIENT_INT_PHY)
+ 		dev_dbg(pp->dev, "phy interrupt received\n");
+ 
+-	pcie_write(pp, reg & (PCIE_CLIENT_INT_LEGACY_DONE |
++	rockchip_pcie_write(pp, reg & (PCIE_CLIENT_INT_LEGACY_DONE |
+ 			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
+ 			      PCIE_CLIENT_INT_DPA | PCIE_CLIENT_INT_FATAL_ERR |
+ 			      PCIE_CLIENT_INT_NFATAL_ERR |
+@@ -693,7 +693,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ 	chained_irq_enter(chip, desc);
+ 	port = irq_desc_get_handler_data(desc);
+ 
+-	reg = pcie_read(port, PCIE_CLIENT_INT_STATUS);
++	reg = rockchip_pcie_read(port, PCIE_CLIENT_INT_STATUS);
+ 	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
+ 	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
+ 
+@@ -917,9 +917,9 @@ err_out:
+ 
+ static void rockchip_pcie_enable_interrupts(struct rockchip_pcie_port *port)
+ {
+-	pcie_write(port, (PCIE_CLIENT_INT_CLI << 16) &
++	rockchip_pcie_write(port, (PCIE_CLIENT_INT_CLI << 16) &
+ 		   (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
+-	pcie_write(port, (u32)(~PCIE_CORE_INT), PCIE_CORE_INT_MASK);
++	rockchip_pcie_write(port, (u32)(~PCIE_CORE_INT), PCIE_CORE_INT_MASK);
+ 
+ 	rockchip_pcie_enable_bw_int(port);
+ }
 
-Also, I will split this patch as you suggested.
-
->
-> Another question below...
->
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> ---
->>  drivers/pci/host/mcfg-quirks.c     |  7 +++
->>  drivers/pci/host/mcfg-quirks.h     |  4 ++
->>  drivers/pci/host/pci-thunder-pem.c | 96 ++++++++++++++++++++++++++++++++------
->>  3 files changed, 94 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/pci/host/mcfg-quirks.c b/drivers/pci/host/mcfg-quirks.c
->> index aa9907b..2993a72 100644
->> --- a/drivers/pci/host/mcfg-quirks.c
->> +++ b/drivers/pci/host/mcfg-quirks.c
->> @@ -44,6 +44,13 @@ struct pci_cfg_fixup {
->>
->>  static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
->>  /*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook }, */
->> +#ifdef CONFIG_PCI_HOST_THUNDER_PEM
->> +	/* Pass2.0 */
->> +	{ "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(4, 9), MCFG_BUS_ANY, NULL,
->> +	  thunder_pem_cfg_init },
->> +	{ "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(14, 19), MCFG_BUS_ANY, NULL,
->> +	  thunder_pem_cfg_init },
->> +#endif
->>  };
->>
->>  static bool pci_mcfg_fixup_match(struct pci_cfg_fixup *f,
->> diff --git a/drivers/pci/host/mcfg-quirks.h b/drivers/pci/host/mcfg-quirks.h
->> index 45cbd16..411c667 100644
->> --- a/drivers/pci/host/mcfg-quirks.h
->> +++ b/drivers/pci/host/mcfg-quirks.h
->> @@ -16,5 +16,9 @@
->>  #define __MCFG_QUIRKS_H__
->>
->>  /* MCFG quirks initialize call list */
->> +#ifdef CONFIG_PCI_HOST_THUNDER_PEM
->> +struct pci_config_window *
->> +thunder_pem_cfg_init(struct acpi_pci_root *root, struct pci_ops *ops);
->> +#endif
->>
->>  #endif /* __MCFG_QUIRKS_H__ */
->> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
->> index 6abaf80..3f06e49 100644
->> --- a/drivers/pci/host/pci-thunder-pem.c
->> +++ b/drivers/pci/host/pci-thunder-pem.c
->> @@ -18,9 +18,12 @@
->>  #include <linux/init.h>
->>  #include <linux/of_address.h>
->>  #include <linux/of_pci.h>
->> +#include <linux/pci-acpi.h>
->>  #include <linux/pci-ecam.h>
->>  #include <linux/platform_device.h>
->>
->> +#include "mcfg-quirks.h"
->> +
->>  #define PEM_CFG_WR 0x28
->>  #define PEM_CFG_RD 0x30
->>
->> @@ -284,6 +287,37 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
->>  	return pci_generic_config_write(bus, devfn, where, size, val);
->>  }
->>
->> +#ifdef CONFIG_ACPI
->> +
->> +static struct resource thunder_pem_reg_res[] = {
->> +	[4] = DEFINE_RES_MEM(0x87e0c0000000UL, SZ_16M),
->> +	[5] = DEFINE_RES_MEM(0x87e0c1000000UL, SZ_16M),
->> +	[6] = DEFINE_RES_MEM(0x87e0c2000000UL, SZ_16M),
->> +	[7] = DEFINE_RES_MEM(0x87e0c3000000UL, SZ_16M),
->> +	[8] = DEFINE_RES_MEM(0x87e0c4000000UL, SZ_16M),
->> +	[9] = DEFINE_RES_MEM(0x87e0c5000000UL, SZ_16M),
->> +	[14] = DEFINE_RES_MEM(0x97e0c0000000UL, SZ_16M),
->> +	[15] = DEFINE_RES_MEM(0x97e0c1000000UL, SZ_16M),
->> +	[16] = DEFINE_RES_MEM(0x97e0c2000000UL, SZ_16M),
->> +	[17] = DEFINE_RES_MEM(0x97e0c3000000UL, SZ_16M),
->> +	[18] = DEFINE_RES_MEM(0x97e0c4000000UL, SZ_16M),
->> +	[19] = DEFINE_RES_MEM(0x97e0c5000000UL, SZ_16M),
->> +};
->> +
->> +static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
->> +{
->> +	struct acpi_device *adev = to_acpi_device(cfg->parent);
->> +	struct acpi_pci_root *root = acpi_driver_data(adev);
->> +
->> +	return &thunder_pem_reg_res[root->segment];
->> +}
->> +#else
->> +static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
->> +{
->> +	return NULL;
->> +}
->> +#endif
->> +
->>  static int thunder_pem_init(struct pci_config_window *cfg)
->>  {
->>  	struct device *dev = cfg->parent;
->> @@ -292,24 +326,24 @@ static int thunder_pem_init(struct pci_config_window *cfg)
->>  	struct thunder_pem_pci *pem_pci;
->>  	struct platform_device *pdev;
->>
->> -	/* Only OF support for now */
->> -	if (!dev->of_node)
->> -		return -EINVAL;
->> -
->>  	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
->>  	if (!pem_pci)
->>  		return -ENOMEM;
->>
->> -	pdev = to_platform_device(dev);
->> -
->> -	/*
->> -	 * The second register range is the PEM bridge to the PCIe
->> -	 * bus.  It has a different config access method than those
->> -	 * devices behind the bridge.
->> -	 */
->> -	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->> +	if (acpi_disabled) {
->> +		pdev = to_platform_device(dev);
->> +
->> +		/*
->> +		 * The second register range is the PEM bridge to the PCIe
->> +		 * bus.  It has a different config access method than those
->> +		 * devices behind the bridge.
->> +		 */
->> +		res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->> +	} else {
->> +		res_pem = thunder_pem_acpi_res(cfg);
->> +	}
->>  	if (!res_pem) {
->> -		dev_err(dev, "missing \"reg[1]\"property\n");
->> +		dev_err(dev, "missing configuration region\n");
->>  		return -EINVAL;
->>  	}
->>
->> @@ -360,3 +394,39 @@ static struct platform_driver thunder_pem_driver = {
->>  	.probe = thunder_pem_probe,
->>  };
->>  builtin_platform_driver(thunder_pem_driver);
->> +
->> +#ifdef CONFIG_ACPI
->> +
->> +static struct resource thunder_pem_cfg_res[] = {
->> +	[4] = DEFINE_RES_MEM(0x88001f000000UL, 0x39 * SZ_16M),
->> +	[5] = DEFINE_RES_MEM(0x884057000000UL, 0x39 * SZ_16M),
->> +	[6] = DEFINE_RES_MEM(0x88808f000000UL, 0x39 * SZ_16M),
->> +	[7] = DEFINE_RES_MEM(0x89001f000000UL, 0x39 * SZ_16M),
->> +	[8] = DEFINE_RES_MEM(0x894057000000UL, 0x39 * SZ_16M),
->> +	[9] = DEFINE_RES_MEM(0x89808f000000UL, 0x39 * SZ_16M),
->> +	[14] = DEFINE_RES_MEM(0x98001f000000UL, 0x39 * SZ_16M),
->> +	[15] = DEFINE_RES_MEM(0x984057000000UL, 0x39 * SZ_16M),
->> +	[16] = DEFINE_RES_MEM(0x98808f000000UL, 0x39 * SZ_16M),
->> +	[17] = DEFINE_RES_MEM(0x99001f000000UL, 0x39 * SZ_16M),
->> +	[18] = DEFINE_RES_MEM(0x994057000000UL, 0x39 * SZ_16M),
->> +	[19] = DEFINE_RES_MEM(0x99808f000000UL, 0x39 * SZ_16M),
->> +};
->> +
->> +struct pci_config_window *
->> +thunder_pem_cfg_init(struct acpi_pci_root *root, struct pci_ops *ops)
->> +{
->> +	struct resource *bus_res = &root->secondary;
->> +	u16 seg = root->segment;
->> +	struct pci_config_window *cfg;
->> +
->> +	cfg = pci_ecam_create(&root->device->dev, &thunder_pem_cfg_res[seg],
->> +			      bus_res, &pci_thunder_pem_ops);
->
-> What happens when root->segment is not one of the values defined in
-> thunder_pem_cfg_res[], say "0"?  I *think* pci_ecam_create() will see
-> cfgres as all zeros, and the request_resource_conflict() will probably
-> fail.  That doesn't seem like a very graceful way to report a firmware
-> error.
-
-Right, I will fix it. Thanks.
-
-Tomasz
