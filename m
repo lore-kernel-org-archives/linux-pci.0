@@ -1,78 +1,99 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [RFC PATCH V5 0/5] ECAM quirks handling for ARM64 platforms
-Date: Mon,  8 Aug 2016 15:05:36 +0200
-Message-Id: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+Subject: Re: [RFC PATCH V2 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon
+ SoCs Host Controllers
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
+ <1472644094-82731-4-git-send-email-liudongdong3@huawei.com>
+ <2194589.LrAdKSkzcT@vostro.rjw.lan>
+CC: <helgaas@kernel.org>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>,
+        <wangzhou1@hisilicon.com>, <pratyush.anand@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jcm@redhat.com>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <hanjun.guo@linaro.org>, <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <57C79F3E.4050405@huawei.com>
+Date: Thu, 1 Sep 2016 11:23:42 +0800
+MIME-Version: 1.0
+In-Reply-To: <2194589.LrAdKSkzcT@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Quirk handling relies on an idea of matching MCFG OEM ID, TABLE ID and
-revision (the ones from standard header of MCFG table).
 
-Static array is used to keep quirk entries. Each entry consists of
-mentioned MCFG IDs along with custom pci_ops structure and initialization call.
+在 2016/9/1 6:56, Rafael J. Wysocki 写道:
+> On Wednesday, August 31, 2016 07:48:14 PM Dongdong Liu wrote:
+>> Add specific quirks for PCI config space accessors.This involves:
+>> 1. New initialization call hisi_pcie_acpi_init() to get RC config resource
+>> with hardcoded range address and setup ecam mapping.
+>> 2. New entry in common quirk array.
+>>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>
+> Well, what exactly is the ACPI support you're adding?  Is it the ECAM part only
+> or is there anything more to it?
+>
 
-As an example, the last patch presents quirk handling mechanism usage for
-ThunderX PEM driver.
+Hi Rafael, thanks for replying.
 
-v4 -> v5
-- rebase against v4.8-rc1
-- rework to exact MCFG OEM ID, TABLE ID, rev match
-  - use memcmp instead of strncmp
-  - no substring match
-- fix typos and dmesg message
+Our host bridge is non ECAM only for the RC bus config space;
+for any other bus underneath the root bus we support ECAM access.
 
-Tomasz Nowicki (5):
-  PCI: Embed pci_ecam_ops in pci_config_window structure
-  PCI/ACPI: Move ACPI ECAM mapping to generic MCFG driver
-  PCI: Check platform specific ECAM quirks
-  ARM64/PCI: Start using quirks handling for ACPI based PCI host
-    controller
-  PCI: thunder-pem: Support quirky configuration space access for ACPI
-    based PCI host controller
+In our case we cannot use the standard MCFG object to pass the RC itself config space addresses.
+The more discuss information can be found:
+https://lkml.org/lkml/2016/2/22/1087
+[...]
+I have looked into this and in our case we cannot use the
+standard MCFG object to pass the RC config space addresses.
 
- arch/arm64/kernel/pci.c            | 42 +----------------
- drivers/acpi/pci_mcfg.c            | 40 ++++++++++++++++
- drivers/pci/ecam.c                 |  6 +--
- drivers/pci/host/Makefile          |  1 +
- drivers/pci/host/mcfg-quirks.c     | 93 ++++++++++++++++++++++++++++++++++++
- drivers/pci/host/mcfg-quirks.h     | 24 ++++++++++
- drivers/pci/host/pci-thunder-pem.c | 96 ++++++++++++++++++++++++++++++++------
- include/linux/pci-acpi.h           |  5 ++
- include/linux/pci-ecam.h           |  2 +-
- 9 files changed, 252 insertions(+), 57 deletions(-)
- create mode 100644 drivers/pci/host/mcfg-quirks.c
- create mode 100644 drivers/pci/host/mcfg-quirks.h
+The reason is that in our HW we have the config base addresses of the
+root complex ports that are less than 0x100000 byte distant one from
+the other as we only map the first 0x10000 bytes.
+Now the MCFG acpi framework always fix the MCFG resource size to 0x100000
+for each bus; therefore if we pass our RC addresses through MCFG we end
+up with a resource conflict.
+To give you a practical example we are in a situation where we have:
 
--- 
-1.9.1
+port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
+port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
+port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
+port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
+So if we pass the base addresses through MCFG the resources
+will overlap as MCFG will consider 0x100000 size for each base
+address of the root complex (only the RC bus uses that address)
+So far I do not see many option other than using _DSD to pass
+these RC config base addresses.
+
+Thanks and Regards
+
+Gab
+[...]
+
+and
+
+https://patchwork.kernel.org/patch/9178791/
+[...]
+Furthermore, I suspect we do not even need a way to pass the
+non-ECAM compliant config space resources to the OS (ie we can't
+change FW anymore anyway in some platforms) so the quirks hooks
+are likely to hardcode the required config space addresses for
+the respective MCFG match.
+
+......
+Thanks !
+Lorenzo
+[...]
+
+So we hard code with our RC itself config resource.
+
+Thanks
+Dongdong
+
+> Thanks,
+> Rafael
+>
+>
+> .
+>
