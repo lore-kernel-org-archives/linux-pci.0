@@ -1,402 +1,350 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 1/8] ACPI: I/O Remapping Table (IORT) initial support
-Date: Mon,  5 Sep 2016 22:05:33 +0200
-Message-Id: <1473105940-9761-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
-References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56706 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934857AbcIAQok (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Sep 2016 12:44:40 -0400
+Subject: [PATCH 5/9] Use a local "dev" to avoid repetition of
+ "rockchip->dev".
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Thu, 01 Sep 2016 11:44:34 -0500
+Message-ID: <20160901164434.14195.62167.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IORT shows representation of IO topology for ARM based systems.
-It describes how various components are connected together on
-parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
-http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
 
-Initial support allows to detect IORT table presence and save its
-root pointer obtained through acpi_get_table(). The pointer validity
-depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
-is not set while using IORT nodes we would dereference unmapped pointers.
-
-For the aforementioned reason call iort_table_detect() from acpi_init()
-which guarantees acpi_gbl_permanent_mmap to be set at that point.
-
-Add generic helpers which are helpful for scanning and retrieving
-information from IORT table content. List of the most important helpers:
-- iort_find_dev_node() finds IORT node for a given device
-- iort_node_map_rid() maps device RID and returns IORT node which provides
-  final translation
-
-IORT support is placed under drivers/acpi/arm64/ new directory due to its
-ARM64 specific nature. The code there is considered only for ARM64.
-The long term plan is to keep all ARM64 specific tables support
-in this place e.g. GTDT table.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 ---
- drivers/acpi/Kconfig        |   4 +
- drivers/acpi/Makefile       |   2 +
- drivers/acpi/arm64/Kconfig  |   6 ++
- drivers/acpi/arm64/Makefile |   1 +
- drivers/acpi/arm64/iort.c   | 221 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/bus.c          |   2 +
- include/linux/iort.h        |  30 ++++++
- 7 files changed, 266 insertions(+)
- create mode 100644 drivers/acpi/arm64/Kconfig
- create mode 100644 drivers/acpi/arm64/Makefile
- create mode 100644 drivers/acpi/arm64/iort.c
- create mode 100644 include/linux/iort.h
+ drivers/pci/host/pcie-rockchip.c |   95 ++++++++++++++++++++------------------
+ 1 file changed, 50 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 445ce28..d5c0614 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -521,4 +521,8 @@ config ACPI_CONFIGFS
- 	  userspace. The configurable ACPI groups will be visible under
- 	  /config/acpi, assuming configfs is mounted under /config.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 63fb0ebc..17612e5 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -380,6 +380,7 @@ static struct pci_ops rockchip_pcie_ops = {
+  */
+ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ {
++	struct device *dev = rockchip->dev;
+ 	int err;
+ 	u32 status;
+ 	unsigned long timeout;
+@@ -388,31 +389,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
  
-+if ARM64
-+source "drivers/acpi/arm64/Kconfig"
-+endif
-+
- endif	# ACPI
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index 5ae9d85..e5ada78 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -105,3 +105,5 @@ obj-$(CONFIG_ACPI_CONFIGFS)	+= acpi_configfs.o
- 
- video-objs			+= acpi_video.o video_detect.o
- obj-y				+= dptf/
-+
-+obj-$(CONFIG_ARM64)		+= arm64/
-diff --git a/drivers/acpi/arm64/Kconfig b/drivers/acpi/arm64/Kconfig
-new file mode 100644
-index 0000000..4616da4
---- /dev/null
-+++ b/drivers/acpi/arm64/Kconfig
-@@ -0,0 +1,6 @@
-+#
-+# ACPI Configuration for ARM64
-+#
-+
-+config ACPI_IORT
-+	bool
-diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
-new file mode 100644
-index 0000000..72331f2
---- /dev/null
-+++ b/drivers/acpi/arm64/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_ACPI_IORT) 	+= iort.o
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-new file mode 100644
-index 0000000..82d5e7d
---- /dev/null
-+++ b/drivers/acpi/arm64/iort.c
-@@ -0,0 +1,221 @@
-+/*
-+ * Copyright (C) 2016, Semihalf
-+ *	Author: Tomasz Nowicki <tn@semihalf.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * This file implements early detection/parsing of I/O mapping
-+ * reported to OS through firmware via I/O Remapping Table (IORT)
-+ * IORT document number: ARM DEN 0049A
-+ */
-+
-+#define pr_fmt(fmt)	"ACPI: IORT: " fmt
-+
-+#include <linux/iort.h>
-+#include <linux/kernel.h>
-+#include <linux/pci.h>
-+
-+typedef acpi_status (*iort_find_node_callback)
-+	(struct acpi_iort_node *node, void *context);
-+
-+/* Root pointer to the mapped IORT table */
-+static struct acpi_table_header *iort_table;
-+
-+static struct acpi_iort_node *
-+iort_scan_node(enum acpi_iort_node_type type,
-+	       iort_find_node_callback callback, void *context)
-+{
-+	struct acpi_iort_node *iort_node, *iort_end;
-+	struct acpi_table_iort *iort;
-+	int i;
-+
-+	if (!iort_table)
-+		return NULL;
-+
-+	/* Get the first IORT node */
-+	iort = (struct acpi_table_iort *)iort_table;
-+	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
-+				 iort->node_offset);
-+	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-+				iort_table->length);
-+
-+	for (i = 0; i < iort->node_count; i++) {
-+		if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
-+			       "IORT node pointer overflows, bad table!\n"))
-+			return NULL;
-+
-+		if (iort_node->type == type) {
-+			if (ACPI_SUCCESS(callback(iort_node, context)))
-+				return iort_node;
-+		}
-+
-+		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
-+					 iort_node->length);
-+	}
-+
-+	return NULL;
-+}
-+
-+static acpi_status
-+iort_match_node_callback(struct acpi_iort_node *node, void *context)
-+{
-+	struct device *dev = context;
-+
-+	switch (node->type) {
-+	case ACPI_IORT_NODE_NAMED_COMPONENT: {
-+		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
-+		struct acpi_iort_named_component *ncomp;
-+
-+		if (!adev)
-+			break;
-+
-+		ncomp = (struct acpi_iort_named_component *)node->node_data;
-+
-+		if (ACPI_FAILURE(acpi_get_name(adev->handle,
-+					       ACPI_FULL_PATHNAME, &buffer))) {
-+			dev_warn(dev, "Can't get device full path name\n");
-+		} else {
-+			int match;
-+
-+			match = !strcmp(ncomp->device_name, buffer.pointer);
-+			acpi_os_free(buffer.pointer);
-+
-+			if (match)
-+				return AE_OK;
-+		}
-+
-+		break;
-+	}
-+	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
-+		struct acpi_iort_root_complex *pci_rc;
-+		struct pci_bus *bus;
-+
-+		bus = to_pci_bus(dev);
-+		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
-+
-+		/*
-+		 * It is assumed that PCI segment numbers maps one-to-one
-+		 * with root complexes. Each segment number can represent only
-+		 * one root complex.
-+		 */
-+		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
-+			return AE_OK;
-+
-+		break;
-+	}
-+	}
-+
-+	return AE_NOT_FOUND;
-+}
-+
-+static int
-+iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in, u32 *rid_out)
-+{
-+	/* Single mapping does not care for input id */
-+	if (map->flags & ACPI_IORT_ID_SINGLE_MAPPING) {
-+		if (type == ACPI_IORT_NODE_NAMED_COMPONENT ||
-+		    type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
-+			*rid_out = map->output_base;
-+			return 0;
-+		}
-+
-+		pr_warn(FW_BUG "[map %p] SINGLE MAPPING flag not allowed for node type %d, skipping ID map\n",
-+			map, type);
-+		return -ENXIO;
-+	}
-+
-+	if (rid_in < map->input_base ||
-+	    (rid_in >= map->input_base + map->id_count))
-+		return -ENXIO;
-+
-+	*rid_out = map->output_base + (rid_in - map->input_base);
-+	return 0;
-+}
-+
-+static struct acpi_iort_node *
-+iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
-+		  u32 *rid_out, u8 type)
-+{
-+	u32 rid = rid_in;
-+
-+	/* Parse the ID mapping tree to find specified node type */
-+	while (node) {
-+		struct acpi_iort_id_mapping *map;
-+		int i;
-+
-+		if (node->type == type) {
-+			if (rid_out)
-+				*rid_out = rid;
-+			return node;
-+		}
-+
-+		if (!node->mapping_offset || !node->mapping_count)
-+			goto fail_map;
-+
-+		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
-+				   node->mapping_offset);
-+
-+		/* Firmware bug! */
-+		if (!map->output_reference) {
-+			pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
-+			       node, node->type);
-+			goto fail_map;
-+		}
-+
-+		/* Do the RID translation */
-+		for (i = 0; i < node->mapping_count; i++, map++) {
-+			if (!iort_id_map(map, node->type, rid, &rid))
-+				break;
-+		}
-+
-+		if (i == node->mapping_count)
-+			goto fail_map;
-+
-+		node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-+				    map->output_reference);
-+	}
-+
-+fail_map:
-+	/* Map input RID to output RID unchanged on mapping failure*/
-+	if (rid_out)
-+		*rid_out = rid_in;
-+
-+	return NULL;
-+}
-+
-+static struct acpi_iort_node *
-+iort_find_dev_node(struct device *dev)
-+{
-+	struct pci_bus *pbus;
-+
-+	if (!dev_is_pci(dev))
-+		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-+				      iort_match_node_callback, dev);
-+
-+	/* Find a PCI root bus */
-+	pbus = to_pci_dev(dev)->bus;
-+	while (!pci_is_root_bus(pbus))
-+		pbus = pbus->parent;
-+
-+	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-+			      iort_match_node_callback, &pbus->dev);
-+}
-+
-+void __init acpi_iort_init(void)
-+{
-+	acpi_status status;
-+
-+	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
-+	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-+		const char *msg = acpi_format_exception(status);
-+		pr_err("Failed to get table, %s\n", msg);
-+	}
-+}
-diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-index 85b7d07..7ddfbf2 100644
---- a/drivers/acpi/bus.c
-+++ b/drivers/acpi/bus.c
-@@ -36,6 +36,7 @@
- #ifdef CONFIG_X86
- #include <asm/mpspec.h>
- #endif
-+#include <linux/iort.h>
- #include <linux/pci.h>
- #include <acpi/apei.h>
- #include <linux/dmi.h>
-@@ -1186,6 +1187,7 @@ static int __init acpi_init(void)
+ 	err = phy_init(rockchip->phy);
+ 	if (err < 0) {
+-		dev_err(rockchip->dev, "fail to init phy, err %d\n", err);
++		dev_err(dev, "fail to init phy, err %d\n", err);
+ 		return err;
  	}
  
- 	pci_mmcfg_late_init();
-+	acpi_iort_init();
- 	acpi_scan_init();
- 	acpi_ec_init();
- 	acpi_debugfs_init();
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-new file mode 100644
-index 0000000..f4d5d45
---- /dev/null
-+++ b/include/linux/iort.h
-@@ -0,0 +1,30 @@
-+/*
-+ * Copyright (C) 2016, Semihalf
-+ *	Author: Tomasz Nowicki <tn@semihalf.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-+ * Place - Suite 330, Boston, MA 02111-1307 USA.
-+ */
-+
-+#ifndef __IORT_H__
-+#define __IORT_H__
-+
-+#include <linux/acpi.h>
-+
-+#ifdef CONFIG_ACPI_IORT
-+void acpi_iort_init(void);
-+#else
-+static inline void acpi_iort_init(void) { }
-+#endif
-+
-+#endif /* __IORT_H__ */
--- 
-1.9.1
+ 	err = reset_control_assert(rockchip->core_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "assert core_rst err %d\n", err);
++		dev_err(dev, "assert core_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->mgmt_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "assert mgmt_rst err %d\n", err);
++		dev_err(dev, "assert mgmt_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->mgmt_sticky_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "assert mgmt_sticky_rst err %d\n", err);
++		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->pipe_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "assert pipe_rst err %d\n", err);
++		dev_err(dev, "assert pipe_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+@@ -436,31 +437,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 
+ 	err = phy_power_on(rockchip->phy);
+ 	if (err) {
+-		dev_err(rockchip->dev, "fail to power on phy, err %d\n", err);
++		dev_err(dev, "fail to power on phy, err %d\n", err);
+ 		return err;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->core_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "deassert core_rst err %d\n", err);
++		dev_err(dev, "deassert core_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->mgmt_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "deassert mgmt_rst err %d\n", err);
++		dev_err(dev, "deassert mgmt_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "deassert mgmt_sticky_rst err %d\n", err);
++		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->pipe_rst);
+ 	if (err) {
+-		dev_err(rockchip->dev, "deassert pipe_rst err %d\n", err);
++		dev_err(dev, "deassert pipe_rst err %d\n", err);
+ 		return err;
+ 	}
+ 
+@@ -492,7 +493,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		if (((status >> PCIE_CLIENT_LINK_STATUS_SHIFT) &
+ 		      PCIE_CLIENT_LINK_STATUS_MASK) ==
+ 		      PCIE_CLIENT_LINK_STATUS_UP) {
+-			dev_dbg(rockchip->dev, "PCIe link training gen1 pass!\n");
++			dev_dbg(dev, "PCIe link training gen1 pass!\n");
+ 			break;
+ 		}
+ 
+@@ -511,7 +512,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			PCIE_CLIENT_LINK_STATUS_MASK) ==
+ 			PCIE_CLIENT_LINK_STATUS_UP) ? 0 : -ETIMEDOUT;
+ 		if (err) {
+-			dev_err(rockchip->dev, "PCIe link training gen1 timeout!\n");
++			dev_err(dev, "PCIe link training gen1 timeout!\n");
+ 			return err;
+ 		}
+ 	}
+@@ -532,7 +533,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		if (((status >> PCIE_CORE_PL_CONF_SPEED_SHIFT) &
+ 		     PCIE_CORE_PL_CONF_SPEED_MASK) ==
+ 		     PCIE_CORE_PL_CONF_SPEED_5G) {
+-			dev_dbg(rockchip->dev, "PCIe link training gen2 pass!\n");
++			dev_dbg(dev, "PCIe link training gen2 pass!\n");
+ 			break;
+ 		}
+ 
+@@ -551,14 +552,14 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			PCIE_CORE_PL_CONF_SPEED_MASK) ==
+ 			PCIE_CORE_PL_CONF_SPEED_5G) ? 0 : -ETIMEDOUT;
+ 		if (err)
+-			dev_dbg(rockchip->dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
++			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+ 	}
+ 
+ 	/* Check the final link width from negotiated lane counter from MGMT */
+ 	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_MGMT_BASE);
+ 	status =  0x1 << ((status >> PCIE_CORE_PL_CONF_LANE_SHIFT) &
+ 			   PCIE_CORE_PL_CONF_LANE_MASK);
+-	dev_dbg(rockchip->dev, "current link width is x%d\n", status);
++	dev_dbg(dev, "current link width is x%d\n", status);
+ 
+ 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID, PCIE_RC_CONFIG_BASE);
+ 	rockchip_pcie_write(rockchip, PCI_CLASS_BRIDGE_PCI << PCIE_CORE_RC_CONF_SCC_SHIFT,
+@@ -580,58 +581,59 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ {
+ 	struct rockchip_pcie *rockchip = arg;
++	struct device *dev = rockchip->dev;
+ 	u32 reg;
+ 	u32 sub_reg;
+ 
+ 	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
+ 	if (reg & PCIE_CLIENT_INT_LOCAL) {
+-		dev_dbg(rockchip->dev, "local interrupt received\n");
++		dev_dbg(dev, "local interrupt received\n");
+ 		sub_reg = rockchip_pcie_read(rockchip, PCIE_CORE_INT_STATUS);
+ 		if (sub_reg & PCIE_CORE_INT_PRFPE)
+-			dev_dbg(rockchip->dev, "parity error detected while reading from the PNP receive FIFO RAM\n");
++			dev_dbg(dev, "parity error detected while reading from the PNP receive FIFO RAM\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_CRFPE)
+-			dev_dbg(rockchip->dev, "parity error detected while reading from the Completion Receive FIFO RAM\n");
++			dev_dbg(dev, "parity error detected while reading from the Completion Receive FIFO RAM\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_RRPE)
+-			dev_dbg(rockchip->dev, "parity error detected while reading from replay buffer RAM\n");
++			dev_dbg(dev, "parity error detected while reading from replay buffer RAM\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_PRFO)
+-			dev_dbg(rockchip->dev, "overflow occurred in the PNP receive FIFO\n");
++			dev_dbg(dev, "overflow occurred in the PNP receive FIFO\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_CRFO)
+-			dev_dbg(rockchip->dev, "overflow occurred in the completion receive FIFO\n");
++			dev_dbg(dev, "overflow occurred in the completion receive FIFO\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_RT)
+-			dev_dbg(rockchip->dev, "replay timer timed out\n");
++			dev_dbg(dev, "replay timer timed out\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_RTR)
+-			dev_dbg(rockchip->dev, "replay timer rolled over after 4 transmissions of the same TLP\n");
++			dev_dbg(dev, "replay timer rolled over after 4 transmissions of the same TLP\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_PE)
+-			dev_dbg(rockchip->dev, "phy error detected on receive side\n");
++			dev_dbg(dev, "phy error detected on receive side\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_MTR)
+-			dev_dbg(rockchip->dev, "malformed TLP received from the link\n");
++			dev_dbg(dev, "malformed TLP received from the link\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_UCR)
+-			dev_dbg(rockchip->dev, "malformed TLP received from the link\n");
++			dev_dbg(dev, "malformed TLP received from the link\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_FCE)
+-			dev_dbg(rockchip->dev, "an error was observed in the flow control advertisements from the other side\n");
++			dev_dbg(dev, "an error was observed in the flow control advertisements from the other side\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_CT)
+-			dev_dbg(rockchip->dev, "a request timed out waiting for completion\n");
++			dev_dbg(dev, "a request timed out waiting for completion\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_UTC)
+-			dev_dbg(rockchip->dev, "unmapped TC error\n");
++			dev_dbg(dev, "unmapped TC error\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_MMVC)
+-			dev_dbg(rockchip->dev, "MSI mask register changes\n");
++			dev_dbg(dev, "MSI mask register changes\n");
+ 
+ 		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
+ 	} else if (reg & PCIE_CLIENT_INT_PHY) {
+-		dev_dbg(rockchip->dev, "phy link changes\n");
++		dev_dbg(dev, "phy link changes\n");
+ 		rockchip_pcie_clr_bw_int(rockchip);
+ 	}
+ 
+@@ -643,32 +645,33 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ {
+ 	struct rockchip_pcie *rockchip = arg;
++	struct device *dev = rockchip->dev;
+ 	u32 reg;
+ 
+ 	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
+ 	if (reg & PCIE_CLIENT_INT_LEGACY_DONE)
+-		dev_dbg(rockchip->dev, "legacy done interrupt received\n");
++		dev_dbg(dev, "legacy done interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_MSG)
+-		dev_dbg(rockchip->dev, "message done interrupt received\n");
++		dev_dbg(dev, "message done interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_HOT_RST)
+-		dev_dbg(rockchip->dev, "hot reset interrupt received\n");
++		dev_dbg(dev, "hot reset interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_DPA)
+-		dev_dbg(rockchip->dev, "dpa interrupt received\n");
++		dev_dbg(dev, "dpa interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_FATAL_ERR)
+-		dev_dbg(rockchip->dev, "fatal error interrupt received\n");
++		dev_dbg(dev, "fatal error interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_NFATAL_ERR)
+-		dev_dbg(rockchip->dev, "no fatal error interrupt received\n");
++		dev_dbg(dev, "no fatal error interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_CORR_ERR)
+-		dev_dbg(rockchip->dev, "correctable error interrupt received\n");
++		dev_dbg(dev, "correctable error interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_PHY)
+-		dev_dbg(rockchip->dev, "phy interrupt received\n");
++		dev_dbg(dev, "phy interrupt received\n");
+ 
+ 	rockchip_pcie_write(rockchip, reg & (PCIE_CLIENT_INT_LEGACY_DONE |
+ 			      PCIE_CLIENT_INT_MSG | PCIE_CLIENT_INT_HOT_RST |
+@@ -685,6 +688,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct rockchip_pcie *rockchip;
++	struct device *dev = rockchip->dev;
+ 	u32 reg;
+ 	u32 hwirq;
+ 	u32 virq;
+@@ -704,7 +708,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ 		if (virq)
+ 			generic_handle_irq(virq);
+ 		else
+-			dev_err(rockchip->dev, "unexpected IRQ, INT%d\n", hwirq);
++			dev_err(dev, "unexpected IRQ, INT%d\n", hwirq);
+ 	}
+ 
+ 	chained_irq_exit(chip, desc);
+@@ -876,12 +880,13 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 
+ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
+ {
++	struct device *dev = rockchip->dev;
+ 	int err;
+ 
+ 	if (!IS_ERR(rockchip->vpcie3v3)) {
+ 		err = regulator_enable(rockchip->vpcie3v3);
+ 		if (err) {
+-			dev_err(rockchip->dev, "fail to enable vpcie3v3 regulator\n");
++			dev_err(dev, "fail to enable vpcie3v3 regulator\n");
+ 			goto err_out;
+ 		}
+ 	}
+@@ -889,7 +894,7 @@ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
+ 	if (!IS_ERR(rockchip->vpcie1v8)) {
+ 		err = regulator_enable(rockchip->vpcie1v8);
+ 		if (err) {
+-			dev_err(rockchip->dev, "fail to enable vpcie1v8 regulator\n");
++			dev_err(dev, "fail to enable vpcie1v8 regulator\n");
+ 			goto err_disable_3v3;
+ 		}
+ 	}
+@@ -897,7 +902,7 @@ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
+ 	if (!IS_ERR(rockchip->vpcie0v9)) {
+ 		err = regulator_enable(rockchip->vpcie0v9);
+ 		if (err) {
+-			dev_err(rockchip->dev, "fail to enable vpcie0v9 regulator\n");
++			dev_err(dev, "fail to enable vpcie0v9 regulator\n");
+ 			goto err_disable_1v8;
+ 		}
+ 	}
+@@ -1082,7 +1087,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = rockchip_pcie_set_vpcie(rockchip);
+ 	if (err) {
+-		dev_err(rockchip->dev, "failed to set vpcie regulator\n");
++		dev_err(dev, "failed to set vpcie regulator\n");
+ 		goto err_set_vpcie;
+ 	}
+ 
+@@ -1117,7 +1122,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 			io_bus_addr = io->start - win->offset;
+ 			err = pci_remap_iospace(io, io_base);
+ 			if (err) {
+-				dev_warn(rockchip->dev, "error %d: failed to map resource %pR\n",
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 err, io);
+ 				continue;
+ 			}
+
