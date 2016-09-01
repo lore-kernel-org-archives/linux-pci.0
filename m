@@ -1,87 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54446 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752172AbcHVRFT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Aug 2016 13:05:19 -0400
-Date: Mon, 22 Aug 2016 12:05:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Will Deacon <will.deacon@arm.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: Add support for unbinding the generic PCI host
- controller
-Message-ID: <20160822170515.GF18628@localhost>
-References: <57698276.6050606@siemens.com>
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:34170 "EHLO
+        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752513AbcIABRa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2016 21:17:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57698276.6050606@siemens.com>
+In-Reply-To: <1472176045-27815-1-git-send-email-lftan@altera.com>
+References: <1472176045-27815-1-git-send-email-lftan@altera.com>
+From: Ley Foon Tan <lftan.linux@gmail.com>
+Date: Thu, 1 Sep 2016 09:17:27 +0800
+Message-ID: <CAFiDJ5-q9=+aLOuHuMtRMnx2Ep3P6h+LXqfeM26Ku1oHbZVQfw@mail.gmail.com>
+Subject: Re: [PATCH v4 0/2] PCI: altera: Retrain link in rootport mode only
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Ley Foon Tan <lftan.linux@gmail.com>,
+        Ley Foon Tan <lftan@altera.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jan,
+On Fri, Aug 26, 2016 at 9:47 AM, Ley Foon Tan <lftan@altera.com> wrote:
+> Altera PCIe IP can be configured as rootport or device and they might have
+> same vendor ID. It will cause the system hang issue if Altera PCIe is in
+> endpoint mode and work with other PCIe rootport that from other vendors.
+>
+> This series of patch rework configs accessors and move retrain function
+> from _FIXUP to altera_pcie_host_init().
+>
+> History:
+> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+> v3: Move retrain function to before pci_scan_root_bus and remove _FIXUP
+> v4: Split patch to 2 patches
+>
+> Ley Foon Tan (2):
+>   PCI: altera: Rework configs accessors
+>   PCI: altera: Move retrain from _FIXUP to altera_pcie_host_init()
+>
+>  drivers/pci/host/pcie-altera.c | 215 +++++++++++++++++++++++++----------------
+>  1 file changed, 132 insertions(+), 83 deletions(-)
+>
+Hi Bjorn
 
-On Tue, Jun 21, 2016 at 08:07:50PM +0200, Jan Kiszka wrote:
-> Particularly useful when working in virtual environments where the
-> controller may come and go, but possibly not only there.
+Do you have further comment on this patch series?
+Thanks.
 
-I'm not sure where we're at with this.  Will had a few questions about
-the tear-down paths, and I couldn't tell what the resolution was.
-
-> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-> ---
->  drivers/pci/ecam.h                  |  1 +
->  drivers/pci/host/pci-host-common.c  | 13 +++++++++++++
->  drivers/pci/host/pci-host-generic.c |  1 +
->  3 files changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
-> index 9878beb..5a5f607 100644
-> --- a/drivers/pci/ecam.h
-> +++ b/drivers/pci/ecam.h
-> @@ -63,5 +63,6 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
->  /* for DT-based PCI controllers that support ECAM */
->  int pci_host_common_probe(struct platform_device *pdev,
->  			  struct pci_ecam_ops *ops);
-> +int pci_host_common_remove(struct platform_device *pdev);
->  #endif
->  #endif
-> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-> index 8cba7ab..c0ff4b1 100644
-> --- a/drivers/pci/host/pci-host-common.c
-> +++ b/drivers/pci/host/pci-host-common.c
-> @@ -164,6 +164,19 @@ int pci_host_common_probe(struct platform_device *pdev,
->  	}
->  
->  	pci_bus_add_devices(bus);
-> +	platform_set_drvdata(pdev, bus);
-> +	return 0;
-> +}
-> +
-> +int pci_host_common_remove(struct platform_device *pdev)
-> +{
-> +	struct pci_bus *bus = platform_get_drvdata(pdev);
-> +
-> +	pci_lock_rescan_remove();
-> +	pci_stop_root_bus(bus);
-> +	pci_remove_root_bus(bus);
-> +	pci_unlock_rescan_remove();
-> +
->  	return 0;
->  }
->  
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 6eaceab..0a2e75b 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -65,6 +65,7 @@ static struct platform_driver gen_pci_driver = {
->  		.of_match_table = gen_pci_of_match,
->  	},
->  	.probe = gen_pci_probe,
-> +	.remove = pci_host_common_remove,
->  };
->  module_platform_driver(gen_pci_driver);
->  
-> -- 
-> 2.1.4
+Regards
+Ley Foon
