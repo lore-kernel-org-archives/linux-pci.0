@@ -1,105 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v5 13/14] drivers: acpi: iort: add single mapping function
-Date: Fri,  9 Sep 2016 15:23:42 +0100
-Message-Id: <20160909142343.13314-14-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <briannorris@chromium.org>
+Return-Path: <briannorris@chromium.org>
+Date: Thu, 1 Sep 2016 09:57:58 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Heiko Stuebner <heiko@sntech.de>,
+	Doug Anderson <dianders@chromium.org>,
+	Wenrui Li <wenrui.li@rock-chips.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [v10,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
+Message-ID: <20160901165757.GA3253@localhost>
+References: <1471570498-3284-1-git-send-email-shawn.lin@rock-chips.com>
+ <20160831181754.GA7460@roeck-us.net>
+ <9075a2c1-c787-986f-31b4-4d5b7c92b771@rock-chips.com>
+ <20160901163455.GA9471@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160901163455.GA9471@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-The current IORT id mapping API requires components to provide
-an input requester ID (a Bus-Device-Function (BDF) identifier for
-PCI devices) to translate an input identifier to an output
-identifier through an IORT range mapping.
+On Thu, Sep 01, 2016 at 11:34:55AM -0500, Bjorn Helgaas wrote:
+> I can't conveniently build it, so I'm sure I've broken things.  I
 
-Named components do not have an identifiable source ID therefore
-their respective input/output mapping can only be defined in
-IORT tables through single mappings, that provide a translation
-that does not require any input identifier.
+Indeed, you have :)
 
-Current IORT interface for requester id mappings (iort_node_map_rid())
-is not suitable for components that do not provide a requester id,
-so it cannot be used for IORT named components.
+> pushed the current work-in-progress branch to pci/host-rockchip-wip.
+> After we fix build errors and other thinkos, I'll rename it and put it
+> in -next.
 
-Add an interface to the IORT API to enable retrieval of id
-by allowing an indexed walk of the single mappings array for
-a given component, therefore completing the IORT mapping API.
+I'll append a patch that gets things building and working for me. With
+that:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/arm64/iort.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+Tested-by: Brian Norris <briannorris@chromium.org>
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 36ea93e..7c68eb4 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -284,6 +284,45 @@ static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
- 	return 0;
- }
+I haven't examined all the changes in detail, but they mostly seem
+reasonable.
+
+> I'll also post the broken-out patches for the changes I made on top of
+> the previous v10 (2098142ae87d).  I'll eventually squash them all into
+> the original commit so we don't have the clutter in the logs.
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 6623598679f2..ac846bab7396 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -128,9 +128,9 @@
+ #define PCIE_CLIENT_CONF_ENABLE		(0x00010000 | 0x0001)
+ #define PCIE_CLIENT_LINK_TRAIN_ENABLE	(0x00020000 | 0x0002)
+ #define PCIE_CLIENT_ARI_ENABLE		(0x00080000 | 0x0008)
+-#define PCIE_CLIENT_CONF_LANE_NUM(x)	(0x00300000 | (((x >> 1) & 3) << 4)
++#define PCIE_CLIENT_CONF_LANE_NUM(x)	(0x00300000 | (((x >> 1) & 3) << 4))
+ #define PCIE_CLIENT_MODE_RC		(0x00400000 | 0x0040)
+-#define PCIE_CLIENT_GEN_SEL(x)		(0x00800000 | ((x & 1) << 7)
++#define PCIE_CLIENT_GEN_SEL(x)		(0x00800000 | ((x & 1) << 7))
+ #define  PCIE_CLIENT_GEN_SEL_0		0
+ #define  PCIE_CLIENT_GEN_SEL_2		1
  
-+static
-+struct acpi_iort_node *iort_node_get_id(struct acpi_iort_node *node,
-+					u32 *id_out, u8 type_mask,
-+					int index)
-+{
-+	struct acpi_iort_node *parent;
-+	struct acpi_iort_id_mapping *map;
-+
-+	if (!node->mapping_offset || !node->mapping_count ||
-+				     index >= node->mapping_count)
-+		return NULL;
-+
-+	map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
-+			   node->mapping_offset);
-+
-+	/* Firmware bug! */
-+	if (!map->output_reference) {
-+		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
-+		       node, node->type);
-+		return NULL;
-+	}
-+
-+	parent = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-+			       map->output_reference);
-+
-+	if (!(IORT_TYPE_MASK(parent->type) & type_mask))
-+		return NULL;
-+
-+	if (map[index].flags & ACPI_IORT_ID_SINGLE_MAPPING) {
-+		if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT ||
-+		    node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
-+			*id_out = map[index].output_base;
-+			return parent;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
- static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
- 						u32 rid_in, u32 *rid_out,
- 						u8 type_mask)
--- 
-2.10.0
-
+@@ -643,14 +643,13 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+-	struct rockchip_pcie *rockchip;
++	struct rockchip_pcie *rockchip = irq_desc_get_handler_data(desc);
+ 	struct device *dev = rockchip->dev;
+ 	u32 reg;
+ 	u32 hwirq;
+ 	u32 virq;
+ 
+ 	chained_irq_enter(chip, desc);
+-	rockchip = irq_desc_get_handler_data(desc);
+ 
+ 	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
+ 	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
