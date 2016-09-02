@@ -1,81 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37119 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753835AbcI0ONw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2016 10:13:52 -0400
-Date: Tue, 27 Sep 2016 16:13:42 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Amir Levy <amir.jer.levy@intel.com>
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com
-Subject: Re: [PATCH v7 5/8] thunderbolt: Networking state machine
-Message-ID: <20160927141342.GC21133@kroah.com>
-References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
- <1474983821-2313-6-git-send-email-amir.jer.levy@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 11/15] Rename PCIE_CORE_RC_CONF_SCC_SHIFT to match
+ similar definitions.
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Fri, 02 Sep 2016 10:55:27 -0500
+Message-ID: <20160902155527.8650.70814.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1474983821-2313-6-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 27, 2016 at 04:43:38PM +0300, Amir Levy wrote:
-> This patch builds the peer to peer communication path.
-> Communication is established by a negotiation process whereby messages are
-> sent back and forth between the peers until a connection is established.
-> This includes the Thunderbolt Network driver communication with the second
-> peer via Intel Connection Manager(ICM) firmware.
->   +--------------------+            +--------------------+
->   |Host 1              |            |Host 2              |
->   |                    |            |                    |
->   |     +-----------+  |            |     +-----------+  |
->   |     |Thunderbolt|  |            |     |Thunderbolt|  |
->   |     |Networking |  |            |     |Networking |  |
->   |     |Driver     |  |            |     |Driver     |  |
->   |     +-----------+  |            |     +-----------+  |
->   |              ^     |            |              ^     |
->   |              |     |            |              |     |
->   | +------------+---+ |            | +------------+---+ |
->   | |Thunderbolt |   | |            | |Thunderbolt |   | |
->   | |Controller  v   | |            | |Controller  v   | |
->   | |         +---+  | |            | |         +---+  | |
->   | |         |ICM|<-+-+------------+-+-------->|ICM|  | |
->   | |         +---+  | |            | |         +---+  | |
->   | +----------------+ |            | +----------------+ |
->   +--------------------+            +--------------------+
-> Note that this patch only establishes the link between the two hosts and
-> not Network Packet handling - this is dealt with in the next patch.
-> 
-> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-> ---
->  drivers/thunderbolt/icm/Makefile  |   2 +-
->  drivers/thunderbolt/icm/icm_nhi.c | 303 ++++++++++++++-
->  drivers/thunderbolt/icm/net.c     | 793 ++++++++++++++++++++++++++++++++++++++
->  drivers/thunderbolt/icm/net.h     |  70 ++++
->  4 files changed, 1157 insertions(+), 11 deletions(-)
->  create mode 100644 drivers/thunderbolt/icm/net.c
-> 
-> diff --git a/drivers/thunderbolt/icm/Makefile b/drivers/thunderbolt/icm/Makefile
-> index f0d0fbb..94a2797 100644
-> --- a/drivers/thunderbolt/icm/Makefile
-> +++ b/drivers/thunderbolt/icm/Makefile
-> @@ -1,2 +1,2 @@
->  obj-${CONFIG_THUNDERBOLT_ICM} += thunderbolt-icm.o
-> -thunderbolt-icm-objs := icm_nhi.o
-> +thunderbolt-icm-objs := icm_nhi.o net.o
-> diff --git a/drivers/thunderbolt/icm/icm_nhi.c b/drivers/thunderbolt/icm/icm_nhi.c
-> index 984aa7c..578eb14 100644
-> --- a/drivers/thunderbolt/icm/icm_nhi.c
-> +++ b/drivers/thunderbolt/icm/icm_nhi.c
-> @@ -74,6 +74,12 @@ static const struct nla_policy nhi_genl_policy[NHI_ATTR_MAX + 1] = {
->  					.len = TBT_ICM_RING_MAX_FRAME_SIZE },
->  	[NHI_ATTR_MSG_FROM_ICM]		= { .type = NLA_BINARY,
->  					.len = TBT_ICM_RING_MAX_FRAME_SIZE },
-> +	[NHI_ATTR_LOCAL_ROUTE_STRING]	= {.len = sizeof(struct route_string)},
-> +	[NHI_ATTR_LOCAL_UUID]		= { .len = sizeof(uuid_be) },
-> +	[NHI_ATTR_REMOTE_UUID]		= { .len = sizeof(uuid_be) },
 
-Be consistent in your choice of whitespace please.
+---
+ drivers/pci/host/pcie-rockchip.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index fe1b52f..88c16da 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -121,7 +121,7 @@
+ 
+ #define PCIE_RC_CONFIG_BASE		0xa00000
+ #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
+-#define  PCIE_CORE_RC_CONF_SCC_SHIFT		16
++#define  PCIE_RC_CONFIG_SCC_SHIFT		16
+ #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
+ #define  PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
+ #define  PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
+@@ -545,7 +545,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
+ 			    PCIE_RC_CONFIG_BASE);
+ 	rockchip_pcie_write(rockchip,
+-			    PCI_CLASS_BRIDGE_PCI << PCIE_CORE_RC_CONF_SCC_SHIFT,
++			    PCI_CLASS_BRIDGE_PCI << PCIE_RC_CONFIG_SCC_SHIFT,
+ 			    PCIE_RC_CONFIG_RID_CCR);
+ 	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
+ 
