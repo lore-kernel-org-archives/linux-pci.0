@@ -1,168 +1,239 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52398 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:58400 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751962AbcI1Wmy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Sep 2016 18:42:54 -0400
-Date: Wed, 28 Sep 2016 17:42:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
-        paulus@samba.org, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
-        benh@kernel.crashing.org, mpe@ellerman.id.au,
-        zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v5 3/4] PCI: Add a new option for resource_alignment to
- reassign alignment
-Message-ID: <20160928224246.GC20897@localhost>
-References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+        id S932644AbcIBPyc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Sep 2016 11:54:32 -0400
+Subject: [PATCH v2 04/15] Rename struct rockchip_pcie_port to struct
+ rockchip_pcie.
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Fri, 02 Sep 2016 10:54:27 -0500
+Message-ID: <20160902155426.8650.40395.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 13, 2016 at 05:00:33PM +0800, Yongji Xie wrote:
-> When using resource_alignment kernel parameter, the current
-> implement reassigns the alignment by changing resources' size
-> which can potentially break some drivers. For example, the driver
-> uses the size to locate some register whose length is related
-> to the size.
-> 
-> This patch adds a new option "noresize" for the parameter to
-> solve this problem.
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  Documentation/kernel-parameters.txt |    9 ++++++---
->  drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
->  2 files changed, 33 insertions(+), 13 deletions(-)
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index a4f4d69..d6a340d 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -3023,9 +3023,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				window. The default value is 64 megabytes.
->  		resource_alignment=
->  				Format:
-> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-> -				[<order of align>@]pci:<vendor>:<device>\
-> -						[:<subvendor>:<subdevice>][; ...]
-> +				[<order of align>@][noresize@][<domain>:]
-> +				<bus>:<slot>.<func>[; ...]
-> +				[<order of align>@][noresize@]pci:<vendor>:<device>
-> +				[:<subvendor>:<subdevice>][; ...]
->  				Specifies alignment and device to reassign
->  				aligned memory resources.
->  				If <order of align> is not specified,
-> @@ -3036,6 +3037,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				instances of a device, the PCI vendor,
->  				device, subvendor, and subdevice may be
->  				specified, e.g., 4096@pci:8086:9c22:103c:198f
-> +				noresize: Don't change the resources' sizes when
-> +				reassigning alignment.
->  		ecrc=		Enable/disable PCIe ECRC (transaction layer
->  				end-to-end CRC checking).
->  				bios: Use BIOS/firmware settings. This is the
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b8357d7..37f8062 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
->  /**
->   * pci_specified_resource_alignment - get resource alignment specified by user.
->   * @dev: the PCI device to get
-> + * @resize: whether or not to change resources' size when reassigning alignment
->   *
->   * RETURNS: Resource alignment if it is specified.
->   *          Zero if it is not specified.
->   */
-> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-> +		bool *resize)
->  {
->  	int seg, bus, slot, func, align_order, count;
->  	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-> @@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->  		} else {
->  			align_order = -1;
->  		}
-> +
-> +		if (!strncmp(p, "noresize@", 9)) {
-> +			*resize = false;
-> +			p += 9;
-> +		} else
-> +			*resize = true;
-> +
->  		if (strncmp(p, "pci:", 4) == 0) {
->  			/* PCI vendor/device (subvendor/subdevice) ids are specified */
->  			p += 4;
-> @@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  {
->  	int i;
->  	struct resource *r;
-> +	bool resize = true;
->  	resource_size_t align, size;
->  	u16 command;
->  
-> @@ -5058,7 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  		return;
->  
->  	/* check if specified PCI is target device to reassign */
-> -	align = pci_specified_resource_alignment(dev);
-> +	align = pci_specified_resource_alignment(dev, &resize);
->  	if (!align)
->  		return;
->  
-> @@ -5086,15 +5096,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  		}
->  
->  		size = resource_size(r);
-> -		if (size < align) {
-> -			size = align;
-> -			dev_info(&dev->dev,
-> -				"Rounding up size of resource #%d to %#llx.\n",
-> -				i, (unsigned long long)size);
-> +		if (resize) {
-> +			if (size < align) {
-> +				size = align;
-> +				dev_info(&dev->dev,
-> +					"Rounding up size of resource #%d to %#llx.\n",
-> +					i, (unsigned long long)size);
-> +			}
-> +			r->flags |= IORESOURCE_UNSET;
-> +			r->end = size - 1;
-> +			r->start = 0;
 
-Why do you want to keep this code that changes the size of the resource?
-Can't we just *always* use IORESOURCE_STARTALIGN as below?  It seems like
-that would potentially fix bugs, as you mention.
+---
+ drivers/pci/host/pcie-rockchip.c |   46 +++++++++++++++++++-------------------
+ 1 file changed, 23 insertions(+), 23 deletions(-)
 
-I think it'd be better if we didn't change the size, even if the user
-didn't specify "noresize@".  We wouldn't even need the "noresize@" option
-then.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 3cfb47a..63fb0ebc 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -178,7 +178,7 @@
+ 	PCIE_CLIENT_INT_LEGACY_DONE | PCIE_CLIENT_INT_LEGACY | \
+ 	PCIE_CLIENT_INT_PHY)
+ 
+-struct rockchip_pcie_port {
++struct rockchip_pcie {
+ 	void	__iomem *reg_base;		/* DT axi-base */
+ 	void	__iomem *apb_base;		/* DT apb-base */
+ 	struct	phy *phy;
+@@ -200,17 +200,17 @@ struct rockchip_pcie_port {
+ 	struct	irq_domain *irq_domain;
+ };
+ 
+-static u32 rockchip_pcie_read(struct rockchip_pcie_port *rockchip, u32 reg)
++static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+ {
+ 	return readl(rockchip->apb_base + reg);
+ }
+ 
+-static void rockchip_pcie_write(struct rockchip_pcie_port *rockchip, u32 val, u32 reg)
++static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val, u32 reg)
+ {
+ 	writel(val, rockchip->apb_base + reg);
+ }
+ 
+-static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *rockchip)
++static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+ {
+ 	u32 status;
+ 
+@@ -219,7 +219,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *rockchip)
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+ }
+ 
+-static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *rockchip)
++static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+ {
+ 	u32 status;
+ 
+@@ -228,7 +228,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *rockchip)
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+ }
+ 
+-static int rockchip_pcie_valid_device(struct rockchip_pcie_port *rockchip,
++static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 				      struct pci_bus *bus, int dev)
+ {
+ 	/* access only one slot on each root port */
+@@ -245,7 +245,7 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie_port *rockchip,
+ 	return 1;
+ }
+ 
+-static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *rockchip,
++static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
+ 				     int where, int size, u32 *val)
+ {
+ 	void __iomem *addr = rockchip->apb_base + PCIE_RC_CONFIG_BASE + where;
+@@ -268,7 +268,7 @@ static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *rockchip,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *rockchip,
++static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
+ 				     int where, int size, u32 val)
+ {
+ 	u32 mask, tmp, offset;
+@@ -289,7 +289,7 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *rockchip,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *rockchip,
++static int rockchip_pcie_rd_other_conf(struct rockchip_pcie *rockchip,
+ 				       struct pci_bus *bus, u32 devfn,
+ 				       int where, int size, u32 *val)
+ {
+@@ -316,7 +316,7 @@ static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *rockchip,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *rockchip,
++static int rockchip_pcie_wr_other_conf(struct rockchip_pcie *rockchip,
+ 				       struct pci_bus *bus, u32 devfn,
+ 				       int where, int size, u32 val)
+ {
+@@ -342,7 +342,7 @@ static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *rockchip,
+ static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 				 int size, u32 *val)
+ {
+-	struct rockchip_pcie_port *rockchip = bus->sysdata;
++	struct rockchip_pcie *rockchip = bus->sysdata;
+ 
+ 	if (!rockchip_pcie_valid_device(rockchip, bus, PCI_SLOT(devfn))) {
+ 		*val = 0xffffffff;
+@@ -358,7 +358,7 @@ static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ static int rockchip_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 				 int where, int size, u32 val)
+ {
+-	struct rockchip_pcie_port *rockchip = bus->sysdata;
++	struct rockchip_pcie *rockchip = bus->sysdata;
+ 
+ 	if (!rockchip_pcie_valid_device(rockchip, bus, PCI_SLOT(devfn)))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+@@ -378,7 +378,7 @@ static struct pci_ops rockchip_pcie_ops = {
+  * rockchip_pcie_init_port - Initialize hardware
+  * @rockchip: PCIe port information
+  */
+-static int rockchip_pcie_init_port(struct rockchip_pcie_port *rockchip)
++static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ {
+ 	int err;
+ 	u32 status;
+@@ -579,7 +579,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *rockchip)
+ 
+ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ {
+-	struct rockchip_pcie_port *rockchip = arg;
++	struct rockchip_pcie *rockchip = arg;
+ 	u32 reg;
+ 	u32 sub_reg;
+ 
+@@ -642,7 +642,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ 
+ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ {
+-	struct rockchip_pcie_port *rockchip = arg;
++	struct rockchip_pcie *rockchip = arg;
+ 	u32 reg;
+ 
+ 	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
+@@ -684,7 +684,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+-	struct rockchip_pcie_port *rockchip;
++	struct rockchip_pcie *rockchip;
+ 	u32 reg;
+ 	u32 hwirq;
+ 	u32 virq;
+@@ -717,7 +717,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+  *
+  * Return: '0' on success and error value on failure
+  */
+-static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *rockchip)
++static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+@@ -874,7 +874,7 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *rockchip)
+ 	return 0;
+ }
+ 
+-static int rockchip_pcie_set_vpcie(struct rockchip_pcie_port *rockchip)
++static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
+ {
+ 	int err;
+ 
+@@ -914,7 +914,7 @@ err_out:
+ 	return err;
+ }
+ 
+-static void rockchip_pcie_enable_interrupts(struct rockchip_pcie_port *rockchip)
++static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
+ {
+ 	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) &
+ 		   (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
+@@ -936,7 +936,7 @@ static const struct irq_domain_ops intx_domain_ops = {
+ 	.map = rockchip_pcie_intx_map,
+ };
+ 
+-static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *rockchip)
++static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+ 	struct device_node *intc = of_get_next_child(dev->of_node, NULL);
+@@ -956,7 +956,7 @@ static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *rockchip)
+ 	return 0;
+ }
+ 
+-static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *rockchip,
++static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
+ 				     int region_no, int type, u8 num_pass_bits,
+ 				     u32 lower_addr, u32 upper_addr)
+ {
+@@ -996,7 +996,7 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *rockchip,
+ 	return 0;
+ }
+ 
+-static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *rockchip,
++static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
+ 				     int region_no, u8 num_pass_bits,
+ 				     u32 lower_addr, u32 upper_addr)
+ {
+@@ -1026,7 +1026,7 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *rockchip,
+ 
+ static int rockchip_pcie_probe(struct platform_device *pdev)
+ {
+-	struct rockchip_pcie_port *rockchip;
++	struct rockchip_pcie *rockchip;
+ 	struct device *dev = &pdev->dev;
+ 	struct pci_bus *bus, *child;
+ 	struct resource_entry *win;
 
-Or is there some reason to keep the resize?  If it's just a question of
-being afraid to change the existing behavior because of the risk, I'm
-willing to take that risk.
-
-> +		} else {
-> +			r->flags &= ~IORESOURCE_SIZEALIGN;
-> +			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-> +			r->start = max(align, size);
-> +			r->end = r->start + size - 1;
->  		}
-> -		r->flags |= IORESOURCE_UNSET;
-> -		r->end = size - 1;
-> -		r->start = 0;
->  	}
->  	/* Need to disable bridge's resource window,
->  	 * to enable the kernel to reassign new resource
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
