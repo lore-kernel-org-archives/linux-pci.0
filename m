@@ -1,35 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37887 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.136]:55806 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751710AbcI2Pck (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 11:32:40 -0400
-Date: Thu, 29 Sep 2016 17:32:37 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com,
-        brking@us.ibm.com, haver@linux.vnet.ibm.com,
-        ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com,
-        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/6] ipr: use pci_irq_allocate_vectors
-Message-ID: <20160929153237.GA32512@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de> <1473600688-24043-3-git-send-email-hch@lst.de> <200e5b3f-8555-9cd3-7940-0ec0f2867b95@linux.vnet.ibm.com>
+        id S932236AbcIBPoP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Sep 2016 11:44:15 -0400
+Date: Fri, 2 Sep 2016 10:44:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Doug Anderson <dianders@chromium.org>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [v10,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
+Message-ID: <20160902154409.GA8370@localhost>
+References: <1471570498-3284-1-git-send-email-shawn.lin@rock-chips.com>
+ <20160831181754.GA7460@roeck-us.net>
+ <9075a2c1-c787-986f-31b4-4d5b7c92b771@rock-chips.com>
+ <20160901163455.GA9471@localhost>
+ <20160901171400.GA4093@localhost>
+ <20160901174852.GC9471@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200e5b3f-8555-9cd3-7940-0ec0f2867b95@linux.vnet.ibm.com>
+In-Reply-To: <20160901174852.GC9471@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 29, 2016 at 09:01:44AM -0500, Brian King wrote:
-> Thanks Christoph. Very nice. As I was reviewing the patch, I noticed
-> the additional PCI_IRQ_AFFINITY flag, which is currently not being set
-> in this patch. Is the intention to set that globally by default, or
-> should I follow up with a one liner to add that to the ipr driver
-> in the next patch set I send out?
+On Thu, Sep 01, 2016 at 12:48:52PM -0500, Bjorn Helgaas wrote:
+> On Thu, Sep 01, 2016 at 10:14:01AM -0700, Brian Norris wrote:
 
-Hi Brian,
+> > The use of HIWORD_UPDATE can indeed be a bit confusing, IMO, but this is
+> > really a common Rockchip-ism that, once you read several of their
+> > drivers, can make a little more sense. If you grep around, it's in at
+> > least their clock, ethernet, SDHCI, PHY, and DP/DRM drivers. I might
+> > defer to Heiko (upstream maintainer of Rockchip code) for a decision.
+> > Maybe there's some intermediate ground where we keep the HIWORK_UPDATE()
+> > logic (it does make sure we get the 16-bit shift right, I think) while
+> > still refactoring a few other bits (like PCIE_CLIENT_CONF_LANE_NUM() and
+> > PCIE_CLIENT_GEN_SEL() for wrapping HIWORK_UPDATE()?).
 
-PCI_IRQ_AFFINITY seems useful for ipr, especially if you also increase
-the number of vectors above the current default 2.  And yes, please
-make it a separate patch.
+Here's a second proposal.  It retains HIWORD_UPDATE (though the structure
+is different) so grep finds it along with the other Rockchip ones.
+
+I'll post updated actual patches; this is just to give the idea:
+
+-/*
+-  * The higher 16-bit of this register is used for write protection
+-  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
+-  */
+-#define HIWORD_UPDATE(val, mask, shift) \
+-	((val) << (shift) | (mask) << ((shift) + 16))
+
+-#define PCIE_CLIENT_CONF_ENABLE			BIT(0)
+-#define PCIE_CLIENT_CONF_ENABLE_SHIFT		0
+-#define PCIE_CLIENT_CONF_ENABLE_MASK		0x1
+-#define PCIE_CLIENT_LINK_TRAIN_ENABLE		1
+-#define PCIE_CLIENT_LINK_TRAIN_SHIFT		1
+-#define PCIE_CLIENT_LINK_TRAIN_MASK		0x1
+-#define PCIE_CLIENT_ARI_ENABLE			BIT(0)
+-#define PCIE_CLIENT_ARI_ENABLE_SHIFT		3
+-#define PCIE_CLIENT_ARI_ENABLE_MASK		0x1
+-#define PCIE_CLIENT_CONF_LANE_NUM(x)		(x / 2)
+-#define PCIE_CLIENT_CONF_LANE_NUM_SHIFT		4
+-#define PCIE_CLIENT_CONF_LANE_NUM_MASK		0x3
+-#define PCIE_CLIENT_MODE_RC			BIT(0)
+-#define PCIE_CLIENT_MODE_SHIFT			6
+-#define PCIE_CLIENT_MODE_MASK			0x1
+-#define PCIE_CLIENT_GEN_SEL_2			1
+-#define PCIE_CLIENT_GEN_SEL_SHIFT		7
+-#define PCIE_CLIENT_GEN_SEL_MASK		0x1
+
++/*
++ * The upper 16 bits of the PCIE_CLIENT registers are a write mask for the
++ * lower 16 bits.  This allows atomic updates of the register without
++ * locking.
++ */
++#define HIWORD_UPDATE(mask, val)	((mask << 16) | val)
++
++#define ENCODE_LANES(x)			(((x >> 1) & 3) << 4)
++
++#define PCIE_CLIENT_CONF_ENABLE		HIWORD_UPDATE(0x0001, 0x0001)
++#define PCIE_CLIENT_LINK_TRAIN_ENABLE	HIWORD_UPDATE(0x0002, 0x0002)
++#define PCIE_CLIENT_CONF_LANE_NUM(x)	HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
++#define PCIE_CLIENT_GEN_SEL_2		HIWORD_UPDATE(0x0040, 0x0040)
+
+ 	rockchip_pcie_write(rockchip,
+-		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
+-				 PCIE_CLIENT_CONF_ENABLE_MASK,
+-				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes),
+-				 PCIE_CLIENT_CONF_LANE_NUM_MASK,
+-				 PCIE_CLIENT_CONF_LANE_NUM_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_MODE_RC,
+-				 PCIE_CLIENT_MODE_MASK,
+-				 PCIE_CLIENT_MODE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_ARI_ENABLE,
+-				 PCIE_CLIENT_ARI_ENABLE_MASK,
+-				 PCIE_CLIENT_ARI_ENABLE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_GEN_SEL_2,
+-				 PCIE_CLIENT_GEN_SEL_MASK,
+-				 PCIE_CLIENT_GEN_SEL_SHIFT),
+-		   PCIE_CLIENT_BASE);
++			    PCIE_CLIENT_CONF_ENABLE |
++			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
++			    PCIE_CLIENT_ARI_ENABLE |
++			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
++			    PCIE_CLIENT_MODE_RC |
++			    PCIE_CLIENT_GEN_SEL_2,
++				PCIE_CLIENT_BASE);
