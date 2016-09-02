@@ -1,66 +1,50 @@
-Return-Path: <Joao.Pinto@synopsys.com>
-Return-Path: <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] pci: adding support for PCI_MSI_IRQ_DOMAIN in ARC arch
-To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
-References: <fdd37b0b995d178fddb34fdbdb5daf5981822f52.1470757628.git.jpinto@synopsys.com>
- <20160906155739.GD1214@localhost>
-CC: <Vineet.Gupta1@synopsys.com>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <a7b7c384-e559-85e5-cee0-11ff9906bbb1@synopsys.com>
-Date: Tue, 6 Sep 2016 17:14:25 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36714 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932372AbcIBPBg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Sep 2016 11:01:36 -0400
+Date: Fri, 2 Sep 2016 10:01:34 -0500
+From: Rob Herring <robh@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Joao Pinto <jpinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        Ian Campbell <ijc+devicetree@hellion.org.uk>,
+        Pawel Moll <pawel.moll@arm.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kumar Gala <galak@codeaurora.org>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Shadi Ammouri <shadi@marvell.com>,
+        Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCH 1/3] dt-bindings: designware-pcie: document optional
+ msi-parent property
+Message-ID: <20160902150134.GA17819@rob-hp-laptop>
+References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1472561830-20932-2-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <20160906155739.GD1214@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472561830-20932-2-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/6/2016 4:57 PM, Bjorn Helgaas wrote:
-> On Tue, Aug 09, 2016 at 04:49:37PM +0100, Joao Pinto wrote:
->> To fix this, this patch adds ARC as a PCI_MSI_IRQ_DOMAIN supportive
->> platform and adds the generation of msi.h in the ARC arch.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+On Tue, Aug 30, 2016 at 02:57:08PM +0200, Thomas Petazzoni wrote:
+> This commit updates the Designware PCIe Device Tree binding
+> documentation to document the optional msi-parent property. This
+> property allows to point to an external MSI controller, which can
+> optionally be provided. If provided, this external MSI controller is
+> used in preference over the internal MSI controller of the Designware
+> PCIe IP.
 > 
-> I added Vineet's ack and put this on pci/msi for v4.9, thanks!
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 2 ++
+>  1 file changed, 2 insertions(+)
 
-Great! Thanks!
-
-> 
->> ---
->>  arch/arc/include/asm/Kbuild | 1 +
->>  drivers/pci/Kconfig         | 2 +-
->>  2 files changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/arch/arc/include/asm/Kbuild b/arch/arc/include/asm/Kbuild
->> index 0b10ef2..c332604 100644
->> --- a/arch/arc/include/asm/Kbuild
->> +++ b/arch/arc/include/asm/Kbuild
->> @@ -25,6 +25,7 @@ generic-y += mcs_spinlock.h
->>  generic-y += mm-arch-hooks.h
->>  generic-y += mman.h
->>  generic-y += msgbuf.h
->> +generic-y += msi.h
->>  generic-y += param.h
->>  generic-y += parport.h
->>  generic-y += pci.h
->> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
->> index 67f9916..6555eb7 100644
->> --- a/drivers/pci/Kconfig
->> +++ b/drivers/pci/Kconfig
->> @@ -25,7 +25,7 @@ config PCI_MSI
->>  	   If you don't know what to do here, say Y.
->>  
->>  config PCI_MSI_IRQ_DOMAIN
->> -	def_bool ARM || ARM64 || X86
->> +	def_bool ARC || ARM || ARM64 || X86
->>  	depends on PCI_MSI
->>  	select GENERIC_MSI_IRQ_DOMAIN
->>  
->> -- 
->> 1.8.1.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Rob Herring <robh@kernel.org>
