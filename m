@@ -1,115 +1,133 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V10 8/8] irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain initialization
-Date: Tue,  6 Sep 2016 11:08:58 +0200
-Message-Id: <1473152938-17388-9-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
-References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:58728 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932311AbcIBPy6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Sep 2016 11:54:58 -0400
+Subject: [PATCH v2 07/15] Simplify the confusing HIWORD_UPDATE scheme.
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Fri, 02 Sep 2016 10:54:53 -0500
+Message-ID: <20160902155453.8650.29613.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let ACPI build ITS PCI MSI domain. ACPI code is responsible for retrieving
-inner domain token and passing it on to its_pci_msi_init_one generic
-init call.
 
-IORT maintains list of registered domain tokens and allows to find
-corresponding domain based on MADT ITS subtable ID info.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 ++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ drivers/pci/host/pcie-rockchip.c |   70 +++++++++++++-------------------------
+ 1 file changed, 24 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index d2c2496..aee1c60 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -15,6 +15,7 @@
-  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  */
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index c0c3ad5..b204567 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -115,36 +115,26 @@
+ 	  (PCIE_ECAM_BUS(bus) | PCIE_ECAM_DEV(dev) | \
+ 	   PCIE_ECAM_FUNC(func) | PCIE_ECAM_REG(reg))
  
-+#include <linux/acpi_iort.h>
- #include <linux/msi.h>
- #include <linux/of.h>
- #include <linux/of_irq.h>
-@@ -144,9 +145,52 @@ static int __init its_pci_of_msi_init(void)
- 	return 0;
- }
+-/*
+-  * The higher 16-bit of this register is used for write protection
+-  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
+-  */
+-#define HIWORD_UPDATE(val, mask, shift) \
+-	((val) << (shift) | (mask) << ((shift) + 16))
+-
+ #define RC_REGION_0_ADDR_TRANS_H		0x00000000
+ #define RC_REGION_0_ADDR_TRANS_L		0x00000000
+ #define RC_REGION_0_PASS_BITS			(25 - 1)
+ #define MAX_AXI_WRAPPER_REGION_NUM		33
+ #define PCIE_CORE_LCSR_RETRAIN_LINK		BIT(5)
+-#define PCIE_CLIENT_CONF_ENABLE			BIT(0)
+-#define PCIE_CLIENT_CONF_ENABLE_SHIFT		0
+-#define PCIE_CLIENT_CONF_ENABLE_MASK		0x1
+-#define PCIE_CLIENT_LINK_TRAIN_ENABLE		1
+-#define PCIE_CLIENT_LINK_TRAIN_SHIFT		1
+-#define PCIE_CLIENT_LINK_TRAIN_MASK		0x1
+-#define PCIE_CLIENT_ARI_ENABLE			BIT(0)
+-#define PCIE_CLIENT_ARI_ENABLE_SHIFT		3
+-#define PCIE_CLIENT_ARI_ENABLE_MASK		0x1
+-#define PCIE_CLIENT_CONF_LANE_NUM(x)		(x / 2)
+-#define PCIE_CLIENT_CONF_LANE_NUM_SHIFT		4
+-#define PCIE_CLIENT_CONF_LANE_NUM_MASK		0x3
+-#define PCIE_CLIENT_MODE_RC			BIT(0)
+-#define PCIE_CLIENT_MODE_SHIFT			6
+-#define PCIE_CLIENT_MODE_MASK			0x1
+-#define PCIE_CLIENT_GEN_SEL_2			1
+-#define PCIE_CLIENT_GEN_SEL_SHIFT		7
+-#define PCIE_CLIENT_GEN_SEL_MASK		0x1
++
++/*
++ * The upper 16 bits of the PCIE_CLIENT registers are a write mask for the
++ * lower 16 bits.  This allows atomic updates of the register without
++ * locking.
++ */
++#define HIWORD_UPDATE(mask, val)	((mask << 16) | val)
++
++#define ENCODE_LANES(x)			(((x >> 1) & 3) << 4)
++
++#define PCIE_CLIENT_CONF_ENABLE		HIWORD_UPDATE(0x0001, 0x0001)
++#define PCIE_CLIENT_LINK_TRAIN_ENABLE	HIWORD_UPDATE(0x0002, 0x0002)
++#define PCIE_CLIENT_CONF_LANE_NUM(x)	HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
++#define PCIE_CLIENT_GEN_SEL_2		HIWORD_UPDATE(0x0040, 0x0040)
++
+ #define PCIE_CLIENT_LINK_STATUS_UP		0x3
+ #define PCIE_CLIENT_LINK_STATUS_SHIFT		20
+ #define PCIE_CLIENT_LINK_STATUS_MASK		0x3
+@@ -423,22 +413,13 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	}
  
-+#ifdef CONFIG_ACPI
-+
-+static int __init
-+its_pci_msi_parse_madt(struct acpi_subtable_header *header,
-+		       const unsigned long end)
-+{
-+	struct acpi_madt_generic_translator *its_entry;
-+	struct fwnode_handle *dom_handle;
-+	const char *node_name;
-+	int err = -ENXIO;
-+
-+	its_entry = (struct acpi_madt_generic_translator *)header;
-+	node_name = kasprintf(GFP_KERNEL, "ITS@0x%lx",
-+			      (long)its_entry->base_address);
-+	dom_handle = iort_find_domain_token(its_entry->translation_id);
-+	if (!dom_handle) {
-+		pr_err("%s: Unable to locate ITS domain handle\n", node_name);
-+		goto out;
-+	}
-+
-+	err = its_pci_msi_init_one(dom_handle, node_name);
-+	if (!err)
-+		pr_info("PCI/MSI: %s domain created\n", node_name);
-+
-+out:
-+	kfree(node_name);
-+	return err;
-+}
-+
-+static int __init its_pci_acpi_msi_init(void)
-+{
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
-+			      its_pci_msi_parse_madt, 0);
-+	return 0;
-+}
-+#else
-+static int __init its_pci_acpi_msi_init(void)
-+{
-+	return 0;
-+}
-+#endif
-+
- static int __init its_pci_msi_init(void)
- {
- 	its_pci_of_msi_init();
-+	its_pci_acpi_msi_init();
+ 	rockchip_pcie_write(rockchip,
+-		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
+-				 PCIE_CLIENT_CONF_ENABLE_MASK,
+-				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes),
+-				 PCIE_CLIENT_CONF_LANE_NUM_MASK,
+-				 PCIE_CLIENT_CONF_LANE_NUM_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_MODE_RC,
+-				 PCIE_CLIENT_MODE_MASK,
+-				 PCIE_CLIENT_MODE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_ARI_ENABLE,
+-				 PCIE_CLIENT_ARI_ENABLE_MASK,
+-				 PCIE_CLIENT_ARI_ENABLE_SHIFT) |
+-		   HIWORD_UPDATE(PCIE_CLIENT_GEN_SEL_2,
+-				 PCIE_CLIENT_GEN_SEL_MASK,
+-				 PCIE_CLIENT_GEN_SEL_SHIFT),
+-		   PCIE_CLIENT_BASE);
++			    PCIE_CLIENT_CONF_ENABLE |
++			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
++			    PCIE_CLIENT_ARI_ENABLE |
++			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
++			    PCIE_CLIENT_MODE_RC |
++			    PCIE_CLIENT_GEN_SEL_2,
++				PCIE_CLIENT_BASE);
  
- 	return 0;
- }
--- 
-1.9.1
+ 	err = phy_power_on(rockchip->phy);
+ 	if (err) {
+@@ -482,11 +463,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 				 PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+ 
+ 	/* Enable Gen1 training */
+-	rockchip_pcie_write(rockchip,
+-		   HIWORD_UPDATE(PCIE_CLIENT_LINK_TRAIN_ENABLE,
+-				 PCIE_CLIENT_LINK_TRAIN_MASK,
+-				 PCIE_CLIENT_LINK_TRAIN_SHIFT),
+-		   PCIE_CLIENT_BASE);
++	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
++			    PCIE_CLIENT_BASE);
+ 
+ 	gpiod_set_value(rockchip->ep_gpio, 1);
+ 
+
