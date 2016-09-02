@@ -1,81 +1,109 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:58766 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932518AbcIBPzG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Sep 2016 11:55:06 -0400
+Subject: [PATCH v2 08/15] Remove duplicate CSR definition.
+To: Shawn Lin <shawn.lin@rock-chips.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Date: Fri, 02 Sep 2016 10:55:01 -0500
+Message-ID: <20160902155501.8650.92863.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <4ef60b61-666c-2be0-1fad-81aa441360bd@semihalf.com>
-References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
- <1473152938-17388-3-git-send-email-tn@semihalf.com> <alpine.DEB.2.20.1609061219230.5647@nanos>
- <f469f024-b1c9-8616-c841-663e3e3d0731@semihalf.com> <4ef60b61-666c-2be0-1fad-81aa441360bd@semihalf.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 7 Sep 2016 13:32:36 +0200
-Message-ID: <CAJZ5v0g47TJvQLPfUHwZV2EQDw2Tgu9mz1ajf9tWVoaMTXJiTw@mail.gmail.com>
-Subject: Re: [PATCH V10 2/8] ACPI: Add new IORT functions to support MSI
- domain handling
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Thomas Gleixner <tglx@linutronix.de>,
-	Marc Zyngier <marc.zyngier@arm.com>, Jason Cooper <jason@lakedaemon.net>,
-	Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>, shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Andrea Gallo <andrea.gallo@linaro.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Stone <al.stone@linaro.org>,
-	G Gregory <graeme.gregory@linaro.org>, David Daney <ddaney.cavm@gmail.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 7, 2016 at 12:35 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> Rafael,
->
-> There are two fixes for iort.c:
-> 1. patch 1 - convert switch to if-else in iort_match_node_callback()
-> 2. patch 2 - remove static local variable for iort_get_device_domain()
->
-> Do you want me to repost these patches to get your ACK, or you want new V11?
+PCIE_RC_CONFIG_LCSR was the same as PCIE_RC_CONFIG_LCS.  Kept
+PCIE_RC_CONFIG_LCS.
 
-Please repost the patches with changes (mark the new versions by
-adding "[Update]" to the subject line or similar).
+PCIE_CORE_LCSR_RETRAIN_LINK was inexplicably named differently and defined
+separately.
+---
+ drivers/pci/host/pcie-rockchip.c |   27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
-Thanks,
-Rafael
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index b204567..a2dd196 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -40,11 +40,12 @@
+ #define PCIE_CLIENT_BASE			0x0
+ #define PCIE_RC_CONFIG_BASE			0xa00000
+ #define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2	0x90c
+-#define PCIE_RC_CONFIG_LCSR			0xd0
+-#define  PCIE_RC_CONFIG_LCSR_LBMIE		BIT(10)
+-#define  PCIE_RC_CONFIG_LCSR_LABIE		BIT(11)
+-#define  PCIE_RC_CONFIG_LCSR_LBMS		BIT(30)
+-#define  PCIE_RC_CONFIG_LCSR_LAMS		BIT(31)
++#define PCIE_RC_CONFIG_LCS			0xd0
++#define  PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
++#define  PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
++#define  PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
++#define  PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
++#define  PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
+ #define PCIE_CORE_CTRL_MGMT_BASE		0x900000
+ #define PCIE_CORE_AXI_CONF_BASE			0xc00000
+ #define PCIE_CORE_AXI_INBOUND_BASE		0xc00800
+@@ -68,7 +69,6 @@
+ #define  PCIE_CLIENT_INT_HOT_PLUG		BIT(1)
+ #define  PCIE_CLIENT_INT_PWR_STCG		BIT(0)
+ #define PCIE_RC_CONFIG_RID_CCR			0x8
+-#define PCIE_RC_CONFIG_LCS			0xd0
+ #define PCIE_RC_BAR_CONF			0x300
+ #define PCIE_CORE_OB_REGION_ADDR1		0x4
+ #define PCIE_CORE_OB_REGION_DESC0		0x8
+@@ -119,7 +119,6 @@
+ #define RC_REGION_0_ADDR_TRANS_L		0x00000000
+ #define RC_REGION_0_PASS_BITS			(25 - 1)
+ #define MAX_AXI_WRAPPER_REGION_NUM		33
+-#define PCIE_CORE_LCSR_RETRAIN_LINK		BIT(5)
+ 
+ /*
+  * The upper 16 bits of the PCIE_CLIENT registers are a write mask for the
+@@ -204,18 +203,18 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
+ {
+ 	u32 status;
+ 
+-	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+-	status |= (PCIE_RC_CONFIG_LCSR_LBMIE | PCIE_RC_CONFIG_LCSR_LABIE);
+-	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
++	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCS);
++	status |= (PCIE_RC_CONFIG_LCS_LBMIE | PCIE_RC_CONFIG_LCS_LABIE);
++	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCS);
+ }
+ 
+ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+ {
+ 	u32 status;
+ 
+-	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
+-	status |= (PCIE_RC_CONFIG_LCSR_LBMS | PCIE_RC_CONFIG_LCSR_LAMS);
+-	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
++	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCS);
++	status |= (PCIE_RC_CONFIG_LCS_LBMS | PCIE_RC_CONFIG_LCS_LAMS);
++	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCS);
+ }
+ 
+ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+@@ -506,7 +505,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	 */
+ 	status = rockchip_pcie_read(rockchip,
+ 			   PCIE_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
+-	status |= PCIE_CORE_LCSR_RETRAIN_LINK;
++	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+ 	rockchip_pcie_write(rockchip, status,
+ 		   PCIE_RC_CONFIG_LCS + PCIE_RC_CONFIG_BASE);
+ 
 
-
-> On 06.09.2016 12:27, Tomasz Nowicki wrote:
->>
->> On 06.09.2016 12:20, Thomas Gleixner wrote:
->>>
->>> On Tue, 6 Sep 2016, Tomasz Nowicki wrote:
->>>>
->>>> +/**
->>>> + * iort_get_device_domain() - Find MSI domain related to a device
->>>> + * @dev: The device.
->>>> + * @req_id: Requester ID for the device.
->>>> + *
->>>> + * Returns: the MSI domain for this device, NULL otherwise
->>>> + */
->>>> +struct irq_domain *iort_get_device_domain(struct device *dev, u32
->>>> req_id)
->>>> +{
->>>> +    static struct fwnode_handle *handle;
->>>
->>>
->>> static ??????
->>>
->>>> +    int its_id;
->>>> +
->>>> +    if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
->>>> +        return NULL;
->>>> +
->>>> +    handle = iort_find_domain_token(its_id);
->>>
->>>
->>> You reevaluate that on every call.
->>>
->>
->> Obviously it is the bug. Thanks for spotting this.
->>
->> Tomasz
