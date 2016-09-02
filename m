@@ -1,141 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:34674 "EHLO
-        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937881AbcIVUUY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 16:20:24 -0400
-Received: by mail-lf0-f45.google.com with SMTP id y6so78087772lff.1
-        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 13:20:21 -0700 (PDT)
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v2] pcie-rcar: try setting PCIe speed to 5 GT/s at boot
-Date: Thu, 22 Sep 2016 23:20:18 +0300
-Message-ID: <3386780.3qrqUfW7i7@wasted.cogentembedded.com>
+Return-Path: <heiko@sntech.de>
+Return-Path: <heiko@sntech.de>
+From: Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Brian Norris <briannorris@chromium.org>, Shawn Lin <shawn.lin@rock-chips.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org, Doug Anderson <dianders@chromium.org>, Wenrui Li <wenrui.li@rock-chips.com>, Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [v10,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
+Date: Fri, 02 Sep 2016 18:28:29 +0200
+Message-ID: <2006737.sL15e15fY3@diego>
+In-Reply-To: <20160902154409.GA8370@localhost>
+References: <1471570498-3284-1-git-send-email-shawn.lin@rock-chips.com> <20160901174852.GC9471@localhost> <20160902154409.GA8370@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Initially, the PCIe link speed is set up only  at 2.5 GT/s.
-For better performance,  we're trying to increase link speed to 5 GT/s.
+Am Freitag, 2. September 2016, 10:44:09 schrieb Bjorn Helgaas:
+> On Thu, Sep 01, 2016 at 12:48:52PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Sep 01, 2016 at 10:14:01AM -0700, Brian Norris wrote:
+> > > The use of HIWORD_UPDATE can indeed be a bit confusing, IMO, but this is
+> > > really a common Rockchip-ism that, once you read several of their
+> > > drivers, can make a little more sense. If you grep around, it's in at
+> > > least their clock, ethernet, SDHCI, PHY, and DP/DRM drivers. I might
+> > > defer to Heiko (upstream maintainer of Rockchip code) for a decision.
+> > > Maybe there's some intermediate ground where we keep the HIWORK_UPDATE()
+> > > logic (it does make sure we get the 16-bit shift right, I think) while
+> > > still refactoring a few other bits (like PCIE_CLIENT_CONF_LANE_NUM() and
+> > > PCIE_CLIENT_GEN_SEL() for wrapping HIWORK_UPDATE()?).
+> 
+> Here's a second proposal.  It retains HIWORD_UPDATE (though the structure
+> is different) so grep finds it along with the other Rockchip ones.
+> 
+> I'll post updated actual patches; this is just to give the idea:
+> 
+> -/*
+> -  * The higher 16-bit of this register is used for write protection
+> -  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
+> -  */
+> -#define HIWORD_UPDATE(val, mask, shift) \
+> -	((val) << (shift) | (mask) << ((shift) + 16))
+> 
+> -#define PCIE_CLIENT_CONF_ENABLE			BIT(0)
+> -#define PCIE_CLIENT_CONF_ENABLE_SHIFT		0
+> -#define PCIE_CLIENT_CONF_ENABLE_MASK		0x1
+> -#define PCIE_CLIENT_LINK_TRAIN_ENABLE		1
+> -#define PCIE_CLIENT_LINK_TRAIN_SHIFT		1
+> -#define PCIE_CLIENT_LINK_TRAIN_MASK		0x1
+> -#define PCIE_CLIENT_ARI_ENABLE			BIT(0)
+> -#define PCIE_CLIENT_ARI_ENABLE_SHIFT		3
+> -#define PCIE_CLIENT_ARI_ENABLE_MASK		0x1
+> -#define PCIE_CLIENT_CONF_LANE_NUM(x)		(x / 2)
+> -#define PCIE_CLIENT_CONF_LANE_NUM_SHIFT		4
+> -#define PCIE_CLIENT_CONF_LANE_NUM_MASK		0x3
+> -#define PCIE_CLIENT_MODE_RC			BIT(0)
+> -#define PCIE_CLIENT_MODE_SHIFT			6
+> -#define PCIE_CLIENT_MODE_MASK			0x1
+> -#define PCIE_CLIENT_GEN_SEL_2			1
+> -#define PCIE_CLIENT_GEN_SEL_SHIFT		7
+> -#define PCIE_CLIENT_GEN_SEL_MASK		0x1
+> 
+> +/*
+> + * The upper 16 bits of the PCIE_CLIENT registers are a write mask for the
+> + * lower 16 bits.  This allows atomic updates of the register without
+> + * locking.
+> + */
+> +#define HIWORD_UPDATE(mask, val)	((mask << 16) | val)
+> +
+> +#define ENCODE_LANES(x)			(((x >> 1) & 3) << 4)
+> +
+> +#define PCIE_CLIENT_CONF_ENABLE		HIWORD_UPDATE(0x0001, 0x0001)
+> +#define PCIE_CLIENT_LINK_TRAIN_ENABLE	HIWORD_UPDATE(0x0002, 0x0002)
+> +#define PCIE_CLIENT_CONF_LANE_NUM(x)	HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+> +#define PCIE_CLIENT_GEN_SEL_2		HIWORD_UPDATE(0x0040, 0x0040)
+> 
+>  	rockchip_pcie_write(rockchip,
+> -		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
+> -				 PCIE_CLIENT_CONF_ENABLE_MASK,
+> -				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
+> -		   HIWORD_UPDATE(PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes),
+> -				 PCIE_CLIENT_CONF_LANE_NUM_MASK,
+> -				 PCIE_CLIENT_CONF_LANE_NUM_SHIFT) |
+> -		   HIWORD_UPDATE(PCIE_CLIENT_MODE_RC,
+> -				 PCIE_CLIENT_MODE_MASK,
+> -				 PCIE_CLIENT_MODE_SHIFT) |
+> -		   HIWORD_UPDATE(PCIE_CLIENT_ARI_ENABLE,
+> -				 PCIE_CLIENT_ARI_ENABLE_MASK,
+> -				 PCIE_CLIENT_ARI_ENABLE_SHIFT) |
+> -		   HIWORD_UPDATE(PCIE_CLIENT_GEN_SEL_2,
+> -				 PCIE_CLIENT_GEN_SEL_MASK,
+> -				 PCIE_CLIENT_GEN_SEL_SHIFT),
+> -		   PCIE_CLIENT_BASE);
+> +			    PCIE_CLIENT_CONF_ENABLE |
+> +			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+> +			    PCIE_CLIENT_ARI_ENABLE |
+> +			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+> +			    PCIE_CLIENT_MODE_RC |
+> +			    PCIE_CLIENT_GEN_SEL_2,
+> +				PCIE_CLIENT_BASE);
 
-Based on the original patch by Grigory Kletsko
-<grigory.kletsko@cogentembedded.com>.
+I like this new approach :-)
+Improves the readability in the code but also future readability of the defined 
+constants, when comparing with register descriptions
 
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
----
-The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
-
-Changes in version 2:
-- switched from the interrupt based speed change algorithm to polling with
-  1-second timeout, got rid  of the now unneeded register/bit #define's;
-- made rcar_pcie_force_speedup() *static*;
-- moved the speed capability check to the start of rcar_pcie_force_speedup();
-- adjusted the speed change in-progress check and the error message;
-- read MACSR ony once during the speed change setup;
-- print current link speed after any speed change outcome and when the speed
-  is already 5 GT/s;
-- removed the TODO comment;
-- moved rcar_pcie_force_speedup() call to the start of rcar_pcie_enable();
-- changed the patch authorship, updated the patch description accordingly.
-
- drivers/pci/host/pcie-rcar.c |   70 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
-
-Index: pci/drivers/pci/host/pcie-rcar.c
-===================================================================
---- pci.orig/drivers/pci/host/pcie-rcar.c
-+++ pci/drivers/pci/host/pcie-rcar.c
-@@ -84,8 +84,19 @@
- #define IDSETR1			0x011004
- #define TLCTLR			0x011048
- #define MACSR			0x011054
-+#define  SPCHG			(1 << 5)
-+#define  SPCHGFIN		(1 << 4)
-+#define  SPCHGSUC		(1 << 7)
-+#define  SPCHGFAIL		(1 << 6)
-+#define  LINK_SPEED		(0xf << 16)
-+#define  LINK_SPEED_2_5GTS	(1 << 16)
-+#define  LINK_SPEED_5_0GTS	(2 << 16)
- #define MACCTLR			0x011058
-+#define  SPEED_CHANGE		(1 << 24)
- #define  SCRAMBLE_DISABLE	(1 << 27)
-+#define MACS2R			0x011078
-+#define MACCGSPSETR		0x011084
-+#define  SPCNGRSN		(1 << 31)
- 
- /* R-Car H1 PHY */
- #define H1_PCIEPHYADRR		0x04000c
-@@ -385,11 +396,70 @@ static int rcar_pcie_setup(struct list_h
- 	return 1;
- }
- 
-+static void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
-+{
-+	unsigned int timeout = 1000;
-+	u32 macsr;
-+
-+	if ((rcar_pci_read_reg(pcie, MACS2R) & LINK_SPEED) != LINK_SPEED_5_0GTS)
-+		return;
-+
-+	dev_info(pcie->dev, "Trying speed up to 5 GT/s\n");
-+
-+	if (rcar_pci_read_reg(pcie, MACCTLR) & SPEED_CHANGE) {
-+		dev_err(pcie->dev, "Speed change is in progress\n");
-+		return;
-+	}
-+
-+	macsr = rcar_pci_read_reg(pcie, MACSR);
-+	if ((macsr & LINK_SPEED) == LINK_SPEED_5_0GTS)
-+		goto done;
-+
-+	/* Set target link speed to 5.0 GT/s */
-+	rcar_rmw32(pcie, EXPCAP(12), PCI_EXP_LNKSTA_CLS,
-+		   PCI_EXP_LNKSTA_CLS_5_0GB);
-+
-+	/* Set speed change reason as intentional factor */
-+	rcar_rmw32(pcie, MACCGSPSETR, SPCNGRSN, 0);
-+
-+	/* Clear SPCHGFIN, SPCHGSUC, and SPCHGFAIL */
-+	if (macsr & (SPCHGFIN | SPCHGSUC | SPCHGFAIL))
-+		rcar_pci_write_reg(pcie, macsr, MACSR);
-+
-+	/* Start link speed change */
-+	rcar_rmw32(pcie, MACCTLR, SPEED_CHANGE, SPEED_CHANGE);
-+
-+	while (timeout--) {
-+		macsr = rcar_pci_read_reg(pcie, MACSR);
-+		if (macsr & SPCHGFIN) {
-+			/* Clear the interrupt bits */
-+			rcar_pci_write_reg(pcie, macsr, MACSR);
-+
-+			if (macsr & SPCHGFAIL)
-+				dev_err(pcie->dev, "Speed change failed\n");
-+
-+			goto done;
-+		}
-+
-+		msleep(1);
-+	};
-+
-+	dev_err(pcie->dev, "Speed change timed out\n");
-+
-+done:
-+	/* Check speed */
-+	dev_info(pcie->dev, "Current link speed is %s GT/s\n",
-+		 (macsr & LINK_SPEED) == LINK_SPEED_5_0GTS ? "5" : "2.5");
-+}
-+
- static int rcar_pcie_enable(struct rcar_pcie *pcie)
- {
- 	struct pci_bus *bus, *child;
- 	LIST_HEAD(res);
- 
-+	/* Try setting 5 GT/s link speed */
-+	rcar_pcie_force_speedup(pcie);
-+
- 	rcar_pcie_setup(&res, pcie);
- 
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-
+Thanks
+Heiko
