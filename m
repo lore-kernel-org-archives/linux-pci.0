@@ -1,426 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:3077 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S965621AbcIXXWQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2016 19:22:16 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v5 02/16] IB/pvrdma: Add user-level shared functions
-Date: Sat, 24 Sep 2016 16:21:26 -0700
-Message-ID: <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
-In-Reply-To: <cover.1474759181.git.aditr@vmware.com>
-References: <cover.1474759181.git.aditr@vmware.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Fri, 2 Sep 2016 12:09:13 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+	Marc Zyngier <marc.zyngier@arm.com>, Duc Dang <dhdang@apm.com>,
+	Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, patches <patches@apm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Punit Agrawal <punit.agrawal@arm.com>
+Subject: Re: Defining polarity and trigger mode for static interrupts in _PRT
+Message-ID: <20160902110905.GA10977@red-moon>
+References: <20160825195917.0e75a8db@arm.com>
+ <20160831160510.GC16426@localhost>
+ <20160831163747.GA28180@red-moon>
+ <10604453.yVTAAeibdq@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <10604453.yVTAAeibdq@vostro.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-We share some common structures with the user-level driver. This patch adds
-those structures and shared functions to traverse the QP/CQ rings.
+On Thu, Sep 01, 2016 at 01:08:19AM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, August 31, 2016 05:37:47 PM Lorenzo Pieralisi wrote:
+> > On Wed, Aug 31, 2016 at 11:05:10AM -0500, Bjorn Helgaas wrote:
+> > > On Wed, Aug 31, 2016 at 02:34:54PM +0100, Lorenzo Pieralisi wrote:
+> > > > On Wed, Aug 31, 2016 at 08:05:06AM -0500, Bjorn Helgaas wrote:
+> > > > > On Tue, Aug 30, 2016 at 11:08:34AM +0100, Lorenzo Pieralisi wrote:
+> > > > > > On Fri, Aug 26, 2016 at 06:53:29PM -0400, Sinan Kaya wrote:
+> > > > > > > 
+> > > > > > > >> Let me throw option d here.
+> > > > > > > >>
+> > > > > > > >> I know Bjorn wants to keep ACTIVE_LOW in the code for common code but
+> > > > > > > >> can't we override this in an arch specific way (arm64's pci.c) while
+> > > > > > > >> creating the root bridge? 
+> > > > > > > > 
+> > > > > > > > On what basis ? You were not copied in from the beginning, but that
+> > > > > > > > is not different from Duc's initial proposal, which Marc discarded
+> > > > > > > > because it should not be done at arch level, it depends on the interrupt
+> > > > > > > > controller.
+> > > > > > > 
+> > > > > > > I happen to watch the linux-pci and linux-acpi mail-lists. I also saw
+> > > > > > > Duc's initial proposal. 
+> > > > > > > 
+> > > > > > > I can't imagine someone building an ACPI compliant ARM64 platform
+> > > > > > > without a GIC interrupt controller. 
+> > > > > > > 
+> > > > > > > The SBSA spec already mentions what kind of compatibility should be
+> > > > > > > maintained with respect to GIC. You can't have an ACPI system that's
+> > > > > > > SBSA compliant and not using GIC. 
+> > > > > > > 
+> > > > > > > Can't we just hard code this to ACTIVE_HIGH in arch directory if ACPI
+> > > > > > > is defined.  Why do we have to reach out to the interrupt controller?
+> > > > > > 
+> > > > > > Patch below (horrible but no solution will be shiny either).
+> > > > > > 
+> > > > > > > https://lists.linaro.org/pipermail/linaro-acpi/2015-November/005973.html
+> > > > > > 
+> > > > > > [...]
+> > > > > > 
+> > > > > > > If you look at my email above, I tried getting rid of PCI Link object
+> > > > > > > and I couldn't. I sticked to only thing that works.
+> > > > > > 
+> > > > > > That's what I object to. If the ACPI bindings do not work for ARM
+> > > > > > we do not work around issues, we upgrade the specs because what may work
+> > > > > > for you has to work on all ARM platforms (and all FW developers have
+> > > > > > to be aware of that). Granted, this is a tiny snag, but the point is
+> > > > > > that no one knows what's the correct way of describing PCI legacy IRQs
+> > > > > > on ARM and we need that rectified.
+> > > > > > 
+> > > > > > This does the trick for me (I can turn it into a function/look-up
+> > > > > > that returns the polarity), I am sure it will ruffle feathers but
+> > > > > > we have to find a solution so here it is (that acpi_irq_model gem
+> > > > > > is already used in generic code drivers/acpi/pci_link.c ;-))
+> > > > > > 
+> > > > > > -- >8 --
+> > > > > > diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> > > > > > index 2c45dd3..c9b8c85 100644
+> > > > > > --- a/drivers/acpi/pci_irq.c
+> > > > > > +++ b/drivers/acpi/pci_irq.c
+> > > > > > @@ -411,7 +411,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+> > > > > >  	int gsi;
+> > > > > >  	u8 pin;
+> > > > > >  	int triggering = ACPI_LEVEL_SENSITIVE;
+> > > > > > -	int polarity = ACPI_ACTIVE_LOW;
+> > > > > > +	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
+> > > > > > +				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
+> > > > > >  	char *link = NULL;
+> > > > > >  	char link_desc[16];
+> > > > > >  	int rc;
+> > > > > 
+> > > > > This still seems weird to me.
+> > > > > 
+> > > > > If I understand correctly, this GIC has several inputs, all active
+> > > > > high.  Some of those inputs are connected to inverters and then to PCI
+> > > > > INTx wires.
+> > > > > 
+> > > > > A generic device driver knows about the hardware it drives, including
+> > > > > the properties of its interrupt wires.  PCI drivers and the ACPI/PCI
+> > > > > core know that conventional PCI device INTx wires are active low.
+> > > > > These drivers, being generic, do not know about the GIC inverters.
+> > > > > 
+> > > > > The patch above basically says "if ACPI tells us about a PCI interrupt
+> > > > > connected to a GIC, *assume* there is an inverter on the input."  But
+> > > > > there's no actual description of that inverter anywhere in ACPI or a
+> > > > > device tree.  Shouldn't that be made explicit somewhere?
+> > > > 
+> > > > It is explicit for all IRQs other than PCI legacy IRQs ;-), that's
+> > > > the message I wanted to get across and I failed so far.
+> > > > 
+> > > > For "normal" IRQs we can use Extended Interrupt Descriptors, that allow
+> > > > us to describe polarity. For PCI legacy IRQs we could use extended
+> > > > interrupt descriptors if we were allowed to use PCI interrupt links,
+> > > > except that, according to current ACPI specs, PCI interrupt links can
+> > > > only be used for *configurable* interrupt pins.
+> > > > 
+> > > > So, some ARM vendors stuck to the static/hardwired configuration
+> > > > in the _PRT, that does not give us a chance to describe polarity.
+> > > > 
+> > > > I think that we should be allowed to use interrupt links, but that would
+> > > > not comply with the specs (and on top of that there is FW that is
+> > > > already shipped in ACPI tables that we can't change anymore).
+> > > > 
+> > > > > If we connect a non-PCI device to a GIC, we need to know whether
+> > > > > there's an inverter.  How could we figure that out?
+> > > > 
+> > > > Through an Extended Interrupt Descriptor. How are we solving this ?
+> > > 
+> > > OK, I think I'm convinced.  What in the spec says you can't use PCI
+> > > Interrupt Links for this case?  I see the example in ACPI 5.0 sec
+> > > 6.2.12 that only shows them changing interrupt numbers with Interrupt
+> > > descriptors.  Is there something that prohibits Extended Interrupt
+> > > descriptors for PNP0C0F devices?  Is there something in the code that
+> > > doesn't handle that?
+> > 
+> > ACPI 6.1 (6.2.13, page 335), that describes the two ways _PRT can be used.
+> > 
+> > The problem is not about whether we can use Extended Interrupt
+> > Descriptors for PNP0C0F, we *can* use them in their (CRS,SRS,PRS), the
+> > problem is that by our specs reading, PNP0C0F PCI interrupt link devices
+> > can *only* describe interrupt pins that are configurable;
+> 
+> That would be the case if _PRS/_SRS/_DIS were required for those objects.
+> It doesn't seem to be the case, though.
 
-Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
----
-Changes v4->v5:
- - Moved pvrdma_uapi.h and pvrdma_user.h into common UAPI folder.
- - Renamed to pvrdma-uapi.h and pvrdma-abi.h respectively.
- - Prefixed unsigned vars with __.
+The kernel currently does not cope with eg missing _SRS on PCI interrupt
+link devices (and I suspect that's the case for other OSs), therefore it
+would only work on ARM64 with an empty _SRS and hardcoded _PRS. We should
+reword the specs, since this has created/is creating confusion (which
+resulted in buggy ACPI tables - ie this thread) and unfortunately we still
+need my hack to make sure static legacy IRQ configurations work on
+ARM64 systems, I would avoid it but there is not much we can do.
 
-Changes v3->v4:
- - Moved pvrdma_sge into pvrdma_uapi.h
----
- include/uapi/rdma/Kbuild        |   2 +
- include/uapi/rdma/pvrdma-abi.h  |  99 ++++++++++++++++
- include/uapi/rdma/pvrdma-uapi.h | 255 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 356 insertions(+)
- create mode 100644 include/uapi/rdma/pvrdma-abi.h
- create mode 100644 include/uapi/rdma/pvrdma-uapi.h
-
-diff --git a/include/uapi/rdma/Kbuild b/include/uapi/rdma/Kbuild
-index 4edb0f2..fc2b285 100644
---- a/include/uapi/rdma/Kbuild
-+++ b/include/uapi/rdma/Kbuild
-@@ -7,3 +7,5 @@ header-y += rdma_netlink.h
- header-y += rdma_user_cm.h
- header-y += hfi/
- header-y += rdma_user_rxe.h
-+header-y += pvrdma-abi.h
-+header-y += pvrdma-uapi.h
-diff --git a/include/uapi/rdma/pvrdma-abi.h b/include/uapi/rdma/pvrdma-abi.h
-new file mode 100644
-index 0000000..6fa0ab6
---- /dev/null
-+++ b/include/uapi/rdma/pvrdma-abi.h
-@@ -0,0 +1,99 @@
-+/*
-+ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of EITHER the GNU General Public License
-+ * version 2 as published by the Free Software Foundation or the BSD
-+ * 2-Clause License. This program is distributed in the hope that it
-+ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ * See the GNU General Public License version 2 for more details at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program available in the file COPYING in the main
-+ * directory of this source tree.
-+ *
-+ * The BSD 2-Clause License
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+ * OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef __PVRDMA_USER_H__
-+#define __PVRDMA_USER_H__
-+
-+#include <linux/types.h>
-+
-+#define PVRDMA_UVERBS_ABI_VERSION	3
-+#define PVRDMA_BOARD_ID			1
-+#define PVRDMA_REV_ID			1
-+
-+struct pvrdma_alloc_ucontext_resp {
-+	__u32 qp_tab_size;
-+	__u32 reserved;
-+};
-+
-+struct pvrdma_alloc_pd_resp {
-+	__u32 pdn;
-+	__u32 reserved;
-+};
-+
-+struct pvrdma_create_cq {
-+	__u64 buf_addr;
-+	__u32 buf_size;
-+	__u32 reserved;
-+};
-+
-+struct pvrdma_create_cq_resp {
-+	__u32 cqn;
-+	__u32 reserved;
-+};
-+
-+struct pvrdma_resize_cq {
-+	__u64 buf_addr;
-+	__u32 buf_size;
-+	__u32 reserved;
-+};
-+
-+struct pvrdma_create_srq {
-+	__u64 buf_addr;
-+};
-+
-+struct pvrdma_create_srq_resp {
-+	__u32 srqn;
-+	__u32 reserved;
-+};
-+
-+struct pvrdma_create_qp {
-+	__u64 rbuf_addr;
-+	__u64 sbuf_addr;
-+	__u32 rbuf_size;
-+	__u32 sbuf_size;
-+	__u64 qp_addr;
-+};
-+
-+#endif /* __PVRDMA_USER_H__ */
-diff --git a/include/uapi/rdma/pvrdma-uapi.h b/include/uapi/rdma/pvrdma-uapi.h
-new file mode 100644
-index 0000000..430d8a5
---- /dev/null
-+++ b/include/uapi/rdma/pvrdma-uapi.h
-@@ -0,0 +1,255 @@
-+/*
-+ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of EITHER the GNU General Public License
-+ * version 2 as published by the Free Software Foundation or the BSD
-+ * 2-Clause License. This program is distributed in the hope that it
-+ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ * See the GNU General Public License version 2 for more details at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program available in the file COPYING in the main
-+ * directory of this source tree.
-+ *
-+ * The BSD 2-Clause License
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+ * OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef __PVRDMA_UAPI_H__
-+#define __PVRDMA_UAPI_H__
-+
-+#include <linux/types.h>
-+
-+#define PVRDMA_VERSION 17
-+
-+#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
-+#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
-+#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
-+#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
-+#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
-+#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
-+#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
-+#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
-+#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
-+
-+/* PVRDMA atomic compare and swap */
-+struct pvrdma_exp_cmp_swap {
-+	__u64 swap_val;
-+	__u64 compare_val;
-+	__u64 swap_mask;
-+	__u64 compare_mask;
-+};
-+
-+/* PVRDMA atomic fetch and add */
-+struct pvrdma_exp_fetch_add {
-+	__u64 add_val;
-+	__u64 field_boundary;
-+};
-+
-+/* PVRDMA address vector. */
-+struct pvrdma_av {
-+	__u32 port_pd;
-+	__u32 sl_tclass_flowlabel;
-+	__u8 dgid[16];
-+	__u8 src_path_bits;
-+	__u8 gid_index;
-+	__u8 stat_rate;
-+	__u8 hop_limit;
-+	__u8 dmac[6];
-+	__u8 reserved[6];
-+};
-+
-+/* PVRDMA scatter/gather entry */
-+struct pvrdma_sge {
-+	__u64   addr;
-+	__u32   length;
-+	__u32   lkey;
-+};
-+
-+/* PVRDMA receive queue work request */
-+struct pvrdma_rq_wqe_hdr {
-+	__u64 wr_id;		/* wr id */
-+	__u32 num_sge;		/* size of s/g array */
-+	__u32 total_len;	/* reserved */
-+};
-+/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
-+
-+/* PVRDMA send queue work request */
-+struct pvrdma_sq_wqe_hdr {
-+	__u64 wr_id;		/* wr id */
-+	__u32 num_sge;		/* size of s/g array */
-+	__u32 total_len;	/* reserved */
-+	__u32 opcode;		/* operation type */
-+	__u32 send_flags;	/* wr flags */
-+	union {
-+		__u32 imm_data;
-+		__u32 invalidate_rkey;
-+	} ex;
-+	__u32 reserved;
-+	union {
-+		struct {
-+			__u64 remote_addr;
-+			__u32 rkey;
-+			__u8 reserved[4];
-+		} rdma;
-+		struct {
-+			__u64 remote_addr;
-+			__u64 compare_add;
-+			__u64 swap;
-+			__u32 rkey;
-+			__u32 reserved;
-+		} atomic;
-+		struct {
-+			__u64 remote_addr;
-+			__u32 log_arg_sz;
-+			__u32 rkey;
-+			union {
-+				struct pvrdma_exp_cmp_swap  cmp_swap;
-+				struct pvrdma_exp_fetch_add fetch_add;
-+			} wr_data;
-+		} masked_atomics;
-+		struct {
-+			__u64 iova_start;
-+			__u64 pl_pdir_dma;
-+			__u32 page_shift;
-+			__u32 page_list_len;
-+			__u32 length;
-+			__u32 access_flags;
-+			__u32 rkey;
-+		} fast_reg;
-+		struct {
-+			__u32 remote_qpn;
-+			__u32 remote_qkey;
-+			struct pvrdma_av av;
-+		} ud;
-+	} wr;
-+};
-+/* Use pvrdma_sge (ib_sge) for send queue s/g array elements. */
-+
-+/* Completion queue element. */
-+struct pvrdma_cqe {
-+	__u64 wr_id;
-+	__u64 qp;
-+	__u32 opcode;
-+	__u32 status;
-+	__u32 byte_len;
-+	__u32 imm_data;
-+	__u32 src_qp;
-+	__u32 wc_flags;
-+	__u32 vendor_err;
-+	__u16 pkey_index;
-+	__u16 slid;
-+	__u8 sl;
-+	__u8 dlid_path_bits;
-+	__u8 port_num;
-+	__u8 smac[6];
-+	__u8 reserved2[7]; /* Pad to next power of 2 (64). */
-+};
-+
-+struct pvrdma_ring {
-+	atomic_t prod_tail;	/* Producer tail. */
-+	atomic_t cons_head;	/* Consumer head. */
-+};
-+
-+struct pvrdma_ring_state {
-+	struct pvrdma_ring tx;	/* Tx ring. */
-+	struct pvrdma_ring rx;	/* Rx ring. */
-+};
-+
-+static inline int pvrdma_idx_valid(__u32 idx, __u32 max_elems)
-+{
-+	/* Generates fewer instructions than a less-than. */
-+	return (idx & ~((max_elems << 1) - 1)) == 0;
-+}
-+
-+static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
-+{
-+	const unsigned int idx = atomic_read(var);
-+
-+	if (pvrdma_idx_valid(idx, max_elems))
-+		return idx & (max_elems - 1);
-+	return PVRDMA_INVALID_IDX;
-+}
-+
-+static inline void pvrdma_idx_ring_inc(atomic_t *var, __u32 max_elems)
-+{
-+	__u32 idx = atomic_read(var) + 1;	/* Increment. */
-+
-+	idx &= (max_elems << 1) - 1;		/* Modulo size, flip gen. */
-+	atomic_set(var, idx);
-+}
-+
-+static inline __s32 pvrdma_idx_ring_has_space(const struct pvrdma_ring *r,
-+					      __u32 max_elems, __u32 *out_tail)
-+{
-+	const __u32 tail = atomic_read(&r->prod_tail);
-+	const __u32 head = atomic_read(&r->cons_head);
-+
-+	if (pvrdma_idx_valid(tail, max_elems) &&
-+	    pvrdma_idx_valid(head, max_elems)) {
-+		*out_tail = tail & (max_elems - 1);
-+		return tail != (head ^ max_elems);
-+	}
-+	return PVRDMA_INVALID_IDX;
-+}
-+
-+static inline __s32 pvrdma_idx_ring_has_data(const struct pvrdma_ring *r,
-+					     __u32 max_elems, __u32 *out_head)
-+{
-+	const __u32 tail = atomic_read(&r->prod_tail);
-+	const __u32 head = atomic_read(&r->cons_head);
-+
-+	if (pvrdma_idx_valid(tail, max_elems) &&
-+	    pvrdma_idx_valid(head, max_elems)) {
-+		*out_head = head & (max_elems - 1);
-+		return tail != head;
-+	}
-+	return PVRDMA_INVALID_IDX;
-+}
-+
-+static inline bool pvrdma_idx_ring_is_valid_idx(const struct pvrdma_ring *r,
-+						__u32 max_elems, __u32 *idx)
-+{
-+	const __u32 tail = atomic_read(&r->prod_tail);
-+	const __u32 head = atomic_read(&r->cons_head);
-+
-+	if (pvrdma_idx_valid(tail, max_elems) &&
-+	    pvrdma_idx_valid(head, max_elems) &&
-+	    pvrdma_idx_valid(*idx, max_elems)) {
-+		if (tail > head && (*idx < tail && *idx >= head))
-+			return true;
-+		else if (head > tail && (*idx >= head || *idx < tail))
-+			return true;
-+	}
-+	return false;
-+}
-+
-+#endif /* __PVRDMA_UAPI_H__ */
--- 
-2.7.4
-
+Thanks,
+Lorenzo
