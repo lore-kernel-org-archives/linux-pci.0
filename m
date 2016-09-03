@@ -1,121 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:49797 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756029AbcIAPiS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Sep 2016 11:38:18 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Ian Campbell <ijc+devicetree@hellion.org.uk>,
-        Pawel Moll <pawel.moll@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kumar Gala <galak@codeaurora.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 3/3] of: pci: remove unused MSI controller helpers
-Date: Thu,  1 Sep 2016 17:38:04 +0200
-Message-Id: <1472744284-18305-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 3 Sep 2016 11:34:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org,
+        Doug Anderson <dianders@chromium.org>,
+        linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH v2 00/15] PCI: rockchip: Cleanups against v10
+Message-ID: <20160903163419.GA23589@localhost>
+References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <5d1e6d5f-c8d9-8fcd-41dd-cabc3027f66a@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5d1e6d5f-c8d9-8fcd-41dd-cabc3027f66a@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All the users of the small MSI controller API have been migrated to use
-the generic MSI infrastructure instead. We no longer need a global
-chained list of msi_controller. Instead, MSI controllers are now
-represented as irq domains attached to OF nodes, and the resolution
-between a device requesting an MSI and the corresponding MSI controller
-is done by the generic interrupt resolution logic.
+On Sat, Sep 03, 2016 at 10:37:24AM +0800, Shawn Lin wrote:
+> Hi Bjorn,
+> 
+> On 2016/9/2 23:53, Bjorn Helgaas wrote:
+> >These are cleanups against 2098142ae87d, the current pci/host-rockchip
+> >head in my tree.
+> >
+> 
+> Thanks so much for you to help clean up this driver, since I think
+> it should be my duty to take over this.  Hope not too late for me to
+> help your cleanup. I think the v2 cannot compile gracefully without
+> the
+> appended patch. After fixing these compile errors, I backported this
+> driver entirely to my downstream 4.4 tree and it worked fine without
+> regression.
+> 
+> Once again, thanks for doing this. :)
 
-Therefore, this API is now completely useless, and can be removed from
-the kernel.
+No problem, thanks a lot for checking it out.  A lot of this stuff is
+things I'm trying to do to other drivers as well, and I wouldn't have
+noticed or bothered except that I've been trying to make all the
+drivers more consistent.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/of/of_pci.c    | 45 ---------------------------------------------
- include/linux/of_pci.h | 11 -----------
- 2 files changed, 56 deletions(-)
+I applied your fixes and pushed it to pci/host-rockchip-wip again.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 589b30c..ea15616 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -263,48 +263,3 @@ parse_failed:
- }
- EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
- #endif /* CONFIG_OF_ADDRESS */
--
--#ifdef CONFIG_PCI_MSI
--
--static LIST_HEAD(of_pci_msi_chip_list);
--static DEFINE_MUTEX(of_pci_msi_chip_mutex);
--
--int of_pci_msi_chip_add(struct msi_controller *chip)
--{
--	if (!of_property_read_bool(chip->of_node, "msi-controller"))
--		return -EINVAL;
--
--	mutex_lock(&of_pci_msi_chip_mutex);
--	list_add(&chip->list, &of_pci_msi_chip_list);
--	mutex_unlock(&of_pci_msi_chip_mutex);
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(of_pci_msi_chip_add);
--
--void of_pci_msi_chip_remove(struct msi_controller *chip)
--{
--	mutex_lock(&of_pci_msi_chip_mutex);
--	list_del(&chip->list);
--	mutex_unlock(&of_pci_msi_chip_mutex);
--}
--EXPORT_SYMBOL_GPL(of_pci_msi_chip_remove);
--
--struct msi_controller *of_pci_find_msi_chip_by_node(struct device_node *of_node)
--{
--	struct msi_controller *c;
--
--	mutex_lock(&of_pci_msi_chip_mutex);
--	list_for_each_entry(c, &of_pci_msi_chip_list, list) {
--		if (c->of_node == of_node) {
--			mutex_unlock(&of_pci_msi_chip_mutex);
--			return c;
--		}
--	}
--	mutex_unlock(&of_pci_msi_chip_mutex);
--
--	return NULL;
--}
--EXPORT_SYMBOL_GPL(of_pci_find_msi_chip_by_node);
--
--#endif /* CONFIG_PCI_MSI */
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index b969e94..569c3f6 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -68,15 +68,4 @@ static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
- }
- #endif
- 
--#if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
--int of_pci_msi_chip_add(struct msi_controller *chip);
--void of_pci_msi_chip_remove(struct msi_controller *chip);
--struct msi_controller *of_pci_find_msi_chip_by_node(struct device_node *of_node);
--#else
--static inline int of_pci_msi_chip_add(struct msi_controller *chip) { return -EINVAL; }
--static inline void of_pci_msi_chip_remove(struct msi_controller *chip) { }
--static inline struct msi_controller *
--of_pci_find_msi_chip_by_node(struct device_node *of_node) { return NULL; }
--#endif
--
- #endif
--- 
-2.7.4
+> >---
+> >
+> >Bjorn Helgaas (15):
+> >      Remove unused symbols, unnecessary parens, other minor comments from
+> >      Rename pcie_read() and pcie_write() to rockchip_pcie_read() and
+> >      Always use "rockchip" as the pointer to per-device struct.
+> >      Rename struct rockchip_pcie_port to struct rockchip_pcie.
+> >      Use a local "dev" to avoid repetition of "rockchip->dev".
+> >      Add comment about why 32-bit read/modify/write isn't safe.
+> >      Simplify the confusing HIWORD_UPDATE scheme.
+> >      Remove duplicate CSR definition.
+> >      Move CSR bases into definition.
+> >      Group related CSR definitions together.
+> >      Rename PCIE_CORE_RC_CONF_SCC_SHIFT to match similar definitions.
+> >      Rename ROCKCHIP_PCIE_RPIFR1_INTR_MASK and ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT
+> >      The register at PCIE_CLIENT_BASE presumably has a name of its own.  Add a
+> >      Simplify testing of link status and speed testing.
+> >      Move msleeps to address Guenter's comments.
+> >
+> >
+> > drivers/pci/host/pcie-rockchip.c |  842 ++++++++++++++++++--------------------
+> > 1 file changed, 391 insertions(+), 451 deletions(-)
+> >
+> >
+> >
+> 
+> 
+> -- 
+> Best Regards
+> Shawn Lin
 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 754d24b..2bc1c35 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -931,7 +931,7 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
+>  	u32 ob_addr_0;
+>  	u32 ob_addr_1;
+>  	u32 ob_desc_0;
+> -	void __iomem *aw_offset;
+> +	u32 aw_offset;
+>  
+>  	if (region_no >= MAX_AXI_WRAPPER_REGION_NUM)
+>  		return -EINVAL;
+> @@ -955,13 +955,13 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
+>  	ob_addr_1 = upper_addr;
+>  	ob_desc_0 = (1 << 23 | type);
+>  
+> -	rockchip_pcie_writel(rockchip, ob_addr_0,
+> +	rockchip_pcie_write(rockchip, ob_addr_0,
+>  			     PCIE_CORE_OB_REGION_ADDR0 + aw_offset);
+> -	rockchip_pcie_writel(rockchip, ob_addr_1,
+> +	rockchip_pcie_write(rockchip, ob_addr_1,
+>  			     PCIE_CORE_OB_REGION_ADDR1 + aw_offset);
+> -	rockchip_pcie_writel(rockchip, ob_desc_0,
+> +	rockchip_pcie_write(rockchip, ob_desc_0,
+>  			     PCIE_CORE_OB_REGION_DESC0 + aw_offset);
+> -	rockchip_pcie_writel(rockchip, 0,
+> +	rockchip_pcie_write(rockchip, 0,
+>  			     PCIE_CORE_OB_REGION_DESC1 + aw_offset);
+>  
+>  	return 0;
+> @@ -973,7 +973,7 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
+>  {
+>  	u32 ib_addr_0;
+>  	u32 ib_addr_1;
+> -	void __iomem *aw_offset;
+> +	u32 aw_offset;
+>  
+>  	if (region_no > MAX_AXI_IB_ROOTPORT_REGION_NUM)
+>  		return -EINVAL;
+> @@ -988,8 +988,8 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
+>  	ib_addr_0 |= (lower_addr << 8) & PCIE_CORE_IB_REGION_ADDR0_LO_ADDR;
+>  	ib_addr_1 = upper_addr;
+>  
+> -	rockchip_pcie_writel(rockchip, ib_addr_0, PCIE_RP_IB_ADDR0 + aw_offset);
+> -	rockchip_pcie_writel(rockchip, ib_addr_1, PCIE_RP_IB_ADDR1 + aw_offset);
+> +	rockchip_pcie_write(rockchip, ib_addr_0, PCIE_RP_IB_ADDR0 + aw_offset);
+> +	rockchip_pcie_write(rockchip, ib_addr_1, PCIE_RP_IB_ADDR1 + aw_offset);
+>  
+>  	return 0;
+>  }
