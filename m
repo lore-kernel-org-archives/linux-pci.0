@@ -1,87 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53380 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759534AbcIOHDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Sep 2016 03:03:20 -0400
-Date: Thu, 15 Sep 2016 10:02:33 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Adit Ranadive <aditr@vmware.com>,
-        "dledford@redhat.com" <dledford@redhat.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        pv-drivers <pv-drivers@vmware.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Jorgen S. Hansen" <jhansen@vmware.com>,
-        Aditya Sarwade <asarwade@vmware.com>,
-        George Zhang <georgezhang@vmware.com>,
-        Bryan Tan <bryantan@vmware.com>
-Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
-Message-ID: <20160915070233.GP26069@leon.nu>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
- <20160912180251.GH5843@obsidianresearch.com>
- <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
- <20160914173636.GA10309@obsidianresearch.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Po Liu <po.liu@nxp.com>
+To: Rob Herring <robh@kernel.org>
+Subject: RE: [PATCH v4 2/2] pci:aer: add support aer interrupt with none
+ MSI/MSI-X/INTx mode
+Date: Mon, 5 Sep 2016 06:05:49 +0000
+Message-ID: <VI1PR0401MB1709ED029763A20726FF5CD392E60@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
+ <1472625442-23309-1-git-send-email-po.liu@nxp.com>
+ <1472625442-23309-2-git-send-email-po.liu@nxp.com>
+ <20160902151725.GA25273@rob-hp-laptop>
+In-Reply-To: <20160902151725.GA25273@rob-hp-laptop>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="b5sSX5qSQrSInIHt"
-In-Reply-To: <20160914173636.GA10309@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>, Roy Zang <roy.zang@nxp.com>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Yang-Leo Li <leoyang.li@nxp.com>,
+ Shawn Guo <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Rob,
 
---b5sSX5qSQrSInIHt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-On Wed, Sep 14, 2016 at 11:36:36AM -0600, Jason Gunthorpe wrote:
-> On Mon, Sep 12, 2016 at 10:43:00PM +0000, Adit Ranadive wrote:
-> > On Mon, Sep 12, 2016 at 11:03:39 -0700, Jason Gunthorpe wrote:
-> > > On Sun, Sep 11, 2016 at 09:49:10PM -0700, Adit Ranadive wrote:
-> > > > [2] Libpvrdma User-level library -
-> > > > http://git.openfabrics.org/?p=~aditr/libpvrdma.git;a=summary
-> > >
-> > > You will probably find that rdma-plumbing will be the best way to get
-> > > your userspace component into the distributors.
-> >
-> > Hi Jason,
-> >
-> > Sorry I haven't paying attention to that discussion. Do you know how soon
-> > distros will pick up the rdma-plumbing stuff?
->
-> We desire to use this as the vehical for the userspace included with
-> the 4.9 kernel.
->
-> I anticipate the tree will be running by Oct 1.
+Best regards,
+Liu Po
 
-+1
+>  -----Original Message-----
+>  From: Rob Herring [mailto:robh@kernel.org]
+>  Sent: Friday, September 02, 2016 11:17 PM
+>  To: Po Liu
+>  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+>  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Bjorn Helgaas;
+>  Shawn Guo; Marc Zyngier; Roy Zang; Mingkai Hu; Stuart Yoder; Yang-Leo Li;
+>  Arnd Bergmann; Minghuan Lian; Murali Karicheri
+>  Subject: Re: [PATCH v4 2/2] pci:aer: add support aer interrupt with none
+>  MSI/MSI-X/INTx mode
+>  
+>  On Wed, Aug 31, 2016 at 02:37:22PM +0800, Po Liu wrote:
+>  > On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
+>  > When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
+>  > maybe there is interrupt line for aer pme etc. Search the interrupt
+>  > number in the fdt file. Then fixup the dev->irq with it.
+>  >
+>  > Signed-off-by: Po Liu <po.liu@nxp.com>
+>  > ---
+>  > Changes for v4:
+>  > 	- re-use the patch changes in the root port driver;
+>  > 	- add binding information;
+>  >
+>  >  .../devicetree/bindings/pci/layerscape-pci.txt     |  4 +--
+>  >  drivers/pci/pcie/portdrv_core.c                    | 31
+>  +++++++++++++++++++---
+>  >  2 files changed, 30 insertions(+), 5 deletions(-)
+>  >
+>  > diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>  > b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>  > index 41e9f55..1dfb1da 100644
+>  > --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>  > +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+>  > @@ -19,7 +19,7 @@ Required properties:
+>  >  - interrupts: A list of interrupt outputs of the controller. Must
+>  contain an
+>  >    entry for each entry in the interrupt-names property.
+>  >  - interrupt-names: Must include the following entries:
+>  > -  "intr": The interrupt that is asserted for controller interrupts
+>  > +  "aer": The interrupt that is asserted for aer interrupts
+>  
+>  You can't just change this. That breaks compatibility with old dts files.
+>  Plus, it is just a name. Why does it even matter? Not to mention having
+>  the name for a single irq is a bit pointless.
+Sorry, this binding comments maybe not clear. 
+"aer" is just one of the interrupt names from host controller. There are "aer" "pme" and so on for further applications. 
+This patch is to fix the Layerscape owning independent aer irq issue. So the 'aer' is used for this patch. The 'intr' will never be used, so removed.
+I may remove the 'must include' for mis-understanding.
 
->
-> Jason
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks!
 
---b5sSX5qSQrSInIHt
-Content-Type: application/pgp-signature; name="signature.asc"
+Po Liu
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX2keJAAoJEORje4g2clinvFQQAK11yirzsFNtZXL6DJ0OuQkV
-8k//QaOX7sU8JITJG64oNdzFuOEjk49zXPbnbI57P9JtYqXTc01Tap+ZCfqXHnXb
-Krvyo6Ry97F/90eUs/Kl6BBlWLDKs4g5xCUPukiHOqJWPC/w+0liFJRgWKg2c9r7
-02UWza0XnslacHRaSWbPte7neR9Tz7BOdYhZPghGpLv4cw33y4EDOB/BJ383rOUx
-5dGJK+w1sUlzWrK5r/Fzlpsy8AXnfH4jFfpe4ef7n5nigHzlVqexKzhYDjz0ftKA
-bj7XB8Skg4YohYYP82Urm0WEG0rVRcdNphvQFqfvDMoXFHZvnpUue2m7lptk/TZ4
-+V9fvVNf+2qPpfXz6LBCVgCJ9BRy6izU/uLuj6F1vJNSATa5VhO6adN6XiDW8H2Q
-A6AOReoC0PVOm5RkeSCH6zm+KeOojfX7IAJLe2YA2Eu7e3jWyAtvy09mneDhjUdS
-YWKpKz5U+ej/mRod+7RISaLDj67zGZp5AcgLBr/f/OCj88d9UHxyxn1cZQEvJ3Tv
-/VFC9X6vn6ePGGPPmyYeCWzORuJ3jvaOhhIb19kp2QrNykHdnP+qM9HIKOnt5fio
-WoLcqvaOlc7i9SOrT8842MoZFjz68hvmRqJv1bPd0zgUjZgmxYWUoQiKAB5QE3JS
-UaQQN3SjNJYWX8t6C4q0
-=xROE
------END PGP SIGNATURE-----
-
---b5sSX5qSQrSInIHt--
+>  
+>  Rob
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
