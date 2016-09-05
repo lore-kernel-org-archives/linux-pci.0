@@ -1,105 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58448 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752790AbcI3IuS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Sep 2016 04:50:18 -0400
-Date: Fri, 30 Sep 2016 10:50:21 +0200
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-Cc: David Miller <davem@davemloft.net>,
-        "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "corbet@lwn.net" <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "mario_limonciello@dell.com" <mario_limonciello@dell.com>,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>,
-        "Zhang, Xiong Y" <xiong.y.zhang@intel.com>
-Subject: Re: [PATCH v8 0/8] thunderbolt: Introducing Thunderbolt(TM)
- Networking
-Message-ID: <20160930085021.GA10451@kroah.com>
-References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
- <20160930.015555.2177533749954623343.davem@davemloft.net>
- <20160930063005.GA7571@kroah.com>
- <20160930.024026.274720546666401005.davem@davemloft.net>
- <E607265CB020454880711A6F96C05A03AB7CF632@hasmsx107.ger.corp.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 4 Sep 2016 21:25:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+        rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+        hanjun.guo@linaro.org, okaya@codeaurora.org, jchandra@broadcom.com,
+        cov@codeaurora.org, dhdang@apm.com, ard.biesheuvel@linaro.org,
+        robert.richter@caviumnetworks.com, mw@semihalf.com,
+        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+        wangyijing@huawei.com, msalter@redhat.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linaro-acpi@lists.linaro.org, jcm@redhat.com,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH V5 3/5] PCI: Check platform specific ECAM quirks
+Message-ID: <20160905022529.GD30488@localhost>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+ <1470661541-26270-4-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E607265CB020454880711A6F96C05A03AB7CF632@hasmsx107.ger.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1470661541-26270-4-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 30, 2016 at 08:37:36AM +0000, Levy, Amir (Jer) wrote:
-> On Fri, Sep 30 2016, 09:40 AM, David Miller wrote:
-> > From: Greg KH <gregkh@linuxfoundation.org>
-> > Date: Fri, 30 Sep 2016 08:30:05 +0200
-> > 
-> > > On Fri, Sep 30, 2016 at 01:55:55AM -0400, David Miller wrote:
-> > >> From: Amir Levy <amir.jer.levy@intel.com>
-> > >> Date: Wed, 28 Sep 2016 17:44:22 +0300
-> > >>
-> > >> > This driver enables Thunderbolt Networking on non-Apple platforms
-> > >> > running Linux.
-> > >>
-> > >> Greg, any idea where this should get merged once fully vetted?  I can
-> > >> take it through the net-next tree, but I'm fine with another more
-> > >> appropriate tree taking it as well.
-> > >
-> > > I am supposed to be taking thunderbolt patches, but if this really is
-> > > a network driver, it should go under drivers/net/ somewhere.  It needs
-> > > more review though, it's not ready to go through anyone's tree just
-> > > yet :)
-> > >
-> > > I'll let the thunderbolt maintainer go through it first before asking
-> > > for a netdev review.
-> > 
-> > Ok, thanks Greg.
+On Mon, Aug 08, 2016 at 03:05:39PM +0200, Tomasz Nowicki wrote:
+> Some platforms may not be fully compliant with generic set of PCI config
+> accessors. For these cases we implement the way to overwrite accessors
+> set. Algorithm traverses available quirk list (static array),
+> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
+> returns pci_config_window structure with fancy PCI config ops.
+> oem_id, oem_table_id and rev come from MCFG table standard header.
 > 
-> Greg, David,
-> Andreas replied to similar request on patch v6:
-> "This driver is independent from mine. It uses an interface provided
-> by the firmware which is not present on Apple hardware and with which
-> I am not familiar (also it does networking, not pci with which I am
-> also not familiar). So I cannot comment on the driver itself. I don't
-> mind a second driver, if that is what you are asking."
+> It is possible to define custom init call which is responsible for
+> setting up PCI configuration access accordingly to quirk requirements.
+> If custom init call is not defined, use standard pci_acpi_setup_ecam_mapping().
+> 
+> pci_generic_ecam_ops will be used for platforms free from quirks.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Signed-off-by: Christopher Covington <cov@codeaurora.org>
+> ---
+>  drivers/pci/host/Makefile      |  1 +
+>  drivers/pci/host/mcfg-quirks.c | 86 ++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/mcfg-quirks.h | 20 ++++++++++
+>  include/linux/pci-acpi.h       |  2 +
+>  4 files changed, 109 insertions(+)
+>  create mode 100644 drivers/pci/host/mcfg-quirks.c
+>  create mode 100644 drivers/pci/host/mcfg-quirks.h
 
-Yes, but I still need an ack from the thunderbolt maintainer that you
-aren't doing anything foolish with that interface before I can take the
-code.
+If the object is to work around defects in the ACPI MCFG table, I
+think I'd put the quirks closer to drivers/acpi/pci_mcfg.c, where we
+parse that table.  What if we actually put them directly *in*
+drivers/acpi/pci_mcfg.c?
 
-> Note that Thunderbolt Networking is the first feature we would like to
-> submit, but the next features aren't related to network, but more to
-> Thunderbolt functionality. 
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 8843410..500cf78 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -31,3 +31,4 @@ obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
+>  obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
+>  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+>  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+> +obj-$(CONFIG_ACPI_MCFG) += mcfg-quirks.o
+> diff --git a/drivers/pci/host/mcfg-quirks.c b/drivers/pci/host/mcfg-quirks.c
+> new file mode 100644
+> index 0000000..aa9907b
+> --- /dev/null
+> +++ b/drivers/pci/host/mcfg-quirks.c
+> @@ -0,0 +1,86 @@
+> +/*
+> + * Copyright (C) 2016 Semihalf
+> + *	Author: Tomasz Nowicki <tn@semihalf.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License, version 2, as
+> + * published by the Free Software Foundation (the "GPL").
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> + * General Public License version 2 (GPLv2) for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * version 2 (GPLv2) along with this source code.
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/ioport.h>
+> +#include <linux/pci.h>
+> +#include <linux/pci-acpi.h>
+> +#include <linux/pci-ecam.h>
+> +
+> +#include "mcfg-quirks.h"
+> +
+> +struct pci_cfg_fixup {
+> +	char oem_id[ACPI_OEM_ID_SIZE + 1];
+> +	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+> +	u32 oem_revision;
+> +	struct resource domain_range;
+> +	struct resource bus_range;
+> +	struct pci_ops *ops;
+> +	struct pci_config_window *(*init)(struct acpi_pci_root *root,
+> +					  struct pci_ops *ops);
+> +};
+> +
+> +#define MCFG_DOM_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
+> +						((end) - (start) + 1), NULL, 0)
+> +#define MCFG_DOM_ANY			MCFG_DOM_RANGE(0x0, 0xffff)
+> +#define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
+> +						((end) - (start) + 1),	\
+> +						NULL, IORESOURCE_BUS)
+> +#define MCFG_BUS_ANY			MCFG_BUS_RANGE(0x0, 0xff)
+> +
+> +static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
+> +/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook }, */
+> +};
+> +
+> +static bool pci_mcfg_fixup_match(struct pci_cfg_fixup *f,
+> +				 struct acpi_table_header *mcfg_header)
+> +{
+> +	return (!memcmp(f->oem_id, mcfg_header->oem_id, ACPI_OEM_ID_SIZE) &&
+> +		!memcmp(f->oem_table_id, mcfg_header->oem_table_id,
+> +			ACPI_OEM_TABLE_ID_SIZE) &&
+> +		f->oem_revision == mcfg_header->oem_revision);
+> +}
+> +
+> +struct pci_config_window *pci_mcfg_match_quirks(struct acpi_pci_root *root)
+> +{
+> +	struct resource dom_res = MCFG_DOM_RANGE(root->segment, root->segment);
+> +	struct resource *bus_res = &root->secondary;
+> +	struct pci_cfg_fixup *f = mcfg_quirks;
+> +	struct acpi_table_header *mcfg_header;
+> +	acpi_status status;
+> +	int i;
+> +
+> +	status = acpi_get_table(ACPI_SIG_MCFG, 0, &mcfg_header);
+> +	if (ACPI_FAILURE(status))
+> +		return NULL;
+> +
+> +	/*
+> +	 * First match against PCI topology <domain:bus> then use OEM ID, OEM
+> +	 * table ID, and OEM revision from MCFG table standard header.
+> +	 */
+> +	for (i = 0; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
+> +		if (resource_contains(&f->domain_range, &dom_res) &&
+> +		    resource_contains(&f->bus_range, bus_res) &&
+> +		    pci_mcfg_fixup_match(f, mcfg_header)) {
 
-If this really is a real network device, it should probably live in
-drivers/net/ like other network drivers.
+I think I'd put all the quirk matching tests (domain, bus, OEM ID,
+table ID, etc) in the same place.
 
-> This is the reason I created the directory thunderbolt/icm, since the
-> next features requires ICM to be enabled as well.
-
-As long as you have ICM split out so that other drivers can use it, it
-should be fine, no matter where in the tree it lives, right?
-
-> I also followed the firewire as example that includes net.c (in
-> drivers/firewire directory) along with other firewire functionality. 
-
-That's the old-style of placing files.  We have moved the USB network
-drivers out of drivers/usb/ a while ago.  The current thought is to
-group drivers of specific types, not busses, together wherever possible,
-as that is usually the majority of the logic in the driver (i.e. a USB
-network driver has more network-driver specific logic than USB-specific
-logic.)
-
-Hope this helps explain things.  I'll get to your patches next week,
-they are in my queue at the moment, but have conferences to deal with at
-the moment.  Don't let my delay stop you from working on further "ICM"
-drivers if needed, you can always send new series of patches that build
-on this one when you have it ready.
-
-thanks,
-
-greg k-h
+> +			dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
+> +				 f->oem_id, f->oem_table_id, f->oem_revision);
+> +			return f->init ? f->init(root, f->ops) :
+> +				pci_acpi_setup_ecam_mapping(root, f->ops);
+> +		}
+> +	}
+> +	return pci_acpi_setup_ecam_mapping(root, &pci_generic_ecam_ops.pci_ops);
+> +}
+> diff --git a/drivers/pci/host/mcfg-quirks.h b/drivers/pci/host/mcfg-quirks.h
+> new file mode 100644
+> index 0000000..45cbd16
+> --- /dev/null
+> +++ b/drivers/pci/host/mcfg-quirks.h
+> @@ -0,0 +1,20 @@
+> +/*
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License, version 2, as
+> + * published by the Free Software Foundation (the "GPL").
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> + * General Public License version 2 (GPLv2) for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * version 2 (GPLv2) along with this source code.
+> + */
+> +
+> +#ifndef __MCFG_QUIRKS_H__
+> +#define __MCFG_QUIRKS_H__
+> +
+> +/* MCFG quirks initialize call list */
+> +
+> +#endif /* __MCFG_QUIRKS_H__ */
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index e9bfe00..28cdce4 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -25,6 +25,8 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+>  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+>  
+>  extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
+> +extern struct pci_config_window *
+> +pci_mcfg_match_quirks(struct acpi_pci_root *root);
+>  
+>  extern struct pci_config_window *
+>  pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
+> -- 
+> 1.9.1
+> 
