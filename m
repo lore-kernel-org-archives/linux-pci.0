@@ -1,78 +1,183 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 3/4] PCI: Avoid unnecessary resume after direct-complete
-Date: Wed, 14 Sep 2016 02:50:13 +0200
-Message-ID: <2963851.chF2hIakqz@vostro.rjw.lan>
-In-Reply-To: <4935437e0bfbab9079db2c8b1fbac66cef7dc569.1472554278.git.lukas@wunner.de>
-References: <cover.1472554278.git.lukas@wunner.de> <4935437e0bfbab9079db2c8b1fbac66cef7dc569.1472554278.git.lukas@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 00/15] ACPI IORT ARM SMMU v3 support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ iommu@lists.linux-foundation.org
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <e12c4831-f625-ca39-0f8c-9ff3f8ebaa53@linaro.org>
+Date: Mon, 5 Sep 2016 17:41:37 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Marc Zyngier <marc.zyngier@arm.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Jon Masters <jcm@redhat.com>,
+ Dennis Chen <dennis.chen@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ Nate Watterson <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
-> Commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might have been
-> reset by firmware") added a runtime resume for devices that were runtime
-> suspended when the system entered sleep.
-> 
-> The motivation was that devices might be in a reset-power-on state after
-> waking from system sleep, so their power state as perceived by Linux
-> (stored in pci_dev->current_state) would no longer reflect reality.
-> By resuming such devices, we allow them to return to a low-power state
-> via autosuspend and also bring their current_state in sync with reality.
-> 
-> However for devices that are *not* in a reset-power-on state, doing an
-> unconditional resume wastes energy.  A more refined approach is called
-> for which issues a runtime resume only if the power state after
-> direct-complete is shallower than it was before. To achieve this, update
-> the device's current_state by querying the platform firmware and reading
-> its PMCSR.
-> 
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pci-driver.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index e39a67c..fd4b9c4 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -684,8 +684,19 @@ static int pci_pm_prepare(struct device *dev)
->  
->  static void pci_pm_complete(struct device *dev)
->  {
-> -	pci_dev_complete_resume(to_pci_dev(dev));
-> -	pm_complete_with_resume_check(dev);
-> +	struct pci_dev *pci_dev = to_pci_dev(dev);
-> +
-> +	pci_dev_complete_resume(pci_dev);
-> +	pm_generic_complete(dev);
-> +
-> +	/* Resume device if platform firmware has put it in reset-power-on */
-> +	if (dev->power.direct_complete && pm_resume_via_firmware()) {
-> +		pci_power_t pre_sleep_state = pci_dev->current_state;
-> +
-> +		pci_update_current_state(pci_dev, pci_dev->current_state);
+On 2016/8/15 23:23, Lorenzo Pieralisi wrote:
+> This patch series is v4 of a previous posting:
+>
+> https://lkml.org/lkml/2016/7/20/248
+>
+> v3 -> v4
+> 	- Added single mapping API (for IORT named components)
 
-I'm not sure if this can be made reliable enough for all of the systems out
-there (including the pre-ACPI-4.0 ones and so on).  I'm a bit concerned that
-we'll uncover firmware issues and such by doing this.
+Thanks, and it works for my platform msi patch set too :)
 
-How much of a problem the existing code is in practice?
+> 	- Fixed arm_smmu_iort_xlate() return value
+> 	- Reworked fwnode registration and platform device creation
+> 	  ordering to fix probe ordering dependencies
+> 	- Added code to keep device_node ref count with new iommu
+> 	  fwspec API
+> 	- Added patch to make iommu_fwspec arch agnostic
+> 	- Dropped RFC status
+> 	- Rebased against v4.8-rc2
+>
 
-> +		if (pci_dev->current_state < pre_sleep_state)
-> +			pm_request_resume(dev);
-> +	}
->  }
->  
->  #else /* !CONFIG_PM_SLEEP */
-> 
+[...]
+>
+> The ACPI IORT table provides information that allows instantiating
+> ARM SMMU devices and carrying out id mappings between components on
+> ARM based systems (devices, IOMMUs, interrupt controllers).
+>
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>
+> Building on basic IORT support, available through [2],
+> this patchset enables ARM SMMU v3 support on ACPI systems.
+>
+> Most of the code is aimed at building the required generic ACPI
+> infrastructure to create and enable IOMMU components and to bring
+> the IOMMU infrastructure for ACPI on par with DT, which is going to
+> make future ARM SMMU components easier to integrate.
 
-Thanks,
-Rafael
+[...]
+>
+> This patchset is built on top and depends on these two patch series:
+>
+> [1] R.Murphy "Generic DT bindings for PCI and ARM SMMU v3" v4
+>     https://marc.info/?l=devicetree&m=146739193215518&w=2
+>
+> [2] T.Nowicki "Introduce ACPI world to ITS irqchip" v8
+>     https://marc.info/?l=linux-kernel&m=147091000919640&w=2
+>
+> and is provided for early review/testing purposes here:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git acpi/iort-smmu-v4
+>
+> Tested on FVP models for ARM SMMU v3 probing path.
 
+I tested this patch set on Hisilicon D03 board, with the ehci platform
+driver loaded, on D03, ehci is using stream id 0x40080 when SMMU is
+enabled, here is the IORT table entries I used:
+
+[0004]                          Signature : "IORT"    [IO Remapping Table]
+[0004]                       Table Length : 0000029e
+[0001]                           Revision : 00
+[0001]                           Checksum : BC
+[0006]                             Oem ID : "HISI "
+[0008]                       Oem Table ID : "HISI1610"
+[0004]                       Oem Revision : 00000000
+[0004]                    Asl Compiler ID : "INTL"
+[0004]              Asl Compiler Revision : 20151124
+
+[0004]                         Node Count : 00000008
+[0004]                        Node Offset : 00000034
+[0004]                           Reserved : 00000000
+[0004]                   Optional Padding : 00 00 00 00
+
+/* ITS 0, for dsa */
+[0001]                               Type : 00
+[0002]                             Length : 0018
+[0001]                           Revision : 00
+[0004]                           Reserved : 00000000
+[0004]                      Mapping Count : 00000000
+[0004]                     Mapping Offset : 00000000
+
+[0004]                           ItsCount : 00000001
+[0004]                        Identifiers : 00000000
+
+/* SMMU PCIE */
+[0001]                               Type : 04
+[0002]                             Length : 003C
+[0001]                           Revision : 00
+[0004]                           Reserved : 00000000
+[0004]                      Mapping Count : 00000001
+[0004]                     Mapping Offset : 0000003C
+
+[0008]                       Base Address : A0040000
+[0004]              Flags (decoded below) : 00000001
+                           COHACC Override : 1
+                             HTTU Override : 0
+[0004]                           Reserved : 00000000
+[0008]                      VATOS Address : 0
+[0004]                              Model : 00000000
+[0004]                    Event Interrupt : 00000000
+[0004]                      PRI Interrupt : 00000000
+[0004]                     GERR Interrupt : 00000000
+[0004]                     Sync Interrupt : 00000000
+
+[...]
+
+/* usb named component */
+[0001]                               Type : 01
+[0002]                             Length : 0046
+[0001]                           Revision : 00
+[0004]                           Reserved : 00000000
+[0004]                      Mapping Count : 00000001
+[0004]                     Mapping Offset : 00000032
+
+[0004]                         Node Flags : 00000000
+[0008]                  Memory Properties : [IORT Memory Access Properties]
+[0004]                    Cache Coherency : 00000000
+[0001]              Hints (decoded below) : 00
+                                 Transient : 0
+                            Write Allocate : 0
+                             Read Allocate : 0
+                                  Override : 0
+[0002]                           Reserved : 0000
+[0001]       Memory Flags (decoded below) : 00
+                                 Coherency : 0
+                          Device Attribute : 0
+[0001]                  Memory Size Limit : 00
+[0016]                        Device Name : "\_SB_.USB0"
+[0004]                            Padding : 00 00 00 00
+
+[0004]                         Input base : 00000000
+[0004]                           ID Count : 00000001
+[0004]                        Output Base : 00040080
+[0004]                   Output Reference : 0000004C /* point to smmu 
+pcie */
+[0004]              Flags (decoded below) : 00000001
+                            Single Mapping : 1
+
+I mounted a USB storage and copy the data (should trigger the DMA :)),
+and it works fine (if the wrong stream id is configured, I can't
+find the USB storage). So with this patch set:
+
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+
+I think I also test Robin's SMMUv3 patchset for supporting no-pci
+devices.
+
+Thanks
+Hanjun
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
