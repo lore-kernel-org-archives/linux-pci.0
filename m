@@ -1,139 +1,402 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54524 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754503AbcI2OOz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 10:14:55 -0400
-Date: Thu, 29 Sep 2016 15:15:20 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org, rjw@rjwysocki.net
-Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 01/14] drivers: iommu: add FWNODE_IOMMU fwnode type
-Message-ID: <20160929141520.GA29244@red-moon>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
- <20160909142343.13314-2-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160909142343.13314-2-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 1/8] ACPI: I/O Remapping Table (IORT) initial support
+Date: Mon,  5 Sep 2016 22:05:33 +0200
+Message-Id: <1473105940-9761-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+IORT shows representation of IO topology for ARM based systems.
+It describes how various components are connected together on
+parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
 
-On Fri, Sep 09, 2016 at 03:23:30PM +0100, Lorenzo Pieralisi wrote:
-> On systems booting with a device tree, every struct device is
-> associated with a struct device_node, that represents its DT
-> representation. The device node can be used in generic kernel
-> contexts (eg IRQ translation, IOMMU streamid mapping), to
-> retrieve the properties associated with the device and carry
-> out kernel operation accordingly. Owing to the 1:1 relationship
-> between the device and its device_node, the device_node can also
-> be used as a look-up token for the device (eg looking up a device
-> through its device_node), to retrieve the device in kernel paths
-> where the device_node is available.
-> 
-> On systems booting with ACPI, the same abstraction provided by
-> the device_node is required to provide look-up functionality.
-> 
-> Therefore, mirroring the approach implemented in the IRQ domain
-> kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
-> 
-> This patch also implements a glue kernel layer that allows to
-> allocate/free FWNODE_IOMMU fwnode_handle structures and associate
-> them with IOMMU devices.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
->  include/linux/fwnode.h |  1 +
->  include/linux/iommu.h  | 25 +++++++++++++++++++++++++
->  2 files changed, 26 insertions(+)
-> 
-> diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
-> index 8516717..6e10050 100644
-> --- a/include/linux/fwnode.h
-> +++ b/include/linux/fwnode.h
-> @@ -19,6 +19,7 @@ enum fwnode_type {
->  	FWNODE_ACPI_DATA,
->  	FWNODE_PDATA,
->  	FWNODE_IRQCHIP,
-> +	FWNODE_IOMMU,
+Initial support allows to detect IORT table presence and save its
+root pointer obtained through acpi_get_table(). The pointer validity
+depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+is not set while using IORT nodes we would dereference unmapped pointers.
 
-This patch provides groundwork for this series and it is key for
-the rest of it, basically the point here is that we need a fwnode
-to differentiate platform devices created out of static ACPI tables
-entries (ie IORT), that represent IOMMU components.
+For the aforementioned reason call iort_table_detect() from acpi_init()
+which guarantees acpi_gbl_permanent_mmap to be set at that point.
 
-The corresponding device is not an ACPI device (I could fabricate one as
-it is done for other static tables entries eg FADT power button, but I
-do not necessarily see the reason for doing that given that all we need
-the fwnode for is a token identifier), so FWNODE_ACPI does not apply
-here.
+Add generic helpers which are helpful for scanning and retrieving
+information from IORT table content. List of the most important helpers:
+- iort_find_dev_node() finds IORT node for a given device
+- iort_node_map_rid() maps device RID and returns IORT node which provides
+  final translation
 
-Please let me know if it is reasonable how I sorted this out (it
-is basically identical to IRQCHIP, just another enum entry), the
-remainder of the code depends on this.
+IORT support is placed under drivers/acpi/arm64/ new directory due to its
+ARM64 specific nature. The code there is considered only for ARM64.
+The long term plan is to keep all ARM64 specific tables support
+in this place e.g. GTDT table.
 
-Thanks !
-Lorenzo
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/acpi/Kconfig        |   4 +
+ drivers/acpi/Makefile       |   2 +
+ drivers/acpi/arm64/Kconfig  |   6 ++
+ drivers/acpi/arm64/Makefile |   1 +
+ drivers/acpi/arm64/iort.c   | 221 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/bus.c          |   2 +
+ include/linux/iort.h        |  30 ++++++
+ 7 files changed, 266 insertions(+)
+ create mode 100644 drivers/acpi/arm64/Kconfig
+ create mode 100644 drivers/acpi/arm64/Makefile
+ create mode 100644 drivers/acpi/arm64/iort.c
+ create mode 100644 include/linux/iort.h
 
->  };
->  
->  struct fwnode_handle {
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index a35fb8b..6456528 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -38,6 +38,7 @@ struct bus_type;
->  struct device;
->  struct iommu_domain;
->  struct notifier_block;
-> +struct fwnode_handle;
->  
->  /* iommu fault flags */
->  #define IOMMU_FAULT_READ	0x0
-> @@ -543,4 +544,28 @@ static inline void iommu_device_unlink(struct device *dev, struct device *link)
->  
->  #endif /* CONFIG_IOMMU_API */
->  
-> +/* IOMMU fwnode handling */
-> +static inline bool is_fwnode_iommu(struct fwnode_handle *fwnode)
-> +{
-> +	return fwnode && fwnode->type == FWNODE_IOMMU;
-> +}
-> +
-> +static inline struct fwnode_handle *iommu_alloc_fwnode(void)
-> +{
-> +	struct fwnode_handle *fwnode;
-> +
-> +	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_KERNEL);
-> +	fwnode->type = FWNODE_IOMMU;
-> +
-> +	return fwnode;
-> +}
-> +
-> +static inline void iommu_free_fwnode(struct fwnode_handle *fwnode)
-> +{
-> +	if (WARN_ON(!is_fwnode_iommu(fwnode)))
-> +		return;
-> +
-> +	kfree(fwnode);
-> +}
-> +
->  #endif /* __LINUX_IOMMU_H */
-> -- 
-> 2.10.0
-> 
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index 445ce28..d5c0614 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -521,4 +521,8 @@ config ACPI_CONFIGFS
+ 	  userspace. The configurable ACPI groups will be visible under
+ 	  /config/acpi, assuming configfs is mounted under /config.
+ 
++if ARM64
++source "drivers/acpi/arm64/Kconfig"
++endif
++
+ endif	# ACPI
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index 5ae9d85..e5ada78 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -105,3 +105,5 @@ obj-$(CONFIG_ACPI_CONFIGFS)	+= acpi_configfs.o
+ 
+ video-objs			+= acpi_video.o video_detect.o
+ obj-y				+= dptf/
++
++obj-$(CONFIG_ARM64)		+= arm64/
+diff --git a/drivers/acpi/arm64/Kconfig b/drivers/acpi/arm64/Kconfig
+new file mode 100644
+index 0000000..4616da4
+--- /dev/null
++++ b/drivers/acpi/arm64/Kconfig
+@@ -0,0 +1,6 @@
++#
++# ACPI Configuration for ARM64
++#
++
++config ACPI_IORT
++	bool
+diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
+new file mode 100644
+index 0000000..72331f2
+--- /dev/null
++++ b/drivers/acpi/arm64/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_ACPI_IORT) 	+= iort.o
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+new file mode 100644
+index 0000000..82d5e7d
+--- /dev/null
++++ b/drivers/acpi/arm64/iort.c
+@@ -0,0 +1,221 @@
++/*
++ * Copyright (C) 2016, Semihalf
++ *	Author: Tomasz Nowicki <tn@semihalf.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * This file implements early detection/parsing of I/O mapping
++ * reported to OS through firmware via I/O Remapping Table (IORT)
++ * IORT document number: ARM DEN 0049A
++ */
++
++#define pr_fmt(fmt)	"ACPI: IORT: " fmt
++
++#include <linux/iort.h>
++#include <linux/kernel.h>
++#include <linux/pci.h>
++
++typedef acpi_status (*iort_find_node_callback)
++	(struct acpi_iort_node *node, void *context);
++
++/* Root pointer to the mapped IORT table */
++static struct acpi_table_header *iort_table;
++
++static struct acpi_iort_node *
++iort_scan_node(enum acpi_iort_node_type type,
++	       iort_find_node_callback callback, void *context)
++{
++	struct acpi_iort_node *iort_node, *iort_end;
++	struct acpi_table_iort *iort;
++	int i;
++
++	if (!iort_table)
++		return NULL;
++
++	/* Get the first IORT node */
++	iort = (struct acpi_table_iort *)iort_table;
++	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
++				 iort->node_offset);
++	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++				iort_table->length);
++
++	for (i = 0; i < iort->node_count; i++) {
++		if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
++			       "IORT node pointer overflows, bad table!\n"))
++			return NULL;
++
++		if (iort_node->type == type) {
++			if (ACPI_SUCCESS(callback(iort_node, context)))
++				return iort_node;
++		}
++
++		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
++					 iort_node->length);
++	}
++
++	return NULL;
++}
++
++static acpi_status
++iort_match_node_callback(struct acpi_iort_node *node, void *context)
++{
++	struct device *dev = context;
++
++	switch (node->type) {
++	case ACPI_IORT_NODE_NAMED_COMPONENT: {
++		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
++		struct acpi_iort_named_component *ncomp;
++
++		if (!adev)
++			break;
++
++		ncomp = (struct acpi_iort_named_component *)node->node_data;
++
++		if (ACPI_FAILURE(acpi_get_name(adev->handle,
++					       ACPI_FULL_PATHNAME, &buffer))) {
++			dev_warn(dev, "Can't get device full path name\n");
++		} else {
++			int match;
++
++			match = !strcmp(ncomp->device_name, buffer.pointer);
++			acpi_os_free(buffer.pointer);
++
++			if (match)
++				return AE_OK;
++		}
++
++		break;
++	}
++	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
++		struct acpi_iort_root_complex *pci_rc;
++		struct pci_bus *bus;
++
++		bus = to_pci_bus(dev);
++		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
++
++		/*
++		 * It is assumed that PCI segment numbers maps one-to-one
++		 * with root complexes. Each segment number can represent only
++		 * one root complex.
++		 */
++		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
++			return AE_OK;
++
++		break;
++	}
++	}
++
++	return AE_NOT_FOUND;
++}
++
++static int
++iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in, u32 *rid_out)
++{
++	/* Single mapping does not care for input id */
++	if (map->flags & ACPI_IORT_ID_SINGLE_MAPPING) {
++		if (type == ACPI_IORT_NODE_NAMED_COMPONENT ||
++		    type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
++			*rid_out = map->output_base;
++			return 0;
++		}
++
++		pr_warn(FW_BUG "[map %p] SINGLE MAPPING flag not allowed for node type %d, skipping ID map\n",
++			map, type);
++		return -ENXIO;
++	}
++
++	if (rid_in < map->input_base ||
++	    (rid_in >= map->input_base + map->id_count))
++		return -ENXIO;
++
++	*rid_out = map->output_base + (rid_in - map->input_base);
++	return 0;
++}
++
++static struct acpi_iort_node *
++iort_node_map_rid(struct acpi_iort_node *node, u32 rid_in,
++		  u32 *rid_out, u8 type)
++{
++	u32 rid = rid_in;
++
++	/* Parse the ID mapping tree to find specified node type */
++	while (node) {
++		struct acpi_iort_id_mapping *map;
++		int i;
++
++		if (node->type == type) {
++			if (rid_out)
++				*rid_out = rid;
++			return node;
++		}
++
++		if (!node->mapping_offset || !node->mapping_count)
++			goto fail_map;
++
++		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
++				   node->mapping_offset);
++
++		/* Firmware bug! */
++		if (!map->output_reference) {
++			pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
++			       node, node->type);
++			goto fail_map;
++		}
++
++		/* Do the RID translation */
++		for (i = 0; i < node->mapping_count; i++, map++) {
++			if (!iort_id_map(map, node->type, rid, &rid))
++				break;
++		}
++
++		if (i == node->mapping_count)
++			goto fail_map;
++
++		node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
++				    map->output_reference);
++	}
++
++fail_map:
++	/* Map input RID to output RID unchanged on mapping failure*/
++	if (rid_out)
++		*rid_out = rid_in;
++
++	return NULL;
++}
++
++static struct acpi_iort_node *
++iort_find_dev_node(struct device *dev)
++{
++	struct pci_bus *pbus;
++
++	if (!dev_is_pci(dev))
++		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
++				      iort_match_node_callback, dev);
++
++	/* Find a PCI root bus */
++	pbus = to_pci_dev(dev)->bus;
++	while (!pci_is_root_bus(pbus))
++		pbus = pbus->parent;
++
++	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
++			      iort_match_node_callback, &pbus->dev);
++}
++
++void __init acpi_iort_init(void)
++{
++	acpi_status status;
++
++	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
++	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
++		const char *msg = acpi_format_exception(status);
++		pr_err("Failed to get table, %s\n", msg);
++	}
++}
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index 85b7d07..7ddfbf2 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -36,6 +36,7 @@
+ #ifdef CONFIG_X86
+ #include <asm/mpspec.h>
+ #endif
++#include <linux/iort.h>
+ #include <linux/pci.h>
+ #include <acpi/apei.h>
+ #include <linux/dmi.h>
+@@ -1186,6 +1187,7 @@ static int __init acpi_init(void)
+ 	}
+ 
+ 	pci_mmcfg_late_init();
++	acpi_iort_init();
+ 	acpi_scan_init();
+ 	acpi_ec_init();
+ 	acpi_debugfs_init();
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+new file mode 100644
+index 0000000..f4d5d45
+--- /dev/null
++++ b/include/linux/iort.h
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (C) 2016, Semihalf
++ *	Author: Tomasz Nowicki <tn@semihalf.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
++ * Place - Suite 330, Boston, MA 02111-1307 USA.
++ */
++
++#ifndef __IORT_H__
++#define __IORT_H__
++
++#include <linux/acpi.h>
++
++#ifdef CONFIG_ACPI_IORT
++void acpi_iort_init(void);
++#else
++static inline void acpi_iort_init(void) { }
++#endif
++
++#endif /* __IORT_H__ */
+-- 
+1.9.1
