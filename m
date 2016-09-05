@@ -1,187 +1,114 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-Date: Tue, 6 Sep 2016 15:05:21 -0600
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, Wei Zhang <wzhang@fb.com>,
-	Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 3/3] pcie/aer: Cache capability position
-Message-ID: <20160906210521.GA14521@localhost.localdomain>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
- <1470683667-28418-4-git-send-email-keith.busch@intel.com>
- <20160809173350.GE27301@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160809173350.GE27301@localhost>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for ACPI
+Date: Mon,  5 Sep 2016 22:05:39 +0200
+Message-Id: <1473105940-9761-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith, I like really this patch and am looking forward to v2. Should aer_root_reset and aer_error_resume be changed as well?
+Firmware agnostic code lands in common functions which do necessary
+domain initialization based on unique domain handler. DT specific
+code goes to DT specific init call.
 
-Also is there any reason the same couldn't be done for any pci_dev? I'd like to have this optimization available for is_error_source(). 
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 +++++++++++++++++++++-----------
+ 1 file changed, 29 insertions(+), 15 deletions(-)
 
-
-On Tue, Aug 09, 2016 at 12:33:50PM -0500, Bjorn Helgaas wrote:
-> Hi Keith,
-> 
-> On Mon, Aug 08, 2016 at 01:14:27PM -0600, Keith Busch wrote:
-> > This saves the postition of the error reporting capability so that it
-> > doesn't need to be rediscovered during error handling.
-> 
-> I like the idea of this, and I wonder if we should go even further,
-> and cache aer_pos in the pci_dev.  There are a zillion places that
-> look for PCI_EXT_CAP_ID_ERR, and several of them are outside the AER
-> driver, where it would be inconvenient to look up the aer_rpc.
-> 
-> That would probably mean adding a hook to pci_init_capabilities(),
-> which would be kind of nice anyway because we already have a call to
-> pci_cleanup_aer_error_status_regs() there, which is sort of dangling
-> and not parallel to the other calls.
-> 
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> > ---
-> >  drivers/pci/pcie/aer/aerdrv.c | 38 +++++++++++++++++---------------------
-> >  drivers/pci/pcie/aer/aerdrv.h |  1 +
-> >  2 files changed, 18 insertions(+), 21 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> > index 48d21e0..d05c864 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv.c
-> > @@ -122,7 +122,6 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
-> >  static void aer_enable_rootport(struct aer_rpc *rpc)
-> >  {
-> >  	struct pci_dev *pdev = rpc->rpd->port;
-> 
-> What if you did this instead:
-> 
->  -	int aer_pos;
->  +	int aer_pos = rpc->pos;
-> 
-> Then all the config accesses wouldn't have to change.
-> 
-> >  	u16 reg16;
-> >  	u32 reg32;
-> >  
-> > @@ -134,14 +133,13 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
-> >  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
-> >  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
-> >  
-> > -	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-> >  	/* Clear error status */
-> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
-> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
-> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, &reg32);
-> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, reg32);
-> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, &reg32);
-> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, reg32);
-> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
-> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
-> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, &reg32);
-> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, reg32);
-> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, &reg32);
-> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, reg32);
-> >  
-> >  	/*
-> >  	 * Enable error reporting for the root port device and downstream port
-> > @@ -150,9 +148,9 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
-> >  	set_downstream_devices_error_reporting(pdev, true);
-> >  
-> >  	/* Enable Root Port's interrupt in response to error messages */
-> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> >  	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
-> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, reg32);
-> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
-> >  }
-> >  
-> >  /**
-> > @@ -165,7 +163,6 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
-> >  {
-> >  	struct pci_dev *pdev = rpc->rpd->port;
-> >  	u32 reg32;
-> > -	int pos;
-> >  
-> >  	/*
-> >  	 * Disable error reporting for the root port device and downstream port
-> > @@ -173,15 +170,14 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
-> >  	 */
-> >  	set_downstream_devices_error_reporting(pdev, false);
-> >  
-> > -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-> >  	/* Disable Root's interrupt in response to error messages */
-> > -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> >  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-> > -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, reg32);
-> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
-> >  
-> >  	/* Clear Root's error status reg */
-> > -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, &reg32);
-> > -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, reg32);
-> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
-> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
-> >  }
-> >  
-> >  /**
-> > @@ -198,9 +194,7 @@ irqreturn_t aer_irq(int irq, void *context)
-> >  	struct aer_rpc *rpc = get_service_data(pdev);
-> >  	int next_prod_idx;
-> >  	unsigned long flags;
-> > -	int pos;
-> >  
-> > -	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
-> >  	/*
-> >  	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
-> >  	 * and Root error producer/consumer index
-> > @@ -208,15 +202,15 @@ irqreturn_t aer_irq(int irq, void *context)
-> >  	spin_lock_irqsave(&rpc->e_lock, flags);
-> >  
-> >  	/* Read error status */
-> > -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, &status);
-> > +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, &status);
-> >  	if (!(status & (PCI_ERR_ROOT_UNCOR_RCV|PCI_ERR_ROOT_COR_RCV))) {
-> >  		spin_unlock_irqrestore(&rpc->e_lock, flags);
-> >  		return IRQ_NONE;
-> >  	}
-> >  
-> >  	/* Read error source and clear error status */
-> > -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_ERR_SRC, &id);
-> > -	pci_write_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, status);
-> > +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_ERR_SRC, &id);
-> > +	pci_write_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, status);
-> >  
-> >  	/* Store error source for later DPC handler */
-> >  	next_prod_idx = rpc->prod_idx + 1;
-> > @@ -317,6 +311,8 @@ static int aer_probe(struct pcie_device *dev)
-> >  		return -ENOMEM;
-> >  	}
-> >  
-> > +	rpc->pos = pci_find_ext_capability(dev->port, PCI_EXT_CAP_ID_ERR);
-> > +
-> >  	/* Request IRQ ISR */
-> >  	status = request_irq(dev->irq, aer_irq, IRQF_SHARED, "aerdrv", dev);
-> >  	if (status) {
-> > diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> > index 945c939..d7c586e 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv.h
-> > +++ b/drivers/pci/pcie/aer/aerdrv.h
-> > @@ -72,6 +72,7 @@ struct aer_rpc {
-> >  					 * recovery on the same
-> >  					 * root port hierarchy
-> >  					 */
-> > +	int pos;			/* position of AER capability */
-> >  };
-> >  
-> >  struct aer_broadcast_data {
-> > -- 
-> > 2.7.2
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+index aee60ed..d2c2496 100644
+--- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+@@ -106,34 +106,48 @@ static struct of_device_id its_device_id[] = {
+ 	{},
+ };
+ 
+-static int __init its_pci_msi_init(void)
++static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
++				       const char *name)
+ {
+-	struct device_node *np;
+ 	struct irq_domain *parent;
+ 
++	parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
++	if (!parent || !msi_get_domain_info(parent)) {
++		pr_err("%s: Unable to locate ITS domain\n", name);
++		return -ENXIO;
++	}
++
++	if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
++				       parent)) {
++		pr_err("%s: Unable to create PCI domain\n", name);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static int __init its_pci_of_msi_init(void)
++{
++	struct device_node *np;
++
+ 	for (np = of_find_matching_node(NULL, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
+ 		if (!of_property_read_bool(np, "msi-controller"))
+ 			continue;
+ 
+-		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
+-		if (!parent || !msi_get_domain_info(parent)) {
+-			pr_err("%s: unable to locate ITS domain\n",
+-			       np->full_name);
++		if (its_pci_msi_init_one(of_node_to_fwnode(np), np->full_name))
+ 			continue;
+-		}
+-
+-		if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
+-					       &its_pci_msi_domain_info,
+-					       parent)) {
+-			pr_err("%s: unable to create PCI domain\n",
+-			       np->full_name);
+-			continue;
+-		}
+ 
+ 		pr_info("PCI/MSI: %s domain created\n", np->full_name);
+ 	}
+ 
+ 	return 0;
+ }
++
++static int __init its_pci_msi_init(void)
++{
++	its_pci_of_msi_init();
++
++	return 0;
++}
+ early_initcall(its_pci_msi_init);
+-- 
+1.9.1
