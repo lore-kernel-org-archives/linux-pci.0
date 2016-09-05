@@ -1,58 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:21577 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751621AbcINIpq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 04:45:46 -0400
-Date: Wed, 14 Sep 2016 11:41:17 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Rajat Jain <rajatja@google.com>,
-        MikaWesterberg@linux.intel.com, linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH v2 0/8] PCI: pciehp: Rework hotplug interrupt routine
-Message-ID: <20160914084117.GX1811@lahna.fi.intel.com>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:52749 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936644AbcIEQw1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2016 12:52:27 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Bart Van Assche <bart.vanassche@sandisk.com>,
+        Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        axboe@fb.com, agordeev@redhat.com
+Subject: [PATCH 4.4 027/113] genirq/msi: Remove unused MSI_FLAG_IDENTITY_MAP
+Date: Mon,  5 Sep 2016 18:43:50 +0200
+Message-Id: <20160905164350.396981651@linuxfoundation.org>
+In-Reply-To: <20160905164349.217621339@linuxfoundation.org>
+References: <20160905164349.217621339@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 12, 2016 at 04:08:47PM -0500, Bjorn Helgaas wrote:
-> This is mostly Mayurkumar's work from [1] and [2].  I split [2] into two
-> patches and reworked it to keep the enclosing loop around the pciehp ISR.
-> 
-> The patches I added are trivial ones to clarify variable names, make dmesg
-> messages consistent, and remove useless code.
-> 
-> [1] 1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com
-> [2] 92EBB4272BF81E4089A7126EC1E7B28466598F35@IRSMSX101.ger.corp.intel.com
-> 
-> ---
-> 
-> Bjorn Helgaas (5):
->       PCI: pciehp: Rename pcie_isr() locals for clarity
->       PCI: pciehp: Return IRQ_NONE when we can't read interrupt status
->       PCI: pciehp: Remove unnecessary guard
->       PCI: pciehp: Clean up dmesg "Slot(%s)" messages
->       PCI: pciehp: Remove useless pciehp_get_latch_status() calls
-> 
-> Mayurkumar Patel (3):
->       PCI: pciehp: Process all hotplug events before looking for new ones
->       PCI: pciehp: Don't re-read Slot Status when queuing hotplug event
->       PCI: pciehp: Don't re-read Slot Status when handling surprise event
-> 
-> 
->  drivers/pci/hotplug/pciehp_ctrl.c |   83 ++++++++++++---------------------
->  drivers/pci/hotplug/pciehp_hpc.c  |   94 ++++++++++++++++++++-----------------
->  2 files changed, 82 insertions(+), 95 deletions(-)
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
-I don't have any machines with native PCIe hotplug support enabled but
-regardless the series looks good to me,
+------------------
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+
+commit b6140914fd079e43ea75a53429b47128584f033a upstream.
+
+No user and we definitely don't want to grow one.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: linux-block@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org
+Cc: axboe@fb.com
+Cc: agordeev@redhat.com
+Link: http://lkml.kernel.org/r/1467621574-8277-2-git-send-email-hch@lst.de
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ include/linux/msi.h |    6 ++----
+ kernel/irq/msi.c    |    8 ++------
+ 2 files changed, 4 insertions(+), 10 deletions(-)
+
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -254,12 +254,10 @@ enum {
+ 	 * callbacks.
+ 	 */
+ 	MSI_FLAG_USE_DEF_CHIP_OPS	= (1 << 1),
+-	/* Build identity map between hwirq and irq */
+-	MSI_FLAG_IDENTITY_MAP		= (1 << 2),
+ 	/* Support multiple PCI MSI interrupts */
+-	MSI_FLAG_MULTI_PCI_MSI		= (1 << 3),
++	MSI_FLAG_MULTI_PCI_MSI		= (1 << 2),
+ 	/* Support PCI MSIX interrupts */
+-	MSI_FLAG_PCI_MSIX		= (1 << 4),
++	MSI_FLAG_PCI_MSIX		= (1 << 3),
+ };
+ 
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -268,7 +268,7 @@ int msi_domain_alloc_irqs(struct irq_dom
+ 	struct msi_domain_ops *ops = info->ops;
+ 	msi_alloc_info_t arg;
+ 	struct msi_desc *desc;
+-	int i, ret, virq = -1;
++	int i, ret, virq;
+ 
+ 	ret = ops->msi_check(domain, info, dev);
+ 	if (ret == 0)
+@@ -278,12 +278,8 @@ int msi_domain_alloc_irqs(struct irq_dom
+ 
+ 	for_each_msi_entry(desc, dev) {
+ 		ops->set_desc(&arg, desc);
+-		if (info->flags & MSI_FLAG_IDENTITY_MAP)
+-			virq = (int)ops->get_hwirq(info, &arg);
+-		else
+-			virq = -1;
+ 
+-		virq = __irq_domain_alloc_irqs(domain, virq, desc->nvec_used,
++		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
+ 					       dev_to_node(dev), &arg, false);
+ 		if (virq < 0) {
+ 			ret = -ENOSPC;
+
+
