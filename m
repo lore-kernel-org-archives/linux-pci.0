@@ -1,97 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:3236 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933672AbcIFWA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 18:00:26 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 1/4] pci: Add is_removed state
-Date: Tue,  6 Sep 2016 16:00:16 -0600
-Message-Id: <1473199219-3369-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
-References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 5 Sep 2016 15:57:51 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Subject: Re: [PATCH v4 05/15] drivers: platform: add fwnode base platform
+ devices retrieval
+Message-ID: <20160905145751.GA7480@red-moon>
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1471274620-20754-6-git-send-email-lorenzo.pieralisi@arm.com>
+ <7659b956-c49d-bd0d-7a1d-8dfc3da6f409@linaro.org>
+MIME-Version: 1.0
+In-Reply-To: <7659b956-c49d-bd0d-7a1d-8dfc3da6f409@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel@lists.infradead.org, Marc Zyngier <marc.zyngier@arm.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ linux-pci@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Nate Watterson <nwatters@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
+ Dennis Chen <dennis.chen@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a new state for devices that were once in the system, but
-unexpectedly removed. This is so device teardown functions can observe
-the device is not accessible so it may skip attempting to initialize
-the hardware.
+On Mon, Sep 05, 2016 at 09:19:43PM +0800, Hanjun Guo wrote:
+> On 2016/8/15 23:23, Lorenzo Pieralisi wrote:
+> >The platform device kernel API does not provide functions to
+> >retrieve a platform device through the corresponding struct
+> >device fwnode pointer.
+> >
+> >Implement the fwnode platform_device look-up in drivers core
+> >code by using the bus_find_device() API and a corresponding
+> >matching function. The OF equivalent (eg of_find_device_by_node())
+> >will reuse the newly introduced function when OF code will
+> >take care of setting up the device->fwnode value that is
+> >currently left dangling for platform devices instantiated out
+> >of device tree nodes.
+> >
+> >Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> >---
+> > drivers/base/platform.c         | 23 +++++++++++++++++++++++
+> > include/linux/platform_device.h |  3 +++
+> > 2 files changed, 26 insertions(+)
+> >
+> >diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+> >index 6482d47..3ef150d 100644
+> >--- a/drivers/base/platform.c
+> >+++ b/drivers/base/platform.c
+> >@@ -760,6 +760,29 @@ err_out:
+> > }
+> > EXPORT_SYMBOL_GPL(__platform_create_bundle);
+> >
+> >+static int fwnode_dev_match(struct device *dev, void *data)
+> >+{
+> >+	return dev->fwnode == data;
+> >+}
+> >+
+> >+/**
+> >+ * platform_find_device_by_fwnode() - Find the platform_device associated
+> >+ *				      with a fwnode
+> >+ * @fwnode: Pointer to firmware node
+> >+ *
+> >+ * Returns platform_device pointer, or NULL if not found
+> >+ */
+> >+struct platform_device *
+> >+platform_find_device_by_fwnode(struct fwnode_handle *fwnode)
+> >+{
+> >+	struct device *dev;
+> >+
+> >+	dev = bus_find_device(&platform_bus_type, NULL, fwnode,
+> >+			      fwnode_dev_match);
+> >+	return dev ? to_platform_device(dev) : NULL;
+> >+}
+> >+EXPORT_SYMBOL(platform_find_device_by_fwnode);
+> 
+> As SMMU is registered as platform devices, I think we need such
+> API to retrieve the platform device with fwnode handle, actually
+> Kefeng introduced a similar patch [1], but your patch is more
+> generic, so this patch make sense to me,
+> 
+> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-The pciehp and pcie-dpc drivers are aware of when the link is down, so
-they explicitly set this flag when its handlers detect the device is gone.
+Thanks ! Strictly speaking, with Robin's new series:
 
-The flag is also cached any time pci_device_is_present returns false. The
-function checks the flag first to avoid additional config accesses to
-removed devices.
+https://lists.linuxfoundation.org/pipermail/iommu/2016-August/018230.html
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/hotplug/pciehp_pci.c | 2 ++
- drivers/pci/pci.c                | 9 ++++++++-
- drivers/pci/pcie/pcie-dpc.c      | 1 +
- include/linux/pci.h              | 1 +
- 4 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 9e69403..299ea5e 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -109,6 +109,8 @@ int pciehp_unconfigure_device(struct slot *p_slot)
- 				break;
- 			}
- 		}
-+		if (!presence)
-+			dev->is_removed = 1;
- 		pci_stop_and_remove_bus_device(dev);
- 		/*
- 		 * Ensure that no new Requests will be generated from
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d51..010e5f6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4924,7 +4924,14 @@ bool pci_device_is_present(struct pci_dev *pdev)
- {
- 	u32 v;
- 
--	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
-+	if (pdev->is_removed)
-+		return false;
-+
-+	if (!pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0)) {
-+		pdev->is_removed = 1;
-+		return false;
-+	}
-+	return true;
- }
- EXPORT_SYMBOL_GPL(pci_device_is_present);
- 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 9811b14..2e5876c5 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -46,6 +46,7 @@ static void interrupt_event_handler(struct work_struct *work)
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
- 					 bus_list) {
- 		pci_dev_get(dev);
-+		dev->is_removed = 1;
- 		pci_stop_and_remove_bus_device(dev);
- 		pci_dev_put(dev);
- 	}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7256f33..865d3ec 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -334,6 +334,7 @@ struct pci_dev {
- 	unsigned int	multifunction:1;/* Part of multi-function device */
- 	/* keep track of device state */
- 	unsigned int	is_added:1;
-+	unsigned int	is_removed:1;	/* device was surprise removed */
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
- 	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
--- 
-2.7.2
+(and corresponding v5 of this one that I have rebased on top of it) we
+do not need this patch any longer and it is not really that generic
+keeping in mind that it can't be used for DT matching (because in DT
+dev->fwnode is dangling); I will see if I keep this patch according
+to dependencies.
 
+Side note: I have a problem with [1], since that code is there to
+implement DT phandles in ACPI IIUC and we must really prevent that :)
+
+Thanks !
+Lorenzo
+
+> Thanks
+> Hanjun
+> 
+> [1]: https://patchwork.kernel.org/patch/7743661/
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
