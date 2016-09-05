@@ -1,90 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23776 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935545AbcIPUCf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:02:35 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v14 00/17] PCI: Fixup for 64bit resource with sparc
-Date: Fri, 16 Sep 2016 13:01:50 -0700
-Message-Id: <20160916200207.21439-1-yinghai@kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:52762 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935428AbcIEQw2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2016 12:52:28 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>,
+        Jason Taylor <jason.taylor@simplivity.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH 4.4 028/113] genirq/msi: Make sure PCI MSIs are activated early
+Date: Mon,  5 Sep 2016 18:43:51 +0200
+Message-Id: <20160905164350.435027692@linuxfoundation.org>
+In-Reply-To: <20160905164349.217621339@linuxfoundation.org>
+References: <20160905164349.217621339@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
-After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
-to 64-bit resources), we have several reports on resource allocation
-failure, and we try to fix the problem with resource clip, and find
-more problems.
+------------------
 
-One is from sparc that have problem with clip as we don't parse
-mem64 for it.
+From: Marc Zyngier <marc.zyngier@arm.com>
 
-This patchset try to fix the problem for sparc.
+commit f3b0946d629c8bfbd3e5f038e30cb9c711a35f10 upstream.
 
-patch 1-5: try to fix the pci mmap for proc path for sparc, that will
-make fix for sparc 64bit resource offset handling much simple.
+Bharat Kumar Gogada reported issues with the generic MSI code, where the
+end-point ended up with garbage in its MSI configuration (both for the vector
+and the message).
 
-patch 6-12: parse MEM64 for sparc and other system with OF.
-So device 64bit resource could find their parent resource.
+It turns out that the two MSI paths in the kernel are doing slightly different
+things:
 
-patch 13-16: MMIO64 handling enhancement
-        treat non-pref mmio64 if parent bridges are all pcie.
+generic MSI: disable MSI -> allocate MSI -> enable MSI -> setup EP
+PCI MSI: disable MSI -> allocate MSI -> setup EP -> enable MSI
 
-patch 17: restore old pref allocation logic if hostbridge does not support mmio64.
+And it turns out that end-points are allowed to latch the content of the MSI
+configuration registers as soon as MSIs are enabled.  In Bharat's case, the
+end-point ends up using whatever was there already, which is not what you
+want.
 
-Khalid Aziz tested on some sparc platforms that have different offset to
-mem space start or support 64bit mmio.
+In order to make things converge, we introduce a new MSI domain flag
+(MSI_FLAG_ACTIVATE_EARLY) that is unconditionally set for PCI/MSI. When set,
+this flag forces the programming of the end-point as soon as the MSIs are
+allocated.
 
--v14: update patchset on linus/master of 2016-09-16
+A consequence of this is that we have an extra activate in irq_startup, but
+that should be without much consequence.
 
-Yinghai Lu (17):
-  PCI: Fix proc mmap on sparc
-  PCI: Let pci_mmap_page_range() take resource address
-  PCI: Remove __pci_mmap_make_offset()
-  PCI: Check resource alignment for /sys pci_mmap_resource path
-  sparc/PCI: Use correct offset for bus address to resource
-  PCI: Add pci_find_bus_resource()
-  sparc/PCI: Reserve legacy mmio after PCI mmio
-  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  sparc/PCI: Keep resource idx order with bridge register number
-  powerpc/PCI: Keep resource idx order with bridge register number
-  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-  PCI: Check pref compatible bit for mem64 resource of PCIe device
-  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-  PCI: Add has_mem64 for struct host_bridge
-  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+tglx:
 
- arch/microblaze/pci/pci-common.c  |  74 ++-------------------
- arch/powerpc/kernel/pci-common.c  |  74 ++-------------------
- arch/powerpc/kernel/pci_of_scan.c |  12 +++-
- arch/sparc/kernel/of_device_32.c  |   5 +-
- arch/sparc/kernel/of_device_64.c  |   5 +-
- arch/sparc/kernel/pci.c           | 132 ++++----------------------------------
- arch/sparc/kernel/pci_common.c    |  91 +++++++++++++++-----------
- arch/sparc/kernel/pci_impl.h      |   5 ++
- arch/xtensa/kernel/pci.c          |  75 +++-------------------
- drivers/of/address.c              |   4 +-
- drivers/pci/bus.c                 |   4 +-
- drivers/pci/pci-sysfs.c           |  35 +++++++---
- drivers/pci/pci.c                 |  31 +++++----
- drivers/pci/pci.h                 |   4 +-
- drivers/pci/probe.c               |  40 ++++++++++++
- drivers/pci/proc.c                |  60 ++++++++++++++---
- drivers/pci/setup-bus.c           |  65 ++++++++++++++++---
- drivers/pci/setup-res.c           |  13 +++-
- include/linux/pci.h               |   4 ++
- 19 files changed, 326 insertions(+), 407 deletions(-)
+ - Several people reported a VMWare regression with PCI/MSI-X passthrough. It
+   turns out that the patch also cures that issue.
 
--- 
-2.8.3
+ - We need to have a look at the MSI disable interrupt path, where we write
+   the msg to all zeros without disabling MSI in the PCI device. Is that
+   correct?
+
+Fixes: 52f518a3a7c2 "x86/MSI: Use hierarchical irqdomains to manage MSI interrupts"
+Reported-and-tested-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Reported-and-tested-by: Foster Snowhill <forst@forstwoof.ru>
+Reported-by: Matthias Prager <linux@matthiasprager.de>
+Reported-by: Jason Taylor <jason.taylor@simplivity.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Link: http://lkml.kernel.org/r/1468426713-31431-1-git-send-email-marc.zyngier@arm.com
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ drivers/pci/msi.c   |    2 ++
+ include/linux/msi.h |    2 ++
+ kernel/irq/msi.c    |   11 +++++++++++
+ 3 files changed, 15 insertions(+)
+
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1278,6 +1278,8 @@ struct irq_domain *pci_msi_create_irq_do
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		pci_msi_domain_update_chip_ops(info);
+ 
++	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
++
+ 	domain = msi_create_irq_domain(fwnode, info, parent);
+ 	if (!domain)
+ 		return NULL;
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -258,6 +258,8 @@ enum {
+ 	MSI_FLAG_MULTI_PCI_MSI		= (1 << 2),
+ 	/* Support PCI MSIX interrupts */
+ 	MSI_FLAG_PCI_MSIX		= (1 << 3),
++	/* Needs early activate, required for PCI */
++	MSI_FLAG_ACTIVATE_EARLY		= (1 << 4),
+ };
+ 
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -303,6 +303,17 @@ int msi_domain_alloc_irqs(struct irq_dom
+ 		else
+ 			dev_dbg(dev, "irq [%d-%d] for MSI\n",
+ 				virq, virq + desc->nvec_used - 1);
++		/*
++		 * This flag is set by the PCI layer as we need to activate
++		 * the MSI entries before the PCI layer enables MSI in the
++		 * card. Otherwise the card latches a random msi message.
++		 */
++		if (info->flags & MSI_FLAG_ACTIVATE_EARLY) {
++			struct irq_data *irq_data;
++
++			irq_data = irq_domain_get_irq_data(domain, desc->irq);
++			irq_domain_activate_irq(irq_data);
++		}
+ 	}
+ 
+ 	return 0;
+
 
