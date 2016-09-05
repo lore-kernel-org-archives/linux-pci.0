@@ -1,177 +1,91 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: arnd@arndb.de,
-	hanjun.guo@linaro.org,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com,
-	cov@codeaurora.org,
-	dhdang@apm.com,
-	ard.biesheuvel@linaro.org,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	gabriele.paoloni@huawei.com,
-	jhugo@codeaurora.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
-Date: Fri,  9 Sep 2016 21:24:04 +0200
-Message-Id: <1473449047-10499-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473449047-10499-1-git-send-email-tn@semihalf.com>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+Return-Path: <yu.c.chen@intel.com>
+Return-Path: <yu.c.chen@intel.com>
+Date: Mon, 5 Sep 2016 12:01:21 +0800
+From: Chen Yu <yu.c.chen@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH][RFC v3] PCI: Workaround to enable poweroff on Mac Pro 11
+Message-ID: <20160905040121.GA10008@sharon>
+References: <1471595425-1752-1-git-send-email-yu.c.chen@intel.com>
+ <20160824141731.GA23108@wunner.de>
+ <20160902162527.GA10403@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160902162527.GA10403@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms may not be fully compliant with generic set of PCI config
-accessors. For these cases we implement the way to overwrite CFG accessors
-set and configuration space range.
-
-In first place pci_mcfg_parse() saves machine's IDs and revision number
-(these come from MCFG header) in order to match against known quirk entries.
-Then the algorithm traverses available quirk list (static array),
-matches against <oem_id, oem_table_id, rev, domain, bus number range> and
-returns custom PCI config ops and/or CFG resource structure.
-
-When adding new quirk there are two possibilities:
-1. Override default pci_generic_ecam_ops ops but CFG resource comes from MCFG
-{ "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &foo_ops, MCFG_RES_EMPTY },
-2. Override default pci_generic_ecam_ops ops and CFG resource. For this case
-it is also allowed get CFG resource from quirk entry w/o having it in MCFG.
-{ "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &boo_ops,
-  DEFINE_RES_MEM(START, SIZE) },
-
-pci_generic_ecam_ops and MCFG entries will be used for platforms
-free from quirks.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Christopher Covington <cov@codeaurora.org>
----
- drivers/acpi/pci_mcfg.c | 80 +++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 74 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index ffcc651..2b8acc7 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -32,6 +32,59 @@ struct mcfg_entry {
- 	u8			bus_start;
- 	u8			bus_end;
- };
-+struct mcfg_fixup {
-+	char oem_id[ACPI_OEM_ID_SIZE + 1];
-+	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
-+	u32 oem_revision;
-+	u16 seg;
-+	struct resource bus_range;
-+	struct pci_ecam_ops *ops;
-+	struct resource cfgres;
-+};
-+
-+#define MCFG_DOM_ANY			(-1)
-+#define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
-+						((end) - (start) + 1),	\
-+						NULL, IORESOURCE_BUS)
-+#define MCFG_BUS_ANY		MCFG_BUS_RANGE(0x0, 0xff)
-+#define MCFG_RES_EMPTY		DEFINE_RES_NAMED(0, 0, NULL, 0)
-+
-+static struct mcfg_fixup mcfg_quirks[] = {
-+/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
-+};
-+
-+static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-+static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
-+static u32 mcfg_oem_revision;
-+
-+static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
-+				  struct resource *cfgres,
-+				  struct pci_ecam_ops **ecam_ops)
-+{
-+	struct mcfg_fixup *f;
-+	int i;
-+
-+	/*
-+	 * First match against PCI topology <domain:bus> then use OEM ID, OEM
-+	 * table ID, and OEM revision from MCFG table standard header.
-+	 */
-+	for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
-+		if (f->seg == root->segment &&
-+		    resource_contains(&f->bus_range, &root->secondary) &&
-+		    !memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
-+		    !memcmp(f->oem_table_id, mcfg_oem_table_id,
-+		            ACPI_OEM_TABLE_ID_SIZE) &&
-+		    f->oem_revision == mcfg_oem_revision) {
-+			if (f->cfgres.start)
-+				*cfgres = f->cfgres;
-+			if (f->ops)
-+				*ecam_ops =  f->ops;
-+			dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
-+				 f->oem_id, f->oem_table_id, f->oem_revision);
-+			return;
-+		}
-+	}
-+}
- 
- /* List to save MCFG entries */
- static LIST_HEAD(pci_mcfg_list);
-@@ -61,14 +114,24 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
- 
- 	}
- 
--	if (!root->mcfg_addr)
--		return -ENXIO;
--
- skip_lookup:
- 	memset(&res, 0, sizeof(res));
--	res.start = root->mcfg_addr + (bus_res->start << 20);
--	res.end = res.start + (resource_size(bus_res) << 20) - 1;
--	res.flags = IORESOURCE_MEM;
-+	if (root->mcfg_addr) {
-+		res.start = root->mcfg_addr + (bus_res->start << 20);
-+		res.end = res.start + (resource_size(bus_res) << 20) - 1;
-+		res.flags = IORESOURCE_MEM;
-+	}
-+
-+	/*
-+	 * Let to override default ECAM ops and CFG resource range.
-+	 * Also, this might even retrieve CFG resource range in case MCFG
-+	 * does not have it. Invalid CFG start address means MCFG firmware bug
-+	 * or we need another quirk in array.
-+	 */
-+	pci_mcfg_match_quirks(root, &res, &ops);
-+	if (!res.start)
-+		return -ENXIO;
-+
- 	*cfgres = res;
- 	*ecam_ops = ops;
- 	return 0;
-@@ -101,6 +164,11 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
- 		list_add(&e->list, &pci_mcfg_list);
- 	}
- 
-+	/* Save MCFG IDs and revision for quirks matching */
-+	memcpy(mcfg_oem_id, header->oem_id, ACPI_OEM_ID_SIZE);
-+	memcpy(mcfg_oem_table_id, header->oem_table_id, ACPI_OEM_TABLE_ID_SIZE);
-+	mcfg_oem_revision = header->revision;
-+
- 	pr_info("MCFG table detected, %d entries\n", n);
- 	return 0;
- }
--- 
-1.9.1
+On Fri, Sep 02, 2016 at 11:25:27AM -0500, Bjorn Helgaas wrote:
+> On Wed, Aug 24, 2016 at 04:17:31PM +0200, Lukas Wunner wrote:
+> > On Fri, Aug 19, 2016 at 04:30:25PM +0800, Chen Yu wrote:
+> > > People reported that they can not do a poweroff nor a
+> > > suspend to ram on their Mac Pro 11. After some investigations
+> > > it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
+> > > mm windows to ([mem 0x7fa00000-0x7fbfffff] and
+> > > [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+> > > io resource 0x1804 becomes unaccessible immediately, where the
+> > > ACPI Sleep register is located, as a result neither poweroff(S5)
+> > > nor suspend to ram(S3) works.
+> > 
+> > To provide a bit more context:
+> > 
+> > The root port in question (0000:00:1c.0) is not listed in the DSDT.
+> > On macOS, only devices present in the ACPI namespace are incorporated
+> > into the I/O Kit registry. Consequently macOS pretends that this root
+> > port doesn't exist. It's not listed in the "ioreg -l" output and thus
+> > no driver is attached to this device.
+> > 
+> > So what we're dealing with is sloppiness on the part of Apple:
+> > Some engineer probably forgot to disable this unused root port
+> > and they didn't notice it during testing because their OS ignores
+> > such devices.
+> > 
+> > We could in principle achieve the same behaviour by adding a PCI
+> > device only if it has an ACPI companion, perhaps quirk this only
+> > to Macs. I'm not sure if that's the right thing to do though.
+> > What if they hide devices from macOS but we want to access them
+> > on Linux?
+> > 
+> > What's really odd is that changing *memory* windows affects
+> > accessibility of *I/O ports*.
+> > 
+> > One theory would be that I/O ports are somehow mapped into memory.
+> > The GPIO pins of Intel chipsets are usually accessible through
+> > I/O ports, but I've recently looked at the DSDT of the newest
+> > MacBook9,1 (2016) and it looks like they're now accessed through
+> > SystemMemory instead of SystemIO. Perhaps someone at Intel knows
+> > about these intricacies of their chipsets.
+> 
+> Hey, look, Chen Yu works at Intel :)
+>
+Ah yes, please give me some time and I'll try to search for related info
+and give feeback later.
+> This apparent connection between memory windows and I/O port
+> accessibility is indeed very concerning.
+> 
+> I know there are PCI host bridges with windows that translate CPU
+> memory accesses into PCI I/O port accesses.  If this is one of them,
+> and it has such a window enabled at the address we happened to choose
+> for the mem window, that would be a problem.
+> 
+> I assume this would be documented somewhere in the chipset datasheet.
+> 
+> > If I/O ports are indeed mapped into memory, we need to find a way
+> > to identify and reserve that region. So while this patch seems
+> > like a workable and sufficiently small fix, it might mask a larger
+> > underlying issue. It's certainly a problem though that these
+> > machines currently cannot power off or suspend.
+> > 
+> > FWIW, we have a somewhat similar issue with the Apple gmux
+> > (a microcontroller built into dual GPU MacBook Pros). That chip
+> > is attached to the LPC bus and accessed through I/O ports.
+> > It turns out that once VGA IO is locked to the discrete GPU
+> > using vgaarb, gmux' I/O ports suddenly become inaccessible.
+> > Apparently its I/O ports are routed to the secondary PCI bus
+> > to which the discrete GPU is connected, and no longer to the
+> > root bus on which the LPC bridge resides. However gmux' I/O ports
+> > are in the 0x700-0x7ff range, whereas the VGA registers are in
+> > the 0x3b0-0x3bb and 0x3c0-0x3df range. So that's another oddity
+> > of Intel chipsets with regards to I/O accessibility.
+> > 
