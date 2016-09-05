@@ -1,252 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54638 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757876AbcILVJt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 17:09:49 -0400
-Subject: [PATCH v2 7/8] PCI: pciehp: Clean up dmesg "Slot(%s)" messages
-To: Mayurkumar Patel <mayurkumar.patel@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
-        linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        mika.westerberg@linux.intel.com
-Date: Mon, 12 Sep 2016 16:09:43 -0500
-Message-ID: <20160912210943.22258.4748.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 04/15] drivers: acpi: iort: add support for IOMMU
+ fwnode registration
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1471274620-20754-5-git-send-email-lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <408a90be-df15-b4fb-169d-81c1743c6c16@linaro.org>
+Date: Mon, 5 Sep 2016 21:00:09 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1471274620-20754-5-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Print slot name consistently as "Slot(%s)".  I don't know whether that's
-ideal, but we can at least do it the same way all the time.  No functional
-change intended.
+On 2016/8/15 23:23, Lorenzo Pieralisi wrote:
+> The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+> components that allow creating the kernel data structures required to
+> probe and initialize the IOMMU devices.
+>
+> This patch provides support in the IORT kernel code to register IOMMU
+> components and their respective fwnode.
+>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>  drivers/acpi/arm64/iort.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/iort.h      |  8 ++++++
+>  2 files changed, 73 insertions(+)
+>
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index cad7d1d..01a5258 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -20,7 +20,9 @@
+>
+>  #include <linux/iort.h>
+>  #include <linux/kernel.h>
+> +#include <linux/list.h>
+>  #include <linux/pci.h>
+> +#include <linux/slab.h>
+>
+>  struct iort_its_msi_chip {
+>  	struct list_head	list;
+> @@ -28,6 +30,69 @@ struct iort_its_msi_chip {
+>  	u32			translation_id;
+>  };
+>
+> +struct iort_fwnode {
+> +	struct list_head list;
+> +	struct acpi_iort_node *iort_node;
+> +	struct fwnode_handle *fwnode;
+> +};
+> +static LIST_HEAD(iort_fwnode_list);
+> +static DEFINE_SPINLOCK(iort_fwnode_lock);
+> +
+> +/**
+> + * iort_set_fwnode() - Create iort_fwnode and use it to register
+> + *		       iommu data in the iort_fwnode_list
+> + *
+> + * @node: IORT table node associated with the IOMMU
+> + * @fwnode: fwnode associated with the IORT node
+> + *
+> + * Returns: 0 on success
+> + *          <0 on failure
+> + */
+> +int iort_set_fwnode(struct acpi_iort_node *iort_node,
+> +		    struct fwnode_handle *fwnode)
+> +{
+> +	struct iort_fwnode *np;
+> +
+> +	np = kzalloc(sizeof(struct iort_fwnode), GFP_ATOMIC);
+> +
+> +	if (WARN_ON(!np))
+> +		return -ENOMEM;
+> +
+> +	INIT_LIST_HEAD(&np->list);
+> +	np->iort_node = iort_node;
+> +	np->fwnode = fwnode;
+> +
+> +	spin_lock(&iort_fwnode_lock);
+> +	list_add_tail(&np->list, &iort_fwnode_list);
+> +	spin_unlock(&iort_fwnode_lock);
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
+> + *
+> + * @node: IORT table node to be looked-up
+> + *
+> + * Returns: fwnode_handle pointer on success, NULL on failure
+> +*/
+> +struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
+> +{
+> +	struct iort_fwnode *curr;
+> +	struct fwnode_handle *fwnode = NULL;
+> +
+> +	spin_lock(&iort_fwnode_lock);
+> +	list_for_each_entry(curr, &iort_fwnode_list, list) {
+> +		if (curr->iort_node == node) {
+> +			fwnode = curr->fwnode;
+> +			break;
+> +		}
+> +	}
+> +	spin_unlock(&iort_fwnode_lock);
+> +
+> +	return fwnode;
+> +}
+> +
+>  typedef acpi_status (*iort_find_node_callback)
+>  	(struct acpi_iort_node *node, void *context);
+>
+> diff --git a/include/linux/iort.h b/include/linux/iort.h
+> index 9bb30c5..666a3de 100644
+> --- a/include/linux/iort.h
+> +++ b/include/linux/iort.h
+> @@ -30,12 +30,20 @@ struct fwnode_handle *iort_find_domain_token(int trans_id);
+>  void iort_table_detect(void);
+>  u32 iort_msi_map_rid(struct device *dev, u32 req_id);
+>  struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
+> +int iort_set_fwnode(struct acpi_iort_node *iort_node,
+> +		    struct fwnode_handle *fwnode);
+> +struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node);
+>  #else
+>  static inline void iort_table_detect(void) { }
+>  static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
+>  { return req_id; }
+>  static inline struct irq_domain *
+>  iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
+> +static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
+> +				  struct fwnode_handle *fwnode)
+> +{ return -ENODEV; }
+> +static inline struct fwnode_handle *
+> +iort_get_fwnode(struct acpi_iort_node *node) { return NULL; }
+>  #endif
+>
+>  #define IORT_ACPI_DECLARE(name, table_id, fn)		\
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp_ctrl.c |   56 ++++++++++++++++++-------------------
- drivers/pci/hotplug/pciehp_hpc.c  |   12 ++++----
- 2 files changed, 33 insertions(+), 35 deletions(-)
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index a787684..bf50f26 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -106,7 +106,7 @@ static int board_added(struct slot *p_slot)
- 
- 	/* Check for a power fault */
- 	if (ctrl->power_fault_detected || pciehp_query_power_fault(p_slot)) {
--		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(p_slot));
-+		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(p_slot));
- 		retval = -EIO;
- 		goto err_exit;
- 	}
-@@ -254,11 +254,11 @@ static void handle_button_press_event(struct slot *p_slot)
- 		pciehp_get_power_status(p_slot, &getstatus);
- 		if (getstatus) {
- 			p_slot->state = BLINKINGOFF_STATE;
--			ctrl_info(ctrl, "PCI slot #%s - powering off due to button press\n",
-+			ctrl_info(ctrl, "Slot(%s): Powering off due to button press\n",
- 				  slot_name(p_slot));
- 		} else {
- 			p_slot->state = BLINKINGON_STATE;
--			ctrl_info(ctrl, "PCI slot #%s - powering on due to button press\n",
-+			ctrl_info(ctrl, "Slot(%s) Powering on due to button press\n",
- 				  slot_name(p_slot));
- 		}
- 		/* blink green LED and turn off amber */
-@@ -273,14 +273,14 @@ static void handle_button_press_event(struct slot *p_slot)
- 		 * press the attention again before the 5 sec. limit
- 		 * expires to cancel hot-add or hot-remove
- 		 */
--		ctrl_info(ctrl, "Button cancel on Slot(%s)\n", slot_name(p_slot));
-+		ctrl_info(ctrl, "Slot(%s): Button cancel\n", slot_name(p_slot));
- 		cancel_delayed_work(&p_slot->work);
- 		if (p_slot->state == BLINKINGOFF_STATE)
- 			pciehp_green_led_on(p_slot);
- 		else
- 			pciehp_green_led_off(p_slot);
- 		pciehp_set_attention_status(p_slot, 0);
--		ctrl_info(ctrl, "PCI slot #%s - action canceled due to button press\n",
-+		ctrl_info(ctrl, "Slot(%s): Action canceled due to button press\n",
- 			  slot_name(p_slot));
- 		p_slot->state = STATIC_STATE;
- 		break;
-@@ -291,10 +291,12 @@ static void handle_button_press_event(struct slot *p_slot)
- 		 * this means that the previous attention button action
- 		 * to hot-add or hot-remove is undergoing
- 		 */
--		ctrl_info(ctrl, "Button ignore on Slot(%s)\n", slot_name(p_slot));
-+		ctrl_info(ctrl, "Slot(%s): Button ignored\n",
-+			  slot_name(p_slot));
- 		break;
- 	default:
--		ctrl_warn(ctrl, "ignoring invalid state %#x\n", p_slot->state);
-+		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
-+			 slot_name(p_slot), p_slot->state);
- 		break;
- 	}
- }
-@@ -317,31 +319,27 @@ static void handle_link_event(struct slot *p_slot, u32 event)
- 		break;
- 	case POWERON_STATE:
- 		if (event == INT_LINK_UP) {
--			ctrl_info(ctrl,
--				  "Link Up event ignored on slot(%s): already powering on\n",
-+			ctrl_info(ctrl, "Slot(%s): Link Up event ignored; already powering on\n",
- 				  slot_name(p_slot));
- 		} else {
--			ctrl_info(ctrl,
--				  "Link Down event queued on slot(%s): currently getting powered on\n",
-+			ctrl_info(ctrl, "Slot(%s): Link Down event queued; currently getting powered on\n",
- 				  slot_name(p_slot));
- 			pciehp_queue_power_work(p_slot, DISABLE_REQ);
- 		}
- 		break;
- 	case POWEROFF_STATE:
- 		if (event == INT_LINK_UP) {
--			ctrl_info(ctrl,
--				  "Link Up event queued on slot(%s): currently getting powered off\n",
-+			ctrl_info(ctrl, "Slot(%s): Link Up event queued; currently getting powered off\n",
- 				  slot_name(p_slot));
- 			pciehp_queue_power_work(p_slot, ENABLE_REQ);
- 		} else {
--			ctrl_info(ctrl,
--				  "Link Down event ignored on slot(%s): already powering off\n",
-+			ctrl_info(ctrl, "Slot(%s): Link Down event ignored; already powering off\n",
- 				  slot_name(p_slot));
- 		}
- 		break;
- 	default:
--		ctrl_err(ctrl, "ignoring invalid state %#x on slot(%s)\n",
--			 p_slot->state, slot_name(p_slot));
-+		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
-+			 slot_name(p_slot), p_slot->state);
- 		break;
- 	}
- }
-@@ -396,13 +394,13 @@ int pciehp_enable_slot(struct slot *p_slot)
- 
- 	pciehp_get_adapter_status(p_slot, &getstatus);
- 	if (!getstatus) {
--		ctrl_info(ctrl, "No adapter on slot(%s)\n", slot_name(p_slot));
-+		ctrl_info(ctrl, "Slot(%s): No adapter\n", slot_name(p_slot));
- 		return -ENODEV;
- 	}
- 	if (MRL_SENS(p_slot->ctrl)) {
- 		pciehp_get_latch_status(p_slot, &getstatus);
- 		if (getstatus) {
--			ctrl_info(ctrl, "Latch open on slot(%s)\n",
-+			ctrl_info(ctrl, "Slot(%s): Latch open\n",
- 				  slot_name(p_slot));
- 			return -ENODEV;
- 		}
-@@ -411,7 +409,7 @@ int pciehp_enable_slot(struct slot *p_slot)
- 	if (POWER_CTRL(p_slot->ctrl)) {
- 		pciehp_get_power_status(p_slot, &getstatus);
- 		if (getstatus) {
--			ctrl_info(ctrl, "Already enabled on slot(%s)\n",
-+			ctrl_info(ctrl, "Slot(%s): Already enabled\n",
- 				  slot_name(p_slot));
- 			return -EINVAL;
- 		}
-@@ -440,7 +438,7 @@ int pciehp_disable_slot(struct slot *p_slot)
- 	if (POWER_CTRL(p_slot->ctrl)) {
- 		pciehp_get_power_status(p_slot, &getstatus);
- 		if (!getstatus) {
--			ctrl_info(ctrl, "Already disabled on slot(%s)\n",
-+			ctrl_info(ctrl, "Slot(%s): Already disabled\n",
- 				  slot_name(p_slot));
- 			return -EINVAL;
- 		}
-@@ -468,17 +466,17 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
- 		p_slot->state = STATIC_STATE;
- 		break;
- 	case POWERON_STATE:
--		ctrl_info(ctrl, "Slot %s is already in powering on state\n",
-+		ctrl_info(ctrl, "Slot(%s): Already in powering on state\n",
- 			  slot_name(p_slot));
- 		break;
- 	case BLINKINGOFF_STATE:
- 	case POWEROFF_STATE:
--		ctrl_info(ctrl, "Already enabled on slot %s\n",
-+		ctrl_info(ctrl, "Slot(%s): Already enabled\n",
- 			  slot_name(p_slot));
- 		break;
- 	default:
--		ctrl_err(ctrl, "invalid state %#x on slot %s\n",
--			 p_slot->state, slot_name(p_slot));
-+		ctrl_err(ctrl, "Slot(%s): Invalid state %#x\n",
-+			 slot_name(p_slot), p_slot->state);
- 		break;
- 	}
- 	mutex_unlock(&p_slot->lock);
-@@ -505,17 +503,17 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
- 		p_slot->state = STATIC_STATE;
- 		break;
- 	case POWEROFF_STATE:
--		ctrl_info(ctrl, "Slot %s is already in powering off state\n",
-+		ctrl_info(ctrl, "Slot(%s): Already in powering off state\n",
- 			  slot_name(p_slot));
- 		break;
- 	case BLINKINGON_STATE:
- 	case POWERON_STATE:
--		ctrl_info(ctrl, "Already disabled on slot %s\n",
-+		ctrl_info(ctrl, "Slot(%s): Already disabled\n",
- 			  slot_name(p_slot));
- 		break;
- 	default:
--		ctrl_err(ctrl, "invalid state %#x on slot %s\n",
--			 p_slot->state, slot_name(p_slot));
-+		ctrl_err(ctrl, "Slot(%s): Invalid state %#x\n",
-+			 slot_name(p_slot), p_slot->state);
- 		break;
- 	}
- 	mutex_unlock(&p_slot->lock);
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 60e1d55..4582fdf 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -592,7 +592,7 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 
- 	/* Check Attention Button Pressed */
- 	if (events & PCI_EXP_SLTSTA_ABP) {
--		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
-+		ctrl_info(ctrl, "Slot(%s): Attention button pressed\n",
- 			  slot_name(slot));
- 		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
- 	}
-@@ -600,8 +600,8 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	/* Check Presence Detect Changed */
- 	if (events & PCI_EXP_SLTSTA_PDC) {
- 		present = !!(status & PCI_EXP_SLTSTA_PDS);
--		ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
--			  present ? "" : "not ", slot_name(slot));
-+		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
-+			  present ? "" : "not ");
- 		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
- 					     INT_PRESENCE_OFF);
- 	}
-@@ -609,13 +609,13 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	/* Check Power Fault Detected */
- 	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
- 		ctrl->power_fault_detected = 1;
--		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(slot));
-+		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
- 		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
- 	}
- 
- 	if (events & PCI_EXP_SLTSTA_DLLSC) {
--		ctrl_info(ctrl, "slot(%s): Link %s event\n",
--			  slot_name(slot), link ? "Up" : "Down");
-+		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
-+			  link ? "Up" : "Down");
- 		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
- 					     INT_LINK_DOWN);
- 	}
-
+Thanks
+Hanjun
