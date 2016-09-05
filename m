@@ -1,174 +1,268 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35725 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758555AbcIPORL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 10:17:11 -0400
-Date: Fri, 16 Sep 2016 09:17:08 -0500
-From: Rob Herring <robh@kernel.org>
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] pcie: qcom: add support to msm8996 PCIE controller
-Message-ID: <20160916141708.GA21504@rob-hp-laptop>
-References: <1473246412-24616-1-git-send-email-srinivas.kandagatla@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473246412-24616-1-git-send-email-srinivas.kandagatla@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 5/8] irqchip/gicv3-its: Refactor ITS DT init code to prepare for ACPI
+Date: Mon,  5 Sep 2016 22:05:37 +0200
+Message-Id: <1473105940-9761-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 07, 2016 at 12:06:52PM +0100, Srinivas Kandagatla wrote:
-> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
-> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
-> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
-> 
-> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
-> pipe clocks and smmu configuration are only setup after the phy is
-> powered on. It also adds ltssm_enable callback as it is very much
-> different to other supported SOCs in the driver.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> ---
-> 
-> I tested this patch along with phy driver patch on DB820c based on
-> APQ8096 on port A and port B using sata and ethernet controllers.
-> 
-> Thanks
-> srini
-> 
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  88 +++++++-
->  drivers/pci/host/pcie-qcom.c                       | 237 ++++++++++++++++++++-
->  2 files changed, 318 insertions(+), 7 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> index 4059a6f..1ddfcb4 100644
-> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -92,6 +92,18 @@
->  			- "aux"		Auxiliary (AUX) clock
->  			- "bus_master"	Master AXI clock
->  			- "bus_slave"	Slave AXI clock
-> +
-> +- clock-names:
-> +	Usage: required for msm8996/apq8096
-> +	Value type: <stringlist>
-> +	Definition: Should contain the following entries
-> +			- "aux"		Auxiliary (AUX) clock
-> +			- "bus_master"	Master AXI clock
-> +			- "bus_slave"	Slave AXI clock
-> +			- "pipe"	Pipe Clock driving internal logic.
-> +			- "cfg"		Configuration clk.
-> +			- "snoc_axi"	SNOC AXI clk
-> +			- "cnoc_ahb"	CNOC AHB clk
->  - resets:
->  	Usage: required
->  	Value type: <prop-encoded-array>
-> @@ -114,8 +126,15 @@
->  	Definition: Should contain the following entries
->  			- "core" Core reset
->  
-> +- iommus:
-> +	Usage: required for msm8996/apq8096
-> +	Value type: <prop-encoded-array>
-> +	Definition: Should point to the respective IOMMU block with master port
-> +		    as argument, see Documentation/devicetree/bindings/iommu/
-> +		    mediatek,iommu.txt for details.
-> +
->  - power-domains:
-> -	Usage: required for apq8084
-> +	Usage: required for apq8084 and msm8996/apq8096
->  	Value type: <prop-encoded-array>
->  	Definition: A phandle and power domain specifier pair to the
->  		    power domain which is responsible for collapsing
-> @@ -137,6 +156,11 @@
->  	Definition: A phandle to the analog power supply for IC which generates
->  		    reference clock
->  
-> +- vdda_1p8-supply:
+In order to add ACPI support we need to isolate ACPI&DT common code and
+move DT logic to corresponding functions. To achieve this we are using
+firmware agnostic handle which can be unpacked to either DT or ACPI node.
 
-Don't use '_' in property names.
+No functional changes other than a very minor one:
+1. Terminate its_init call with -ENODEV for non-DT case which allows
+to remove hack from its-gic-v3.c.
+2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+as a bonus we get nice string formatting.
+3. Since there is only one of ITS parent domain convert it to static global
+variable and drop the parameter from its_probe_one. Users can refer to it
+in more convenient way then.
 
-> +	Usage: required for msm8996/apq8096
-> +	Value type: <phandle>
-> +	Definition: A phandle to the analog power supply for PCIE_1P8
-> +
->  - phys:
->  	Usage: required for apq8084
->  	Value type: <phandle>
-> @@ -231,3 +255,65 @@
->  		pinctrl-0 = <&pcie0_pins_default>;
->  		pinctrl-names = "default";
->  	};
-> +
-> +* Example for apq8096:
-> +	pcie1: qcom,pcie@00608000 {
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c   | 65 ++++++++++++++++++++++----------------
+ drivers/irqchip/irq-gic-v3.c       |  7 ++--
+ include/linux/irqchip/arm-gic-v3.h |  4 +--
+ 3 files changed, 42 insertions(+), 34 deletions(-)
 
-pcie@...
-
-> +		compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
-> +		power-domains = <&gcc PCIE1_GDSC>;
-> +		bus-range = <0x00 0xff>;
-> +		num-lanes = <1>;
-> +
-> +		status  = "disabled";
-> +
-> +		reg = <0x00608000 0x2000>,
-> +		      <0x0d000000 0xf1d>,
-> +		      <0x0d000f20 0xa8>,
-> +		      <0x0d100000 0x100000>;
-> +
-> +		reg-names = "parf", "dbi", "elbi","config";
-> +
-> +		phys = <&pcie_phy 1>;
-> +		phy-names = "pciephy";
-> +
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		ranges = <0x01000000 0x0 0x0d200000 0x0d200000 0x0 0x100000>,
-> +			<0x02000000 0x0 0x0d300000 0x0d300000 0x0 0xd00000>;
-> +
-> +		interrupts = <GIC_SPI 413 IRQ_TYPE_NONE>;
-> +		interrupt-names = "msi";
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0x7>;
-> +		interrupt-map = <0 0 0 1 &intc 0 272 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-> +				<0 0 0 2 &intc 0 273 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-> +				<0 0 0 3 &intc 0 274 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-> +				<0 0 0 4 &intc 0 275 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-> +
-> +		pinctrl-names = "default", "sleep";
-> +		pinctrl-0 = <&pcie1_clkreq_default &pcie1_perst_default &pcie1_wake_default>;
-> +		pinctrl-1 = <&pcie1_clkreq_sleep &pcie1_perst_default &pcie1_wake_sleep>;
-> +
-> +
-> +		vreg-1.8-supply = <&pm8994_l12>;
-> +		vreg-0.9-supply = <&pm8994_l28>;
-
-Doesn't match binding?
-
-> +		iommus = <&anoc0_smmu>;
-> +
-> +		linux,pci-domain = <1>;
-> +
-> +		clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
-> +			<&gcc GCC_PCIE_1_AUX_CLK>,
-> +			<&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-> +			<&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
-> +			<&gcc GCC_PCIE_1_SLV_AXI_CLK>,
-> +			<&gcc GCC_AGGRE0_SNOC_AXI_CLK>,
-> +			<&gcc GCC_AGGRE0_CNOC_AHB_CLK>;
-> +
-> +		clock-names =  "pipe",
-> +				"aux",
-> +				"cfg",
-> +				"bus_master",
-> +				"bus_slave",
-> +				"snoc_axi",
-> +				"cnoc_ahb";
-> +
-> +	};
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 943442d..c7518c7 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -75,7 +75,7 @@ struct its_node {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	entry;
+ 	void __iomem		*base;
+-	unsigned long		phys_base;
++	phys_addr_t		phys_base;
+ 	struct its_cmd_block	*cmd_base;
+ 	struct its_cmd_block	*cmd_write;
+ 	struct its_baser	tables[GITS_BASER_NR_REGS];
+@@ -115,6 +115,7 @@ struct its_device {
+ static LIST_HEAD(its_nodes);
+ static DEFINE_SPINLOCK(its_lock);
+ static struct rdists *gic_rdists;
++static struct irq_domain *its_parent;
+ 
+ #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
+ #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
+@@ -1614,8 +1615,7 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
+ }
+ 
+-static int its_init_domain(struct device_node *node, struct its_node *its,
+-			   struct irq_domain *parent)
++static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
+ {
+ 	struct irq_domain *inner_domain;
+ 	struct msi_domain_info *info;
+@@ -1624,13 +1624,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	if (!info)
+ 		return -ENOMEM;
+ 
+-	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
+ 	if (!inner_domain) {
+ 		kfree(info);
+ 		return -ENOMEM;
+ 	}
+ 
+-	inner_domain->parent = parent;
++	inner_domain->parent = its_parent;
+ 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 	info->ops = &its_msi_domain_ops;
+ 	info->data = its;
+@@ -1639,43 +1639,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	return 0;
+ }
+ 
+-static int __init its_probe(struct device_node *node,
+-			    struct irq_domain *parent)
++static int __init its_probe_one(struct resource *res,
++				struct fwnode_handle *handle, int numa_node)
+ {
+-	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+ 
+-	err = of_address_to_resource(node, 0, &res);
+-	if (err) {
+-		pr_warn("%s: no regs?\n", node->full_name);
+-		return -ENXIO;
+-	}
+-
+-	its_base = ioremap(res.start, resource_size(&res));
++	its_base = ioremap(res->start, resource_size(res));
+ 	if (!its_base) {
+-		pr_warn("%s: unable to map registers\n", node->full_name);
++		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+ 		return -ENOMEM;
+ 	}
+ 
+ 	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+ 	if (val != 0x30 && val != 0x40) {
+-		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
++		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+ 		err = -ENODEV;
+ 		goto out_unmap;
+ 	}
+ 
+ 	err = its_force_quiescent(its_base);
+ 	if (err) {
+-		pr_warn("%s: failed to quiesce, giving up\n",
+-			node->full_name);
++		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+ 		goto out_unmap;
+ 	}
+ 
+-	pr_info("ITS: %s\n", node->full_name);
++	pr_info("ITS %pR\n", res);
+ 
+ 	its = kzalloc(sizeof(*its), GFP_KERNEL);
+ 	if (!its) {
+@@ -1687,9 +1679,9 @@ static int __init its_probe(struct device_node *node,
+ 	INIT_LIST_HEAD(&its->entry);
+ 	INIT_LIST_HEAD(&its->its_device_list);
+ 	its->base = its_base;
+-	its->phys_base = res.start;
++	its->phys_base = res->start;
+ 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+-	its->numa_node = of_node_to_nid(node);
++	its->numa_node = numa_node;
+ 
+ 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+ 	if (!its->cmd_base) {
+@@ -1736,7 +1728,7 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	err = its_init_domain(node, its, parent);
++	err = its_init_domain(handle, its);
+ 	if (err)
+ 		goto out_free_tables;
+ 
+@@ -1754,7 +1746,7 @@ out_free_its:
+ 	kfree(its);
+ out_unmap:
+ 	iounmap(its_base);
+-	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
++	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
+ 	return err;
+ }
+ 
+@@ -1782,10 +1774,10 @@ static struct of_device_id its_device_id[] = {
+ 	{},
+ };
+ 
+-int __init its_init(struct device_node *node, struct rdists *rdists,
+-	     struct irq_domain *parent_domain)
++static int __init its_of_probe(struct device_node *node)
+ {
+ 	struct device_node *np;
++	struct resource res;
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
+@@ -1795,8 +1787,27 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 			continue;
+ 		}
+ 
+-		its_probe(np, parent_domain);
++		if (of_address_to_resource(np, 0, &res)) {
++			pr_warn("%s: no regs?\n", np->full_name);
++			continue;
++		}
++
++		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
+ 	}
++	return 0;
++}
++
++int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
++		    struct irq_domain *parent_domain)
++{
++	struct device_node *of_node;
++
++	its_parent = parent_domain;
++	of_node = to_of_node(handle);
++	if (of_node)
++		its_of_probe(of_node);
++	else
++		return -ENODEV;
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index ede5672..1efc02a 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -910,7 +910,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 				 u64 redist_stride,
+ 				 struct fwnode_handle *handle)
+ {
+-	struct device_node *node;
+ 	u32 typer;
+ 	int gic_irqs;
+ 	int err;
+@@ -951,10 +950,8 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 
+ 	set_handle_irq(gic_handle_irq);
+ 
+-	node = to_of_node(handle);
+-	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
+-	    node) /* Temp hack to prevent ITS init for ACPI */
+-		its_init(node, &gic_data.rdists, gic_data.domain);
++	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis())
++		its_init(handle, &gic_data.rdists, gic_data.domain);
+ 
+ 	gic_smp_init();
+ 	gic_dist_init();
+diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+index 99ac022..8361c8d 100644
+--- a/include/linux/irqchip/arm-gic-v3.h
++++ b/include/linux/irqchip/arm-gic-v3.h
+@@ -430,9 +430,9 @@ struct rdists {
+ };
+ 
+ struct irq_domain;
+-struct device_node;
++struct fwnode_handle;
+ int its_cpu_init(void);
+-int its_init(struct device_node *node, struct rdists *rdists,
++int its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	     struct irq_domain *domain);
+ 
+ static inline bool gic_enable_sre(void)
+-- 
+1.9.1
