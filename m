@@ -1,178 +1,183 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27839 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965274AbcIPUHo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:07:44 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v14 05/17] sparc/PCI: Use correct offset for bus address to resource
-Date: Fri, 16 Sep 2016 13:01:55 -0700
-Message-Id: <20160916200207.21439-6-yinghai@kernel.org>
-In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
-References: <20160916200207.21439-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 4 Sep 2016 21:22:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+        rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+        hanjun.guo@linaro.org, okaya@codeaurora.org, jchandra@broadcom.com,
+        cov@codeaurora.org, dhdang@apm.com, ard.biesheuvel@linaro.org,
+        robert.richter@caviumnetworks.com, mw@semihalf.com,
+        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+        wangyijing@huawei.com, msalter@redhat.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linaro-acpi@lists.linaro.org, jcm@redhat.com,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH V5 2/5] PCI/ACPI: Move ACPI ECAM mapping to generic
+ MCFG driver
+Message-ID: <20160905022247.GC30488@localhost>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+ <1470661541-26270-3-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470661541-26270-3-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After we added 64bit mmio parsing, we got some "no compatible bridge window"
-warning on anther new model that support 64bit resource.
+On Mon, Aug 08, 2016 at 03:05:38PM +0200, Tomasz Nowicki wrote:
+> pci_acpi_setup_ecam_mapping() is not really ARM64 specific so move it out
+> of arch/arm64/ directory. In preparation for adding MCFG quirk handling
+> extend pci_acpi_setup_ecam_mapping() functionality to accept custom
+> PCI config accessors (function's argument).
+> 
+> For ARM64 ACPI based PCI host controller we still use pci_generic_ecam_ops.
 
-It turns out that we can not use mem_space.start as 64bit mem space
-offset, aka there is mem_space.start != offset.
+I'm not sure we gain much by moving pci_acpi_setup_ecam_mapping() from
+arm64 code to generic code, since nobody else uses it yet.  But if you
+do want to move it, can you do the move (with no other change at all)
+in one patch, and add the new "ops" argument in a second patch?  I
+just don't want the "ops" change to get lost in the noise of the move.
 
-Use child_phys_addr to calculate exact offset and record offset in
-pbm.
-
-After patch we get correct offset.
-
-/pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
-/pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
-/pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
-...
-pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
-
--v3: put back mem64_offset, as we found T4 has mem_offset != mem64_offset
-     check overlapping between mem64_space and mem_space.
--v7: after new pci_mmap_page_range patches.
--v8: remove change in pci_resource_to_user()
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: sparclinux@vger.kernel.org
----
- arch/sparc/kernel/pci.c        |  6 +++---
- arch/sparc/kernel/pci_common.c | 32 ++++++++++++++++++++++++--------
- arch/sparc/kernel/pci_impl.h   |  4 ++++
- 3 files changed, 31 insertions(+), 11 deletions(-)
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index c7d2ce6..e16da35 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -663,12 +663,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
- 	pci_add_resource_offset(&resources, &pbm->io_space,
--				pbm->io_space.start);
-+				pbm->io_offset);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
--				pbm->mem_space.start);
-+				pbm->mem_offset);
- 	if (pbm->mem64_space.flags)
- 		pci_add_resource_offset(&resources, &pbm->mem64_space,
--					pbm->mem_space.start);
-+					pbm->mem64_offset);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 33524c1..76998f8 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -410,13 +410,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
--		unsigned long a, size;
-+		unsigned long a, size, region_a;
- 		u32 parent_phys_hi, parent_phys_lo;
-+		u32 child_phys_mid, child_phys_lo;
- 		u32 size_hi, size_lo;
- 		int type;
- 
- 		parent_phys_hi = pr->parent_phys_hi;
- 		parent_phys_lo = pr->parent_phys_lo;
-+		child_phys_mid = pr->child_phys_mid;
-+		child_phys_lo = pr->child_phys_lo;
- 		if (tlb_type == hypervisor)
- 			parent_phys_hi &= 0x0fffffff;
- 
-@@ -426,6 +429,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		type = (pr->child_phys_hi >> 24) & 0x3;
- 		a = (((unsigned long)parent_phys_hi << 32UL) |
- 		     ((unsigned long)parent_phys_lo  <<  0UL));
-+		region_a = (((unsigned long)child_phys_mid << 32UL) |
-+		     ((unsigned long)child_phys_lo  <<  0UL));
- 		size = (((unsigned long)size_hi << 32UL) |
- 			((unsigned long)size_lo  <<  0UL));
- 
-@@ -440,6 +445,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->io_space.start = a;
- 			pbm->io_space.end = a + size - 1UL;
- 			pbm->io_space.flags = IORESOURCE_IO;
-+			pbm->io_offset = a - region_a;
- 			saw_io = 1;
- 			break;
- 
-@@ -448,6 +454,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem_space.start = a;
- 			pbm->mem_space.end = a + size - 1UL;
- 			pbm->mem_space.flags = IORESOURCE_MEM;
-+			pbm->mem_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -456,6 +463,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem64_space.start = a;
- 			pbm->mem64_space.end = a + size - 1UL;
- 			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			pbm->mem64_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -471,14 +479,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
- 	}
- 
--	printk("%s: PCI IO[%llx] MEM[%llx]",
--	       pbm->name,
--	       pbm->io_space.start,
--	       pbm->mem_space.start);
-+	if (pbm->io_space.flags)
-+		printk("%s: PCI IO %pR offset %llx\n",
-+		       pbm->name, &pbm->io_space, pbm->io_offset);
-+	if (pbm->mem_space.flags)
-+		printk("%s: PCI MEM %pR offset %llx\n",
-+		       pbm->name, &pbm->mem_space, pbm->mem_offset);
-+	if (pbm->mem64_space.flags && pbm->mem_space.flags) {
-+		if (pbm->mem64_space.start <= pbm->mem_space.end)
-+			pbm->mem64_space.start = pbm->mem_space.end + 1;
-+		if (pbm->mem64_space.start > pbm->mem64_space.end)
-+			pbm->mem64_space.flags = 0;
-+	}
-+
- 	if (pbm->mem64_space.flags)
--		printk(" MEM64[%llx]",
--		       pbm->mem64_space.start);
--	printk("\n");
-+		printk("%s: PCI MEM64 %pR offset %llx\n",
-+		       pbm->name, &pbm->mem64_space, pbm->mem64_offset);
- 
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
- 	pbm->mem64_space.name = pbm->name;
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 37222ca..2853af7 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -99,6 +99,10 @@ struct pci_pbm_info {
- 	struct resource			mem_space;
- 	struct resource			mem64_space;
- 	struct resource			busn;
-+	/* offset */
-+	resource_size_t			io_offset;
-+	resource_size_t			mem_offset;
-+	resource_size_t			mem64_offset;
- 
- 	/* Base of PCI Config space, can be per-PBM or shared. */
- 	unsigned long			config_space;
--- 
-2.8.3
-
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>  arch/arm64/kernel/pci.c  | 41 ++---------------------------------------
+>  drivers/acpi/pci_mcfg.c  | 40 ++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-acpi.h |  3 +++
+>  3 files changed, 45 insertions(+), 39 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 981e828..2e7bed4 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -114,44 +114,6 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>  	return 0;
+>  }
+>  
+> -/*
+> - * Lookup the bus range for the domain in MCFG, and set up config space
+> - * mapping.
+> - */
+> -static struct pci_config_window *
+> -pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+> -{
+> -	struct resource *bus_res = &root->secondary;
+> -	u16 seg = root->segment;
+> -	struct pci_config_window *cfg;
+> -	struct resource cfgres;
+> -	unsigned int bsz;
+> -
+> -	/* Use address from _CBA if present, otherwise lookup MCFG */
+> -	if (!root->mcfg_addr)
+> -		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+> -
+> -	if (!root->mcfg_addr) {
+> -		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
+> -			seg, bus_res);
+> -		return NULL;
+> -	}
+> -
+> -	bsz = 1 << pci_generic_ecam_ops.bus_shift;
+> -	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+> -	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+> -	cfgres.flags = IORESOURCE_MEM;
+> -	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+> -			      &pci_generic_ecam_ops);
+> -	if (IS_ERR(cfg)) {
+> -		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+> -			seg, bus_res, PTR_ERR(cfg));
+> -		return NULL;
+> -	}
+> -
+> -	return cfg;
+> -}
+> -
+>  /* release_info: free resources allocated by init_info */
+>  static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
+>  {
+> @@ -177,7 +139,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	if (!ri)
+>  		return NULL;
+>  
+> -	ri->cfg = pci_acpi_setup_ecam_mapping(root);
+> +	ri->cfg = pci_acpi_setup_ecam_mapping(root,
+> +					      &pci_generic_ecam_ops.pci_ops);
+>  	if (!ri->cfg) {
+>  		kfree(ri);
+>  		return NULL;
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index b5b376e..331b560 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci-acpi.h>
+> +#include <linux/pci-ecam.h>
+>  
+>  /* Structure to hold entries from the MCFG table */
+>  struct mcfg_entry {
+> @@ -52,6 +53,45 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Lookup the bus range for the domain in MCFG, and set up config space
+> + * mapping.
+> + */
+> +struct pci_config_window *
+> +pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops)
+> +{
+> +	struct resource *bus_res = &root->secondary;
+> +	u16 seg = root->segment;
+> +	struct pci_config_window *cfg;
+> +	struct resource cfgres;
+> +	struct pci_ecam_ops ecam_ops = {
+> +			.bus_shift = 20,
+> +			.pci_ops = *ops,
+> +	};
+> +
+> +	/* Use address from _CBA if present, otherwise lookup MCFG */
+> +	if (!root->mcfg_addr)
+> +		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+> +
+> +	if (!root->mcfg_addr) {
+> +		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
+> +			seg, bus_res);
+> +		return NULL;
+> +	}
+> +
+> +	cfgres.start = root->mcfg_addr + (bus_res->start << 20);
+> +	cfgres.end = cfgres.start + (resource_size(bus_res) << 20) - 1;
+> +	cfgres.flags = IORESOURCE_MEM;
+> +	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, &ecam_ops);
+> +	if (IS_ERR(cfg)) {
+> +		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+> +			seg, bus_res, PTR_ERR(cfg));
+> +		return NULL;
+> +	}
+> +
+> +	return cfg;
+> +}
+> +
+>  static __init int pci_mcfg_parse(struct acpi_table_header *header)
+>  {
+>  	struct acpi_table_mcfg *mcfg;
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index 7d63a66..e9bfe00 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -26,6 +26,9 @@ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+>  
+>  extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
+>  
+> +extern struct pci_config_window *
+> +pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
+> +
+>  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+>  {
+>  	struct pci_bus *pbus = pdev->bus;
+> -- 
+> 1.9.1
+> 
