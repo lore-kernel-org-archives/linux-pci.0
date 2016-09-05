@@ -1,135 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-To: Ondrej Zary <linux@rainbow-software.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609281032.35190.linux@rainbow-software.org>
- <b404278b-d8e1-2b16-e044-c30d27ba8c25@codeaurora.org>
- <201609281902.31500.linux@rainbow-software.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <76303bb8-7ae2-9a6b-8e5d-a144ae7c6009@codeaurora.org>
-Date: Wed, 28 Sep 2016 14:22:40 -0400
-MIME-Version: 1.0
-In-Reply-To: <201609281902.31500.linux@rainbow-software.org>
-Content-Type: multipart/mixed;
- boundary="------------9D3701B128FA71C9F7B9780B"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V9 3/8] PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
+Date: Mon,  5 Sep 2016 22:05:35 +0200
+Message-Id: <1473105940-9761-4-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------9D3701B128FA71C9F7B9780B
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+It is possible to provide information about which MSI controller to
+use on a per-device basis for DT. This patch supply this with ACPI support.
 
-On 9/28/2016 1:02 PM, Ondrej Zary wrote:
->> Thanks, It sounds like you have more than one machine with similar
->> > problems. Can you collect the log from the other machines with 4.8-rc8?
->> >
->> > and also a boot log with 4.6 kernel where things are working?
-> The attached logs are from another machine:
-> 
-> dmesg-bad-debug.txt: 4.8-rc8 with your debug patch - bad
-> 
-> dmesg-reverted.txt: 4.8-rc8 with patches (as per Rafael's suggestion) 
-> reverted - good
-> 
-> dmesg-3.6.txt: 4.6 (Debian kernel) - good
+Currently, IORT is the only one ACPI table which can provide such mapping.
+In order to plug IORT into MSI infrastructure we are adding ACPI
+equivalents for finding PCI device domain and its RID translation
+(pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
 
-I think I see a race condition for the SCI interrupt. I need another dump from
-4.8-rc8 with the attached patch to confirm. Let's remove the previous one and
-apply this one.
-
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
---------------9D3701B128FA71C9F7B9780B
-Content-Type: text/plain; charset=UTF-8;
- name="0001-acpi-pci_link-debug-aids-v2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="0001-acpi-pci_link-debug-aids-v2.patch"
-
->From 3545aba9f138bd233264c151d8c32cd417bfb09f Mon Sep 17 00:00:00 2001
-From: Sinan Kaya <okaya@codeaurora.org>
-Date: Tue, 27 Sep 2016 18:35:15 -0400
-Subject: [PATCH] acpi: pci_link: debug aids v2
-
-Change-Id: I6c459cb5888d95f5f1ef7c0e2f138fb9c65f40e5
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/pci_link.c | 24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+ drivers/pci/msi.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index c983bf7..92a6506 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -508,6 +508,8 @@ static int acpi_irq_get_penalty(int irq)
- 			penalty += PIRQ_PENALTY_ISA_ALWAYS;
- 		else
- 			penalty += PIRQ_PENALTY_PCI_USING;
-+
-+		pr_info("%s:%d adding SCI penalty: 0x%x \n", __func__, __LINE__, penalty);
- 	}
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 98f1222..37f253a 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -19,6 +19,7 @@
+ #include <linux/smp.h>
+ #include <linux/errno.h>
+ #include <linux/io.h>
++#include <linux/iort.h>
+ #include <linux/slab.h>
+ #include <linux/irqdomain.h>
+ #include <linux/of_irq.h>
+@@ -1502,8 +1503,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
  
- 	if (irq < ACPI_MAX_ISA_IRQS)
-@@ -592,6 +594,10 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 	else
- 		irq = link->irq.possible[link->irq.possible_count - 1];
+ 	of_node = irq_domain_get_of_node(domain);
+-	if (of_node)
+-		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
++	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
++			iort_msi_map_rid(&pdev->dev, rid);
  
-+	pr_info("irq : %d\n", irq);
-+	pr_info("acpi_irq_balance : %d\n", acpi_irq_balance);
-+	pr_info("link->irq.active : %d\n", link->irq.active);
-+	pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
- 	if (acpi_irq_balance || !link->irq.active) {
- 		/*
- 		 * Select the best IRQ.  This is done in reverse to promote
-@@ -599,11 +605,22 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 		 */
- 		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
- 			if (acpi_irq_get_penalty(irq) >
--			    acpi_irq_get_penalty(link->irq.possible[i]))
-+			    acpi_irq_get_penalty(link->irq.possible[i])) {
-+				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", link->irq.possible[i], acpi_irq_get_penalty(link->irq.possible[i]));
-+				pr_info("acpi_irq_get_penalty(%d) : 0x%x\n", irq, acpi_irq_get_penalty(irq));
- 				irq = link->irq.possible[i];
-+			    }
- 		}
- 	}
- 	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
-+		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
-+			pr_info("penalty[%d] = 0x%x\n",
-+					link->irq.possible[i],
-+			    acpi_irq_get_penalty(link->irq.possible[i]));
-+		}
-+		pr_info("irq : %d\n", irq);
-+		pr_info("acpi_gbl_FADT.sci_interrupt : %d\n", acpi_gbl_FADT.sci_interrupt);
-+
- 		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
- 			    "Try pci=noacpi or acpi=off\n",
- 			    acpi_device_name(link->device),
-@@ -870,9 +887,12 @@ static int __init acpi_irq_penalty_update(char *str, int used)
-  */
- void acpi_penalize_isa_irq(int irq, int active)
- {
--	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
-+	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty))) {
- 		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
- 		  (active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING);
-+		pr_info("%s:%d acpi_isa_irq_penalty[%d]=0x%x active = %d\n", __func__,
-+				__LINE__, irq,  acpi_irq_get_penalty(irq), active);
-+	}
+ 	return rid;
  }
+@@ -1519,9 +1520,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+  */
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+ {
++	struct irq_domain *dom;
+ 	u32 rid = 0;
  
- bool acpi_isa_irq_available(int irq)
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+-	return of_msi_map_get_device_domain(&pdev->dev, rid);
++	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
++	if (!dom)
++		dom = iort_get_device_domain(&pdev->dev, rid);
++	return dom;
+ }
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
 -- 
 1.9.1
-
-
---------------9D3701B128FA71C9F7B9780B--
