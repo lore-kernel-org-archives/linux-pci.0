@@ -1,141 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49982 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760934AbcIZGDt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Sep 2016 02:03:49 -0400
-Date: Mon, 26 Sep 2016 09:03:42 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
-        pv-drivers@vmware.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
-        georgezhang@vmware.com, bryantan@vmware.com
-Subject: Re: [PATCH v5 13/16] IB/pvrdma: Add the main driver module for PVRDMA
-Message-ID: <20160926060342.GG4088@leon.nu>
-References: <cover.1474759181.git.aditr@vmware.com>
- <8db982c37a0a96b37df02826564474a216922f25.1474759181.git.aditr@vmware.com>
- <20160925075703.GX4088@leon.nu>
- <da4a09fc-bef1-60ea-f9af-7c505a9af6d6@vmware.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:36197 "EHLO
+        mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932649AbcIELmM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2016 07:42:12 -0400
+Received: by mail-pa0-f51.google.com with SMTP id id6so3078861pad.3
+        for <linux-pci@vger.kernel.org>; Mon, 05 Sep 2016 04:42:12 -0700 (PDT)
+Subject: Re: [PATCH v4 03/15] drivers: acpi: iort: introduce linker section
+ for IORT entries probing
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1471274620-20754-4-git-send-email-lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <300bbfa6-8a9a-25f6-1182-e220ed46397e@linaro.org>
+Date: Mon, 5 Sep 2016 19:42:05 +0800
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="fqSO13Wp+IaiYtoI"
-In-Reply-To: <da4a09fc-bef1-60ea-f9af-7c505a9af6d6@vmware.com>
+In-Reply-To: <1471274620-20754-4-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---fqSO13Wp+IaiYtoI
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Sun, Sep 25, 2016 at 10:10:43PM -0700, Adit Ranadive wrote:
-> On sun, Sep 25 2016 at 10:57:03AM +0300, Leon Romanovsky wrote:
-> > On Sat, Sep 24, 2016 at 04:21:37PM -0700, Adit Ranadive wrote:
-> > > This patch adds the support to register a RDMA device with the kernel RDMA
-> > > stack as well as a kernel module. This also initializes the underlying
-> > > virtual PCI device.
-> > >
-> > > Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-> > > Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-> > > Reviewed-by: George Zhang <georgezhang@vmware.com>
-> > > Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-> > > Reviewed-by: Bryan Tan <bryantan@vmware.com>
-> > > Signed-off-by: Adit Ranadive <aditr@vmware.com>
+On 2016/8/15 23:23, Lorenzo Pieralisi wrote:
+> Since commit e647b532275b ("ACPI: Add early device probing
+> infrastructure") the kernel has gained the infrastructure that allows
+> adding linker script section entries to execute ACPI driver callbacks
+> (ie probe routines) for all subsystems that register a table entry
+> in the respective kernel section (eg clocksource, irqchip).
 >
-> <...>
+> Since ARM IOMMU devices data is described through IORT tables when
+> booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
+> callback routines that are called to probe IORT entries and initialize
+> the respective IOMMU devices.
 >
-> > > +
-> > > +#include <linux/errno.h>
-> > > +#include <linux/inetdevice.h>
-> > > +#include <linux/init.h>
-> > > +#include <linux/module.h>
-> > > +#include <linux/slab.h>
-> > > +#include <rdma/ib_addr.h>
-> > > +#include <rdma/ib_smi.h>
-> > > +#include <rdma/ib_user_verbs.h>
-> > > +#include <net/addrconf.h>
-> > > +#include <rdma/pvrdma-abi.h>
-> > > +
-> > > +#include "pvrdma.h"
-> > > +
-> > > +#define DRV_NAME	"pvrdma"
-> > > +#define DRV_VERSION	"1.0"
-> > > +#define DRV_RELDATE	"January 1, 2013"
-> > > +
-> > > +static const char pvrdma_version[] =
-> > > +	DRV_NAME ": PVRDMA InfiniBand driver v"
-> > > +	DRV_VERSION " (" DRV_RELDATE ")\n";
-> >
-> > This is a good example why driver version and reldate are useless in
-> > kernel. We are in 2016 and not in 2013. All these data are forgotten to
-> > update right after the developer copied it from other pre-historic driver
-> > (very common practice in netdev). It is worth to stop to use this totally
-> > useless defines.
-> >
+> To avoid adding driver specific hooks into IORT table initialization
+> code (breaking therefore code modularity - ie ACPI IORT code must be made
+> aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
+> that allows ARM SMMU drivers to take advantage of the ACPI early probing
+> infrastructure, so that they can add linker script section entries
+> containing drivers callback to be executed on IORT tables detection.
 >
-> Sorry, in our case it was the Mellanox mlx4 driver :). Yeah, I can remove
-> DRV_VERSION and DRV_RELDATE. I'll keep the MODULE_VERSION since we keep
-> track of our virtual driver versions that way. So when there are any changes
-> to our driver we typically bump up the version. Not sure if that's a netdev
-> or misc device practice and if thats followed here.
-
-They always promise to do it, but after year or two they are stopping.
-The funny thing starts when they start debug customer issues in specific
-distro with mix of backported fixes/features from old and new kernels.
-
+> Since IORT nodes are differentiated by a type, the callback routines
+> can easily parse the IORT table entries, check the IORT nodes and
+> carry out some actions whenever the IORT node type associated with
+> the driver specific callback is matched.
 >
-> <...>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/acpi/arm64/iort.c         | 2 ++
+>  include/asm-generic/vmlinux.lds.h | 1 +
+>  include/linux/iort.h              | 3 +++
+>  3 files changed, 6 insertions(+)
 >
-> > > +static void pvrdma_get_fw_ver_str(struct ib_device *device, char *str,
-> > > +				  size_t str_len)
-> > > +{
-> > > +	struct pvrdma_dev *dev =
-> > > +		container_of(device, struct pvrdma_dev, ib_dev);
-> > > +	snprintf(str, str_len, "%d.%d.%d\n",
-> > > +		 (int) (dev->dsr->caps.fw_ver >> 32),
-> > > +		 (int) (dev->dsr->caps.fw_ver >> 16) & 0xffff,
-> > > +		 (int) dev->dsr->caps.fw_ver & 0xffff);
-> > > +}
-> >
-> > Yuval already pointed it to you.
-> > Thanks to Ira, we have general function in core to print FW version.
-> > Please use them.
-> >
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index 2543f60..cad7d1d 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -383,4 +383,6 @@ void __init iort_table_detect(void)
+>  		const char *msg = acpi_format_exception(status);
+>  		pr_err("Failed to get table, %s\n", msg);
+>  	}
+> +
+> +	acpi_probe_device_table(iort);
+>  }
+> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+> index 2456397..7ee4e0c 100644
+> --- a/include/asm-generic/vmlinux.lds.h
+> +++ b/include/asm-generic/vmlinux.lds.h
+> @@ -546,6 +546,7 @@
+>  	IRQCHIP_OF_MATCH_TABLE()					\
+>  	ACPI_PROBE_TABLE(irqchip)					\
+>  	ACPI_PROBE_TABLE(clksrc)					\
+> +	ACPI_PROBE_TABLE(iort)						\
+>  	EARLYCON_TABLE()
 >
-> If you are referring to commit 5fa76c20458518ed6181adddef2e31c5afc0745c
-> then isnt this is exactly what Ira did for the other providers?
-> Here, the pvrdma_get_fw_ver_str function is registered as a callback for
-> the get_dev_fw_str API. Please our pvrdma_register_device function where
-> we register our callbacks with ib_core:
-> https://patchwork.kernel.org/patch/9349357/
+>  #define INIT_TEXT							\
+> diff --git a/include/linux/iort.h b/include/linux/iort.h
+> index d7daba1..9bb30c5 100644
+> --- a/include/linux/iort.h
+> +++ b/include/linux/iort.h
+> @@ -38,4 +38,7 @@ static inline struct irq_domain *
+>  iort_get_device_domain(struct device *dev, u32 req_id) { return NULL; }
+>  #endif
 >
-> > > +	dev->ib_dev.get_dev_fw_str = pvrdma_get_fw_ver_str;
+> +#define IORT_ACPI_DECLARE(name, table_id, fn)		\
+> +	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
+> +
+>  #endif /* __IORT_H__ */
 
-You are right,
-Sorry for that.
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
->
->
-
---fqSO13Wp+IaiYtoI
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX6Lo+AAoJEORje4g2clinvVEP/j1rYd32uSEJE8qHkcJeGgqg
-XnFwoMTm0Iy7aPETlCAWw688aVi1aaBWrxdnuJ7xf5W9nvmzamCfKSjvNprMgxVl
-jsReWSCnLzeXywIPbrd4kCfbsBlde0F0fBaeEWlChHa5z+m8lVjY5lPTQN2gSFP7
-/Rq9INhqtuIR/c3YUMoPsOMtEJZHYmOzOXCX21l72lgBBz/9KSHoQHoUBTpZsm+i
-obwtyD3N3tie0oq+/njleFL8EZiIcT4nFqOgEjnEfmAlGNWYrqHXEdKw9VtO+zMQ
-epf8WinFSuzPhP9xlbNKntOrXOkjEiwt/IDUkyONtm6A5BpMGL+ZoPZdf6F0J24R
-B8WGJrfY/DwfeQBJG/Vw4osH/fIxRdUzyHJLClkP+WdebCfkBA6mVRVcRf3zytcE
-mQdzs4SSZymeDxOM07qjEZdLsjwc1racD3sl/XxN6oUv0fndyu7xE4in4JCCrjq8
-ylbjSz1NG/+UljlJBECkvjrnTTO6LaTuuqipF6+zxFcJtb9pJFFAw23HMeqq9NxA
-cr9p5xdwrTNj52ONjq3EwH1d4buxIcvoGrsnW71kcPoBSrn1xfoZE73J3FIGlgEW
-E8OVdPn1Fp9/8MEdbih3p2Cf4ONMvvXnmj0L2CR22BmMWe/hTLwuCl1J4jin2+9k
-/YwNeayAJZlVwMQrpNXk
-=ApJE
------END PGP SIGNATURE-----
-
---fqSO13Wp+IaiYtoI--
+Thanks
+Hanjun
