@@ -1,50 +1,63 @@
-Return-Path: <mpe@ellerman.id.au>
-Return-Path: <mpe@ellerman.id.au>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org, bhelgaas@google.com
-Subject: Re: [PATCH 4/4] drivers/pci/hotplug: Support surprise hotplug
-In-Reply-To: <20160921165703.GA17457@localhost>
-References: <1474460130-8316-1-git-send-email-gwshan@linux.vnet.ibm.com> <1474460130-8316-5-git-send-email-gwshan@linux.vnet.ibm.com> <20160921165703.GA17457@localhost>
-Date: Thu, 22 Sep 2016 20:51:28 +1000
-Message-ID: <877fa48axb.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 4 Sep 2016 21:27:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+        rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+        hanjun.guo@linaro.org, okaya@codeaurora.org, jchandra@broadcom.com,
+        cov@codeaurora.org, dhdang@apm.com, ard.biesheuvel@linaro.org,
+        robert.richter@caviumnetworks.com, mw@semihalf.com,
+        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+        wangyijing@huawei.com, msalter@redhat.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linaro-acpi@lists.linaro.org, jcm@redhat.com,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH V5 4/5] ARM64/PCI: Start using quirks handling for
+ ACPI based PCI host controller
+Message-ID: <20160905022753.GE30488@localhost>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+ <1470661541-26270-5-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470661541-26270-5-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+On Mon, Aug 08, 2016 at 03:05:40PM +0200, Tomasz Nowicki wrote:
+> Since there are platforms which have non-compliant ECAM space we need to
+> override these accessors prior to PCI buses enumeration. In order to do
+> that we call pci_mcfg_match_quirks() to retrieve custom
+> pci_config_window structure. If no correlated quirk on list, use
+> fully ECAM compliant generic PCI config accessors.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>  arch/arm64/kernel/pci.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 2e7bed4..aa734bd 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -139,8 +139,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	if (!ri)
+>  		return NULL;
+>  
+> -	ri->cfg = pci_acpi_setup_ecam_mapping(root,
+> -					      &pci_generic_ecam_ops.pci_ops);
+> +	ri->cfg = pci_mcfg_match_quirks(root);
 
-> Hi Gavin,
->
-> You don't need my ack for any of these, and I assume you'll merge them
-> through the powerpc tree.
+I don't really like this part: previously it was obvious that we're
+setting up ECAM mappings, and now it's not.  I think the quirk
+functionality should be buried somewhere inside; it shouldn't be
+something this generic code has to worry about.
 
-Thanks Bjorn, I wasn't sure if you wanted to ack it or not. I'll take
-the whole series via the powerpc tree.
-
-> Minor comments below, feel free to ignore them.
->
-> On Wed, Sep 21, 2016 at 10:15:30PM +1000, Gavin Shan wrote:
->> ...
->> @@ -536,9 +565,16 @@ static struct pnv_php_slot *pnv_php_alloc_slot(struct device_node *dn)
->>  	if (unlikely(!php_slot))
->>  		return NULL;
->>  
->> +	php_slot->event = kzalloc(sizeof(struct pnv_php_event), GFP_KERNEL);
->> +	if (unlikely(!php_slot->event)) {
->> +		kfree(php_slot);
->> +		return NULL;
->> +	}
->
-> Since you *always* allocate the event when allocating the php_slot,
-> making the event a member of php_slot (instead of keeping a pointer to
-> it) would simplify your memory management a bit.
-
-> It seems to be the style in this file to use "unlikely" liberally, but
-> I really doubt there's any performance consideration in this code.  To
-> me it adds more clutter than usefulness.
-
-Agreed on both counts. Gavin can you do another spin with those changes,
-thanks.
-
-cheers
+>  	if (!ri->cfg) {
+>  		kfree(ri);
+>  		return NULL;
+> -- 
+> 1.9.1
+> 
