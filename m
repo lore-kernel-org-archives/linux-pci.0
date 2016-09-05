@@ -1,79 +1,92 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, tglx@linutronix.de, jason@lakedaemon.net, helgaas@kernel.org, rafael@kernel.org, will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org, shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com, okaya@codeaurora.org
-Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial support
-Date: Mon, 12 Sep 2016 15:43:52 +0200
-Message-ID: <6844783.vEMDYH8fjO@vostro.rjw.lan>
-In-Reply-To: <57D6A7DD.1060305@arm.com>
-References: <1473152938-17388-2-git-send-email-tn@semihalf.com> <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com> <57D6A7DD.1060305@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43215 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754247AbcIEK0Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2016 06:26:16 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u85ANeCw062727
+        for <linux-pci@vger.kernel.org>; Mon, 5 Sep 2016 06:26:16 -0400
+Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 258brnd6r3-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 05 Sep 2016 06:26:15 -0400
+Received: from localhost
+        by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Mon, 5 Sep 2016 20:26:13 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+        by d23dlp03.au.ibm.com (Postfix) with ESMTP id 6A5273578052
+        for <linux-pci@vger.kernel.org>; Mon,  5 Sep 2016 20:26:11 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u85AQBCV786808
+        for <linux-pci@vger.kernel.org>; Mon, 5 Sep 2016 20:26:11 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+        by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u85AQAoR006131
+        for <linux-pci@vger.kernel.org>; Mon, 5 Sep 2016 20:26:11 +1000
+Subject: Re: [PATCH v4 0/5] PCI: Introduce a way to enforce all MMIO BARs not
+ to share PAGE_SIZE
+To: bhelgaas@google.com
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Cc: zhong@linux.vnet.ibm.com, aik@ozlabs.ru, linux-pci@vger.kernel.org,
+        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
+        paulus@samba.org, linuxppc-dev@lists.ozlabs.org
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Mon, 5 Sep 2016 18:26:07 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <41a82dfc-5629-6f7e-1d8b-73e04fb44b57@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, September 12, 2016 02:04:29 PM Marc Zyngier wrote:
-> On 12/09/16 13:37, Tomasz Nowicki wrote:
-> > Hi Rafael,
-> > 
-> > On 09.09.2016 11:20, Lorenzo Pieralisi wrote:
-> >> Hi Rafael,
-> >>
-> >> On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
-> >>> IORT shows representation of IO topology for ARM based systems.
-> >>> It describes how various components are connected together on
-> >>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
-> >>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-> >>>
-> >>> Initial support allows to detect IORT table presence and save its
-> >>> root pointer obtained through acpi_get_table(). The pointer validity
-> >>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
-> >>> is not set while using IORT nodes we would dereference unmapped pointers.
-> >>>
-> >>> For the aforementioned reason call iort_table_detect() from acpi_init()
-> >>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
-> >>>
-> >>> Add generic helpers which are helpful for scanning and retrieving
-> >>> information from IORT table content. List of the most important helpers:
-> >>> - iort_find_dev_node() finds IORT node for a given device
-> >>> - iort_node_map_rid() maps device RID and returns IORT node which provides
-> >>>   final translation
-> >>>
-> >>> IORT support is placed under drivers/acpi/arm64/ new directory due to its
-> >>> ARM64 specific nature. The code there is considered only for ARM64.
-> >>> The long term plan is to keep all ARM64 specific tables support
-> >>> in this place e.g. GTDT table.
-> >>>
-> >>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> >>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> >>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >>> ---
-> >>
-> >> Apart from the minor commit logs oversights we consider these two
-> >> patches ready to go, please let us know if there is something you want
-> >> changed since we are at risk of missing yet another merge window.
-> >>
-> >> It is ARM64 specific code, we created and moved the code to its
-> >> ARM64 specific directory and we are happy to maintain it as such,
-> >> we need your ACK to get this done so if there is something you
-> >> want changed please let us know otherwise I would ask your ACK
-> >> on these two patches to give Marc a go-ahead for -next and
-> >> hopefully 4.9.
-> > 
-> > Kindly reminder. Is there anything we need to do more about these 
-> > patches? Please let us know. Note this is the major thing for incoming 
-> > IORT more advance feature.
-> 
-> May I convey a slight sense of urgency here? I'd like to cut the irqchip
-> branch for 4.9 pretty soon (this week), in order to let it sink in -next
-> for a few days at the very least.
-> 
-> It'd be a bit disappointing if these patches missed the boat this time
-> again.
+Ping?
 
-Both [1-2/8] are fine by me.
+On 2016/8/12 13:42, Yongji Xie wrote:
+> This series introduces a way for PCI resource allocator to force
+> MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO
+> driver. Because current VFIO implementation disallows to mmap
+> sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
+> with other BARs for security reasons. Thus, we have to handle mmio
+> access to these BARs in QEMU emulation rather than in guest which
+> will cause some performance loss.
+>
+> In our solution, we try to make use of the existing code path of
+> resource_alignment kernel parameter and add a macro to set default
+> alignment for it. Thus we can define this macro by default on some
+> archs which may easily hit the performance issue because of their
+> 64K page.
+>
+> In this series, patch 1,2,3 fixed bugs of using resource_alignment;
+> patch 4 tried to add a new option for resource_alignment to use
+> IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 5
+> adds a macro to set the default alignment of all MMIO BARs.
+>
+> Changelog v4:
+> - Rebased against v4.8-rc1
+> - Drop one irrelevant patch
+> - Drop the patch that adding wildcard to resource_alignment to enforce
+>    the alignment of all MMIO BARs to be at least PAGE_SIZE
+> - Change the format of option "noresize" of resource_alignment
+> - Code style improvements
+>
+> Changelog v3:
+> - Ignore enforced alignment to fixed BARs
+> - Fix issue that disabling memory decoding when reassigning the alignment
+> - Only enable default alignment on PowerNV platform
+>
+> Changelog v2:
+> - Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
+>
+> Yongji Xie (5):
+>    PCI: Ignore enforced alignment when kernel uses existing firmware setup
+>    PCI: Ignore enforced alignment to VF BARs
+>    PCI: Do not disable memory decoding in pci_reassigndev_resource_alignment()
+>    PCI: Add a new option for resource_alignment to reassign alignment
+>    PCI: Add a macro to set default alignment for all PCI devices
+>
+>   Documentation/kernel-parameters.txt |    9 +++--
+>   arch/powerpc/include/asm/pci.h      |    4 ++
+>   drivers/pci/pci.c                   |   71 ++++++++++++++++++++++++++---------
+>   3 files changed, 64 insertions(+), 20 deletions(-)
+>
 
-Please feel free to add my ACKs to those when you apply them.
-
-Thanks,
-Rafael
