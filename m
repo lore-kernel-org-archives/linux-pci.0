@@ -1,126 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:3429 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934512AbcIOMGn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2016 08:06:43 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        John Garry <john.garry@huawei.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
-Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-Date: Thu, 15 Sep 2016 12:05:51 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F871F72@lhreml507-mbx>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <5869118.UilSPY9Sai@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F871B01@lhreml507-mbx>
- <8360154.kzsE8V8pTW@wuerfel>
-In-Reply-To: <8360154.kzsE8V8pTW@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga07.intel.com ([134.134.136.100]:3236 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933672AbcIFWA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Sep 2016 18:00:26 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 1/4] pci: Add is_removed state
+Date: Tue,  6 Sep 2016 16:00:16 -0600
+Message-Id: <1473199219-3369-2-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
+References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
+This adds a new state for devices that were once in the system, but
+unexpectedly removed. This is so device teardown functions can observe
+the device is not accessible so it may skip attempting to initialize
+the hardware.
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 15 September 2016 09:22
-> To: Gabriele Paoloni
-> Cc: linux-arm-kernel@lists.infradead.org; Yuanzhichang;
-> devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
-> gregkh@linuxfoundation.org; benh@kernel.crashing.org; John Garry;
-> will.deacon@arm.com; linux-kernel@vger.kernel.org; xuwei (O); Linuxarm;
-> linux-serial@vger.kernel.org; linux-pci@vger.kernel.org;
-> zourongrong@gmail.com; liviu.dudau@arm.com; kantyzc@163.com;
-> zhichang.yuan02@gmail.com
-> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
-> Hip06
-> 
-> On Thursday, September 15, 2016 8:02:27 AM CEST Gabriele Paoloni wrote:
-> >
-> > From <<3.1.1. Open Firmware Properties for Bus Nodes>> in
-> > http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
-> >
-> > I quote:
-> > "There shall be an entry in the "ranges" property for each
-> > of the Memory and/or I/O spaces if that address space is
-> > mapped through the bridge."
-> >
-> > It seems to me that it is ok to have 1:1 address mapping and that
-> > therefore of_translate_address() should fail if "ranges" is not
-> > present.
-> 
-> The key here is the definition of "mapped through the bridge".
-> I can only understand this as "directly mapped", i.e. an I/O
-> port of the child bus corresponds directly to a memory address
-> on the parent bus, but this is not the case here.
-> 
-> The problem with adding the mapping here is that it looks
-> like it should be valid to create a page table entry for
-> the address returned from the translation and access it through
-> a pointer dereference, but that is clearly not possible.
+The pciehp and pcie-dpc drivers are aware of when the link is down, so
+they explicitly set this flag when its handlers detect the device is gone.
 
-I understand that somehow we are abusing of the ranges property
-here however the point is that with the current implementation ranges
-is needed because otherwise the ipmi driver probe will fail here:
+The flag is also cached any time pci_device_is_present returns false. The
+function checks the flag first to avoid additional config accesses to
+removed devices.
 
-of_ipmi_probe -> of_address_to_resource -> __of_address_to_resource
--> of_translate_address -> __of_translate_address
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/hotplug/pciehp_pci.c | 2 ++
+ drivers/pci/pci.c                | 9 ++++++++-
+ drivers/pci/pcie/pcie-dpc.c      | 1 +
+ include/linux/pci.h              | 1 +
+ 4 files changed, 12 insertions(+), 1 deletion(-)
 
-Now we had a bit of discussion internally and to avoid
-having ranges we came up with two possible solutions:
-
-1) Using bit 3 of phys.hi cell in 2.2.1 of
-http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
-This would mean reworking of_bus_isa_get_flags in 
-http://lxr.free-electrons.com/source/drivers/of/address.c#L398
-and setting a new flag to be checked in __of_address_to_resource
-
-2) Adding a property in the bindings of each device that is
-a child of our LPC bus and modify __of_address_to_resource
-to check if the property is in the DT and eventually bypass
-of_translate_address
-
-However in both 1) and 2) there are some issues:
-in 1) we are not complying with the isa binding doc (we use
-a bit that should be zero); in 2) we need to modify the
-bindings documentation of the devices that are connected
-to our LPC controller (therefore modifying other devices
-bindings to fit our special case).
-
-I think that maybe having the 1:1 range mapping doesn't
-reflect well the reality but it is the less painful
-solution...
-
-What's your view?
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 9e69403..299ea5e 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -109,6 +109,8 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 				break;
+ 			}
+ 		}
++		if (!presence)
++			dev->is_removed = 1;
+ 		pci_stop_and_remove_bus_device(dev);
+ 		/*
+ 		 * Ensure that no new Requests will be generated from
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d51..010e5f6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4924,7 +4924,14 @@ bool pci_device_is_present(struct pci_dev *pdev)
+ {
+ 	u32 v;
  
-Many Thanks
+-	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
++	if (pdev->is_removed)
++		return false;
++
++	if (!pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0)) {
++		pdev->is_removed = 1;
++		return false;
++	}
++	return true;
+ }
+ EXPORT_SYMBOL_GPL(pci_device_is_present);
+ 
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 9811b14..2e5876c5 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -46,6 +46,7 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
+ 		pci_dev_get(dev);
++		dev->is_removed = 1;
+ 		pci_stop_and_remove_bus_device(dev);
+ 		pci_dev_put(dev);
+ 	}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7256f33..865d3ec 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -334,6 +334,7 @@ struct pci_dev {
+ 	unsigned int	multifunction:1;/* Part of multi-function device */
+ 	/* keep track of device state */
+ 	unsigned int	is_added:1;
++	unsigned int	is_removed:1;	/* device was surprise removed */
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
+ 	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
+-- 
+2.7.2
 
-Gab
-
-> 
-> > This is also explained quite well in
-> > http://lxr.free-electrons.com/source/drivers/of/address.c#L490
-> >
-> > what do you think?
-> 
-> This is a separate issue, and only relevant for Apple Macintosh
-> machines as well as the PA-Semi sdc.
-> 
-> 	Arnd
