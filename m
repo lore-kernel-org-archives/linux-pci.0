@@ -1,99 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44928 "EHLO
-        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934061AbcIOIjO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2016 04:39:14 -0400
-Subject: Re: LPC16 PCI microconference - Call for sessions proposals
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>
-References: <20160613171823.GA29621@red-moon>
-CC: David Woodhouse <dwmw2@infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jesse Barnes <jbarnes@virtuousgeek.org>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Auger Eric <eric.auger@redhat.com>,
-        Yinghai Lu <yinghai@kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <57DA5DF7.8040003@ti.com>
-Date: Thu, 15 Sep 2016 14:08:15 +0530
-MIME-Version: 1.0
-In-Reply-To: <20160613171823.GA29621@red-moon>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V10 4/8] irqchip/gicv3-its: Cleanup for ITS domain initialization
+Date: Tue,  6 Sep 2016 11:08:54 +0200
+Message-Id: <1473152938-17388-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+There is no point to initialize ITS without having msi-controller
+property in corresponding DT node. However, its_probe is checking
+msi-controller presence at the end, so we can save our time and do that
+check prior to its_probe call. Also, for the code clarity purpose,
+we put domain initialization to separate function.
 
-Recently I sent a patch series to add support for configurable PCI endpoint
-[1]. It would be nice if we can allocate time to discuss this in LPC. I've also
-submitted a proposal for this in [2]. Let me know your thoughts.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+ drivers/irqchip/irq-gic-v3-its.c | 57 ++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 23 deletions(-)
 
-Thanks
-Kishon
-
-
-[1] -> https://lkml.org/lkml/2016/9/13/543
-[2] -> http://www.linuxplumbersconf.org/2016/ocw/proposals/3657
-
-On Monday 13 June 2016 10:48 PM, Lorenzo Pieralisi wrote:
-> Hi,
-> 
-> following the official LPC16 PCI uconf acceptance notification:
-> 
-> https://www.linuxplumbersconf.org/2016/pci-microconference-accepted-into-2016-linux-plumbers-conference/
-> 
-> I am sending out a call for sessions proposals open to all developers
-> interested/involved in Linux kernel PCI development.
-> 
-> The LPC16 uconf wiki provides a list of topics that we put forward for
-> the microconference submission:
-> 
-> http://wiki.linuxplumbersconf.org/2016:pci
-> 
-> The wiki is there to provide a list of topics that we considered key
-> and it should not be considered final, actually it is a starting point
-> to define a possible schedule structure.
-> 
-> Session proposals for the LPC16 PCI microconference are warmly encouraged
-> and can be submitted here:
-> 
-> http://www.linuxplumbersconf.org/2016/ocw/events/LPC2016/tracks/531
-> 
-> Maintainers in CC, as an initial step we singled out the main subtracks
-> below and I would be grateful if you could add a session through the link
-> above and run the respective session (in brackets people whom I know are
-> involved in the topic and are likely to be asked to run/take part in the
-> session; NB: it is obviously incomplete, and it is based on what we
-> could infer from current PCI related patches, please do manifest your
-> interest):
-> 
-> - PCI resources allocation/validation/cross-arch consolidation
->   ([Bjorn, Lorenzo, Yinghai, Benjamin, Jesse, Arnd])
-> - PCI Virtualization (cross-topic)
->   ([Alex, Bjorn, Eric, Marc, Joerg, Will, David])
-> - PCI MSI ([Alex, Eric, Marc])
-> - PCI IOMMU ([Joerg, David, Jesse, Will, Marc])
-> - PCIe (ATS, PRI) ([Jesse, Will])
-> - PCIe root ports power management ([Rafael])
-> - PCI DT/ACPI - consolidation ([Bjorn, Lorenzo, Arnd, Rob])
-> 
-> Anyone involved in PCI kernel development, if you wish to add sessions and
-> attend the microconference consider yourself welcome, for any questions
-> just reply to this thread or drop me a line.
-> 
-> Looking forward to meeting you all in Santa Fe for this interesting track !
-> 
-> Lorenzo
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 36b9c28..943442d 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -1614,13 +1614,37 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
+ }
+ 
++static int its_init_domain(struct device_node *node, struct its_node *its,
++			   struct irq_domain *parent)
++{
++	struct irq_domain *inner_domain;
++	struct msi_domain_info *info;
++
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	if (!inner_domain) {
++		kfree(info);
++		return -ENOMEM;
++	}
++
++	inner_domain->parent = parent;
++	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
++	info->ops = &its_msi_domain_ops;
++	info->data = its;
++	inner_domain->host_data = info;
++
++	return 0;
++}
++
+ static int __init its_probe(struct device_node *node,
+ 			    struct irq_domain *parent)
+ {
+ 	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+-	struct irq_domain *inner_domain;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+@@ -1712,28 +1736,9 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	if (of_property_read_bool(node, "msi-controller")) {
+-		struct msi_domain_info *info;
+-
+-		info = kzalloc(sizeof(*info), GFP_KERNEL);
+-		if (!info) {
+-			err = -ENOMEM;
+-			goto out_free_tables;
+-		}
+-
+-		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
+-		if (!inner_domain) {
+-			err = -ENOMEM;
+-			kfree(info);
+-			goto out_free_tables;
+-		}
+-
+-		inner_domain->parent = parent;
+-		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+-		info->ops = &its_msi_domain_ops;
+-		info->data = its;
+-		inner_domain->host_data = info;
+-	}
++	err = its_init_domain(node, its, parent);
++	if (err)
++		goto out_free_tables;
+ 
+ 	spin_lock(&its_lock);
+ 	list_add(&its->entry, &its_nodes);
+@@ -1784,6 +1789,12 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
++		if (!of_property_read_bool(np, "msi-controller")) {
++			pr_warn("%s: no msi-controller property, ITS ignored\n",
++				np->full_name);
++			continue;
++		}
++
+ 		its_probe(np, parent_domain);
+ 	}
+ 
+-- 
+1.9.1
