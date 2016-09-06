@@ -1,215 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:48146 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756790AbcIGL5S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Sep 2016 07:57:18 -0400
-Subject: Re: [PATCH] pcie: qcom: add support to msm8996 PCIE controller
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org
-References: <1473246412-24616-1-git-send-email-srinivas.kandagatla@linaro.org>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <34872e94-9679-5572-e39b-e962842b074e@arm.com>
-Date: Wed, 7 Sep 2016 12:57:14 +0100
-MIME-Version: 1.0
-In-Reply-To: <1473246412-24616-1-git-send-email-srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [RFC] pci/aer: kmalloc the aer_err_info struct once
+Date: Tue,  6 Sep 2016 12:35:52 -0600
+Message-Id: <1473186952-8998-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/09/16 12:06, Srinivas Kandagatla wrote:
-> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
-> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
-> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
-> 
-> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
-> pipe clocks and smmu configuration are only setup after the phy is
-> powered on. It also adds ltssm_enable callback as it is very much
-> different to other supported SOCs in the driver.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> ---
-> 
-> I tested this patch along with phy driver patch on DB820c based on
-> APQ8096 on port A and port B using sata and ethernet controllers.
-> 
-> Thanks
-> srini
-> 
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  88 +++++++-
->  drivers/pci/host/pcie-qcom.c                       | 237 ++++++++++++++++++++-
->  2 files changed, 318 insertions(+), 7 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> index 4059a6f..1ddfcb4 100644
-> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -92,6 +92,18 @@
->  			- "aux"		Auxiliary (AUX) clock
->  			- "bus_master"	Master AXI clock
->  			- "bus_slave"	Slave AXI clock
-> +
-> +- clock-names:
-> +	Usage: required for msm8996/apq8096
-> +	Value type: <stringlist>
-> +	Definition: Should contain the following entries
-> +			- "aux"		Auxiliary (AUX) clock
-> +			- "bus_master"	Master AXI clock
-> +			- "bus_slave"	Slave AXI clock
-> +			- "pipe"	Pipe Clock driving internal logic.
-> +			- "cfg"		Configuration clk.
-> +			- "snoc_axi"	SNOC AXI clk
-> +			- "cnoc_ahb"	CNOC AHB clk
->  - resets:
->  	Usage: required
->  	Value type: <prop-encoded-array>
-> @@ -114,8 +126,15 @@
->  	Definition: Should contain the following entries
->  			- "core" Core reset
->  
-> +- iommus:
-> +	Usage: required for msm8996/apq8096
-> +	Value type: <prop-encoded-array>
-> +	Definition: Should point to the respective IOMMU block with master port
-> +		    as argument, see Documentation/devicetree/bindings/iommu/
-> +		    mediatek,iommu.txt for details.
+AER injecting tests with many devices and nosourceid are resulting in
+soft lockups, mostly due to the config reads, but there's also a
+kmalloc/kfree pair for the aer_err_info struct for each p_device.
 
-Qualcomm have cross-licensed the M4U!? :P
+When a device emits an error, it's not unreasonable to assume that it
+may emit another error soon. Instead of mallocing the aer error info
+struct each pass through the aer isr, malloc it once per root port and
+hold the reference through the life of the root port. This may save a
+few cycles if there are many devices downstream of the root port and
+no-source-id checking is enabled, disabling the fast path and requiring
+checking all devices for errors.
 
-In seriousness, though, it seems a bit odd to list "iommus" as a
-required property - unless the IOMMU is actually an integral part of the
-PCIe root complex being described (in which case it wants its own
-binding documenting as well), then the relationship is merely a
-circumstance of integration of those particular SoCs.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c      |  1 +
+ drivers/pci/pcie/aer/aerdrv.h      |  1 +
+ drivers/pci/pcie/aer/aerdrv_core.c | 23 +++++++++++++++--------
+ 3 files changed, 17 insertions(+), 8 deletions(-)
 
-> +
->  - power-domains:
-> -	Usage: required for apq8084
-> +	Usage: required for apq8084 and msm8996/apq8096
->  	Value type: <prop-encoded-array>
->  	Definition: A phandle and power domain specifier pair to the
->  		    power domain which is responsible for collapsing
-> @@ -137,6 +156,11 @@
->  	Definition: A phandle to the analog power supply for IC which generates
->  		    reference clock
->  
-> +- vdda_1p8-supply:
-> +	Usage: required for msm8996/apq8096
-> +	Value type: <phandle>
-> +	Definition: A phandle to the analog power supply for PCIE_1P8
-> +
->  - phys:
->  	Usage: required for apq8084
->  	Value type: <phandle>
-> @@ -231,3 +255,65 @@
->  		pinctrl-0 = <&pcie0_pins_default>;
->  		pinctrl-names = "default";
->  	};
-> +
-> +* Example for apq8096:
-> +	pcie1: qcom,pcie@00608000 {
-> +		compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
-> +		power-domains = <&gcc PCIE1_GDSC>;
-> +		bus-range = <0x00 0xff>;
-> +		num-lanes = <1>;
-> +
-> +		status  = "disabled";
-> +
-> +		reg = <0x00608000 0x2000>,
-> +		      <0x0d000000 0xf1d>,
-> +		      <0x0d000f20 0xa8>,
-> +		      <0x0d100000 0x100000>;
-> +
-> +		reg-names = "parf", "dbi", "elbi","config";
-> +
-> +		phys = <&pcie_phy 1>;
-> +		phy-names = "pciephy";
-> +
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		ranges = <0x01000000 0x0 0x0d200000 0x0d200000 0x0 0x100000>,
-> +			<0x02000000 0x0 0x0d300000 0x0d300000 0x0 0xd00000>;
-> +
-> +		interrupts = <GIC_SPI 413 IRQ_TYPE_NONE>;
-> +		interrupt-names = "msi";
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0x7>;
-> +		interrupt-map = <0 0 0 1 &intc 0 272 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-> +				<0 0 0 2 &intc 0 273 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-> +				<0 0 0 3 &intc 0 274 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-> +				<0 0 0 4 &intc 0 275 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-> +
-> +		pinctrl-names = "default", "sleep";
-> +		pinctrl-0 = <&pcie1_clkreq_default &pcie1_perst_default &pcie1_wake_default>;
-> +		pinctrl-1 = <&pcie1_clkreq_sleep &pcie1_perst_default &pcie1_wake_sleep>;
-> +
-> +
-> +		vreg-1.8-supply = <&pm8994_l12>;
-> +		vreg-0.9-supply = <&pm8994_l28>;
-> +		iommus = <&anoc0_smmu>;
-
-Furthermore, the exact meaning of "iommus" is defined by the relevant
-IOMMU's binding itself - at face value here, you're missing the LARB
-port number :P - but more generally a bare phandle with no arguments for
-something as busy as a root complex smells a bit off.
-
-> +
-> +		linux,pci-domain = <1>;
-> +
-> +		clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
-> +			<&gcc GCC_PCIE_1_AUX_CLK>,
-> +			<&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-> +			<&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
-> +			<&gcc GCC_PCIE_1_SLV_AXI_CLK>,
-> +			<&gcc GCC_AGGRE0_SNOC_AXI_CLK>,
-> +			<&gcc GCC_AGGRE0_CNOC_AHB_CLK>;
-> +
-> +		clock-names =  "pipe",
-> +				"aux",
-> +				"cfg",
-> +				"bus_master",
-> +				"bus_slave",
-> +				"snoc_axi",
-> +				"cnoc_ahb";
-> +
-> +	};
-> diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-> index f2f90c5..7748c11 100644
-> --- a/drivers/pci/host/pcie-qcom.c
-> +++ b/drivers/pci/host/pcie-qcom.c
-[...]
-> +static int qcom_pcie_post_init_msm8996(struct qcom_pcie *pcie)
-> +{
-> +	struct qcom_pcie_resources_msm8996 *res = &pcie->res.msm8996;
-> +	struct device *dev = pcie->dev;
-> +	int ret;
-> +
-> +	ret = clk_prepare_enable(res->pipe_clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot prepare/enable pipe clock\n");
-> +		return ret;
-> +	}
-> +	/* SMMU specific registers */
-> +	writel(0, pcie->parf + PCIE20_PARF_BDF_TRANSLATE_CFG);
-> +	writel(0, pcie->parf +	PCIE20_PARF_SID_OFFSET);
-
-Ah, so it's another of these RID->SID lookup-table-type things. That
-would be more appropriately described with "iommu-map"[1], particularly
-if you want things to actually work as expected[2]. There is of course a
-fun circular dependency there in that the DT becomes more of a promise
-than an actual description of the hardware state, since the latter
-doesn't necessarily exist until the driver programs it here. It might
-ultimately be cleaner to have the firmware program this and repaint the
-DT accordingly, so that things do look fixed from Linux's perspective.
-
-Robin.
-
-[1]:http://www.mail-archive.com/iommu@lists.linux-foundation.org/msg14165.html
-[2]:http://www.mail-archive.com/iommu@lists.linux-foundation.org/msg14162.html
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 48d21e0..dab15d3 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -286,6 +286,7 @@ static void aer_remove(struct pcie_device *dev)
+ 
+ 		flush_work(&rpc->dpc_handler);
+ 		aer_disable_rootport(rpc);
++		kfree(rpc->e_info);
+ 		kfree(rpc);
+ 		set_service_data(dev, NULL);
+ 	}
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index 945c939..2c5a5b8 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -60,6 +60,7 @@ struct aer_rpc {
+ 	struct pcie_device *rpd;	/* Root Port device */
+ 	struct work_struct dpc_handler;
+ 	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
++	struct aer_err_info *e_info;
+ 	unsigned short prod_idx;	/* Error Producer Index */
+ 	unsigned short cons_idx;	/* Error Consumer Index */
+ 	int isr;
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 521e39c..e1b2e6c 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -715,14 +715,23 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
+ static void aer_isr_one_error(struct pcie_device *p_device,
+ 		struct aer_err_source *e_src)
+ {
+-	struct aer_err_info *e_info;
++	struct aer_rpc *rpc = get_service_data(p_device);
++	struct aer_err_info *e_info = rpc->e_info;
+ 
+-	/* struct aer_err_info might be big, so we allocate it with slab */
+-	e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
++	/*
++	 * struct aer_err_info might be big, so we allocate it with slab.
++	 * It's not unreasonable to assume a faulting device might emit
++	 * another error, so try to only malloc once and keep the
++	 * reference through the root port's life.
++	 */
+ 	if (!e_info) {
+-		dev_printk(KERN_DEBUG, &p_device->port->dev,
+-			"Can't allocate mem when processing AER errors\n");
+-		return;
++		e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
++		if (!e_info) {
++			dev_printk(KERN_DEBUG, &p_device->port->dev,
++				"Can't allocate mem when processing AER errors\n");
++			return;
++		}
++		rpc->e_info = e_info;
+ 	}
+ 
+ 	/*
+@@ -762,8 +771,6 @@ static void aer_isr_one_error(struct pcie_device *p_device,
+ 		if (find_source_device(p_device->port, e_info))
+ 			aer_process_err_devices(p_device, e_info);
+ 	}
+-
+-	kfree(e_info);
+ }
+ 
+ /**
+-- 
+1.8.3.1
