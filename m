@@ -1,53 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59091 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752029AbcI2Svl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 14:51:41 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8TIlT7M034152
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 14:51:40 -0400
-Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25s80x9kvw-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 14:51:40 -0400
-Received: from localhost
-        by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-        Thu, 29 Sep 2016 15:51:38 -0300
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.verkuil@cisco.com, brking@us.ibm.com,
-        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
-        alex.williamson@redhat.com, kvm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/6] genwqe: use pci_irq_allocate_vectors
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
-        <1473600688-24043-6-git-send-email-hch@lst.de>
-        <87twcyk1cd.fsf@linux.vnet.ibm.com> <20160929183757.GA4106@lst.de>
-        <87lgyak0ja.fsf@linux.vnet.ibm.com> <20160929184824.GA4380@lst.de>
-Date: Thu, 29 Sep 2016 15:51:32 -0300
-In-Reply-To: <20160929184824.GA4380@lst.de> (Christoph Hellwig's message of
-        "Thu, 29 Sep 2016 20:48:24 +0200")
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [RFC PATCH V5 3/5] PCI: Check platform specific ECAM quirks
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
+ <1470661541-26270-4-git-send-email-tn@semihalf.com>
+ <20160905022529.GD30488@localhost>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+ rafael@kernel.org, Lorenzo.Pieralisi@arm.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
+ dhdang@apm.com, ard.biesheuvel@linaro.org,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+ jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <34416dae-31e6-93b6-2ba8-f42ba61ede4f@semihalf.com>
+Date: Tue, 6 Sep 2016 19:49:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Message-Id: <87h98yk097.fsf@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160905022529.GD30488@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Christoph Hellwig <hch@lst.de> writes:
-
-> On Thu, Sep 29, 2016 at 03:45:29PM -0300, Gabriel Krisman Bertazi wrote:
->> I'm stepping up to assist with the genwqe_card driver just now, since we
->> (ibm) missed some of the last patches that went in.  I'll add myself to
->> maintainers file.
+On 05.09.2016 04:25, Bjorn Helgaas wrote:
+> On Mon, Aug 08, 2016 at 03:05:39PM +0200, Tomasz Nowicki wrote:
+>> Some platforms may not be fully compliant with generic set of PCI config
+>> accessors. For these cases we implement the way to overwrite accessors
+>> set. Algorithm traverses available quirk list (static array),
+>> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
+>> returns pci_config_window structure with fancy PCI config ops.
+>> oem_id, oem_table_id and rev come from MCFG table standard header.
+>>
+>> It is possible to define custom init call which is responsible for
+>> setting up PCI configuration access accordingly to quirk requirements.
+>> If custom init call is not defined, use standard pci_acpi_setup_ecam_mapping().
+>>
+>> pci_generic_ecam_ops will be used for platforms free from quirks.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
+>> ---
+>>  drivers/pci/host/Makefile      |  1 +
+>>  drivers/pci/host/mcfg-quirks.c | 86 ++++++++++++++++++++++++++++++++++++++++++
+>>  drivers/pci/host/mcfg-quirks.h | 20 ++++++++++
+>>  include/linux/pci-acpi.h       |  2 +
+>>  4 files changed, 109 insertions(+)
+>>  create mode 100644 drivers/pci/host/mcfg-quirks.c
+>>  create mode 100644 drivers/pci/host/mcfg-quirks.h
 >
-> Can your forward it to Greg together with whatever other changes are
-> pending for the driver?
+> If the object is to work around defects in the ACPI MCFG table, I
+> think I'd put the quirks closer to drivers/acpi/pci_mcfg.c, where we
+> parse that table.  What if we actually put them directly *in*
+> drivers/acpi/pci_mcfg.c?
 
-sure, will do.
+Then we need to export quirk init calls or ecam ops from 
+drivers/pci/host/* directory.
 
--- 
-Gabriel Krisman Bertazi
+Currently we keep mcfg quirk handling code and related drivers in one 
+place drivers/pci/host/
 
+Tomasz
