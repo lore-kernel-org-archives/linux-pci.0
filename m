@@ -1,231 +1,187 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+Date: Tue, 6 Sep 2016 15:05:21 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, Wei Zhang <wzhang@fb.com>,
+	Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 3/3] pcie/aer: Cache capability position
+Message-ID: <20160906210521.GA14521@localhost.localdomain>
+References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
+ <1470683667-28418-4-git-send-email-keith.busch@intel.com>
+ <20160809173350.GE27301@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 13 Sep 2016 03:46:26 -0400
-From: nwatters@codeaurora.org
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 07/14] drivers: acpi: iort: add support for ARM SMMU
- platform devices creation
-In-Reply-To: <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
- <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
-Message-ID: <7a63cf312b6e9714cdce1d0aca88cf4d@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160809173350.GE27301@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-09-09 10:23, Lorenzo Pieralisi wrote:
-> In ARM ACPI systems, IOMMU components are specified through static
-> IORT table entries. In order to create platform devices for the
-> corresponding ARM SMMU components, IORT kernel code should be made
-> able to parse IORT table entries and create platform devices
-> dynamically.
-> 
-> This patch adds the generic IORT infrastructure required to create
-> platform devices for ARM SMMUs.
-> 
-> ARM SMMU versions have different resources requirement therefore this
-> patch also introduces an IORT specific structure (ie iort_iommu_config)
-> that contains hooks (to be defined when the corresponding ARM SMMU
-> driver support is added to the kernel) to be used to define the
-> platform devices names, init the IOMMUs, count their resources and
-> finally initialize them.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
->  drivers/acpi/arm64/iort.c | 131 
-> ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 131 insertions(+)
-> 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index b89b3d3..e0a9b16 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -22,6 +22,7 @@
->  #include <linux/kernel.h>
->  #include <linux/list.h>
->  #include <linux/pci.h>
-> +#include <linux/platform_device.h>
->  #include <linux/slab.h>
-> 
->  struct iort_its_msi_chip {
-> @@ -424,6 +425,135 @@ struct irq_domain *iort_get_device_domain(struct
-> device *dev, u32 req_id)
->  	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
->  }
-> 
-> +struct iort_iommu_config {
-> +	const char *name;
-> +	int (*iommu_init)(struct acpi_iort_node *node);
-> +	bool (*iommu_is_coherent)(struct acpi_iort_node *node);
-> +	int (*iommu_count_resources)(struct acpi_iort_node *node);
-> +	void (*iommu_init_resources)(struct resource *res,
-> +				     struct acpi_iort_node *node);
-> +};
-> +
-> +static __init
-> +const struct iort_iommu_config *iort_get_iommu_cfg(struct 
-> acpi_iort_node *node)
-> +{
-> +	return NULL;
-> +}
-> +
-> +/**
-> + * iort_add_smmu_platform_device() - Allocate a platform device for 
-> SMMU
-> + * @fwnode: IORT node associated fwnode handle
-> + * @node: Pointer to SMMU ACPI IORT node
-> + *
-> + * Returns: 0 on success, <0 failure
-> + */
-> +static int __init iort_add_smmu_platform_device(struct fwnode_handle 
-> *fwnode,
-> +						struct acpi_iort_node *node)
-> +{
-> +	struct platform_device *pdev;
-> +	struct resource *r;
-> +	enum dev_dma_attr attr;
-> +	int ret, count;
-> +	const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
-> +
-> +	if (!ops)
-> +		return -ENODEV;
-> +
-> +	pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
-> +	if (!pdev)
-> +		return PTR_ERR(pdev);
-> +
-> +	count = ops->iommu_count_resources(node);
-> +
-> +	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
-> +	if (!r) {
-> +		ret = -ENOMEM;
-> +		goto dev_put;
-> +	}
-> +
-> +	ops->iommu_init_resources(r, node);
-> +
-> +	ret = platform_device_add_resources(pdev, r, count);
-> +	/*
-> +	 * Resources are duplicated in platform_device_add_resources,
-> +	 * free their allocated memory
-> +	 */
-> +	kfree(r);
-> +
-> +	if (ret)
-> +		goto dev_put;
-> +
-> +	/*
-> +	 * Add a copy of IORT node pointer to platform_data to
-> +	 * be used to retrieve IORT data information.
-> +	 */
-> +	ret = platform_device_add_data(pdev, &node, sizeof(node));
-> +	if (ret)
-> +		goto dev_put;
-> +
-> +	pdev->dev.dma_mask = kmalloc(sizeof(*pdev->dev.dma_mask), 
-> GFP_KERNEL);
-> +	if (!pdev->dev.dma_mask) {
-> +		ret = -ENOMEM;
-> +		goto dev_put;
-> +	}
-> +
-> +	pdev->dev.fwnode = fwnode;
-> +
-> +	/*
-> +	 * Set default dma mask value for the table walker,
-> +	 * to be overridden on probing with correct value.
-> +	 */
-> +	*pdev->dev.dma_mask = DMA_BIT_MASK(32);
-> +	pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
-> +
-> +	attr = ops->iommu_is_coherent(node) ?
-> +			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
-> +
-> +	/* Configure DMA for the page table walker */
-> +	acpi_dma_configure(&pdev->dev, attr);
-> +
-> +	ret = platform_device_add(pdev);
-> +	if (ret)
-> +		goto dma_deconfigure;
-> +
-> +	return 0;
-> +
-> +dma_deconfigure:
-> +	acpi_dma_deconfigure(&pdev->dev);
-> +	kfree(pdev->dev.dma_mask);
-> +
-> +dev_put:
-> +	platform_device_put(pdev);
-> +
-> +	return ret;
-> +}
-> +
-> +static acpi_status __init iort_match_iommu_callback(struct
-> acpi_iort_node *node,
-> +						    void *context)
-> +{
-> +	int ret;
-> +	struct fwnode_handle *fwnode;
-> +
-> +	fwnode = iort_get_fwnode(node);
-> +
-> +	if (!fwnode)
-> +		return AE_NOT_FOUND;
-> +
-> +	ret = iort_add_smmu_platform_device(fwnode, node);
-> +	if (ret) {
-> +		pr_err("Error in platform device creation\n");
-> +		return AE_ERROR;
-> +	}
-> +
-> +	return AE_OK;
-> +}
-> +
-> +static void __init iort_smmu_init(void)
-> +{
-> +	iort_scan_node(ACPI_IORT_NODE_SMMU, iort_match_iommu_callback, NULL);
-> +	iort_scan_node(ACPI_IORT_NODE_SMMU_V3, iort_match_iommu_callback, 
-> NULL);
+Hi Keith, I like really this patch and am looking forward to v2. Should aer_root_reset and aer_error_resume be changed as well?
 
-Since iort_scan_node() returns after the first successful match it 
-finds,
-only the first SMMU_V3 in my IORT is being enumerated. I think you need
-to go back to the "iterator" like approach you had been using or make
-iort_match_iommu_callback() always return a non-AE_OK value so the scan
-continues and has a chance to visit all of the SMMU_V3 nodes.
+Also is there any reason the same couldn't be done for any pci_dev? I'd like to have this optimization available for is_error_source(). 
 
-> +}
-> +
->  void __init acpi_iort_init(void)
->  {
->  	acpi_status status;
-> @@ -436,4 +566,5 @@ void __init acpi_iort_init(void)
->  	}
+
+On Tue, Aug 09, 2016 at 12:33:50PM -0500, Bjorn Helgaas wrote:
+> Hi Keith,
 > 
->  	acpi_probe_device_table(iort);
-> +	iort_smmu_init();
->  }
-
--- 
-Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
-Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
-Linux Foundation Collaborative Project.
+> On Mon, Aug 08, 2016 at 01:14:27PM -0600, Keith Busch wrote:
+> > This saves the postition of the error reporting capability so that it
+> > doesn't need to be rediscovered during error handling.
+> 
+> I like the idea of this, and I wonder if we should go even further,
+> and cache aer_pos in the pci_dev.  There are a zillion places that
+> look for PCI_EXT_CAP_ID_ERR, and several of them are outside the AER
+> driver, where it would be inconvenient to look up the aer_rpc.
+> 
+> That would probably mean adding a hook to pci_init_capabilities(),
+> which would be kind of nice anyway because we already have a call to
+> pci_cleanup_aer_error_status_regs() there, which is sort of dangling
+> and not parallel to the other calls.
+> 
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> >  drivers/pci/pcie/aer/aerdrv.c | 38 +++++++++++++++++---------------------
+> >  drivers/pci/pcie/aer/aerdrv.h |  1 +
+> >  2 files changed, 18 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> > index 48d21e0..d05c864 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv.c
+> > @@ -122,7 +122,6 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
+> >  static void aer_enable_rootport(struct aer_rpc *rpc)
+> >  {
+> >  	struct pci_dev *pdev = rpc->rpd->port;
+> 
+> What if you did this instead:
+> 
+>  -	int aer_pos;
+>  +	int aer_pos = rpc->pos;
+> 
+> Then all the config accesses wouldn't have to change.
+> 
+> >  	u16 reg16;
+> >  	u32 reg32;
+> >  
+> > @@ -134,14 +133,13 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+> >  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
+> >  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+> >  
+> > -	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+> >  	/* Clear error status */
+> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
+> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
+> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, &reg32);
+> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_COR_STATUS, reg32);
+> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, &reg32);
+> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, reg32);
+> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
+> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
+> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, &reg32);
+> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_COR_STATUS, reg32);
+> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, &reg32);
+> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_UNCOR_STATUS, reg32);
+> >  
+> >  	/*
+> >  	 * Enable error reporting for the root port device and downstream port
+> > @@ -150,9 +148,9 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+> >  	set_downstream_devices_error_reporting(pdev, true);
+> >  
+> >  	/* Enable Root Port's interrupt in response to error messages */
+> > -	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, &reg32);
+> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
+> >  	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+> > -	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, reg32);
+> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
+> >  }
+> >  
+> >  /**
+> > @@ -165,7 +163,6 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+> >  {
+> >  	struct pci_dev *pdev = rpc->rpd->port;
+> >  	u32 reg32;
+> > -	int pos;
+> >  
+> >  	/*
+> >  	 * Disable error reporting for the root port device and downstream port
+> > @@ -173,15 +170,14 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+> >  	 */
+> >  	set_downstream_devices_error_reporting(pdev, false);
+> >  
+> > -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+> >  	/* Disable Root's interrupt in response to error messages */
+> > -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
+> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, &reg32);
+> >  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+> > -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_COMMAND, reg32);
+> >  
+> >  	/* Clear Root's error status reg */
+> > -	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+> > -	pci_write_config_dword(pdev, pos + PCI_ERR_ROOT_STATUS, reg32);
+> > +	pci_read_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, &reg32);
+> > +	pci_write_config_dword(pdev, rpc->pos + PCI_ERR_ROOT_STATUS, reg32);
+> >  }
+> >  
+> >  /**
+> > @@ -198,9 +194,7 @@ irqreturn_t aer_irq(int irq, void *context)
+> >  	struct aer_rpc *rpc = get_service_data(pdev);
+> >  	int next_prod_idx;
+> >  	unsigned long flags;
+> > -	int pos;
+> >  
+> > -	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
+> >  	/*
+> >  	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
+> >  	 * and Root error producer/consumer index
+> > @@ -208,15 +202,15 @@ irqreturn_t aer_irq(int irq, void *context)
+> >  	spin_lock_irqsave(&rpc->e_lock, flags);
+> >  
+> >  	/* Read error status */
+> > -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, &status);
+> > +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, &status);
+> >  	if (!(status & (PCI_ERR_ROOT_UNCOR_RCV|PCI_ERR_ROOT_COR_RCV))) {
+> >  		spin_unlock_irqrestore(&rpc->e_lock, flags);
+> >  		return IRQ_NONE;
+> >  	}
+> >  
+> >  	/* Read error source and clear error status */
+> > -	pci_read_config_dword(pdev->port, pos + PCI_ERR_ROOT_ERR_SRC, &id);
+> > -	pci_write_config_dword(pdev->port, pos + PCI_ERR_ROOT_STATUS, status);
+> > +	pci_read_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_ERR_SRC, &id);
+> > +	pci_write_config_dword(pdev->port, rpc->pos + PCI_ERR_ROOT_STATUS, status);
+> >  
+> >  	/* Store error source for later DPC handler */
+> >  	next_prod_idx = rpc->prod_idx + 1;
+> > @@ -317,6 +311,8 @@ static int aer_probe(struct pcie_device *dev)
+> >  		return -ENOMEM;
+> >  	}
+> >  
+> > +	rpc->pos = pci_find_ext_capability(dev->port, PCI_EXT_CAP_ID_ERR);
+> > +
+> >  	/* Request IRQ ISR */
+> >  	status = request_irq(dev->irq, aer_irq, IRQF_SHARED, "aerdrv", dev);
+> >  	if (status) {
+> > diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+> > index 945c939..d7c586e 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv.h
+> > +++ b/drivers/pci/pcie/aer/aerdrv.h
+> > @@ -72,6 +72,7 @@ struct aer_rpc {
+> >  					 * recovery on the same
+> >  					 * root port hierarchy
+> >  					 */
+> > +	int pos;			/* position of AER capability */
+> >  };
+> >  
+> >  struct aer_broadcast_data {
+> > -- 
+> > 2.7.2
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
