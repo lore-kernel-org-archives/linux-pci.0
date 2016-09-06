@@ -1,74 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1675 "EHLO mga09.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:37098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932573AbcI0UMp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 16:12:45 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>, Lukas Wunner <lukas@wunner.de>,
-        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv3 2/5] pci: Add is_removed state
-Date: Tue, 27 Sep 2016 16:23:32 -0400
-Message-Id: <1475007815-28354-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
-References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
+        id S1754991AbcIFRAI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Sep 2016 13:00:08 -0400
+Date: Tue, 6 Sep 2016 11:59:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        paulus@samba.org, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
+        benh@kernel.crashing.org, mpe@ellerman.id.au,
+        zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v4 5/5] PCI: Add a macro to set default alignment for all
+ PCI devices
+Message-ID: <20160906165930.GF1214@localhost>
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1470980546-2918-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470980546-2918-6-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a new state for devices that were once in the system, but
-unexpectedly removed. This is so device tear down functions can observe
-the device is not accessible so it may skip attempting to initialize
-the hardware.
+On Fri, Aug 12, 2016 at 01:42:26PM +0800, Yongji Xie wrote:
+> When vfio passthroughs a PCI device of which MMIO BARs are
+> smaller than PAGE_SIZE, guest will not handle the mmio
+> accesses to the BARs which leads to mmio emulations in host.
+> 
+> This is because vfio will not allow to passthrough one BAR's
+> mmio page which may be shared with other BARs. Otherwise,
+> there will be a backdoor that guest can use to access BARs
+> of other guest.
+> 
+> This patch adds a macro to set default alignment for all
+> PCI devices. Then we could solve this issue on some platforms
+> which would easily hit this issue because of their 64K page
+> such as PowerNV platform by defining this macro as PAGE_SIZE.
 
-The pciehp and pcie-dpc drivers are aware of when the link is down,
-so these explicitly set this flag when its handlers detect the device
-is gone.
+Just to clarify, I think the issue happens on any arch, whenever
+device BARs are smaller than PAGE_SIZE.  This is obviously more
+*likely* when PAGE_SIZE is large, but could still happen even with
+4K pages.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_pci.c | 2 ++
- drivers/pci/pcie/pcie-dpc.c      | 1 +
- include/linux/pci.h              | 1 +
- 3 files changed, 4 insertions(+)
-
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 9e69403..299ea5e 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -109,6 +109,8 @@ int pciehp_unconfigure_device(struct slot *p_slot)
- 				break;
- 			}
- 		}
-+		if (!presence)
-+			dev->is_removed = 1;
- 		pci_stop_and_remove_bus_device(dev);
- 		/*
- 		 * Ensure that no new Requests will be generated from
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 250f878..756eae4 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -44,6 +44,7 @@ static void interrupt_event_handler(struct work_struct *work)
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
- 					 bus_list) {
- 		pci_dev_get(dev);
-+		dev->is_removed = 1;
- 		pci_stop_and_remove_bus_device(dev);
- 		pci_dev_put(dev);
- 	}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c81fbf7..36b759c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -337,6 +337,7 @@ struct pci_dev {
- 	unsigned int	multifunction:1;/* Part of multi-function device */
- 	/* keep track of device state */
- 	unsigned int	is_added:1;
-+	unsigned int	is_removed:1;	/* device was surprise removed */
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
- 	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
--- 
-2.7.2
-
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci.h |    4 ++++
+>  drivers/pci/pci.c              |    4 ++++
+>  2 files changed, 8 insertions(+)
+> 
+> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+> index e9bd6cf..5e31bc2 100644
+> --- a/arch/powerpc/include/asm/pci.h
+> +++ b/arch/powerpc/include/asm/pci.h
+> @@ -28,6 +28,10 @@
+>  #define PCIBIOS_MIN_IO		0x1000
+>  #define PCIBIOS_MIN_MEM		0x10000000
+>  
+> +#ifdef CONFIG_PPC_POWERNV
+> +#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
+> +#endif
+> +
+>  struct pci_dev;
+>  
+>  /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d895be7..feae59e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4959,6 +4959,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>  	resource_size_t align = 0;
+>  	char *p;
+>  
+> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
+> +	align = PCIBIOS_DEFAULT_ALIGNMENT;
+> +	*resize = false;
+> +#endif
+>  	spin_lock(&resource_alignment_lock);
+>  	p = resource_alignment_param;
+>  	if (pci_has_flag(PCI_PROBE_ONLY)) {
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
