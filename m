@@ -1,50 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42911 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762659AbcINVO7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 17:14:59 -0400
-From: Tyler Baicar <tbaicar@codeaurora.org>
-To: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-        paul.gortmaker@windriver.com, sudipm.mukherjee@gmail.com,
-        axboe@fb.com, izumi.taku@jp.fujitsu.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc: bp@suse.de, Tyler Baicar <tbaicar@codeaurora.org>
-Subject: [PATCH V2 2/2] acpi: apei: send correct severity to calculate AER severity
-Date: Wed, 14 Sep 2016 15:14:46 -0600
-Message-Id: <1473887686-24420-3-git-send-email-tbaicar@codeaurora.org>
-In-Reply-To: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
-References: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.136]:50970 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933628AbcIFPkw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Sep 2016 11:40:52 -0400
+Date: Tue, 6 Sep 2016 10:40:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Hadden Hoppert <haddenh@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Subject: Re: [PATCH 0/5] PCI: hv: some minor bug fixes and cleanups
+Message-ID: <20160906154045.GB1214@localhost>
+References: <MWHPR03MB266985BDDEE4EB1A9C481B0DBFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <MWHPR03MB266985BDDEE4EB1A9C481B0DBFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the AER severity is calculated by calling
-cper_severity_to_aer(), but the parameter sent is actually the
-GHES severity. This causes the AER severity to be incorrect.
-Fix the parameter to be the CPER severity instead of the GHES
-severity.
+On Tue, Aug 23, 2016 at 04:42:41AM +0000, Dexuan Cui wrote:
+> 
+> 1. use zero-length array to make the code more readable.
+> 2. remove an unused struct member.
+> 3. small error handling improvement to some error cases.
+> 
+> Dexuan Cui (5):
+>   PCI: hv: use zero-length message in struct pci_packet
+>   PCI: hv: use pci_function_description[0] in struct definitions
+>   PCI: hv: remove the unused 'wrk' in struct hv_pcibus_device
+>   PCI: hv: hv_compose_msi_msg: handle the 'ret' value
+>   PCI: hv: hv_pci_generic_compl(): handle the error case
+> 
+>  drivers/pci/host/pci-hyperv.c | 56 ++++++++++++++++++++++---------------------
+>  1 file changed, 29 insertions(+), 27 deletions(-)
 
-Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
-Reviewed-by: Borislav Petkov <bp@suse.de>
----
- drivers/acpi/apei/ghes.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'm waiting for an ack from the Hyper-V maintainers:
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 60746ef..f0a029e 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -457,7 +457,7 @@ static void ghes_do_proc(struct ghes *ghes,
- 
- 				devfn = PCI_DEVFN(pcie_err->device_id.device,
- 						  pcie_err->device_id.function);
--				aer_severity = cper_severity_to_aer(sev);
-+				aer_severity = cper_severity_to_aer(gdata->error_severity);
- 
- 				/*
- 				 * If firmware reset the component to contain
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
-
+  Hyper-V CORE AND DRIVERS
+  M:      "K. Y. Srinivasan" <kys@microsoft.com>
+  M:      Haiyang Zhang <haiyangz@microsoft.com>
+  L:      devel@linuxdriverproject.org
+  S:      Maintained
+  ...
+  F:      drivers/pci/host/pci-hyperv.c
+  ...
