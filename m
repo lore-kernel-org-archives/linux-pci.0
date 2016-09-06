@@ -1,84 +1,115 @@
-Return-Path: <mayurkumar.patel@intel.com>
-Return-Path: <mayurkumar.patel@intel.com>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: 'Rajat Jain' <rajatja@google.com>, "'bhelgaas@google.com'"
-	<bhelgaas@google.com>, "'linux-pci@vger.kernel.org'"
-	<linux-pci@vger.kernel.org>, "Wysocki, Rafael J"
-	<rafael.j.wysocki@intel.com>, "'mika.westerberg@linux.intel.com'"
-	<mika.westerberg@linux.intel.com>, "Busch, Keith" <keith.busch@intel.com>,
-	"Tarazona-Duarte, Luis Antonio" <luis.antonio.tarazona-duarte@intel.com>,
-	'Rajat Jain' <rajatxjain@gmail.com>, 'Andy Shevchenko'
-	<andriy.shevchenko@linux.intel.com>
-Subject: RE: [PATCH v1 2/2] PCI: pciehp: Rework hotplug interrupt routine
-Date: Tue, 13 Sep 2016 16:12:28 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B284665AD0BE@IRSMSX101.ger.corp.intel.com>
-References: <92EBB4272BF81E4089A7126EC1E7B28466598F35@IRSMSX101.ger.corp.intel.com>
- <20160912205608.GB23532@localhost>
-In-Reply-To: <20160912205608.GB23532@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V10 8/8] irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain initialization
+Date: Tue,  6 Sep 2016 11:08:58 +0200
+Message-Id: <1473152938-17388-9-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+Let ACPI build ITS PCI MSI domain. ACPI code is responsible for retrieving
+inner domain token and passing it on to its_pci_msi_init_one generic
+init call.
 
-> On Tue, Aug 23, 2016 at 08:59:49AM +0000, Patel, Mayurkumar wrote:
-> > First scenario, on any slot events, pcie_isr() does as following,
-> > pcie_isr() -> do {...} while(detected) loop in which it
-> > reads PCI_EXP_SLTSTA, stores it in the intr_loc, then
-> > clears respective interrupts by writing to PCI_EXP_SLTSTA.
-> > Again, due to loop, it reads PCI_EXP_SLTSTA, which might
-> > have been changed already for the same type of interrupts
-> > because in the previous iteration they already got cleared.
-> > In this case, it will execute pciehp_queue_interrupt_event() only once
-> > based on the last event happened. This can be problematic
-> > for PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC types of
-> > interrupts as if they miss to process previous events then PCIe device
-> > enumeration can get effected.
-> >
-> > Second scenario, pcie_isr() after clearing interrupts, it calls
-> > pciehp_get_adapter_status() before processing PCI_EXP_SLTSTA_PDS
-> > and pciehp_check_link_active() before processing PCI_EXP_SLTSTA_DLLSC
-> > and takes decisions based on that to do pciehp_queue_interrupt_event()
-> > which might also have already got changed due to the same
-> > fact that the respective interrupts got cleared earlier.
-> >
-> > The patch removes re-inspection to avoid first scenario happening
-> > and just reads the events once and clears them as soon as possible.
-> > To successfully execute right Slot events for PDC and DLLSC types which
-> > triggered pcie_isr() it reads the PCI_EXP_SLTSTA_PDS and
-> > PCI_EXP_LNKSTA_DLLLA earlier before clearing the respective interrupts
-> > and executes pciehp_queue_interrupt_event() based on the stored
-> > status of these two Slot events.
-> =
+IORT maintains list of registered domain tokens and allows to find
+corresponding domain based on MADT ITS subtable ID info.
 
-> I think this is great.  I split it into two patches, one to deal with
-> the loop and a second to stop re-reading PCI_EXP_SLTSTA.
-> =
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 ++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-> I propose that we keep the loop, but restructure it a little.  If we
-> remove the loop completely, I worry that we may be able to miss an
-> interrupt.  I'm not confident that there is a hole, so maybe we
-> *could* remove the loop competely; I just couldn't convince myself
-> that it was safe both for INTx and MSI/MSI-X signaling.
-> =
-
-> I also added a few trivial patches for cleanup in the area.  I'll post
-> the whole set as a v2 for your comments.
-> =
-
-
-Thanks for splitting the commit. The v2 patches are ok for me.
-
-
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
+diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+index d2c2496..aee1c60 100644
+--- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+@@ -15,6 +15,7 @@
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++#include <linux/acpi_iort.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+@@ -144,9 +145,52 @@ static int __init its_pci_of_msi_init(void)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++
++static int __init
++its_pci_msi_parse_madt(struct acpi_subtable_header *header,
++		       const unsigned long end)
++{
++	struct acpi_madt_generic_translator *its_entry;
++	struct fwnode_handle *dom_handle;
++	const char *node_name;
++	int err = -ENXIO;
++
++	its_entry = (struct acpi_madt_generic_translator *)header;
++	node_name = kasprintf(GFP_KERNEL, "ITS@0x%lx",
++			      (long)its_entry->base_address);
++	dom_handle = iort_find_domain_token(its_entry->translation_id);
++	if (!dom_handle) {
++		pr_err("%s: Unable to locate ITS domain handle\n", node_name);
++		goto out;
++	}
++
++	err = its_pci_msi_init_one(dom_handle, node_name);
++	if (!err)
++		pr_info("PCI/MSI: %s domain created\n", node_name);
++
++out:
++	kfree(node_name);
++	return err;
++}
++
++static int __init its_pci_acpi_msi_init(void)
++{
++	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
++			      its_pci_msi_parse_madt, 0);
++	return 0;
++}
++#else
++static int __init its_pci_acpi_msi_init(void)
++{
++	return 0;
++}
++#endif
++
+ static int __init its_pci_msi_init(void)
+ {
+ 	its_pci_of_msi_init();
++	its_pci_acpi_msi_init();
+ 
+ 	return 0;
+ }
+-- 
+1.9.1
