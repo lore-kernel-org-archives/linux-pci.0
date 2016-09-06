@@ -1,84 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Minghuan Lian <Minghuan.Lian@nxp.com>
-To: <linux-pci@vger.kernel.org>
-Subject: [PATCH 2/2] pci/layerscape: fix error response behavior
-Date: Thu, 8 Sep 2016 14:25:50 +0800
-Message-ID: <1473315950-6396-2-git-send-email-Minghuan.Lian@nxp.com>
-In-Reply-To: <1473315950-6396-1-git-send-email-Minghuan.Lian@nxp.com>
-References: <1473315950-6396-1-git-send-email-Minghuan.Lian@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54404 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933625AbcIFP5o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Sep 2016 11:57:44 -0400
+Date: Tue, 6 Sep 2016 10:57:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Vineet.Gupta1@synopsys.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-snps-arc@lists.infradead.org
+Subject: Re: [PATCH] pci: adding support for PCI_MSI_IRQ_DOMAIN in ARC arch
+Message-ID: <20160906155739.GD1214@localhost>
+References: <fdd37b0b995d178fddb34fdbdb5daf5981822f52.1470757628.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- Jingoo Han <jg1.han@samsung.com>, Stuart Yoder <stuart.yoder@nxp.com>,
- Yang-Leo Li <leoyang.li@nxp.com>, Minghuan
- Lian <Minghuan.Lian@nxp.com>, linux-arm-kernel@lists.infradead.org, Bjorn
- Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fdd37b0b995d178fddb34fdbdb5daf5981822f52.1470757628.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By default, when the PCIe controller experiences an erroneous
-completion from an external completer for its outbound non-posted
-request, it always sends an OKAY response to the device's internal
-AXI slave system interface. However, such default system error
-response behavior cannot be used for other types of outbound
-non-posted requests. For example, the outbound memory read
-transaction requires an actual ERROR response, like UR completion
-or completion timeout. The patch is to fix it by forwarding
-the error response of the non-posted request.
+On Tue, Aug 09, 2016 at 04:49:37PM +0100, Joao Pinto wrote:
+> To fix this, this patch adds ARC as a PCI_MSI_IRQ_DOMAIN supportive
+> platform and adds the generation of msi.h in the ARC arch.
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
----
- drivers/pci/host/pci-layerscape.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+I added Vineet's ack and put this on pci/msi for v4.9, thanks!
 
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index cf783ad..873447a 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -34,6 +34,8 @@
- /* PEX Internal Configuration Registers */
- #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
- #define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
-+#define PCIE_ABSERR		0x8d0 /* Bridge Slave Error Response Register */
-+#define PCIE_ABSERR_SETTING	0x9401 /* Forward error of non-posted request */
- 
- /* PEX LUT registers */
- #define PCIE_LUT_DBG		0x7FC /* PEX LUT Debug Register */
-@@ -99,6 +101,12 @@ static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
- 		dw_pcie_disable_outbound_atu(&pcie->pp, i);
- }
- 
-+/* Forward error response of outbound non-posted requests */
-+static void ls_pcie_fix_error_response(struct ls_pcie *pcie)
-+{
-+	iowrite32(PCIE_ABSERR_SETTING, pcie->dbi + PCIE_ABSERR);
-+}
-+
- static int ls1021_pcie_link_up(struct pcie_port *pp)
- {
- 	u32 state;
-@@ -166,6 +174,7 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	iowrite32(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
- 
- 	ls_pcie_disable_outbound_atus(pcie);
-+	ls_pcie_fix_error_response(pcie);
- }
- 
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  arch/arc/include/asm/Kbuild | 1 +
+>  drivers/pci/Kconfig         | 2 +-
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/arc/include/asm/Kbuild b/arch/arc/include/asm/Kbuild
+> index 0b10ef2..c332604 100644
+> --- a/arch/arc/include/asm/Kbuild
+> +++ b/arch/arc/include/asm/Kbuild
+> @@ -25,6 +25,7 @@ generic-y += mcs_spinlock.h
+>  generic-y += mm-arch-hooks.h
+>  generic-y += mman.h
+>  generic-y += msgbuf.h
+> +generic-y += msi.h
+>  generic-y += param.h
+>  generic-y += parport.h
+>  generic-y += pci.h
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 67f9916..6555eb7 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -25,7 +25,7 @@ config PCI_MSI
+>  	   If you don't know what to do here, say Y.
+>  
+>  config PCI_MSI_IRQ_DOMAIN
+> -	def_bool ARM || ARM64 || X86
+> +	def_bool ARC || ARM || ARM64 || X86
+>  	depends on PCI_MSI
+>  	select GENERIC_MSI_IRQ_DOMAIN
+>  
+> -- 
+> 1.8.1.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
