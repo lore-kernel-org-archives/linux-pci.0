@@ -1,121 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58554 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755811AbcILVoN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 17:44:13 -0400
-Date: Mon, 12 Sep 2016 16:44:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Po Liu <po.liu@nxp.com>
-Cc: linux-pci@vger.kernel.org, soren.brinkmann@xilinx.com,
-        Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
-        jingoohan1@gmail.com, pratyush.anand@gmail.com,
-        Stuart Yoder <stuart.yoder@nxp.com>,
-        Yang-Leo Li <leoyang.li@nxp.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>, lftan@altera.com,
-        michal.simek@xilinx.com, Mingkai Hu <mingkai.hu@nxp.com>
-Subject: Re: [PATCH v2] arm64:pci: fix the IOV device access config space
- valid condition
-Message-ID: <20160912214408.GC23532@localhost>
-References: <1471932072-6980-1-git-send-email-po.liu@nxp.com>
- <1472455618-17892-1-git-send-email-po.liu@nxp.com>
+Return-Path: <tglx@linutronix.de>
+Return-Path: <tglx@linutronix.de>
+Date: Tue, 6 Sep 2016 11:50:17 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Tomasz Nowicki <tn@semihalf.com>
+cc: marc.zyngier@arm.com, jason@lakedaemon.net, rjw@rjwysocki.net,
+    helgaas@kernel.org, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+    will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
+    shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
+    linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+    linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
+    linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+    al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+    okaya@codeaurora.org
+Subject: Re: [PATCH V10 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that
+ might be reused for ACPI
+In-Reply-To: <1473152938-17388-8-git-send-email-tn@semihalf.com>
+Message-ID: <alpine.DEB.2.20.1609061149090.5647@nanos>
+References: <1473152938-17388-1-git-send-email-tn@semihalf.com> <1473152938-17388-8-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472455618-17892-1-git-send-email-po.liu@nxp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 29, 2016 at 03:26:58PM +0800, Po Liu wrote:
-> When echo a number to /sys/bus/pci/devices/xxx/sriov_numvfs to enable the
-> VF devices. A crash log occurred. This found to be access the IOV devices
-> config space failure issue.
-> 
-> The read/write config space from host would judge the pcie device plugin
-> or not by(Designware platform as example):
-> 
-> if (bus->primary == pp->root_bus_nr && dev > 0)
->     return 0;
-> 
-> Although all PCIe devices for dev(coming from the device and function
-> number) is zero. But the dev is not zero for VF devices. So remove the
-> condition.
-> 
-> These PCI hosts were changed: designware, altera, xilinx.
-> 
-> Signed-off-by: Po Liu <po.liu@nxp.com>
+On Tue, 6 Sep 2016, Tomasz Nowicki wrote:
+> -static int __init its_pci_msi_init(void)
+> +static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
+> +				       const char *name)
+>  {
+> -	struct device_node *np;
+>  	struct irq_domain *parent;
+>  
+> +	parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
+> +	if (!parent || !msi_get_domain_info(parent)) {
+> +		pr_err("%s: Unable to locate ITS domain\n", name);
+> +		return -ENXIO;
+> +	}
+> +
+> +	if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
+> +				       parent)) {
+> +		pr_err("%s: Unable to create PCI domain\n", name);
+> +		return -ENOMEM;
 
-Applied to pci/virtualization for v4.9, thanks!
+So you have error codes here.
 
-I split it into three patches for backporting and reversion purposes.
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int __init its_pci_of_msi_init(void)
+> +{
+> +	struct device_node *np;
+> +
+>  	for (np = of_find_matching_node(NULL, its_device_id); np;
+>  	     np = of_find_matching_node(np, its_device_id)) {
+>  		if (!of_property_read_bool(np, "msi-controller"))
+>  			continue;
+>  
+> -		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
+> -		if (!parent || !msi_get_domain_info(parent)) {
+> -			pr_err("%s: unable to locate ITS domain\n",
+> -			       np->full_name);
+> +		if (its_pci_msi_init_one(of_node_to_fwnode(np), np->full_name))
+>  			continue;
+> -		}
+> -
+> -		if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
+> -					       &its_pci_msi_domain_info,
+> -					       parent)) {
+> -			pr_err("%s: unable to create PCI domain\n",
+> -			       np->full_name);
+> -			continue;
+> -		}
+>  
+>  		pr_info("PCI/MSI: %s domain created\n", np->full_name);
+>  	}
+>  
+>  	return 0;
 
-> ---
-> changes for v2:
-> 	- add pci hosts: altera, xilinx;
-> 
->  drivers/pci/host/pcie-altera.c     | 7 -------
->  drivers/pci/host/pcie-designware.c | 7 -------
->  drivers/pci/host/pcie-xilinx.c     | 7 -------
->  3 files changed, 21 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> index 2b78376..edbe0a7 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -171,13 +171,6 @@ static bool altera_pcie_valid_config(struct altera_pcie *pcie,
->  	if (bus->number == pcie->root_bus_nr && dev > 0)
->  		return false;
->  
-> -	/*
-> -	 * Do not read more than one device on the bus directly attached
-> -	 * to root port, root port can only attach to one downstream port.
-> -	 */
-> -	if (bus->primary == pcie->root_bus_nr && dev > 0)
-> -		return false;
-> -
->  	 return true;
+And no matter what you return success
+
 >  }
->  
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 12afce1..dd20eb2 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -670,13 +670,6 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
->  	if (bus->number == pp->root_bus_nr && dev > 0)
->  		return 0;
->  
-> -	/*
-> -	 * do not read more than one device on the bus directly attached
-> -	 * to RC's (Virtual Bridge's) DS side.
-> -	 */
-> -	if (bus->primary == pp->root_bus_nr && dev > 0)
-> -		return 0;
-> -
->  	return 1;
->  }
->  
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index a30e016..75c89db 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -168,13 +168,6 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
->  	if (bus->number == port->root_busno && devfn > 0)
->  		return false;
->  
-> -	/*
-> -	 * Do not read more than one device on the bus directly attached
-> -	 * to RC.
-> -	 */
-> -	if (bus->primary == port->root_busno && devfn > 0)
-> -		return false;
-> -
->  	return true;
->  }
->  
-> -- 
-> 2.1.0.27.g96db324
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +
+> +static int __init its_pci_msi_init(void)
+> +{
+> +	its_pci_of_msi_init();
+
+Which you subsequently ignore here. What's the point?
+
+Thanks,
+
+	tglx
