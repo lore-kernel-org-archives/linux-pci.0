@@ -1,30 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38762 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751710AbcI2Ss2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 14:48:28 -0400
-Date: Thu, 29 Sep 2016 20:48:24 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com,
-        brking@us.ibm.com, haver@linux.vnet.ibm.com,
-        ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com,
-        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/6] genwqe: use pci_irq_allocate_vectors
-Message-ID: <20160929184824.GA4380@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de> <1473600688-24043-6-git-send-email-hch@lst.de> <87twcyk1cd.fsf@linux.vnet.ibm.com> <20160929183757.GA4106@lst.de> <87lgyak0ja.fsf@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87lgyak0ja.fsf@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Punit Agrawal <punit.agrawal@arm.com>,
+        Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Marc Zyngier <marc.zyngier@arm.com>
+Subject: [PATCH v2] drivers: acpi: fix GIC irq model default PCI IRQ polarity
+Date: Tue,  6 Sep 2016 17:51:03 +0100
+Message-Id: <1473180663-20590-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 29, 2016 at 03:45:29PM -0300, Gabriel Krisman Bertazi wrote:
-> I'm stepping up to assist with the genwqe_card driver just now, since we
-> (ibm) missed some of the last patches that went in.  I'll add myself to
-> maintainers file.
+On ACPI ARM based systems the GIC interrupt controller
+and corresponding interrupt model permit only the high
+polarity for level interrupts.
 
-Can your forward it to Greg together with whatever other changes are
-pending for the driver?
+ACPI firmware describes PCI legacy IRQs through entries
+in the _PRT objects. Entries in the _PRT can be of two types:
+
+- Static: not configurable, trigger/polarity default to level-low,
+  _PRT entry defines the global GSI interrupt number
+- Configurable: _PRT interrupt entry contains a reference to the
+  corresponding PCI interrupt link device (that in turn provides the
+  interrupt descriptor through its _CRS/_PRS methods)
+
+Configurable IRQ entries are not currently allowed by the ACPI
+specification on ARM since they can only be used for interrupt pins that
+are routable, as per ACPI specifications (version 6.1, 6.2.13):
+
+"[...] There are two ways that _PRT can be used. Typically, the
+interrupt input that a given PCI interrupt is on is configurable. For
+example, a given PCI interrupt might be configured for either IRQ 10 or
+11 on an 8259 interrupt controller. In this model, each interrupt is
+represented in the ACPI namespace as a PCI Interrupt Link Device. [...]"
+
+ARM platforms GIC configurations do not allow dynamic IRQ routing,
+since routing is statically laid out at synthesis time; therefore PCI
+interrupt links cannot be used for PCI legacy IRQ descriptions in the
+_PRT on ARM systems.
+
+On the other hand, current core ACPI code handling PCI legacy IRQs
+consider IRQ trigger/polarity for static _PRT entries as level-low.
+
+On ARM systems with a GIC interrupt controller and corresponding
+ACPI interrupt model this does not work in that GIC interrupt
+controller is only capable of handling level interrupts whose
+polarity is high (for PCI legacy IRQs - that are level-low by
+specification - this means that the legacy IRQs are inverted before
+reaching the interrupt controller pin), resulting in IRQ allocation
+failures such as:
+
+genirq: Setting trigger mode 8 for irq 18 failed (gic_set_type+0x0/0x48)
+
+Change the default polarity for PCI legacy IRQs to high on systems
+booting wth ACPI on platforms with a GIC interrupt controller model,
+fixing the discrepancy between specification and HW behaviour.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Cc: Punit Agrawal <punit.agrawal@arm.com>
+Cc: Duc Dang <dhdang@apm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+---
+v1 -> v2:
+
+- Added ACPI specs PCI Interrupt Link device usage restrictions in
+  the patch commit log for explanation
+- Added review tags
+
+ drivers/acpi/pci_irq.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 2c45dd3..c576a6f 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -411,7 +411,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 	int gsi;
+ 	u8 pin;
+ 	int triggering = ACPI_LEVEL_SENSITIVE;
+-	int polarity = ACPI_ACTIVE_LOW;
++	/*
++	 * On ARM systems with the GIC interrupt model, level interrupts
++	 * are always polarity high by specification; PCI legacy
++	 * IRQs lines are inverted before reaching the interrupt
++	 * controller and must therefore be considered active high
++	 * as default.
++	 */
++	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
++				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
+ 	char *link = NULL;
+ 	char link_desc[16];
+ 	int rc;
+-- 
+2.6.4
+
