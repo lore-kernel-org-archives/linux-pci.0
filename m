@@ -1,382 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org,
-        sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.org
-Subject: [PATCH v14 03/17] PCI: Remove __pci_mmap_make_offset()
-Date: Fri, 16 Sep 2016 13:01:53 -0700
-Message-Id: <20160916200207.21439-4-yinghai@kernel.org>
-In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
-References: <20160916200207.21439-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V10 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
+Date: Tue,  6 Sep 2016 11:08:56 +0200
+Message-Id: <1473152938-17388-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-After
-  PCI: Let pci_mmap_page_range() take resource address
-No user for __pci_mmap_make_offset in those arch.
+ITS is prepared for being initialized different than DT,
+therefore we can initialize it in ACPI way. We collect register base
+address from MADT table and pass mandatory info to firmware-agnostic
+ITS init call.
 
-Remove them.
+Use here IORT lib to register ITS domain which then can be found and
+used on to build another PCI MSI domain in hierarchical stack domain.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: sparclinux@vger.kernel.org
-Cc: linux-xtensa@linux-xtensa.org
+NOTE: Waiting for proper ITS and NUMA node relation description in IORT
+table, we pass around NUMA_NO_NODE to the its_probe_one init call.
+This means that Cavium ThunderX erratum 23144 (pass1.1 only)
+is not supported for ACPI boot method yet.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- arch/microblaze/pci/pci-common.c |  63 ----------------------
- arch/powerpc/kernel/pci-common.c |  63 ----------------------
- arch/sparc/kernel/pci.c          | 113 ---------------------------------------
- arch/xtensa/kernel/pci.c         |  62 ---------------------
- 4 files changed, 301 deletions(-)
+ drivers/irqchip/Kconfig          |  1 +
+ drivers/irqchip/irq-gic-v3-its.c | 61 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 61 insertions(+), 1 deletion(-)
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 9e3bc05..e7cd0ab 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -156,69 +156,6 @@ void pcibios_set_master(struct pci_dev *dev)
+diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+index 7f87289..9aeea1d8 100644
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -39,6 +39,7 @@ config ARM_GIC_V3_ITS
+ 	bool
+ 	depends on PCI
+ 	depends on PCI_MSI
++	select ACPI_IORT if ACPI
+ 
+ config ARM_NVIC
+ 	bool
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index c7518c7..35c851c 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -15,10 +15,13 @@
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
   */
  
- /*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
--					       resource_size_t *offset,
--					       enum pci_mmap_state mmap_state)
--{
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	unsigned long io_offset = 0;
--	int i, res_bit;
--
--	if (!hose)
--		return NULL;		/* should never happen */
--
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
--		*offset += hose->pci_mem_offset;
--#endif
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		*offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
--
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
--			continue;
--
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			*offset += hose->io_base_phys - io_offset;
--		return rp;
--	}
--
--	return NULL;
--}
--
--/*
-  * This one is used by /dev/mem and fbdev who have no clue about the
-  * PCI device, it tries to find the PCI device first and calls the
-  * above routine
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 67b2e68..07fa9d5 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -388,69 +388,6 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
-  */
++#include <linux/acpi.h>
+ #include <linux/bitmap.h>
+ #include <linux/cpu.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irqdomain.h>
++#include <linux/acpi_iort.h>
+ #include <linux/log2.h>
+ #include <linux/mm.h>
+ #include <linux/msi.h>
+@@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
+ 		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
+ 		fwspec.param[1] = hwirq;
+ 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
++	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
++		fwspec.fwnode = domain->parent->fwnode;
++		fwspec.param_count = 2;
++		fwspec.param[0] = hwirq;
++		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
+ 	} else {
+ 		return -EINVAL;
+ 	}
+@@ -1797,6 +1805,57 @@ static int __init its_of_probe(struct device_node *node)
+ 	return 0;
+ }
  
- /*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
--					       resource_size_t *offset,
--					       enum pci_mmap_state mmap_state)
--{
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	unsigned long io_offset = 0;
--	int i, res_bit;
--
--	if (hose == NULL)
--		return NULL;		/* should never happen */
--
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
--		*offset += hose->pci_mem_offset;
--#endif
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		*offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
--
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
--			continue;
--
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			*offset += hose->io_base_phys - io_offset;
--		return rp;
--	}
--
--	return NULL;
--}
--
--/*
-  * This one is used by /dev/mem and fbdev who have no clue about the
-  * PCI device, it tries to find the PCI device first and calls the
-  * above routine
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 5f2d78e..c7d2ce6 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -732,119 +732,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
++#ifdef CONFIG_ACPI
++
++#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
++
++static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
++					  const unsigned long end)
++{
++	struct acpi_madt_generic_translator *its_entry;
++	struct fwnode_handle *dom_handle;
++	struct resource res;
++	int err;
++
++	its_entry = (struct acpi_madt_generic_translator *)header;
++	memset(&res, 0, sizeof(res));
++	res.start = its_entry->base_address;
++	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
++	res.flags = IORESOURCE_MEM;
++
++	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
++	if (!dom_handle) {
++		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
++		       &res.start);
++		return -ENOMEM;
++	}
++
++	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
++	if (err) {
++		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
++		       &res.start, its_entry->translation_id);
++		goto dom_err;
++	}
++
++	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
++	if (!err)
++		return 0;
++
++	iort_deregister_domain_token(its_entry->translation_id);
++dom_err:
++	irq_domain_free_fwnode(dom_handle);
++	return err;
++}
++
++static void __init its_acpi_probe(void)
++{
++	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
++			      gic_acpi_parse_madt_its, 0);
++}
++#else
++static void __init its_acpi_probe(void) { }
++#endif
++
+ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 		    struct irq_domain *parent_domain)
+ {
+@@ -1807,7 +1866,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	if (of_node)
+ 		its_of_probe(of_node);
+ 	else
+-		return -ENODEV;
++		its_acpi_probe();
  
- /* Platform support for /proc/bus/pci/X/Y mmap()s. */
- 
--/* If the user uses a host-bridge as the PCI device, he may use
-- * this to perform a raw mmap() of the I/O or MEM space behind
-- * that controller.
-- *
-- * This can be useful for execution of x86 PCI bios initialization code
-- * on a PCI card, like the xfree86 int10 stuff does.
-- */
--static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
--				      enum pci_mmap_state mmap_state)
--{
--	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
--	unsigned long space_size, user_offset, user_size;
--
--	if (mmap_state == pci_mmap_io) {
--		space_size = resource_size(&pbm->io_space);
--	} else {
--		space_size = resource_size(&pbm->mem_space);
--	}
--
--	/* Make sure the request is in range. */
--	user_offset = vma->vm_pgoff << PAGE_SHIFT;
--	user_size = vma->vm_end - vma->vm_start;
--
--	if (user_offset >= space_size ||
--	    (user_offset + user_size) > space_size)
--		return -EINVAL;
--
--	if (mmap_state == pci_mmap_io) {
--		vma->vm_pgoff = (pbm->io_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	} else {
--		vma->vm_pgoff = (pbm->mem_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	}
--
--	return 0;
--}
--
--/* Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static int __pci_mmap_make_offset(struct pci_dev *pdev,
--				  struct vm_area_struct *vma,
--				  enum pci_mmap_state mmap_state)
--{
--	unsigned long user_paddr, user_size;
--	int i, err;
--
--	/* First compute the physical address in vma->vm_pgoff,
--	 * making sure the user offset is within range in the
--	 * appropriate PCI space.
--	 */
--	err = __pci_mmap_make_offset_bus(pdev, vma, mmap_state);
--	if (err)
--		return err;
--
--	/* If this is a mapping on a host bridge, any address
--	 * is OK.
--	 */
--	if ((pdev->class >> 8) == PCI_CLASS_BRIDGE_HOST)
--		return err;
--
--	/* Otherwise make sure it's in the range for one of the
--	 * device's resources.
--	 */
--	user_paddr = vma->vm_pgoff << PAGE_SHIFT;
--	user_size = vma->vm_end - vma->vm_start;
--
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &pdev->resource[i];
--		resource_size_t aligned_end;
--
--		/* Active? */
--		if (!rp->flags)
--			continue;
--
--		/* Same type? */
--		if (i == PCI_ROM_RESOURCE) {
--			if (mmap_state != pci_mmap_mem)
--				continue;
--		} else {
--			if ((mmap_state == pci_mmap_io &&
--			     (rp->flags & IORESOURCE_IO) == 0) ||
--			    (mmap_state == pci_mmap_mem &&
--			     (rp->flags & IORESOURCE_MEM) == 0))
--				continue;
--		}
--
--		/* Align the resource end to the next page address.
--		 * PAGE_SIZE intentionally added instead of (PAGE_SIZE - 1),
--		 * because actually we need the address of the next byte
--		 * after rp->end.
--		 */
--		aligned_end = (rp->end + PAGE_SIZE) & PAGE_MASK;
--
--		if ((rp->start <= user_paddr) &&
--		    (user_paddr + user_size) <= aligned_end)
--			break;
--	}
--
--	if (i > PCI_ROM_RESOURCE)
--		return -EINVAL;
--
--	return 0;
--}
--
- /* Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-  * device mapping.
-  */
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index 4c5f1fa..97ad3dd 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -272,68 +272,6 @@ pci_controller_num(struct pci_dev *dev)
-  */
- 
- /*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static __inline__ int
--__pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
--		       enum pci_mmap_state mmap_state)
--{
--	struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
--	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
--	unsigned long io_offset = 0;
--	int i, res_bit;
--
--	if (pci_ctrl == 0)
--		return -EINVAL;		/* should never happen */
--
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)pci_ctrl->io_space.base;
--		offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
--
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (offset < (rp->start & PAGE_MASK) || offset > rp->end)
--			continue;
--
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			offset += pci_ctrl->io_space.start - io_offset;
--		vma->vm_pgoff = offset >> PAGE_SHIFT;
--		return 0;
--	}
--
--	return -EINVAL;
--}
--
--/*
-  * Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-  * device mapping.
-  */
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
 -- 
-2.8.3
+1.9.1
