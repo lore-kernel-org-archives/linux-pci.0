@@ -1,119 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>,
-        Jason Taylor <jason.taylor@simplivity.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 4.7 023/143] genirq/msi: Make sure PCI MSIs are activated early
-Date: Mon,  5 Sep 2016 18:43:19 +0200
-Message-Id: <20160905164431.606610687@linuxfoundation.org>
-In-Reply-To: <20160905164430.593075551@linuxfoundation.org>
-References: <20160905164430.593075551@linuxfoundation.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v2 02/10] driver core: Functional dependencies tracking
+ support
+Date: Wed, 07 Sep 2016 01:57:11 +0200
+Message-ID: <1546158.G8Vnv1pldV@vostro.rjw.lan>
+In-Reply-To: <20160728152831.GA1929@wunner.de>
+References: <1466144820-6286-1-git-send-email-m.szyprowski@samsung.com>
+ <2841548.NIYVpJFBcH@vostro.rjw.lan> <20160728152831.GA1929@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+ linux-samsung-soc@vger.kernel.org,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Inki Dae <inki.dae@samsung.com>,
+ "open list:AMD IOMMU \(AMD-VI\)" <iommu@lists.linux-foundation.org>,
+ Kukjin Kim <kgene@kernel.org>, Mark Brown <broonie@kernel.org>,
+ linux-pci@vger.kernel.org, Andreas Noever <andreas.noever@gmail.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.7-stable review patch.  If anyone has any objections, please let me know.
+On Thursday, July 28, 2016 05:28:31 PM Lukas Wunner wrote:
+> On Thu, Jul 28, 2016 at 02:30:31AM +0200, Rafael J. Wysocki wrote:
+> > On Monday, July 25, 2016 12:48:32 AM Lukas Wunner wrote:
+> > > On Thu, Jul 21, 2016 at 02:25:15AM +0200, Rafael J. Wysocki wrote:
+> > > > On Thursday, July 21, 2016 01:25:53 AM Lukas Wunner wrote:
+> > > > > I guess I could amend portdrv to return -EPROBE_DEFER on Macs if
+> > > > > no driver is bound to the NHI. Doesn't feel pretty to me though.
+> > > > > 
+> > > > > Ultimately this seems to be the same issue as with calling
+> > > > > dev_pm_domain_set() for a bound device. Perhaps device_link_add()
+> > > > > can likewise be allowed if a runtime PM ref is held for the devices
+> > > > > and the call happens under lock_system_sleep()?
+> > > > 
+> > > > No, the whole synchronization scheme in the links code would have had to be
+> > > > changed for that to really work.
+> > > > 
+> > > > And it really is about what is needed (at least in principle) to run your
+> > > > device.  If you think you need device X with a driver to handle device Y
+> > > > correctly, then either you need it all the time, from probe to remove, or
+> > > > you just don't really need it at all.
+> > > 
+> > > Real life isn't as simple as that.
+> > > 
+> > > In this case, we have consumers (hotplug ports) which are doing fine
+> > > if the driver for the supplier (NHI) is not loaded. But once it loads,
+> > > the links must be in place.
+> > 
+> > Hmm.
+> > 
+> > What if it is not loaded and the system suspends.  Will everything work
+> > as expected after the subsequent resume?
+> 
+> The short answer is yes.
 
-------------------
+OK
 
-From: Marc Zyngier <marc.zyngier@arm.com>
+I think it's possible to add a link flag to address this case.
 
-commit f3b0946d629c8bfbd3e5f038e30cb9c711a35f10 upstream.
+Namely, if that flag is passed to device_link_add(), the link will be
+added in the DEVICE_LINK_ACTIVE state right away, but that will need to
+be synchronized against all possible transitions of the consumer device
+(at least).
 
-Bharat Kumar Gogada reported issues with the generic MSI code, where the
-end-point ended up with garbage in its MSI configuration (both for the vector
-and the message).
+It's better to do that in a separate patch for this reason IMO.
 
-It turns out that the two MSI paths in the kernel are doing slightly different
-things:
+Thanks,
+Rafael
 
-generic MSI: disable MSI -> allocate MSI -> enable MSI -> setup EP
-PCI MSI: disable MSI -> allocate MSI -> setup EP -> enable MSI
 
-And it turns out that end-points are allowed to latch the content of the MSI
-configuration registers as soon as MSIs are enabled.  In Bharat's case, the
-end-point ends up using whatever was there already, which is not what you
-want.
-
-In order to make things converge, we introduce a new MSI domain flag
-(MSI_FLAG_ACTIVATE_EARLY) that is unconditionally set for PCI/MSI. When set,
-this flag forces the programming of the end-point as soon as the MSIs are
-allocated.
-
-A consequence of this is that we have an extra activate in irq_startup, but
-that should be without much consequence.
-
-tglx:
-
- - Several people reported a VMWare regression with PCI/MSI-X passthrough. It
-   turns out that the patch also cures that issue.
-
- - We need to have a look at the MSI disable interrupt path, where we write
-   the msg to all zeros without disabling MSI in the PCI device. Is that
-   correct?
-
-Fixes: 52f518a3a7c2 "x86/MSI: Use hierarchical irqdomains to manage MSI interrupts"
-Reported-and-tested-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Reported-and-tested-by: Foster Snowhill <forst@forstwoof.ru>
-Reported-by: Matthias Prager <linux@matthiasprager.de>
-Reported-by: Jason Taylor <jason.taylor@simplivity.com>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Link: http://lkml.kernel.org/r/1468426713-31431-1-git-send-email-marc.zyngier@arm.com
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/pci/msi.c   |    2 ++
- include/linux/msi.h |    2 ++
- kernel/irq/msi.c    |   11 +++++++++++
- 3 files changed, 15 insertions(+)
-
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1277,6 +1277,8 @@ struct irq_domain *pci_msi_create_irq_do
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		pci_msi_domain_update_chip_ops(info);
- 
-+	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
-+
- 	domain = msi_create_irq_domain(fwnode, info, parent);
- 	if (!domain)
- 		return NULL;
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -268,6 +268,8 @@ enum {
- 	MSI_FLAG_MULTI_PCI_MSI		= (1 << 2),
- 	/* Support PCI MSIX interrupts */
- 	MSI_FLAG_PCI_MSIX		= (1 << 3),
-+	/* Needs early activate, required for PCI */
-+	MSI_FLAG_ACTIVATE_EARLY		= (1 << 4),
- };
- 
- int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -357,6 +357,17 @@ int msi_domain_alloc_irqs(struct irq_dom
- 		else
- 			dev_dbg(dev, "irq [%d-%d] for MSI\n",
- 				virq, virq + desc->nvec_used - 1);
-+		/*
-+		 * This flag is set by the PCI layer as we need to activate
-+		 * the MSI entries before the PCI layer enables MSI in the
-+		 * card. Otherwise the card latches a random msi message.
-+		 */
-+		if (info->flags & MSI_FLAG_ACTIVATE_EARLY) {
-+			struct irq_data *irq_data;
-+
-+			irq_data = irq_domain_get_irq_data(domain, desc->irq);
-+			irq_domain_activate_irq(irq_data);
-+		}
- 	}
- 
- 	return 0;
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
