@@ -1,49 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:24343 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751033AbcISRgL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Sep 2016 13:36:11 -0400
-Date: Mon, 19 Sep 2016 13:47:23 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv2 1/4] pci: Add is_removed state
-Message-ID: <20160919174723.GA8000@keith>
-References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
- <1473199219-3369-2-git-send-email-keith.busch@intel.com>
- <20160917083506.GA1235@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160917083506.GA1235@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V10 3/8] PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
+Date: Tue,  6 Sep 2016 11:08:53 +0200
+Message-Id: <1473152938-17388-4-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 17, 2016 at 10:35:06AM +0200, Lukas Wunner wrote:
-> On Tue, Sep 06, 2016 at 04:00:16PM -0600, Keith Busch wrote:
-> > -	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
-> > +	if (pdev->is_removed)
-> > +		return false;
-> > +
-> > +	if (!pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0)) {
-> > +		pdev->is_removed = 1;
-> > +		return false;
-> > +	}
-> > +	return true;
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_device_is_present);
-> 
-> I've kept this series on my development branch and found a bug now:
-> 
-> In the above hunk, it's okay to return false if pdev->is_removed is set,
-> but it's not okay to set pdev->is_removed if pci_bus_read_dev_vendor_id()
-> returns false.  That's because pci_bus_read_dev_vendor_id() can fail for
-> other reasons, such as the device being powered down to D3cold, or
-> currently unreachable because a PCIe port above it was suspended to D3hot
-> so that the link is down.  Those are transient issues, the device isn't
-> removed in those cases.
+It is possible to provide information about which MSI controller to
+use on a per-device basis for DT. This patch supply this with ACPI support.
 
-Thanks for the info. I wasn't sure about making the removed return sticky
-on a failed vendor id check, so I will remove that from this path and
-resend the entire series.
+Currently, IORT is the only one ACPI table which can provide such mapping.
+In order to plug IORT into MSI infrastructure we are adding ACPI
+equivalents for finding PCI device domain and its RID translation
+(pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/msi.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 98f1222..137b4c5 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -19,6 +19,7 @@
+ #include <linux/smp.h>
+ #include <linux/errno.h>
+ #include <linux/io.h>
++#include <linux/acpi_iort.h>
+ #include <linux/slab.h>
+ #include <linux/irqdomain.h>
+ #include <linux/of_irq.h>
+@@ -1502,8 +1503,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+ 
+ 	of_node = irq_domain_get_of_node(domain);
+-	if (of_node)
+-		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
++	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
++			iort_msi_map_rid(&pdev->dev, rid);
+ 
+ 	return rid;
+ }
+@@ -1519,9 +1520,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+  */
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+ {
++	struct irq_domain *dom;
+ 	u32 rid = 0;
+ 
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+-	return of_msi_map_get_device_domain(&pdev->dev, rid);
++	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
++	if (!dom)
++		dom = iort_get_device_domain(&pdev->dev, rid);
++	return dom;
+ }
+ #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+-- 
+1.9.1
