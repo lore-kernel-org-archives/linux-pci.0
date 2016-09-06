@@ -1,183 +1,268 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sun, 4 Sep 2016 21:22:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-        rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
-        hanjun.guo@linaro.org, okaya@codeaurora.org, jchandra@broadcom.com,
-        cov@codeaurora.org, dhdang@apm.com, ard.biesheuvel@linaro.org,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-        wangyijing@huawei.com, msalter@redhat.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linaro-acpi@lists.linaro.org, jcm@redhat.com,
-        andrea.gallo@linaro.org, jeremy.linton@arm.com,
-        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH V5 2/5] PCI/ACPI: Move ACPI ECAM mapping to generic
- MCFG driver
-Message-ID: <20160905022247.GC30488@localhost>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com>
- <1470661541-26270-3-git-send-email-tn@semihalf.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470661541-26270-3-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V10 5/8] irqchip/gicv3-its: Refactor ITS DT init code to prepare for ACPI
+Date: Tue,  6 Sep 2016 11:08:55 +0200
+Message-Id: <1473152938-17388-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 08, 2016 at 03:05:38PM +0200, Tomasz Nowicki wrote:
-> pci_acpi_setup_ecam_mapping() is not really ARM64 specific so move it out
-> of arch/arm64/ directory. In preparation for adding MCFG quirk handling
-> extend pci_acpi_setup_ecam_mapping() functionality to accept custom
-> PCI config accessors (function's argument).
-> 
-> For ARM64 ACPI based PCI host controller we still use pci_generic_ecam_ops.
+In order to add ACPI support we need to isolate ACPI&DT common code and
+move DT logic to corresponding functions. To achieve this we are using
+firmware agnostic handle which can be unpacked to either DT or ACPI node.
 
-I'm not sure we gain much by moving pci_acpi_setup_ecam_mapping() from
-arm64 code to generic code, since nobody else uses it yet.  But if you
-do want to move it, can you do the move (with no other change at all)
-in one patch, and add the new "ops" argument in a second patch?  I
-just don't want the "ops" change to get lost in the noise of the move.
+No functional changes other than a very minor one:
+1. Terminate its_init call with -ENODEV for non-DT case which allows
+to remove hack from its-gic-v3.c.
+2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+as a bonus we get nice string formatting.
+3. Since there is only one of ITS parent domain convert it to static global
+variable and drop the parameter from its_probe_one. Users can refer to it
+in more convenient way then.
 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> ---
->  arch/arm64/kernel/pci.c  | 41 ++---------------------------------------
->  drivers/acpi/pci_mcfg.c  | 40 ++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci-acpi.h |  3 +++
->  3 files changed, 45 insertions(+), 39 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index 981e828..2e7bed4 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -114,44 +114,6 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  	return 0;
->  }
->  
-> -/*
-> - * Lookup the bus range for the domain in MCFG, and set up config space
-> - * mapping.
-> - */
-> -static struct pci_config_window *
-> -pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
-> -{
-> -	struct resource *bus_res = &root->secondary;
-> -	u16 seg = root->segment;
-> -	struct pci_config_window *cfg;
-> -	struct resource cfgres;
-> -	unsigned int bsz;
-> -
-> -	/* Use address from _CBA if present, otherwise lookup MCFG */
-> -	if (!root->mcfg_addr)
-> -		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
-> -
-> -	if (!root->mcfg_addr) {
-> -		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
-> -			seg, bus_res);
-> -		return NULL;
-> -	}
-> -
-> -	bsz = 1 << pci_generic_ecam_ops.bus_shift;
-> -	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
-> -	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
-> -	cfgres.flags = IORESOURCE_MEM;
-> -	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
-> -			      &pci_generic_ecam_ops);
-> -	if (IS_ERR(cfg)) {
-> -		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
-> -			seg, bus_res, PTR_ERR(cfg));
-> -		return NULL;
-> -	}
-> -
-> -	return cfg;
-> -}
-> -
->  /* release_info: free resources allocated by init_info */
->  static void pci_acpi_generic_release_info(struct acpi_pci_root_info *ci)
->  {
-> @@ -177,7 +139,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  	if (!ri)
->  		return NULL;
->  
-> -	ri->cfg = pci_acpi_setup_ecam_mapping(root);
-> +	ri->cfg = pci_acpi_setup_ecam_mapping(root,
-> +					      &pci_generic_ecam_ops.pci_ops);
->  	if (!ri->cfg) {
->  		kfree(ri);
->  		return NULL;
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index b5b376e..331b560 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -22,6 +22,7 @@
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
->  #include <linux/pci-acpi.h>
-> +#include <linux/pci-ecam.h>
->  
->  /* Structure to hold entries from the MCFG table */
->  struct mcfg_entry {
-> @@ -52,6 +53,45 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
->  	return 0;
->  }
->  
-> +/*
-> + * Lookup the bus range for the domain in MCFG, and set up config space
-> + * mapping.
-> + */
-> +struct pci_config_window *
-> +pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops)
-> +{
-> +	struct resource *bus_res = &root->secondary;
-> +	u16 seg = root->segment;
-> +	struct pci_config_window *cfg;
-> +	struct resource cfgres;
-> +	struct pci_ecam_ops ecam_ops = {
-> +			.bus_shift = 20,
-> +			.pci_ops = *ops,
-> +	};
-> +
-> +	/* Use address from _CBA if present, otherwise lookup MCFG */
-> +	if (!root->mcfg_addr)
-> +		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
-> +
-> +	if (!root->mcfg_addr) {
-> +		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
-> +			seg, bus_res);
-> +		return NULL;
-> +	}
-> +
-> +	cfgres.start = root->mcfg_addr + (bus_res->start << 20);
-> +	cfgres.end = cfgres.start + (resource_size(bus_res) << 20) - 1;
-> +	cfgres.flags = IORESOURCE_MEM;
-> +	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, &ecam_ops);
-> +	if (IS_ERR(cfg)) {
-> +		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
-> +			seg, bus_res, PTR_ERR(cfg));
-> +		return NULL;
-> +	}
-> +
-> +	return cfg;
-> +}
-> +
->  static __init int pci_mcfg_parse(struct acpi_table_header *header)
->  {
->  	struct acpi_table_mcfg *mcfg;
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index 7d63a66..e9bfe00 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -26,6 +26,9 @@ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
->  
->  extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
->  
-> +extern struct pci_config_window *
-> +pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root, struct pci_ops *ops);
-> +
->  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
->  {
->  	struct pci_bus *pbus = pdev->bus;
-> -- 
-> 1.9.1
-> 
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c   | 65 ++++++++++++++++++++++----------------
+ drivers/irqchip/irq-gic-v3.c       |  7 ++--
+ include/linux/irqchip/arm-gic-v3.h |  4 +--
+ 3 files changed, 42 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 943442d..c7518c7 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -75,7 +75,7 @@ struct its_node {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	entry;
+ 	void __iomem		*base;
+-	unsigned long		phys_base;
++	phys_addr_t		phys_base;
+ 	struct its_cmd_block	*cmd_base;
+ 	struct its_cmd_block	*cmd_write;
+ 	struct its_baser	tables[GITS_BASER_NR_REGS];
+@@ -115,6 +115,7 @@ struct its_device {
+ static LIST_HEAD(its_nodes);
+ static DEFINE_SPINLOCK(its_lock);
+ static struct rdists *gic_rdists;
++static struct irq_domain *its_parent;
+ 
+ #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
+ #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
+@@ -1614,8 +1615,7 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
+ }
+ 
+-static int its_init_domain(struct device_node *node, struct its_node *its,
+-			   struct irq_domain *parent)
++static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
+ {
+ 	struct irq_domain *inner_domain;
+ 	struct msi_domain_info *info;
+@@ -1624,13 +1624,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	if (!info)
+ 		return -ENOMEM;
+ 
+-	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
+ 	if (!inner_domain) {
+ 		kfree(info);
+ 		return -ENOMEM;
+ 	}
+ 
+-	inner_domain->parent = parent;
++	inner_domain->parent = its_parent;
+ 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 	info->ops = &its_msi_domain_ops;
+ 	info->data = its;
+@@ -1639,43 +1639,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	return 0;
+ }
+ 
+-static int __init its_probe(struct device_node *node,
+-			    struct irq_domain *parent)
++static int __init its_probe_one(struct resource *res,
++				struct fwnode_handle *handle, int numa_node)
+ {
+-	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+ 
+-	err = of_address_to_resource(node, 0, &res);
+-	if (err) {
+-		pr_warn("%s: no regs?\n", node->full_name);
+-		return -ENXIO;
+-	}
+-
+-	its_base = ioremap(res.start, resource_size(&res));
++	its_base = ioremap(res->start, resource_size(res));
+ 	if (!its_base) {
+-		pr_warn("%s: unable to map registers\n", node->full_name);
++		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+ 		return -ENOMEM;
+ 	}
+ 
+ 	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+ 	if (val != 0x30 && val != 0x40) {
+-		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
++		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+ 		err = -ENODEV;
+ 		goto out_unmap;
+ 	}
+ 
+ 	err = its_force_quiescent(its_base);
+ 	if (err) {
+-		pr_warn("%s: failed to quiesce, giving up\n",
+-			node->full_name);
++		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+ 		goto out_unmap;
+ 	}
+ 
+-	pr_info("ITS: %s\n", node->full_name);
++	pr_info("ITS %pR\n", res);
+ 
+ 	its = kzalloc(sizeof(*its), GFP_KERNEL);
+ 	if (!its) {
+@@ -1687,9 +1679,9 @@ static int __init its_probe(struct device_node *node,
+ 	INIT_LIST_HEAD(&its->entry);
+ 	INIT_LIST_HEAD(&its->its_device_list);
+ 	its->base = its_base;
+-	its->phys_base = res.start;
++	its->phys_base = res->start;
+ 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+-	its->numa_node = of_node_to_nid(node);
++	its->numa_node = numa_node;
+ 
+ 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+ 	if (!its->cmd_base) {
+@@ -1736,7 +1728,7 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	err = its_init_domain(node, its, parent);
++	err = its_init_domain(handle, its);
+ 	if (err)
+ 		goto out_free_tables;
+ 
+@@ -1754,7 +1746,7 @@ out_free_its:
+ 	kfree(its);
+ out_unmap:
+ 	iounmap(its_base);
+-	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
++	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
+ 	return err;
+ }
+ 
+@@ -1782,10 +1774,10 @@ static struct of_device_id its_device_id[] = {
+ 	{},
+ };
+ 
+-int __init its_init(struct device_node *node, struct rdists *rdists,
+-	     struct irq_domain *parent_domain)
++static int __init its_of_probe(struct device_node *node)
+ {
+ 	struct device_node *np;
++	struct resource res;
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
+@@ -1795,8 +1787,27 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 			continue;
+ 		}
+ 
+-		its_probe(np, parent_domain);
++		if (of_address_to_resource(np, 0, &res)) {
++			pr_warn("%s: no regs?\n", np->full_name);
++			continue;
++		}
++
++		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
+ 	}
++	return 0;
++}
++
++int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
++		    struct irq_domain *parent_domain)
++{
++	struct device_node *of_node;
++
++	its_parent = parent_domain;
++	of_node = to_of_node(handle);
++	if (of_node)
++		its_of_probe(of_node);
++	else
++		return -ENODEV;
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index ede5672..1efc02a 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -910,7 +910,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 				 u64 redist_stride,
+ 				 struct fwnode_handle *handle)
+ {
+-	struct device_node *node;
+ 	u32 typer;
+ 	int gic_irqs;
+ 	int err;
+@@ -951,10 +950,8 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 
+ 	set_handle_irq(gic_handle_irq);
+ 
+-	node = to_of_node(handle);
+-	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
+-	    node) /* Temp hack to prevent ITS init for ACPI */
+-		its_init(node, &gic_data.rdists, gic_data.domain);
++	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis())
++		its_init(handle, &gic_data.rdists, gic_data.domain);
+ 
+ 	gic_smp_init();
+ 	gic_dist_init();
+diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+index 99ac022..8361c8d 100644
+--- a/include/linux/irqchip/arm-gic-v3.h
++++ b/include/linux/irqchip/arm-gic-v3.h
+@@ -430,9 +430,9 @@ struct rdists {
+ };
+ 
+ struct irq_domain;
+-struct device_node;
++struct fwnode_handle;
+ int its_cpu_init(void);
+-int its_init(struct device_node *node, struct rdists *rdists,
++int its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	     struct irq_domain *domain);
+ 
+ static inline bool gic_enable_sre(void)
+-- 
+1.9.1
