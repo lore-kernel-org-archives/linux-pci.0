@@ -1,180 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:40967 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934688AbcIGL34 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Sep 2016 07:29:56 -0400
-Date: Wed, 7 Sep 2016 13:30:01 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv2 3/4] pcie/aer: Cache capability position
-Message-ID: <20160907113001.GB28213@wunner.de>
-References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
- <1473199219-3369-4-git-send-email-keith.busch@intel.com>
+Received: from mail.kernel.org ([198.145.29.136]:52522 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932286AbcIFPtI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Sep 2016 11:49:08 -0400
+Date: Tue, 6 Sep 2016 10:48:04 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: netdev@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Santosh Raspatur <santosh@chelsio.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH kernel] PCI: Enable access to custom VPD for Chelsio
+ devices (cxgb3)
+Message-ID: <20160906154804.GC1214@localhost>
+References: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
+ <1470909809-11007-1-git-send-email-aik@ozlabs.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473199219-3369-4-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1470909809-11007-1-git-send-email-aik@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 06, 2016 at 04:00:18PM -0600, Keith Busch wrote:
-> This saves the postition of the error reporting capability so that it
-                 ^ position
+Hi Alexey,
 
-I'm wondering if the flag in struct pci_dev as well as the additional
-code in probe.c should be enclosed in #ifdef CONFIG_PCIEAER, as we're
-doing for ats_cap.
-
-Otherwise LGTM.
-
-Lukas
-
-> doesn't need to be rediscovered during error handling.
+On Thu, Aug 11, 2016 at 08:03:29PM +1000, Alexey Kardashevskiy wrote:
+> There is at least one Chelsio 10Gb card which uses VPD area to store
+> some custom blocks (example below). However pci_vpd_size() returns
+> the length of the first block only assuming that there can be only
+> one VPD "End Tag" and VFIO blocks access beyond that offset
+> (since 4e1a63555) which leads to the situation when the guest "cxgb3"
+> driver fails to probe the device. The host system does not have this
+> problem as the drives accesses the config space directly without
+> pci_read_vpd()/...
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> This adds a quirk to override the VPD size to a bigger value.
+> 
+> This is the controller:
+> Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
+> 
+> This is its VPD:
+> #0000 Large item 42 bytes; name 0x2 Identifier String
+> 	b'10 Gigabit Ethernet-SR PCI Express Adapter'
+> #002d Large item 74 bytes; name 0x10
+> 	#00 [EC] len=7: b'D76809 '
+> 	#0a [FN] len=7: b'46K7897'
+> 	#14 [PN] len=7: b'46K7897'
+> 	#1e [MN] len=4: b'1037'
+> 	#25 [FC] len=4: b'5769'
+> 	#2c [SN] len=12: b'YL102035603V'
+> 	#3b [NA] len=12: b'00145E992ED1'
+> #007a Small item 1 bytes; name 0xf End Tag
 > ---
->  drivers/pci/pcie/aer/aerdrv.c      | 10 +++++-----
->  drivers/pci/pcie/aer/aerdrv_core.c | 12 ++++++------
->  drivers/pci/probe.c                |  2 ++
->  include/linux/pci.h                |  1 +
->  4 files changed, 14 insertions(+), 11 deletions(-)
+> #0c00 Large item 16 bytes; name 0x2 Identifier String
+> 	b'S310E-SR-X      '
+> #0c13 Large item 234 bytes; name 0x10
+> 	#00 [PN] len=16: b'TBD             '
+> 	#13 [EC] len=16: b'110107730D2     '
+> 	#26 [SN] len=16: b'97YL102035603V  '
+> 	#39 [NA] len=12: b'00145E992ED1'
+> 	#48 [V0] len=6: b'175000'
+> 	#51 [V1] len=6: b'266666'
+> 	#5a [V2] len=6: b'266666'
+> 	#63 [V3] len=6: b'2000  '
+> 	#6c [V4] len=2: b'1 '
+> 	#71 [V5] len=6: b'c2    '
+> 	#7a [V6] len=6: b'0     '
+> 	#83 [V7] len=2: b'1 '
+> 	#88 [V8] len=2: b'0 '
+> 	#8d [V9] len=2: b'0 '
+> 	#92 [VA] len=2: b'0 '
+> 	#97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+> #0d00 Large item 252 bytes; name 0x11
+> 	#00 [VC] len=16: b'122310_1222 dp  '
+> 	#13 [VD] len=16: b'610-0001-00 H1\x00\x00'
+> 	#26 [VE] len=16: b'122310_1353 fp  '
+> 	#39 [VF] len=16: b'610-0001-00 H1\x00\x00'
+> 	#4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
+> #0dff Small item 0 bytes; name 0xf End Tag
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 49805a4..df64adb 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -130,7 +130,7 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
->  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
->  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> ---
+>  drivers/pci/quirks.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index ee72ebe1..94d3fb5 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3241,6 +3241,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
+>  			quirk_thunderbolt_hotplug_msi);
 >  
-> -	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-> +	aer_pos = pdev->aer_cap;
->  	/* Clear error status */
->  	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
->  	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
-> @@ -169,7 +169,7 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
->  	 */
->  	set_downstream_devices_error_reporting(pdev, false);
->  
-> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-> +	pos = pdev->aer_cap;
->  	/* Disable Root's interrupt in response to error messages */
->  	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
->  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-> @@ -196,7 +196,7 @@ irqreturn_t aer_irq(int irq, void *context)
->  	unsigned long flags;
->  	int pos;
->  
-> -	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
-> +	pos = pdev->port->aer_cap;
->  	/*
->  	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
->  	 * and Root error producer/consumer index
-> @@ -339,7 +339,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
->  	u32 reg32;
->  	int pos;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  
->  	/* Disable Root's interrupt in response to error messages */
->  	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> @@ -392,7 +392,7 @@ static void aer_error_resume(struct pci_dev *dev)
->  	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
->  
->  	/* Clean AER Root Error Status */
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
->  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
->  	if (dev->error_state == pci_channel_io_normal)
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 521e39c..47ac510 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -40,7 +40,7 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
->  	if (pcie_aer_get_firmware_first(dev))
->  		return -EIO;
->  
-> -	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
-> +	if (!dev->aer_cap)
->  		return -EIO;
->  
->  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
-> @@ -62,7 +62,7 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->  	int pos;
->  	u32 status;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	if (!pos)
->  		return -EIO;
->  
-> @@ -83,7 +83,7 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->  	if (!pci_is_pcie(dev))
->  		return -ENODEV;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	if (!pos)
->  		return -EIO;
->  
-> @@ -158,7 +158,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
->  	if (!(reg16 & PCI_EXP_AER_FLAGS))
->  		return false;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	if (!pos)
->  		return false;
->  
-> @@ -555,7 +555,7 @@ static void handle_error_source(struct pcie_device *aerdev,
->  		 * Correctable error does not need software intervention.
->  		 * No need to go through error recovery process.
->  		 */
-> -		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +		pos = dev->aer_cap;
->  		if (pos)
->  			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
->  					info->status);
-> @@ -647,7 +647,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
->  	info->status = 0;
->  	info->tlp_header_valid = 0;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  
->  	/* The device might not support AER */
->  	if (!pos)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e2e4244..7c3fcba 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1666,6 +1666,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	/* Enable ACS P2P upstream forwarding */
->  	pci_enable_acs(dev);
->  
-> +	/* Advanced Error Reporting */
-> +	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
->  	pci_cleanup_aer_error_status_regs(dev);
->  
->  	/* Precision Time Measurement */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1b62f7a..ee289da 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -268,6 +268,7 @@ struct pci_dev {
->  	unsigned int	class;		/* 3 bytes: (base,sub,prog-if) */
->  	u8		revision;	/* PCI revision, low byte of class word */
->  	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
-> +	u16		aer_cap;	/* AER capability offset */
->  	u8		pcie_cap;	/* PCIe capability offset */
->  	u8		msi_cap;	/* MSI capability offset */
->  	u8		msix_cap;	/* MSI-X capability offset */
+> +static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+> +{
+> +	if (!dev->vpd || !dev->vpd->ops || !dev->vpd->ops->set_size)
+> +		return;
+> +
+> +	dev->vpd->ops->set_size(dev, max_t(unsigned int, dev->vpd->len, 0xe00));
+> +}
+> +
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO,
+> +			PCI_ANY_ID,
+> +			quirk_chelsio_extend_vpd);
+
+Do you really want this for *all* Chelsio devices?  If you only need
+it for certain devices, the quirk could probably go in the driver.
+
+Can you use pci_set_vpd_size() instead?  There's already a use of that
+in cxgb4.
+
+> +
+>  #ifdef CONFIG_ACPI
+>  /*
+>   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
 > -- 
-> 2.7.2
+> 2.5.0.rc3
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
