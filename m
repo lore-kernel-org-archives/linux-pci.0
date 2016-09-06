@@ -1,58 +1,107 @@
-Return-Path: <arnd@arndb.de>
-Return-Path: <arnd@arndb.de>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>, gabriele.paoloni@huawei.com, rafael@kernel.org, catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org, wangyijing@huawei.com, andrea.gallo@linaro.org, Lorenzo.Pieralisi@arm.com, jhugo@codeaurora.org, linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com, liudongdong3@huawei.com, linux-pci@vger.kernel.org, Liviu.Dudau@arm.com, jcm@redhat.com, msalter@redhat.com, cov@codeaurora.org, mw@semihalf.com, jchandra@broadcom.com, ard.biesheuvel@linaro.org, dhdang@apm.com, linux-kernel@vger.kernel.org, jeremy.linton@arm.com, hanjun.guo@linaro.org
-Subject: Re: [RFC PATCH V5 3/5] PCI: Check platform specific ECAM quirks
-Date: Tue, 06 Sep 2016 21:14:27 +0200
-Message-ID: <6146693.UZIeGQtNL9@wuerfel>
-In-Reply-To: <34416dae-31e6-93b6-2ba8-f42ba61ede4f@semihalf.com>
-References: <1470661541-26270-1-git-send-email-tn@semihalf.com> <20160905022529.GD30488@localhost> <34416dae-31e6-93b6-2ba8-f42ba61ede4f@semihalf.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 6 Sep 2016 10:11:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Punit Agrawal <punit.agrawal@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Duc Dang <dhdang@apm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] drivers: acpi: fix GIC irq model default PCI IRQ polarity
+Message-ID: <20160906151118.GA1214@localhost>
+References: <1473084758-7377-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <CAJZ5v0hHW2ovycYRpyVLxg3As0w9ETiu2nuum8J=Ro5YPk1E4g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0hHW2ovycYRpyVLxg3As0w9ETiu2nuum8J=Ro5YPk1E4g@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, September 6, 2016 7:49:49 PM CEST Tomasz Nowicki wrote:
-> On 05.09.2016 04:25, Bjorn Helgaas wrote:
-> > On Mon, Aug 08, 2016 at 03:05:39PM +0200, Tomasz Nowicki wrote:
-> >> Some platforms may not be fully compliant with generic set of PCI config
-> >> accessors. For these cases we implement the way to overwrite accessors
-> >> set. Algorithm traverses available quirk list (static array),
-> >> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
-> >> returns pci_config_window structure with fancy PCI config ops.
-> >> oem_id, oem_table_id and rev come from MCFG table standard header.
-> >>
-> >> It is possible to define custom init call which is responsible for
-> >> setting up PCI configuration access accordingly to quirk requirements.
-> >> If custom init call is not defined, use standard pci_acpi_setup_ecam_mapping().
-> >>
-> >> pci_generic_ecam_ops will be used for platforms free from quirks.
-> >>
-> >> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> >> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> >> Signed-off-by: Christopher Covington <cov@codeaurora.org>
-> >> ---
-> >>  drivers/pci/host/Makefile      |  1 +
-> >>  drivers/pci/host/mcfg-quirks.c | 86 ++++++++++++++++++++++++++++++++++++++++++
-> >>  drivers/pci/host/mcfg-quirks.h | 20 ++++++++++
-> >>  include/linux/pci-acpi.h       |  2 +
-> >>  4 files changed, 109 insertions(+)
-> >>  create mode 100644 drivers/pci/host/mcfg-quirks.c
-> >>  create mode 100644 drivers/pci/host/mcfg-quirks.h
+On Mon, Sep 05, 2016 at 10:37:29PM +0200, Rafael J. Wysocki wrote:
+> On Mon, Sep 5, 2016 at 4:12 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > On ACPI ARM based systems the GIC interrupt controller
+> > and corresponding interrupt model permit only the high
+> > polarity for level interrupts.
 > >
-> > If the object is to work around defects in the ACPI MCFG table, I
-> > think I'd put the quirks closer to drivers/acpi/pci_mcfg.c, where we
-> > parse that table.  What if we actually put them directly *in*
-> > drivers/acpi/pci_mcfg.c?
+> > ACPI firmware describes PCI legacy IRQs through entries
+> > in the _PRT objects. Entries in the _PRT can be of two types:
+> >
+> > - Static: not configurable, trigger/polarity default to level-low,
+> >   _PRT entry defines the global GSI interrupt number
+> > - Configurable: _PRT interrupt entry contains a reference to the
+> >   corresponding PCI interrupt link device (that in turn provides the
+> >   interrupt descriptor through its _CRS/_PRS methods)
+> >
+> > Configurable IRQ entries are not currently allowed by the ACPI
+> > specification on ARM, since they can only be used for interrupt
+> > pins that are routable, and ARM platforms GIC configurations
+> > do not allow dynamic IRQ routing, routing is statically laid out
+> > at synthesis time; therefore PCI interrupt links cannot be used
+> > for PCI legacy IRQ descriptions in the _PRT on ARM systems.
+> >
+> > On the other hand, current core ACPI code handling PCI legacy IRQs
+> > consider IRQ trigger/polarity for static _PRT entries as level-low.
+> >
+> > On ARM systems with a GIC interrupt controller and corresponding
+> > ACPI interrupt model this does not work in that GIC interrupt
+> > controller is only capable of handling level interrupts whose
+> > polarity is high (for PCI legacy IRQs - that are level-low by
+> > specification - this means that the legacy IRQs are inverted before
+> > reaching the interrupt controller pin), resulting in IRQ allocation
+> > failures such as:
+> >
+> > genirq: Setting trigger mode 8 for irq 18 failed (gic_set_type+0x0/0x48)
+> >
+> > Change the default polarity for PCI legacy IRQs to high on systems
+> > booting wth ACPI on platforms with a GIC interrupt controller model,
+> > fixing the discrepancy between specification and HW behaviour.
+> >
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Punit Agrawal <punit.agrawal@arm.com>
+> > Cc: Duc Dang <dhdang@apm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Sinan Kaya <okaya@codeaurora.org>
+> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> > Cc: Marc Zyngier <marc.zyngier@arm.com>
+> > ---
+> >  drivers/acpi/pci_irq.c | 10 +++++++++-
+> >  1 file changed, 9 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> > index 2c45dd3..c576a6f 100644
+> > --- a/drivers/acpi/pci_irq.c
+> > +++ b/drivers/acpi/pci_irq.c
+> > @@ -411,7 +411,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+> >         int gsi;
+> >         u8 pin;
+> >         int triggering = ACPI_LEVEL_SENSITIVE;
+> > -       int polarity = ACPI_ACTIVE_LOW;
+> > +       /*
+> > +        * On ARM systems with the GIC interrupt model, level interrupts
+> > +        * are always polarity high by specification; PCI legacy
+> > +        * IRQs lines are inverted before reaching the interrupt
+> > +        * controller and must therefore be considered active high
+> > +        * as default.
+> > +        */
+> > +       int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
+> > +                                     ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
+> >         char *link = NULL;
+> >         char link_desc[16];
+> >         int rc;
+> > --
 > 
-> Then we need to export quirk init calls or ecam ops from 
-> drivers/pci/host/* directory.
-> 
-> Currently we keep mcfg quirk handling code and related drivers in one 
-> place drivers/pci/host/
+> Bjorn, any objections?
 
-I think that's the wrong place to have it, it just leads to people
-trying to share code with the host drivers in that directory, which
-hasn't really worked out so far, it just adds complexity.
+Looks OK to me.
 
-	Arnd
+I never did figure out exactly what in the ACPI spec prohibited the
+use of interrupt links, so a spec reference there would be nice.
+
+Bjorn
