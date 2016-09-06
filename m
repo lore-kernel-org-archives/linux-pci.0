@@ -1,132 +1,97 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Aaron Durbin <adurbin@google.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v2 2/2] ACPI / platform: Pay attention to parent device's resources
-Date: Thu, 15 Sep 2016 11:07:04 +0300
-Message-Id: <20160915080704.129892-2-mika.westerberg@linux.intel.com>
-In-Reply-To: <20160915080704.129892-1-mika.westerberg@linux.intel.com>
-References: <CAJZ5v0jqk_5wr1qDhiX9+V3o3f1J74hBm8Pf=6gt4kmvX0_5EQ@mail.gmail.com>
- <20160915080704.129892-1-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:46296 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934334AbcIFWUF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Sep 2016 18:20:05 -0400
+Subject: [PATCH 1/2] PCI/AER: Remove aerdriver.nosourceid kernel parameter
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lance Ortiz <lance.ortiz@hpe.com>, Betty Dall <betty.dall@hpe.com>,
+        Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
+        Chen Gong <gong.chen@linux.intel.com>,
+        KeithBuschkeith.busch@intel.com,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-kernel@vger.kernel.org, Shuah Khan <shuahkh@osg.samsung.com>,
+        Huang Ying <ying.huang@intel.com>,
+        Vijay Mohan Pandarathil <vijaymohan.pandarathil@hpe.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Date: Tue, 06 Sep 2016 17:19:42 -0500
+Message-ID: <20160906221942.23655.87117.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160906221522.23655.66321.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160906221522.23655.66321.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Given following simplified device hierarchy:
+The aerdriver.nosourceid kernel parameter was intended for working around
+broken chipsets don't supply the source ID for AER events.  We recently
+added PCI_BUS_FLAGS_NO_AERSID, which can be set by quirks for the same
+purpose.
 
-  // PCI device having BAR0 (RMEM) split between 4 GPIO devices.
-  Device (P2S)
-  {
-      Name (_ADR, 0x000d0000)
+Remove the aerdriver.nosourceid kernel parameter.  For anything other than
+debugging, asking users to find and use kernel parameters is a poor user
+experience.  Instead, we should add PCI_BUS_FLAGS_NO_AERSID quirks for any
+hardware that needs it.
 
-      Device (GPO0)
-      {
-          Name (_HID, "INT3452")
-          Name (_UID, 1)
-          Name (_CRS, ResourceTemplate () {
-              Memory32Fixed (ReadWrite, 0, 0x4000, RMEM + 0x0000)
-          })
-      }
-
-      Device (GPO1)
-      {
-          Name (_HID, "INT3452")
-          Name (_UID, 2)
-          Name (_CRS, ResourceTemplate () {
-              Memory32Fixed (ReadWrite, 0, 0x4000, RMEM + 0x4000)
-          })
-      }
-
-      Device (GPO2)
-      {
-          Name (_HID, "INT3452")
-          Name (_UID, 3)
-          Name (_CRS, ResourceTemplate () {
-              Memory32Fixed (ReadWrite, 0, 0x4000, RMEM + 0x8000)
-          })
-      }
-
-      Device (GPO3)
-      {
-          Name (_HID, "INT3452")
-          Name (_UID, 4)
-          Name (_CRS, ResourceTemplate () {
-              Memory32Fixed (ReadWrite, 0, 0x4000, RMEM + 0xc000)
-          })
-      }
-  }
-
-The current ACPI platform enumeration code allocates resources from the
-global MMIO resource pool (/proc/iomem) for all the four GPIO devices.
-After this PCI core calls pcibios_resource_survey() to allocate resources
-for all PCI devices including the parent device for these GPIO devices
-(P2S). Since that resource range has already been reserved the allocation
-fails.
-
-The reason for this is that we never bother with parent device's resources
-when ACPI platform devices are created.
-
-Fix this by checking whether there is a parent device and in that case make
-sure we assign correct parent resource to the resources for the child ACPI
-platform device. Currently we only deal with parent devices if they are PCI
-devices but we may expand this later to cover other bus types as well.
-
-Reported-by: Aaron Durbin <adurbin@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-No changes from v1.
+ Documentation/PCI/pcieaer-howto.txt |    4 ----
+ drivers/pci/pcie/aer/aerdrv_core.c  |   12 ++++--------
+ 2 files changed, 4 insertions(+), 12 deletions(-)
 
- drivers/acpi/acpi_platform.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.txt
+index b4987c0..4956df3 100644
+--- a/Documentation/PCI/pcieaer-howto.txt
++++ b/Documentation/PCI/pcieaer-howto.txt
+@@ -61,10 +61,6 @@ be initiated although firmwares have no _OSC support. To enable the
+ walkaround, pls. add aerdriver.forceload=y to kernel boot parameter line
+ when booting kernel. Note that forceload=n by default.
+ 
+-nosourceid, another parameter of type bool, can be used when broken
+-hardware (mostly chipsets) has root ports that cannot obtain the reporting
+-source ID. nosourceid=n by default.
+-
+ 2.3 AER error output
+ When a PCI-E AER error is captured, an error message will be outputted to
+ console. If it's a correctable error, it is outputted as a warning.
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 8f5e14c..f8a9b17 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -28,9 +28,7 @@
+ #include "aerdrv.h"
+ 
+ static bool forceload;
+-static bool nosourceid;
+ module_param(forceload, bool, 0);
+-module_param(nosourceid, bool, 0);
+ 
+ #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+ 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+@@ -132,8 +130,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 	 * When bus id is equal to 0, it might be a bad id
+ 	 * reported by root port.
+ 	 */
+-	if (!nosourceid &&
+-	    (PCI_BUS_NUM(e_info->id) != 0) &&
++	if ((PCI_BUS_NUM(e_info->id) != 0) &&
+ 	    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
+ 		/* Device ID match? */
+ 		if (e_info->id == ((dev->bus->number << 8) | dev->devfn))
+@@ -146,11 +143,10 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 
+ 	/*
+ 	 * When either
+-	 *      1) nosourceid==y;
+-	 *      2) bus id is equal to 0. Some ports might lose the bus
++	 *      1) bus id is equal to 0. Some ports might lose the bus
+ 	 *              id of error source id;
+-	 *      3) bus flag PCI_BUS_FLAGS_NO_AERSID is set
+-	 *      4) There are multiple errors and prior ID comparing fails;
++	 *      2) bus flag PCI_BUS_FLAGS_NO_AERSID is set
++	 *      3) There are multiple errors and prior ID comparing fails;
+ 	 * We check AER status registers to find possible reporter.
+ 	 */
+ 	if (atomic_read(&dev->enable_cnt) == 0)
 
-diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-index 159f7f19abce..b200ae1f3c6f 100644
---- a/drivers/acpi/acpi_platform.c
-+++ b/drivers/acpi/acpi_platform.c
-@@ -17,6 +17,7 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/dma-mapping.h>
-+#include <linux/pci.h>
- #include <linux/platform_device.h>
- 
- #include "internal.h"
-@@ -30,6 +31,22 @@ static const struct acpi_device_id forbidden_id_list[] = {
- 	{"", 0},
- };
- 
-+static void acpi_platform_fill_resource(struct acpi_device *adev,
-+	const struct resource *src, struct resource *dest)
-+{
-+	struct device *parent;
-+
-+	*dest = *src;
-+
-+	/*
-+	 * If the device has parent we need to take its resources into
-+	 * account as well because this device might consume part of those.
-+	 */
-+	parent = acpi_get_first_physical_node(adev->parent);
-+	if (parent && dev_is_pci(parent))
-+		dest->parent = pci_find_resource(to_pci_dev(parent), dest);
-+}
-+
- /**
-  * acpi_create_platform_device - Create platform device for ACPI device node
-  * @adev: ACPI device node to create a platform device for.
-@@ -70,7 +87,8 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
- 		}
- 		count = 0;
- 		list_for_each_entry(rentry, &resource_list, node)
--			resources[count++] = *rentry->res;
-+			acpi_platform_fill_resource(adev, rentry->res,
-+						    &resources[count++]);
- 
- 		acpi_dev_free_resource_list(&resource_list);
- 	}
--- 
-2.9.3
