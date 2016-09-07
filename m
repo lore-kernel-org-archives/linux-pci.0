@@ -1,59 +1,50 @@
-Return-Path: <gwshan@linux.vnet.ibm.com>
-Return-Path: <gwshan@linux.vnet.ibm.com>
-Date: Wed, 28 Sep 2016 09:37:49 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        bhelgaas@google.com, linux-pci@vger.kernel.org, clsoto@us.ibm.com,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH] PCI: Add parameter @mmio_force_on to
- pci_update_resource()
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <20160927192003.GA14642@localhost>
- <1475012732.2857.293.camel@au1.ibm.com>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [UPDATE PATCH V10 2/8] ACPI: Add new IORT functions to support
+ MSI domain handling
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+ rjw@rjwysocki.net, helgaas@kernel.org, rafael@kernel.org,
+ Lorenzo.Pieralisi@arm.com
+References: <1473152938-17388-3-git-send-email-tn@semihalf.com>
+ <1473249493-20271-1-git-send-email-tn@semihalf.com>
+Cc: will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
+ shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+ okaya@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <c9c233c4-bb19-df6f-f848-7306af713eb5@semihalf.com>
+Date: Wed, 7 Sep 2016 15:01:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475012732.2857.293.camel@au1.ibm.com>
-Message-Id: <20160927233749.GA19797@gwshan>
+In-Reply-To: <1473249493-20271-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 28, 2016 at 07:45:32AM +1000, Benjamin Herrenschmidt wrote:
->On Tue, 2016-09-27 at 14:20 -0500, Bjorn Helgaas wrote:
->> On Mon, Sep 19, 2016 at 09:53:30AM +1000, Gavin Shan wrote:
->> > In pci_update_resource(), the PCI device's memory decoding (0x2 in
->> > PCI_COMMAND) is disabled when 64-bits memory BAR is updated if the
->> > PCI device's memory space wasn't asked to be always on by @pdev->
->> > mmio_always_on. The PF's memory decoding might be disabled when
->> > updating its IOV BARs in the following path. Actually, the PF's
->> > memory decoding shouldn't be disabled in this scenario as the PF
->> > has been started to provide services:
->> 
->> The reason we disable memory decoding while updating a 64-bit BAR is
->> because we can't do the update atomically, and a half-updated BAR might
->> conflict with other devices.
->> 
->> You need to explain what is special about these SR-IOV BARs that makes it
->> safe to update them non-atomically while decoding is enabled.
+On 07.09.2016 13:58, Tomasz Nowicki wrote:
+> For ITS, MSI functionality consists on building domain stack and
+> during that process we need to reference to domain stack components
+> e.g. before we create new DOMAIN_BUS_PCI_MSI domain we need to specify
+> its DOMAIN_BUS_NEXUS parent domain. In order to manage that process
+> properly, maintain list which elements contain domain token
+> (unique for MSI domain stack) and ITS ID: iort_register_domain_token()
+> and iort_deregister_domain_token(). Then retrieve domain token
+> any time later with ITS ID being key off: iort_find_domain_token().
+> With domain token and domain type we are able to find corresponding
+> IRQ domain.
 >
->The IOV BAR won't decode until SR-IOV is enabled right ? Gavin, I don't
->think we update it "live", so it should be safe...
+> Since IORT is prepared to describe MSI domain on a per-device basis,
+> use existing IORT helpers and implement two calls:
+> 1. iort_msi_map_rid() to map MSI RID for a device
+> 2. iort_get_device_domain() to find domain token for a device
 >
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+>
+> Conflicts:
+> 	drivers/acpi/arm64/iort.c
 
-Yeah, it's safe to update it with memory decoding on. As the function call
-flow I listed in the changelog (as below), nobody should access the IOV BAR
-when pci_update_resource() is called. However, the PF's memory BARs might
-be accessed that time and it's not safe to disable PF's memory decoding.
+Rebase leftover ^^^,  sorry.
 
-   sriov_numvfs_store
-   pdev->driver->sriov_configure
-   mlx5_core_sriov_configure
-   pci_enable_sriov
-   sriov_enable
-   pcibios_sriov_enable
-   pnv_pci_sriov_enable
-   pnv_pci_vf_resource_shift
-   pci_update_resource
-
-Thanks,
-Gavin
+Tomasz
