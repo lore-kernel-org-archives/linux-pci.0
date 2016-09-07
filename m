@@ -1,144 +1,182 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Tomasz Nowicki
-	<tn@semihalf.com>,
-        David Daney <ddaney@caviumnetworks.com>,
-        Will Deacon
-	<will.deacon@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        "Rafael
- Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Hanjun Guo <hanjun.guo@linaro.org>,
-        Sinan Kaya
-	<okaya@codeaurora.org>,
-        Jayachandran C <jchandra@broadcom.com>,
-        "Christopher
- Covington" <cov@codeaurora.org>,
-        Duc Dang <dhdang@apm.com>,
-        Robert Richter
-	<robert.richter@caviumnetworks.com>,
-        Marcin Wojtas <mw@semihalf.com>, "Liviu
- Dudau" <Liviu.Dudau@arm.com>,
-        Wangyijing <wangyijing@huawei.com>, Mark Salter
-	<msalter@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        Linaro ACPI Mailman List
-	<linaro-acpi@lists.linaro.org>,
-        Jon Masters <jcm@redhat.com>, Andrea Gallo
-	<andrea.gallo@linaro.org>,
-        Jeremy Linton <jeremy.linton@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        Jeff Hugo
-	<jhugo@codeaurora.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: RE: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Date: Thu, 22 Sep 2016 11:12:09 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8815C8@lhreml507-mbx>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-4-git-send-email-tn@semihalf.com>
- <20160919180900.GB13775@localhost>
- <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
- <20160920133327.GB13855@localhost>
- <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
- <20160920140518.GD13855@localhost>
- <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
- <20160920191744.GA4941@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F87CF8F@lhreml507-mbx>
- <20160921185920.GC20006@localhost>
-In-Reply-To: <20160921185920.GC20006@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:40967 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934688AbcIGL34 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Sep 2016 07:29:56 -0400
+Date: Wed, 7 Sep 2016 13:30:01 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv2 3/4] pcie/aer: Cache capability position
+Message-ID: <20160907113001.GB28213@wunner.de>
+References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
+ <1473199219-3369-4-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473199219-3369-4-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+On Tue, Sep 06, 2016 at 04:00:18PM -0600, Keith Busch wrote:
+> This saves the postition of the error reporting capability so that it
+                 ^ position
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 21 September 2016 19:59
-> To: Gabriele Paoloni
-> Cc: Ard Biesheuvel; Tomasz Nowicki; David Daney; Will Deacon; Catalin
-> Marinas; Rafael Wysocki; Lorenzo Pieralisi; Arnd Bergmann; Hanjun Guo;
-> Sinan Kaya; Jayachandran C; Christopher Covington; Duc Dang; Robert
-> Richter; Marcin Wojtas; Liviu Dudau; Wangyijing; Mark Salter; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Linaro ACPI
-> Mailman List; Jon Masters; Andrea Gallo; Jeremy Linton; liudongdong
-> (C); Jeff Hugo; linux-acpi@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Rafael J. Wysocki
-> Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-
-> specific register range for ACPI case
->=20
-> On Wed, Sep 21, 2016 at 02:10:55PM +0000, Gabriele Paoloni wrote:
-> > Hi Bjorn
-> >
-> > [...]
-> >
-> >
-> > >
-> > > If future hardware is completely ECAM-compliant and we don't need
-> any
-> > > more MCFG quirks, that would be great.
-> > >
-> > > But we'll still need to describe that memory-mapped config space
-> > > somewhere.  If that's done with PNP0C02 or similar devices (as is
-> done
-> > > on my x86 laptop), we'd be all set.
-> > >
-> > > If we need to work around firmware in the field that doesn't do
-> that,
-> > > one possibility is a PNP quirk along the lines of
-> > > quirk_amd_mmconfig_area().
-> >
-> > So, if my understanding is correct, for platforms that have not been
-> > shipped yet you propose to use PNP0C02 in the ACPI table in order to
-> > declare a motherboard reserved resource whereas for shipped platforms
-> > you propose to have a quirk along pnp_fixups in order to track the
-> > resource usage even if values are hardcoded...correct?
->=20
-> Yes.  I'm open to alternate proposals, but x86 uses PNP0C02, and
-> following existing practice seems reasonable.
->=20
-> > Before Tomasz came up with this patchset we had a call between the
-> vendors
-> > involved in this PCI quirks saga and other guys from Linaro and ARM.
-> >
-> > Lorenzo summarized the outcome as in the following link
-> > http://lkml.iu.edu/hypermail/linux/kernel/1606.2/03344.html
-> >
-> > Since this quirks mechanism has been discussed for quite a long time
-> now
-> > IMHO it would be good to have a last call including also you (Bjorn)
-> so
-> > that we can all agree on what to do and we avoid changing our drivers
-> again
-> > and again...
->=20
-> I think we're converging pretty fast.  As far as I'm concerned, the
-> v6 ECAM quirks implementation is perfect.  The only remaining issue is
-> reporting the ECAM resources, and I haven't seen objections to using
-> PNP0C02 + PNP quirks for broken firmware.
->=20
-> There is the question of how or whether to associate a PNP0A03 PCI
-> bridge with resources from a different PNP0C02 device, but that's not
-> super important.  If the hard-coded resources appear both in a quirk
-> and in the PCI bridge driver, it's ugly but not the end of the world.
-> We've still achieved the objective of avoiding landmines in the
-> address space.
+I'm wondering if the flag in struct pci_dev as well as the additional
+code in probe.c should be enclosed in #ifdef CONFIG_PCIEAER, as we're
+doing for ats_cap.
 
-Ok got it many thanks
+Otherwise LGTM.
 
-Gab
+Lukas
 
->=20
-> Bjorn
+> doesn't need to be rediscovered during error handling.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv.c      | 10 +++++-----
+>  drivers/pci/pcie/aer/aerdrv_core.c | 12 ++++++------
+>  drivers/pci/probe.c                |  2 ++
+>  include/linux/pci.h                |  1 +
+>  4 files changed, 14 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index 49805a4..df64adb 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -130,7 +130,7 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+>  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
+>  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+>  
+> -	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+> +	aer_pos = pdev->aer_cap;
+>  	/* Clear error status */
+>  	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
+>  	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
+> @@ -169,7 +169,7 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+>  	 */
+>  	set_downstream_devices_error_reporting(pdev, false);
+>  
+> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+> +	pos = pdev->aer_cap;
+>  	/* Disable Root's interrupt in response to error messages */
+>  	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
+>  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+> @@ -196,7 +196,7 @@ irqreturn_t aer_irq(int irq, void *context)
+>  	unsigned long flags;
+>  	int pos;
+>  
+> -	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
+> +	pos = pdev->port->aer_cap;
+>  	/*
+>  	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
+>  	 * and Root error producer/consumer index
+> @@ -339,7 +339,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+>  	u32 reg32;
+>  	int pos;
+>  
+> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	pos = dev->aer_cap;
+>  
+>  	/* Disable Root's interrupt in response to error messages */
+>  	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
+> @@ -392,7 +392,7 @@ static void aer_error_resume(struct pci_dev *dev)
+>  	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+>  
+>  	/* Clean AER Root Error Status */
+> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	pos = dev->aer_cap;
+>  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+>  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
+>  	if (dev->error_state == pci_channel_io_normal)
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 521e39c..47ac510 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -40,7 +40,7 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+>  	if (pcie_aer_get_firmware_first(dev))
+>  		return -EIO;
+>  
+> -	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
+> +	if (!dev->aer_cap)
+>  		return -EIO;
+>  
+>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
+> @@ -62,7 +62,7 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+>  	int pos;
+>  	u32 status;
+>  
+> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	pos = dev->aer_cap;
+>  	if (!pos)
+>  		return -EIO;
+>  
+> @@ -83,7 +83,7 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+>  	if (!pci_is_pcie(dev))
+>  		return -ENODEV;
+>  
+> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	pos = dev->aer_cap;
+>  	if (!pos)
+>  		return -EIO;
+>  
+> @@ -158,7 +158,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+>  	if (!(reg16 & PCI_EXP_AER_FLAGS))
+>  		return false;
+>  
+> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	pos = dev->aer_cap;
+>  	if (!pos)
+>  		return false;
+>  
+> @@ -555,7 +555,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+>  		 * Correctable error does not need software intervention.
+>  		 * No need to go through error recovery process.
+>  		 */
+> -		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +		pos = dev->aer_cap;
+>  		if (pos)
+>  			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+>  					info->status);
+> @@ -647,7 +647,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+>  	info->status = 0;
+>  	info->tlp_header_valid = 0;
+>  
+> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +	pos = dev->aer_cap;
+>  
+>  	/* The device might not support AER */
+>  	if (!pos)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e2e4244..7c3fcba 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1666,6 +1666,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	/* Enable ACS P2P upstream forwarding */
+>  	pci_enable_acs(dev);
+>  
+> +	/* Advanced Error Reporting */
+> +	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+>  	pci_cleanup_aer_error_status_regs(dev);
+>  
+>  	/* Precision Time Measurement */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1b62f7a..ee289da 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -268,6 +268,7 @@ struct pci_dev {
+>  	unsigned int	class;		/* 3 bytes: (base,sub,prog-if) */
+>  	u8		revision;	/* PCI revision, low byte of class word */
+>  	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
+> +	u16		aer_cap;	/* AER capability offset */
+>  	u8		pcie_cap;	/* PCIe capability offset */
+>  	u8		msi_cap;	/* MSI capability offset */
+>  	u8		msix_cap;	/* MSI-X capability offset */
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
