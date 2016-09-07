@@ -1,214 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:3431 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752032AbcIPJDG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 05:03:06 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>
-CC: Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "cov@codeaurora.org" <cov@codeaurora.org>,
-        "dhdang@apm.com" <dhdang@apm.com>,
-        "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>,
-        "robert.richter@caviumnetworks.com"
-        <robert.richter@caviumnetworks.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "jhugo@codeaurora.org" <jhugo@codeaurora.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
-Date: Fri, 16 Sep 2016 09:02:15 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8730EA@lhreml507-mbx>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-3-git-send-email-tn@semihalf.com>
- <57D76626.1050109@huawei.com>
- <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
- <57D7E53F.1000106@huawei.com> <20160915105849.GA10345@red-moon>
-In-Reply-To: <20160915105849.GA10345@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Return-Path: <xyjxie@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 3/5] PCI: Do not disable memory decoding in
+ pci_reassigndev_resource_alignment()
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1470980546-2918-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160906165652.GE1214@localhost>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        paulus@samba.org, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
+        benh@kernel.crashing.org, mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date: Wed, 7 Sep 2016 16:28:31 +0800
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160906165652.GE1214@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <dc5ce728-5df1-46cc-a7f0-e1d7da5ea64d@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo and Tomasz
+On 2016/9/7 0:56, Bjorn Helgaas wrote:
 
-Many Thanks for looking at this
+> On Fri, Aug 12, 2016 at 01:42:24PM +0800, Yongji Xie wrote:
+>> We should not disable memory decoding when we reassign alignment
+>> in pci_reassigndev_resource_alignment(). It's meaningless and
+>> have some side effects. For example, we found it would break
+>> this kind of P2P bridge:
+>>
+>> 0001:02:02.0 PCI bridge: PLX Technology, Inc. PEX 8718 16-Lane,
+>> 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev aa)
+> I doubt that turning memory decode off breaks this bridge.  I can
+> believe that it could cause a problem, but I doubt it would be
+> specific to this bridge.
 
-> -----Original Message-----
-> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-> Sent: 15 September 2016 11:59
-> To: liudongdong (C)
-> Cc: Tomasz Nowicki; helgaas@kernel.org; will.deacon@arm.com;
-> catalin.marinas@arm.com; rafael@kernel.org; arnd@arndb.de;
-> hanjun.guo@linaro.org; okaya@codeaurora.org; jchandra@broadcom.com;
-> cov@codeaurora.org; dhdang@apm.com; ard.biesheuvel@linaro.org;
-> robert.richter@caviumnetworks.com; mw@semihalf.com;
-> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
-> msalter@redhat.com; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linaro-acpi@lists.linaro.org;
-> jcm@redhat.com; andrea.gallo@linaro.org; jeremy.linton@arm.com;
-> Gabriele Paoloni; jhugo@codeaurora.org; linux-acpi@vger.kernel.org;
-> linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM
-> quirks
-> 
-> On Tue, Sep 13, 2016 at 07:38:39PM +0800, Dongdong Liu wrote:
-> 
-> [...]
-> 
-> > Our host bridge is non ECAM only for the RC bus config space;
-> > for any other bus underneath the root bus we support ECAM access.
-> >
-> > RC config resource with hardcode as DEFINE_RES_MEM(0xb0070000,
-> SZ_4K),
-> > EP config resource we get it from MCFG table.
-> > So we need to override ops, but config resource we only need to
-> hardcode with RC config resource.
-> >
-> > Our host controller ACPI support patch can be found:
-> > https://lkml.org/lkml/2016/8/31/340
-> 
-> Sorry I misread your code. IIUC you create an array of resources that
-> represent non-ECAM config space (and incidentally contain debug
-> registers to check the link status - that you need to check for every
-> given config access (?)), but you still need to have an MCFG entry that
+I found that disabling memory decoding would not break
+this kind of bridge.
 
-The link status check is inherited from the designware framework (see
-http://lxr.free-electrons.com/source/drivers/pci/host/pcie-designware.c#L678)
+However, it would cause some problems if we have a
+VGA device using "vgaarb" driver behind the bridge.
 
-However I think that in this case we can just check the link status
-in our init function and return an error if the link is down
+The driver didn't call something like pci_enable_device()
+when it is loaded or initialized. So when the driver issued
+memory access to the VGA device, the access cannot be
+supported by the bridge because its memory decoding is
+still disabled.
 
-> covers the bus number subject to quirk to make sure this mechanism
-> works. Correct ?
+Maybe we should drop this patch and try to fix the driver.
 
-Well we need the quirks for the root bus numbers but if read this v6
-quirk mechanism correctly even if we do not specify an mcfg entry for
-bus 0 oci_mcfg_match_quirks() is called anyway and we can set our
-special configuration space addresses for the root buses (i.e. I think
-we can have a clean MCFG table with entries only for those bus ranges
-that are really ECAM)  
+Thanks,
+Yongji
 
-> 
-> This also means that, with the MCFG tables you have and current
-> mainline kernel you are able to probe a root bridge (because the MCFG
-> table covers the bus number that is not ECAM), with enumeration
-> going haywire because it is trying to carry out ECAM accesses on
-> non-ECAM space.
-
-Yes correct, we cannot access the host controller configuration space
-with our current MCFG table and current Linux mainline
-
-> 
-> Is my reading correct ?
-> 
-> Anyway, that's not stricly related to this discussion, it is time we
-> converge on this patchset, we can add a domain range if that
-> simplifies things.
-
-IMO it would be better to have the domain range to avoid
-a very large and repetitive static quirk array
-
-Thanks
-
-Gab
-
-> 
-> Thanks,
-> Lorenzo
-> 
-> > This patch is based on RFC V5 quirk mechanism.
-> >
-> > Based on V6 quirk mechanism, we have to change it as below:
-> >
-> > #ifdef CONFIG_PCI_HISI_ACPI
-> > 	{ "HISI ", "HIP05 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP05 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP05 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP05 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP06 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP06 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP06 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP06 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
-> >          MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP07 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	{ "HISI ", "HIP07 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
-> > 	  MCFG_RES_EMPTY},
-> > 	....
-> >
-> > 	{ "HISI ", "HIP07 ", 0, 15, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
-> > 	  MCFG_RES_EMPTY},
-> >
-> > #endif
-> >
-> > struct pci_ecam_ops hisi_pci_hip05_ops = {
-> > 	.bus_shift	= 20,
-> > 	.init		=  hisi_pci_hip05_init,
-> > 	.pci_ops	= {
-> > 		.map_bus	= pci_ecam_map_bus,
-> > 		.read		= hisi_pcie_acpi_rd_conf,
-> > 		.write		= hisi_pcie_acpi_wr_conf,
-> > 	}
-> > };
-> >
-> > struct pci_ecam_ops hisi_pci_hip06_ops = {
-> > 	.bus_shift = 20,
-> > 	.init = hisi_pci_hip06_init,
-> > 	.pci_ops = {
-> > 		.map_bus = pci_ecam_map_bus,
-> > 		.read = hisi_pcie_acpi_rd_conf,
-> > 		.write = hisi_pcie_acpi_wr_conf,
-> > 	}
-> > };
-> >
-> > hisi_pci_hipxx_init function is used to get RC config resource with
-> hardcode.
-> > .....
-> >
-> > So I hope we can use MCFG_DOM_RANGE, Then I can change it as below.
-> >
-> > #ifdef CONFIG_PCI_HISI_ACPI
-> > 	{ "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
-> > 	 &hisi_pcie_hip05_ops, MCFG_RES_EMPTY},
-> > 	{ "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
-> > 	 &hisi_pcie_hip06_ops, MCFG_RES_EMPTY},
-> > 	{ "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
-> > 	  &hisi_pcie_hip07_ops, MCFG_RES_EMPTY},
-> > #endif
-> >
-> > Thanks
-> > Dongdong
-> > >
-> > >Thanks,
-> > >Tomasz
-> > >
-> > >.
-> > >
-> >
+> I also don't think it's meaningless.  After your patch, we throw away
+> our knowledge of what the BAR contains when we set "r->start = 0".
+> But if you leave memory decoding enabled, the device will still
+> respond at whatever address the BAR contains.  That seems like a
+> problem.
+>
+>> And it may also potentially break the PCI devices with mmio_always_on
+>> bit set.
+>>
+>> Besides, disabling memory decoding is not expected in some fixup
+>> function such as fixup_vga(). The fixup_vga() read PCI_COMMAND_MEMORY
+>> to know whether the devices has been initialized by the firmware or
+>> not. Disabling memory decoding would cause the one initialized by
+>> firmware may not be set as the default VGA device when more than one
+>> graphics adapter is present.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>>   drivers/pci/pci.c |    8 +-------
+>>   1 file changed, 1 insertion(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index b8357d7..caa0894 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -5046,7 +5046,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>   	int i;
+>>   	struct resource *r;
+>>   	resource_size_t align, size;
+>> -	u16 command;
+>>   
+>>   	/*
+>>   	 * VF BARs are RO zero according to SR-IOV spec 3.4.1.11. Their
+>> @@ -5069,12 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>   		return;
+>>   	}
+>>   
+>> -	dev_info(&dev->dev,
+>> -		"Disabling memory decoding and releasing memory resources.\n");
+>> -	pci_read_config_word(dev, PCI_COMMAND, &command);
+>> -	command &= ~PCI_COMMAND_MEMORY;
+>> -	pci_write_config_word(dev, PCI_COMMAND, command);
+>> -
+>> +	dev_info(&dev->dev, "Releasing memory resources.\n");
+>>   	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+>>   		r = &dev->resource[i];
+>>   		if (!(r->flags & IORESOURCE_MEM))
+>> -- 
+>> 1.7.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
