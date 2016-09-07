@@ -1,108 +1,131 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rajat Jain <rajatja@google.com>,
-        "MikaWesterberg@linux.intel.com" <MikaWesterberg@linux.intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Busch, Keith" <keith.busch@intel.com>,
-        "Tarazona-Duarte, Luis Antonio"
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
-Subject: RE: [PATCH v2 1/8] PCI: pciehp: Rename pcie_isr() locals for clarity
-Date: Tue, 13 Sep 2016 10:05:31 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B284665ABBDA@IRSMSX101.ger.corp.intel.com>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160912210855.22258.32643.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160912210855.22258.32643.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V10 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that
+ might be reused for ACPI
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+ <1473152938-17388-8-git-send-email-tn@semihalf.com>
+ <alpine.DEB.2.20.1609061149090.5647@nanos>
+ <292d1dd1-0084-d796-b852-6cad2099eb66@semihalf.com>
+ <CAJZ5v0iYc=1CN546MaabJdoNBUW8JbeD_qt8hSSDBPLJnB8Hug@mail.gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier
+ <marc.zyngier@arm.com>, Jason Cooper <jason@lakedaemon.net>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <helgaas@kernel.org>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Catalin Marinas
+ <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
+ shijie.huang@arm.com, robert.richter@caviumnetworks.com,
+ Marcin Wojtas <mw@semihalf.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ Andrea Gallo <andrea.gallo@linaro.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Al Stone <al.stone@linaro.org>, G Gregory <graeme.gregory@linaro.org>,
+ David Daney <ddaney.cavm@gmail.com>, Sinan Kaya <okaya@codeaurora.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <c3228e58-5fbe-692f-5047-df4cff12d1f8@semihalf.com>
+Date: Wed, 7 Sep 2016 09:49:31 +0200
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0iYc=1CN546MaabJdoNBUW8JbeD_qt8hSSDBPLJnB8Hug@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-IA0KPiBSZW5hbWUgImRldGVjdGVkIiBhbmQgImludHJfbG9jIiB0byAic3RhdHVzIiBhbmQgImV2
-ZW50cyIgZm9yIGNsYXJpdHkuDQo+ICJzdGF0dXMiIGlzIHRoZSB2YWx1ZSB3ZSByZWFkIGZyb20g
-dGhlIFNsb3QgU3RhdHVzIHJlZ2lzdGVyOyAiZXZlbnRzIiBpcw0KPiB0aGUgc2V0IG9mIGhvdC1w
-bHVnIGV2ZW50cyB3ZSBuZWVkIHRvIHByb2Nlc3MuICBObyBmdW5jdGlvbmFsIGNoYW5nZQ0KPiBp
-bnRlbmRlZC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdv
-b2dsZS5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBjLmMgfCAg
-IDQ2ICsrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tDQo+ICAxIGZpbGUgY2hh
-bmdlZCwgMjUgaW5zZXJ0aW9ucygrKSwgMjEgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBjLmMgYi9kcml2ZXJzL3BjaS9ob3RwbHVn
-L3BjaWVocF9ocGMuYw0KPiBpbmRleCAwOGU4NGQ2Li4yNjRkZjM2IDEwMDY0NA0KPiAtLS0gYS9k
-cml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiArKysgYi9kcml2ZXJzL3BjaS9ob3Rw
-bHVnL3BjaWVocF9ocGMuYw0KPiBAQCAtNTQyLDcgKzU0Miw3IEBAIHN0YXRpYyBpcnFyZXR1cm5f
-dCBwY2llX2lzcihpbnQgaXJxLCB2b2lkICpkZXZfaWQpDQo+ICAJc3RydWN0IHBjaV9idXMgKnN1
-Ym9yZGluYXRlID0gcGRldi0+c3Vib3JkaW5hdGU7DQo+ICAJc3RydWN0IHBjaV9kZXYgKmRldjsN
-Cj4gIAlzdHJ1Y3Qgc2xvdCAqc2xvdCA9IGN0cmwtPnNsb3Q7DQo+IC0JdTE2IGRldGVjdGVkLCBp
-bnRyX2xvYzsNCj4gKwl1MTYgc3RhdHVzLCBldmVudHM7DQo+ICAJdTggcHJlc2VudDsNCj4gIAli
-b29sIGxpbms7DQo+IA0KPiBAQCAtNTU1LDMxICs1NTUsMzUgQEAgc3RhdGljIGlycXJldHVybl90
-IHBjaWVfaXNyKGludCBpcnEsIHZvaWQgKmRldl9pZCkNCj4gIAkgKiBzZXJ2aWNlZCwgd2UgbmVl
-ZCB0byByZS1pbnNwZWN0IFNsb3QgU3RhdHVzIHJlZ2lzdGVyIGFmdGVyDQo+ICAJICogY2xlYXJp
-bmcgd2hhdCBpcyBwcmVzdW1lZCB0byBiZSB0aGUgbGFzdCBwZW5kaW5nIGludGVycnVwdC4NCj4g
-IAkgKi8NCj4gLQlpbnRyX2xvYyA9IDA7DQo+ICsJZXZlbnRzID0gMDsNCj4gIAlkbyB7DQo+IC0J
-CXBjaWVfY2FwYWJpbGl0eV9yZWFkX3dvcmQocGRldiwgUENJX0VYUF9TTFRTVEEsICZkZXRlY3Rl
-ZCk7DQo+IC0JCWlmIChkZXRlY3RlZCA9PSAodTE2KSB+MCkgew0KPiArCQlwY2llX2NhcGFiaWxp
-dHlfcmVhZF93b3JkKHBkZXYsIFBDSV9FWFBfU0xUU1RBLCAmc3RhdHVzKTsNCj4gKwkJaWYgKHN0
-YXR1cyA9PSAodTE2KSB+MCkgew0KPiAgCQkJY3RybF9pbmZvKGN0cmwsICIlczogbm8gcmVzcG9u
-c2UgZnJvbSBkZXZpY2VcbiIsDQo+ICAJCQkJICBfX2Z1bmNfXyk7DQo+ICAJCQlyZXR1cm4gSVJR
-X0hBTkRMRUQ7DQo+ICAJCX0NCj4gDQo+IC0JCWRldGVjdGVkICY9IChQQ0lfRVhQX1NMVFNUQV9B
-QlAgfCBQQ0lfRVhQX1NMVFNUQV9QRkQgfA0KPiAtCQkJICAgICBQQ0lfRVhQX1NMVFNUQV9QREMg
-fA0KPiAtCQkJICAgICBQQ0lfRVhQX1NMVFNUQV9DQyB8IFBDSV9FWFBfU0xUU1RBX0RMTFNDKTsN
-Cj4gLQkJZGV0ZWN0ZWQgJj0gfmludHJfbG9jOw0KPiAtCQlpbnRyX2xvYyB8PSBkZXRlY3RlZDsN
-Cj4gLQkJaWYgKCFpbnRyX2xvYykNCj4gKwkJLyoNCj4gKwkJICogU2xvdCBTdGF0dXMgY29udGFp
-bnMgcGxhaW4gc3RhdHVzIGJpdHMgYXMgd2VsbCBhcyBldmVudA0KPiArCQkgKiBub3RpZmljYXRp
-b24gYml0czsgcmlnaHQgbm93IHdlIG9ubHkgd2FudCB0aGUgZXZlbnQgYml0cy4NCj4gKwkJICov
-DQo+ICsJCXN0YXR1cyAmPSAoUENJX0VYUF9TTFRTVEFfQUJQIHwgUENJX0VYUF9TTFRTVEFfUEZE
-IHwNCj4gKwkJCSAgIFBDSV9FWFBfU0xUU1RBX1BEQyB8IFBDSV9FWFBfU0xUU1RBX0NDIHwNCj4g
-KwkJCSAgIFBDSV9FWFBfU0xUU1RBX0RMTFNDKTsNCj4gKwkJc3RhdHVzICY9IH5ldmVudHM7DQo+
-ICsJCWV2ZW50cyB8PSBzdGF0dXM7DQo+ICsJCWlmICghZXZlbnRzKQ0KPiAgCQkJcmV0dXJuIElS
-UV9OT05FOw0KPiAtCQlpZiAoZGV0ZWN0ZWQpDQo+ICsJCWlmIChzdGF0dXMpDQo+ICAJCQlwY2ll
-X2NhcGFiaWxpdHlfd3JpdGVfd29yZChwZGV2LCBQQ0lfRVhQX1NMVFNUQSwNCj4gLQkJCQkJCSAg
-IGludHJfbG9jKTsNCj4gLQl9IHdoaWxlIChkZXRlY3RlZCk7DQo+ICsJCQkJCQkgICBldmVudHMp
-Ow0KPiArCX0gd2hpbGUgKHN0YXR1cyk7DQo+IA0KPiAtCWN0cmxfZGJnKGN0cmwsICJwZW5kaW5n
-IGludGVycnVwdHMgJSMwNnggZnJvbSBTbG90IFN0YXR1c1xuIiwgaW50cl9sb2MpOw0KPiArCWN0
-cmxfZGJnKGN0cmwsICJwZW5kaW5nIGludGVycnVwdHMgJSMwNnggZnJvbSBTbG90IFN0YXR1c1xu
-IiwgZXZlbnRzKTsNCj4gDQo+ICAJLyogQ2hlY2sgQ29tbWFuZCBDb21wbGV0ZSBJbnRlcnJ1cHQg
-UGVuZGluZyAqLw0KPiAtCWlmIChpbnRyX2xvYyAmIFBDSV9FWFBfU0xUU1RBX0NDKSB7DQo+ICsJ
-aWYgKGV2ZW50cyAmIFBDSV9FWFBfU0xUU1RBX0NDKSB7DQo+ICAJCWN0cmwtPmNtZF9idXN5ID0g
-MDsNCj4gIAkJc21wX21iKCk7DQo+ICAJCXdha2VfdXAoJmN0cmwtPnF1ZXVlKTsNCj4gQEAgLTU4
-OSwyNCArNTkzLDI0IEBAIHN0YXRpYyBpcnFyZXR1cm5fdCBwY2llX2lzcihpbnQgaXJxLCB2b2lk
-ICpkZXZfaWQpDQo+ICAJCWxpc3RfZm9yX2VhY2hfZW50cnkoZGV2LCAmc3Vib3JkaW5hdGUtPmRl
-dmljZXMsIGJ1c19saXN0KSB7DQo+ICAJCQlpZiAoZGV2LT5pZ25vcmVfaG90cGx1Zykgew0KPiAg
-CQkJCWN0cmxfZGJnKGN0cmwsICJpZ25vcmluZyBob3RwbHVnIGV2ZW50ICUjMDZ4ICglcyByZXF1
-ZXN0ZWQgbm8gaG90cGx1ZylcbiIsDQo+IC0JCQkJCSBpbnRyX2xvYywgcGNpX25hbWUoZGV2KSk7
-DQo+ICsJCQkJCSBldmVudHMsIHBjaV9uYW1lKGRldikpOw0KPiAgCQkJCXJldHVybiBJUlFfSEFO
-RExFRDsNCg0KRG9lcyBpdCBtYWtlIHNlbnNlIGhlcmUgYWxzbyB0byByZXR1cm4gSVJRX05PTkU/
-IA0KDQo+ICAJCQl9DQo+ICAJCX0NCj4gIAl9DQo+IA0KPiAtCWlmICghKGludHJfbG9jICYgflBD
-SV9FWFBfU0xUU1RBX0NDKSkNCj4gKwlpZiAoIShldmVudHMgJiB+UENJX0VYUF9TTFRTVEFfQ0Mp
-KQ0KPiAgCQlyZXR1cm4gSVJRX0hBTkRMRUQ7DQo+IA0KPiAgCS8qIENoZWNrIEF0dGVudGlvbiBC
-dXR0b24gUHJlc3NlZCAqLw0KPiAtCWlmIChpbnRyX2xvYyAmIFBDSV9FWFBfU0xUU1RBX0FCUCkg
-ew0KPiArCWlmIChldmVudHMgJiBQQ0lfRVhQX1NMVFNUQV9BQlApIHsNCj4gIAkJY3RybF9pbmZv
-KGN0cmwsICJCdXR0b24gcHJlc3NlZCBvbiBTbG90KCVzKVxuIiwNCj4gIAkJCSAgc2xvdF9uYW1l
-KHNsb3QpKTsNCj4gIAkJcGNpZWhwX3F1ZXVlX2ludGVycnVwdF9ldmVudChzbG90LCBJTlRfQlVU
-VE9OX1BSRVNTKTsNCj4gIAl9DQo+IA0KPiAgCS8qIENoZWNrIFByZXNlbmNlIERldGVjdCBDaGFu
-Z2VkICovDQo+IC0JaWYgKGludHJfbG9jICYgUENJX0VYUF9TTFRTVEFfUERDKSB7DQo+ICsJaWYg
-KGV2ZW50cyAmIFBDSV9FWFBfU0xUU1RBX1BEQykgew0KPiAgCQlwY2llaHBfZ2V0X2FkYXB0ZXJf
-c3RhdHVzKHNsb3QsICZwcmVzZW50KTsNCj4gIAkJY3RybF9pbmZvKGN0cmwsICJDYXJkICVzcHJl
-c2VudCBvbiBTbG90KCVzKVxuIiwNCj4gIAkJCSAgcHJlc2VudCA/ICIiIDogIm5vdCAiLCBzbG90
-X25hbWUoc2xvdCkpOw0KPiBAQCAtNjE1LDEzICs2MTksMTMgQEAgc3RhdGljIGlycXJldHVybl90
-IHBjaWVfaXNyKGludCBpcnEsIHZvaWQgKmRldl9pZCkNCj4gIAl9DQo+IA0KPiAgCS8qIENoZWNr
-IFBvd2VyIEZhdWx0IERldGVjdGVkICovDQo+IC0JaWYgKChpbnRyX2xvYyAmIFBDSV9FWFBfU0xU
-U1RBX1BGRCkgJiYgIWN0cmwtPnBvd2VyX2ZhdWx0X2RldGVjdGVkKSB7DQo+ICsJaWYgKChldmVu
-dHMgJiBQQ0lfRVhQX1NMVFNUQV9QRkQpICYmICFjdHJsLT5wb3dlcl9mYXVsdF9kZXRlY3RlZCkg
-ew0KPiAgCQljdHJsLT5wb3dlcl9mYXVsdF9kZXRlY3RlZCA9IDE7DQo+ICAJCWN0cmxfZXJyKGN0
-cmwsICJQb3dlciBmYXVsdCBvbiBzbG90ICVzXG4iLCBzbG90X25hbWUoc2xvdCkpOw0KPiAgCQlw
-Y2llaHBfcXVldWVfaW50ZXJydXB0X2V2ZW50KHNsb3QsIElOVF9QT1dFUl9GQVVMVCk7DQo+ICAJ
-fQ0KPiANCj4gLQlpZiAoaW50cl9sb2MgJiBQQ0lfRVhQX1NMVFNUQV9ETExTQykgew0KPiArCWlm
-IChldmVudHMgJiBQQ0lfRVhQX1NMVFNUQV9ETExTQykgew0KPiAgCQlsaW5rID0gcGNpZWhwX2No
-ZWNrX2xpbmtfYWN0aXZlKGN0cmwpOw0KPiAgCQljdHJsX2luZm8oY3RybCwgInNsb3QoJXMpOiBM
-aW5rICVzIGV2ZW50XG4iLA0KPiAgCQkJICBzbG90X25hbWUoc2xvdCksIGxpbmsgPyAiVXAiIDog
-IkRvd24iKTsNCg0KSW50ZWwgRGV1dHNjaGxhbmQgR21iSApSZWdpc3RlcmVkIEFkZHJlc3M6IEFt
-IENhbXBlb24gMTAtMTIsIDg1NTc5IE5ldWJpYmVyZywgR2VybWFueQpUZWw6ICs0OSA4OSA5OSA4
-ODUzLTAsIHd3dy5pbnRlbC5kZQpNYW5hZ2luZyBEaXJlY3RvcnM6IENocmlzdGluIEVpc2Vuc2No
-bWlkLCBDaHJpc3RpYW4gTGFtcHJlY2h0ZXIKQ2hhaXJwZXJzb24gb2YgdGhlIFN1cGVydmlzb3J5
-IEJvYXJkOiBOaWNvbGUgTGF1ClJlZ2lzdGVyZWQgT2ZmaWNlOiBNdW5pY2gKQ29tbWVyY2lhbCBS
-ZWdpc3RlcjogQW10c2dlcmljaHQgTXVlbmNoZW4gSFJCIDE4NjkyOAo=
+On 06.09.2016 13:29, Rafael J. Wysocki wrote:
+> On Tue, Sep 6, 2016 at 12:22 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>> Hi Thomas,
+>>
+>>
+>> On 06.09.2016 11:50, Thomas Gleixner wrote:
+>>>
+>>> On Tue, 6 Sep 2016, Tomasz Nowicki wrote:
+>>>>
+>>>> -static int __init its_pci_msi_init(void)
+>>>> +static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
+>>>> +                                      const char *name)
+>>>>  {
+>>>> -       struct device_node *np;
+>>>>         struct irq_domain *parent;
+>>>>
+>>>> +       parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
+>>>> +       if (!parent || !msi_get_domain_info(parent)) {
+>>>> +               pr_err("%s: Unable to locate ITS domain\n", name);
+>>>> +               return -ENXIO;
+>>>> +       }
+>>>> +
+>>>> +       if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
+>>>> +                                      parent)) {
+>>>> +               pr_err("%s: Unable to create PCI domain\n", name);
+>>>> +               return -ENOMEM;
+>>>
+>>>
+>>> So you have error codes here.
+>>>
+>>>> +       }
+>>>> +
+>>>> +       return 0;
+>>>> +}
+>>>> +
+>>>> +static int __init its_pci_of_msi_init(void)
+>>>> +{
+>>>> +       struct device_node *np;
+>>>> +
+>>>>         for (np = of_find_matching_node(NULL, its_device_id); np;
+>>>>              np = of_find_matching_node(np, its_device_id)) {
+>>>>                 if (!of_property_read_bool(np, "msi-controller"))
+>>>>                         continue;
+>>>>
+>>>> -               parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
+>>>> -               if (!parent || !msi_get_domain_info(parent)) {
+>>>> -                       pr_err("%s: unable to locate ITS domain\n",
+>>>> -                              np->full_name);
+>>>> +               if (its_pci_msi_init_one(of_node_to_fwnode(np),
+>>>> np->full_name))
+>>>>                         continue;
+>>>> -               }
+>>>> -
+>>>> -               if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
+>>>> -                                              &its_pci_msi_domain_info,
+>>>> -                                              parent)) {
+>>>> -                       pr_err("%s: unable to create PCI domain\n",
+>>>> -                              np->full_name);
+>>>> -                       continue;
+>>>> -               }
+>>>>
+>>>>                 pr_info("PCI/MSI: %s domain created\n", np->full_name);
+>>>>         }
+>>>>
+>>>>         return 0;
+>>>
+>>>
+>>> And no matter what you return success
+>>>
+>>>>  }
+>>>> +
+>>>> +static int __init its_pci_msi_init(void)
+>>>> +{
+>>>> +       its_pci_of_msi_init();
+>>>
+>>>
+>>> Which you subsequently ignore here. What's the point?
+>>>
+>>
+>> Well, this patch is meant to refactor the code. It does not change the error
+>> handing nor the functionality. However, you have got a point but IMO it
+>> should be fixed in separate patch if possible.
+>
+> But you are refactoring the code, so it would make sense to clean it
+> up while at it.  Perhaps add one more patch to the series?
+>
+
+I have a look at the code again and come to the conclusion the code is 
+fine now. We iterate over available its nodes and try to probe driver. 
+There might be an error for one of it (print error message) but we keep 
+trying for the rest. One of it might be probed successfully. So there is 
+no reason to escape in half way. Since its_pci_of_msi_init() always 
+returns 0 I can remove return statement so we would have:
+void its_pci_of_msi_init(void) instead.
+
+Thanks,
+Tomasz
