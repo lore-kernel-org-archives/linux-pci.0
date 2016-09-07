@@ -1,70 +1,125 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-Date: Mon, 12 Sep 2016 11:10:50 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Aaron Durbin <adurbin@google.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: ACPI device using sub-resource of PCI device
-Message-ID: <20160912081050.GV15313@lahna.fi.intel.com>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
- <3103060.86QBTjSLk3@vostro.rjw.lan>
- <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
- <3861743.KWBechkp08@vostro.rjw.lan>
- <CAE2855sk2M_77W7dPUb-G43zaDgiNvH2fwpEUvZKOZCBZ-1UpQ@mail.gmail.com>
- <CAE2855uNKxtSJSGdF9T7LcGV+F6HzqJhmgDEdgAEwrY=HjPnrQ@mail.gmail.com>
- <20160816091502.GB1751@lahna.fi.intel.com>
- <CAE2855ts_Xw2ahGRYpVWHAqCEvzNYV7BmOVejeErJ_e2oXZ1qg@mail.gmail.com>
- <CAE2855u7vLDVSJ04gr8yrg+U=W2DwwNk2+8jGhb-_isixDWvHw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:59047 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932778AbcIGLOD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Sep 2016 07:14:03 -0400
+Date: Wed, 7 Sep 2016 13:14:09 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv2 1/4] pci: Add is_removed state
+Message-ID: <20160907111409.GA28213@wunner.de>
+References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
+ <1473199219-3369-2-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE2855u7vLDVSJ04gr8yrg+U=W2DwwNk2+8jGhb-_isixDWvHw@mail.gmail.com>
+In-Reply-To: <1473199219-3369-2-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 09, 2016 at 09:12:49AM -0500, Aaron Durbin wrote:
-> On Wed, Aug 17, 2016 at 6:02 PM, Aaron Durbin <adurbin@google.com> wrote:
-> > On Tue, Aug 16, 2016 at 2:15 AM, Mika Westerberg
-> > <mika.westerberg@linux.intel.com> wrote:
-> >> On Fri, Aug 12, 2016 at 11:45:30AM -0500, Aaron Durbin wrote:
-> >>> Was anyone able to take a look into a solution for the current
-> >>> problem?  Again, please feel free to ask if anyone would like help
-> >>> testing potential solutions.
-> >>
-> >> Below is one proposal for fixing the issue. It is just a prototype and
-> >> I'm not sure if it takes everything needed into account. Would you be
-> >> able to try it out and let us know if it works for you?
-> >
-> > Yes. I'll give it a go. I'm traveling this week so it won't likely be
-> > til early next week. Thanks for the proposed fix. I'll report back on
-> > my findings.
-> >
+On Tue, Sep 06, 2016 at 04:00:16PM -0600, Keith Busch wrote:
+> This adds a new state for devices that were once in the system, but
+> unexpectedly removed. This is so device teardown functions can observe
+> the device is not accessible so it may skip attempting to initialize
+                                  ^ they                    ^ access (?)
+
+> the hardware.
 > 
-> Sorry for the late response. I tried the patch and it works with ACPI
-> devices in a hierarchy below PCI devices. I didn't have any ACPI
-> drivers probed but I was able to hang 2 ACPI devices off of a BAR that
-> had a driver for the PCI device without any resource conflicts
-> (snippet from /proc/iomem):
+> The pciehp and pcie-dpc drivers are aware of when the link is down, so
+> they explicitly set this flag when its handlers detect the device is gone.
+                                     ^ their
+
 > 
->     c2a43000-c2a43fff : 0000:00:1b.0
->       c2a43000-c2a437ff : GOOG1234:00
->       c2a43800-c2a43fff : GOOG1235:00
+> The flag is also cached any time pci_device_is_present returns false. The
+> function checks the flag first to avoid additional config accesses to
+> removed devices.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-Thanks for testing.
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
 
-> One observation that I don't think matters much, but I wanted to write
-> it down in case anyone pulls this thread up again. In the case of
-> finding the parent resource, the ACPI devcie's resources won't show up
-> in the resource tree until the pci parent devices' resources are
-> inserted.
+I think this is a significant improvement because with Thunderbolt,
+devices can disappear at any time and many drivers currently access
+the device in their ->remove hook, which is fine if the driver
+detachment is caused by "modprobe -r" but entirely wrong in the case
+of a surprise removal. This patch adds the necessary infrastructure
+for drivers to adjust their behaviour during ->remove if the device
+is gone.
 
-Right, that's expected as the parent PCI device resources will be
-allocated a bit later when pcibios_resource_survey_bus() is called.
+Thanks,
 
-Rafael, Bjorn,
+Lukas
 
-What do you think? Should I clean up the code and send it out as a
-formal patch?
+> ---
+>  drivers/pci/hotplug/pciehp_pci.c | 2 ++
+>  drivers/pci/pci.c                | 9 ++++++++-
+>  drivers/pci/pcie/pcie-dpc.c      | 1 +
+>  include/linux/pci.h              | 1 +
+>  4 files changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+> index 9e69403..299ea5e 100644
+> --- a/drivers/pci/hotplug/pciehp_pci.c
+> +++ b/drivers/pci/hotplug/pciehp_pci.c
+> @@ -109,6 +109,8 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>  				break;
+>  			}
+>  		}
+> +		if (!presence)
+> +			dev->is_removed = 1;
+>  		pci_stop_and_remove_bus_device(dev);
+>  		/*
+>  		 * Ensure that no new Requests will be generated from
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index aab9d51..010e5f6 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4924,7 +4924,14 @@ bool pci_device_is_present(struct pci_dev *pdev)
+>  {
+>  	u32 v;
+>  
+> -	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
+> +	if (pdev->is_removed)
+> +		return false;
+> +
+> +	if (!pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0)) {
+> +		pdev->is_removed = 1;
+> +		return false;
+> +	}
+> +	return true;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_device_is_present);
+>  
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index 9811b14..2e5876c5 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -46,6 +46,7 @@ static void interrupt_event_handler(struct work_struct *work)
+>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+>  					 bus_list) {
+>  		pci_dev_get(dev);
+> +		dev->is_removed = 1;
+>  		pci_stop_and_remove_bus_device(dev);
+>  		pci_dev_put(dev);
+>  	}
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 7256f33..865d3ec 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -334,6 +334,7 @@ struct pci_dev {
+>  	unsigned int	multifunction:1;/* Part of multi-function device */
+>  	/* keep track of device state */
+>  	unsigned int	is_added:1;
+> +	unsigned int	is_removed:1;	/* device was surprise removed */
+>  	unsigned int	is_busmaster:1; /* device is busmaster */
+>  	unsigned int	no_msi:1;	/* device may not use msi */
+>  	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
