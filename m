@@ -1,135 +1,267 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49688 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751795AbcI2TVD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 15:21:03 -0400
-Date: Thu, 29 Sep 2016 13:21:01 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.verkuil@cisco.com, brking@us.ibm.com,
-        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
-        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/6] vfio_pci: use pci_irq_allocate_vectors
-Message-ID: <20160929132101.248d79c0@t450s.home>
-In-Reply-To: <1473600688-24043-5-git-send-email-hch@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
-        <1473600688-24043-5-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [UPDATE PATCH V10 2/8] ACPI: Add new IORT functions to support MSI domain handling
+Date: Wed,  7 Sep 2016 13:58:13 +0200
+Message-Id: <1473249493-20271-1-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473152938-17388-3-git-send-email-tn@semihalf.com>
+References: <1473152938-17388-3-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 11 Sep 2016 15:31:26 +0200
-Christoph Hellwig <hch@lst.de> wrote:
+For ITS, MSI functionality consists on building domain stack and
+during that process we need to reference to domain stack components
+e.g. before we create new DOMAIN_BUS_PCI_MSI domain we need to specify
+its DOMAIN_BUS_NEXUS parent domain. In order to manage that process
+properly, maintain list which elements contain domain token
+(unique for MSI domain stack) and ITS ID: iort_register_domain_token()
+and iort_deregister_domain_token(). Then retrieve domain token
+any time later with ITS ID being key off: iort_find_domain_token().
+With domain token and domain type we are able to find corresponding
+IRQ domain.
 
-> Simply the interrupt setup by using the new PCI layer helpers.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/vfio/pci/vfio_pci_intrs.c   | 45 +++++++++----------------------------
->  drivers/vfio/pci/vfio_pci_private.h |  1 -
->  2 files changed, 10 insertions(+), 36 deletions(-)
+Since IORT is prepared to describe MSI domain on a per-device basis,
+use existing IORT helpers and implement two calls:
+1. iort_msi_map_rid() to map MSI RID for a device
+2. iort_get_device_domain() to find domain token for a device
 
-Sorry for the delay, slipped by me.  Overall a really nice cleanup.
-One tiny nit, the commit log mis-names the function as
-pci_irq_allocate_vectors instead of pci_alloc_irq_vectors.  With that,
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-Acked-by: Alex Williamson <alex.williamson@redhat.com>
+Conflicts:
+	drivers/acpi/arm64/iort.c
+---
+ drivers/acpi/arm64/iort.c | 152 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/acpi_iort.h |  12 ++++
+ 2 files changed, 164 insertions(+)
 
-Let me know if you're wanting me to pull this through my tree, I'm
-assuming not.  Thanks,
-
-Alex
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index e28e256..8d672cf 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -22,6 +22,12 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
  
-> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-> index 152b438..a1d283e 100644
-> --- a/drivers/vfio/pci/vfio_pci_intrs.c
-> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-> @@ -250,6 +250,7 @@ static irqreturn_t vfio_msihandler(int irq, void *arg)
->  static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
->  {
->  	struct pci_dev *pdev = vdev->pdev;
-> +	unsigned int flag = msix ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
->  	int ret;
->  
->  	if (!is_irq_none(vdev))
-> @@ -259,35 +260,13 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
->  	if (!vdev->ctx)
->  		return -ENOMEM;
->  
-> -	if (msix) {
-> -		int i;
-> -
-> -		vdev->msix = kzalloc(nvec * sizeof(struct msix_entry),
-> -				     GFP_KERNEL);
-> -		if (!vdev->msix) {
-> -			kfree(vdev->ctx);
-> -			return -ENOMEM;
-> -		}
-> -
-> -		for (i = 0; i < nvec; i++)
-> -			vdev->msix[i].entry = i;
-> -
-> -		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
-> -		if (ret < nvec) {
-> -			if (ret > 0)
-> -				pci_disable_msix(pdev);
-> -			kfree(vdev->msix);
-> -			kfree(vdev->ctx);
-> -			return ret;
-> -		}
-> -	} else {
-> -		ret = pci_enable_msi_range(pdev, 1, nvec);
-> -		if (ret < nvec) {
-> -			if (ret > 0)
-> -				pci_disable_msi(pdev);
-> -			kfree(vdev->ctx);
-> -			return ret;
-> -		}
-> +	/* return the number of supported vectors if we can't get all: */
-> +	ret = pci_alloc_irq_vectors(pdev, 1, nvec, flag);
-> +	if (ret < nvec) {
-> +		if (ret > 0)
-> +			pci_free_irq_vectors(pdev);
-> +		kfree(vdev->ctx);
-> +		return ret;
->  	}
->  
->  	vdev->num_ctx = nvec;
-> @@ -315,7 +294,7 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
->  	if (vector < 0 || vector >= vdev->num_ctx)
->  		return -EINVAL;
->  
-> -	irq = msix ? vdev->msix[vector].vector : pdev->irq + vector;
-> +	irq = pci_irq_vector(pdev, vector);
->  
->  	if (vdev->ctx[vector].trigger) {
->  		free_irq(irq, vdev->ctx[vector].trigger);
-> @@ -408,11 +387,7 @@ static void vfio_msi_disable(struct vfio_pci_device *vdev, bool msix)
->  
->  	vfio_msi_set_block(vdev, 0, vdev->num_ctx, NULL, msix);
->  
-> -	if (msix) {
-> -		pci_disable_msix(vdev->pdev);
-> -		kfree(vdev->msix);
-> -	} else
-> -		pci_disable_msi(pdev);
-> +	pci_free_irq_vectors(pdev);
->  
->  	vdev->irq_type = VFIO_PCI_NUM_IRQS;
->  	vdev->num_ctx = 0;
-> diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-> index 2128de8..f561ac1 100644
-> --- a/drivers/vfio/pci/vfio_pci_private.h
-> +++ b/drivers/vfio/pci/vfio_pci_private.h
-> @@ -72,7 +72,6 @@ struct vfio_pci_device {
->  	struct perm_bits	*msi_perm;
->  	spinlock_t		irqlock;
->  	struct mutex		igate;
-> -	struct msix_entry	*msix;
->  	struct vfio_pci_irq_ctx	*ctx;
->  	int			num_ctx;
->  	int			irq_type;
-
++struct iort_its_msi_chip {
++	struct list_head	list;
++	struct fwnode_handle	*fw_node;
++	u32			translation_id;
++};
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+@@ -31,6 +37,76 @@ static struct acpi_table_header *iort_table;
+ static LIST_HEAD(iort_msi_chip_list);
+ static DEFINE_SPINLOCK(iort_msi_chip_lock);
+ 
++/**
++ * iort_register_domain_token() - register domain token and related ITS ID
++ * to the list from where we can get it back later on.
++ * @trans_id: ITS ID.
++ * @fw_node: Domain token.
++ *
++ * Returns: 0 on success, -ENOMEM if no memory when allocating list element
++ */
++int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
++{
++	struct iort_its_msi_chip *its_msi_chip;
++
++	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
++	if (!its_msi_chip)
++		return -ENOMEM;
++
++	its_msi_chip->fw_node = fw_node;
++	its_msi_chip->translation_id = trans_id;
++
++	spin_lock(&iort_msi_chip_lock);
++	list_add(&its_msi_chip->list, &iort_msi_chip_list);
++	spin_unlock(&iort_msi_chip_lock);
++
++	return 0;
++}
++
++/**
++ * iort_deregister_domain_token() - Deregister domain token based on ITS ID
++ * @trans_id: ITS ID.
++ *
++ * Returns: none.
++ */
++void iort_deregister_domain_token(int trans_id)
++{
++	struct iort_its_msi_chip *its_msi_chip, *t;
++
++	spin_lock(&iort_msi_chip_lock);
++	list_for_each_entry_safe(its_msi_chip, t, &iort_msi_chip_list, list) {
++		if (its_msi_chip->translation_id == trans_id) {
++			list_del(&its_msi_chip->list);
++			kfree(its_msi_chip);
++			break;
++		}
++	}
++	spin_unlock(&iort_msi_chip_lock);
++}
++
++/**
++ * iort_find_domain_token() - Find domain token based on given ITS ID
++ * @trans_id: ITS ID.
++ *
++ * Returns: domain token when find on the list, NULL otherwise
++ */
++struct fwnode_handle *iort_find_domain_token(int trans_id)
++{
++	struct fwnode_handle *fw_node = NULL;
++	struct iort_its_msi_chip *its_msi_chip;
++
++	spin_lock(&iort_msi_chip_lock);
++	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
++		if (its_msi_chip->translation_id == trans_id) {
++			fw_node = its_msi_chip->fw_node;
++			break;
++		}
++	}
++	spin_unlock(&iort_msi_chip_lock);
++
++	return fw_node;
++}
++
+ static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
+ 					     iort_find_node_callback callback,
+ 					     void *context)
+@@ -201,6 +277,82 @@ static struct acpi_iort_node *iort_find_dev_node(struct device *dev)
+ 			      iort_match_node_callback, &pbus->dev);
+ }
+ 
++/**
++ * iort_msi_map_rid() - Map a MSI requester ID for a device
++ * @dev: The device for which the mapping is to be done.
++ * @req_id: The device requester ID.
++ *
++ * Returns: mapped MSI RID on success, input requester ID otherwise
++ */
++u32 iort_msi_map_rid(struct device *dev, u32 req_id)
++{
++	struct acpi_iort_node *node;
++	u32 dev_id;
++
++	node = iort_find_dev_node(dev);
++	if (!node)
++		return req_id;
++
++	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
++	return dev_id;
++}
++
++/**
++ * iort_dev_find_its_id() - Find the ITS identifier for a device
++ * @dev: The device.
++ * @idx: Index of the ITS identifier list.
++ * @its_id: ITS identifier.
++ *
++ * Returns: 0 on success, appropriate error value otherwise
++ */
++static int iort_dev_find_its_id(struct device *dev, u32 req_id,
++				unsigned int idx, int *its_id)
++{
++	struct acpi_iort_its_group *its;
++	struct acpi_iort_node *node;
++
++	node = iort_find_dev_node(dev);
++	if (!node)
++		return -ENXIO;
++
++	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
++	if (!node)
++		return -ENXIO;
++
++	/* Move to ITS specific data */
++	its = (struct acpi_iort_its_group *)node->node_data;
++	if (idx > its->its_count) {
++		dev_err(dev, "requested ITS ID index [%d] is greater than available [%d]\n",
++			idx, its->its_count);
++		return -ENXIO;
++	}
++
++	*its_id = its->identifiers[idx];
++	return 0;
++}
++
++/**
++ * iort_get_device_domain() - Find MSI domain related to a device
++ * @dev: The device.
++ * @req_id: Requester ID for the device.
++ *
++ * Returns: the MSI domain for this device, NULL otherwise
++ */
++struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
++{
++	struct fwnode_handle *handle;
++	int its_id;
++
++	if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
++		return NULL;
++
++	handle = iort_find_domain_token(its_id);
++	if (!handle)
++		return NULL;
++
++	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
++}
++
+ void __init acpi_iort_init(void)
+ {
+ 	acpi_status status;
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index fcacaf7..0e32dac 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -20,11 +20,23 @@
+ #define __ACPI_IORT_H__
+ 
+ #include <linux/acpi.h>
++#include <linux/fwnode.h>
++#include <linux/irqdomain.h>
+ 
++int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
++void iort_deregister_domain_token(int trans_id);
++struct fwnode_handle *iort_find_domain_token(int trans_id);
+ #ifdef CONFIG_ACPI_IORT
+ void acpi_iort_init(void);
++u32 iort_msi_map_rid(struct device *dev, u32 req_id);
++struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
+ #else
+ static inline void acpi_iort_init(void) { }
++static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
++{ return req_id; }
++static inline struct irq_domain *iort_get_device_domain(struct device *dev,
++							u32 req_id)
++{ return NULL; }
+ #endif
+ 
+ #endif /* __ACPI_IORT_H__ */
+-- 
+1.9.1
