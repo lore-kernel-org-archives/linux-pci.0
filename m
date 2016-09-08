@@ -1,192 +1,186 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33588 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755081AbcI2Lya (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 07:54:30 -0400
-Date: Thu, 29 Sep 2016 06:54:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: zhong@linux.vnet.ibm.com, aik@ozlabs.ru, linux-pci@vger.kernel.org,
-        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
-        paulus@samba.org, bhelgaas@google.com,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v5 3/4] PCI: Add a new option for resource_alignment to
- reassign alignment
-Message-ID: <20160929115422.GA31048@localhost>
-References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160928224246.GC20897@localhost>
- <6e4d1079-a3a6-5d3f-7339-ae4d0e1ee828@linux.vnet.ibm.com>
+Return-Path: <ray.jui@broadcom.com>
+Return-Path: <ray.jui@broadcom.com>
+Subject: Re: [PATCH v2] PCI: altera: Retrain link in rootport mode only
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1471595078-26297-1-git-send-email-lftan@altera.com>
+ <20160822154738.GB18628@localhost>
+ <CAFiDJ5_PnZ-oEj748ZY8dZhnFWMzK-bUYCti2ySFk5ZvLh6idw@mail.gmail.com>
+ <20160824175431.GC23914@localhost>
+ <2ffee400-d3bd-4b6e-cb9c-05a0c121b896@broadcom.com>
+ <20160830133747.GB16426@localhost>
+ <a1688079-6a39-3c25-756f-cd1e1256f468@broadcom.com>
+ <20160830170055.GA22908@localhost>
+ <8093b687-2d62-73b5-2d67-421eab5b7c27@broadcom.com>
+Cc: Ley Foon Tan <lftan@altera.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <bd2261f1-f5e0-a1e4-5dd3-a2405596f378@broadcom.com>
+Date: Wed, 7 Sep 2016 17:10:10 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6e4d1079-a3a6-5d3f-7339-ae4d0e1ee828@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8093b687-2d62-73b5-2d67-421eab5b7c27@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 29, 2016 at 10:38:01AM +0800, Yongji Xie wrote:
-> On 2016/9/29 6:42, Bjorn Helgaas wrote:
-> 
-> >On Tue, Sep 13, 2016 at 05:00:33PM +0800, Yongji Xie wrote:
-> >>When using resource_alignment kernel parameter, the current
-> >>implement reassigns the alignment by changing resources' size
-> >>which can potentially break some drivers. For example, the driver
-> >>uses the size to locate some register whose length is related
-> >>to the size.
-> >>
-> >>This patch adds a new option "noresize" for the parameter to
-> >>solve this problem.
-> >>
-> >>Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> >>---
-> >>  Documentation/kernel-parameters.txt |    9 ++++++---
-> >>  drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
-> >>  2 files changed, 33 insertions(+), 13 deletions(-)
-> >>
-> >>diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> >>index a4f4d69..d6a340d 100644
-> >>--- a/Documentation/kernel-parameters.txt
-> >>+++ b/Documentation/kernel-parameters.txt
-> >>@@ -3023,9 +3023,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> >>  				window. The default value is 64 megabytes.
-> >>  		resource_alignment=
-> >>  				Format:
-> >>-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-> >>-				[<order of align>@]pci:<vendor>:<device>\
-> >>-						[:<subvendor>:<subdevice>][; ...]
-> >>+				[<order of align>@][noresize@][<domain>:]
-> >>+				<bus>:<slot>.<func>[; ...]
-> >>+				[<order of align>@][noresize@]pci:<vendor>:<device>
-> >>+				[:<subvendor>:<subdevice>][; ...]
-> >>  				Specifies alignment and device to reassign
-> >>  				aligned memory resources.
-> >>  				If <order of align> is not specified,
-> >>@@ -3036,6 +3037,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> >>  				instances of a device, the PCI vendor,
-> >>  				device, subvendor, and subdevice may be
-> >>  				specified, e.g., 4096@pci:8086:9c22:103c:198f
-> >>+				noresize: Don't change the resources' sizes when
-> >>+				reassigning alignment.
-> >>  		ecrc=		Enable/disable PCIe ECRC (transaction layer
-> >>  				end-to-end CRC checking).
-> >>  				bios: Use BIOS/firmware settings. This is the
-> >>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >>index b8357d7..37f8062 100644
-> >>--- a/drivers/pci/pci.c
-> >>+++ b/drivers/pci/pci.c
-> >>@@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
-> >>  /**
-> >>   * pci_specified_resource_alignment - get resource alignment specified by user.
-> >>   * @dev: the PCI device to get
-> >>+ * @resize: whether or not to change resources' size when reassigning alignment
-> >>   *
-> >>   * RETURNS: Resource alignment if it is specified.
-> >>   *          Zero if it is not specified.
-> >>   */
-> >>-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> >>+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-> >>+		bool *resize)
-> >>  {
-> >>  	int seg, bus, slot, func, align_order, count;
-> >>  	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-> >>@@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> >>  		} else {
-> >>  			align_order = -1;
-> >>  		}
-> >>+
-> >>+		if (!strncmp(p, "noresize@", 9)) {
-> >>+			*resize = false;
-> >>+			p += 9;
-> >>+		} else
-> >>+			*resize = true;
-> >>+
-> >>  		if (strncmp(p, "pci:", 4) == 0) {
-> >>  			/* PCI vendor/device (subvendor/subdevice) ids are specified */
-> >>  			p += 4;
-> >>@@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> >>  {
-> >>  	int i;
-> >>  	struct resource *r;
-> >>+	bool resize = true;
-> >>  	resource_size_t align, size;
-> >>  	u16 command;
-> >>@@ -5058,7 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> >>  		return;
-> >>  	/* check if specified PCI is target device to reassign */
-> >>-	align = pci_specified_resource_alignment(dev);
-> >>+	align = pci_specified_resource_alignment(dev, &resize);
-> >>  	if (!align)
-> >>  		return;
-> >>@@ -5086,15 +5096,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> >>  		}
-> >>  		size = resource_size(r);
-> >>-		if (size < align) {
-> >>-			size = align;
-> >>-			dev_info(&dev->dev,
-> >>-				"Rounding up size of resource #%d to %#llx.\n",
-> >>-				i, (unsigned long long)size);
-> >>+		if (resize) {
-> >>+			if (size < align) {
-> >>+				size = align;
-> >>+				dev_info(&dev->dev,
-> >>+					"Rounding up size of resource #%d to %#llx.\n",
-> >>+					i, (unsigned long long)size);
-> >>+			}
-> >>+			r->flags |= IORESOURCE_UNSET;
-> >>+			r->end = size - 1;
-> >>+			r->start = 0;
-> >Why do you want to keep this code that changes the size of the resource?
-> >Can't we just *always* use IORESOURCE_STARTALIGN as below?  It seems like
-> >that would potentially fix bugs, as you mention.
-> >
-> >I think it'd be better if we didn't change the size, even if the user
-> >didn't specify "noresize@".  We wouldn't even need the "noresize@" option
-> >then.
-> >
-> >Or is there some reason to keep the resize?  If it's just a question of
-> >being afraid to change the existing behavior because of the risk, I'm
-> >willing to take that risk.
-> 
-> Hi Bjorn,
-> 
-> Thanks for your time. The reason is just like what you said.  I'm worried
-> that this may break the existing behavior.  I'll updated this patch as
-> you suggested.
+Hi Bjorn,
 
-I guess one problem is that if we *don't* change the size, there's
-nothing to prevent something else from being allocated right after the
-resource.  For example, if we have a 1K BAR, and the objective is to
-make sure it's on a 4K page by itself, not only do we have to align
-the BAR on 4K, we *also* have to keep anything else from using the
-remaining 3K of that page.
+On 8/30/2016 10:04 AM, Ray Jui wrote:
+>
+>
+> On 8/30/2016 10:00 AM, Bjorn Helgaas wrote:
+>> On Tue, Aug 30, 2016 at 09:36:52AM -0700, Ray Jui wrote:
+>>>
+>>>
+>>> On 8/30/2016 6:37 AM, Bjorn Helgaas wrote:
+>>>> On Mon, Aug 29, 2016 at 05:37:09PM -0700, Ray Jui wrote:
+>>>>> Hi Bjorn,
+>>>>>
+>>>>> On 8/24/2016 10:54 AM, Bjorn Helgaas wrote:
+>>>>>> [+cc Ray, Scott, Jon, bcm-kernel-feedback-list]
+>>>>>>
+>>>>>> On Wed, Aug 24, 2016 at 03:07:52PM +0800, Ley Foon Tan wrote:
+>>>>>>> On Mon, Aug 22, 2016 at 11:47 PM, Bjorn Helgaas
+>>>>>>> <helgaas@kernel.org> wrote:
+>>>>>>>> On Fri, Aug 19, 2016 at 04:24:38PM +0800, Ley Foon Tan wrote:
+>>>>>>>>> Altera PCIe IP can be configured as rootport or device and they
+>>>>>>>>> might have
+>>>>>>>>> same vendor ID. It will cause the system hang issue if Altera
+>>>>>>>>> PCIe is in
+>>>>>>>>> endpoint mode and work with other PCIe rootport that from other
+>>>>>>>>> vendors.
+>>>>>>>>> So, add the rootport mode checking in link retrain fixup function.
+>>>>>>>>>
+>>>>>>>>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>>>>>>>>> ---
+>>>>>>>>> v2: change to check PCIe type is PCI_EXP_TYPE_ROOT_PORT
+>>>>>>>>> ---
+>>>>>>>>> drivers/pci/host/pcie-altera.c | 3 +++
+>>>>>>>>> 1 file changed, 3 insertions(+)
+>>>>>>>>>
+>>>>>>>>> diff --git a/drivers/pci/host/pcie-altera.c
+>>>>>>>>> b/drivers/pci/host/pcie-altera.c
+>>>>>>>>> index 58eef99..33b6968 100644
+>>>>>>>>> --- a/drivers/pci/host/pcie-altera.c
+>>>>>>>>> +++ b/drivers/pci/host/pcie-altera.c
+>>>>>>>>> @@ -139,6 +139,9 @@ static void altera_pcie_retrain(struct
+>>>>>>>>> pci_dev *dev)
+>>>>>>>>>     u16 linkcap, linkstat;
+>>>>>>>>>     struct altera_pcie *pcie = dev->bus->sysdata;
+>>>>>>>>>
+>>>>>>>>> +     if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+>>>>>>>>> +             return;
+>>>>>>>>> +
+>>>>>>>>>     if (!altera_pcie_link_is_up(pcie))
+>>>>>>>>>             return;
+>>>>>>>>
+>>>>>>>> Instead of making this a PCI fixup, can you make an
+>>>>>>>> altera_pcie_host_init() function, call it from altera_pcie_probe(),
+>>>>>>>> and do the link retrain there?  Then you wouldn't need to worry
+>>>>>>>> about
+>>>>>>>> whether this is a Root Port or an Endpoint, plus it would make the
+>>>>>>>> altera driver structure more like the other drivers.
+>>>>>>>>
+>>>>>>>> You would call altera_pcie_host_init() before
+>>>>>>>> pci_scan_root_bus(), so
+>>>>>>>> you wouldn't have a pci_dev yet, so you wouldn't be able to use
+>>>>>>>> pcie_capability_set_word() to set the PCI_EXP_LNKCTL_RL bit.  But I
+>>>>>>>> assume there's some device-dependent way to access it using
+>>>>>>>> cra_writel()?
+>>>>>>> We can't use cra_write() to set PCI_EXP_LNKCTL_RL bit.
+>>>>>>
+>>>>>> Why not?  I don't mean it has to be cra_write(), but isn't there some
+>>>>>> way you can write that bit before we scan the root bus?  It doesn't
+>>>>>> make sense that we have to scan the bus before we can train the link.
+>>>>>>
+>>>>>> We want to be able to tell the PCI core "all the device-specific root
+>>>>>> complex initialization has been done, here are the config accessors
+>>>>>> you need, please scan for devices."  I want to keep device-specific
+>>>>>> things like this quirk directly in the driver and out of the
+>>>>>> enumeration process.
+>>>>>>
+>>>>>>> We can use
+>>>>>>> pci_bus_find_capability() and pci_bus_read_config_word() with struct
+>>>>>>> pci_bus instead.
+>>>>>>> But this only can be called after pci_scan_root_bus().
+>>>>>>
+>>>>>>> Found
+>>>>>>> iproc_pcie_check_link() have similar implementation.
+>>>>>>
+>>>>>> You're right, and I don't like iproc_pcie_check_link() either, for
+>>>>>> the
+>>>>>> same reasons.
+>>>>>>
+>>>>>> The iproc_pcie_check_link() is a little better because it's called
+>>>>>> before enumeration:
+>>>>>>
+>>>>>> pci_create_root_bus()
+>>>>>> iproc_pcie_check_link()
+>>>>>> pci_scan_child_bus()
+>>>>>>
+>>>>>> But it would be a lot better if iproc_pcie_check_link() were done
+>>>>>> first, before pci_create_root_bus().  Then it would be more like the
+>>>>>> structure of other drivers, and we could use pci_scan_root_bus()
+>>>>>> instead.
+>>>>>
+>>>>> Although not yet tested, I suppose we can do iproc_pcie_check_link
+>>>>> before calling pci_scan_root_bus so we can get rid of separate calls
+>>>>> to pci_create_root_bus and pci_scan_child_bus. But then we need to
+>>>>> create some dummy bus in the iproc_pcie_check_link function to allow
+>>>>> access to the root bus for link check, which was the primary reason
+>>>>> why we did pci_create_root_bus before iproc_pcie_check_link, i.e.,
+>>>>> to avoid the use of dummy root bus.
+>>>>
+>>>> I don't want a dummy root bus.
+>>>
+>>> Okay we are on the same page for this.
+>>>
+>>>> There should be some way to structure that code so you can write the
+>>>> class code and the link status stuff without having a struct pci_bus.
+>>>> The only reason you need the struct pci_bus in the first place is so
+>>>> you can extract the struct iproc_pcie *, and you already have that in
+>>>> iproc_pcie_check_link().
+>>>>
+>>>> No, you won't be able to use pci_bus_find_capability(), but presumably
+>>>> you already *know* where the capability is, since you know exactly
+>>>> what device this is.
+>>>
+>>> I'll need to review the check link function carefully and do some
+>>> experiment to see what I can do to determine the link status without
+>>> accessing any of the configuration registers, which is what you seem
+>>> to imply here.
+>>
+>> No, that's not what I'm trying to say.  You can access the
+>> configuration registers if you need to.  But you shouldn't need a
+>> struct pci_bus to do that.  All you do with the struct pci_bus is get
+>> the corresponding struct iproc_pcie.
+>>
+>> It will require some restructuring, of course, e.g., making low-level
+>> accessors that take the struct iproc_pcie, and wrappers around them
+>> that take a struct pci_bus.  The usual config accesses can go through
+>> the wrapper, and the iproc-internal accesses can use the low-level
+>> accessors directly.
+>>
+>> Bjorn
+>>
+>
+> Okay I got it. Thanks for the clarifications. I'll look into this when I
+> have a chance.
+>
+> Ray
 
-Maybe it's easier to fix the drivers so they don't rely on the size.
-Do you have examples of such drivers?
+By looking at the code closer, I found that we have an issue here, i.e., 
+currently the iProc PCIe driver accesses the configuration registers 
+using the standard struct pci_ops (i.e., pci_generic_config_read32 and 
+pci_generic_config_write32). There's no existing iProc specific 
+low-level code for configuration register access (well, there actually 
+was previously, until we switched to use the generic code). As a result, 
+unless we diverge from using the generic code, I cannot think of a way 
+to make this work.
 
-I'm hesitant to add a new option to the "pci=resource_alignment"
-parameter because it's already very complicated and it exposes more
-kernel internals than I'm really comfortable with.  If we can figure
-out a way to make the existing parameter work for everybody, I would
-prefer that.
+Any comment on this?
 
-Bjorn
+Regards,
 
-> >>+		} else {
-> >>+			r->flags &= ~IORESOURCE_SIZEALIGN;
-> >>+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-> >>+			r->start = max(align, size);
-> >>+			r->end = r->start + size - 1;
-> >>  		}
-> >>-		r->flags |= IORESOURCE_UNSET;
-> >>-		r->end = size - 1;
-> >>-		r->start = 0;
-> >>  	}
-> >>  	/* Need to disable bridge's resource window,
-> >>  	 * to enable the kernel to reassign new resource
-> >>-- 
-> >>1.7.9.5
-> >>
-> >>--
-> >>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >>the body of a message to majordomo@vger.kernel.org
-> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Ray
