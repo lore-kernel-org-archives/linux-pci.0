@@ -1,140 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:51822
-        "EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755671AbcIOAUL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 20:20:11 -0400
-From: Long Li <longli@exchange.microsoft.com>
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
-Subject: [PATCH 1/2 v2] pci-hyperv: properly handle pci bus remove
-Date: Wed, 14 Sep 2016 19:10:01 -0700
-Message-Id: <1473905402-2375-1-git-send-email-longli@exchange.microsoft.com>
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:34396 "EHLO
+        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941343AbcIHTdI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Sep 2016 15:33:08 -0400
+Received: by mail-lf0-f41.google.com with SMTP id u14so29062978lfd.1
+        for <linux-pci@vger.kernel.org>; Thu, 08 Sep 2016 12:33:07 -0700 (PDT)
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH] pcie-rcar: MSI range allocation support
+Date: Thu, 08 Sep 2016 22:32:59 +0300
+Message-ID: <2520843.q5xC3E7R5B@wasted.cogentembedded.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Long Li <longli@microsoft.com>
+From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
 
-hv_pci_devices_present is called in hv_pci_remove when we remove a PCI device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove, the bus is already removed before the call, so we don't need to rescan the bus in the workqueue scheduled from hv_pci_devices_present. By introducing status hv_pcibus_removed, we can avoid this situation.
+Impelment MSI setup_irqs() method which enables allocation of several MSIs
+at once.
 
-The patch fixes the following kernel panic.
+[Sergei Shtylyov: removed unrelated/unneeded changes, fixed too long lines,
+reordered the variable declarations, reworded the summary/description.]
 
-[  383.853124] Workqueue: events pci_devices_present_work [pci_hyperv]
-[  383.853124] task: ffff88007f5f8000 ti: ffff88007f600000 task.ti:
-ffff88007f600000
-[  383.853124] RIP: 0010:[<ffffffff81349806>]  [<ffffffff81349806>]
-pci_is_pcie+0x6/0x20
-[  383.853124] RSP: 0018:ffff88007f603d38  EFLAGS: 00010206
-[  383.853124] RAX: ffff88007f5f8000 RBX: 642f3d4854415056 RCX:
-ffff88007f603fd8
-[  383.853124] RDX: 0000000000000000 RSI: 0000000000000000 RDI:
-642f3d4854415056
-[  383.853124] RBP: ffff88007f603d68 R08: 0000000000000246 R09:
-ffffffffa045eb9e
-[  383.853124] R10: ffff88007b419a80 R11: ffffea0001c0ef40 R12:
-ffff880003ee1c00
-[  383.853124] R13: 63702f30303a3137 R14: 0000000000000000 R15:
-0000000000000246
-[  383.853124] FS:  0000000000000000(0000) GS:ffff88007b400000(0000)
-knlGS:0000000000000000
-[  383.853124] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  383.853124] CR2: 00007f68b3f52350 CR3: 0000000003546000 CR4:
-00000000000406f0
-[  383.853124] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-0000000000000000
-[  383.853124] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-0000000000000400
-[  383.853124] Stack:
-[  383.853124]  ffff88007f603d68 ffffffff8134db17 0000000000000008
-ffff880003ee1c00
-[  383.853124]  63702f30303a3137 ffff880003d8edb8 ffff88007f603da0
-ffffffff8134ee2d
-[  383.853124]  ffff880003d8ed00 ffff88007f603dd8 ffff880075fec320
-ffff880003d8edb8
-[  383.853124] Call Trace:
-[  383.853124]  [<ffffffff8134db17>] ? pci_scan_slot+0x27/0x140
-[  383.853124]  [<ffffffff8134ee2d>] pci_scan_child_bus+0x3d/0x150
-[  383.853124]  [<ffffffffa045ef5a>]
-pci_devices_present_work+0x3ea/0x400 [pci_hyperv]
-[  383.853124]  [<ffffffff810a682b>] process_one_work+0x17b/0x470
-[  383.853124]  [<ffffffff810a7666>] worker_thread+0x126/0x410
-[  383.853124]  [<ffffffff810a7540>] ? rescuer_thread+0x460/0x460
-[  383.853124]  [<ffffffff810aee1f>] kthread+0xcf/0xe0
-[  383.853124]  [<ffffffff810aed50>] ?
-kthread_create_on_node+0x140/0x140
-[  383.853124]  [<ffffffff81699958>] ret_from_fork+0x58/0x90
-[  383.853124]  [<ffffffff810aed50>] ?
-kthread_create_on_node+0x140/0x140
-[  383.853124] Code: 89 e5 5d 25 f0 00 00 00 c1 f8 04 c3 66 0f 1f 84 00
-00 00 00 00 66 66 66 66 90 55 0f b6 47 4a 48 89 e5 5d c3 90 66 66 66 66
-90 55 <80> 7f 4a 00 48 89 e5 5d 0f 95 c0 c3 0f 1f 40 00 66 2e 0f 1f 84
-[  383.853124] RIP  [<ffffffff81349806>] pci_is_pcie+0x6/0x20
-[  383.853124]  RSP <ffff88007f603d38>
+Signed-off-by: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Signed-off-by: Long Li <longli@microsoft.com>
 ---
- drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo plus
+the patch posted yesterday.
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index a8deeca..4a37598 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -348,6 +348,7 @@ enum hv_pcibus_state {
- 	hv_pcibus_init = 0,
- 	hv_pcibus_probed,
- 	hv_pcibus_installed,
-+	hv_pcibus_removed,
- 	hv_pcibus_maximum
- };
+ drivers/pci/host/pcie-rcar.c |   72 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 70 insertions(+), 2 deletions(-)
+
+Index: pci/drivers/pci/host/pcie-rcar.c
+===================================================================
+--- pci.orig/drivers/pci/host/pcie-rcar.c
++++ pci/drivers/pci/host/pcie-rcar.c
+@@ -673,6 +673,18 @@ static int rcar_msi_alloc(struct rcar_ms
+ 	return msi;
+ }
  
-@@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_struct *work)
- 		put_pcichild(hpdev, hv_pcidev_ref_initial);
- 	}
++static int rcar_msi_alloc_region(struct rcar_msi *chip, int no_irqs)
++{
++	int msi;
++
++	mutex_lock(&chip->lock);
++	msi = bitmap_find_free_region(chip->used, INT_PCI_MSI_NR,
++				      order_base_2(no_irqs));
++	mutex_unlock(&chip->lock);
++
++	return msi;
++}
++
+ static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
+ {
+ 	mutex_lock(&chip->lock);
+@@ -768,7 +780,7 @@ static int rcar_msi_setup_irq(struct msi
+ 	if (hwirq < 0)
+ 		return hwirq;
  
--	/* Tell the core to rescan bus because there may have been changes. */
--	if (hbus->state == hv_pcibus_installed) {
-+	switch (hbus->state) {
-+	case hv_pcibus_installed:
+-	irq = irq_create_mapping(msi->domain, hwirq);
++	irq = irq_find_mapping(msi->domain, hwirq);
+ 	if (!irq) {
+ 		rcar_msi_free(msi, hwirq);
+ 		return -EINVAL;
+@@ -785,6 +797,58 @@ static int rcar_msi_setup_irq(struct msi
+ 	return 0;
+ }
+ 
++static int rcar_msi_setup_irqs(struct msi_controller *chip,
++			       struct pci_dev *pdev, int nvec, int type)
++{
++	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
++	struct rcar_msi *msi = to_rcar_msi(chip);
++	struct msi_desc *desc;
++	struct msi_msg msg;
++	unsigned int irq;
++	int hwirq;
++	int i;
++
++	/* MSI-X interrupts are not supported */
++	if (type == PCI_CAP_ID_MSIX)
++		return -EINVAL;
++
++	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
++	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
++
++	hwirq = rcar_msi_alloc_region(msi, nvec);
++	if (hwirq < 0)
++		return -ENOSPC;
++
++	irq = irq_find_mapping(msi->domain, hwirq);
++	if (!irq)
++		return -ENOSPC;
++
++	for (i = 0; i < nvec; i++) {
 +		/*
-+		 * Tell the core to rescan bus
-+		 * because there may have been changes.
++		 * irq_create_mapping() called from rcar_pcie_probe() pre-
++		 * allocates descs,  so there is no need to allocate descs here.
++		 * We can therefore assume that if irq_find_mapping() above
++		 * returns non-zero, then the descs are also successfully
++		 * allocated.
 +		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
--	} else {
-+		break;
++		if (irq_set_msi_desc_off(irq, i, desc)) {
++			/* TODO: clear */
++			return -EINVAL;
++		}
++	}
 +
-+	case hv_pcibus_init:
-+	case hv_pcibus_probed:
- 		survey_child_resources(hbus);
-+		break;
++	desc->nvec_used = nvec;
++	desc->msi_attrib.multiple = order_base_2(nvec);
 +
-+	default:
-+		break;
- 	}
++	msg.address_lo = rcar_pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
++	msg.address_hi = rcar_pci_read_reg(pcie, PCIEMSIAUR);
++	msg.data = hwirq;
++
++	pci_write_msi_msg(irq, &msg);
++
++	return 0;
++}
++
+ static void rcar_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+ {
+ 	struct rcar_msi *msi = to_rcar_msi(chip);
+@@ -819,12 +883,13 @@ static int rcar_pcie_enable_msi(struct r
+ 	struct platform_device *pdev = to_platform_device(pcie->dev);
+ 	struct rcar_msi *msi = &pcie->msi;
+ 	unsigned long base;
+-	int err;
++	int err, i;
  
- 	up(&hbus->enum_sem);
-@@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
- 	if (!hbus)
+ 	mutex_init(&msi->lock);
+ 
+ 	msi->chip.dev = pcie->dev;
+ 	msi->chip.setup_irq = rcar_msi_setup_irq;
++	msi->chip.setup_irqs = rcar_msi_setup_irqs;
+ 	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+ 
+ 	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
+@@ -834,6 +899,9 @@ static int rcar_pcie_enable_msi(struct r
  		return -ENOMEM;
-+	hbus->state = hv_pcibus_init;
- 
- 	/*
- 	 * The PCI bus "domain" is what is called "segment" in ACPI and
-@@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
- 		pci_stop_root_bus(hbus->pci_bus);
- 		pci_remove_root_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
-+		hbus->state = hv_pcibus_removed;
  	}
  
- 	ret = hv_send_resources_released(hdev);
--- 
-1.8.5.6
++	for (i = 0; i < INT_PCI_MSI_NR; i++)
++		irq_create_mapping(msi->domain, i);
++
+ 	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
+ 	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
+ 			       IRQF_SHARED | IRQF_NO_THREAD,
 
