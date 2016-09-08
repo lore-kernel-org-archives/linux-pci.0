@@ -1,265 +1,219 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V11 2/8] ACPI: Add new IORT functions to support MSI domain handling
-Date: Mon, 12 Sep 2016 20:32:21 +0200
-Message-Id: <1473705147-6588-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
-References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2 1/4] ARM64 LPC: Indirect ISA port IO introduced
+To: Arnd Bergmann <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>
+References: <1473255233-154297-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1473255233-154297-2-git-send-email-yuanzhichang@hisilicon.com>
+ <3419224.SdRtVQMJCi@wuerfel>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <57D11711.9090901@hisilicon.com>
+Date: Thu, 8 Sep 2016 15:45:21 +0800
+MIME-Version: 1.0
+In-Reply-To: <3419224.SdRtVQMJCi@wuerfel>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, minyard@acm.org, gabriele.paoloni@huawei.com,
+ linux-pci@vger.kernel.org, benh@kernel.crashing.org, john.garry@huawei.com,
+ liviu.dudau@arm.com, linuxarm@huawei.com, linux-kernel@vger.kernel.org,
+ zhichang.yuan02@gmail.com, zourongrong@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For ITS, MSI functionality consists on building domain stack and
-during that process we need to reference to domain stack components
-e.g. before we create new DOMAIN_BUS_PCI_MSI domain we need to specify
-its DOMAIN_BUS_NEXUS parent domain. In order to manage that process
-properly, maintain list which elements contain domain token
-(unique for MSI domain stack) and ITS ID: iort_register_domain_token()
-and iort_deregister_domain_token(). Then retrieve domain token
-any time later with ITS ID being key off: iort_find_domain_token().
-With domain token and domain type we are able to find corresponding
-IRQ domain.
+Hi, Arnd,
 
-Since IORT is prepared to describe MSI domain on a per-device basis,
-use existing IORT helpers and implement two calls:
-1. iort_msi_map_rid() to map MSI RID for a device
-2. iort_get_device_domain() to find domain token for a device
+Thanks for your remarks!
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Rafael J. Wysocki <rjw@rjwysocki.net>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/acpi/arm64/iort.c | 152 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi_iort.h |  12 ++++
- 2 files changed, 164 insertions(+)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 3eaeb66..c669fdab 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -22,6 +22,12 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- 
-+struct iort_its_msi_chip {
-+	struct list_head	list;
-+	struct fwnode_handle	*fw_node;
-+	u32			translation_id;
-+};
-+
- typedef acpi_status (*iort_find_node_callback)
- 	(struct acpi_iort_node *node, void *context);
- 
-@@ -31,6 +37,76 @@ static struct acpi_table_header *iort_table;
- static LIST_HEAD(iort_msi_chip_list);
- static DEFINE_SPINLOCK(iort_msi_chip_lock);
- 
-+/**
-+ * iort_register_domain_token() - register domain token and related ITS ID
-+ * to the list from where we can get it back later on.
-+ * @trans_id: ITS ID.
-+ * @fw_node: Domain token.
-+ *
-+ * Returns: 0 on success, -ENOMEM if no memory when allocating list element
-+ */
-+int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
-+{
-+	struct iort_its_msi_chip *its_msi_chip;
-+
-+	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
-+	if (!its_msi_chip)
-+		return -ENOMEM;
-+
-+	its_msi_chip->fw_node = fw_node;
-+	its_msi_chip->translation_id = trans_id;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_add(&its_msi_chip->list, &iort_msi_chip_list);
-+	spin_unlock(&iort_msi_chip_lock);
-+
-+	return 0;
-+}
-+
-+/**
-+ * iort_deregister_domain_token() - Deregister domain token based on ITS ID
-+ * @trans_id: ITS ID.
-+ *
-+ * Returns: none.
-+ */
-+void iort_deregister_domain_token(int trans_id)
-+{
-+	struct iort_its_msi_chip *its_msi_chip, *t;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_for_each_entry_safe(its_msi_chip, t, &iort_msi_chip_list, list) {
-+		if (its_msi_chip->translation_id == trans_id) {
-+			list_del(&its_msi_chip->list);
-+			kfree(its_msi_chip);
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_msi_chip_lock);
-+}
-+
-+/**
-+ * iort_find_domain_token() - Find domain token based on given ITS ID
-+ * @trans_id: ITS ID.
-+ *
-+ * Returns: domain token when find on the list, NULL otherwise
-+ */
-+struct fwnode_handle *iort_find_domain_token(int trans_id)
-+{
-+	struct fwnode_handle *fw_node = NULL;
-+	struct iort_its_msi_chip *its_msi_chip;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
-+		if (its_msi_chip->translation_id == trans_id) {
-+			fw_node = its_msi_chip->fw_node;
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_msi_chip_lock);
-+
-+	return fw_node;
-+}
-+
- static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
- 					     iort_find_node_callback callback,
- 					     void *context)
-@@ -202,6 +278,82 @@ static struct acpi_iort_node *iort_find_dev_node(struct device *dev)
- 			      iort_match_node_callback, &pbus->dev);
- }
- 
-+/**
-+ * iort_msi_map_rid() - Map a MSI requester ID for a device
-+ * @dev: The device for which the mapping is to be done.
-+ * @req_id: The device requester ID.
-+ *
-+ * Returns: mapped MSI RID on success, input requester ID otherwise
-+ */
-+u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-+{
-+	struct acpi_iort_node *node;
-+	u32 dev_id;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node)
-+		return req_id;
-+
-+	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-+	return dev_id;
-+}
-+
-+/**
-+ * iort_dev_find_its_id() - Find the ITS identifier for a device
-+ * @dev: The device.
-+ * @idx: Index of the ITS identifier list.
-+ * @its_id: ITS identifier.
-+ *
-+ * Returns: 0 on success, appropriate error value otherwise
-+ */
-+static int iort_dev_find_its_id(struct device *dev, u32 req_id,
-+				unsigned int idx, int *its_id)
-+{
-+	struct acpi_iort_its_group *its;
-+	struct acpi_iort_node *node;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node)
-+		return -ENXIO;
-+
-+	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	if (!node)
-+		return -ENXIO;
-+
-+	/* Move to ITS specific data */
-+	its = (struct acpi_iort_its_group *)node->node_data;
-+	if (idx > its->its_count) {
-+		dev_err(dev, "requested ITS ID index [%d] is greater than available [%d]\n",
-+			idx, its->its_count);
-+		return -ENXIO;
-+	}
-+
-+	*its_id = its->identifiers[idx];
-+	return 0;
-+}
-+
-+/**
-+ * iort_get_device_domain() - Find MSI domain related to a device
-+ * @dev: The device.
-+ * @req_id: Requester ID for the device.
-+ *
-+ * Returns: the MSI domain for this device, NULL otherwise
-+ */
-+struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
-+{
-+	struct fwnode_handle *handle;
-+	int its_id;
-+
-+	if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
-+		return NULL;
-+
-+	handle = iort_find_domain_token(its_id);
-+	if (!handle)
-+		return NULL;
-+
-+	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
-+}
-+
- void __init acpi_iort_init(void)
- {
- 	acpi_status status;
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index fcacaf7..0e32dac 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -20,11 +20,23 @@
- #define __ACPI_IORT_H__
- 
- #include <linux/acpi.h>
-+#include <linux/fwnode.h>
-+#include <linux/irqdomain.h>
- 
-+int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
-+void iort_deregister_domain_token(int trans_id);
-+struct fwnode_handle *iort_find_domain_token(int trans_id);
- #ifdef CONFIG_ACPI_IORT
- void acpi_iort_init(void);
-+u32 iort_msi_map_rid(struct device *dev, u32 req_id);
-+struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- #else
- static inline void acpi_iort_init(void) { }
-+static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-+{ return req_id; }
-+static inline struct irq_domain *iort_get_device_domain(struct device *dev,
-+							u32 req_id)
-+{ return NULL; }
- #endif
- 
- #endif /* __ACPI_IORT_H__ */
--- 
-1.9.1
+On 2016/9/7 23:06, Arnd Bergmann wrote:
+> On Wednesday, September 7, 2016 9:33:50 PM CEST Zhichang Yuan wrote:
+>> +#ifdef CONFIG_ARM64_INDIRECT_PIO
+>> +
+>> +typedef u64 (*inhook)(void *devobj, unsigned long ptaddr, void *inbuf,
+>> +                               size_t dlen, unsigned int count);
+>> +typedef void (*outhook)(void *devobj, unsigned long ptaddr,
+>> +                               const void *outbuf, size_t dlen,
+>> +                               unsigned int count);
+>> +
+>> +struct extio_ops {
+>> +       inhook  pfin;
+>> +       outhook pfout;
+>> +       void *devpara;
+>> +};
+>> +
+>> +extern struct extio_ops *arm64_simops __refdata;
+>> +
+>> +/*Up to now, only applied to Hip06 LPC. Define as static here.*/
+>> +static inline void arm64_set_simops(struct extio_ops *ops)
+>> +{
+>> +       if (ops)
+>> +               WRITE_ONCE(arm64_simops, ops);
+>> +}
+>> +
+>> +
+>> +#define BUILDIO(bw, type)                                              \
+>> +static inline type in##bw(unsigned long addr)                          \
+>> +{                                                                      \
+>> +       if (addr >= PCIBIOS_MIN_IO)                                     \
+>> +               return read##bw(PCI_IOBASE + addr);                     \
+>> +       return (arm64_simops && arm64_simops->pfin) ?                   \
+>> +               arm64_simops->pfin(arm64_simops->devpara, addr, NULL,   \
+>> +                                       sizeof(type), 1) : -1;          \
+>> +}                                                      \
+>>
+> 
+> Hmm, the way this is done, enabling CONFIG_ARM64_INDIRECT_PIO at
+> compile time means that only the dynamically registered PIO support
+> is possible for I/O port ranges 0-0xfff.
+Yes. The arm64_simops is only for IO range 0-0xfff. But since only one global arm64_simops, this patch doesn't
+support the dynamically PIO register, only one PIO range of 0-0xfff is supported. As for multiple PIO ranges
+register, you also mention below, will discuss there.
+> 
+> I think the runtime check should better test if simops was defined
+> first and fall back to normal PIO otherwise, in order to allow
+> LPC implementations on a PCI-LPC bridge.
+Do you mean check arm64_simops first?
+I don't understand clearly what is the benefit about that.
+It seems that most IO accesses are MMIO, is it the current implementation a bit efficent?
+
+> 
+> How about allowing an I/O port range to be defined along with
+> the operations and check against that?
+> 
+> u8 intb(unsigned long port)
+> {
+> 	if (arm64_simops &&
+> 	    (port >= arm64_simops->min) && 
+> 	    (port <= arm64_simops->max))
+> 		return arm64_simops->pfin(arm64_simops, port, 1);
+> 	else
+> 		return readb(PCI_IOBASE + addr);
+> }
+> 
+> The other advantage of that is that you can dynamically register
+> a translation for the LPC port range into the Linux I/O port range
+> like PCI hosts do.
+Yes. an IO port range along with the operations is more generic and extensible.
+Do you want to define extio_ops like that:
+
+struct extio_ops {
+        unsigned long start;
+        unsigned long end;
+        unsigned long ptoffset;/* port IO - linux io */
+        inhook  pfin;
+        outhook pfout;
+        void *devpara;
+};
+
+With this structure, we can register the PIO range we need without limit in 0-0xfff. But there is only one global struct
+extio_ops where arm64_simops points to, we can only register one operation.
+Actually, Hip06 LPC currently need at least two PIO ranges, 0xe4-0xe7, 0x2f8-0x2ff.
+In this patch, we want to make the PIO differentiation in the new revised in/out() is more simpler, just reserve a bigger
+PIO range of 0-0xfff from the whole PIO range for this indirect-IO introduced in this patch-set. I think this reservation
+is not so safe, if there are other legacy devices which are designed to use fixable PIO range below 0x1000 through in/out,
+the trouble will happen.
+
+Based on your initial idea, I have two thoughts which help to make the indirect-IO more generic:
+
+1. setup a list where all indirect-IO devices' operations are linked to
+
+
+struct extio_range {
+        unsigned long start;/* inclusive, sys io addr */
+        unsigned long end;/* inclusive, sys io addr */
+        unsigned long ptoffset;/* port Io - system Io */
+};
+
+struct extio_node {
+        struct list_head ranlink;
+
+        struct extio_range iores;
+
+        /*pointer to the device provided services*/
+        struct extio_ops *regops;
+};
+
+when in/out is called with the input PIO parameter, check which node contains the input PIO and call the corresponding operation to
+complete the IO.
+
+static inline type inb(unsigned long addr)
+{
+        struct extio_node *extop;
+        unsigned long offset;
+/* extio_range_getops() will scan the list to find the node where start <= addr <= end is satisfied*/
+        extop = extio_range_getops(addr, &offset);
+        if (!extop)
+                return read##bw(PCI_IOBASE + addr);
+        if (extop->regops && extop->regops->pfin)
+                return extop->regops->pfin(extop->regops->devpara,
+                                addr + offset, NULL, sizeof(type), 1);
+        return -1;
+}
+
+The major disadvantage of this method is the performance. When the list is not long, it will be ok, I think.
+
+If support multiple PIO ranges are not needed, we don't need this list, only continue use the global arm64_simops based on the new
+extio_ops structure. Probably this is your suggestion.
+But if the PIO ranges are discrete, it seems we have to reserve a bigger PIO range which probably conflict with other PIO devices...
+
+2. extend the linux IO space to spare a fully separate PIO range for indirect-IO
+
+the current linux IO space on arm64 is 0 to  IO_SPACE_LIMIT:
+
+#define IO_SPACE_LIMIT		(PCI_IO_SIZE - 1)
+#define PCI_IOBASE		((void __iomem *)PCI_IO_START)
+
+current PCI_IO_SIZE is 16M.
+
+It seems the current linux IO space on arm64 is totally for PCI IO based on MMIO. For indirect-IO in this patch-set, we populate the linux
+IO range from 16M to 18M, this 2M linux IO space can be divided into 32 segments with segment size is 64K. Each segment is exclusively populated
+by one indirect-IO device. when the device is creating, a segment with unique segment ID will be allocated and the IO resource will be converted
+to the IO range corresponding with that segment. For example, segement 2 will own the IO range 0x1020000 - 0x102ffff.
+
+the structure for this way is:
+
+#define EXTIO_VECTOR_MAX     32
+struct extio_vector {
+        struct mutex            seglock;
+
+	/* one bit corresponds with one segment */
+        DECLARE_BITMAP(bmap, EXTIO_VECTOR_MAX);
+        struct extio_ops       *opsvec;
+};
+
+
+when the corresponding driver call in/out with one port address from the allocated linux IO resource, the processing like that:
+
+static inline type inb(unsigned long addr)
+{
+        if (!(addr & (0x01 << 16))) /* only check bit 16 */
+                return readb(PCI_IOBASE + addr);
+/* extio_inb will directly parse the bit16 to bit 20 to get the segment ID, then get the corresponding IO operation specific to device */
+        return extio_inb(addr);
+}
+
+This method is nearly no performance lose, but is more complicated. Maybe it is not worthy to do that.
+
+
+> 
+> We may also want to move the inb/outb definitions into a .c file
+> as they are getting rather big.
+The current in/out is defined as inline function in asm-generic/io.h; If we move them to .c file, probably much change.....
+
+> 
+> 	Arnd
+> 
+> .
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
