@@ -1,33 +1,84 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Fri, 23 Sep 2016 12:57:02 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv3 2/2] x86/vmd: Add PCI domain specific LED option
-Message-ID: <20160923165702.GA20686@keith>
-References: <1473779140-4016-1-git-send-email-keith.busch@intel.com>
- <1473779140-4016-2-git-send-email-keith.busch@intel.com>
- <20160923143441.GF1514@localhost>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Minghuan Lian <Minghuan.Lian@nxp.com>
+To: <linux-pci@vger.kernel.org>
+Subject: [PATCH 2/2] pci/layerscape: fix error response behavior
+Date: Thu, 8 Sep 2016 14:25:50 +0800
+Message-ID: <1473315950-6396-2-git-send-email-Minghuan.Lian@nxp.com>
+In-Reply-To: <1473315950-6396-1-git-send-email-Minghuan.Lian@nxp.com>
+References: <1473315950-6396-1-git-send-email-Minghuan.Lian@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160923143441.GF1514@localhost>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ Jingoo Han <jg1.han@samsung.com>, Stuart Yoder <stuart.yoder@nxp.com>,
+ Yang-Leo Li <leoyang.li@nxp.com>, Minghuan
+ Lian <Minghuan.Lian@nxp.com>, linux-arm-kernel@lists.infradead.org, Bjorn
+ Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 23, 2016 at 09:34:41AM -0500, Bjorn Helgaas wrote:
-> I made the necessary changes to match the renaming I did in the first
-> patch, and I also used plain old "#ifdef" instead of "#if IS_ENABLED"
-> since the rest of the file uses the former style.  If there's a reason
-> to switch, we should change the whole file in a separate patch so we
-> can explain the rationale.
+By default, when the PCIe controller experiences an erroneous
+completion from an external completer for its outbound non-posted
+request, it always sends an OKAY response to the device's internal
+AXI slave system interface. However, such default system error
+response behavior cannot be used for other types of outbound
+non-posted requests. For example, the outbound memory read
+transaction requires an actual ERROR response, like UR completion
+or completion timeout. The patch is to fix it by forwarding
+the error response of the non-posted request.
 
-The check was "IS_ENABLED" because VMD can be a loadable module, which
-fails the ifdef check. I see Fengguang 0'dayed it using the module
-configuration option. I can send you a fix based on your pci/hotplug
-branch, or revert and apply the original patch if you prefer.
+Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+---
+ drivers/pci/host/pci-layerscape.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-BTW, you had asked me not to split a series when incremental fixes
-touched a single patch. I didn't resend the whole series here, and while
-you got the right patches, I apologize for making it more difficult to find.
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index cf783ad..873447a 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -34,6 +34,8 @@
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+ #define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
++#define PCIE_ABSERR		0x8d0 /* Bridge Slave Error Response Register */
++#define PCIE_ABSERR_SETTING	0x9401 /* Forward error of non-posted request */
+ 
+ /* PEX LUT registers */
+ #define PCIE_LUT_DBG		0x7FC /* PEX LUT Debug Register */
+@@ -99,6 +101,12 @@ static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
+ 		dw_pcie_disable_outbound_atu(&pcie->pp, i);
+ }
+ 
++/* Forward error response of outbound non-posted requests */
++static void ls_pcie_fix_error_response(struct ls_pcie *pcie)
++{
++	iowrite32(PCIE_ABSERR_SETTING, pcie->dbi + PCIE_ABSERR);
++}
++
+ static int ls1021_pcie_link_up(struct pcie_port *pp)
+ {
+ 	u32 state;
+@@ -166,6 +174,7 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	iowrite32(0, pcie->dbi + PCIE_DBI_RO_WR_EN);
+ 
+ 	ls_pcie_disable_outbound_atus(pcie);
++	ls_pcie_fix_error_response(pcie);
+ }
+ 
+ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
