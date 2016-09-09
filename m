@@ -1,141 +1,144 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v14 17/17] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-Date: Fri, 16 Sep 2016 13:02:07 -0700
-Message-Id: <20160916200207.21439-18-yinghai@kernel.org>
-In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
-References: <20160916200207.21439-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: arnd@arndb.de,
+	hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 5/5] PCI: thunder: Enable ACPI PCI controller for ThunderX pass1.x silicon version
+Date: Fri,  9 Sep 2016 21:24:07 +0200
+Message-Id: <1473449047-10499-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
->From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
-resources), we change the logic for pref mmio allocation:
-When bridge pref support mmio64, we will only put children pref
-that support mmio64 into it, and will put children pref mmio32
-into bridge's non-pref mmio32.
+ThunderX pass1.x requires to emulate the EA headers for on-chip devices
+hence it has to use custom pci_thunder_ecam_ops for accessing PCI config
+space (pci-thuner-ecam.c). Add new entries to MCFG quirk array where they
+can be applied while probing ACPI based PCI host controller.
 
-That could leave bridge pref bar not used when that pref bar is mmio64,
-and children res only has mmio32.
-Also could have allocation failure when non-pref mmio32 is not big
-enough space for those children pref mmio32.
+ThunderX pass1.x is using the same way for accessing off-chip devices
+(so-called PEM) as silicon pass-2.x so we need to add PEM quirk
+entries too.
 
-That is not rational when the host bridge does not have 64bit mmio
-above 4g at all.
+Quirk is considered for ThunderX silicon pass1.x only which is identified
+via MCFG revision 2.
 
-The patch restore to old logic:
-when host bridge does not have has_mem64, put children pref mmio64 and
-pref mmio32 all under bridges pref bars.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- drivers/pci/bus.c       |  4 +++-
- drivers/pci/setup-bus.c | 13 +++++++++----
- drivers/pci/setup-res.c |  9 ++++++---
- 3 files changed, 18 insertions(+), 8 deletions(-)
+ drivers/acpi/pci_mcfg.c             | 45 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pci-thunder-ecam.c |  2 +-
+ include/linux/pci-ecam.h            |  3 +++
+ 3 files changed, 49 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index c288e5a..33a56a4 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -233,8 +233,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index 1f73d7b..eb14f74 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -77,6 +77,51 @@ static struct mcfg_fixup mcfg_quirks[] = {
+ 	  DEFINE_RES_MEM(0x994057000000UL, 0x39 * SZ_16M) },
+ 	{ "CAVIUM", "THUNDERX", 1, 19, MCFG_BUS_ANY, &pci_thunder_pem_ops,
+ 	  DEFINE_RES_MEM(0x99808f000000UL, 0x39 * SZ_16M) },
++
++	/* SoC pass1.x */
++	{ "CAVIUM", "THUNDERX", 2, 4, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x88001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 5, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x884057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 6, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x88808f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 7, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x89001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 8, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x894057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 9, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x89808f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 14, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x98001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 15, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x984057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 16, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x98808f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 17, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x99001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 18, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x994057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 2, 19, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x99808f000000UL, 0x39 * SZ_16M) },
++#endif
++#ifdef CONFIG_PCI_HOST_THUNDER_ECAM
++	/* SoC pass1.x */
++	{ "CAVIUM", "THUNDERX", 2, 0, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
++	{ "CAVIUM", "THUNDERX", 2, 1, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
++	{ "CAVIUM", "THUNDERX", 2, 2, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
++	{ "CAVIUM", "THUNDERX", 2, 3, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
++	{ "CAVIUM", "THUNDERX", 2, 10, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
++	{ "CAVIUM", "THUNDERX", 2, 11, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
++	{ "CAVIUM", "THUNDERX", 2, 12, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
++	{ "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
++	  MCFG_RES_EMPTY},
+ #endif
+ };
  
--	if (res->flags & IORESOURCE_MEM_64) {
-+	if (res->flags & mmio64) {
- 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
- 					       type_mask, alignf, alignf_data,
- 					       &pci_high);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1fcfa13..89d8c88 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1316,7 +1316,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if (b_res[2].flags & IORESOURCE_MEM_64) {
-+		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
-+		    pci_find_host_bridge(bus)->has_mem64) {
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
-@@ -1586,17 +1587,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 *	  io port.
- 	 *     2. if there is non pref mmio assign fail, release bridge
- 	 *	  nonpref mmio.
--	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-+	 *     3. if there is pref mmio assign fail, and host bridge does
-+	 *	  have 64bit mmio, release bridge pref mmio.
-+	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
- 	 *	  is 64bit, release bridge pref mmio.
--	 *     4. if there is pref mmio assign fail, and bridge pref is
-+	 *     5. if there is pref mmio assign fail, and bridge pref is
- 	 *	  32bit mmio, release bridge pref mmio
--	 *     5. if there is pref mmio assign fail, and bridge pref is not
-+	 *     6. if there is pref mmio assign fail, and bridge pref is not
- 	 *	  assigned, release bridge nonpref mmio.
- 	 */
- 	if (type & IORESOURCE_IO)
- 		idx = 0;
- 	else if (!(type & IORESOURCE_PREFETCH))
- 		idx = 1;
-+	else if (!pci_find_host_bridge(bus)->has_mem64)
-+		idx = 2;
- 	else if ((type & IORESOURCE_MEM_64) &&
- 		 (b_res[2].flags & IORESOURCE_MEM_64))
- 		idx = 2;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index f741fed..59271ee 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -212,6 +212,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t min;
- 	int ret;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
+diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
+index d50a3dc..b6c17e2 100644
+--- a/drivers/pci/host/pci-thunder-ecam.c
++++ b/drivers/pci/host/pci-thunder-ecam.c
+@@ -346,7 +346,7 @@ static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
+ 	return pci_generic_config_write(bus, devfn, where, size, val);
+ }
  
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+-static struct pci_ecam_ops pci_thunder_ecam_ops = {
++struct pci_ecam_ops pci_thunder_ecam_ops = {
+ 	.bus_shift	= 20,
+ 	.pci_ops	= {
+ 		.map_bus        = pci_ecam_map_bus,
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 65505ea..35f0e81 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -62,6 +62,9 @@ extern struct pci_ecam_ops pci_generic_ecam_ops;
+ #ifdef CONFIG_PCI_HOST_THUNDER_PEM
+ extern struct pci_ecam_ops pci_thunder_pem_ops;
+ #endif
++#ifdef CONFIG_PCI_HOST_THUNDER_ECAM
++extern struct pci_ecam_ops pci_thunder_ecam_ops;
++#endif
  
-@@ -223,7 +225,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * things differently than they were sized, not everything will fit.
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
--				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
-+				     IORESOURCE_PREFETCH | mmio64,
- 				     pcibios_align_resource, dev);
- 	if (ret == 0)
- 		return 0;
-@@ -232,7 +234,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * If the prefetchable window is only 32 bits wide, we can put
- 	 * 64-bit prefetchable resources in it.
- 	 */
--	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-+	if (mmio64 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
-@@ -247,7 +250,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * non-prefetchable, the first call already tried the only possibility
- 	 * so we don't need to try again.
- 	 */
--	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
-+	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
- 					     pcibios_align_resource, dev);
- 
+ #ifdef CONFIG_PCI_HOST_GENERIC
+ /* for DT-based PCI controllers that support ECAM */
 -- 
-2.8.3
+1.9.1
