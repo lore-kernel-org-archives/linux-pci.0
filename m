@@ -1,89 +1,258 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Aaron Durbin <adurbin@google.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH 1/2] PCI: Add pci_find_resource()
-Date: Tue, 13 Sep 2016 15:19:41 +0300
-Message-Id: <20160913121942.80356-1-mika.westerberg@linux.intel.com>
-In-Reply-To: <CAJZ5v0gRm++9zcAtXc1jYKsrg=tw2K3Wd=kQRS=RbRxXRDj8yA@mail.gmail.com>
-References: <CAJZ5v0gRm++9zcAtXc1jYKsrg=tw2K3Wd=kQRS=RbRxXRDj8yA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:44610 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751836AbcIIOXg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Sep 2016 10:23:36 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v5 02/14] drivers: iommu: implement arch_{set/get}_iommu_fwspec API
+Date: Fri,  9 Sep 2016 15:23:31 +0100
+Message-Id: <20160909142343.13314-3-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a new helper function pci_find_resource() that can be used to find out
-whether a given resource (for example from a child device) is contained
-within given PCI device's standard resources.
+The iommu fwspec configuration mechanism currently relies on
+the arch specific struct dev_archdata.iommu member to stash
+the struct iommu_fwspec pointer set-up for streamid translation.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+The struct dev_archdata.iommu member is arch specific and is not present
+on all arches that make use of the struct iommu_fwspec infrastructure,
+hence an arch specific kernel API is required to set-up and retrieve
+struct iommu_fwspec pointers safely from generic iommu code, hiding
+the arch specific details.
+
+Implement the arch_{set/get}_iommu_fwspec() generic kernel infrastructure
+and add the ARM/ARM64 back-end implementations.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- drivers/pci/pci.c   | 27 +++++++++++++++++++++++++++
- include/linux/pci.h |  4 ++++
- 2 files changed, 31 insertions(+)
+ arch/arm/Kconfig                      |  1 +
+ arch/arm/include/asm/iommu-fwspec.h   | 30 ++++++++++++++++++++++++++++++
+ arch/arm64/Kconfig                    |  1 +
+ arch/arm64/include/asm/iommu-fwspec.h | 30 ++++++++++++++++++++++++++++++
+ drivers/iommu/Kconfig                 |  3 +++
+ drivers/iommu/of_iommu.c              | 14 +++++++-------
+ include/linux/of_iommu.h              | 10 ++++++++++
+ 7 files changed, 82 insertions(+), 7 deletions(-)
+ create mode 100644 arch/arm/include/asm/iommu-fwspec.h
+ create mode 100644 arch/arm64/include/asm/iommu-fwspec.h
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d5115a5f..491f879f34cb 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -480,6 +480,33 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
- /**
-+ * pci_find_resource - Return matching PCI device resource
-+ * @dev: PCI device to query
-+ * @res: Resource to look for
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index a9c4e48..e84f62e 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -59,6 +59,7 @@ config ARM
+ 	select HAVE_GENERIC_DMA_COHERENT
+ 	select HAVE_HW_BREAKPOINT if (PERF_EVENTS && (CPU_V6 || CPU_V6K || CPU_V7))
+ 	select HAVE_IDE if PCI || ISA || PCMCIA
++	select HAVE_IOMMU_FWSPEC if IOMMU_API
+ 	select HAVE_IRQ_TIME_ACCOUNTING
+ 	select HAVE_KERNEL_GZIP
+ 	select HAVE_KERNEL_LZ4
+diff --git a/arch/arm/include/asm/iommu-fwspec.h b/arch/arm/include/asm/iommu-fwspec.h
+new file mode 100644
+index 0000000..2e87d8b
+--- /dev/null
++++ b/arch/arm/include/asm/iommu-fwspec.h
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (C) 2016 ARM Ltd.
 + *
-+ * Goes over standard PCI resources (BARs) and checks if the given resource
-+ * is partially or fully contained in any of them. In that case the
-+ * matching resource is returned, %NULL otherwise.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 + */
-+struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res)
++#ifndef __ASM_IOMMU_FWSPEC_H
++#define __ASM_IOMMU_FWSPEC_H
++
++static inline void arch_set_iommu_fwspec(struct device *dev,
++					 struct iommu_fwspec *fwspec)
 +{
-+	int i;
-+
-+	if (!res)
-+		return NULL;
-+
-+	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (r->start && resource_contains(r, res))
-+			return r;
-+	}
-+
-+	return NULL;
++	dev->archdata.iommu = fwspec;
 +}
-+EXPORT_SYMBOL(pci_find_resource);
 +
-+/**
-  * pci_find_pcie_root_port - return PCIe Root Port
-  * @dev: PCI device to query
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0ab835965669..a917d4b20554 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1126,6 +1126,7 @@ void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
- 		    int (*)(const struct pci_dev *, u8, u8));
-+struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res);
- #define HAVE_PCI_REQ_REGIONS	2
- int __must_check pci_request_regions(struct pci_dev *, const char *);
- int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
-@@ -1542,6 +1543,9 @@ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  int enable)
- { return 0; }
++static inline struct iommu_fwspec *arch_get_iommu_fwspec(struct device *dev)
++{
++	return dev->archdata.iommu;
++}
++#endif
++
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index bc3f00f..10c9b3d 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -83,6 +83,7 @@ config ARM64
+ 	select HAVE_GCC_PLUGINS
+ 	select HAVE_GENERIC_DMA_COHERENT
+ 	select HAVE_HW_BREAKPOINT if PERF_EVENTS
++	select HAVE_IOMMU_FWSPEC if IOMMU_API
+ 	select HAVE_IRQ_TIME_ACCOUNTING
+ 	select HAVE_MEMBLOCK
+ 	select HAVE_MEMBLOCK_NODE_MAP if NUMA
+diff --git a/arch/arm64/include/asm/iommu-fwspec.h b/arch/arm64/include/asm/iommu-fwspec.h
+new file mode 100644
+index 0000000..2e87d8b
+--- /dev/null
++++ b/arch/arm64/include/asm/iommu-fwspec.h
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (C) 2016 ARM Ltd.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++#ifndef __ASM_IOMMU_FWSPEC_H
++#define __ASM_IOMMU_FWSPEC_H
++
++static inline void arch_set_iommu_fwspec(struct device *dev,
++					 struct iommu_fwspec *fwspec)
++{
++	dev->archdata.iommu = fwspec;
++}
++
++static inline struct iommu_fwspec *arch_get_iommu_fwspec(struct device *dev)
++{
++	return dev->archdata.iommu;
++}
++#endif
++
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index 8ee54d7..101cb17 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -67,6 +67,9 @@ config OF_IOMMU
+        def_bool y
+        depends on OF && IOMMU_API
  
-+static inline struct resource *pci_find_resource(struct pci_dev *dev,
-+						 struct resource *res)
-+{ return NULL; }
- static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
- { return -EIO; }
- static inline void pci_release_regions(struct pci_dev *dev) { }
++config HAVE_IOMMU_FWSPEC
++	bool
++
+ # IOMMU-agnostic DMA-mapping layer
+ config IOMMU_DMA
+ 	bool
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 04d616d..38669b8 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -229,7 +229,7 @@ postcore_initcall_sync(of_iommu_init);
+ 
+ int iommu_fwspec_init(struct device *dev, struct device_node *iommu_np)
+ {
+-	struct iommu_fwspec *fwspec = dev->archdata.iommu;
++	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+ 
+ 	if (fwspec)
+ 		return 0;
+@@ -240,13 +240,13 @@ int iommu_fwspec_init(struct device *dev, struct device_node *iommu_np)
+ 
+ 	fwspec->iommu_np = of_node_get(iommu_np);
+ 	fwspec->iommu_ops = of_iommu_get_ops(iommu_np);
+-	dev->archdata.iommu = fwspec;
++	arch_set_iommu_fwspec(dev, fwspec);
+ 	return 0;
+ }
+ 
+ void iommu_fwspec_free(struct device *dev)
+ {
+-	struct iommu_fwspec *fwspec = dev->archdata.iommu;
++	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+ 
+ 	if (fwspec) {
+ 		of_node_put(fwspec->iommu_np);
+@@ -256,7 +256,7 @@ void iommu_fwspec_free(struct device *dev)
+ 
+ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+ {
+-	struct iommu_fwspec *fwspec = dev->archdata.iommu;
++	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+ 	size_t size;
+ 	int i;
+ 
+@@ -264,7 +264,7 @@ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+ 		return -EINVAL;
+ 
+ 	size = offsetof(struct iommu_fwspec, ids[fwspec->num_ids + num_ids]);
+-	fwspec = krealloc(dev->archdata.iommu, size, GFP_KERNEL);
++	fwspec = krealloc(fwspec, size, GFP_KERNEL);
+ 	if (!fwspec)
+ 		return -ENOMEM;
+ 
+@@ -272,11 +272,11 @@ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+ 		fwspec->ids[fwspec->num_ids + i] = ids[i];
+ 
+ 	fwspec->num_ids += num_ids;
+-	dev->archdata.iommu = fwspec;
++	arch_set_iommu_fwspec(dev, fwspec);
+ 	return 0;
+ }
+ 
+ inline struct iommu_fwspec *dev_iommu_fwspec(struct device *dev)
+ {
+-	return dev->archdata.iommu;
++	return arch_get_iommu_fwspec(dev);
+ }
+diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+index accdc05..358db49 100644
+--- a/include/linux/of_iommu.h
++++ b/include/linux/of_iommu.h
+@@ -46,6 +46,16 @@ void iommu_fwspec_free(struct device *dev);
+ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+ struct iommu_fwspec *dev_iommu_fwspec(struct device *dev);
+ 
++#ifdef CONFIG_HAVE_IOMMU_FWSPEC
++#include <asm/iommu-fwspec.h>
++#else /* !CONFIG_HAVE_IOMMU_FWSPEC */
++static inline void arch_set_iommu_fwspec(struct device *dev,
++					 struct iommu_fwspec *fwspec) {}
++
++static inline struct iommu_fwspec *
++arch_get_iommu_fwspec(struct device *dev) { return NULL; }
++#endif
++
+ void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+ const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
+ 
 -- 
-2.9.3
+2.10.0
+
