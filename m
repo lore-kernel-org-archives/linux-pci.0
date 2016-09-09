@@ -1,50 +1,129 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, alex.williamson@redhat.com,
-        vikrams@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V2 0/5] PCI: error handling clean up and add CRS support
-Date: Fri, 16 Sep 2016 16:06:29 -0400
-Message-Id: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: arnd@arndb.de,
+	hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 4/5] PCI: thunder: Enable ACPI PCI controller for ThunderX pass2.x silicon version
+Date: Fri,  9 Sep 2016 21:24:06 +0200
+Message-Id: <1473449047-10499-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Device states on the bus are not saved and restored for some of the bus
-reset paths as:
+ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
+compliant with ECAM standard. It uses non-standard configuration space
+accessors (see pci_thunder_pem_ops) and custom configuration space granulation
+(see bus_shift = 24). In order to access configuration space and
+probe PEM as ACPI based PCI host controller we need to add MCFG quirk
+infrastructure. This involves:
+1. Export PEM pci_thunder_pem_ops structure so it is visible to MCFG quirk
+   code.
+2. New quirk entries for each PEM segment. Each contains platform IDs,
+   mentioned pci_thunder_pem_ops and CFG resources.
 
-1. IB/hfi1 via pci_reset_bridge_secondary_bus
-2. PCI/AER via pci_reset_bridge_secondary_bus
-3. PCI: dev_reset via parent bus reset
+Quirk is considered for ThunderX silicon pass2.x only which is identified
+via MCFG revision 1.
 
-Changing the external API usage to pci_reset_bus outside of PCI code and
-adding save/restore into pci_parent_bus_reset function. Note that
-pci_parent_bus_reset is called with a device lock held.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/pci_mcfg.c            | 27 +++++++++++++++++++++++++++
+ drivers/pci/host/pci-thunder-pem.c |  2 +-
+ include/linux/pci-ecam.h           |  4 ++++
+ 3 files changed, 32 insertions(+), 1 deletion(-)
 
-A PCIe endpoint is allowed to issue CRS following an FLR request to
-indicate that it is not ready to accept new requests. Changing the polling
-mechanism in FLR wait function to go read the vendor ID instead of the
-command/status register. A CRS indication will only be given if the address
-to be read is vendor ID.
-
-v1:
-http://www.spinics.net/lists/linux-pci/msg53596.html
-* initial implementation
-
-Sinan Kaya (5):
-  PCI/AER: replace pci_reset_bridge_secondary_bus with pci_reset_bus
-  IB/hfi1: replace pci_reset_bridge_secondary_bus with pci_reset_bus
-  PCI: save and restore bus on parent bus reset
-  PCI: add CRS support to error handling path
-  PCI: handle CRS returned by device after FLR
-
- drivers/infiniband/hw/hfi1/pcie.c  |  4 +---
- drivers/pci/pci.c                  | 28 +++++++++++++++++++++++++++-
- drivers/pci/pcie/aer/aerdrv.c      |  2 +-
- drivers/pci/pcie/aer/aerdrv_core.c |  2 +-
- 4 files changed, 30 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index 2b8acc7..1f73d7b 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -51,6 +51,33 @@ struct mcfg_fixup {
+ 
+ static struct mcfg_fixup mcfg_quirks[] = {
+ /*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
++#ifdef CONFIG_PCI_HOST_THUNDER_PEM
++	/* SoC pass2.x */
++	{ "CAVIUM", "THUNDERX", 1, 4, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x88001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 5, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x884057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 6, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x88808f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 7, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x89001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 8, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x894057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 9, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x89808f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 14, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x98001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 15, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x984057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 16, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x98808f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 17, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x99001f000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 18, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x994057000000UL, 0x39 * SZ_16M) },
++	{ "CAVIUM", "THUNDERX", 1, 19, MCFG_BUS_ANY, &pci_thunder_pem_ops,
++	  DEFINE_RES_MEM(0x99808f000000UL, 0x39 * SZ_16M) },
++#endif
+ };
+ 
+ static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index b048761..d7c10cc 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -367,7 +367,7 @@ static int thunder_pem_init(struct pci_config_window *cfg)
+ 	return 0;
+ }
+ 
+-static struct pci_ecam_ops pci_thunder_pem_ops = {
++struct pci_ecam_ops pci_thunder_pem_ops = {
+ 	.bus_shift	= 24,
+ 	.init		= thunder_pem_init,
+ 	.pci_ops	= {
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 7adad20..65505ea 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -58,6 +58,10 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 			       int where);
+ /* default ECAM ops */
+ extern struct pci_ecam_ops pci_generic_ecam_ops;
++/* ECAM ops for known quirks */
++#ifdef CONFIG_PCI_HOST_THUNDER_PEM
++extern struct pci_ecam_ops pci_thunder_pem_ops;
++#endif
+ 
+ #ifdef CONFIG_PCI_HOST_GENERIC
+ /* for DT-based PCI controllers that support ECAM */
 -- 
 1.9.1
