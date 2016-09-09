@@ -1,42 +1,404 @@
-Return-Path: <benh@au1.ibm.com>
-Return-Path: <benh@au1.ibm.com>
-Subject: Re: [PATCH] PCI: Add parameter @mmio_force_on to
- pci_update_resource()
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Reply-To: benh@au1.ibm.com
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Gavin Shan
- <gwshan@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, clsoto@us.ibm.com,
-        linuxppc-dev@lists.ozlabs.org
-Date: Wed, 28 Sep 2016 07:45:32 +1000
-In-Reply-To: <20160927192003.GA14642@localhost>
-References: <1474242810-11530-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <20160927192003.GA14642@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1475012732.2857.293.camel@au1.ibm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Fri, 9 Sep 2016 10:20:12 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>, rjw@rjwysocki.net
+Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+	helgaas@kernel.org, rafael@kernel.org, will.deacon@arm.com,
+	catalin.marinas@arm.com, hanjun.guo@linaro.org,
+	shijie.huang@arm.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, al.stone@linaro.org,
+	graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+	okaya@codeaurora.org
+Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial
+ support
+Message-ID: <20160909092012.GC19669@red-moon>
+References: <1473152938-17388-2-git-send-email-tn@semihalf.com>
+ <1473249412-20226-1-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473249412-20226-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-09-27 at 14:20 -0500, Bjorn Helgaas wrote:
-> On Mon, Sep 19, 2016 at 09:53:30AM +1000, Gavin Shan wrote:
-> > In pci_update_resource(), the PCI device's memory decoding (0x2 in
-> > PCI_COMMAND) is disabled when 64-bits memory BAR is updated if the
-> > PCI device's memory space wasn't asked to be always on by @pdev->
-> > mmio_always_on. The PF's memory decoding might be disabled when
-> > updating its IOV BARs in the following path. Actually, the PF's
-> > memory decoding shouldn't be disabled in this scenario as the PF
-> > has been started to provide services:
-> 
-> The reason we disable memory decoding while updating a 64-bit BAR is
-> because we can't do the update atomically, and a half-updated BAR might
-> conflict with other devices.
-> 
-> You need to explain what is special about these SR-IOV BARs that makes it
-> safe to update them non-atomically while decoding is enabled.
+Hi Rafael,
 
-The IOV BAR won't decode until SR-IOV is enabled right ? Gavin, I don't
-think we update it "live", so it should be safe...
+On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
+> IORT shows representation of IO topology for ARM based systems.
+> It describes how various components are connected together on
+> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+> 
+> Initial support allows to detect IORT table presence and save its
+> root pointer obtained through acpi_get_table(). The pointer validity
+> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+> is not set while using IORT nodes we would dereference unmapped pointers.
+> 
+> For the aforementioned reason call iort_table_detect() from acpi_init()
+> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+> 
+> Add generic helpers which are helpful for scanning and retrieving
+> information from IORT table content. List of the most important helpers:
+> - iort_find_dev_node() finds IORT node for a given device
+> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>   final translation
+> 
+> IORT support is placed under drivers/acpi/arm64/ new directory due to its
+> ARM64 specific nature. The code there is considered only for ARM64.
+> The long term plan is to keep all ARM64 specific tables support
+> in this place e.g. GTDT table.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> ---
 
-Cheers,
-Ben.
+Apart from the minor commit logs oversights we consider these two
+patches ready to go, please let us know if there is something you want
+changed since we are at risk of missing yet another merge window.
+
+It is ARM64 specific code, we created and moved the code to its
+ARM64 specific directory and we are happy to maintain it as such,
+we need your ACK to get this done so if there is something you
+want changed please let us know otherwise I would ask your ACK
+on these two patches to give Marc a go-ahead for -next and
+hopefully 4.9.
+
+Thanks !
+Lorenzo
+
+>  drivers/acpi/Kconfig        |   4 +
+>  drivers/acpi/Makefile       |   2 +
+>  drivers/acpi/arm64/Kconfig  |   6 ++
+>  drivers/acpi/arm64/Makefile |   1 +
+>  drivers/acpi/arm64/iort.c   | 213 ++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/acpi/bus.c          |   2 +
+>  include/linux/acpi_iort.h   |  30 +++++++
+>  7 files changed, 258 insertions(+)
+>  create mode 100644 drivers/acpi/arm64/Kconfig
+>  create mode 100644 drivers/acpi/arm64/Makefile
+>  create mode 100644 drivers/acpi/arm64/iort.c
+>  create mode 100644 include/linux/acpi_iort.h
+> 
+> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+> index 445ce28..d5c0614 100644
+> --- a/drivers/acpi/Kconfig
+> +++ b/drivers/acpi/Kconfig
+> @@ -521,4 +521,8 @@ config ACPI_CONFIGFS
+>  	  userspace. The configurable ACPI groups will be visible under
+>  	  /config/acpi, assuming configfs is mounted under /config.
+>  
+> +if ARM64
+> +source "drivers/acpi/arm64/Kconfig"
+> +endif
+> +
+>  endif	# ACPI
+> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+> index 5ae9d85..e5ada78 100644
+> --- a/drivers/acpi/Makefile
+> +++ b/drivers/acpi/Makefile
+> @@ -105,3 +105,5 @@ obj-$(CONFIG_ACPI_CONFIGFS)	+= acpi_configfs.o
+>  
+>  video-objs			+= acpi_video.o video_detect.o
+>  obj-y				+= dptf/
+> +
+> +obj-$(CONFIG_ARM64)		+= arm64/
+> diff --git a/drivers/acpi/arm64/Kconfig b/drivers/acpi/arm64/Kconfig
+> new file mode 100644
+> index 0000000..4616da4
+> --- /dev/null
+> +++ b/drivers/acpi/arm64/Kconfig
+> @@ -0,0 +1,6 @@
+> +#
+> +# ACPI Configuration for ARM64
+> +#
+> +
+> +config ACPI_IORT
+> +	bool
+> diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
+> new file mode 100644
+> index 0000000..72331f2
+> --- /dev/null
+> +++ b/drivers/acpi/arm64/Makefile
+> @@ -0,0 +1 @@
+> +obj-$(CONFIG_ACPI_IORT) 	+= iort.o
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> new file mode 100644
+> index 0000000..e28e256
+> --- /dev/null
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -0,0 +1,213 @@
+> +/*
+> + * Copyright (C) 2016, Semihalf
+> + *	Author: Tomasz Nowicki <tn@semihalf.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+> + * more details.
+> + *
+> + * This file implements early detection/parsing of I/O mapping
+> + * reported to OS through firmware via I/O Remapping Table (IORT)
+> + * IORT document number: ARM DEN 0049A
+> + */
+> +
+> +#define pr_fmt(fmt)	"ACPI: IORT: " fmt
+> +
+> +#include <linux/acpi_iort.h>
+> +#include <linux/kernel.h>
+> +#include <linux/pci.h>
+> +
+> +typedef acpi_status (*iort_find_node_callback)
+> +	(struct acpi_iort_node *node, void *context);
+> +
+> +/* Root pointer to the mapped IORT table */
+> +static struct acpi_table_header *iort_table;
+> +
+> +static LIST_HEAD(iort_msi_chip_list);
+> +static DEFINE_SPINLOCK(iort_msi_chip_lock);
+> +
+> +static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
+> +					     iort_find_node_callback callback,
+> +					     void *context)
+> +{
+> +	struct acpi_iort_node *iort_node, *iort_end;
+> +	struct acpi_table_iort *iort;
+> +	int i;
+> +
+> +	if (!iort_table)
+> +		return NULL;
+> +
+> +	/* Get the first IORT node */
+> +	iort = (struct acpi_table_iort *)iort_table;
+> +	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
+> +				 iort->node_offset);
+> +	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
+> +				iort_table->length);
+> +
+> +	for (i = 0; i < iort->node_count; i++) {
+> +		if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
+> +			       "IORT node pointer overflows, bad table!\n"))
+> +			return NULL;
+> +
+> +		if (iort_node->type == type &&
+> +		    ACPI_SUCCESS(callback(iort_node, context)))
+> +				return iort_node;
+> +
+> +		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
+> +					 iort_node->length);
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
+> +					    void *context)
+> +{
+> +	struct device *dev = context;
+> +	acpi_status status = AE_NOT_FOUND;
+> +
+> +	if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT) {
+> +		struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER, NULL };
+> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
+> +		struct acpi_iort_named_component *ncomp;
+> +
+> +		if (!adev)
+> +			goto out;
+> +
+> +		status = acpi_get_name(adev->handle, ACPI_FULL_PATHNAME, &buf);
+> +		if (ACPI_FAILURE(status)) {
+> +			dev_warn(dev, "Can't get device full path name\n");
+> +			goto out;
+> +		}
+> +
+> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
+> +		if (!strcmp(ncomp->device_name, buf.pointer))
+> +			status = AE_OK;
+> +
+> +		acpi_os_free(buf.pointer);
+> +	} else if (node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
+> +		struct acpi_iort_root_complex *pci_rc;
+> +		struct pci_bus *bus;
+> +
+> +		bus = to_pci_bus(dev);
+> +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
+> +
+> +		/*
+> +		 * It is assumed that PCI segment numbers maps one-to-one
+> +		 * with root complexes. Each segment number can represent only
+> +		 * one root complex.
+> +		 */
+> +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
+> +			status = AE_OK;
+> +	}
+> +out:
+> +	return status;
+> +}
+> +
+> +static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
+> +		       u32 *rid_out)
+> +{
+> +	/* Single mapping does not care for input id */
+> +	if (map->flags & ACPI_IORT_ID_SINGLE_MAPPING) {
+> +		if (type == ACPI_IORT_NODE_NAMED_COMPONENT ||
+> +		    type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
+> +			*rid_out = map->output_base;
+> +			return 0;
+> +		}
+> +
+> +		pr_warn(FW_BUG "[map %p] SINGLE MAPPING flag not allowed for node type %d, skipping ID map\n",
+> +			map, type);
+> +		return -ENXIO;
+> +	}
+> +
+> +	if (rid_in < map->input_base ||
+> +	    (rid_in >= map->input_base + map->id_count))
+> +		return -ENXIO;
+> +
+> +	*rid_out = map->output_base + (rid_in - map->input_base);
+> +	return 0;
+> +}
+> +
+> +static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
+> +						u32 rid_in, u32 *rid_out,
+> +						u8 type)
+> +{
+> +	u32 rid = rid_in;
+> +
+> +	/* Parse the ID mapping tree to find specified node type */
+> +	while (node) {
+> +		struct acpi_iort_id_mapping *map;
+> +		int i;
+> +
+> +		if (node->type == type) {
+> +			if (rid_out)
+> +				*rid_out = rid;
+> +			return node;
+> +		}
+> +
+> +		if (!node->mapping_offset || !node->mapping_count)
+> +			goto fail_map;
+> +
+> +		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
+> +				   node->mapping_offset);
+> +
+> +		/* Firmware bug! */
+> +		if (!map->output_reference) {
+> +			pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
+> +			       node, node->type);
+> +			goto fail_map;
+> +		}
+> +
+> +		/* Do the RID translation */
+> +		for (i = 0; i < node->mapping_count; i++, map++) {
+> +			if (!iort_id_map(map, node->type, rid, &rid))
+> +				break;
+> +		}
+> +
+> +		if (i == node->mapping_count)
+> +			goto fail_map;
+> +
+> +		node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
+> +				    map->output_reference);
+> +	}
+> +
+> +fail_map:
+> +	/* Map input RID to output RID unchanged on mapping failure*/
+> +	if (rid_out)
+> +		*rid_out = rid_in;
+> +
+> +	return NULL;
+> +}
+> +
+> +static struct acpi_iort_node *iort_find_dev_node(struct device *dev)
+> +{
+> +	struct pci_bus *pbus;
+> +
+> +	if (!dev_is_pci(dev))
+> +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> +				      iort_match_node_callback, dev);
+> +
+> +	/* Find a PCI root bus */
+> +	pbus = to_pci_dev(dev)->bus;
+> +	while (!pci_is_root_bus(pbus))
+> +		pbus = pbus->parent;
+> +
+> +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> +			      iort_match_node_callback, &pbus->dev);
+> +}
+> +
+> +void __init acpi_iort_init(void)
+> +{
+> +	acpi_status status;
+> +
+> +	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
+> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
+> +		const char *msg = acpi_format_exception(status);
+> +		pr_err("Failed to get table, %s\n", msg);
+> +	}
+> +}
+> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+> index 85b7d07..e56e643 100644
+> --- a/drivers/acpi/bus.c
+> +++ b/drivers/acpi/bus.c
+> @@ -36,6 +36,7 @@
+>  #ifdef CONFIG_X86
+>  #include <asm/mpspec.h>
+>  #endif
+> +#include <linux/acpi_iort.h>
+>  #include <linux/pci.h>
+>  #include <acpi/apei.h>
+>  #include <linux/dmi.h>
+> @@ -1186,6 +1187,7 @@ static int __init acpi_init(void)
+>  	}
+>  
+>  	pci_mmcfg_late_init();
+> +	acpi_iort_init();
+>  	acpi_scan_init();
+>  	acpi_ec_init();
+>  	acpi_debugfs_init();
+> diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+> new file mode 100644
+> index 0000000..fcacaf7
+> --- /dev/null
+> +++ b/include/linux/acpi_iort.h
+> @@ -0,0 +1,30 @@
+> +/*
+> + * Copyright (C) 2016, Semihalf
+> + *	Author: Tomasz Nowicki <tn@semihalf.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+> + * more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along with
+> + * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+> + * Place - Suite 330, Boston, MA 02111-1307 USA.
+> + */
+> +
+> +#ifndef __ACPI_IORT_H__
+> +#define __ACPI_IORT_H__
+> +
+> +#include <linux/acpi.h>
+> +
+> +#ifdef CONFIG_ACPI_IORT
+> +void acpi_iort_init(void);
+> +#else
+> +static inline void acpi_iort_init(void) { }
+> +#endif
+> +
+> +#endif /* __ACPI_IORT_H__ */
+> -- 
+> 1.9.1
+> 
