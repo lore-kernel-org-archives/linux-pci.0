@@ -1,131 +1,321 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:43925 "EHLO mga05.intel.com"
+Received: from foss.arm.com ([217.140.101.70]:44802 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758739AbcIMPFm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 11:05:42 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv3 1/2] pciehp: Let user control LED status
-Date: Tue, 13 Sep 2016 09:05:39 -0600
-Message-Id: <1473779140-4016-1-git-send-email-keith.busch@intel.com>
+        id S1752363AbcIIOX6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Sep 2016 10:23:58 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v5 09/14] drivers: iommu: arm-smmu-v3: add IORT configuration
+Date: Fri,  9 Sep 2016 15:23:38 +0100
+Message-Id: <20160909142343.13314-10-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new flag to the pci_dev structure instructing pciehp
-to not interpret PCIe slot LED indicators. The pciehp driver will instead
-allow all LED control from the user by setting the slot control indicators
-as the user requested through sysfs. This is preparing for domain devices
-that repurpose these control bits for non-standard use.
+In ACPI bases systems, in order to be able to create platform
+devices and initialize them for ARM SMMU v3 components, the IORT
+kernel implementation requires a set of static functions to be
+used by the IORT kernel layer to configure platform devices for
+ARM SMMU v3 components.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Add static configuration functions to the IORT kernel layer for
+the ARM SMMU v3 components, so that the ARM SMMU v3 driver can
+initialize its respective platform device by relying on the IORT
+kernel infrastructure and by adding a corresponding ACPI device
+early probe section entry.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
-v2 -> v3:
+ drivers/acpi/arm64/iort.c   | 103 +++++++++++++++++++++++++++++++++++++++++++-
+ drivers/iommu/arm-smmu-v3.c |  95 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 195 insertions(+), 3 deletions(-)
 
-  Moved the slot op's attention status callback to pciehp_hpc.c
-
- drivers/pci/hotplug/pciehp.h      |  5 +++++
- drivers/pci/hotplug/pciehp_core.c |  3 +++
- drivers/pci/hotplug/pciehp_hpc.c  | 27 +++++++++++++++++++++++++++
- include/linux/pci.h               |  1 +
- 4 files changed, 36 insertions(+)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index e764918..7f71ac1 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -152,6 +152,11 @@ bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
- int pciehp_reset_slot(struct slot *slot, int probe);
- 
-+int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 status);
-+int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 *value);
-+
- static inline const char *slot_name(struct slot *slot)
- {
- 	return hotplug_slot_name(slot->hotplug_slot);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index fb0f863..68b7aeb 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -113,6 +113,9 @@ static int init_slot(struct controller *ctrl)
- 	if (ATTN_LED(ctrl)) {
- 		ops->get_attention_status = get_attention_status;
- 		ops->set_attention_status = set_attention_status;
-+	} else if (ctrl->pcie->port->user_leds) {
-+		ops->get_attention_status = pciehp_get_raw_attention_status;
-+		ops->set_attention_status = pciehp_set_raw_attention_status;
- 	}
- 
- 	/* register this slot with the hotplug pci core */
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 08e84d6..fccb63d 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -355,6 +355,18 @@ static int pciehp_link_enable(struct controller *ctrl)
- 	return __pciehp_link_set(ctrl, true);
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index e0a9b16..a2ad102 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -425,6 +425,95 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
+ 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
  }
  
-+int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 *value)
++static void __init acpi_iort_register_irq(int hwirq, const char *name,
++					  int trigger,
++					  struct resource *res)
 +{
-+	struct slot *slot = hotplug_slot->private;
-+	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
-+	u16 slot_ctrl;
++	int irq = acpi_register_gsi(NULL, hwirq, trigger,
++				    ACPI_ACTIVE_HIGH);
 +
-+	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-+	*status = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
-+	return 0;
++	if (irq < 0) {
++		pr_err("could not register gsi hwirq %d name [%s]\n", hwirq,
++								      name);
++		return;
++	}
++
++	res->start = irq;
++	res->end = irq;
++	res->flags = IORESOURCE_IRQ;
++	res->name = name;
 +}
 +
- void pciehp_get_attention_status(struct slot *slot, u8 *status)
++static int __init arm_smmu_v3_count_resources(struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++	/* Always present mem resource */
++	int num_res = 1;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	if (smmu->event_gsiv)
++		num_res++;
++
++	if (smmu->pri_gsiv)
++		num_res++;
++
++	if (smmu->gerr_gsiv)
++		num_res++;
++
++	if (smmu->sync_gsiv)
++		num_res++;
++
++	return num_res;
++}
++
++static void __init arm_smmu_v3_init_resources(struct resource *res,
++					      struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++	int num_res = 0;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	res[num_res].start = smmu->base_address;
++	res[num_res].end = smmu->base_address + SZ_128K - 1;
++	res[num_res].flags = IORESOURCE_MEM;
++
++	num_res++;
++
++	if (smmu->event_gsiv)
++		acpi_iort_register_irq(smmu->event_gsiv, "eventq",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->pri_gsiv)
++		acpi_iort_register_irq(smmu->pri_gsiv, "priq",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->gerr_gsiv)
++		acpi_iort_register_irq(smmu->gerr_gsiv, "gerror",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++
++	if (smmu->sync_gsiv)
++		acpi_iort_register_irq(smmu->sync_gsiv, "cmdq-sync",
++				       ACPI_EDGE_SENSITIVE,
++				       &res[num_res++]);
++}
++
++static bool __init arm_smmu_v3_is_coherent(struct acpi_iort_node *node)
++{
++	struct acpi_iort_smmu_v3 *smmu;
++
++	/* Retrieve SMMUv3 specific data */
++	smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	return smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE;
++}
++
+ struct iort_iommu_config {
+ 	const char *name;
+ 	int (*iommu_init)(struct acpi_iort_node *node);
+@@ -434,10 +523,22 @@ struct iort_iommu_config {
+ 				     struct acpi_iort_node *node);
+ };
+ 
++static const struct iort_iommu_config iort_arm_smmu_v3_cfg __initconst = {
++	.name = "arm-smmu-v3",
++	.iommu_is_coherent = arm_smmu_v3_is_coherent,
++	.iommu_count_resources = arm_smmu_v3_count_resources,
++	.iommu_init_resources = arm_smmu_v3_init_resources
++};
++
+ static __init
+ const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
  {
- 	struct controller *ctrl = slot->ctrl;
-@@ -431,6 +443,17 @@ int pciehp_query_power_fault(struct slot *slot)
- 	return !!(slot_status & PCI_EXP_SLTSTA_PFD);
+-	return NULL;
++	switch (node->type) {
++	case ACPI_IORT_NODE_SMMU_V3:
++		return &iort_arm_smmu_v3_cfg;
++	default:
++		return NULL;
++	}
  }
  
-+int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 status)
+ /**
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index dbc21e3..9463f3f 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -20,6 +20,8 @@
+  * This driver is powered by bad coffee and bombay mix.
+  */
+ 
++#include <linux/acpi.h>
++#include <linux/acpi_iort.h>
+ #include <linux/delay.h>
+ #include <linux/dma-iommu.h>
+ #include <linux/err.h>
+@@ -2539,6 +2541,32 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
++				      struct arm_smmu_device *smmu)
 +{
-+	struct slot *slot = hotplug_slot->private;
-+	struct controller *ctrl = slot->ctrl;
++	struct acpi_iort_smmu_v3 *iort_smmu;
++	struct device *dev = smmu->dev;
++	struct acpi_iort_node *node;
 +
-+	pcie_write_cmd_nowait(ctrl, value << 6,
-+			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
++	node = *(struct acpi_iort_node **)dev_get_platdata(dev);
++
++	/* Retrieve SMMUv3 specific data */
++	iort_smmu = (struct acpi_iort_smmu_v3 *)node->node_data;
++
++	if (iort_smmu->flags & ACPI_IORT_SMMU_V3_COHACC_OVERRIDE)
++		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
++
 +	return 0;
 +}
++#else
++static int arm_smmu_device_acpi_probe(struct platform_device *pdev,
++				      struct arm_smmu_device *smmu)
++{
++	return -ENODEV;
++}
++#endif
 +
- void pciehp_set_attention_status(struct slot *slot, u8 value)
+ static int arm_smmu_device_dt_probe(struct platform_device *pdev,
+ 				    struct arm_smmu_device *smmu)
  {
- 	struct controller *ctrl = slot->ctrl;
-@@ -804,6 +827,10 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	}
- 	ctrl->pcie = dev;
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-+
-+	if (pdev->user_leds)
-+		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
-+
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
- 	init_waitqueue_head(&ctrl->queue);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7256f33..f41bbca 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -308,6 +308,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+@@ -2556,6 +2584,7 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+ 	struct resource *res;
+ 	struct arm_smmu_device *smmu;
+ 	struct device *dev = &pdev->dev;
++	struct fwnode_handle *fwnode;
  
+ 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
+ 	if (!smmu) {
+@@ -2592,7 +2621,10 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+ 	if (irq > 0)
+ 		smmu->gerr_irq = irq;
+ 
+-	ret = arm_smmu_device_dt_probe(pdev, smmu);
++	if (dev->of_node)
++		ret = arm_smmu_device_dt_probe(pdev, smmu);
++	else
++		ret = arm_smmu_device_acpi_probe(pdev, smmu);
+ 
+ 	if (ret)
+ 		return ret;
+@@ -2615,8 +2647,12 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	/* FIXME: DT code path does not set up dev->fwnode pointer */
++	fwnode = dev->of_node ? &dev->of_node->fwnode : dev->fwnode;
++
+ 	/* And we're up. Go go go! */
+-	fwspec_iommu_set_ops(&dev->of_node->fwnode, &arm_smmu_ops);
++	fwspec_iommu_set_ops(fwnode, &arm_smmu_ops);
++
+ #ifdef CONFIG_PCI
+ 	pci_request_acs();
+ 	ret = bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+@@ -2688,6 +2724,61 @@ static int __init arm_smmu_of_init(struct device_node *np)
+ }
+ IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+ 
++#ifdef CONFIG_ACPI
++static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
++{
++	struct acpi_iort_node *iort_node, *iort_end;
++	struct acpi_table_iort *iort;
++	struct fwnode_handle *fwnode;
++	int i, ret;
++
++	/*
++	 * table and iort will both point to the start of IORT table, but
++	 * have different struct types
++	 */
++	iort = (struct acpi_table_iort *)table;
++
++	/* Get the first IORT node */
++	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, table,
++				 iort->node_offset);
++	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, table,
++				table->length);
++
++	for (i = 0; i < iort->node_count; i++) {
++
++		if (iort_node >= iort_end) {
++			pr_err("iort node pointer overflows, bad table\n");
++			return -EINVAL;
++		}
++
++		if (iort_node->type == ACPI_IORT_NODE_SMMU_V3) {
++			ret = arm_smmu_init();
++			if (ret)
++				return ret;
++
++			fwnode = iommu_alloc_fwnode();
++
++			if (!fwnode)
++				return -ENOMEM;
++
++			ret = iort_set_fwnode(iort_node, fwnode);
++			if (ret)
++				goto free;
++		}
++
++		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
++					 iort_node->length);
++	}
++
++	return 0;
++free:
++	iommu_free_fwnode(fwnode);
++	return ret;
++
++}
++IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
++#endif
++
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+ MODULE_LICENSE("GPL v2");
 -- 
-2.7.2
+2.10.0
 
