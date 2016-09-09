@@ -1,193 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32279 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761025AbcIZHQO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 03:16:14 -0400
-Date: Mon, 26 Sep 2016 10:16:01 +0300
-From: Yuval Shaia <yuval.shaia@oracle.com>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
-        pv-drivers@vmware.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
-        georgezhang@vmware.com, bryantan@vmware.com
-Subject: Re: [PATCH v5 08/16] IB/pvrdma: Add device command support
-Message-ID: <20160926071601.GA6352@yuval-lap.Home>
-References: <cover.1474759181.git.aditr@vmware.com>
- <47e16986707ddbe0ffa15795ef9ae60d15bdd728.1474759181.git.aditr@vmware.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <47e16986707ddbe0ffa15795ef9ae60d15bdd728.1474759181.git.aditr@vmware.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v5 10/14] drivers: iommu: arm-smmu: split probe functions into DT/generic portions
+Date: Fri,  9 Sep 2016 15:23:39 +0100
+Message-Id: <20160909142343.13314-11-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Minor question/suggestion inline.
-(sorry for missing it till now).
+Current ARM SMMU probe functions intermingle HW and DT probing
+in the initialization functions to detect and programme the ARM SMMU
+driver features. In order to allow probing the ARM SMMU with other
+firmwares than DT, this patch splits the ARM SMMU init functions into
+DT and HW specific portions so that other FW interfaces (ie ACPI) can
+reuse the HW probing functions and skip the DT portion accordingly.
 
-Yuval
+This patch implements no functional change, only code reshuffling.
 
-On Sat, Sep 24, 2016 at 04:21:32PM -0700, Adit Ranadive wrote:
-> This patch enables posting Verb requests and receiving responses to/from
-> the backend PVRDMA emulation layer.
-> 
-> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-> Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-> Reviewed-by: George Zhang <georgezhang@vmware.com>
-> Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-> Reviewed-by: Bryan Tan <bryantan@vmware.com>
-> Signed-off-by: Adit Ranadive <aditr@vmware.com>
-> ---
-> Changes v4->v5:
->  - Moved the timeout to pvrdma_cmd_recv.
->  - Added additional response code parameter to pvrdma_cmd_post.
-> 
-> Changes v3->v4:
->  - Removed the min check and added a BUILD_BUG_ON check for size.
-> 
-> Changes v2->v3:
->  - Converted pvrdma_cmd_recv to inline.
->  - Added a min check in the memcpy to cmd_slot.
->  - Removed the boolean from pvrdma_cmd_post.
-> ---
->  drivers/infiniband/hw/pvrdma/pvrdma_cmd.c | 117 ++++++++++++++++++++++++++++++
->  1 file changed, 117 insertions(+)
->  create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
-> 
-> diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
-> new file mode 100644
-> index 0000000..21f1af8
-> --- /dev/null
-> +++ b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
-> @@ -0,0 +1,117 @@
-> +/*
-> + * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of EITHER the GNU General Public License
-> + * version 2 as published by the Free Software Foundation or the BSD
-> + * 2-Clause License. This program is distributed in the hope that it
-> + * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-> + * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-> + * See the GNU General Public License version 2 for more details at
-> + * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program available in the file COPYING in the main
-> + * directory of this source tree.
-> + *
-> + * The BSD 2-Clause License
-> + *
-> + *     Redistribution and use in source and binary forms, with or
-> + *     without modification, are permitted provided that the following
-> + *     conditions are met:
-> + *
-> + *      - Redistributions of source code must retain the above
-> + *        copyright notice, this list of conditions and the following
-> + *        disclaimer.
-> + *
-> + *      - Redistributions in binary form must reproduce the above
-> + *        copyright notice, this list of conditions and the following
-> + *        disclaimer in the documentation and/or other materials
-> + *        provided with the distribution.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-> + * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-> + * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-> + * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-> + * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> + * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-> + * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-> + * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-> + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-> + * OF THE POSSIBILITY OF SUCH DAMAGE.
-> + */
-> +
-> +#include <linux/list.h>
-> +
-> +#include "pvrdma.h"
-> +
-> +#define PVRDMA_CMD_TIMEOUT	10000 /* ms */
-> +
-> +static inline int pvrdma_cmd_recv(struct pvrdma_dev *dev,
-> +				  union pvrdma_cmd_resp *resp,
-> +				  unsigned resp_code)
-> +{
-> +	int err;
-> +
-> +	dev_dbg(&dev->pdev->dev, "receive response from device\n");
-> +
-> +	err = wait_for_completion_interruptible_timeout(&dev->cmd_done,
-> +			msecs_to_jiffies(PVRDMA_CMD_TIMEOUT));
-> +	if (err == 0 || err == -ERESTARTSYS) {
-> +		dev_warn(&dev->pdev->dev,
-> +			 "completion timeout or interrupted\n");
-> +		return -ETIMEDOUT;
-> +	}
-> +
-> +	spin_lock(&dev->cmd_lock);
-> +	memcpy(resp, dev->resp_slot, sizeof(*resp));
-> +	spin_unlock(&dev->cmd_lock);
-> +
-> +	if (resp->hdr.ack != resp_code) {
-> +		dev_warn(&dev->pdev->dev,
-> +			 "unknown response %#x expected %#x\n",
-> +			 resp->hdr.ack, resp_code);
-> +		return -EFAULT;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +int
-> +pvrdma_cmd_post(struct pvrdma_dev *dev, union pvrdma_cmd_req *req,
-> +		union pvrdma_cmd_resp *resp, unsigned resp_code)
-> +{
-> +	int err;
-> +
-> +	dev_dbg(&dev->pdev->dev, "post request to device\n");
-> +
-> +	/* Serializiation */
-> +	down(&dev->cmd_sema);
-> +
-> +	BUILD_BUG_ON(sizeof(union pvrdma_cmd_req) !=
-> +		     sizeof(struct pvrdma_cmd_modify_qp));
-> +
-> +	spin_lock(&dev->cmd_lock);
-> +	memcpy(dev->cmd_slot, req, sizeof(*req));
-> +	spin_unlock(&dev->cmd_lock);
-> +
-> +	init_completion(&dev->cmd_done);
-> +	pvrdma_write_reg(dev, PVRDMA_REG_REQUEST, 0);
-> +
-> +	/* Make sure the request is written before reading status. */
-> +	mb();
-> +
-> +	err = pvrdma_read_reg(dev, PVRDMA_REG_ERR);
-> +	if (err == 0) {
-> +		if (resp != NULL)
-> +			err = pvrdma_cmd_recv(dev, resp, resp_code);
-> +	} else {
-> +		dev_warn(&dev->pdev->dev, "failed to write request %d\n", err);
-> +	}
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/arm-smmu.c | 65 +++++++++++++++++++++++++++++-------------------
+ 1 file changed, 39 insertions(+), 26 deletions(-)
 
-Please note that callers checks if err<0  while here err!=0 considered as
-error.
-Looking at similar code in pvrdma_pci_probe i can see that function
-"translates" this error to -EINVAL. Suggesting to do the same here
-(although -EINVAL is not a good choice, if device can be more friendly with
-the return code then we can propagate it up or just print a suitable error
-i.e. EAGAIN or ENOMEM otherwise EFAULT should be sufficient).
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index d453c55..bdb4e26 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1665,7 +1665,7 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 	unsigned long size;
+ 	void __iomem *gr0_base = ARM_SMMU_GR0(smmu);
+ 	u32 id;
+-	bool cttw_dt, cttw_reg;
++	bool cttw_reg, cttw_fw = smmu->features & ARM_SMMU_FEAT_COHERENT_WALK;
+ 	int i;
+ 
+ 	dev_notice(smmu->dev, "probing hardware configuration...\n");
+@@ -1710,20 +1710,17 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 
+ 	/*
+ 	 * In order for DMA API calls to work properly, we must defer to what
+-	 * the DT says about coherency, regardless of what the hardware claims.
++	 * the FW says about coherency, regardless of what the hardware claims.
+ 	 * Fortunately, this also opens up a workaround for systems where the
+ 	 * ID register value has ended up configured incorrectly.
+ 	 */
+-	cttw_dt = of_dma_is_coherent(smmu->dev->of_node);
+ 	cttw_reg = !!(id & ID0_CTTW);
+-	if (cttw_dt)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
+-	if (cttw_dt || cttw_reg)
++	if (cttw_fw || cttw_reg)
+ 		dev_notice(smmu->dev, "\t%scoherent table walk\n",
+-			   cttw_dt ? "" : "non-");
+-	if (cttw_dt != cttw_reg)
++			   cttw_fw ? "" : "non-");
++	if (cttw_fw != cttw_reg)
+ 		dev_notice(smmu->dev,
+-			   "\t(IDR0.CTTW overridden by dma-coherent property)\n");
++			   "\t(IDR0.CTTW overridden by FW configuration)\n");
+ 
+ 	/* Max. number of entries we have for stream matching/indexing */
+ 	size = 1 << ((id >> ID0_NUMSIDB_SHIFT) & ID0_NUMSIDB_MASK);
+@@ -1904,15 +1901,25 @@ static const struct of_device_id arm_smmu_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, arm_smmu_of_match);
+ 
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++static int arm_smmu_device_dt_probe(struct platform_device *pdev,
++				    struct arm_smmu_device *smmu)
+ {
+ 	const struct arm_smmu_match_data *data;
+-	struct resource *res;
+-	struct arm_smmu_device *smmu;
+ 	struct device *dev = &pdev->dev;
+-	int num_irqs, i, err;
+ 	bool legacy_binding;
+ 
++	if (of_property_read_u32(dev->of_node, "#global-interrupts",
++				 &smmu->num_global_irqs)) {
++		dev_err(dev, "missing #global-interrupts property\n");
++		return -ENODEV;
++	}
++
++	data = of_device_get_match_data(dev);
++	smmu->version = data->version;
++	smmu->model = data->model;
++
++	parse_driver_options(smmu);
++
+ 	legacy_binding = of_find_property(dev->of_node, "mmu-masters", NULL);
+ 	if (legacy_binding && !using_generic_binding) {
+ 		pr_notice("deprecated \"mmu-masters\" DT property in use; DMA API support unavailable\n");
+@@ -1924,6 +1931,19 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
++	if (of_dma_is_coherent(smmu->dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
++
++	return 0;
++}
++
++static int arm_smmu_device_probe(struct platform_device *pdev)
++{
++	struct resource *res;
++	struct arm_smmu_device *smmu;
++	struct device *dev = &pdev->dev;
++	int num_irqs, i, err;
++
+ 	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
+ 	if (!smmu) {
+ 		dev_err(dev, "failed to allocate arm_smmu_device\n");
+@@ -1931,9 +1951,10 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	}
+ 	smmu->dev = dev;
+ 
+-	data = of_device_get_match_data(dev);
+-	smmu->version = data->version;
+-	smmu->model = data->model;
++	err = arm_smmu_device_dt_probe(pdev, smmu);
++
++	if (err)
++		return err;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	smmu->base = devm_ioremap_resource(dev, res);
+@@ -1941,12 +1962,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return PTR_ERR(smmu->base);
+ 	smmu->size = resource_size(res);
+ 
+-	if (of_property_read_u32(dev->of_node, "#global-interrupts",
+-				 &smmu->num_global_irqs)) {
+-		dev_err(dev, "missing #global-interrupts property\n");
+-		return -ENODEV;
+-	}
+-
+ 	num_irqs = 0;
+ 	while ((res = platform_get_resource(pdev, IORESOURCE_IRQ, num_irqs))) {
+ 		num_irqs++;
+@@ -1981,8 +1996,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	parse_driver_options(smmu);
+-
+ 	if (smmu->version == ARM_SMMU_V2 &&
+ 	    smmu->num_context_banks != smmu->num_context_irqs) {
+ 		dev_err(dev,
+@@ -2004,7 +2017,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
++	fwspec_iommu_set_ops(&dev->of_node->fwnode, &arm_smmu_ops);
+ 	platform_set_drvdata(pdev, smmu);
+ 	arm_smmu_device_reset(smmu);
+ 
+@@ -2044,7 +2057,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
+-- 
+2.10.0
 
-> +
-> +	up(&dev->cmd_sema);
-> +
-> +	return err;
-> +}
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
