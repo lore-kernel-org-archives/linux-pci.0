@@ -1,202 +1,161 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH v5 3/3] pci:aer: add support aer interrupt with none
- MSI/MSI-X/INTx mode
-Date: Thu, 22 Sep 2016 02:53:37 +0000
-Message-ID: <VI1PR0401MB1709C4C29C35E8991052364992C90@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
- <1473741659-17618-1-git-send-email-po.liu@nxp.com>
- <1473741659-17618-3-git-send-email-po.liu@nxp.com>
- <20160921223741.GG20006@localhost>
-In-Reply-To: <20160921223741.GG20006@localhost>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Marc Zyngier <marc.zyngier@arm.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stuart Yoder <stuart.yoder@nxp.com>, "M.H. Lian" <minghuan.lian@nxp.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>, Bjorn
- Helgaas <bhelgaas@google.com>, Leo Li <leoyang.li@nxp.com>,
- Shawn Guo <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:44662 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751325AbcIIOXs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Sep 2016 10:23:48 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v5 04/14] drivers: acpi: iort: add support for IOMMU fwnode registration
+Date: Fri,  9 Sep 2016 15:23:33 +0100
+Message-Id: <20160909142343.13314-5-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+components that allow creating the kernel data structures required to
+probe and initialize the IOMMU devices.
 
->  -----Original Message-----
->  From: Bjorn Helgaas [mailto:helgaas@kernel.org]
->  Sent: Thursday, September 22, 2016 6:38 AM
->  To: Po Liu
->  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Roy Zang; Arnd
->  Bergmann; Marc Zyngier; Stuart Yoder; Leo Li; M.H. Lian; Murali
->  Karicheri; Bjorn Helgaas; Shawn Guo; Mingkai Hu
->  Subject: Re: [PATCH v5 3/3] pci:aer: add support aer interrupt with none
->  MSI/MSI-X/INTx mode
->  
->  On Tue, Sep 13, 2016 at 12:40:59PM +0800, Po Liu wrote:
->  > On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
->  > When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
->  > maybe there is interrupt line for aer pme etc. Search the interrupt
->  > number in the fdt file. Then fixup the dev->irq with it.
->  >
->  > Signed-off-by: Po Liu <po.liu@nxp.com>
->  > ---
->  > changes for v5:
->  > 	- Add clear 'aer' interrup-names description
->  >
->  >  .../devicetree/bindings/pci/layerscape-pci.txt     | 11 +++++---
->  >  drivers/pci/pcie/portdrv_core.c                    | 31
->  +++++++++++++++++++---
->  >  2 files changed, 35 insertions(+), 7 deletions(-)
->  >
->  > diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > index 41e9f55..101d0a7 100644
->  > --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > @@ -18,8 +18,10 @@ Required properties:
->  >  - reg: base addresses and lengths of the PCIe controller
->  >  - interrupts: A list of interrupt outputs of the controller. Must
->  contain an
->  >    entry for each entry in the interrupt-names property.
->  > -- interrupt-names: Must include the following entries:
->  > -  "intr": The interrupt that is asserted for controller interrupts
->  > +- interrupt-names: It may be include the following entries:
->  > +  "aer": The interrupt that is asserted for aer interrupt
->  > +  "pme": The interrupt that is asserted for pme interrupt
->  > +  ......
->  >  - fsl,pcie-scfg: Must include two entries.
->  >    The first entry must be a link to the SCFG device node
->  >    The second entry must be '0' or '1' based on physical PCIe
->  controller index.
->  > @@ -35,8 +37,9 @@ Example:
->  >  		reg = <0x00 0x03400000 0x0 0x00010000   /* controller
->  registers */
->  >  		       0x40 0x00000000 0x0 0x00002000>; /* configuration
->  space */
->  >  		reg-names = "regs", "config";
->  > -		interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /*
->  controller interrupt */
->  > -		interrupt-names = "intr";
->  > +		interrupts = <GIC_SPI 176 IRQ_TYPE_LEVEL_HIGH>, /* aer
->  interrupt */
->  > +			<GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* pme interrupt */
->  > +		interrupt-names = "aer", "pme";
->  >  		fsl,pcie-scfg = <&scfg 0>;
->  >  		#address-cells = <3>;
->  >  		#size-cells = <2>;
->  > diff --git a/drivers/pci/pcie/portdrv_core.c
->  > b/drivers/pci/pcie/portdrv_core.c index e9270b4..7c4943d 100644
->  > --- a/drivers/pci/pcie/portdrv_core.c
->  > +++ b/drivers/pci/pcie/portdrv_core.c
->  > @@ -16,6 +16,7 @@
->  >  #include <linux/slab.h>
->  >  #include <linux/pcieport_if.h>
->  >  #include <linux/aer.h>
->  > +#include <linux/of_irq.h>
->  >
->  >  #include "../pci.h"
->  >  #include "portdrv.h"
->  > @@ -200,6 +201,28 @@ static int pcie_port_enable_msix(struct pci_dev
->  > *dev, int *vectors, int mask)  static int init_service_irqs(struct
->  > pci_dev *dev, int *irqs, int mask)  {
->  >  	int i, irq = -1;
->  > +	int ret;
->  > +	struct device_node *np = NULL;
->  > +
->  > +	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
->  > +		irqs[i] = 0;
->  > +
->  > +	if (dev->bus->dev.of_node)
->  > +		np = dev->bus->dev.of_node;
->  > +
->  > +	/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
->  > +	 * request irq for aer
->  > +	 */
->  > +	if (IS_ENABLED(CONFIG_OF_IRQ) && np &&
->  > +			(mask & PCIE_PORT_SERVICE_PME)) {
->  > +		ret = of_irq_get_byname(np, "aer");
->  > +		if (ret > 0) {
->  > +			irqs[PCIE_PORT_SERVICE_AER_SHIFT] = ret;
->  > +			if (dev->irq)
->  > +				irq = dev->irq;
->  > +			goto no_msi;
->  > +		}
->  > +	}
->  
->  We definitely need to solve this somehow.  But this approach doesn't
->  feel quite right because it's hard to map this code back to anything in
->  the spec, and it uses a completely platform-dependent name ("interrupt-
->  names aer") in code that is supposedly generic.
+This patch provides support in the IORT kernel code to register IOMMU
+components and their respective fwnode.
 
-Very agree.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/arm64/iort.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/acpi_iort.h |  9 +++++++
+ 2 files changed, 74 insertions(+)
 
->  
->  What if we added some sort of hook that would return the IRQ?  Maybe a
->  pcibios_*() hook right now, with the idea of making it a pci_host_bridge
->  function pointer someday?
-
-Good idea. I'll try one version patch soon.
-
->  
->  I know the body of the hook would look a lot like what you have here,
->  but at least it would be more obvious that it's platform-specific code.
->  
-Not agree more.
-
->  I think your platform supports PME interrupts as well as AER, and
->  they're different IRQs.  So you'd probably have to do something similar
->  to the pcie_port_enable_msix() interface, so you can fill in both IRQs.
-> 
-
-Ok, understand.
-
-Po
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 4cbeb707..b89b3d3 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -20,7 +20,9 @@
  
->  >  	/*
->  >  	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
->  @@
->  > -225,11 +248,13 @@ static int init_service_irqs(struct pci_dev *dev,
->  int *irqs, int mask)
->  >  		irq = dev->irq;
->  >
->  >   no_msi:
->  > -	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
->  > -		irqs[i] = irq;
->  > +	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
->  > +		if (!irqs[i])
->  > +			irqs[i] = irq;
->  > +	}
->  >  	irqs[PCIE_PORT_SERVICE_VC_SHIFT] = -1;
->  >
->  > -	if (irq < 0)
->  > +	if (irq < 0 && irqs[PCIE_PORT_SERVICE_AER_SHIFT] < 0)
->  >  		return -ENODEV;
->  >  	return 0;
->  >  }
->  > --
->  > 2.1.0.27.g96db324
->  >
->  >
->  > _______________________________________________
->  > linux-arm-kernel mailing list
->  > linux-arm-kernel@lists.infradead.org
->  > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ #include <linux/acpi_iort.h>
+ #include <linux/kernel.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -28,6 +30,69 @@ struct iort_its_msi_chip {
+ 	u32			translation_id;
+ };
+ 
++struct iort_fwnode {
++	struct list_head list;
++	struct acpi_iort_node *iort_node;
++	struct fwnode_handle *fwnode;
++};
++static LIST_HEAD(iort_fwnode_list);
++static DEFINE_SPINLOCK(iort_fwnode_lock);
++
++/**
++ * iort_set_fwnode() - Create iort_fwnode and use it to register
++ *		       iommu data in the iort_fwnode_list
++ *
++ * @node: IORT table node associated with the IOMMU
++ * @fwnode: fwnode associated with the IORT node
++ *
++ * Returns: 0 on success
++ *          <0 on failure
++ */
++int iort_set_fwnode(struct acpi_iort_node *iort_node,
++		    struct fwnode_handle *fwnode)
++{
++	struct iort_fwnode *np;
++
++	np = kzalloc(sizeof(struct iort_fwnode), GFP_ATOMIC);
++
++	if (WARN_ON(!np))
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&np->list);
++	np->iort_node = iort_node;
++	np->fwnode = fwnode;
++
++	spin_lock(&iort_fwnode_lock);
++	list_add_tail(&np->list, &iort_fwnode_list);
++	spin_unlock(&iort_fwnode_lock);
++
++	return 0;
++}
++
++/**
++ * iort_get_fwnode() - Retrieve fwnode associated with an IORT node
++ *
++ * @node: IORT table node to be looked-up
++ *
++ * Returns: fwnode_handle pointer on success, NULL on failure
++*/
++struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
++{
++	struct iort_fwnode *curr;
++	struct fwnode_handle *fwnode = NULL;
++
++	spin_lock(&iort_fwnode_lock);
++	list_for_each_entry(curr, &iort_fwnode_list, list) {
++		if (curr->iort_node == node) {
++			fwnode = curr->fwnode;
++			break;
++		}
++	}
++	spin_unlock(&iort_fwnode_lock);
++
++	return fwnode;
++}
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index d16fdda..c851646 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -30,6 +30,9 @@ struct fwnode_handle *iort_find_domain_token(int trans_id);
+ void acpi_iort_init(void);
+ u32 iort_msi_map_rid(struct device *dev, u32 req_id);
+ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
++int iort_set_fwnode(struct acpi_iort_node *iort_node,
++		    struct fwnode_handle *fwnode);
++struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node);
+ #else
+ static inline void acpi_iort_init(void) { }
+ static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
+@@ -37,6 +40,12 @@ static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
+ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
+ 							u32 req_id)
+ { return NULL; }
++static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
++				  struct fwnode_handle *fwnode)
++{ return -ENODEV; }
++static inline
++struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
++{ return NULL; }
+ #endif
+ 
+ #define IORT_ACPI_DECLARE(name, table_id, fn)		\
+-- 
+2.10.0
+
