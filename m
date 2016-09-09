@@ -1,156 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50541 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755915AbcIMJAo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 05:00:44 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8D8wcNl082029
-        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:44 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25e3g5670m-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:43 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Tue, 13 Sep 2016 03:00:43 -0600
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
-        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
-Subject: [PATCH v5 3/4] PCI: Add a new option for resource_alignment to reassign alignment
-Date: Tue, 13 Sep 2016 17:00:33 +0800
-In-Reply-To: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: arnd@arndb.de,
+	hanjun.guo@linaro.org,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com,
+	cov@codeaurora.org,
+	dhdang@apm.com,
+	ard.biesheuvel@linaro.org,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	gabriele.paoloni@huawei.com,
+	jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 1/5] PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
+Date: Fri,  9 Sep 2016 21:24:03 +0200
+Message-Id: <1473449047-10499-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-When using resource_alignment kernel parameter, the current
-implement reassigns the alignment by changing resources' size
-which can potentially break some drivers. For example, the driver
-uses the size to locate some register whose length is related
-to the size.
+In preparation for adding MCFG platform specific quirk handling move
+CFG resource calculation and ECAM ops assignment to pci_mcfg_lookup().
+It becomes the gate for further ops and CFG resource manipulation
+in arch-agnostic code (drivers/acpi/pci_mcfg.c).
 
-This patch adds a new option "noresize" for the parameter to
-solve this problem.
+No functionality changes in this patch.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- Documentation/kernel-parameters.txt |    9 ++++++---
- drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
- 2 files changed, 33 insertions(+), 13 deletions(-)
+ arch/arm64/kernel/pci.c  | 17 +++++------------
+ drivers/acpi/pci_mcfg.c  | 28 +++++++++++++++++++++++++---
+ include/linux/pci-acpi.h |  4 +++-
+ 3 files changed, 33 insertions(+), 16 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index a4f4d69..d6a340d 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -3023,9 +3023,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				window. The default value is 64 megabytes.
- 		resource_alignment=
- 				Format:
--				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
--				[<order of align>@]pci:<vendor>:<device>\
--						[:<subvendor>:<subdevice>][; ...]
-+				[<order of align>@][noresize@][<domain>:]
-+				<bus>:<slot>.<func>[; ...]
-+				[<order of align>@][noresize@]pci:<vendor>:<device>
-+				[:<subvendor>:<subdevice>][; ...]
- 				Specifies alignment and device to reassign
- 				aligned memory resources.
- 				If <order of align> is not specified,
-@@ -3036,6 +3037,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				instances of a device, the PCI vendor,
- 				device, subvendor, and subdevice may be
- 				specified, e.g., 4096@pci:8086:9c22:103c:198f
-+				noresize: Don't change the resources' sizes when
-+				reassigning alignment.
- 		ecrc=		Enable/disable PCIe ECRC (transaction layer
- 				end-to-end CRC checking).
- 				bios: Use BIOS/firmware settings. This is the
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b8357d7..37f8062 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
- /**
-  * pci_specified_resource_alignment - get resource alignment specified by user.
-  * @dev: the PCI device to get
-+ * @resize: whether or not to change resources' size when reassigning alignment
-  *
-  * RETURNS: Resource alignment if it is specified.
-  *          Zero if it is not specified.
-  */
--static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+		bool *resize)
- {
- 	int seg, bus, slot, func, align_order, count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-@@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 		} else {
- 			align_order = -1;
- 		}
-+
-+		if (!strncmp(p, "noresize@", 9)) {
-+			*resize = false;
-+			p += 9;
-+		} else
-+			*resize = true;
-+
- 		if (strncmp(p, "pci:", 4) == 0) {
- 			/* PCI vendor/device (subvendor/subdevice) ids are specified */
- 			p += 4;
-@@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- {
- 	int i;
- 	struct resource *r;
-+	bool resize = true;
- 	resource_size_t align, size;
- 	u16 command;
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index acf3872..fb439c7 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -125,24 +125,17 @@ pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root)
+ 	u16 seg = root->segment;
+ 	struct pci_config_window *cfg;
+ 	struct resource cfgres;
+-	unsigned int bsz;
++	struct pci_ecam_ops *ecam_ops;
++	int ret;
  
-@@ -5058,7 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		return;
- 
- 	/* check if specified PCI is target device to reassign */
--	align = pci_specified_resource_alignment(dev);
-+	align = pci_specified_resource_alignment(dev, &resize);
- 	if (!align)
- 		return;
- 
-@@ -5086,15 +5096,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		}
- 
- 		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
-+		if (resize) {
-+			if (size < align) {
-+				size = align;
-+				dev_info(&dev->dev,
-+					"Rounding up size of resource #%d to %#llx.\n",
-+					i, (unsigned long long)size);
-+			}
-+			r->flags |= IORESOURCE_UNSET;
-+			r->end = size - 1;
-+			r->start = 0;
-+		} else {
-+			r->flags &= ~IORESOURCE_SIZEALIGN;
-+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-+			r->start = max(align, size);
-+			r->end = r->start + size - 1;
- 		}
--		r->flags |= IORESOURCE_UNSET;
--		r->end = size - 1;
--		r->start = 0;
+-	/* Use address from _CBA if present, otherwise lookup MCFG */
+-	if (!root->mcfg_addr)
+-		root->mcfg_addr = pci_mcfg_lookup(seg, bus_res);
+-
+-	if (!root->mcfg_addr) {
++	ret = pci_mcfg_lookup(root, &cfgres, &ecam_ops);
++	if (ret) {
+ 		dev_err(&root->device->dev, "%04x:%pR ECAM region not found\n",
+ 			seg, bus_res);
+ 		return NULL;
  	}
- 	/* Need to disable bridge's resource window,
- 	 * to enable the kernel to reassign new resource
+ 
+-	bsz = 1 << pci_generic_ecam_ops.bus_shift;
+-	cfgres.start = root->mcfg_addr + bus_res->start * bsz;
+-	cfgres.end = cfgres.start + resource_size(bus_res) * bsz - 1;
+-	cfgres.flags = IORESOURCE_MEM;
+-	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res,
+-			      &pci_generic_ecam_ops);
++	cfg = pci_ecam_create(&root->device->dev, &cfgres, bus_res, ecam_ops);
+ 	if (IS_ERR(cfg)) {
+ 		dev_err(&root->device->dev, "%04x:%pR error %ld mapping ECAM\n",
+ 			seg, bus_res, PTR_ERR(cfg));
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index b5b376e..ffcc651 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -22,6 +22,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
++#include <linux/pci-ecam.h>
+ 
+ /* Structure to hold entries from the MCFG table */
+ struct mcfg_entry {
+@@ -35,9 +36,18 @@ struct mcfg_entry {
+ /* List to save MCFG entries */
+ static LIST_HEAD(pci_mcfg_list);
+ 
+-phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
++int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
++		    struct pci_ecam_ops **ecam_ops)
+ {
++	struct pci_ecam_ops *ops = &pci_generic_ecam_ops;
++	struct resource *bus_res = &root->secondary;
++	u16 seg = root->segment;
+ 	struct mcfg_entry *e;
++	struct resource res;
++
++	/* Use address from _CBA if present, otherwise lookup MCFG */
++	if (root->mcfg_addr)
++		goto skip_lookup;
+ 
+ 	/*
+ 	 * We expect exact match, unless MCFG entry end bus covers more than
+@@ -45,10 +55,22 @@ phys_addr_t pci_mcfg_lookup(u16 seg, struct resource *bus_res)
+ 	 */
+ 	list_for_each_entry(e, &pci_mcfg_list, list) {
+ 		if (e->segment == seg && e->bus_start == bus_res->start &&
+-		    e->bus_end >= bus_res->end)
+-			return e->addr;
++		    e->bus_end >= bus_res->end) {
++			root->mcfg_addr = e->addr;
++		}
++
+ 	}
+ 
++	if (!root->mcfg_addr)
++		return -ENXIO;
++
++skip_lookup:
++	memset(&res, 0, sizeof(res));
++	res.start = root->mcfg_addr + (bus_res->start << 20);
++	res.end = res.start + (resource_size(bus_res) << 20) - 1;
++	res.flags = IORESOURCE_MEM;
++	*cfgres = res;
++	*ecam_ops = ops;
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 7d63a66..7a4e83a 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -24,7 +24,9 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ }
+ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+-extern phys_addr_t pci_mcfg_lookup(u16 domain, struct resource *bus_res);
++struct pci_ecam_ops;
++extern int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
++			   struct pci_ecam_ops **ecam_ops);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+ {
 -- 
-1.7.9.5
-
+1.9.1
