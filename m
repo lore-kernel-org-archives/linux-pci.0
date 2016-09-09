@@ -1,84 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56166 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932754AbcIANxR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Sep 2016 09:53:17 -0400
-Date: Thu, 1 Sep 2016 08:53:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Andi Kleen <ak@linux.intel.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Mark Haswell Power Control Unit as having
- non-compliant BARs
-Message-ID: <20160901135310.GA31531@localhost>
-References: <20160831155009.3216.93787.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160831155009.3216.93787.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v5 08/14] drivers: iommu: arm-smmu-v3: split probe functions into DT/generic portions
+Date: Fri,  9 Sep 2016 15:23:37 +0100
+Message-Id: <20160909142343.13314-9-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 31, 2016 at 10:50:09AM -0500, Bjorn Helgaas wrote:
-> The Haswell Power Control Unit has a non-PCI register (CONFIG_TDP_NOMINAL)
-> where BAR 0 is supposed to be.  This is erratum HSE43 in the spec update
-> referenced below:
-> 
->   The PCIe* Base Specification indicates that Configuration Space Headers
->   have a base address register at offset 0x10.  Due to this erratum, the
->   Power Control Unit's CONFIG_TDP_NOMINAL CSR (Bus 1; Device 30; Function
->   3; Offset 0x10) is located where a base register is expected.
-> 
-> Mark the PCU as having non-compliant BARs so we don't try to probe any of
-> them.  There are no other BARs on this device.
-> 
-> Rename the quirk so it's not Broadwell-specific.
-> 
-> Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=153881
-> Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Current ARM SMMUv3 probe functions intermingle HW and DT probing in the
+initialization functions to detect and programme the ARM SMMU v3 driver
+features. In order to allow probing the ARM SMMUv3 with other firmwares
+than DT, this patch splits the ARM SMMUv3 init functions into DT and HW
+specific portions so that other FW interfaces (ie ACPI) can reuse the HW
+probing functions and skip the DT portion accordingly.
 
-I applied this with Myron's ack and Prarit's tested-by to for-linus
-for v4.8.
+This patch implements no functional change, only code reshuffling.
 
-> ---
->  arch/x86/pci/fixup.c |   20 +++++++++++++-------
->  1 file changed, 13 insertions(+), 7 deletions(-)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 837ea36..6d52b94 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -553,15 +553,21 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
->  
->  /*
-> - * Broadwell EP Home Agent BARs erroneously return non-zero values when read.
-> + * Device [8086:2fc0]
-> + * Erratum HSE43
-> + * CONFIG_TDP_NOMINAL CSR Implemented at Incorrect Offset
-> + * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v3-spec-update.html
->   *
-> - * See http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
-> - * entry BDF2.
-> + * Devices [8086:6f60,6fa0,6fc0]
-> + * Erratum BDF2
-> + * PCI BARs in the Home Agent Will Return Non-Zero Values During Enumeration
-> + * http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
->   */
-> -static void pci_bdwep_bar(struct pci_dev *dev)
-> +static void pci_invalid_bar(struct pci_dev *dev)
->  {
->  	dev->non_compliant_bars = 1;
->  }
-> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_bdwep_bar);
-> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_bar);
-> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_bar);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-> 
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/iommu/arm-smmu-v3.c | 34 ++++++++++++++++++++++------------
+ 1 file changed, 22 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index a7e9de9..dbc21e3 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2361,10 +2361,10 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu)
+ 	return 0;
+ }
+ 
+-static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
++static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ {
+ 	u32 reg;
+-	bool coherent;
++	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
+ 
+ 	/* IDR0 */
+ 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
+@@ -2416,13 +2416,9 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+ 		smmu->features |= ARM_SMMU_FEAT_HYP;
+ 
+ 	/*
+-	 * The dma-coherent property is used in preference to the ID
++	 * The coherency feature as set by FW is used in preference to the ID
+ 	 * register, but warn on mismatch.
+ 	 */
+-	coherent = of_dma_is_coherent(smmu->dev->of_node);
+-	if (coherent)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
+-
+ 	if (!!(reg & IDR0_COHACC) != coherent)
+ 		dev_warn(smmu->dev, "IDR0.COHACC overridden by dma-coherent property (%s)\n",
+ 			 coherent ? "true" : "false");
+@@ -2543,7 +2539,18 @@ static int arm_smmu_device_probe(struct arm_smmu_device *smmu)
+ 	return 0;
+ }
+ 
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++static int arm_smmu_device_dt_probe(struct platform_device *pdev,
++				    struct arm_smmu_device *smmu)
++{
++	parse_driver_options(smmu);
++
++	if (of_dma_is_coherent(smmu->dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENCY;
++
++	return 0;
++}
++
++static int arm_smmu_device_probe(struct platform_device *pdev)
+ {
+ 	int irq, ret;
+ 	struct resource *res;
+@@ -2585,10 +2592,13 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	if (irq > 0)
+ 		smmu->gerr_irq = irq;
+ 
+-	parse_driver_options(smmu);
++	ret = arm_smmu_device_dt_probe(pdev, smmu);
++
++	if (ret)
++		return ret;
+ 
+ 	/* Probe the h/w */
+-	ret = arm_smmu_device_probe(smmu);
++	ret = arm_smmu_device_hw_probe(smmu);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -2606,7 +2616,7 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		return ret;
+ 
+ 	/* And we're up. Go go go! */
+-	of_iommu_set_ops(dev->of_node, &arm_smmu_ops);
++	fwspec_iommu_set_ops(&dev->of_node->fwnode, &arm_smmu_ops);
+ #ifdef CONFIG_PCI
+ 	pci_request_acs();
+ 	ret = bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+@@ -2640,7 +2650,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu-v3",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
+-- 
+2.10.0
