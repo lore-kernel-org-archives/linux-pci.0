@@ -1,66 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25814 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965369AbcIPUDN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:03:13 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Yijing Wang <wangyijing@huawei.com>,
-        Anton Blanchard <anton@samba.org>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v14 11/17] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Fri, 16 Sep 2016 13:02:01 -0700
-Message-Id: <20160916200207.21439-12-yinghai@kernel.org>
-In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
-References: <20160916200207.21439-1-yinghai@kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33360 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751219AbcIJXVG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Sep 2016 19:21:06 -0400
+MIME-Version: 1.0
+In-Reply-To: <1470054233-4309-2-git-send-email-amir.jer.levy@intel.com>
+References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com> <1470054233-4309-2-git-send-email-amir.jer.levy@intel.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Sun, 11 Sep 2016 01:20:44 +0200
+Message-ID: <CAMxnaaW0vBFeUcLg6oC=FuRx3sqStQ4pht2HUzyHqDMtf8oR2g@mail.gmail.com>
+Subject: Re: [PATCH v6 1/8] thunderbolt: Macro rename
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, corbet@lwn.net,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
-
-This patch set IORESOUCE_MEM_64 for 64bit resource during OF device
-resource flags parsing.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Anton Blanchard <anton@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 719f225..476b8ac5 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
--- 
-2.8.3
-
+On Mon, Aug 1, 2016 at 2:23 PM, Amir Levy <amir.jer.levy@intel.com> wrote:
+> This first patch updates the registers file to
+> reflect that it isn't only for Cactus Ridge.
+> No functional change intended.
+>
+> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> ---
+>  drivers/thunderbolt/nhi_regs.h | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+> index 86b996c..75cf069 100644
+> --- a/drivers/thunderbolt/nhi_regs.h
+> +++ b/drivers/thunderbolt/nhi_regs.h
+> @@ -1,11 +1,11 @@
+>  /*
+> - * Thunderbolt Cactus Ridge driver - NHI registers
+> + * Thunderbolt driver - NHI registers
+>   *
+>   * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
+>   */
+>
+> -#ifndef DSL3510_REGS_H_
+> -#define DSL3510_REGS_H_
+> +#ifndef NHI_REGS_H_
+> +#define NHI_REGS_H_
+>
+>  #include <linux/types.h>
+>
+> --
+> 2.7.4
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
