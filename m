@@ -1,40 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54966 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753970AbcINUZU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 16:25:20 -0400
-Date: Wed, 14 Sep 2016 15:25:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [RFCv2 0/3] vmd irq list shortening, map allocation
-Message-ID: <20160914202515.GA13189@localhost>
-References: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <bp@alien8.de>
+Return-Path: <bp@alien8.de>
+Date: Sat, 10 Sep 2016 16:30:31 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: bhelgaas@google.com, torvalds@linux-foundation.org,
+	peterz@infradead.org, tglx@linutronix.de, helgaas@kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	rjw@rjwysocki.net, tony.luck@intel.com, mingo@kernel.org,
+	x86@kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 584c5c422f6c ("x86/ioapic: Support hot-removal of IOAPICs
+ present during boot")
+Message-ID: <20160910143031.5s4psayo4wqrmpt2@pd.tnic>
+References: <20160910112744.4a6inn5bnjxsseak@pd.tnic>
+ <1473513090-30218-1-git-send-email-rui.y.wang@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1473513090-30218-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 02, 2016 at 11:53:03AM -0600, Jon Derrick wrote:
-> V2:
-> Added a map for vmd irqs to attempt to allocate all vmd irqs within an
-> irq list into a single page. Once we start getting many devices
-> sharing the irq in an irq list, this may help the list traversal latency.
-> 
-> V1:
-> Couple of RFC patches here. I don't really notice a positive benefit but
-> it does reduce the struct size of vmd_irq_list and hopefully we gain some
-> cache benefits from that.
-> 
-> Both are based on:
-> https://patchwork.kernel.org/patch/9304179/
-> https://patchwork.kernel.org/patch/9304181/
-> 
-> Jon Derrick (3):
->   vmd: eliminate vmd_vector member from list type
->   vmd: eliminate index member from irq list
->   pci/vmd: Create irq map for irq nodes
+On Sat, Sep 10, 2016 at 09:11:30PM +0800, Rui Wang wrote:
+> Thanks for the analysis. Looks like acpi_gbl_root_node == 0. It is
 
-I converted Keith's "looks good to me" to acks on 1/3 and 2/3, applied them
-to pci/host-vmd for v4.9, and dropped 3/3 for now.  Thanks, guys!
+Is ACPI_HANDLE(root_bus->bridge) == ACPI_ROOT_OBJECT?
+
+Because this is what the code does but I can't see it from the code that
+the handle is of type ACPI_ROOT_OBJECT...
+
+> initialized earlier than where we call acpi_ioapic_add().
+> start_kernel()
+> 	->acpi_early_init()
+> 		->acpi_initialize_subsystem()
+> 			 ->acpi_ns_root_initialize()
+> 				-> acpi_gbl_root_node = ...
+> 
+> 
+> But acpi_gbl_root_node can be 0 if acpi_disabled == 1.
+> Do you somehow have acpi turned off (!CONFIG_ACPI or booting with acpi=off)?
+
+Nope.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+ECO tip #101: Trim your mails when you reply.
