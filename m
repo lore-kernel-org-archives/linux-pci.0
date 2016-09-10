@@ -1,66 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 22 Sep 2016 10:15:11 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] PCI: rockchip: fix uninitialized variable use
-Message-ID: <20160922171510.GA113955@google.com>
-References: <20160922094018.2138640-1-arnd@arndb.de>
-MIME-Version: 1.0
-In-Reply-To: <20160922094018.2138640-1-arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <rui.y.wang@intel.com>
+Return-Path: <rui.y.wang@intel.com>
+From: Rui Wang <rui.y.wang@intel.com>
+To: bp@alien8.de
+Cc: bhelgaas@google.com,
+	torvalds@linux-foundation.org,
+	peterz@infradead.org,
+	tglx@linutronix.de,
+	helgaas@kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	rjw@rjwysocki.net,
+	tony.luck@intel.com,
+	mingo@kernel.org,
+	x86@kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com
+Subject: Re: 584c5c422f6c ("x86/ioapic: Support hot-removal of IOAPICs present during boot")
+Date: Sat, 10 Sep 2016 23:03:29 +0800
+Message-Id: <1473519809-31107-1-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <20160910143031.5s4psayo4wqrmpt2@pd.tnic>
+References: <20160910143031.5s4psayo4wqrmpt2@pd.tnic>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 22, 2016 at 11:39:59AM +0200, Arnd Bergmann wrote:
-> The newly added pcie-rockchip driver fails to initialize the
-> io_size variable if the DT doesn't provide ranges for the PCI
-> I/O space, as found by building it with -Wmaybe-uninitialized:
+On Sat, Sep 10, 2016 10:31 PM, Borislav Petkov wrote:
 > 
-> drivers/pci/host/pcie-rockchip.c: In function 'rockchip_pcie_probe':
-> drivers/pci/host/pcie-rockchip.c:1007:6: warning: 'io_size' may be used uninitialized in this function [-Wmaybe-uninitialized]
+> On Sat, Sep 10, 2016 at 09:11:30PM +0800, Rui Wang wrote:
+> > Thanks for the analysis. Looks like acpi_gbl_root_node == 0. It is
 > 
-> This adds an appropriate initialization immediately in front of
-> the loop, so the io_size is zero as expected afterwards for that
-> case.
+> Is ACPI_HANDLE(root_bus->bridge) == ACPI_ROOT_OBJECT?
 > 
-> Fixes: abe17181b16f ("PCI: rockchip: Add Rockchip PCIe controller support")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/pci/host/pcie-rockchip.c | 1 +
->  1 file changed, 1 insertion(+)
+> Because this is what the code does but I can't see it from the code that the
+> handle is of type ACPI_ROOT_OBJECT...
 > 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index c3593e633ccd..8bedc1e1ef80 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -1078,6 +1078,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  		goto err_vpcie;
->  
->  	/* Get the I/O and memory ranges from DT */
-> +	io_size = 0;
->  	resource_list_for_each_entry(win, &res) {
->  		switch (resource_type(win->res)) {
->  		case IORESOURCE_IO:
 
-I feel like we've fixed this one before, but then it's been refactored
-many times along the way...
+I seem to have the clue. It is because ACPI_HANDLE(root_bus->bridge) == NULL.
+Then this root bridge doesn't have a corresponding ACPI device. In this case
+we shouldn't call acpi_ioapic_add(). This can be true for some old platforms.
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+If that's the case then the patch below can fix it.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks
+Rui
+
+>From b37d806c78e5eea70dbb890c1e3dbb8b7e5038e6 Mon Sep 17 00:00:00 2001
+From: Rui Wang <rui.y.wang@intel.com>
+Date: Sat, 10 Sep 2016 10:56:34 -0400
+Subject: [PATCH] x86/ioapic: Ignore root bridges without a companion ACPI device
+
+Some PCI root bridges don't have a corresponding ACPI device.
+Don't call acpi_ioapic_add() on these bridges because they can't
+support ioapic hotplug.
+
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/pci/setup-bus.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ec538d3..2b05ac6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1852,10 +1852,15 @@ dump:
+ void __init pci_assign_unassigned_resources(void)
+ {
+ 	struct pci_bus *root_bus;
++	acpi_handle root_handle;
+ 
+ 	list_for_each_entry(root_bus, &pci_root_buses, node) {
+ 		pci_assign_unassigned_root_bus_resources(root_bus);
+-		acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
++		root_handle = ACPI_HANDLE(root_bus->bridge);
++
++		/* make sure the root bridge has a companion ACPI device */
++		if (root_handle)
++			acpi_ioapic_add(root_handle);
+ 	}
+ }
+ 
+-- 
+1.8.3.1
