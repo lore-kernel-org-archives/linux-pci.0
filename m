@@ -1,190 +1,115 @@
-Return-Path: <leedom@chelsio.com>
-Return-Path: <leedom@chelsio.com>
-From: Casey Leedom <leedom@chelsio.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Hariprasad S <hariprasad@chelsio.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, SWise OGC <swise@opengridcomputing.com>, "Hannes
- Reinecke" <hare@suse.de>
-Subject: Re: [PATCH] pci: Use same logic in pci_vpd_read as that of
- pci_vpd_write
-Date: Tue, 13 Sep 2016 22:16:25 +0000
-Message-ID: <DM5PR12MB1786F02F0A07E6F5EC7CD7D5C8FE0@DM5PR12MB1786.namprd12.prod.outlook.com>
-References: <1466827722-17287-1-git-send-email-hariprasad@chelsio.com>
- <20160808210858.GC6129@localhost>
- <DM5PR12MB17864DB8AA81CBA21EBB7AA8C81B0@DM5PR12MB1786.namprd12.prod.outlook.com>,<20160818205524.GO27353@localhost>
-In-Reply-To: <20160818205524.GO27353@localhost>
-Content-Type: multipart/alternative;
-	boundary="_000_DM5PR12MB1786F02F0A07E6F5EC7CD7D5C8FE0DM5PR12MB1786namp_"
-MIME-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: hans.verkuil@cisco.com, brking@us.ibm.com,
+        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
+        alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/6] vfio_pci: use pci_irq_allocate_vectors
+Date: Sun, 11 Sep 2016 15:31:26 +0200
+Message-Id: <1473600688-24043-5-git-send-email-hch@lst.de>
+In-Reply-To: <1473600688-24043-1-git-send-email-hch@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_DM5PR12MB1786F02F0A07E6F5EC7CD7D5C8FE0DM5PR12MB1786namp_
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Simply the interrupt setup by using the new PCI layer helpers.
 
-  And now sorry for my long-delayed response =97 I was one vacation in Euro=
-pe for four weeks hut hiking around the Monte Rosa Mastiff, etc.  Loads of =
-fun and exhausting.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/vfio/pci/vfio_pci_intrs.c   | 45 +++++++++----------------------------
+ drivers/vfio/pci/vfio_pci_private.h |  1 -
+ 2 files changed, 10 insertions(+), 36 deletions(-)
 
-
-  I see your point regarding the sysfs interface.  So I think that we shoul=
-d make sure that all callers correctly handle short reads.  I don't think t=
-here are that many, so it should be an easy task.
-
-
-Casey
-
-________________________________
-From: Bjorn Helgaas <helgaas@kernel.org>
-Sent: Thursday, August 18, 2016 1:55:25 PM
-To: Casey Leedom
-Cc: Hariprasad S; bhelgaas@google.com; linux-pci@vger.kernel.org; SWise OGC=
-; Hannes Reinecke
-Subject: Re: [PATCH] pci: Use same logic in pci_vpd_read as that of pci_vpd=
-_write
-
-Hi Casey,
-
-Sorry for the delay in responding.
-
-On Mon, Aug 08, 2016 at 09:20:22PM +0000, Casey Leedom wrote:
-> | From: Bjorn Helgaas <helgaas@kernel.org>
-> | Sent: Monday, August 8, 2016 2:08 PM
-> |
-> | I think the existing semantics are the same as for the read(2)
-> | syscall: we return the number of bytes read, which may be less than
-> | the size requested, and callers may use random garbage if they don't
-> | check for short reads.
->
-> read(2) is a generic I/O system call, which maintains a read pointer with
-> lseek(2) semantics, etc.  This seems like an Apples and Oranges
-> comparison.
->
-> | If we make pci_read_vpd() return error instead of a short read, how do
-> | callers figure out how much to request?
->
-> The same question could be asked of the pci_write_vpd() call which
-> currently throws an error is any portion of the requested write is beyond
-> the recorded VPD area.  Also, isn't this what (struct pci_dev *)->vpd.len
-> is for?  Although I think we'd want an API to retrieve that rather than h=
-ave
-> callers simply access the potentially uninitialized field which is lazily
-> initialized.  On the other hand, we don't seem to have any current caller=
-s
-> with this issue.
-
-Drivers that read VPD probably can figure out how much to read.  The
-place I'm worried about is read_vpd_attr(), the hook for reading VPD
-via sysfs.  If we do something like "cat /sys/.../vpd", I think cat
-will try to read a large chunk and it will currently get a short read.
-If we return an error instead of the short read, I think the sysfs
-file will be much harder to use.
-
-Bjorn
-
---_000_DM5PR12MB1786F02F0A07E6F5EC7CD7D5C8FE0DM5PR12MB1786namp_
-Content-Type: text/html; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
-
-<html>
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3DWindows-1=
-252">
-<meta name=3D"Generator" content=3D"Microsoft Exchange Server">
-<!-- converted from text --><style><!-- .EmailQuote { margin-left: 1pt; pad=
-ding-left: 4pt; border-left: #800000 2px solid; } --></style>
-</head>
-<body>
-<meta content=3D"text/html; charset=3DUTF-8">
-<style type=3D"text/css" style=3D"">
-<!--
-p
-	{margin-top:0;
-	margin-bottom:0}
--->
-</style>
-<div dir=3D"ltr">
-<div id=3D"x_divtagdefaultwrapper" style=3D"font-size:12pt; color:#000000; =
-background-color:#FFFFFF; font-family:Calibri,Arial,Helvetica,sans-serif">
-<p>&nbsp; And now sorry for my long-delayed response =97 I was one vacation=
- in Europe for four weeks hut hiking around the Monte Rosa Mastiff, etc.&nb=
-sp; Loads of fun and exhausting.</p>
-<p><br>
-</p>
-<p>&nbsp; I see your point regarding the sysfs interface.&nbsp; So I think =
-that we should make sure that all callers correctly handle short reads.&nbs=
-p; I don't think there are that many, so it should be an easy task.</p>
-<p><br>
-</p>
-<p>Casey<br>
-</p>
-</div>
-<hr tabindex=3D"-1" style=3D"display:inline-block; width:98%">
-<div id=3D"x_divRplyFwdMsg" dir=3D"ltr"><font face=3D"Calibri, sans-serif" =
-color=3D"#000000" style=3D"font-size:11pt"><b>From:</b> Bjorn Helgaas &lt;h=
-elgaas@kernel.org&gt;<br>
-<b>Sent:</b> Thursday, August 18, 2016 1:55:25 PM<br>
-<b>To:</b> Casey Leedom<br>
-<b>Cc:</b> Hariprasad S; bhelgaas@google.com; linux-pci@vger.kernel.org; SW=
-ise OGC; Hannes Reinecke<br>
-<b>Subject:</b> Re: [PATCH] pci: Use same logic in pci_vpd_read as that of =
-pci_vpd_write</font>
-<div>&nbsp;</div>
-</div>
-</div>
-<font size=3D"2"><span style=3D"font-size:10pt;">
-<div class=3D"PlainText">Hi Casey,<br>
-<br>
-Sorry for the delay in responding.<br>
-<br>
-On Mon, Aug 08, 2016 at 09:20:22PM &#43;0000, Casey Leedom wrote:<br>
-&gt; | From: Bjorn Helgaas &lt;helgaas@kernel.org&gt;<br>
-&gt; | Sent: Monday, August 8, 2016 2:08 PM<br>
-&gt; | <br>
-&gt; | I think the existing semantics are the same as for the read(2)<br>
-&gt; | syscall: we return the number of bytes read, which may be less than<=
-br>
-&gt; | the size requested, and callers may use random garbage if they don't=
-<br>
-&gt; | check for short reads.<br>
-&gt; <br>
-&gt; read(2) is a generic I/O system call, which maintains a read pointer w=
-ith<br>
-&gt; lseek(2) semantics, etc.&nbsp; This seems like an Apples and Oranges<b=
-r>
-&gt; comparison.<br>
-&gt; <br>
-&gt; | If we make pci_read_vpd() return error instead of a short read, how =
-do<br>
-&gt; | callers figure out how much to request?<br>
-&gt; <br>
-&gt; The same question could be asked of the pci_write_vpd() call which<br>
-&gt; currently throws an error is any portion of the requested write is bey=
-ond<br>
-&gt; the recorded VPD area.&nbsp; Also, isn't this what (struct pci_dev *)-=
-&gt;vpd.len<br>
-&gt; is for?&nbsp; Although I think we'd want an API to retrieve that rathe=
-r than have<br>
-&gt; callers simply access the potentially uninitialized field which is laz=
-ily<br>
-&gt; initialized.&nbsp; On the other hand, we don't seem to have any curren=
-t callers<br>
-&gt; with this issue.<br>
-<br>
-Drivers that read VPD probably can figure out how much to read.&nbsp; The<b=
-r>
-place I'm worried about is read_vpd_attr(), the hook for reading VPD<br>
-via sysfs.&nbsp; If we do something like &quot;cat /sys/.../vpd&quot;, I th=
-ink cat<br>
-will try to read a large chunk and it will currently get a short read.<br>
-If we return an error instead of the short read, I think the sysfs<br>
-file will be much harder to use.<br>
-<br>
-Bjorn<br>
-</div>
-</span></font>
-</body>
-</html>
-
---_000_DM5PR12MB1786F02F0A07E6F5EC7CD7D5C8FE0DM5PR12MB1786namp_--
+diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+index 152b438..a1d283e 100644
+--- a/drivers/vfio/pci/vfio_pci_intrs.c
++++ b/drivers/vfio/pci/vfio_pci_intrs.c
+@@ -250,6 +250,7 @@ static irqreturn_t vfio_msihandler(int irq, void *arg)
+ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
++	unsigned int flag = msix ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
+ 	int ret;
+ 
+ 	if (!is_irq_none(vdev))
+@@ -259,35 +260,13 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
+ 	if (!vdev->ctx)
+ 		return -ENOMEM;
+ 
+-	if (msix) {
+-		int i;
+-
+-		vdev->msix = kzalloc(nvec * sizeof(struct msix_entry),
+-				     GFP_KERNEL);
+-		if (!vdev->msix) {
+-			kfree(vdev->ctx);
+-			return -ENOMEM;
+-		}
+-
+-		for (i = 0; i < nvec; i++)
+-			vdev->msix[i].entry = i;
+-
+-		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
+-		if (ret < nvec) {
+-			if (ret > 0)
+-				pci_disable_msix(pdev);
+-			kfree(vdev->msix);
+-			kfree(vdev->ctx);
+-			return ret;
+-		}
+-	} else {
+-		ret = pci_enable_msi_range(pdev, 1, nvec);
+-		if (ret < nvec) {
+-			if (ret > 0)
+-				pci_disable_msi(pdev);
+-			kfree(vdev->ctx);
+-			return ret;
+-		}
++	/* return the number of supported vectors if we can't get all: */
++	ret = pci_alloc_irq_vectors(pdev, 1, nvec, flag);
++	if (ret < nvec) {
++		if (ret > 0)
++			pci_free_irq_vectors(pdev);
++		kfree(vdev->ctx);
++		return ret;
+ 	}
+ 
+ 	vdev->num_ctx = nvec;
+@@ -315,7 +294,7 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+ 	if (vector < 0 || vector >= vdev->num_ctx)
+ 		return -EINVAL;
+ 
+-	irq = msix ? vdev->msix[vector].vector : pdev->irq + vector;
++	irq = pci_irq_vector(pdev, vector);
+ 
+ 	if (vdev->ctx[vector].trigger) {
+ 		free_irq(irq, vdev->ctx[vector].trigger);
+@@ -408,11 +387,7 @@ static void vfio_msi_disable(struct vfio_pci_device *vdev, bool msix)
+ 
+ 	vfio_msi_set_block(vdev, 0, vdev->num_ctx, NULL, msix);
+ 
+-	if (msix) {
+-		pci_disable_msix(vdev->pdev);
+-		kfree(vdev->msix);
+-	} else
+-		pci_disable_msi(pdev);
++	pci_free_irq_vectors(pdev);
+ 
+ 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+ 	vdev->num_ctx = 0;
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 2128de8..f561ac1 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -72,7 +72,6 @@ struct vfio_pci_device {
+ 	struct perm_bits	*msi_perm;
+ 	spinlock_t		irqlock;
+ 	struct mutex		igate;
+-	struct msix_entry	*msix;
+ 	struct vfio_pci_irq_ctx	*ctx;
+ 	int			num_ctx;
+ 	int			irq_type;
+-- 
+2.1.4
