@@ -1,77 +1,204 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial
- support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, rjw@rjwysocki.net
-References: <1473152938-17388-2-git-send-email-tn@semihalf.com>
- <1473249412-20226-1-git-send-email-tn@semihalf.com>
- <20160909092012.GC19669@red-moon>
-Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
- helgaas@kernel.org, rafael@kernel.org, will.deacon@arm.com,
- catalin.marinas@arm.com, hanjun.guo@linaro.org, shijie.huang@arm.com,
- robert.richter@caviumnetworks.com, mw@semihalf.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
- okaya@codeaurora.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com>
-Date: Mon, 12 Sep 2016 14:37:06 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20160909092012.GC19669@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1470054233-4309-3-git-send-email-amir.jer.levy@intel.com>
+References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com> <1470054233-4309-3-git-send-email-amir.jer.levy@intel.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Sun, 11 Sep 2016 02:02:02 +0200
+Message-ID: <CAMxnaaUnY5XtXWpYPbeZiXqEJYJ6_RprCPCEwG-_G4NB3PUTNQ@mail.gmail.com>
+Subject: Re: [PATCH v6 2/8] thunderbolt: Updating the register definitions
+To: Amir Levy <amir.jer.levy@intel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
+        thunderbolt-linux <thunderbolt-linux@intel.com>,
+        "Westerberg, Mika" <mika.westerberg@intel.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+On Mon, Aug 1, 2016 at 2:23 PM, Amir Levy <amir.jer.levy@intel.com> wrote:
+> Adding more Thunderbolt(TM) register definitions
+> and some helper macros.
 
-On 09.09.2016 11:20, Lorenzo Pieralisi wrote:
-> Hi Rafael,
->
-> On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
->> IORT shows representation of IO topology for ARM based systems.
->> It describes how various components are connected together on
->> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
->> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>
->> Initial support allows to detect IORT table presence and save its
->> root pointer obtained through acpi_get_table(). The pointer validity
->> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
->> is not set while using IORT nodes we would dereference unmapped pointers.
->>
->> For the aforementioned reason call iort_table_detect() from acpi_init()
->> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->>
->> Add generic helpers which are helpful for scanning and retrieving
->> information from IORT table content. List of the most important helpers:
->> - iort_find_dev_node() finds IORT node for a given device
->> - iort_node_map_rid() maps device RID and returns IORT node which provides
->>   final translation
->>
->> IORT support is placed under drivers/acpi/arm64/ new directory due to its
->> ARM64 specific nature. The code there is considered only for ARM64.
->> The long term plan is to keep all ARM64 specific tables support
->> in this place e.g. GTDT table.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> ---
->
-> Apart from the minor commit logs oversights we consider these two
-> patches ready to go, please let us know if there is something you want
-> changed since we are at risk of missing yet another merge window.
->
-> It is ARM64 specific code, we created and moved the code to its
-> ARM64 specific directory and we are happy to maintain it as such,
-> we need your ACK to get this done so if there is something you
-> want changed please let us know otherwise I would ask your ACK
-> on these two patches to give Marc a go-ahead for -next and
-> hopefully 4.9.
+Thinking about this again I would prefer it if you would put your
+definitions into a separate file under icm/ (even if there is some
+duplication). The style (bitfields vs. genmask) is different between
+the drivers and for a reader it is difficult to find out what is
+actually supposed to be used by the two drivers (ring_desc vs
+tbt_buf_desc or the ring RING_INT_EN/DISABLE macros in the header file
+vs. ring_interrupt_active in nhi.c).
 
-Kindly reminder. Is there anything we need to do more about these 
-patches? Please let us know. Note this is the major thing for incoming 
-IORT more advance feature.
+This would also completely separate the two drivers.
 
-Thanks,
-Tomasz
+Andreas
+
+
+> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+> ---
+>  drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 109 insertions(+)
+>
+> diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
+> index 75cf069..b8e961f 100644
+> --- a/drivers/thunderbolt/nhi_regs.h
+> +++ b/drivers/thunderbolt/nhi_regs.h
+> @@ -9,6 +9,11 @@
+>
+>  #include <linux/types.h>
+>
+> +#define NHI_MMIO_BAR 0
+> +
+> +#define TBT_RING_MIN_NUM_BUFFERS       2
+> +#define TBT_RING_MAX_FRAME_SIZE                (4 * 1024)
+> +
+>  enum ring_flags {
+>         RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
+>         RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
+> @@ -39,6 +44,33 @@ struct ring_desc {
+>         u32 time; /* write zero */
+>  } __packed;
+>
+> +/**
+> + * struct tbt_buf_desc - TX/RX ring buffer descriptor.
+> + * This is same as struct ring_desc, but without the use of bitfields and
+> + * with explicit endianity.
+> + */
+> +struct tbt_buf_desc {
+> +       __le64 phys;
+> +       __le32 attributes;
+> +       __le32 time;
+> +};
+> +
+> +#define DESC_ATTR_LEN_SHIFT            0
+> +#define DESC_ATTR_LEN_MASK             GENMASK(11, DESC_ATTR_LEN_SHIFT)
+> +#define DESC_ATTR_EOF_SHIFT            12
+> +#define DESC_ATTR_EOF_MASK             GENMASK(15, DESC_ATTR_EOF_SHIFT)
+> +#define DESC_ATTR_SOF_SHIFT            16
+> +#define DESC_ATTR_SOF_MASK             GENMASK(19, DESC_ATTR_SOF_SHIFT)
+> +#define DESC_ATTR_TX_ISOCH_DMA_EN      BIT(20) /* TX */
+> +#define DESC_ATTR_RX_CRC_ERR           BIT(20) /* RX after use */
+> +#define DESC_ATTR_DESC_DONE            BIT(21)
+> +#define DESC_ATTR_REQ_STS              BIT(22) /* TX and RX before use */
+> +#define DESC_ATTR_RX_BUF_OVRN_ERR      BIT(22) /* RX after use */
+> +#define DESC_ATTR_INT_EN               BIT(23)
+> +#define DESC_ATTR_OFFSET_SHIFT         24
+> +#define DESC_ATTR_OFFSET_MASK          GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
+> +
+> +
+>  /* NHI registers in bar 0 */
+>
+>  /*
+> @@ -60,6 +92,30 @@ struct ring_desc {
+>   */
+>  #define REG_RX_RING_BASE       0x08000
+>
+> +#define REG_RING_STEP                  16
+> +#define REG_RING_PHYS_LO_OFFSET                0
+> +#define REG_RING_PHYS_HI_OFFSET                4
+> +#define REG_RING_CONS_PROD_OFFSET      8       /* cons - RO, prod - RW */
+> +#define REG_RING_CONS_SHIFT            0
+> +#define REG_RING_CONS_MASK             GENMASK(15, REG_RING_CONS_SHIFT)
+> +#define REG_RING_PROD_SHIFT            16
+> +#define REG_RING_PROD_MASK             GENMASK(31, REG_RING_PROD_SHIFT)
+> +#define REG_RING_SIZE_OFFSET           12
+> +#define REG_RING_SIZE_SHIFT            0
+> +#define REG_RING_SIZE_MASK             GENMASK(15, REG_RING_SIZE_SHIFT)
+> +#define REG_RING_BUF_SIZE_SHIFT                16
+> +#define REG_RING_BUF_SIZE_MASK         GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
+> +
+> +#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
+> +                             ((iobase) + (ringbase) + \
+> +                             ((ringnumber) * REG_RING_STEP) + \
+> +                             REG_RING_CONS_PROD_OFFSET)
+> +
+> +#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
+> +                                      REG_RING_PROD_SHIFT)
+> +
+> +#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
+> +                                      REG_RING_CONS_SHIFT)
+>  /*
+>   * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
+>   * 00: enum_ring_flags
+> @@ -77,6 +133,19 @@ struct ring_desc {
+>   * ..: unknown
+>   */
+>  #define REG_RX_OPTIONS_BASE    0x29800
+> +#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT        12
+> +#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK \
+> +                               GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
+> +#define REG_RX_OPTS_MASK_OFFSET                4
+> +#define REG_RX_OPTS_MASK_EOF_SHIFT     0
+> +#define REG_RX_OPTS_MASK_EOF_MASK      GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
+> +#define REG_RX_OPTS_MASK_SOF_SHIFT     16
+> +#define REG_RX_OPTS_MASK_SOF_MASK      GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
+> +
+> +#define REG_OPTS_STEP                  32
+> +#define REG_OPTS_E2E_EN                        BIT(28)
+> +#define REG_OPTS_RAW                   BIT(30)
+> +#define REG_OPTS_VALID                 BIT(31)
+>
+>  /*
+>   * three bitfields: tx, rx, rx overflow
+> @@ -86,6 +155,7 @@ struct ring_desc {
+>   */
+>  #define REG_RING_NOTIFY_BASE   0x37800
+>  #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
+> +#define REG_RING_NOTIFY_STEP   4
+>
+>  /*
+>   * two bitfields: rx, tx
+> @@ -94,8 +164,47 @@ struct ring_desc {
+>   */
+>  #define REG_RING_INTERRUPT_BASE        0x38200
+>  #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
+> +#define REG_RING_INT_TX_PROCESSED(ring_num)            BIT(ring_num)
+> +#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths) BIT((ring_num) + \
+> +                                                           (num_paths))
+> +#define RING_INT_DISABLE(base, val) iowrite32( \
+> +                       ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
+> +                       (base) + REG_RING_INTERRUPT_BASE)
+> +#define RING_INT_ENABLE(base, val) iowrite32( \
+> +                       ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
+> +                       (base) + REG_RING_INTERRUPT_BASE)
+> +#define RING_INT_DISABLE_TX(base, ring_num) \
+> +       RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
+> +#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
+> +       RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
+> +#define RING_INT_ENABLE_TX(base, ring_num) \
+> +       RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
+> +#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
+> +       RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
+> +#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
+> +       RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
+> +                              REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
+> +
+> +#define REG_RING_INTERRUPT_STEP        4
+> +
+> +#define REG_INT_THROTTLING_RATE        0x38c00
+> +#define REG_INT_THROTTLING_RATE_STEP   4
+> +#define NUM_INT_VECTORS                        16
+> +
+> +#define REG_INT_VEC_ALLOC_BASE 0x38c40
+> +#define REG_INT_VEC_ALLOC_STEP         4
+> +#define REG_INT_VEC_ALLOC_FIELD_BITS   4
+> +#define REG_INT_VEC_ALLOC_FIELD_MASK   (BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
+> +#define REG_INT_VEC_ALLOC_PER_REG      ((BITS_PER_BYTE * sizeof(u32)) / \
+> +                                        REG_INT_VEC_ALLOC_FIELD_BITS)
+>
+>  /* The last 11 bits contain the number of hops supported by the NHI port. */
+>  #define REG_HOP_COUNT          0x39640
+> +#define REG_HOP_COUNT_TOTAL_PATHS_MASK GENMASK(10, 0)
+> +
+> +#define REG_HOST_INTERFACE_RST 0x39858
+> +
+> +#define REG_DMA_MISC           0x39864
+> +#define REG_DMA_MISC_INT_AUTO_CLEAR    BIT(2)
+>
+>  #endif
+> --
+> 2.7.4
+>
