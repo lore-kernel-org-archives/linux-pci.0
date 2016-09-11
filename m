@@ -1,64 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47866 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752098AbcITNJe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Sep 2016 09:09:34 -0400
-Date: Tue, 20 Sep 2016 08:08:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
-        dhdang@apm.com, ard.biesheuvel@linaro.org,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-        wangyijing@huawei.com, msalter@redhat.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linaro-acpi@lists.linaro.org, jcm@redhat.com,
-        andrea.gallo@linaro.org, jeremy.linton@arm.com,
-        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V6 4/5] PCI: thunder: Enable ACPI PCI controller for
- ThunderX pass2.x silicon version
-Message-ID: <20160920130839.GA13855@localhost>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-5-git-send-email-tn@semihalf.com>
- <20160919154550.GA13775@localhost>
- <d06879a2-d6e9-5d62-77c5-47eff33d9584@semihalf.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d06879a2-d6e9-5d62-77c5-47eff33d9584@semihalf.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: hans.verkuil@cisco.com, brking@us.ibm.com,
+        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
+        alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/6] arcmsr: use pci_alloc_irq_vectors
+Date: Sun, 11 Sep 2016 15:31:23 +0200
+Message-Id: <1473600688-24043-2-git-send-email-hch@lst.de>
+In-Reply-To: <1473600688-24043-1-git-send-email-hch@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 20, 2016 at 09:06:23AM +0200, Tomasz Nowicki wrote:
-> On 19.09.2016 17:45, Bjorn Helgaas wrote:
-> >On Fri, Sep 09, 2016 at 09:24:06PM +0200, Tomasz Nowicki wrote:
-> >>ThunderX PCIe controller to off-chip devices (so-called PEM) is not fully
-> >>compliant with ECAM standard. It uses non-standard configuration space
-> >>accessors (see pci_thunder_pem_ops) and custom configuration space granulation
-> >>(see bus_shift = 24). In order to access configuration space and
-> >>probe PEM as ACPI based PCI host controller we need to add MCFG quirk
-> >>infrastructure. This involves:
-> >>1. Export PEM pci_thunder_pem_ops structure so it is visible to MCFG quirk
-> >>   code.
-> >>2. New quirk entries for each PEM segment. Each contains platform IDs,
-> >>   mentioned pci_thunder_pem_ops and CFG resources.
-> >>
-> >>Quirk is considered for ThunderX silicon pass2.x only which is identified
-> >>via MCFG revision 1.
-> >
-> >Is it really the case that silicon pass2.x has MCFG revision 1, and
-> >silicon pass1.x has MCFG revision 2?  That just seems backwards.
-> 
-> It is weird but silicon pass2.x is more common and it had MCFG
-> revision 1 from the beginning. Unless it is allowed to use MCFG
-> revision 0 ? Then we could use MCFG revision 0 for pass1.x
+Switch the arcmsr driver to use pci_alloc_irq_vectors.  We need to two
+calls to pci_alloc_irq_vectors as arcmsr only supports multiple MSI-X
+vectors, but not multiple MSI vectors.
 
-There's no reason to avoid revision 0.  The question is really what
-firmware is already in the field.  We need to accommodate that.  We don't
-want a situation where kernel version X only works with firmware version Y,
-but kernel version X+1 only works with firmware version Y+1.
+Otherwise this cleans up a lot of cruft and allows to use a common
+request_irq loop for irq types, which happens to only iterate over a
+single line in the non MSI-X case.
 
-Bjorn
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/arcmsr/arcmsr.h     |  5 +--
+ drivers/scsi/arcmsr/arcmsr_hba.c | 82 ++++++++++++++++------------------------
+ 2 files changed, 33 insertions(+), 54 deletions(-)
+
+diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+index cf99f8c..a254b32 100644
+--- a/drivers/scsi/arcmsr/arcmsr.h
++++ b/drivers/scsi/arcmsr/arcmsr.h
+@@ -629,7 +629,6 @@ struct AdapterControlBlock
+ 	struct pci_dev *		pdev;
+ 	struct Scsi_Host *		host;
+ 	unsigned long			vir2phy_offset;
+-	struct msix_entry	entries[ARCMST_NUM_MSIX_VECTORS];
+ 	/* Offset is used in making arc cdb physical to virtual calculations */
+ 	uint32_t			outbound_int_enable;
+ 	uint32_t			cdb_phyaddr_hi32;
+@@ -671,8 +670,6 @@ struct AdapterControlBlock
+ 	/* iop init */
+ 	#define ACB_F_ABORT				0x0200
+ 	#define ACB_F_FIRMWARE_TRAP           		0x0400
+-	#define ACB_F_MSI_ENABLED		0x1000
+-	#define ACB_F_MSIX_ENABLED		0x2000
+ 	struct CommandControlBlock *			pccb_pool[ARCMSR_MAX_FREECCB_NUM];
+ 	/* used for memory free */
+ 	struct list_head		ccb_free_list;
+@@ -725,7 +722,7 @@ struct AdapterControlBlock
+ 	atomic_t 			rq_map_token;
+ 	atomic_t			ante_token_value;
+ 	uint32_t	maxOutstanding;
+-	int		msix_vector_count;
++	int		vector_count;
+ };/* HW_DEVICE_EXTENSION */
+ /*
+ *******************************************************************************
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 7640498..a267327 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -720,51 +720,39 @@ static void arcmsr_message_isr_bh_fn(struct work_struct *work)
+ static int
+ arcmsr_request_irq(struct pci_dev *pdev, struct AdapterControlBlock *acb)
+ {
+-	int	i, j, r;
+-	struct msix_entry entries[ARCMST_NUM_MSIX_VECTORS];
+-
+-	for (i = 0; i < ARCMST_NUM_MSIX_VECTORS; i++)
+-		entries[i].entry = i;
+-	r = pci_enable_msix_range(pdev, entries, 1, ARCMST_NUM_MSIX_VECTORS);
+-	if (r < 0)
+-		goto msi_int;
+-	acb->msix_vector_count = r;
+-	for (i = 0; i < r; i++) {
+-		if (request_irq(entries[i].vector,
+-			arcmsr_do_interrupt, 0, "arcmsr", acb)) {
++	unsigned long flags;
++	int nvec, i;
++
++	nvec = pci_alloc_irq_vectors(pdev, 1, ARCMST_NUM_MSIX_VECTORS,
++			PCI_IRQ_MSIX);
++	if (nvec > 0) {
++		pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
++		flags = 0;
++	} else {
++		nvec = pci_alloc_irq_vectors(pdev, 1, 1,
++				PCI_IRQ_MSI | PCI_IRQ_LEGACY);
++		if (nvec < 1)
++			return FAILED;
++
++		flags = IRQF_SHARED;
++	}
++
++	acb->vector_count = nvec;
++	for (i = 0; i < nvec; i++) {
++		if (request_irq(pci_irq_vector(pdev, i), arcmsr_do_interrupt,
++				flags, "arcmsr", acb)) {
+ 			pr_warn("arcmsr%d: request_irq =%d failed!\n",
+-				acb->host->host_no, entries[i].vector);
+-			for (j = 0 ; j < i ; j++)
+-				free_irq(entries[j].vector, acb);
+-			pci_disable_msix(pdev);
+-			goto msi_int;
++				acb->host->host_no, pci_irq_vector(pdev, i));
++			goto out_free_irq;
+ 		}
+-		acb->entries[i] = entries[i];
+-	}
+-	acb->acb_flags |= ACB_F_MSIX_ENABLED;
+-	pr_info("arcmsr%d: msi-x enabled\n", acb->host->host_no);
+-	return SUCCESS;
+-msi_int:
+-	if (pci_enable_msi_exact(pdev, 1) < 0)
+-		goto legacy_int;
+-	if (request_irq(pdev->irq, arcmsr_do_interrupt,
+-		IRQF_SHARED, "arcmsr", acb)) {
+-		pr_warn("arcmsr%d: request_irq =%d failed!\n",
+-			acb->host->host_no, pdev->irq);
+-		pci_disable_msi(pdev);
+-		goto legacy_int;
+-	}
+-	acb->acb_flags |= ACB_F_MSI_ENABLED;
+-	pr_info("arcmsr%d: msi enabled\n", acb->host->host_no);
+-	return SUCCESS;
+-legacy_int:
+-	if (request_irq(pdev->irq, arcmsr_do_interrupt,
+-		IRQF_SHARED, "arcmsr", acb)) {
+-		pr_warn("arcmsr%d: request_irq = %d failed!\n",
+-			acb->host->host_no, pdev->irq);
+-		return FAILED;
+ 	}
++
+ 	return SUCCESS;
++out_free_irq:
++	while (--i >= 0)
++		free_irq(pci_irq_vector(pdev, i), acb);
++	pci_free_irq_vectors(pdev);
++	return FAILED;
+ }
+ 
+ static int arcmsr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -886,15 +874,9 @@ static void arcmsr_free_irq(struct pci_dev *pdev,
+ {
+ 	int i;
+ 
+-	if (acb->acb_flags & ACB_F_MSI_ENABLED) {
+-		free_irq(pdev->irq, acb);
+-		pci_disable_msi(pdev);
+-	} else if (acb->acb_flags & ACB_F_MSIX_ENABLED) {
+-		for (i = 0; i < acb->msix_vector_count; i++)
+-			free_irq(acb->entries[i].vector, acb);
+-		pci_disable_msix(pdev);
+-	} else
+-		free_irq(pdev->irq, acb);
++	for (i = 0; i < acb->vector_count; i++)
++		free_irq(pci_irq_vector(pdev, i), acb);
++	pci_free_irq_vectors(pdev);
+ }
+ 
+ static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
+-- 
+2.1.4
