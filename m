@@ -1,176 +1,357 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53310 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751124AbcITUrb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Sep 2016 16:47:31 -0400
-Date: Tue, 20 Sep 2016 15:47:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Po Liu <po.liu@nxp.com>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Stuart Yoder <stuart.yoder@nxp.com>,
-        Minghuan Lian <minghuan.lian@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yang-Leo Li <leoyang.li@nxp.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
-Message-ID: <20160920204725.GA10804@localhost>
-References: <1464242406-20203-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-1-git-send-email-po.liu@nxp.com>
- <1465892645-32381-2-git-send-email-po.liu@nxp.com>
- <20160729224154.GC13632@localhost>
- <VI1PR0401MB170958461E597D1BC7D280FF92E80@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <VI1PR0401MB170958461E597D1BC7D280FF92E80@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:60098 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932543AbcIKNbk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Sep 2016 09:31:40 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: hans.verkuil@cisco.com, brking@us.ibm.com,
+        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
+        alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/6] ipr: use pci_irq_allocate_vectors
+Date: Sun, 11 Sep 2016 15:31:24 +0200
+Message-Id: <1473600688-24043-3-git-send-email-hch@lst.de>
+In-Reply-To: <1473600688-24043-1-git-send-email-hch@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 22, 2016 at 10:09:18AM +0000, Po Liu wrote:
-> Hi Bjorn,
-> 
-> Sorry for late reply.
-> 
-> I checked the updated kernel with Dongdong mentioned ACPI patch which was truly affected my quirk patch uploaded. So I suppose the quirk patch is not qualify to fix the bug.
+Switch the ipr driver to use pci_alloc_irq_vectors.  We need to two calls to
+pci_alloc_irq_vectors as ipr only supports multiple MSI-X vectors, but not
+multiple MSI vectors.
 
-I don't understand what you're saying here.  
+Otherwise this cleans up a lot of cruft and allows to use a common
+request_irq loop for irq types, which happens to only iterate over a
+single line in the non MSI-X case.
 
-The quirk worked on your machine.  It apparently didn't work on
-Dongdong's machine because of_irq_parse_and_map_pci() is run after the
-quirk in this path:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/ipr.c | 173 ++++++++++++++++-------------------------------------
+ drivers/scsi/ipr.h |   7 +--
+ 2 files changed, 52 insertions(+), 128 deletions(-)
 
-  pci_device_probe
-    pcibios_alloc_irq                 # arm64
-      dev->irq = of_irq_parse_and_map_pci
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 17d04c7..cadf56c 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -186,16 +186,16 @@ static const struct ipr_chip_cfg_t ipr_chip_cfg[] = {
+ };
+ 
+ static const struct ipr_chip_t ipr_chip[] = {
+-	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE, IPR_USE_LSI, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
+-	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CITRINE, IPR_USE_LSI, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
+-	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_OBSIDIAN, IPR_USE_LSI, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
+-	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN, IPR_USE_LSI, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
+-	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN_E, IPR_USE_MSI, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
+-	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE, IPR_USE_LSI, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[1] },
+-	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_SCAMP, IPR_USE_LSI, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[1] },
+-	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2, IPR_USE_MSI, IPR_SIS64, IPR_MMIO, &ipr_chip_cfg[2] },
+-	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE, IPR_USE_MSI, IPR_SIS64, IPR_MMIO, &ipr_chip_cfg[2] },
+-	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_RATTLESNAKE, IPR_USE_MSI, IPR_SIS64, IPR_MMIO, &ipr_chip_cfg[2] }
++	{ PCI_VENDOR_ID_MYLEX, PCI_DEVICE_ID_IBM_GEMSTONE, false, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CITRINE, false, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_OBSIDIAN, false, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN, false, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN_E, true, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE, false, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[1] },
++	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_SCAMP, false, IPR_SIS32, IPR_PCI_CFG, &ipr_chip_cfg[1] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2, true, IPR_SIS64, IPR_MMIO, &ipr_chip_cfg[2] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROCODILE, true, IPR_SIS64, IPR_MMIO, &ipr_chip_cfg[2] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_RATTLESNAKE, true, IPR_SIS64, IPR_MMIO, &ipr_chip_cfg[2] }
+ };
+ 
+ static int ipr_max_bus_speeds[] = {
+@@ -9356,23 +9356,11 @@ static void ipr_free_mem(struct ipr_ioa_cfg *ioa_cfg)
+ static void ipr_free_irqs(struct ipr_ioa_cfg *ioa_cfg)
+ {
+ 	struct pci_dev *pdev = ioa_cfg->pdev;
++	int i;
+ 
+-	if (ioa_cfg->intr_flag == IPR_USE_MSI ||
+-	    ioa_cfg->intr_flag == IPR_USE_MSIX) {
+-		int i;
+-		for (i = 0; i < ioa_cfg->nvectors; i++)
+-			free_irq(ioa_cfg->vectors_info[i].vec,
+-				 &ioa_cfg->hrrq[i]);
+-	} else
+-		free_irq(pdev->irq, &ioa_cfg->hrrq[0]);
+-
+-	if (ioa_cfg->intr_flag == IPR_USE_MSI) {
+-		pci_disable_msi(pdev);
+-		ioa_cfg->intr_flag &= ~IPR_USE_MSI;
+-	} else if (ioa_cfg->intr_flag == IPR_USE_MSIX) {
+-		pci_disable_msix(pdev);
+-		ioa_cfg->intr_flag &= ~IPR_USE_MSIX;
+-	}
++	for (i = 0; i < ioa_cfg->nvectors; i++)
++		free_irq(pci_irq_vector(pdev, i), &ioa_cfg->hrrq[i]);
++	pci_free_irq_vectors(pdev);
+ }
+ 
+ /**
+@@ -9799,45 +9787,6 @@ static void ipr_wait_for_pci_err_recovery(struct ipr_ioa_cfg *ioa_cfg)
+ 	}
+ }
+ 
+-static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
+-{
+-	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
+-	int i, vectors;
+-
+-	for (i = 0; i < ARRAY_SIZE(entries); ++i)
+-		entries[i].entry = i;
+-
+-	vectors = pci_enable_msix_range(ioa_cfg->pdev,
+-					entries, 1, ipr_number_of_msix);
+-	if (vectors < 0) {
+-		ipr_wait_for_pci_err_recovery(ioa_cfg);
+-		return vectors;
+-	}
+-
+-	for (i = 0; i < vectors; i++)
+-		ioa_cfg->vectors_info[i].vec = entries[i].vector;
+-	ioa_cfg->nvectors = vectors;
+-
+-	return 0;
+-}
+-
+-static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
+-{
+-	int i, vectors;
+-
+-	vectors = pci_enable_msi_range(ioa_cfg->pdev, 1, ipr_number_of_msix);
+-	if (vectors < 0) {
+-		ipr_wait_for_pci_err_recovery(ioa_cfg);
+-		return vectors;
+-	}
+-
+-	for (i = 0; i < vectors; i++)
+-		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
+-	ioa_cfg->nvectors = vectors;
+-
+-	return 0;
+-}
+-
+ static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
+ {
+ 	int vec_idx, n = sizeof(ioa_cfg->vectors_info[0].desc) - 1;
+@@ -9850,19 +9799,20 @@ static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
+ 	}
+ }
+ 
+-static int ipr_request_other_msi_irqs(struct ipr_ioa_cfg *ioa_cfg)
++static int ipr_request_other_msi_irqs(struct ipr_ioa_cfg *ioa_cfg,
++		struct pci_dev *pdev)
+ {
+ 	int i, rc;
+ 
+ 	for (i = 1; i < ioa_cfg->nvectors; i++) {
+-		rc = request_irq(ioa_cfg->vectors_info[i].vec,
++		rc = request_irq(pci_irq_vector(pdev, i),
+ 			ipr_isr_mhrrq,
+ 			0,
+ 			ioa_cfg->vectors_info[i].desc,
+ 			&ioa_cfg->hrrq[i]);
+ 		if (rc) {
+ 			while (--i >= 0)
+-				free_irq(ioa_cfg->vectors_info[i].vec,
++				free_irq(pci_irq_vector(pdev, i),
+ 					&ioa_cfg->hrrq[i]);
+ 			return rc;
+ 		}
+@@ -9900,8 +9850,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
+  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
+  * @pdev:		PCI device struct
+  *
+- * Description: The return value from pci_enable_msi_range() can not always be
+- * trusted.  This routine sets up and initiates a test interrupt to determine
++ * Description: This routine sets up and initiates a test interrupt to determine
+  * if the interrupt is received via the ipr_test_intr() service routine.
+  * If the tests fails, the driver will fall back to LSI.
+  *
+@@ -9913,6 +9862,7 @@ static int ipr_test_msi(struct ipr_ioa_cfg *ioa_cfg, struct pci_dev *pdev)
+ 	int rc;
+ 	volatile u32 int_reg;
+ 	unsigned long lock_flags = 0;
++	int irq = pci_irq_vector(pdev, 0);
+ 
+ 	ENTER;
+ 
+@@ -9924,15 +9874,12 @@ static int ipr_test_msi(struct ipr_ioa_cfg *ioa_cfg, struct pci_dev *pdev)
+ 	int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 
+-	if (ioa_cfg->intr_flag == IPR_USE_MSIX)
+-		rc = request_irq(ioa_cfg->vectors_info[0].vec, ipr_test_intr, 0, IPR_NAME, ioa_cfg);
+-	else
+-		rc = request_irq(pdev->irq, ipr_test_intr, 0, IPR_NAME, ioa_cfg);
++	rc = request_irq(irq, ipr_test_intr, 0, IPR_NAME, ioa_cfg);
+ 	if (rc) {
+-		dev_err(&pdev->dev, "Can not assign irq %d\n", pdev->irq);
++		dev_err(&pdev->dev, "Can not assign irq %d\n", irq);
+ 		return rc;
+ 	} else if (ipr_debug)
+-		dev_info(&pdev->dev, "IRQ assigned: %d\n", pdev->irq);
++		dev_info(&pdev->dev, "IRQ assigned: %d\n", irq);
+ 
+ 	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.sense_interrupt_reg32);
+ 	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg);
+@@ -9949,10 +9896,7 @@ static int ipr_test_msi(struct ipr_ioa_cfg *ioa_cfg, struct pci_dev *pdev)
+ 
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 
+-	if (ioa_cfg->intr_flag == IPR_USE_MSIX)
+-		free_irq(ioa_cfg->vectors_info[0].vec, ioa_cfg);
+-	else
+-		free_irq(pdev->irq, ioa_cfg);
++	free_irq(irq, ioa_cfg);
+ 
+ 	LEAVE;
+ 
+@@ -9976,6 +9920,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+ 	int rc = PCIBIOS_SUCCESSFUL;
+ 	volatile u32 mask, uproc, interrupts;
+ 	unsigned long lock_flags, driver_lock_flags;
++	unsigned int irq_flag;
+ 
+ 	ENTER;
+ 
+@@ -10091,18 +10036,18 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+ 		ipr_number_of_msix = IPR_MAX_MSIX_VECTORS;
+ 	}
+ 
+-	if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
+-			ipr_enable_msix(ioa_cfg) == 0)
+-		ioa_cfg->intr_flag = IPR_USE_MSIX;
+-	else if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI &&
+-			ipr_enable_msi(ioa_cfg) == 0)
+-		ioa_cfg->intr_flag = IPR_USE_MSI;
+-	else {
+-		ioa_cfg->intr_flag = IPR_USE_LSI;
+-		ioa_cfg->clear_isr = 1;
+-		ioa_cfg->nvectors = 1;
+-		dev_info(&pdev->dev, "Cannot enable MSI.\n");
++	irq_flag = PCI_IRQ_LEGACY;
++	if (ioa_cfg->ipr_chip->has_msi)
++		irq_flag |= PCI_IRQ_MSI | PCI_IRQ_MSIX;
++	rc = pci_alloc_irq_vectors(pdev, 1, ipr_number_of_msix, irq_flag);
++	if (rc < 0) {
++		ipr_wait_for_pci_err_recovery(ioa_cfg);
++		goto cleanup_nomem;
+ 	}
++	ioa_cfg->nvectors = rc;
++
++	if (!pdev->msi_enabled && !pdev->msix_enabled)
++		ioa_cfg->clear_isr = 1;
+ 
+ 	pci_set_master(pdev);
+ 
+@@ -10115,33 +10060,22 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+ 		}
+ 	}
+ 
+-	if (ioa_cfg->intr_flag == IPR_USE_MSI ||
+-	    ioa_cfg->intr_flag == IPR_USE_MSIX) {
++	if (pdev->msi_enabled || pdev->msix_enabled) {
+ 		rc = ipr_test_msi(ioa_cfg, pdev);
+-		if (rc == -EOPNOTSUPP) {
++		switch (rc) {
++		case 0:
++			dev_info(&pdev->dev,
++				"Request for %d MSI%ss succeeded.", ioa_cfg->nvectors,
++				pdev->msix_enabled ? "-X" : "");
++			break;
++		case -EOPNOTSUPP:
+ 			ipr_wait_for_pci_err_recovery(ioa_cfg);
+-			if (ioa_cfg->intr_flag == IPR_USE_MSI) {
+-				ioa_cfg->intr_flag &= ~IPR_USE_MSI;
+-				pci_disable_msi(pdev);
+-			 } else if (ioa_cfg->intr_flag == IPR_USE_MSIX) {
+-				ioa_cfg->intr_flag &= ~IPR_USE_MSIX;
+-				pci_disable_msix(pdev);
+-			}
++			pci_free_irq_vectors(pdev);
+ 
+-			ioa_cfg->intr_flag = IPR_USE_LSI;
+ 			ioa_cfg->nvectors = 1;
+-		}
+-		else if (rc)
++			break;
++		default:
+ 			goto out_msi_disable;
+-		else {
+-			if (ioa_cfg->intr_flag == IPR_USE_MSI)
+-				dev_info(&pdev->dev,
+-					"Request for %d MSIs succeeded with starting IRQ: %d\n",
+-					ioa_cfg->nvectors, pdev->irq);
+-			else if (ioa_cfg->intr_flag == IPR_USE_MSIX)
+-				dev_info(&pdev->dev,
+-					"Request for %d MSIXs succeeded.",
+-					ioa_cfg->nvectors);
+ 		}
+ 	}
+ 
+@@ -10189,15 +10123,13 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+ 	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 
+-	if (ioa_cfg->intr_flag == IPR_USE_MSI
+-			|| ioa_cfg->intr_flag == IPR_USE_MSIX) {
++	if (pdev->msi_enabled || pdev->msix_enabled) {
+ 		name_msi_vectors(ioa_cfg);
+-		rc = request_irq(ioa_cfg->vectors_info[0].vec, ipr_isr,
+-			0,
++		rc = request_irq(pci_irq_vector(pdev, 0), ipr_isr, 0,
+ 			ioa_cfg->vectors_info[0].desc,
+ 			&ioa_cfg->hrrq[0]);
+ 		if (!rc)
+-			rc = ipr_request_other_msi_irqs(ioa_cfg);
++			rc = ipr_request_other_msi_irqs(ioa_cfg, pdev);
+ 	} else {
+ 		rc = request_irq(pdev->irq, ipr_isr,
+ 			 IRQF_SHARED,
+@@ -10239,10 +10171,7 @@ cleanup_nolog:
+ 	ipr_free_mem(ioa_cfg);
+ out_msi_disable:
+ 	ipr_wait_for_pci_err_recovery(ioa_cfg);
+-	if (ioa_cfg->intr_flag == IPR_USE_MSI)
+-		pci_disable_msi(pdev);
+-	else if (ioa_cfg->intr_flag == IPR_USE_MSIX)
+-		pci_disable_msix(pdev);
++	pci_free_irq_vectors(pdev);
+ cleanup_nomem:
+ 	iounmap(ipr_regs);
+ out_disable:
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index cdb5196..ec4110e 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -1411,10 +1411,7 @@ struct ipr_chip_cfg_t {
+ struct ipr_chip_t {
+ 	u16 vendor;
+ 	u16 device;
+-	u16 intr_type;
+-#define IPR_USE_LSI			0x00
+-#define IPR_USE_MSI			0x01
+-#define IPR_USE_MSIX			0x02
++	bool has_msi;
+ 	u16 sis_type;
+ #define IPR_SIS32			0x00
+ #define IPR_SIS64			0x01
+@@ -1589,11 +1586,9 @@ struct ipr_ioa_cfg {
+ 	struct ipr_cmnd **ipr_cmnd_list;
+ 	dma_addr_t *ipr_cmnd_list_dma;
+ 
+-	u16 intr_flag;
+ 	unsigned int nvectors;
+ 
+ 	struct {
+-		unsigned short vec;
+ 		char desc[22];
+ 	} vectors_info[IPR_MAX_MSIX_VECTORS];
+ 
+-- 
+2.1.4
 
-and of_irq_parse_and_map_pci() returned zero, probably because
-of_irq_parse_pci() failed.  My guess is that the reason it works on
-your machine but not Dongdong's is that your DTs are different such
-that of_irq_parse_pci() works for you but not for Dongdong.
-
-I think the idea of of_irq_parse_and_map_pci() is to set up a device's
-INTx line.  But that doesn't quite apply here because your device
-doesn't actually *use* INTx.  So I don't know why of_irq_parse_pci()
-works for you.  Maybe that's a symptom of a problem in your DT.
-
-Or maybe you're saying that the quirk *didn't* work on your machine
-when you tested it in a kernel that included d8ed75d59332 ("ARM64:
-PCI: ACPI support for legacy IRQs parsing and consolidation with DT
-code").   But that doesn't make sense either, because prior to
-d8ed75d59332, we *always* set
-
-  dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-
-and after the patch we only do it if "acpi_disabled".  I guess I just
-don't understand what you're saying.
-
-> I were keep thinking what your "explicitly checking for a root port device" meaning. Do you mean I should upload again the first version patch which fix it in the portdrv_core.c ? I would upload again if yes. 
-
-No, I did not mean you should go back to the first version of the
-patch.  If we *can* do this in a quirk, I think that would be much
-better than doing it in the PCIe port driver.  I meant that Dongdong's
-suggestion of adding this:
-
-  if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
-    return;
-
-to your quirk made sense to me.
-
-> >  -----Original Message-----
-> >  From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> >  Sent: Saturday, July 30, 2016 6:42 AM
-> >  To: Po Liu
-> >  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> >  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Roy Zang; Arnd
-> >  Bergmann; Marc Zyngier; Stuart Yoder; Yang-Leo Li; Minghuan Lian; Murali
-> >  Karicheri; Bjorn Helgaas; Shawn Guo; Mingkai Hu
-> >  Subject: Re: [PATCH v3 2/2] pci/aer: interrupt fixup in the quirk
-> >  
-> >  On Tue, Jun 14, 2016 at 04:24:05PM +0800, Po Liu wrote:
-> >  > On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
-> >  > When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
-> >  > maybe there is interrupt line for aer pme etc. Search the interrupt
-> >  > number in the fdt file. Then fixup the dev->irq with it.
-> >  >
-> >  > Signed-off-by: Po Liu <po.liu@nxp.com>
-> >  
-> >  I'm not sure where we're at with this.  Dongdong had some issue
-> >  (possibly with a version of the quirk on a different platform?), and I
-> >  think the suggestion of explicitly checking for a root port device was a
-> >  good one.
-> >  
-> >  So please update and repost this for next cycle.
-> >  
-> >  > ---
-> >  > changes for V3:
-> >  > 	- Move to quirk;
-> >  > 	- Only correct the irq in RC mode;
-> >  >
-> >  >  drivers/pci/quirks.c | 29 +++++++++++++++++++++++++++++
-> >  >  1 file changed, 29 insertions(+)
-> >  >
-> >  > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
-> >  > ee72ebe..8b39cce 100644
-> >  > --- a/drivers/pci/quirks.c
-> >  > +++ b/drivers/pci/quirks.c
-> >  > @@ -25,6 +25,7 @@
-> >  >  #include <linux/sched.h>
-> >  >  #include <linux/ktime.h>
-> >  >  #include <linux/mm.h>
-> >  > +#include <linux/of_irq.h>
-> >  >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-> >  >  #include "pci.h"
-> >  >
-> >  > @@ -4419,3 +4420,31 @@ static void quirk_intel_qat_vf_cap(struct
-> >  pci_dev *pdev)
-> >  >  	}
-> >  >  }
-> >  >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443,
-> >  > quirk_intel_qat_vf_cap);
-> >  > +
-> >  > +/* If root port doesn't support MSI/MSI-X/INTx in RC mode,
-> >  > + * but use standalone irq. Read the device tree for the aer
-> >  > + * interrupt number.
-> >  > + */
-> >  > +static void quirk_aer_interrupt(struct pci_dev *dev) {
-> >  > +	int ret;
-> >  > +	u8 header_type;
-> >  > +	struct device_node *np = NULL;
-> >  > +
-> >  > +	/* Only for the RC mode device */
-> >  > +	pci_read_config_byte(dev, PCI_HEADER_TYPE, &header_type);
-> >  > +	if ((header_type & 0x7F) != PCI_HEADER_TYPE_BRIDGE)
-> >  > +		return;
-> >  > +
-> >  > +	if (dev->bus->dev.of_node)
-> >  > +		np = dev->bus->dev.of_node;
-> >  > +
-> >  > +	if (IS_ENABLED(CONFIG_OF_IRQ) && np) {
-> >  > +		ret = of_irq_get_byname(np, "aer");
-> >  > +		if (ret > 0) {
-> >  > +			dev->no_msi = 1;
-> >  > +			dev->irq = ret;
-> >  > +		}
-> >  > +	}
-> >  > +}
-> >  > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
-> >  > +quirk_aer_interrupt);
-> >  > --
-> >  > 2.1.0.27.g96db324
-> >  >
-> >  >
-> >  > _______________________________________________
-> >  > linux-arm-kernel mailing list
-> >  > linux-arm-kernel@lists.infradead.org
-> >  > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
