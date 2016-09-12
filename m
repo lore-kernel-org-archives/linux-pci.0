@@ -1,51 +1,30 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <tony.luck@intel.com>
+Return-Path: <tony.luck@intel.com>
+From: "Luck, Tony" <tony.luck@intel.com>
+To: "Derrick, Jonathan" <jonathan.derrick@intel.com>, "Wang, Rui Y"
+	<rui.y.wang@intel.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, "tglx@linutronix.de"
+	<tglx@linutronix.de>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+	"mingo@kernel.org" <mingo@kernel.org>, "bp@alien8.de" <bp@alien8.de>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"peterz@infradead.org" <peterz@infradead.org>, "helgaas@kernel.org"
+	<helgaas@kernel.org>, "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] x86/ioapic: Ignore root bridges without a companion
+ ACPI device
+Date: Mon, 12 Sep 2016 21:43:23 +0000
+Message-ID: <3908561D78D1C84285E8C5FCA982C28F3A1C7E09@ORSMSX114.amr.corp.intel.com>
+References: <1473522046-31329-1-git-send-email-rui.y.wang@intel.com>
+ <20160912212537.GA1740@localhost.localdomain>
+In-Reply-To: <20160912212537.GA1740@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <5ee9b263-ed42-ee16-057e-2f4c1d2c1dc6@codeaurora.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609300844.24325.linux@rainbow-software.org> <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
- <201609301756.25894.linux@rainbow-software.org> <94aee80e-f7c3-5732-ef1e-08e3ecb19e5e@codeaurora.org>
- <CAJZ5v0jr=KEfjo3HH6M2WhPCPCB9w1DYGB_VHhXDJXwjh76Pmg@mail.gmail.com> <5ee9b263-ed42-ee16-057e-2f4c1d2c1dc6@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 30 Sep 2016 23:04:23 +0200
-Message-ID: <CAJZ5v0isjggpiSnFYy_1omEorTD6HSWe2jCsRmvugyH6qiYq2g@mail.gmail.com>
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-        Ondrej Zary <linux@rainbow-software.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
-        ravikanth.nalla@hpe.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 30, 2016 at 10:24 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 9/30/2016 3:39 PM, Rafael J. Wysocki wrote:
->>> how do we feel about increasing the ISA IRQ range to 256 so that
->>> > we are safe for all SCI interrupts?
->> I'm not sure how this is related to the problem at hand.  Care to elaborate?
->>
->
-> Sure, let me explain.
->
+> What branch is this based on? I can't find the relevant code/commits
 
-[cut]
+tip tree. branch x86/apic
 
->
-> I hope it makes sense now. I tend to skip details sometimes. Feel free to
-> send more questions.
-
-Thanks for the information!
-
-IIUC, basically, what you are proposing would be to restore the old
-penalizing method for IRQs in the 0-255 range and use the new approach
-for the rest, right?
-
-What's the drawback, if any?
-
-Thanks,
-Rafael
+-Tony
