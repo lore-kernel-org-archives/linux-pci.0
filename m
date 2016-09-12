@@ -1,203 +1,268 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>
-CC: "robh@kernel.org" <robh@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        Soren Brinkmann <sorenb@xilinx.com>,
-        Michal Simek <michals@xilinx.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        "Ley Foon Tan" <lftan@altera.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Murali Karicheri <m-karicheri2@ti.com>
-Subject: RE: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
- device for legacy interrupts.
-Date: Wed, 14 Sep 2016 05:34:19 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258D6182@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
- <57C57975.7040306@arm.com>
- <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57C59FE8.30307@arm.com>
- <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57C6B7F1.5000001@arm.com>
- <8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160912220241.GG23532@localhost> <57D7ADA8.5060201@arm.com>
- <20160913150511.GC27748@localhost> <20160913153402.GA4138@localhost>
-In-Reply-To: <20160913153402.GA4138@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V11 5/8] irqchip/gicv3-its: Refactor ITS DT init code to prepare for ACPI
+Date: Mon, 12 Sep 2016 20:32:24 +0200
+Message-Id: <1473705147-6588-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> [+cc Ley Foon (altera), Thomas (aardvark), Kishon (dra7xx), Murali (keyst=
-one)]
->=20
-> On Tue, Sep 13, 2016 at 10:05:11AM -0500, Bjorn Helgaas wrote:
-> > On Tue, Sep 13, 2016 at 08:41:28AM +0100, Marc Zyngier wrote:
-> > > On 12/09/16 23:02, Bjorn Helgaas wrote:
-> > > > On Thu, Sep 01, 2016 at 05:19:55AM +0000, Bharat Kumar Gogada wrote=
-:
-> > > >>>>>>> Hi Bharat,
-> > > >>>>>>>> @@ -561,7 +561,7 @@ static int
-> > > >>>>>>>> nwl_pcie_init_irq_domain(struct nwl_pcie
-> > > >>>>>>> *pcie)
-> > > >>>>>>>>     }
-> > > >>>>>>>>
-> > > >>>>>>>>     pcie->legacy_irq_domain =3D
-> irq_domain_add_linear(legacy_intc_node,
-> > > >>>>>>>> -                                                   INTX_NUM=
-,
-> > > >>>>>>>> +
-> > > >>>>>>>> + INTX_NUM + 1,
-> > > >>>>>>>>                                                     &legacy_=
-domain_ops,
-> > > >>>>>>>>                                                     pcie);
-> > > >>>>>>>
-> > > >>>>>>> This feels like the wrong thing to do. You have INTX_NUM
-> > > >>>>>>> irqs, so the domain allocation should reflect this. On the
-> > > >>>>>>> other hand, the way the driver currently deals with mappings
-> > > >>>>>>> is quite broken (consistently adding 1 to
-> > > >>>>> the HW interrupt).
-> > > >>>>>>>
-> > > >>>>>> Hi Marc,
-> > > >>>>>>
-> > > >>>>>> Without above change I get following crash in kernel while boo=
-ting.
-> > > >>>>>>
-> > > >>>>>> [    2.441684] error: hwirq 0x4 is too large for dummy
-> > > >>>>>>
-> > > >>>>>> [    2.441694] ------------[ cut here ]------------
-> > > >>>>>>
-> > > >>>>>> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
-> > > >>>>>>
-> > > >>>>>> [    2.441702] Modules linked in:
-> > > >>>>>>
-> > > >>>>>> [    2.441706]
-> > > >>>>>>
-> > > >>>>>> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0=
- #8
-> > > >>>>>>
-> > > >>>>>> [    2.441718] Hardware name: xlnx,zynqmp (DT)
-> > > >>>>>>
-> > > >>>>>> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 tas=
-k.ti:
-> > > >>>>> ffffffc071888000
-> > > >>>>>>
-> > > >>>>>> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
-> > > >>>>>>
-> > > >>>>>> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
-> > > >>>>>>
-> > > >>>>>> In kernel/irq/irqdomain.c function irq_domain_associate
-> > > >>>>>>
-> > > >>>>>> if (WARN(hwirq >=3D domain->hwirq_max,
-> > > >>>>>>                  "error: hwirq 0x%x is too large for %s\n",
-> > > >>>>>> (int)hwirq, domain-
-> > > >>>> name))
-> > > >>>>>>                 return -EINVAL;
-> > > >>>>>>
-> > > >>>>>> Here the hwirq and hwirq_max are equal to 4 without the above
-> > > >>>>>> condition
-> > > >>>>> (INTX_NUM + 1) due to which crash is coming.
-> > > >>>>>> This is happening as the legacy interrupts are starting from 1=
- (INTA).
-> > > >>>>>
-> > > >>>>> I understood that. I'm still persisting in saying that you have=
- the wrong
-> fix.
-> > > >>>>>
-> > > >>>>> Your domain should always allocate many interrupts as you have
-> > > >>>>> interrupt sources. These interrupts (hwirq) should be numbered
-> > > >>>>> from 0 to (n-
-> > > >>> 1).
-> > > >>>>
-> > > >>>> Agreed, but here comes the problem the hwirq for legacy
-> > > >>>> interrupts will start at 0x1 to 0x4 (INTA to INTD) and these
-> > > >>>> values are as per PCIe specification for legacy interrupts. So
-> > > >>>> these cannot be numbered from 0. So when 0x4 (INTD) for a
-> > > >>>> multi-function device comes the crash occurs.
-> > > >>>
-> > > >>> So who provides this hwirq? Who calls irq_domain_associate()
-> > > >>> with hwirq set to 4?
-> > > >>>
-> > > >> PCIe subsystem invokes pcibios_add_device function in
-> arch/arm64/kernel/pci.c for every pci device.
-> > > >> The purpose of this function is to assign dev->irq using
-> of_irq_parse_and_map_pci.
-> > > >> of_irq_parse_and_map_pci invokes of_irq_parse_pci where it reads
-> > > >> PCI_INTERRUPT_PIN from configuration space and saves it in paramet=
-er
-> of struct of_phandle_args.
-> > > >> This structure is passed to irq_create_of_mapping where it invokes
-> irq_create_fwspec_mapping.
-> > > >> irq_create_fwspec_mapping invokes irq_domain_translate and gets
-> > > >> hwirq, here the above saved PCI_INTERRUPT_PIN value is assigned to
-> hwirq (*hwirq =3D fwspec->param[0]).
-> > > >> And then using this hwirq irq_create_mapping -> irq_domain_associa=
-te
-> were invoked and mapping is created for virtual irq with this hwirq.
-> > > >> So for any end point PCI_INTERRUPT_PIN value starts from 0x1 to 0x=
-4
-> and so hwirq starts from 0x1 to 0x4.
-> > > >>
-> > > >> So the values are more generic w.r.t to protocol, that's why hwirq=
- will
-> range from 0x1 to 0x4.
-> > > >> And then if you check pcie-altera.c they are doing this adding one=
- in their
-> handler and while creating legacy domain.
-> > > >
-> > > > Is this resolved yet?  Marc, are you happy, or should we iterate
-> > > > on this again?
-> > >
-> > > Ah, sorry to have dropped the ball on this patch.
-> >
-> > No problem, I wasn't making forward progress anyway.
-> >
-> > > I guess that given that the infrastructure imposes the hwirq range
-> > > on the host drivers, Bharat's approach is the only way (and a number
-> > > of other host drivers are already slightly broken). I'll try and
-> > > have a look at solving this at the generic level. In the meantime:
-> > >
-> > > Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> >
-> > After looking at this myself, I'm not happy with this either.  It
-> > feels like there are bugs lurking here and we're just hiding one of the=
-m.
-> >
-> > Here are the callers of irq_domain_add_linear() for legacy INTx in
-> > drivers/pci/host:
-> >
-> >   advk_pcie_init_irq_domain    LEGACY_IRQ_NUM   (4)
-> >   dra7xx_pcie_init_irq_domain  4
-> >   ks_dw_pcie_host_init         MAX_LEGACY_IRQS  (4)
-> >   altera_pcie_init_irq_domain  INTX_NUM + 1     (5)
-> >   nwl_pcie_init_irq_domain     INTX_NUM + 1     (5)
-> >   xilinx_pcie_init_irq_domain  4
->=20
-> The altera change corresponding to this was 99496bd2971f ("PCI: altera: F=
-ix
-> error when INTx is 4").  I should have noticed this inconsistency back th=
-en.
->=20
-> Are aardvark, dra7xx, keystone, and xilinx (non-NWL) broken because they =
-only
-> request 4 IRQs and only INTA, INTB, and INTC work?
->=20
-Hi Bjorn,
+In order to add ACPI support we need to isolate ACPI&DT common code and
+move DT logic to corresponding functions. To achieve this we are using
+firmware agnostic handle which can be unpacked to either DT or ACPI node.
 
-xilinx (non-NWL) will also work with all 4 INTA, INTB, INTc and INTD, but I=
- haven't sent patches
-for this yet, because by that time marc has already raised issue regarding =
-the fix w.r.t this. So
-once a proper fix was agreed upon for Xilinx-nwl, I will send fix for this =
-also.
+No functional changes other than a very minor one:
+1. Terminate its_init call with -ENODEV for non-DT case which allows
+to remove hack from its-gic-v3.c.
+2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
+as a bonus we get nice string formatting.
+3. Since there is only one of ITS parent domain convert it to static global
+variable and drop the parameter from its_probe_one. Users can refer to it
+in more convenient way then.
 
-Thanks & Regards,
-Bharat
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c   | 65 ++++++++++++++++++++++----------------
+ drivers/irqchip/irq-gic-v3.c       |  7 ++--
+ include/linux/irqchip/arm-gic-v3.h |  4 +--
+ 3 files changed, 42 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 943442d..c7518c7 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -75,7 +75,7 @@ struct its_node {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	entry;
+ 	void __iomem		*base;
+-	unsigned long		phys_base;
++	phys_addr_t		phys_base;
+ 	struct its_cmd_block	*cmd_base;
+ 	struct its_cmd_block	*cmd_write;
+ 	struct its_baser	tables[GITS_BASER_NR_REGS];
+@@ -115,6 +115,7 @@ struct its_device {
+ static LIST_HEAD(its_nodes);
+ static DEFINE_SPINLOCK(its_lock);
+ static struct rdists *gic_rdists;
++static struct irq_domain *its_parent;
+ 
+ #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
+ #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
+@@ -1614,8 +1615,7 @@ static void its_enable_quirks(struct its_node *its)
+ 	gic_enable_quirks(iidr, its_quirks, its);
+ }
+ 
+-static int its_init_domain(struct device_node *node, struct its_node *its,
+-			   struct irq_domain *parent)
++static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
+ {
+ 	struct irq_domain *inner_domain;
+ 	struct msi_domain_info *info;
+@@ -1624,13 +1624,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	if (!info)
+ 		return -ENOMEM;
+ 
+-	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
+ 	if (!inner_domain) {
+ 		kfree(info);
+ 		return -ENOMEM;
+ 	}
+ 
+-	inner_domain->parent = parent;
++	inner_domain->parent = its_parent;
+ 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 	info->ops = &its_msi_domain_ops;
+ 	info->data = its;
+@@ -1639,43 +1639,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
+ 	return 0;
+ }
+ 
+-static int __init its_probe(struct device_node *node,
+-			    struct irq_domain *parent)
++static int __init its_probe_one(struct resource *res,
++				struct fwnode_handle *handle, int numa_node)
+ {
+-	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+ 
+-	err = of_address_to_resource(node, 0, &res);
+-	if (err) {
+-		pr_warn("%s: no regs?\n", node->full_name);
+-		return -ENXIO;
+-	}
+-
+-	its_base = ioremap(res.start, resource_size(&res));
++	its_base = ioremap(res->start, resource_size(res));
+ 	if (!its_base) {
+-		pr_warn("%s: unable to map registers\n", node->full_name);
++		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
+ 		return -ENOMEM;
+ 	}
+ 
+ 	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
+ 	if (val != 0x30 && val != 0x40) {
+-		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
++		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
+ 		err = -ENODEV;
+ 		goto out_unmap;
+ 	}
+ 
+ 	err = its_force_quiescent(its_base);
+ 	if (err) {
+-		pr_warn("%s: failed to quiesce, giving up\n",
+-			node->full_name);
++		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
+ 		goto out_unmap;
+ 	}
+ 
+-	pr_info("ITS: %s\n", node->full_name);
++	pr_info("ITS %pR\n", res);
+ 
+ 	its = kzalloc(sizeof(*its), GFP_KERNEL);
+ 	if (!its) {
+@@ -1687,9 +1679,9 @@ static int __init its_probe(struct device_node *node,
+ 	INIT_LIST_HEAD(&its->entry);
+ 	INIT_LIST_HEAD(&its->its_device_list);
+ 	its->base = its_base;
+-	its->phys_base = res.start;
++	its->phys_base = res->start;
+ 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+-	its->numa_node = of_node_to_nid(node);
++	its->numa_node = numa_node;
+ 
+ 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+ 	if (!its->cmd_base) {
+@@ -1736,7 +1728,7 @@ static int __init its_probe(struct device_node *node,
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	err = its_init_domain(node, its, parent);
++	err = its_init_domain(handle, its);
+ 	if (err)
+ 		goto out_free_tables;
+ 
+@@ -1754,7 +1746,7 @@ out_free_its:
+ 	kfree(its);
+ out_unmap:
+ 	iounmap(its_base);
+-	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
++	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
+ 	return err;
+ }
+ 
+@@ -1782,10 +1774,10 @@ static struct of_device_id its_device_id[] = {
+ 	{},
+ };
+ 
+-int __init its_init(struct device_node *node, struct rdists *rdists,
+-	     struct irq_domain *parent_domain)
++static int __init its_of_probe(struct device_node *node)
+ {
+ 	struct device_node *np;
++	struct resource res;
+ 
+ 	for (np = of_find_matching_node(node, its_device_id); np;
+ 	     np = of_find_matching_node(np, its_device_id)) {
+@@ -1795,8 +1787,27 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
+ 			continue;
+ 		}
+ 
+-		its_probe(np, parent_domain);
++		if (of_address_to_resource(np, 0, &res)) {
++			pr_warn("%s: no regs?\n", np->full_name);
++			continue;
++		}
++
++		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
+ 	}
++	return 0;
++}
++
++int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
++		    struct irq_domain *parent_domain)
++{
++	struct device_node *of_node;
++
++	its_parent = parent_domain;
++	of_node = to_of_node(handle);
++	if (of_node)
++		its_of_probe(of_node);
++	else
++		return -ENODEV;
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index ede5672..1efc02a 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -910,7 +910,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 				 u64 redist_stride,
+ 				 struct fwnode_handle *handle)
+ {
+-	struct device_node *node;
+ 	u32 typer;
+ 	int gic_irqs;
+ 	int err;
+@@ -951,10 +950,8 @@ static int __init gic_init_bases(void __iomem *dist_base,
+ 
+ 	set_handle_irq(gic_handle_irq);
+ 
+-	node = to_of_node(handle);
+-	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
+-	    node) /* Temp hack to prevent ITS init for ACPI */
+-		its_init(node, &gic_data.rdists, gic_data.domain);
++	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis())
++		its_init(handle, &gic_data.rdists, gic_data.domain);
+ 
+ 	gic_smp_init();
+ 	gic_dist_init();
+diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+index 99ac022..8361c8d 100644
+--- a/include/linux/irqchip/arm-gic-v3.h
++++ b/include/linux/irqchip/arm-gic-v3.h
+@@ -430,9 +430,9 @@ struct rdists {
+ };
+ 
+ struct irq_domain;
+-struct device_node;
++struct fwnode_handle;
+ int its_cpu_init(void);
+-int its_init(struct device_node *node, struct rdists *rdists,
++int its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	     struct irq_domain *domain);
+ 
+ static inline bool gic_enable_sre(void)
+-- 
+1.9.1
