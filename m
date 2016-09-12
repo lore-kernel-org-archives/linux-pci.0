@@ -1,91 +1,77 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Aaron Durbin <adurbin@google.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v2 1/2] PCI: Add pci_find_resource()
-Date: Thu, 15 Sep 2016 11:07:03 +0300
-Message-Id: <20160915080704.129892-1-mika.westerberg@linux.intel.com>
-In-Reply-To: <CAJZ5v0jqk_5wr1qDhiX9+V3o3f1J74hBm8Pf=6gt4kmvX0_5EQ@mail.gmail.com>
-References: <CAJZ5v0jqk_5wr1qDhiX9+V3o3f1J74hBm8Pf=6gt4kmvX0_5EQ@mail.gmail.com>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial
+ support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, rjw@rjwysocki.net
+References: <1473152938-17388-2-git-send-email-tn@semihalf.com>
+ <1473249412-20226-1-git-send-email-tn@semihalf.com>
+ <20160909092012.GC19669@red-moon>
+Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+ helgaas@kernel.org, rafael@kernel.org, will.deacon@arm.com,
+ catalin.marinas@arm.com, hanjun.guo@linaro.org, shijie.huang@arm.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+ okaya@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com>
+Date: Mon, 12 Sep 2016 14:37:06 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160909092012.GC19669@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a new helper function pci_find_resource() that can be used to find out
-whether a given resource (for example from a child device) is contained
-within given PCI device's standard resources.
+Hi Rafael,
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
-Changes from v1:
-  - Removed check for NULL res
-  - Added Bjorn's ACK
+On 09.09.2016 11:20, Lorenzo Pieralisi wrote:
+> Hi Rafael,
+>
+> On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
+>> IORT shows representation of IO topology for ARM based systems.
+>> It describes how various components are connected together on
+>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>>
+>> Initial support allows to detect IORT table presence and save its
+>> root pointer obtained through acpi_get_table(). The pointer validity
+>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+>> is not set while using IORT nodes we would dereference unmapped pointers.
+>>
+>> For the aforementioned reason call iort_table_detect() from acpi_init()
+>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+>>
+>> Add generic helpers which are helpful for scanning and retrieving
+>> information from IORT table content. List of the most important helpers:
+>> - iort_find_dev_node() finds IORT node for a given device
+>> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>>   final translation
+>>
+>> IORT support is placed under drivers/acpi/arm64/ new directory due to its
+>> ARM64 specific nature. The code there is considered only for ARM64.
+>> The long term plan is to keep all ARM64 specific tables support
+>> in this place e.g. GTDT table.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> ---
+>
+> Apart from the minor commit logs oversights we consider these two
+> patches ready to go, please let us know if there is something you want
+> changed since we are at risk of missing yet another merge window.
+>
+> It is ARM64 specific code, we created and moved the code to its
+> ARM64 specific directory and we are happy to maintain it as such,
+> we need your ACK to get this done so if there is something you
+> want changed please let us know otherwise I would ask your ACK
+> on these two patches to give Marc a go-ahead for -next and
+> hopefully 4.9.
 
- drivers/pci/pci.c   | 24 ++++++++++++++++++++++++
- include/linux/pci.h |  4 ++++
- 2 files changed, 28 insertions(+)
+Kindly reminder. Is there anything we need to do more about these 
+patches? Please let us know. Note this is the major thing for incoming 
+IORT more advance feature.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d5115a5f..415956c5c593 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -480,6 +480,30 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
- /**
-+ * pci_find_resource - Return matching PCI device resource
-+ * @dev: PCI device to query
-+ * @res: Resource to look for
-+ *
-+ * Goes over standard PCI resources (BARs) and checks if the given resource
-+ * is partially or fully contained in any of them. In that case the
-+ * matching resource is returned, %NULL otherwise.
-+ */
-+struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res)
-+{
-+	int i;
-+
-+	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (r->start && resource_contains(r, res))
-+			return r;
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(pci_find_resource);
-+
-+/**
-  * pci_find_pcie_root_port - return PCIe Root Port
-  * @dev: PCI device to query
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0ab835965669..a917d4b20554 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1126,6 +1126,7 @@ void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
- 		    int (*)(const struct pci_dev *, u8, u8));
-+struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res);
- #define HAVE_PCI_REQ_REGIONS	2
- int __must_check pci_request_regions(struct pci_dev *, const char *);
- int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
-@@ -1542,6 +1543,9 @@ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  int enable)
- { return 0; }
- 
-+static inline struct resource *pci_find_resource(struct pci_dev *dev,
-+						 struct resource *res)
-+{ return NULL; }
- static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
- { return -EIO; }
- static inline void pci_release_regions(struct pci_dev *dev) { }
--- 
-2.9.3
+Thanks,
+Tomasz
