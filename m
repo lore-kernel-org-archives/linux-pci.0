@@ -1,37 +1,26 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Zhichang Yuan <yuanzhichang@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
-        benh@kernel.crashing.org, minyard@acm.org,
-        linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
-        john.garry@huawei.com, will.deacon@arm.com, xuwei5@hisilicon.com,
-        linux-serial@vger.kernel.org, gregkh@linuxfoundation.org,
-        zourongrong@gmail.com, liviu.dudau@arm.com, kantyzc@163.com,
-        zhichang.yuan02@gmail.com
-Subject: Re: [PATCH V3 3/4] ARM64 LPC: support serial based on low-pin-count
-Date: Wed, 14 Sep 2016 14:25:54 +0200
-Message-ID: <4340181.AghlmQIy28@wuerfel>
-In-Reply-To: <1473855354-150093-4-git-send-email-yuanzhichang@hisilicon.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <1473855354-150093-4-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+Date: Mon, 12 Sep 2016 15:25:38 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: bhelgaas@google.com, tglx@linutronix.de, rjw@rjwysocki.net,
+	mingo@kernel.org, bp@alien8.de, torvalds@linux-foundation.org,
+	peterz@infradead.org, helgaas@kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	tony.luck@intel.com, x86@kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] x86/ioapic: Ignore root bridges without a companion ACPI
+ device
+Message-ID: <20160912212537.GA1740@localhost.localdomain>
+References: <1473522046-31329-1-git-send-email-rui.y.wang@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473522046-31329-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 8:15:53 PM CEST Zhichang Yuan wrote:
-> From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-> 
-> On Hip06 platform, a 16550 compatible UART is connected to low-pin-count and
-> controlled through the LPC I/O cycles. After registering the LPC uart specific
-> serial_in/serial_out to 8250 core driver, serial data can be read/written
-> through the LPC.
-> 
-> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-> 
+On Sat, Sep 10, 2016 at 11:40:45PM +0800, Rui Wang wrote:
+> Some PCI root bridges don't have a corresponding ACPI device.
+> This can be the case on some old platforms. Don't call acpi_ioapic_add()
+> on these bridges because they can't support ioapic hotplug.
+Not just old platforms. VMD is a new device which initializes a root port in software without an acpi handle.
 
-I still think this should be handled by 8250_of.c after the addition of
-support for IORESOURCE_IO.
-
-	Arnd
+What branch is this based on? I can't find the relevant code/commits
