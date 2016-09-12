@@ -1,68 +1,66 @@
-Return-Path: <liudongdong3@huawei.com>
-Return-Path: <liudongdong3@huawei.com>
-Subject: Re: [RFC PATCH V2 1/3] PCI: hisi: re-architect Hip05/Hip06
- controllers driver to preapare for ACPI
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
- <5913196.I3zIbc2qla@wuerfel> <57C822C1.9000203@huawei.com>
- <6532722.cVEMfv9Kqj@wuerfel>
-CC: <helgaas@kernel.org>, <rafael@kernel.org>, <Lorenzo.Pieralisi@arm.com>,
-        <tn@semihalf.com>, <wangzhou1@hisilicon.com>,
-        <pratyush.anand@gmail.com>, <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <jcm@redhat.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <hanjun.guo@linaro.org>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <57C8DDBD.5070103@huawei.com>
-Date: Fri, 2 Sep 2016 10:02:37 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54704 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757535AbcILVJ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 17:09:56 -0400
+Subject: [PATCH v2 8/8] PCI: pciehp: Remove useless
+ pciehp_get_latch_status() calls
+To: Mayurkumar Patel <mayurkumar.patel@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
+        linux-pci@vger.kernel.org,
+        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
+        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Luis Antonio Tarazona-Duarte
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        mika.westerberg@linux.intel.com
+Date: Mon, 12 Sep 2016 16:09:52 -0500
+Message-ID: <20160912210952.22258.67691.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <6532722.cVEMfv9Kqj@wuerfel>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
+Long ago, we updated a "switch_save" field based on the latch status.  But
+switch_save was unused, and ed6cbcf2ac70 ("[PATCH] pciehp: miscellaneous
+cleanups") removed it.
 
-在 2016/9/1 22:02, Arnd Bergmann 写道:
->
->> 2. We need to backward compatible with the old dt way config access as below code,
->> so we have to call hisi_pcie_common_cfg_read() when accessing the RC config space.
->> For this, we have to call hisi_pcie_common_cfg_read().
->>
->> drivers/pci/host/pcie-hisi.c
->> static inline int hisi_pcie_cfg_read(struct pcie_port *pp, int where,
->> 		int size, u32 *val)
->> {
->> 	struct hisi_pcie *pcie = to_hisi_pcie(pp);
->>
->> 	return hisi_pcie_common_cfg_read(pcie->reg_base, where, size, val);
->> }
->>
->> static struct pcie_host_ops hisi_pcie_host_ops = {
->> 	.rd_own_conf = hisi_pcie_cfg_read,
->> 	.wr_own_conf = hisi_pcie_cfg_write,
->> 	.link_up = hisi_pcie_link_up,
->> };
->
-> I think this would be easier if you separate the ACPI code from the
-> DT code and not try to have a common file used for both.
->
-> Sharing the config space accessors really isn't worth it when both
-> variants are fairly simple to do, but they don't fit in a common
-> model because one is called from the ACPI quirks and the other
-> is called from the dw-pcie driver with completely different calling
-> conventions.
+We no longer use the latch status, so remove calls to
+pciehp_get_latch_status().  No functional change intended.
 
-I agree, many thanks.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-Thanks
-Dongdong
->
-> 	ARnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> .
->
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index bf50f26..efe69e8 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -389,7 +389,6 @@ static void interrupt_event_handler(struct work_struct *work)
+ int pciehp_enable_slot(struct slot *p_slot)
+ {
+ 	u8 getstatus = 0;
+-	int rc;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
+ 	pciehp_get_adapter_status(p_slot, &getstatus);
+@@ -415,13 +414,7 @@ int pciehp_enable_slot(struct slot *p_slot)
+ 		}
+ 	}
+ 
+-	pciehp_get_latch_status(p_slot, &getstatus);
+-
+-	rc = board_added(p_slot);
+-	if (rc)
+-		pciehp_get_latch_status(p_slot, &getstatus);
+-
+-	return rc;
++	return board_added(p_slot);
+ }
+ 
+ /*
+
