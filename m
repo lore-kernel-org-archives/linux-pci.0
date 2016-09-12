@@ -1,117 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:30810 "EHLO mga04.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:36560 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758916AbcIMPFm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 11:05:42 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv3 2/2] x86/vmd: Add PCI domain specific LED option
-Date: Tue, 13 Sep 2016 09:05:40 -0600
-Message-Id: <1473779140-4016-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1473779140-4016-1-git-send-email-keith.busch@intel.com>
-References: <1473779140-4016-1-git-send-email-keith.busch@intel.com>
+        id S1751936AbcILWVn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 18:21:43 -0400
+Date: Mon, 12 Sep 2016 17:21:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: bhelgaas@google.com, soren.brinkmann@xilinx.com,
+        christophe.jaillet@wanadoo.fr, grygorii.strashko@ti.com,
+        yinghai@kernel.org, lorenzo.pieralisi@arm.com,
+        fengguang.wu@intel.com, michal.simek@xilinx.com, arnd@arndb.de,
+        Bharat Kumar Gogada <bharatku@xilinx.com>,
+        linux-pci@vger.kernel.org, rgummal@xilinx.com,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/6] PCI: xilinx: Keep both legacy and MSI interrupt
+ references.
+Message-ID: <20160912222138.GK23532@localhost>
+References: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new function to set PCI domain specific options as
-devices are added. The usage included in this patch is for LED indicator
-control in VMD domains, but may be extended in the future as new domain
-specific options are required.
+On Thu, Sep 01, 2016 at 03:44:41PM +0530, Bharat Kumar Gogada wrote:
+> When built with MSI support the legacy domain reference is being
+> overwritten with MSI.
+> Instead creating two separate domains for MSI and legacy interrupts.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
 
-PCIe LED Slot Control in a VMD domain is repurposed to a non-standard
-implementation. As such, all devices in a VMD domain will be flagged so
-pciehp does not attempt to use LED indicators. This user_led flag
-has pciehp provide a different sysfs entry for user exclusive control
-over the domain's slot indicators.
+I'm looking for an ack from Michal for these...
 
-In order to determine if a bus is within a PCI domain, the patch appends
-a bool to the pci_sysdata structure that the VMD driver sets during
-initialization.
-
-Requested-by: Kapil Karkra <kapil.karkra@intel.com>
-Tested-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
-
-No change from previous version of this patch; just part of the series.
-
- arch/x86/include/asm/pci.h | 14 ++++++++++++++
- arch/x86/pci/common.c      |  7 +++++++
- arch/x86/pci/vmd.c         |  1 +
- 3 files changed, 22 insertions(+)
-
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 9ab7507..1411dbe 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -23,6 +23,9 @@ struct pci_sysdata {
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- 	void		*fwnode;	/* IRQ domain for MSI assignment */
- #endif
-+#if IS_ENABLED(CONFIG_VMD)
-+	bool vmd_domain;		/* True if in Intel VMD domain */
-+#endif
- };
- 
- extern int pci_routeirq;
-@@ -56,6 +59,17 @@ static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
- #define pci_root_bus_fwnode	_pci_root_bus_fwnode
- #endif
- 
-+static inline bool is_vmd(struct pci_bus *bus)
-+{
-+#if IS_ENABLED(CONFIG_VMD)
-+	struct pci_sysdata *sd = bus->sysdata;
-+
-+	return sd->vmd_domain;
-+#else
-+	return false;
-+#endif
-+}
-+
- /* Can be used to override the logic in pci_scan_bus for skipping
-    already-configured bus numbers - to be used for buggy BIOSes
-    or architectures with incomplete PCI setup by the loader */
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 7b6a9d1..ccf696c 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -677,6 +677,12 @@ static void set_dma_domain_ops(struct pci_dev *pdev)
- static void set_dma_domain_ops(struct pci_dev *pdev) {}
- #endif
- 
-+static void set_dev_domain_options(struct pci_dev *pdev)
-+{
-+	if (is_vmd(pdev->bus))
-+		pdev->user_leds = 1;
-+}
-+
- int pcibios_add_device(struct pci_dev *dev)
- {
- 	struct setup_data *data;
-@@ -707,6 +713,7 @@ int pcibios_add_device(struct pci_dev *dev)
- 		iounmap(data);
- 	}
- 	set_dma_domain_ops(dev);
-+	set_dev_domain_options(dev);
- 	return 0;
- }
- 
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index b814ca6..a021b7b 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -596,6 +596,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		.parent = res,
- 	};
- 
-+	sd->vmd_domain = true;
- 	sd->domain = vmd_find_free_domain();
- 	if (sd->domain < 0)
- 		return sd->domain;
--- 
-2.7.2
-
+> ---
+>  drivers/pci/host/pcie-xilinx.c | 26 +++++++++++++++-----------
+>  1 file changed, 15 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index a30e016..bd64677 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -101,7 +101,8 @@
+>   * @msi_pages: MSI pages
+>   * @root_busno: Root Bus number
+>   * @dev: Device pointer
+> - * @irq_domain: IRQ domain pointer
+> + * @msi_domain: MSI IRQ domain pointer
+> + * @leg_domain: Legacy IRQ domain pointer
+>   * @resources: Bus Resources
+>   */
+>  struct xilinx_pcie_port {
+> @@ -110,7 +111,8 @@ struct xilinx_pcie_port {
+>  	unsigned long msi_pages;
+>  	u8 root_busno;
+>  	struct device *dev;
+> -	struct irq_domain *irq_domain;
+> +	struct irq_domain *msi_domain;
+> +	struct irq_domain *leg_domain;
+>  	struct list_head resources;
+>  };
+>  
+> @@ -281,7 +283,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
+>  	if (hwirq < 0)
+>  		return hwirq;
+>  
+> -	irq = irq_create_mapping(port->irq_domain, hwirq);
+> +	irq = irq_create_mapping(port->msi_domain, hwirq);
+>  	if (!irq)
+>  		return -EINVAL;
+>  
+> @@ -443,7 +445,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+>  			/* Handle INTx Interrupt */
+>  			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+>  				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
+> -			generic_handle_irq(irq_find_mapping(port->irq_domain,
+> +			generic_handle_irq(irq_find_mapping(port->leg_domain,
+>  							    val));
+>  		}
+>  	}
+> @@ -526,12 +528,14 @@ static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
+>  	}
+>  
+>  	for (i = 0; i < num_irqs; i++) {
+> -		irq = irq_find_mapping(port->irq_domain, i);
+> +		irq = irq_find_mapping(port->leg_domain, i);
+>  		if (irq > 0)
+>  			irq_dispose_mapping(irq);
+>  	}
+> -
+> -	irq_domain_remove(port->irq_domain);
+> +	if (port->leg_domain)
+> +		irq_domain_remove(port->leg_domain);
+> +	if (port->msi_domain)
+> +		irq_domain_remove(port->msi_domain);
+>  }
+>  
+>  /**
+> @@ -553,21 +557,21 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  		return -ENODEV;
+>  	}
+>  
+> -	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
+> +	port->leg_domain = irq_domain_add_linear(pcie_intc_node, 4,
+>  						 &intx_domain_ops,
+>  						 port);
+> -	if (!port->irq_domain) {
+> +	if (!port->leg_domain) {
+>  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+>  		return -ENODEV;
+>  	}
+>  
+>  	/* Setup MSI */
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -		port->irq_domain = irq_domain_add_linear(node,
+> +		port->msi_domain = irq_domain_add_linear(node,
+>  							 XILINX_NUM_MSI_IRQS,
+>  							 &msi_domain_ops,
+>  							 &xilinx_pcie_msi_chip);
+> -		if (!port->irq_domain) {
+> +		if (!port->msi_domain) {
+>  			dev_err(dev, "Failed to get a MSI IRQ domain\n");
+>  			return -ENODEV;
+>  		}
+> -- 
+> 2.1.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
