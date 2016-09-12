@@ -1,130 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:8132 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759047AbcIMQcB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 12:32:01 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv4] pciehp: Let user control LED status
-Date: Tue, 13 Sep 2016 10:31:59 -0600
-Message-Id: <1473784319-6137-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
+MIME-Version: 1.0
+In-Reply-To: <CADaLNDk0JPJYT_pqjWYwrMBvbyWkpL+6=dEDU9H9qDGMhnQvyw@mail.gmail.com>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-3-git-send-email-tn@semihalf.com> <CADaLNDk0JPJYT_pqjWYwrMBvbyWkpL+6=dEDU9H9qDGMhnQvyw@mail.gmail.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Mon, 12 Sep 2016 15:47:54 -0700
+Message-ID: <CADaLNDkforSVOADi_GpYGF7GG3M1tcdmqsGSx=F1BD3FgETHoQ@mail.gmail.com>
+Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Hanjun Guo <hanjun.guo@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
+	Jayachandran C <jchandra@broadcom.com>, Christopher Covington <cov@codeaurora.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Robert Richter <robert.richter@caviumnetworks.com>, Marcin Wojtas <mw@semihalf.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, David Daney <ddaney@caviumnetworks.com>,
+	Yijing Wang <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>, linaro-acpi@lists.linaro.org,
+	Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>, jeremy.linton@arm.com,
+	Dongdong Liu <liudongdong3@huawei.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jeffrey Hugo <jhugo@codeaurora.org>, linux-acpi@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new flag to the pci_dev structure instructing pciehp
-to not interpret PCIe slot LED indicators. The pciehp driver will instead
-allow all LED control from the user by setting the slot control indicators
-as the user requested through sysfs. This is preparing for domain devices
-that repurpose these control bits for non-standard use.
+On Mon, Sep 12, 2016 at 3:24 PM, Duc Dang <dhdang@apm.com> wrote:
+> On Fri, Sep 9, 2016 at 12:24 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>>
+>> Some platforms may not be fully compliant with generic set of PCI config
+>> accessors. For these cases we implement the way to overwrite CFG accessors
+>> set and configuration space range.
+>>
+>> In first place pci_mcfg_parse() saves machine's IDs and revision number
+>> (these come from MCFG header) in order to match against known quirk entries.
+>> Then the algorithm traverses available quirk list (static array),
+>> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
+>> returns custom PCI config ops and/or CFG resource structure.
+>>
+>> When adding new quirk there are two possibilities:
+>> 1. Override default pci_generic_ecam_ops ops but CFG resource comes from MCFG
+>> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &foo_ops, MCFG_RES_EMPTY },
+>> 2. Override default pci_generic_ecam_ops ops and CFG resource. For this case
+>> it is also allowed get CFG resource from quirk entry w/o having it in MCFG.
+>> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &boo_ops,
+>>   DEFINE_RES_MEM(START, SIZE) },
+>>
+>> pci_generic_ecam_ops and MCFG entries will be used for platforms
+>> free from quirks.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
+>> ---
+>>  drivers/acpi/pci_mcfg.c | 80 +++++++++++++++++++++++++++++++++++++++++++++----
+>>  1 file changed, 74 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>> index ffcc651..2b8acc7 100644
+>> --- a/drivers/acpi/pci_mcfg.c
+>> +++ b/drivers/acpi/pci_mcfg.c
+>> @@ -32,6 +32,59 @@ struct mcfg_entry {
+>>         u8                      bus_start;
+>>         u8                      bus_end;
+>>  };
+>> +struct mcfg_fixup {
+>> +       char oem_id[ACPI_OEM_ID_SIZE + 1];
+>> +       char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+>> +       u32 oem_revision;
+>> +       u16 seg;
+>> +       struct resource bus_range;
+>> +       struct pci_ecam_ops *ops;
+>> +       struct resource cfgres;
+>> +};
+>> +
+>> +#define MCFG_DOM_ANY                   (-1)
+>> +#define MCFG_BUS_RANGE(start, end)     DEFINE_RES_NAMED((start),       \
+>> +                                               ((end) - (start) + 1),  \
+>> +                                               NULL, IORESOURCE_BUS)
+>> +#define MCFG_BUS_ANY           MCFG_BUS_RANGE(0x0, 0xff)
+>> +#define MCFG_RES_EMPTY         DEFINE_RES_NAMED(0, 0, NULL, 0)
+>> +
+>> +static struct mcfg_fixup mcfg_quirks[] = {
+>> +/*     { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+>> +};
+>> +
+>> +static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+>> +static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
+>> +static u32 mcfg_oem_revision;
+>> +
+>> +static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
+>> +                                 struct resource *cfgres,
+>> +                                 struct pci_ecam_ops **ecam_ops)
+>> +{
+>> +       struct mcfg_fixup *f;
+>> +       int i;
+>> +
+>> +       /*
+>> +        * First match against PCI topology <domain:bus> then use OEM ID, OEM
+>> +        * table ID, and OEM revision from MCFG table standard header.
+>> +        */
+>> +       for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
+>> +               if (f->seg == root->segment &&
+>
+> Is dropping the comparison with MCFG_DOM_ANY intended? It is useful if
+> all the controllers (segs) can use the same quirk (X-Gene case).
+> If you decide to drop it, then we can remove MCFG_DOM_ANY definition as well.
+>
+>> +                   resource_contains(&f->bus_range, &root->secondary) &&
+>> +                   !memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
+>> +                   !memcmp(f->oem_table_id, mcfg_oem_table_id,
+>> +                           ACPI_OEM_TABLE_ID_SIZE) &&
+>> +                   f->oem_revision == mcfg_oem_revision) {
+>> +                       if (f->cfgres.start)
+>> +                               *cfgres = f->cfgres;
+>> +                       if (f->ops)
+>> +                               *ecam_ops =  f->ops;
+>> +                       dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
+>> +                                f->oem_id, f->oem_table_id, f->oem_revision);
+>> +                       return;
+>> +               }
+>> +       }
+>> +}
+>>
+>>  /* List to save MCFG entries */
+>>  static LIST_HEAD(pci_mcfg_list);
+>> @@ -61,14 +114,24 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
+>>
+>>         }
+>>
+>> -       if (!root->mcfg_addr)
+>> -               return -ENXIO;
+>> -
+>>  skip_lookup:
+>>         memset(&res, 0, sizeof(res));
+>> -       res.start = root->mcfg_addr + (bus_res->start << 20);
+>> -       res.end = res.start + (resource_size(bus_res) << 20) - 1;
+>> -       res.flags = IORESOURCE_MEM;
+>> +       if (root->mcfg_addr) {
+>> +               res.start = root->mcfg_addr + (bus_res->start << 20);
+>> +               res.end = res.start + (resource_size(bus_res) << 20) - 1;
+>> +               res.flags = IORESOURCE_MEM;
+>> +       }
+>> +
+>> +       /*
+>> +        * Let to override default ECAM ops and CFG resource range.
+>> +        * Also, this might even retrieve CFG resource range in case MCFG
+>> +        * does not have it. Invalid CFG start address means MCFG firmware bug
+>> +        * or we need another quirk in array.
+>> +        */
+>> +       pci_mcfg_match_quirks(root, &res, &ops);
+>> +       if (!res.start)
+>> +               return -ENXIO;
+>> +
+>>         *cfgres = res;
+>>         *ecam_ops = ops;
+>>         return 0;
+>> @@ -101,6 +164,11 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
+>>                 list_add(&e->list, &pci_mcfg_list);
+>>         }
+>>
+>> +       /* Save MCFG IDs and revision for quirks matching */
+>> +       memcpy(mcfg_oem_id, header->oem_id, ACPI_OEM_ID_SIZE);
+>> +       memcpy(mcfg_oem_table_id, header->oem_table_id, ACPI_OEM_TABLE_ID_SIZE);
+>> +       mcfg_oem_revision = header->revision;
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
-v3 -> v4:
+I think this is a typo, it should be:
+               mcfg_oem_revision = header->oem_revision;
 
-  Fixing symbol usage by generating patch from the tree that compiles
-  correctly.
-
- drivers/pci/hotplug/pciehp.h      |  5 +++++
- drivers/pci/hotplug/pciehp_core.c |  3 +++
- drivers/pci/hotplug/pciehp_hpc.c  | 27 +++++++++++++++++++++++++++
- include/linux/pci.h               |  1 +
- 4 files changed, 36 insertions(+)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index e764918..725078d 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -152,6 +152,11 @@ bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
- int pciehp_reset_slot(struct slot *slot, int probe);
- 
-+int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 status);
-+int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 *status);
-+
- static inline const char *slot_name(struct slot *slot)
- {
- 	return hotplug_slot_name(slot->hotplug_slot);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index fb0f863..68b7aeb 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -113,6 +113,9 @@ static int init_slot(struct controller *ctrl)
- 	if (ATTN_LED(ctrl)) {
- 		ops->get_attention_status = get_attention_status;
- 		ops->set_attention_status = set_attention_status;
-+	} else if (ctrl->pcie->port->user_leds) {
-+		ops->get_attention_status = pciehp_get_raw_attention_status;
-+		ops->set_attention_status = pciehp_set_raw_attention_status;
- 	}
- 
- 	/* register this slot with the hotplug pci core */
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 08e84d6..5ab8604 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -355,6 +355,18 @@ static int pciehp_link_enable(struct controller *ctrl)
- 	return __pciehp_link_set(ctrl, true);
- }
- 
-+int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 *status)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
-+	u16 slot_ctrl;
-+
-+	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-+	*status = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
-+	return 0;
-+}
-+
- void pciehp_get_attention_status(struct slot *slot, u8 *status)
- {
- 	struct controller *ctrl = slot->ctrl;
-@@ -431,6 +443,17 @@ int pciehp_query_power_fault(struct slot *slot)
- 	return !!(slot_status & PCI_EXP_SLTSTA_PFD);
- }
- 
-+int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
-+								u8 status)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+	struct controller *ctrl = slot->ctrl;
-+
-+	pcie_write_cmd_nowait(ctrl, status << 6,
-+			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
-+	return 0;
-+}
-+
- void pciehp_set_attention_status(struct slot *slot, u8 value)
- {
- 	struct controller *ctrl = slot->ctrl;
-@@ -804,6 +827,10 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	}
- 	ctrl->pcie = dev;
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-+
-+	if (pdev->user_leds)
-+		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
-+
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
- 	init_waitqueue_head(&ctrl->queue);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7256f33..f41bbca 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -308,6 +308,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
--- 
-2.7.2
-
+>> +
+>>         pr_info("MCFG table detected, %d entries\n", n);
+>>         return 0;
+>>  }
+>> --
+>> 1.9.1
+> Regards,
+> Duc Dang.
+Regards,
+Duc Dang.
