@@ -1,539 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48836 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761899AbcINLRm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 07:17:42 -0400
-Date: Wed, 14 Sep 2016 14:17:30 +0300
-From: Yuval Shaia <yuval.shaia@oracle.com>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
-        pv-drivers@vmware.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
-        georgezhang@vmware.com, bryantan@vmware.com
-Subject: Re: [PATCH v4 06/16] IB/pvrdma: Add paravirtual rdma device
-Message-ID: <20160914111729.GB15800@yuval-lap.uk.oracle.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
- <1473655766-31628-7-git-send-email-aditr@vmware.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473655766-31628-7-git-send-email-aditr@vmware.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V11 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
+Date: Mon, 12 Sep 2016 20:32:25 +0200
+Message-Id: <1473705147-6588-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-No more comments.
-Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+ITS is prepared for being initialized different than DT,
+therefore we can initialize it in ACPI way. We collect register base
+address from MADT table and pass mandatory info to firmware-agnostic
+ITS init call.
 
-On Sun, Sep 11, 2016 at 09:49:16PM -0700, Adit Ranadive wrote:
-> This patch adds the main device-level structures and functions to be used
-> to provide RDMA functionality. Also, we define conversion functions from
-> the IB core stack structures to the device-specific ones.
-> 
-> Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-> Reviewed-by: George Zhang <georgezhang@vmware.com>
-> Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-> Reviewed-by: Bryan Tan <bryantan@vmware.com>
-> Signed-off-by: Adit Ranadive <aditr@vmware.com>
-> ---
-> Changes v3->v4:
->  - Renamed pvrdma_flush_cqe to _pvrdma_flush_cqe since we hold a lock
->  to call it.
->  - Added wrapper functions for writing to UARs for CQ/QP.
->  - The conversion functions are updated as func_name(dst, src) format.
->  - Renamed max_gs to max_sg.
->  - Added work struct for net device events.
->  - priviledged -> privileged.
-> 
-> Changes v2->v3:
->  - Removed VMware vendor id redefinition.
->  - Removed the boolean in pvrdma_cmd_post.
-> ---
->  drivers/infiniband/hw/pvrdma/pvrdma.h | 473 ++++++++++++++++++++++++++++++++++
->  1 file changed, 473 insertions(+)
->  create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma.h
-> 
-> diff --git a/drivers/infiniband/hw/pvrdma/pvrdma.h b/drivers/infiniband/hw/pvrdma/pvrdma.h
-> new file mode 100644
-> index 0000000..fedd7cb
-> --- /dev/null
-> +++ b/drivers/infiniband/hw/pvrdma/pvrdma.h
-> @@ -0,0 +1,473 @@
-> +/*
-> + * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of EITHER the GNU General Public License
-> + * version 2 as published by the Free Software Foundation or the BSD
-> + * 2-Clause License. This program is distributed in the hope that it
-> + * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-> + * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-> + * See the GNU General Public License version 2 for more details at
-> + * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program available in the file COPYING in the main
-> + * directory of this source tree.
-> + *
-> + * The BSD 2-Clause License
-> + *
-> + *     Redistribution and use in source and binary forms, with or
-> + *     without modification, are permitted provided that the following
-> + *     conditions are met:
-> + *
-> + *      - Redistributions of source code must retain the above
-> + *        copyright notice, this list of conditions and the following
-> + *        disclaimer.
-> + *
-> + *      - Redistributions in binary form must reproduce the above
-> + *        copyright notice, this list of conditions and the following
-> + *        disclaimer in the documentation and/or other materials
-> + *        provided with the distribution.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-> + * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-> + * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-> + * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-> + * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-> + * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-> + * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-> + * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-> + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-> + * OF THE POSSIBILITY OF SUCH DAMAGE.
-> + */
-> +
-> +#ifndef __PVRDMA_H__
-> +#define __PVRDMA_H__
-> +
-> +#include <linux/compiler.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/list.h>
-> +#include <linux/mutex.h>
-> +#include <linux/pci.h>
-> +#include <linux/semaphore.h>
-> +#include <linux/workqueue.h>
-> +#include <rdma/ib_umem.h>
-> +#include <rdma/ib_verbs.h>
-> +
-> +#include "pvrdma_defs.h"
-> +#include "pvrdma_dev_api.h"
-> +#include "pvrdma_verbs.h"
-> +
-> +/* NOT the same as BIT_MASK(). */
-> +#define PVRDMA_MASK(n) ((n << 1) - 1)
-> +
-> +/*
-> + * VMware PVRDMA PCI device id.
-> + */
-> +#define PCI_DEVICE_ID_VMWARE_PVRDMA	0x0820
-> +
-> +struct pvrdma_dev;
-> +
-> +struct pvrdma_page_dir {
-> +	dma_addr_t dir_dma;
-> +	u64 *dir;
-> +	int ntables;
-> +	u64 **tables;
-> +	u64 npages;
-> +	void **pages;
-> +};
-> +
-> +struct pvrdma_cq {
-> +	struct ib_cq ibcq;
-> +	int offset;
-> +	spinlock_t cq_lock; /* Poll lock. */
-> +	struct pvrdma_uar_map *uar;
-> +	struct ib_umem *umem;
-> +	struct pvrdma_ring_state *ring_state;
-> +	struct pvrdma_page_dir pdir;
-> +	u32 cq_handle;
-> +	bool is_kernel;
-> +	atomic_t refcnt;
-> +	wait_queue_head_t wait;
-> +};
-> +
-> +struct pvrdma_id_table {
-> +	u32 last;
-> +	u32 top;
-> +	u32 max;
-> +	u32 mask;
-> +	spinlock_t lock; /* Table lock. */
-> +	unsigned long *table;
-> +};
-> +
-> +struct pvrdma_uar_map {
-> +	unsigned long pfn;
-> +	void __iomem *map;
-> +	int index;
-> +};
-> +
-> +struct pvrdma_uar_table {
-> +	struct pvrdma_id_table tbl;
-> +	int size;
-> +};
-> +
-> +struct pvrdma_ucontext {
-> +	struct ib_ucontext ibucontext;
-> +	struct pvrdma_dev *dev;
-> +	struct pvrdma_uar_map uar;
-> +	u64 ctx_handle;
-> +};
-> +
-> +struct pvrdma_pd {
-> +	struct ib_pd ibpd;
-> +	u32 pdn;
-> +	u32 pd_handle;
-> +	int privileged;
-> +};
-> +
-> +struct pvrdma_mr {
-> +	u32 mr_handle;
-> +	u64 iova;
-> +	u64 size;
-> +};
-> +
-> +struct pvrdma_user_mr {
-> +	struct ib_mr ibmr;
-> +	struct ib_umem *umem;
-> +	struct pvrdma_mr mmr;
-> +	struct pvrdma_page_dir pdir;
-> +	u64 *pages;
-> +	u32 npages;
-> +	u32 max_pages;
-> +	u32 page_shift;
-> +};
-> +
-> +struct pvrdma_wq {
-> +	struct pvrdma_ring *ring;
-> +	spinlock_t lock; /* Work queue lock. */
-> +	int wqe_cnt;
-> +	int wqe_size;
-> +	int max_sg;
-> +	int offset;
-> +};
-> +
-> +struct pvrdma_ah {
-> +	struct ib_ah ibah;
-> +	struct pvrdma_av av;
-> +};
-> +
-> +struct pvrdma_qp {
-> +	struct ib_qp ibqp;
-> +	u32 qp_handle;
-> +	u32 qkey;
-> +	struct pvrdma_wq sq;
-> +	struct pvrdma_wq rq;
-> +	struct ib_umem *rumem;
-> +	struct ib_umem *sumem;
-> +	struct pvrdma_page_dir pdir;
-> +	int npages;
-> +	int npages_send;
-> +	int npages_recv;
-> +	u32 flags;
-> +	u8 port;
-> +	u8 state;
-> +	bool is_kernel;
-> +	struct mutex mutex; /* QP state mutex. */
-> +	atomic_t refcnt;
-> +	wait_queue_head_t wait;
-> +};
-> +
-> +struct pvrdma_dev {
-> +	/* PCI device-related information. */
-> +	struct ib_device ib_dev;
-> +	struct pci_dev *pdev;
-> +	void __iomem *regs;
-> +	struct pvrdma_device_shared_region *dsr; /* Shared region pointer */
-> +	dma_addr_t dsrbase; /* Shared region base address */
-> +	void *cmd_slot;
-> +	void *resp_slot;
-> +	unsigned long flags;
-> +	struct list_head device_link;
-> +
-> +	/* Locking and interrupt information. */
-> +	spinlock_t cmd_lock; /* Command lock. */
-> +	struct semaphore cmd_sema;
-> +	struct completion cmd_done;
-> +	struct {
-> +		enum pvrdma_intr_type type; /* Intr type */
-> +		struct msix_entry msix_entry[PVRDMA_MAX_INTERRUPTS];
-> +		irq_handler_t handler[PVRDMA_MAX_INTERRUPTS];
-> +		u8 enabled[PVRDMA_MAX_INTERRUPTS];
-> +		u8 size;
-> +	} intr;
-> +
-> +	/* RDMA-related device information. */
-> +	union ib_gid *sgid_tbl;
-> +	struct pvrdma_ring_state *async_ring_state;
-> +	struct pvrdma_page_dir async_pdir;
-> +	struct pvrdma_ring_state *cq_ring_state;
-> +	struct pvrdma_page_dir cq_pdir;
-> +	struct pvrdma_cq **cq_tbl;
-> +	spinlock_t cq_tbl_lock;
-> +	struct pvrdma_qp **qp_tbl;
-> +	spinlock_t qp_tbl_lock;
-> +	struct pvrdma_uar_table uar_table;
-> +	struct pvrdma_uar_map driver_uar;
-> +	__be64 sys_image_guid;
-> +	spinlock_t desc_lock; /* Device modification lock. */
-> +	u32 port_cap_mask;
-> +	struct mutex port_mutex; /* Port modification mutex. */
-> +	bool ib_active;
-> +	atomic_t num_qps;
-> +	atomic_t num_cqs;
-> +	atomic_t num_pds;
-> +	atomic_t num_ahs;
-> +
-> +	/* Network device information. */
-> +	struct net_device *netdev;
-> +	struct notifier_block nb_netdev;
-> +};
-> +
-> +struct pvrdma_netdevice_work {
-> +	struct work_struct work;
-> +	struct net_device *event_netdev;
-> +	unsigned long event;
-> +};
-> +
-> +static inline struct pvrdma_dev *to_vdev(struct ib_device *ibdev)
-> +{
-> +	return container_of(ibdev, struct pvrdma_dev, ib_dev);
-> +}
-> +
-> +static inline struct
-> +pvrdma_ucontext *to_vucontext(struct ib_ucontext *ibucontext)
-> +{
-> +	return container_of(ibucontext, struct pvrdma_ucontext, ibucontext);
-> +}
-> +
-> +static inline struct pvrdma_pd *to_vpd(struct ib_pd *ibpd)
-> +{
-> +	return container_of(ibpd, struct pvrdma_pd, ibpd);
-> +}
-> +
-> +static inline struct pvrdma_cq *to_vcq(struct ib_cq *ibcq)
-> +{
-> +	return container_of(ibcq, struct pvrdma_cq, ibcq);
-> +}
-> +
-> +static inline struct pvrdma_user_mr *to_vmr(struct ib_mr *ibmr)
-> +{
-> +	return container_of(ibmr, struct pvrdma_user_mr, ibmr);
-> +}
-> +
-> +static inline struct pvrdma_qp *to_vqp(struct ib_qp *ibqp)
-> +{
-> +	return container_of(ibqp, struct pvrdma_qp, ibqp);
-> +}
-> +
-> +static inline struct pvrdma_ah *to_vah(struct ib_ah *ibah)
-> +{
-> +	return container_of(ibah, struct pvrdma_ah, ibah);
-> +}
-> +
-> +static inline void pvrdma_write_reg(struct pvrdma_dev *dev, u32 reg, u32 val)
-> +{
-> +	writel(cpu_to_le32(val), dev->regs + reg);
-> +}
-> +
-> +static inline u32 pvrdma_read_reg(struct pvrdma_dev *dev, u32 reg)
-> +{
-> +	return le32_to_cpu(readl(dev->regs + reg));
-> +}
-> +
-> +static inline void pvrdma_write_uar_cq(struct pvrdma_dev *dev, u32 val)
-> +{
-> +	writel(cpu_to_le32(val), dev->driver_uar.map + PVRDMA_UAR_CQ_OFFSET);
-> +}
-> +
-> +static inline void pvrdma_write_uar_qp(struct pvrdma_dev *dev, u32 val)
-> +{
-> +	writel(cpu_to_le32(val), dev->driver_uar.map + PVRDMA_UAR_QP_OFFSET);
-> +}
-> +
-> +static inline void *pvrdma_page_dir_get_ptr(struct pvrdma_page_dir *pdir,
-> +					    u64 offset)
-> +{
-> +	return pdir->pages[offset / PAGE_SIZE] + (offset % PAGE_SIZE);
-> +}
-> +
-> +static inline enum pvrdma_mtu ib_mtu_to_pvrdma(enum ib_mtu mtu)
-> +{
-> +	return (enum pvrdma_mtu)mtu;
-> +}
-> +
-> +static inline enum ib_mtu pvrdma_mtu_to_ib(enum pvrdma_mtu mtu)
-> +{
-> +	return (enum ib_mtu)mtu;
-> +}
-> +
-> +static inline enum pvrdma_port_state ib_port_state_to_pvrdma(
-> +					enum ib_port_state state)
-> +{
-> +	return (enum pvrdma_port_state)state;
-> +}
-> +
-> +static inline enum ib_port_state pvrdma_port_state_to_ib(
-> +					enum pvrdma_port_state state)
-> +{
-> +	return (enum ib_port_state)state;
-> +}
-> +
-> +static inline int ib_port_cap_flags_to_pvrdma(int flags)
-> +{
-> +	return flags & PVRDMA_MASK(PVRDMA_PORT_CAP_FLAGS_MAX);
-> +}
-> +
-> +static inline int pvrdma_port_cap_flags_to_ib(int flags)
-> +{
-> +	return flags;
-> +}
-> +
-> +static inline enum pvrdma_port_width ib_port_width_to_pvrdma(
-> +					enum ib_port_width width)
-> +{
-> +	return (enum pvrdma_port_width)width;
-> +}
-> +
-> +static inline enum ib_port_width pvrdma_port_width_to_ib(
-> +					enum pvrdma_port_width width)
-> +{
-> +	return (enum ib_port_width)width;
-> +}
-> +
-> +static inline enum pvrdma_port_speed ib_port_speed_to_pvrdma(
-> +					enum ib_port_speed speed)
-> +{
-> +	return (enum pvrdma_port_speed)speed;
-> +}
-> +
-> +static inline enum ib_port_speed pvrdma_port_speed_to_ib(
-> +					enum pvrdma_port_speed speed)
-> +{
-> +	return (enum ib_port_speed)speed;
-> +}
-> +
-> +static inline int pvrdma_qp_attr_mask_to_ib(int attr_mask)
-> +{
-> +	return attr_mask;
-> +}
-> +
-> +static inline int ib_qp_attr_mask_to_pvrdma(int attr_mask)
-> +{
-> +	return attr_mask & PVRDMA_MASK(PVRDMA_QP_ATTR_MASK_MAX);
-> +}
-> +
-> +static inline enum pvrdma_mig_state ib_mig_state_to_pvrdma(
-> +					enum ib_mig_state state)
-> +{
-> +	return (enum pvrdma_mig_state)state;
-> +}
-> +
-> +static inline enum ib_mig_state pvrdma_mig_state_to_ib(
-> +					enum pvrdma_mig_state state)
-> +{
-> +	return (enum ib_mig_state)state;
-> +}
-> +
-> +static inline int ib_access_flags_to_pvrdma(int flags)
-> +{
-> +	return flags;
-> +}
-> +
-> +static inline int pvrdma_access_flags_to_ib(int flags)
-> +{
-> +	return flags & PVRDMA_MASK(PVRDMA_ACCESS_FLAGS_MAX);
-> +}
-> +
-> +static inline enum pvrdma_qp_type ib_qp_type_to_pvrdma(enum ib_qp_type type)
-> +{
-> +	return (enum pvrdma_qp_type)type;
-> +}
-> +
-> +static inline enum ib_qp_type pvrdma_qp_type_to_ib(enum pvrdma_qp_type type)
-> +{
-> +	return (enum ib_qp_type)type;
-> +}
-> +
-> +static inline enum pvrdma_qp_state ib_qp_state_to_pvrdma(enum ib_qp_state state)
-> +{
-> +	return (enum pvrdma_qp_state)state;
-> +}
-> +
-> +static inline enum ib_qp_state pvrdma_qp_state_to_ib(enum pvrdma_qp_state state)
-> +{
-> +	return (enum ib_qp_state)state;
-> +}
-> +
-> +static inline enum pvrdma_wr_opcode ib_wr_opcode_to_pvrdma(enum ib_wr_opcode op)
-> +{
-> +	return (enum pvrdma_wr_opcode)op;
-> +}
-> +
-> +static inline enum ib_wc_status pvrdma_wc_status_to_ib(
-> +					enum pvrdma_wc_status status)
-> +{
-> +	return (enum ib_wc_status)status;
-> +}
-> +
-> +static inline int pvrdma_wc_opcode_to_ib(int opcode)
-> +{
-> +	return opcode;
-> +}
-> +
-> +static inline int pvrdma_wc_flags_to_ib(int flags)
-> +{
-> +	return flags;
-> +}
-> +
-> +static inline int ib_send_flags_to_pvrdma(int flags)
-> +{
-> +	return flags & PVRDMA_MASK(PVRDMA_SEND_FLAGS_MAX);
-> +}
-> +
-> +void pvrdma_qp_cap_to_ib(struct ib_qp_cap *dst,
-> +			 const struct pvrdma_qp_cap *src);
-> +void ib_qp_cap_to_pvrdma(struct pvrdma_qp_cap *dst,
-> +			 const struct ib_qp_cap *src);
-> +void pvrdma_gid_to_ib(union ib_gid *dst, const union pvrdma_gid *src);
-> +void ib_gid_to_pvrdma(union pvrdma_gid *dst, const union ib_gid *src);
-> +void pvrdma_global_route_to_ib(struct ib_global_route *dst,
-> +			       const struct pvrdma_global_route *src);
-> +void ib_global_route_to_pvrdma(struct pvrdma_global_route *dst,
-> +			       const struct ib_global_route *src);
-> +void pvrdma_ah_attr_to_ib(struct ib_ah_attr *dst,
-> +			  const struct pvrdma_ah_attr *src);
-> +void ib_ah_attr_to_pvrdma(struct pvrdma_ah_attr *dst,
-> +			  const struct ib_ah_attr *src);
-> +
-> +int pvrdma_uar_table_init(struct pvrdma_dev *dev);
-> +void pvrdma_uar_table_cleanup(struct pvrdma_dev *dev);
-> +
-> +int pvrdma_uar_alloc(struct pvrdma_dev *dev, struct pvrdma_uar_map *uar);
-> +void pvrdma_uar_free(struct pvrdma_dev *dev, struct pvrdma_uar_map *uar);
-> +
-> +void _pvrdma_flush_cqe(struct pvrdma_qp *qp, struct pvrdma_cq *cq);
-> +
-> +int pvrdma_page_dir_init(struct pvrdma_dev *dev, struct pvrdma_page_dir *pdir,
-> +			 u64 npages, bool alloc_pages);
-> +void pvrdma_page_dir_cleanup(struct pvrdma_dev *dev,
-> +			     struct pvrdma_page_dir *pdir);
-> +int pvrdma_page_dir_insert_dma(struct pvrdma_page_dir *pdir, u64 idx,
-> +			       dma_addr_t daddr);
-> +int pvrdma_page_dir_insert_umem(struct pvrdma_page_dir *pdir,
-> +				struct ib_umem *umem, u64 offset);
-> +dma_addr_t pvrdma_page_dir_get_dma(struct pvrdma_page_dir *pdir, u64 idx);
-> +int pvrdma_page_dir_insert_page_list(struct pvrdma_page_dir *pdir,
-> +				     u64 *page_list, int num_pages);
-> +
-> +int pvrdma_cmd_post(struct pvrdma_dev *dev, union pvrdma_cmd_req *req,
-> +		    union pvrdma_cmd_resp *rsp);
-> +
-> +#endif /* __PVRDMA_H__ */
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Use here IORT lib to register ITS domain which then can be found and
+used on to build another PCI MSI domain in hierarchical stack domain.
+
+NOTE: Waiting for proper ITS and NUMA node relation description in IORT
+table, we pass around NUMA_NO_NODE to the its_probe_one init call.
+This means that Cavium ThunderX erratum 23144 (pass1.1 only)
+is not supported for ACPI boot method yet.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+ drivers/irqchip/Kconfig          |  1 +
+ drivers/irqchip/irq-gic-v3-its.c | 61 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 61 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+index 7f87289..9aeea1d 100644
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -39,6 +39,7 @@ config ARM_GIC_V3_ITS
+ 	bool
+ 	depends on PCI
+ 	depends on PCI_MSI
++	select ACPI_IORT if ACPI
+ 
+ config ARM_NVIC
+ 	bool
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index c7518c7..35c851c 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -15,10 +15,13 @@
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/bitmap.h>
+ #include <linux/cpu.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/irqdomain.h>
++#include <linux/acpi_iort.h>
+ #include <linux/log2.h>
+ #include <linux/mm.h>
+ #include <linux/msi.h>
+@@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
+ 		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
+ 		fwspec.param[1] = hwirq;
+ 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
++	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
++		fwspec.fwnode = domain->parent->fwnode;
++		fwspec.param_count = 2;
++		fwspec.param[0] = hwirq;
++		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
+ 	} else {
+ 		return -EINVAL;
+ 	}
+@@ -1797,6 +1805,57 @@ static int __init its_of_probe(struct device_node *node)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ACPI
++
++#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
++
++static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
++					  const unsigned long end)
++{
++	struct acpi_madt_generic_translator *its_entry;
++	struct fwnode_handle *dom_handle;
++	struct resource res;
++	int err;
++
++	its_entry = (struct acpi_madt_generic_translator *)header;
++	memset(&res, 0, sizeof(res));
++	res.start = its_entry->base_address;
++	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
++	res.flags = IORESOURCE_MEM;
++
++	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
++	if (!dom_handle) {
++		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
++		       &res.start);
++		return -ENOMEM;
++	}
++
++	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
++	if (err) {
++		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
++		       &res.start, its_entry->translation_id);
++		goto dom_err;
++	}
++
++	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
++	if (!err)
++		return 0;
++
++	iort_deregister_domain_token(its_entry->translation_id);
++dom_err:
++	irq_domain_free_fwnode(dom_handle);
++	return err;
++}
++
++static void __init its_acpi_probe(void)
++{
++	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
++			      gic_acpi_parse_madt_its, 0);
++}
++#else
++static void __init its_acpi_probe(void) { }
++#endif
++
+ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 		    struct irq_domain *parent_domain)
+ {
+@@ -1807,7 +1866,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
+ 	if (of_node)
+ 		its_of_probe(of_node);
+ 	else
+-		return -ENODEV;
++		its_acpi_probe();
+ 
+ 	if (list_empty(&its_nodes)) {
+ 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
+-- 
+1.9.1
