@@ -1,124 +1,410 @@
-Return-Path: <adurbin@google.com>
-Return-Path: <adurbin@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:34207 "EHLO
+        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756241AbcILEu2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:28 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v4 02/16] IB/pvrdma: Add user-level shared functions
+Date: Sun, 11 Sep 2016 21:49:12 -0700
+Message-ID: <1473655766-31628-3-git-send-email-aditr@vmware.com>
+In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE2855ts_Xw2ahGRYpVWHAqCEvzNYV7BmOVejeErJ_e2oXZ1qg@mail.gmail.com>
-References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
- <3103060.86QBTjSLk3@vostro.rjw.lan> <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
- <3861743.KWBechkp08@vostro.rjw.lan> <CAE2855sk2M_77W7dPUb-G43zaDgiNvH2fwpEUvZKOZCBZ-1UpQ@mail.gmail.com>
- <CAE2855uNKxtSJSGdF9T7LcGV+F6HzqJhmgDEdgAEwrY=HjPnrQ@mail.gmail.com>
- <20160816091502.GB1751@lahna.fi.intel.com> <CAE2855ts_Xw2ahGRYpVWHAqCEvzNYV7BmOVejeErJ_e2oXZ1qg@mail.gmail.com>
-From: Aaron Durbin <adurbin@google.com>
-Date: Fri, 9 Sep 2016 09:12:49 -0500
-Message-ID: <CAE2855u7vLDVSJ04gr8yrg+U=W2DwwNk2+8jGhb-_isixDWvHw@mail.gmail.com>
-Subject: Re: ACPI device using sub-resource of PCI device
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 17, 2016 at 6:02 PM, Aaron Durbin <adurbin@google.com> wrote:
-> On Tue, Aug 16, 2016 at 2:15 AM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
->> On Fri, Aug 12, 2016 at 11:45:30AM -0500, Aaron Durbin wrote:
->>> Was anyone able to take a look into a solution for the current
->>> problem?  Again, please feel free to ask if anyone would like help
->>> testing potential solutions.
->>
->> Below is one proposal for fixing the issue. It is just a prototype and
->> I'm not sure if it takes everything needed into account. Would you be
->> able to try it out and let us know if it works for you?
->
-> Yes. I'll give it a go. I'm traveling this week so it won't likely be
-> til early next week. Thanks for the proposed fix. I'll report back on
-> my findings.
->
+We share some common structures with the user-level driver. This patch
+adds those structures and shared functions to traverse the QP/CQ rings.
 
-Sorry for the late response. I tried the patch and it works with ACPI
-devices in a hierarchy below PCI devices. I didn't have any ACPI
-drivers probed but I was able to hang 2 ACPI devices off of a BAR that
-had a driver for the PCI device without any resource conflicts
-(snippet from /proc/iomem):
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+Reviewed-by: George Zhang <georgezhang@vmware.com>
+Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+Reviewed-by: Bryan Tan <bryantan@vmware.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
+---
+Changes v3->v4:
+ - Moved pvrdma_sge into pvrdma_uapi.h
+---
+ drivers/infiniband/hw/pvrdma/pvrdma_uapi.h | 255 +++++++++++++++++++++++++++++
+ drivers/infiniband/hw/pvrdma/pvrdma_user.h |  99 +++++++++++
+ 2 files changed, 354 insertions(+)
+ create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_uapi.h
+ create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_user.h
 
-    c2a43000-c2a43fff : 0000:00:1b.0
-      c2a43000-c2a437ff : GOOG1234:00
-      c2a43800-c2a43fff : GOOG1235:00
+diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_uapi.h b/drivers/infiniband/hw/pvrdma/pvrdma_uapi.h
+new file mode 100644
+index 0000000..430d8a5
+--- /dev/null
++++ b/drivers/infiniband/hw/pvrdma/pvrdma_uapi.h
+@@ -0,0 +1,255 @@
++/*
++ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of EITHER the GNU General Public License
++ * version 2 as published by the Free Software Foundation or the BSD
++ * 2-Clause License. This program is distributed in the hope that it
++ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
++ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License version 2 for more details at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program available in the file COPYING in the main
++ * directory of this source tree.
++ *
++ * The BSD 2-Clause License
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef __PVRDMA_UAPI_H__
++#define __PVRDMA_UAPI_H__
++
++#include <linux/types.h>
++
++#define PVRDMA_VERSION 17
++
++#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
++#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
++#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
++#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
++#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
++#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
++#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
++#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
++#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
++
++/* PVRDMA atomic compare and swap */
++struct pvrdma_exp_cmp_swap {
++	__u64 swap_val;
++	__u64 compare_val;
++	__u64 swap_mask;
++	__u64 compare_mask;
++};
++
++/* PVRDMA atomic fetch and add */
++struct pvrdma_exp_fetch_add {
++	__u64 add_val;
++	__u64 field_boundary;
++};
++
++/* PVRDMA address vector. */
++struct pvrdma_av {
++	__u32 port_pd;
++	__u32 sl_tclass_flowlabel;
++	__u8 dgid[16];
++	__u8 src_path_bits;
++	__u8 gid_index;
++	__u8 stat_rate;
++	__u8 hop_limit;
++	__u8 dmac[6];
++	__u8 reserved[6];
++};
++
++/* PVRDMA scatter/gather entry */
++struct pvrdma_sge {
++	__u64   addr;
++	__u32   length;
++	__u32   lkey;
++};
++
++/* PVRDMA receive queue work request */
++struct pvrdma_rq_wqe_hdr {
++	__u64 wr_id;		/* wr id */
++	__u32 num_sge;		/* size of s/g array */
++	__u32 total_len;	/* reserved */
++};
++/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
++
++/* PVRDMA send queue work request */
++struct pvrdma_sq_wqe_hdr {
++	__u64 wr_id;		/* wr id */
++	__u32 num_sge;		/* size of s/g array */
++	__u32 total_len;	/* reserved */
++	__u32 opcode;		/* operation type */
++	__u32 send_flags;	/* wr flags */
++	union {
++		__u32 imm_data;
++		__u32 invalidate_rkey;
++	} ex;
++	__u32 reserved;
++	union {
++		struct {
++			__u64 remote_addr;
++			__u32 rkey;
++			__u8 reserved[4];
++		} rdma;
++		struct {
++			__u64 remote_addr;
++			__u64 compare_add;
++			__u64 swap;
++			__u32 rkey;
++			__u32 reserved;
++		} atomic;
++		struct {
++			__u64 remote_addr;
++			__u32 log_arg_sz;
++			__u32 rkey;
++			union {
++				struct pvrdma_exp_cmp_swap  cmp_swap;
++				struct pvrdma_exp_fetch_add fetch_add;
++			} wr_data;
++		} masked_atomics;
++		struct {
++			__u64 iova_start;
++			__u64 pl_pdir_dma;
++			__u32 page_shift;
++			__u32 page_list_len;
++			__u32 length;
++			__u32 access_flags;
++			__u32 rkey;
++		} fast_reg;
++		struct {
++			__u32 remote_qpn;
++			__u32 remote_qkey;
++			struct pvrdma_av av;
++		} ud;
++	} wr;
++};
++/* Use pvrdma_sge (ib_sge) for send queue s/g array elements. */
++
++/* Completion queue element. */
++struct pvrdma_cqe {
++	__u64 wr_id;
++	__u64 qp;
++	__u32 opcode;
++	__u32 status;
++	__u32 byte_len;
++	__u32 imm_data;
++	__u32 src_qp;
++	__u32 wc_flags;
++	__u32 vendor_err;
++	__u16 pkey_index;
++	__u16 slid;
++	__u8 sl;
++	__u8 dlid_path_bits;
++	__u8 port_num;
++	__u8 smac[6];
++	__u8 reserved2[7]; /* Pad to next power of 2 (64). */
++};
++
++struct pvrdma_ring {
++	atomic_t prod_tail;	/* Producer tail. */
++	atomic_t cons_head;	/* Consumer head. */
++};
++
++struct pvrdma_ring_state {
++	struct pvrdma_ring tx;	/* Tx ring. */
++	struct pvrdma_ring rx;	/* Rx ring. */
++};
++
++static inline int pvrdma_idx_valid(__u32 idx, __u32 max_elems)
++{
++	/* Generates fewer instructions than a less-than. */
++	return (idx & ~((max_elems << 1) - 1)) == 0;
++}
++
++static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
++{
++	const unsigned int idx = atomic_read(var);
++
++	if (pvrdma_idx_valid(idx, max_elems))
++		return idx & (max_elems - 1);
++	return PVRDMA_INVALID_IDX;
++}
++
++static inline void pvrdma_idx_ring_inc(atomic_t *var, __u32 max_elems)
++{
++	__u32 idx = atomic_read(var) + 1;	/* Increment. */
++
++	idx &= (max_elems << 1) - 1;		/* Modulo size, flip gen. */
++	atomic_set(var, idx);
++}
++
++static inline __s32 pvrdma_idx_ring_has_space(const struct pvrdma_ring *r,
++					      __u32 max_elems, __u32 *out_tail)
++{
++	const __u32 tail = atomic_read(&r->prod_tail);
++	const __u32 head = atomic_read(&r->cons_head);
++
++	if (pvrdma_idx_valid(tail, max_elems) &&
++	    pvrdma_idx_valid(head, max_elems)) {
++		*out_tail = tail & (max_elems - 1);
++		return tail != (head ^ max_elems);
++	}
++	return PVRDMA_INVALID_IDX;
++}
++
++static inline __s32 pvrdma_idx_ring_has_data(const struct pvrdma_ring *r,
++					     __u32 max_elems, __u32 *out_head)
++{
++	const __u32 tail = atomic_read(&r->prod_tail);
++	const __u32 head = atomic_read(&r->cons_head);
++
++	if (pvrdma_idx_valid(tail, max_elems) &&
++	    pvrdma_idx_valid(head, max_elems)) {
++		*out_head = head & (max_elems - 1);
++		return tail != head;
++	}
++	return PVRDMA_INVALID_IDX;
++}
++
++static inline bool pvrdma_idx_ring_is_valid_idx(const struct pvrdma_ring *r,
++						__u32 max_elems, __u32 *idx)
++{
++	const __u32 tail = atomic_read(&r->prod_tail);
++	const __u32 head = atomic_read(&r->cons_head);
++
++	if (pvrdma_idx_valid(tail, max_elems) &&
++	    pvrdma_idx_valid(head, max_elems) &&
++	    pvrdma_idx_valid(*idx, max_elems)) {
++		if (tail > head && (*idx < tail && *idx >= head))
++			return true;
++		else if (head > tail && (*idx >= head || *idx < tail))
++			return true;
++	}
++	return false;
++}
++
++#endif /* __PVRDMA_UAPI_H__ */
+diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_user.h b/drivers/infiniband/hw/pvrdma/pvrdma_user.h
+new file mode 100644
+index 0000000..35f8c1e
+--- /dev/null
++++ b/drivers/infiniband/hw/pvrdma/pvrdma_user.h
+@@ -0,0 +1,99 @@
++/*
++ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of EITHER the GNU General Public License
++ * version 2 as published by the Free Software Foundation or the BSD
++ * 2-Clause License. This program is distributed in the hope that it
++ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
++ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License version 2 for more details at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program available in the file COPYING in the main
++ * directory of this source tree.
++ *
++ * The BSD 2-Clause License
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef __PVRDMA_USER_H__
++#define __PVRDMA_USER_H__
++
++#include <linux/types.h>
++
++#define PVRDMA_UVERBS_ABI_VERSION	3
++#define PVRDMA_BOARD_ID			1
++#define PVRDMA_REV_ID			1
++
++struct pvrdma_alloc_ucontext_resp {
++	u32 qp_tab_size;
++	u32 reserved;
++};
++
++struct pvrdma_alloc_pd_resp {
++	u32 pdn;
++	u32 reserved;
++};
++
++struct pvrdma_create_cq {
++	u64 buf_addr;
++	u32 buf_size;
++	u32 reserved;
++};
++
++struct pvrdma_create_cq_resp {
++	u32 cqn;
++	u32 reserved;
++};
++
++struct pvrdma_resize_cq {
++	u64 buf_addr;
++	u32 buf_size;
++	u32 reserved;
++};
++
++struct pvrdma_create_srq {
++	u64 buf_addr;
++};
++
++struct pvrdma_create_srq_resp {
++	u32 srqn;
++	u32 reserved;
++};
++
++struct pvrdma_create_qp {
++	u64 rbuf_addr;
++	u64 sbuf_addr;
++	u32 rbuf_size;
++	u32 sbuf_size;
++	u64 qp_addr;
++};
++
++#endif /* __PVRDMA_USER_H__ */
+-- 
+2.7.4
 
-One observation that I don't think matters much, but I wanted to write
-it down in case anyone pulls this thread up again. In the case of
-finding the parent resource, the ACPI devcie's resources won't show up
-in the resource tree until the pci parent devices' resources are
-inserted.
-
-
->>
->> diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
->> index 159f7f19abce..72068415f806 100644
->> --- a/drivers/acpi/acpi_platform.c
->> +++ b/drivers/acpi/acpi_platform.c
->> @@ -18,6 +18,7 @@
->>  #include <linux/module.h>
->>  #include <linux/dma-mapping.h>
->>  #include <linux/platform_device.h>
->> +#include <linux/pci.h>
->>
->>  #include "internal.h"
->>
->> @@ -30,6 +31,35 @@ static const struct acpi_device_id forbidden_id_list[] = {
->>         {"", 0},
->>  };
->>
->> +static struct resource *acpi_find_parent_resource(struct acpi_device *adev,
->> +                                                 struct resource *res)
->> +{
->> +       struct device *parent;
->> +
->> +       parent = acpi_get_first_physical_node(adev->parent);
->> +       if (!parent)
->> +               return NULL;
->> +
->> +#if IS_ENABLED(CONFIG_PCI)
->> +       if (dev_is_pci(parent)) {
->> +               struct pci_dev *pdev = to_pci_dev(parent);
->> +
->> +               if (!pci_is_bridge(pdev)) {
->> +                       int i;
->> +
->> +                       for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->> +                               struct resource *r = &pdev->resource[i];
->> +
->> +                               if (r->start && resource_contains(r, res))
->> +                                       return r;
->> +                       }
->> +               }
->> +       }
->> +#endif
->> +
->> +       return NULL;
->> +}
->> +
->>  /**
->>   * acpi_create_platform_device - Create platform device for ACPI device node
->>   * @adev: ACPI device node to create a platform device for.
->> @@ -69,8 +99,17 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
->>                         return ERR_PTR(-ENOMEM);
->>                 }
->>                 count = 0;
->> -               list_for_each_entry(rentry, &resource_list, node)
->> -                       resources[count++] = *rentry->res;
->> +               list_for_each_entry(rentry, &resource_list, node) {
->> +                       struct resource *res = &resources[count++];
->> +
->> +                       *res = *rentry->res;
->> +                       /*
->> +                        * If the device has parent we need to take its
->> +                        * resources into account as well because this
->> +                        * device might consume part of those.
->> +                        */
->> +                       res->parent = acpi_find_parent_resource(adev, res);
->> +               }
->>
->>                 acpi_dev_free_resource_list(&resource_list);
->>         }
