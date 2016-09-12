@@ -1,103 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH] drivers: acpi: fix GIC irq model default PCI IRQ polarity
-Date: Mon,  5 Sep 2016 15:12:38 +0100
-Message-Id: <1473084758-7377-1-git-send-email-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Punit Agrawal <punit.agrawal@arm.com>, Marc Zyngier <marc.zyngier@arm.com>,
- Duc Dang <dhdang@apm.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35552 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752632AbcILWPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 18:15:53 -0400
+Date: Mon, 12 Sep 2016 17:15:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Simon Horman <horms@verge.net.au>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar: Don't disable/unprepare clocks on
+ prepare/enable failure
+Message-ID: <20160912221547.GJ23532@localhost>
+References: <1472635702-26465-1-git-send-email-geert+renesas@glider.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472635702-26465-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ACPI ARM based systems the GIC interrupt controller
-and corresponding interrupt model permit only the high
-polarity for level interrupts.
+On Wed, Aug 31, 2016 at 11:28:22AM +0200, Geert Uytterhoeven wrote:
+> If clk_prepare_enable() fails, we must not call clk_disable_unprepare()
+> in the error path.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-ACPI firmware describes PCI legacy IRQs through entries
-in the _PRT objects. Entries in the _PRT can be of two types:
+Applied to pci/host-rcar for v4.9, thanks!
 
-- Static: not configurable, trigger/polarity default to level-low,
-  _PRT entry defines the global GSI interrupt number
-- Configurable: _PRT interrupt entry contains a reference to the
-  corresponding PCI interrupt link device (that in turn provides the
-  interrupt descriptor through its _CRS/_PRS methods)
-
-Configurable IRQ entries are not currently allowed by the ACPI
-specification on ARM, since they can only be used for interrupt
-pins that are routable, and ARM platforms GIC configurations
-do not allow dynamic IRQ routing, routing is statically laid out
-at synthesis time; therefore PCI interrupt links cannot be used
-for PCI legacy IRQ descriptions in the _PRT on ARM systems.
-
-On the other hand, current core ACPI code handling PCI legacy IRQs
-consider IRQ trigger/polarity for static _PRT entries as level-low.
-
-On ARM systems with a GIC interrupt controller and corresponding
-ACPI interrupt model this does not work in that GIC interrupt
-controller is only capable of handling level interrupts whose
-polarity is high (for PCI legacy IRQs - that are level-low by
-specification - this means that the legacy IRQs are inverted before
-reaching the interrupt controller pin), resulting in IRQ allocation
-failures such as:
-
-genirq: Setting trigger mode 8 for irq 18 failed (gic_set_type+0x0/0x48)
-
-Change the default polarity for PCI legacy IRQs to high on systems
-booting wth ACPI on platforms with a GIC interrupt controller model,
-fixing the discrepancy between specification and HW behaviour.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Punit Agrawal <punit.agrawal@arm.com>
-Cc: Duc Dang <dhdang@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/acpi/pci_irq.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 2c45dd3..c576a6f 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -411,7 +411,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 	int gsi;
- 	u8 pin;
- 	int triggering = ACPI_LEVEL_SENSITIVE;
--	int polarity = ACPI_ACTIVE_LOW;
-+	/*
-+	 * On ARM systems with the GIC interrupt model, level interrupts
-+	 * are always polarity high by specification; PCI legacy
-+	 * IRQs lines are inverted before reaching the interrupt
-+	 * controller and must therefore be considered active high
-+	 * as default.
-+	 */
-+	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
-+				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
- 	char *link = NULL;
- 	char link_desc[16];
- 	int rc;
--- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/host/pcie-rcar.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 65db7a2215090ff4..0f5c2b2b4f8dfcd2 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -782,7 +782,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+>  	}
+>  	err = clk_prepare_enable(pcie->clk);
+>  	if (err)
+> -		goto fail_clk;
+> +		return err;
+>  
+>  	pcie->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
+>  	if (IS_ERR(pcie->bus_clk)) {
+> @@ -792,7 +792,7 @@ static int rcar_pcie_get_resources(struct platform_device *pdev,
+>  	}
+>  	err = clk_prepare_enable(pcie->bus_clk);
+>  	if (err)
+> -		goto err_map_reg;
+> +		goto fail_clk;
+>  
+>  	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
+>  	if (!i) {
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
