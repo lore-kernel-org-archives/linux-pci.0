@@ -1,47 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0043.outbound.protection.outlook.com ([104.47.32.43]:43200
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S964968AbcIWJ72 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Sep 2016 05:59:28 -0400
-From: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "holler@ahsoftware.de" <holler@ahsoftware.de>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Subject: RE: ATA failure regression
-Date: Fri, 23 Sep 2016 09:25:51 +0000
-Message-ID: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:54078 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932404AbcILVIw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 17:08:52 -0400
+Subject: [PATCH v2 0/8] PCI: pciehp: Rework hotplug interrupt routine
+To: Mayurkumar Patel <mayurkumar.patel@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
+        linux-pci@vger.kernel.org,
+        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
+        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Luis Antonio Tarazona-Duarte
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        mika.westerberg@linux.intel.com
+Date: Mon, 12 Sep 2016 16:08:47 -0500
+Message-ID: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+This is mostly Mayurkumar's work from [1] and [2].  I split [2] into two
+patches and reworked it to keep the enclosing loop around the pciehp ISR.
 
-Resending this wider audience=20
+The patches I added are trivial ones to clarify variable names, make dmesg
+messages consistent, and remove useless code.
 
-Currently I am working on AMD future platform.  I am hitting the same bug o=
-f ATA Failure Regression reported in past.
-(https://patchwork.kernel.org/patch/6875661/) or http://lkml.iu.edu/hyperma=
-il/linux/kernel/1507.3/01961.html
+[1] 1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com
+[2] 92EBB4272BF81E4089A7126EC1E7B28466598F35@IRSMSX101.ger.corp.intel.com
 
-I am newbie to this and because of this Ubuntu  16.04 is not booting. If di=
-sable IOMMU and MSI obviously it works but that is not solution. Even when =
-I bisected it boiled to same place which was mentioned in past discussion.
+---
 
-Now my question is there anything required to be done for this future platf=
-orm in order to make above patch working because it is already present in U=
-buntu 16.04 kernel i.e. 4.4 kernel.
+Bjorn Helgaas (5):
+      PCI: pciehp: Rename pcie_isr() locals for clarity
+      PCI: pciehp: Return IRQ_NONE when we can't read interrupt status
+      PCI: pciehp: Remove unnecessary guard
+      PCI: pciehp: Clean up dmesg "Slot(%s)" messages
+      PCI: pciehp: Remove useless pciehp_get_latch_status() calls
 
-Please help me to debug this issue.
-
-Looking forward to hear from you.
-
-Thanks and Regards
-Nehal Shah
-
+Mayurkumar Patel (3):
+      PCI: pciehp: Process all hotplug events before looking for new ones
+      PCI: pciehp: Don't re-read Slot Status when queuing hotplug event
+      PCI: pciehp: Don't re-read Slot Status when handling surprise event
 
 
+ drivers/pci/hotplug/pciehp_ctrl.c |   83 ++++++++++++---------------------
+ drivers/pci/hotplug/pciehp_hpc.c  |   94 ++++++++++++++++++++-----------------
+ 2 files changed, 82 insertions(+), 95 deletions(-)
