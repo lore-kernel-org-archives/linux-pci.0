@@ -1,88 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37874 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932185AbcI2Vtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 17:49:53 -0400
-Date: Thu, 29 Sep 2016 16:49:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, alex.williamson@redhat.com,
-        vikrams@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2 3/5] PCI: save and restore bus on parent bus reset
-Message-ID: <20160929214942.GD20897@localhost>
-References: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
- <1474056395-21843-4-git-send-email-okaya@codeaurora.org>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:38056 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932581AbcILEuo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:44 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v4 14/16] IB/pvrdma: Add Kconfig and Makefile
+Date: Sun, 11 Sep 2016 21:49:24 -0700
+Message-ID: <1473655766-31628-15-git-send-email-aditr@vmware.com>
+In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1474056395-21843-4-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+This patch adds a Kconfig and Makefile for the PVRDMA driver.
 
-On Fri, Sep 16, 2016 at 04:06:32PM -0400, Sinan Kaya wrote:
-> Device states on the bus are saved and restored for all bus resets except
-> the one initiated through pci_dev_reset. Filling the hole.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index aab9d51..8aecab1 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -51,6 +51,10 @@ static void pci_pme_list_scan(struct work_struct *work);
->  static LIST_HEAD(pci_pme_list);
->  static DEFINE_MUTEX(pci_pme_list_mutex);
->  static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
-> +static void pci_dev_lock(struct pci_dev *dev);
-> +static void pci_dev_unlock(struct pci_dev *dev);
-> +static void pci_bus_save_and_disable(struct pci_bus *bus);
-> +static void pci_bus_restore(struct pci_bus *bus);
->  
->  struct pci_pme_device {
->  	struct list_head list;
-> @@ -3888,8 +3892,18 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
->  	if (probe)
->  		return 0;
->  
-> +	if (!probe) {
-> +		pci_dev_unlock(dev);
-> +		pci_bus_save_and_disable(dev->bus);
-> +	}
-> +
->  	pci_reset_bridge_secondary_bus(dev->bus->self);
->  
-> +	if (!probe) {
-> +		pci_bus_restore(dev->bus);
-> +		pci_dev_lock(dev);
-> +	}
+Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+Reviewed-by: George Zhang <georgezhang@vmware.com>
+Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+Reviewed-by: Bryan Tan <bryantan@vmware.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
+---
+Changes v3->v4:
+ - Enforced dependency on VMXNet3
+---
+ drivers/infiniband/hw/pvrdma/Kconfig  | 7 +++++++
+ drivers/infiniband/hw/pvrdma/Makefile | 3 +++
+ 2 files changed, 10 insertions(+)
+ create mode 100644 drivers/infiniband/hw/pvrdma/Kconfig
+ create mode 100644 drivers/infiniband/hw/pvrdma/Makefile
 
-This pattern of "unlock, do something, relock" needs some
-justification.  In general it's unsafe because the lock is protecting
-*something*, and you have to assume that something can change as soon
-as you unlock.  Maybe you know it's safe in this situation, and if so,
-the explanation of why it's safe is what I'm looking for.
+diff --git a/drivers/infiniband/hw/pvrdma/Kconfig b/drivers/infiniband/hw/pvrdma/Kconfig
+new file mode 100644
+index 0000000..b345679
+--- /dev/null
++++ b/drivers/infiniband/hw/pvrdma/Kconfig
+@@ -0,0 +1,7 @@
++config INFINIBAND_PVRDMA
++	tristate "VMware Paravirtualized RDMA Driver"
++	depends on NETDEVICES && ETHERNET && PCI && INET && VMXNET3
++	---help---
++	  This driver provides low-level support for VMware Paravirtual
++	  RDMA adapter. It interacts with the VMXNet3 driver to provide
++	  Ethernet capabilities.
+diff --git a/drivers/infiniband/hw/pvrdma/Makefile b/drivers/infiniband/hw/pvrdma/Makefile
+new file mode 100644
+index 0000000..e6f078b
+--- /dev/null
++++ b/drivers/infiniband/hw/pvrdma/Makefile
+@@ -0,0 +1,3 @@
++obj-$(CONFIG_INFINIBAND_PVRDMA) += pvrdma.o
++
++pvrdma-y := pvrdma_cmd.o pvrdma_cq.o pvrdma_doorbell.o pvrdma_main.o pvrdma_misc.o pvrdma_mr.o pvrdma_qp.o pvrdma_verbs.o
+-- 
+2.7.4
 
-Also, you're now calling pci_reset_bridge_secondary_bus() with the dev
-unlocked, where we called it with the dev locked before.  Some (but
-worryingly, not all) of the other pci_reset_bridge_secondary_bus()
-callers also have the dev locked.  I didn't look long enough to figure
-out if there is a strategy there or if these inconsistencies are
-latent bugs.
-
-> +
->  	return 0;
->  }
->  
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
