@@ -1,54 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:59075 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755144AbcISKNo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Sep 2016 06:13:44 -0400
-Date: Mon, 19 Sep 2016 12:14:02 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Oliver Neukum <oneukum@suse.com>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 5/5] PCI: Avoid unnecessary resume on shutdown
-Message-ID: <20160919101402.GA2506@wunner.de>
-References: <cover.1474130360.git.lukas@wunner.de>
- <760eb8c67a02e35938a4fbd3b31cbe9bb1414c5a.1474130360.git.lukas@wunner.de>
- <1474276343.2044.4.camel@suse.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1474276343.2044.4.camel@suse.com>
+Received: from p3plsmtps2ded04.prod.phx3.secureserver.net ([208.109.80.198]:53394
+        "EHLO p3plsmtps2ded04.prod.phx3.secureserver.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751882AbcILWEi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 18:04:38 -0400
+From: Long Li <longli@exchange.microsoft.com>
+To: "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
+Subject: [PATCH 1/2] pci-hyperv: properly handle pci bus remove
+Date: Mon, 12 Sep 2016 16:54:00 -0700
+Message-Id: <1473724441-21207-1-git-send-email-longli@exchange.microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 19, 2016 at 11:12:23AM +0200, Oliver Neukum wrote:
-> On Sun, 2016-09-18 at 05:39 +0200, Lukas Wunner wrote:
-> > We currently perform a mandatory runtime resume of all PCI devices on
-> > ->shutdown.  However it is pointless to wake devices only to immediately
-> > power them down afterwards.  (Or have the firmware reset them, in case
-> > of a reboot.)
-> > 
-> > It seems there are only two cases when a runtime resume is actually
-> > necessary:  If the driver has declared a ->shutdown callback or if kexec
-> > is in progress.
-> > 
-> > Constrain resume of a device to these cases and let it slumber
-> > otherwise, thereby conserving energy and speeding up shutdown.
-> 
-> What happens if you get a wakeup event while going down?
+From: Long Li <longli@microsoft.com>
 
-Hm, I should probably disable that with
+hv_pci_devices_present is called in hv_pci_remove when we remove a PCI device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove, the bus is already removed before the call, so we don't need to rescan the bus in the workqueue scheduled from hv_pci_devices_present. By introducing status hv_pcibus_removed, we can avoid this situation.
 
-	__pci_enable_wake(pci_dev, pci_dev->current_state, true, false);
+The patch fixes the following kernel panic.
 
+[  383.853124] Workqueue: events pci_devices_present_work [pci_hyperv]
+[  383.853124] task: ffff88007f5f8000 ti: ffff88007f600000 task.ti:
+ffff88007f600000
+[  383.853124] RIP: 0010:[<ffffffff81349806>]  [<ffffffff81349806>]
+pci_is_pcie+0x6/0x20
+[  383.853124] RSP: 0018:ffff88007f603d38  EFLAGS: 00010206
+[  383.853124] RAX: ffff88007f5f8000 RBX: 642f3d4854415056 RCX:
+ffff88007f603fd8
+[  383.853124] RDX: 0000000000000000 RSI: 0000000000000000 RDI:
+642f3d4854415056
+[  383.853124] RBP: ffff88007f603d68 R08: 0000000000000246 R09:
+ffffffffa045eb9e
+[  383.853124] R10: ffff88007b419a80 R11: ffffea0001c0ef40 R12:
+ffff880003ee1c00
+[  383.853124] R13: 63702f30303a3137 R14: 0000000000000000 R15:
+0000000000000246
+[  383.853124] FS:  0000000000000000(0000) GS:ffff88007b400000(0000)
+knlGS:0000000000000000
+[  383.853124] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  383.853124] CR2: 00007f68b3f52350 CR3: 0000000003546000 CR4:
+00000000000406f0
+[  383.853124] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+0000000000000000
+[  383.853124] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+0000000000000400
+[  383.853124] Stack:
+[  383.853124]  ffff88007f603d68 ffffffff8134db17 0000000000000008
+ffff880003ee1c00
+[  383.853124]  63702f30303a3137 ffff880003d8edb8 ffff88007f603da0
+ffffffff8134ee2d
+[  383.853124]  ffff880003d8ed00 ffff88007f603dd8 ffff880075fec320
+ffff880003d8edb8
+[  383.853124] Call Trace:
+[  383.853124]  [<ffffffff8134db17>] ? pci_scan_slot+0x27/0x140
+[  383.853124]  [<ffffffff8134ee2d>] pci_scan_child_bus+0x3d/0x150
+[  383.853124]  [<ffffffffa045ef5a>]
+pci_devices_present_work+0x3ea/0x400 [pci_hyperv]
+[  383.853124]  [<ffffffff810a682b>] process_one_work+0x17b/0x470
+[  383.853124]  [<ffffffff810a7666>] worker_thread+0x126/0x410
+[  383.853124]  [<ffffffff810a7540>] ? rescuer_thread+0x460/0x460
+[  383.853124]  [<ffffffff810aee1f>] kthread+0xcf/0xe0
+[  383.853124]  [<ffffffff810aed50>] ?
+kthread_create_on_node+0x140/0x140
+[  383.853124]  [<ffffffff81699958>] ret_from_fork+0x58/0x90
+[  383.853124]  [<ffffffff810aed50>] ?
+kthread_create_on_node+0x140/0x140
+[  383.853124] Code: 89 e5 5d 25 f0 00 00 00 c1 f8 04 c3 66 0f 1f 84 00
+00 00 00 00 66 66 66 66 90 55 0f b6 47 4a 48 89 e5 5d c3 90 66 66 66 66
+90 55 <80> 7f 4a 00 48 89 e5 5d 0f 95 c0 c3 0f 1f 40 00 66 2e 0f 1f 84
+[  383.853124] RIP  [<ffffffff81349806>] pci_is_pcie+0x6/0x20
+[  383.853124]  RSP <ffff88007f603d38>
 
-> Will it lead to a reboot when a shutdown has been requested?
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-That would depend on the platform, my guess is no, but only someone
-with extensive real world experience with such corner cases can answer
-this. (Rafael?)
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index daa5fc3..26f049b 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -348,6 +348,7 @@ enum hv_pcibus_state {
+ 	hv_pcibus_init = 0,
+ 	hv_pcibus_probed,
+ 	hv_pcibus_installed,
++	hv_pcibus_removed,
+ 	hv_pcibus_maximum
+ };
+ 
+@@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_struct *work)
+ 		put_pcichild(hpdev, hv_pcidev_ref_initial);
+ 	}
+ 
+-	/* Tell the core to rescan bus because there may have been changes. */
+-	if (hbus->state == hv_pcibus_installed) {
++	switch (hbus->state) {
++	case hv_pcibus_installed:
++		/*
++		 * Tell the core to rescan bus
++		 * because there may have been changes.
++		 */
+ 		pci_lock_rescan_remove();
+ 		pci_scan_child_bus(hbus->pci_bus);
+ 		pci_unlock_rescan_remove();
+-	} else {
++		break;
++
++	case hv_pcibus_init:
++	case hv_pcibus_probed:
+ 		survey_child_resources(hbus);
++		break;
++
++	default:
++		break;
+ 	}
+ 
+ 	up(&hbus->enum_sem);
+@@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
+ 	if (!hbus)
+ 		return -ENOMEM;
++	hbus->state = hv_pcibus_init;
+ 
+ 	/*
+ 	 * The PCI bus "domain" is what is called "segment" in ACPI and
+@@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+ 		pci_stop_root_bus(hbus->pci_bus);
+ 		pci_remove_root_bus(hbus->pci_bus);
+ 		pci_unlock_rescan_remove();
++		hbus->state = hv_pcibus_removed;
+ 	}
+ 
+ 	ret = hv_send_resources_released(hdev);
+-- 
+1.8.5.6
 
-Thanks,
-
-Lukas
