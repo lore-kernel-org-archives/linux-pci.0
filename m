@@ -25,11 +25,11 @@ Cc: will.deacon@arm.com,
 	ddaney.cavm@gmail.com,
 	okaya@codeaurora.org,
 	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V10 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for ACPI
-Date: Tue,  6 Sep 2016 11:08:57 +0200
-Message-Id: <1473152938-17388-8-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
-References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+Subject: [PATCH V11 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for ACPI
+Date: Mon, 12 Sep 2016 20:32:26 +0200
+Message-Id: <1473705147-6588-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
 Firmware agnostic code lands in common functions which do necessary
