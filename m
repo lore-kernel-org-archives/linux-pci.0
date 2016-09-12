@@ -1,69 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 2 Sep 2016 10:17:25 -0500
-From: Rob Herring <robh@kernel.org>
-To: Po Liu <po.liu@nxp.com>
-Subject: Re: [PATCH v4 2/2] pci:aer: add support aer interrupt with none
- MSI/MSI-X/INTx mode
-Message-ID: <20160902151725.GA25273@rob-hp-laptop>
-References: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
- <1472625442-23309-1-git-send-email-po.liu@nxp.com>
- <1472625442-23309-2-git-send-email-po.liu@nxp.com>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, tglx@linutronix.de, jason@lakedaemon.net, helgaas@kernel.org, rafael@kernel.org, will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org, shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com, okaya@codeaurora.org
+Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial support
+Date: Mon, 12 Sep 2016 15:43:52 +0200
+Message-ID: <6844783.vEMDYH8fjO@vostro.rjw.lan>
+In-Reply-To: <57D6A7DD.1060305@arm.com>
+References: <1473152938-17388-2-git-send-email-tn@semihalf.com> <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com> <57D6A7DD.1060305@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
- Roy Zang <roy.zang@nxp.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Shawn Guo <shawnguo@kernel.org>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 31, 2016 at 02:37:22PM +0800, Po Liu wrote:
-> On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
-> When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
-> maybe there is interrupt line for aer pme etc. Search the interrupt
-> number in the fdt file. Then fixup the dev->irq with it.
+On Monday, September 12, 2016 02:04:29 PM Marc Zyngier wrote:
+> On 12/09/16 13:37, Tomasz Nowicki wrote:
+> > Hi Rafael,
+> > 
+> > On 09.09.2016 11:20, Lorenzo Pieralisi wrote:
+> >> Hi Rafael,
+> >>
+> >> On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
+> >>> IORT shows representation of IO topology for ARM based systems.
+> >>> It describes how various components are connected together on
+> >>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+> >>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+> >>>
+> >>> Initial support allows to detect IORT table presence and save its
+> >>> root pointer obtained through acpi_get_table(). The pointer validity
+> >>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+> >>> is not set while using IORT nodes we would dereference unmapped pointers.
+> >>>
+> >>> For the aforementioned reason call iort_table_detect() from acpi_init()
+> >>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+> >>>
+> >>> Add generic helpers which are helpful for scanning and retrieving
+> >>> information from IORT table content. List of the most important helpers:
+> >>> - iort_find_dev_node() finds IORT node for a given device
+> >>> - iort_node_map_rid() maps device RID and returns IORT node which provides
+> >>>   final translation
+> >>>
+> >>> IORT support is placed under drivers/acpi/arm64/ new directory due to its
+> >>> ARM64 specific nature. The code there is considered only for ARM64.
+> >>> The long term plan is to keep all ARM64 specific tables support
+> >>> in this place e.g. GTDT table.
+> >>>
+> >>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> >>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> >>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >>> ---
+> >>
+> >> Apart from the minor commit logs oversights we consider these two
+> >> patches ready to go, please let us know if there is something you want
+> >> changed since we are at risk of missing yet another merge window.
+> >>
+> >> It is ARM64 specific code, we created and moved the code to its
+> >> ARM64 specific directory and we are happy to maintain it as such,
+> >> we need your ACK to get this done so if there is something you
+> >> want changed please let us know otherwise I would ask your ACK
+> >> on these two patches to give Marc a go-ahead for -next and
+> >> hopefully 4.9.
+> > 
+> > Kindly reminder. Is there anything we need to do more about these 
+> > patches? Please let us know. Note this is the major thing for incoming 
+> > IORT more advance feature.
 > 
-> Signed-off-by: Po Liu <po.liu@nxp.com>
-> ---
-> Changes for v4:
-> 	- re-use the patch changes in the root port driver;
-> 	- add binding information;
+> May I convey a slight sense of urgency here? I'd like to cut the irqchip
+> branch for 4.9 pretty soon (this week), in order to let it sink in -next
+> for a few days at the very least.
 > 
->  .../devicetree/bindings/pci/layerscape-pci.txt     |  4 +--
->  drivers/pci/pcie/portdrv_core.c                    | 31 +++++++++++++++++++---
->  2 files changed, 30 insertions(+), 5 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> index 41e9f55..1dfb1da 100644
-> --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> @@ -19,7 +19,7 @@ Required properties:
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
->  - interrupt-names: Must include the following entries:
-> -  "intr": The interrupt that is asserted for controller interrupts
-> +  "aer": The interrupt that is asserted for aer interrupts
+> It'd be a bit disappointing if these patches missed the boat this time
+> again.
 
-You can't just change this. That breaks compatibility with old dts 
-files. Plus, it is just a name. Why does it even matter? Not to mention 
-having the name for a single irq is a bit pointless.
+Both [1-2/8] are fine by me.
 
-Rob
+Please feel free to add my ACKs to those when you apply them.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Rafael
