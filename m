@@ -1,145 +1,157 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 15 Sep 2016 00:58:57 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 2/4] PCI: Query platform firmware for device power state
-Message-ID: <20160914225857.GA1966@wunner.de>
-References: <cover.1472554278.git.lukas@wunner.de>
- <20160914105024.GC1597@wunner.de>
- <1707182.o83Q5WOaET@vostro.rjw.lan>
- <2423504.PN3SurRX7i@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54292 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932160AbcILVJQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 17:09:16 -0400
+Subject: [PATCH v2 3/8] PCI: pciehp: Process all hotplug events before
+ looking for new ones
+To: Mayurkumar Patel <mayurkumar.patel@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
+        linux-pci@vger.kernel.org,
+        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
+        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Luis Antonio Tarazona-Duarte
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        mika.westerberg@linux.intel.com
+Date: Mon, 12 Sep 2016 16:09:12 -0500
+Message-ID: <20160912210911.22258.70054.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2423504.PN3SurRX7i@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 06:47:40PM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, September 14, 2016 03:01:33 PM Rafael J. Wysocki wrote:
-> > On Wednesday, September 14, 2016 12:50:24 PM Lukas Wunner wrote:
-> > > On Wed, Sep 14, 2016 at 02:21:30AM +0200, Rafael J. Wysocki wrote:
-> > > > On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
-> > > > > Usually the most accurate way to determine a PCI device's power state
-> > > > > is to read its PM Control & Status Register.  There are two cases
-> > > > > however when this is not an option:  If the device doesn't have the
-> > > > > PM capability at all, or if it is in D3cold.
-> > > > > 
-> > > > > In D3cold, reading from config space typically results in a
-> > > > > fabricated "all ones" response.  But in D3hot, the two bits
-> > > > > representing the power state in the PMCSR are *also* set to 1.
-> > > > > Thus D3hot and D3cold are not discernible by just reading the PMCSR.
-> > > > > 
-> > > > > A (supposedly) reliable way to detect D3cold is to query the platform
-> > > > > firmware for its opinion on the device's power state.  To this end,
-> > > > > add a ->get_power callback to struct pci_platform_pm_ops, and an
-> > > > > implementation to acpi_pci_platform_pm.  (The only
-> > > > > pci_platform_pm_ops existing so far).
-> > > > > 
-> > > > > Amend pci_update_current_state() to query the platform firmware before
-> > > > > reading the PMCSR.
-> > > > > 
-> > > > > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> > > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > > > > ---
-> > > > >  drivers/pci/pci-acpi.c | 23 +++++++++++++++++++++++
-> > > > >  drivers/pci/pci.c      | 21 ++++++++++++++++-----
-> > > > >  drivers/pci/pci.h      |  3 +++
-> > > > >  3 files changed, 42 insertions(+), 5 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> > > > > index 9a033e8..89f2707 100644
-> > > > > --- a/drivers/pci/pci-acpi.c
-> > > > > +++ b/drivers/pci/pci-acpi.c
-> > > > > @@ -452,6 +452,28 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> > > > >  	return error;
-> > > > >  }
-> > > > >  
-> > > > > +static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
-> > > > > +{
-> > > > > +	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-> > > > > +	static const pci_power_t state_conv[] = {
-> > > > > +		[ACPI_STATE_D0]      = PCI_D0,
-> > > > > +		[ACPI_STATE_D1]      = PCI_D1,
-> > > > > +		[ACPI_STATE_D2]      = PCI_D2,
-> > > > > +		[ACPI_STATE_D3_HOT]  = PCI_D3hot,
-> > > > > +		[ACPI_STATE_D3_COLD] = PCI_D3cold,
-> > > > > +	};
-> > > > > +	int state;
-> > > > 
-> > > > ACPI_STATE_D3_HOT and ACPI_STATE_D3_COLD were introduced in ACPI 4.0.
-> > > > For systems predating that, ACPI_STATE_D3_HOT is the deepest state
-> > > > returned by acpi_device_get_power().
-> > > 
-> > > Would it be possible to detect the ACPI spec version the platform
-> > > firmware conforms to, and amend acpi_device_get_power() to return
-> > > ACPI_STATE_D3_COLD if the device is in D3?
-> > > 
-> > > Then we could avoid the unnecessary runtime resume after direct_complete
-> > > also for these older machines.
-> > 
-> > Well, please see below.
-> > 
-> > > Can the revision in the FADT (offset 8) be used as a proxy?
-> > > => E.g. the old Clevo B7130 has revision 3 in the FADT and uses
-> > >    a _DSM and _PS3 to put the discrete GPU in D3cold:
-> > >    https://github.com/Lekensteyn/acpi-stuff/tree/master/dsl/Clevo_B7130
-> > > => Whereas the newer Clevo P651RA has revision 5 in the FADT and uses
-> > >    _PR3 to put the discrete GPU in D3cold:
-> > >    https://github.com/Lekensteyn/acpi-stuff/tree/master/dsl/Clevo_P651RA
-> > > 
-> > > However the FADT revision was already 4 in the ACPI 3.0 spec,
-> > > so we can only use it to discern ACPI 2.0 vs 3.0, not 3.0 vs 4.0,
-> > > which is what we'd actually want.  And there's a comment in
-> > > acpica/tbfadt.c that "The FADT revision value is unreliable."
-> > > 
-> > > Do you know of a better way to discern ACPI 3.0 vs 4.0?
-> > 
-> > I'm not sure if there is a reliable way to be honest.
-> > 
-> > Also even if the FADT etc tells you something, there's no guarantee that
-> > AML actually follows that.
-> > 
-> > In fact, whether or not acpi_device_get_power() will ever return D3cold
-> > for a device depends on whether or not _PR3 is there.  If it's not there,
-> > the deepest state returned will be D3hot in any case.
-> > 
-> > So I'm not sure how useful that is in the context of D3cold detection?
-> 
-> There is more to this.
-> 
-> In fact, we can't really trust _PSC too, because in some ACPI tables it is
-> implemented to always return 0 (seriously).
-> 
-> For this reason, I think the way to go would be to use something like
-> acpi_device_update_power() to ensure that the device really is in the
-> state we think it is in.
+From: Mayurkumar Patel <mayurkumar.patel@intel.com>
 
-The patch only trusts the platform firmware to report D3cold correctly.
-If it reports anything else the patch reads the PMCSR.
+Previously we accumulated hotplug events, then processed them, essentially
+like this:
 
-Thus if _PSC returns a bogus D0 status, worst that can happen is that we
-incorrectly assume D3hot while the device is actually in D3cold.  Which
-is still kind of a bummer.
+  events = 0
+  do {
+    status = read(Slot Status)
+    status &= EVENT_MASK              # only look at events
+    events |= status                  # accumulate events
+    write(Slot Status, events)        # clear events
+  } while (status)
+  process events
 
-We've got this handy pci_device_is_present() function which reads the
-vendor ID and returns false if it's "all ones" (which is what we'd get
-in D3cold).
+The problem is that as soon as we clear events in Slot Status, the hardware
+may send notifications for new events, and we lose information about the
+first events.  For example, we might see two Presence Detect Changed
+events, but lose the fact that the slot was temporarily empty:
 
-What if we ask the platform firmware first.  If it says D3cold, assume
-that's true.  In all other cases, call pci_device_is_present().  If
-that returns false, assume D3cold.  Otherwise read the PMCSR.
+  read  PCI_EXP_SLTSTA_PDC set, PCI_EXP_SLTSTA_PDS clear  # slot empty
+  write PCI_EXP_SLTSTA_PDC                                # clear PDC event
+  read  PCI_EXP_SLTSTA_PDC set, PCI_EXP_SLTSTA_PDS set    # slot occupied
 
-That would also work for devices that are suspended to D3cold in a
-nonstandard way, such as Thunderbolt.  Having a function that updates
-the current_state in a robust way and correctly discerns D3cold and
-D3hot would be really useful I think.
+The current code does not process a removal; it only processes the
+insertion, which fails because we didn't remove the original device.
 
-Thanks a lot for sharing these ACPI intricacies, it wasn't clear to me
-in how far we can trust the platform firmware.
+To avoid this problem, read Slot Status once and process all the events
+before reading it again, like this:
 
-Best regards,
+  do {
+    read events
+    clear events
+    process events
+  } while (events)
 
-Lukas
+[bhelgaas: changelog, add external loop around pciehp_isr()]
+Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   58 +++++++++++++++++++++-----------------
+ 1 file changed, 32 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index b8efe1b..625fa6a 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -535,7 +535,7 @@ void pciehp_power_off_slot(struct slot *slot)
+ 		 PCI_EXP_SLTCTL_PWR_OFF);
+ }
+ 
+-static irqreturn_t pcie_isr(int irq, void *dev_id)
++static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ {
+ 	struct controller *ctrl = (struct controller *)dev_id;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+@@ -550,36 +550,23 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	if (pdev->current_state == PCI_D3cold)
+ 		return IRQ_NONE;
+ 
++	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
++	if (status == (u16) ~0) {
++		ctrl_info(ctrl, "%s: no response from device\n", __func__);
++		return IRQ_NONE;
++	}
++
+ 	/*
+-	 * In order to guarantee that all interrupt events are
+-	 * serviced, we need to re-inspect Slot Status register after
+-	 * clearing what is presumed to be the last pending interrupt.
++	 * Slot Status contains plain status bits as well as event
++	 * notification bits; right now we only want the event bits.
+ 	 */
+-	events = 0;
+-	do {
+-		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
+-		if (status == (u16) ~0) {
+-			ctrl_info(ctrl, "%s: no response from device\n",
+-				  __func__);
+-			return IRQ_NONE;
+-		}
+-
+-		/*
+-		 * Slot Status contains plain status bits as well as event
+-		 * notification bits; right now we only want the event bits.
+-		 */
+-		status &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
++	events = status & (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+ 			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
+ 			   PCI_EXP_SLTSTA_DLLSC);
+-		status &= ~events;
+-		events |= status;
+-		if (!events)
+-			return IRQ_NONE;
+-		if (status)
+-			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+-						   events);
+-	} while (status);
++	if (!events)
++		return IRQ_NONE;
+ 
++	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
+ 	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", events);
+ 
+ 	/* Check Command Complete Interrupt Pending */
+@@ -636,6 +623,25 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
++static irqreturn_t pcie_isr(int irq, void *dev_id)
++{
++	irqreturn_t rc, handled = IRQ_NONE;
++
++	/*
++	 * To guarantee that all interrupt events are serviced, we need to
++	 * re-inspect Slot Status register after clearing what is presumed
++	 * to be the last pending interrupt.
++	 */
++	do {
++		rc = pciehp_isr(irq, dev_id);
++		if (rc == IRQ_HANDLED)
++			handled = IRQ_HANDLED;
++	} while (rc == IRQ_HANDLED);
++
++	/* Return IRQ_HANDLED if we handled one or more events */
++	return handled;
++}
++
+ void pcie_enable_notification(struct controller *ctrl)
+ {
+ 	u16 cmd, mask;
+
