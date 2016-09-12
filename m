@@ -1,133 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 13 Sep 2016 10:56:41 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38856 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933247AbcILRVc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 13:21:32 -0400
+Date: Mon, 12 Sep 2016 12:21:26 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: bhelgaas@google.com, soren.brinkmann@xilinx.com,
-        christophe.jaillet@wanadoo.fr, grygorii.strashko@ti.com,
-        yinghai@kernel.org, lorenzo.pieralisi@arm.com,
-        fengguang.wu@intel.com, michal.simek@xilinx.com, arnd@arndb.de,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        linux-pci@vger.kernel.org, rgummal@xilinx.com,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/6] PCI: xilinx: Keep both legacy and MSI interrupt
- references.
-Message-ID: <20160913155641.GB4138@localhost>
-References: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v4 01/16] vmxnet3: Move PCI Id to pci_ids.h
+Message-ID: <20160912172126.GA23532@localhost>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-2-git-send-email-aditr@vmware.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1473655766-31628-2-git-send-email-aditr@vmware.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 01, 2016 at 03:44:41PM +0530, Bharat Kumar Gogada wrote:
-> When built with MSI support the legacy domain reference is being
-> overwritten with MSI.
-> Instead creating two separate domains for MSI and legacy interrupts.
+On Sun, Sep 11, 2016 at 09:49:11PM -0700, Adit Ranadive wrote:
+> The VMXNet3 PCI Id will be shared with our paravirtual RDMA driver.
+> Moved it to the shared location in pci_ids.h.
 > 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Suggested-by: Leon Romanovsky <leon@kernel.org>
+> Signed-off-by: Adit Ranadive <aditr@vmware.com>
 
-Applied all these (except [5/6]) with Michal's ack to pci/host-xilinx for
-v4.9, thanks!
-
-I already applied Po Liu's patch ("PCI: xilinx: Relax device number
-checking to allow SR-IOV") to pci/virtualization.  This is identical to
-[5/6], so I dropped [5/6] to avoid a conflict.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
 > ---
->  drivers/pci/host/pcie-xilinx.c | 26 +++++++++++++++-----------
->  1 file changed, 15 insertions(+), 11 deletions(-)
+> ---
+>  drivers/net/vmxnet3/vmxnet3_int.h | 3 +--
+>  include/linux/pci_ids.h           | 1 +
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index a30e016..bd64677 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -101,7 +101,8 @@
->   * @msi_pages: MSI pages
->   * @root_busno: Root Bus number
->   * @dev: Device pointer
-> - * @irq_domain: IRQ domain pointer
-> + * @msi_domain: MSI IRQ domain pointer
-> + * @leg_domain: Legacy IRQ domain pointer
->   * @resources: Bus Resources
->   */
->  struct xilinx_pcie_port {
-> @@ -110,7 +111,8 @@ struct xilinx_pcie_port {
->  	unsigned long msi_pages;
->  	u8 root_busno;
->  	struct device *dev;
-> -	struct irq_domain *irq_domain;
-> +	struct irq_domain *msi_domain;
-> +	struct irq_domain *leg_domain;
->  	struct list_head resources;
+> diff --git a/drivers/net/vmxnet3/vmxnet3_int.h b/drivers/net/vmxnet3/vmxnet3_int.h
+> index 74fc030..2bd6bf8 100644
+> --- a/drivers/net/vmxnet3/vmxnet3_int.h
+> +++ b/drivers/net/vmxnet3/vmxnet3_int.h
+> @@ -119,9 +119,8 @@ enum {
 >  };
 >  
-> @@ -281,7 +283,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
->  	if (hwirq < 0)
->  		return hwirq;
+>  /*
+> - * PCI vendor and device IDs.
+> + * Maximum devices supported.
+>   */
+> -#define PCI_DEVICE_ID_VMWARE_VMXNET3    0x07B0
+>  #define MAX_ETHERNET_CARDS		10
+>  #define MAX_PCI_PASSTHRU_DEVICE		6
 >  
-> -	irq = irq_create_mapping(port->irq_domain, hwirq);
-> +	irq = irq_create_mapping(port->msi_domain, hwirq);
->  	if (!irq)
->  		return -EINVAL;
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index c58752f..98bb455 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2251,6 +2251,7 @@
+>  #define PCI_DEVICE_ID_RASTEL_2PORT	0x2000
 >  
-> @@ -443,7 +445,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
->  			/* Handle INTx Interrupt */
->  			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
->  				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
-> -			generic_handle_irq(irq_find_mapping(port->irq_domain,
-> +			generic_handle_irq(irq_find_mapping(port->leg_domain,
->  							    val));
->  		}
->  	}
-> @@ -526,12 +528,14 @@ static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
->  	}
+>  #define PCI_VENDOR_ID_VMWARE		0x15ad
+> +#define PCI_DEVICE_ID_VMWARE_VMXNET3	0x07b0
 >  
->  	for (i = 0; i < num_irqs; i++) {
-> -		irq = irq_find_mapping(port->irq_domain, i);
-> +		irq = irq_find_mapping(port->leg_domain, i);
->  		if (irq > 0)
->  			irq_dispose_mapping(irq);
->  	}
-> -
-> -	irq_domain_remove(port->irq_domain);
-> +	if (port->leg_domain)
-> +		irq_domain_remove(port->leg_domain);
-> +	if (port->msi_domain)
-> +		irq_domain_remove(port->msi_domain);
->  }
->  
->  /**
-> @@ -553,21 +557,21 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
->  		return -ENODEV;
->  	}
->  
-> -	port->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
-> +	port->leg_domain = irq_domain_add_linear(pcie_intc_node, 4,
->  						 &intx_domain_ops,
->  						 port);
-> -	if (!port->irq_domain) {
-> +	if (!port->leg_domain) {
->  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
->  		return -ENODEV;
->  	}
->  
->  	/* Setup MSI */
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -		port->irq_domain = irq_domain_add_linear(node,
-> +		port->msi_domain = irq_domain_add_linear(node,
->  							 XILINX_NUM_MSI_IRQS,
->  							 &msi_domain_ops,
->  							 &xilinx_pcie_msi_chip);
-> -		if (!port->irq_domain) {
-> +		if (!port->msi_domain) {
->  			dev_err(dev, "Failed to get a MSI IRQ domain\n");
->  			return -ENODEV;
->  		}
+>  #define PCI_VENDOR_ID_ZOLTRIX		0x15b0
+>  #define PCI_DEVICE_ID_ZOLTRIX_2BD0	0x2bd0
 > -- 
-> 2.1.1
+> 2.7.4
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
