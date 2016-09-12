@@ -1,91 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36574 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935024AbcIFQ45 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 12:56:57 -0400
-Date: Tue, 6 Sep 2016 11:56:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
-        paulus@samba.org, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
-        benh@kernel.crashing.org, mpe@ellerman.id.au,
-        zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v4 3/5] PCI: Do not disable memory decoding in
- pci_reassigndev_resource_alignment()
-Message-ID: <20160906165652.GE1214@localhost>
-References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1470980546-2918-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470980546-2918-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: marc.zyngier@arm.com,
+	tglx@linutronix.de,
+	jason@lakedaemon.net,
+	rjw@rjwysocki.net,
+	helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	hanjun.guo@linaro.org,
+	shijie.huang@arm.com,
+	robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org,
+	andrea.gallo@linaro.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	al.stone@linaro.org,
+	graeme.gregory@linaro.org,
+	ddaney.cavm@gmail.com,
+	okaya@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V11 0/8] Introduce ACPI world to ITS irqchip
+Date: Mon, 12 Sep 2016 20:32:19 +0200
+Message-Id: <1473705147-6588-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 12, 2016 at 01:42:24PM +0800, Yongji Xie wrote:
-> We should not disable memory decoding when we reassign alignment
-> in pci_reassigndev_resource_alignment(). It's meaningless and
-> have some side effects. For example, we found it would break
-> this kind of P2P bridge:
-> 
-> 0001:02:02.0 PCI bridge: PLX Technology, Inc. PEX 8718 16-Lane,
-> 5-Port PCI Express Gen 3 (8.0 GT/s) Switch (rev aa)
+The series builds the PCI/MSI domain stack based on initial IORT driver
+which is added in first place. As a reference please see IORT spec:
+http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
 
-I doubt that turning memory decode off breaks this bridge.  I can
-believe that it could cause a problem, but I doubt it would be
-specific to this bridge.
+Tested on Cavium ThunderX server and Qualcomm Technologies server platform QDF2XXX.
+The patches can be found here:
+https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v11)
 
-I also don't think it's meaningless.  After your patch, we throw away
-our knowledge of what the BAR contains when we set "r->start = 0".
-But if you leave memory decoding enabled, the device will still
-respond at whatever address the BAR contains.  That seems like a
-problem.
+v10 -> v11
+- rebased against v4.8-rc6
+- bug fix for iort_match_node_callback() error handling
+- patch 1-2 changelog updates
 
-> And it may also potentially break the PCI devices with mmio_always_on
-> bit set.
-> 
-> Besides, disabling memory decoding is not expected in some fixup
-> function such as fixup_vga(). The fixup_vga() read PCI_COMMAND_MEMORY
-> to know whether the devices has been initialized by the firmware or
-> not. Disabling memory decoding would cause the one initialized by
-> firmware may not be set as the default VGA device when more than one
-> graphics adapter is present.
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  drivers/pci/pci.c |    8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b8357d7..caa0894 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5046,7 +5046,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  	int i;
->  	struct resource *r;
->  	resource_size_t align, size;
-> -	u16 command;
->  
->  	/*
->  	 * VF BARs are RO zero according to SR-IOV spec 3.4.1.11. Their
-> @@ -5069,12 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  		return;
->  	}
->  
-> -	dev_info(&dev->dev,
-> -		"Disabling memory decoding and releasing memory resources.\n");
-> -	pci_read_config_word(dev, PCI_COMMAND, &command);
-> -	command &= ~PCI_COMMAND_MEMORY;
-> -	pci_write_config_word(dev, PCI_COMMAND, command);
-> -
-> +	dev_info(&dev->dev, "Releasing memory resources.\n");
->  	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
->  		r = &dev->resource[i];
->  		if (!(r->flags & IORESOURCE_MEM))
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v9 -> v10
+- error handling improvements for iort_match_node_callback() but no functional changes
+- iort.h -> acpi_iort.h header name change
+- style improvements
+
+v8 -> v9
+- rebased against v4.8-rc4
+- move root IORT pointer validation to one place iort_scan_node()
+- function names & Kconfig option name improvements
+- remove annoying dev_err() appearances for non-IORT users
+- for debug purpose print full ITS resource range
+
+v7 -> v8
+- rebased against v4.8-rc1
+- move IORT support under new drivers/acpi/arm64 directory
+- memory leak fix for iort_match_node_callback()
+- iort_node_map_rid() algorithm improvements
+- fix RID match check in iort_id_map()
+- fix typos and white spaces
+
+v6 -> v7
+- rebased against irq/irqchip-4.8
+- improvements for IORT ID mapping
+- call IORT init call from acpi_init() instead of arch_initcall()
+- split IORT driver in to two parts: core and ITS/MSI
+
+v5 -> v6
+- added locking mechanism for IORT list with domain token
+- IORT function name improvements
+- extended IORT RID mapping helper
+- reworked IORT to be more SMMU friendly
+- IORT functions which map RID and find corresponding domain are not
+  PCI specific any more (struct pci_dev -> struct device)
+- bug fixes
+
+v4 -> v5
+- rebased against v4.7-rc1
+- drop generic layer and call IORT functions directly
+- improve resource abstraction and string formatting
+
+v3 -> v4
+- rebased against v4.5
+- add ACPI support for IRQ domain handling on a per-device basis
+- reorder domain setup step
+- improve error handling
+- code style improvements
+
+v2 -> v3
+- rebased on top of 4.4
+- fixes and improvements for redistributor init via GICC structures
+- fixes as per kbuild reports
+
+v1 -> v2
+- rebased on top of 4.4-rc4
+- use pci_msi_domain_get_msi_rid for requester ID to device ID translation
+
+Tomasz Nowicki (8):
+  ACPI: I/O Remapping Table (IORT) initial support
+  ACPI: Add new IORT functions to support MSI domain handling
+  PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
+  irqchip/gicv3-its: Cleanup for ITS domain initialization
+  irqchip/gicv3-its: Refactor ITS DT init code to prepare for ACPI
+  irqchip/gicv3-its: Probe ITS in the ACPI way
+  irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for
+    ACPI
+  irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain
+    initialization
+
+ drivers/acpi/Kconfig                     |   4 +
+ drivers/acpi/Makefile                    |   2 +
+ drivers/acpi/arm64/Kconfig               |   6 +
+ drivers/acpi/arm64/Makefile              |   1 +
+ drivers/acpi/arm64/iort.c                | 366 +++++++++++++++++++++++++++++++
+ drivers/acpi/bus.c                       |   2 +
+ drivers/irqchip/Kconfig                  |   1 +
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c |  88 ++++++--
+ drivers/irqchip/irq-gic-v3-its.c         | 171 +++++++++++----
+ drivers/irqchip/irq-gic-v3.c             |   7 +-
+ drivers/pci/msi.c                        |  11 +-
+ include/linux/acpi_iort.h                |  42 ++++
+ include/linux/irqchip/arm-gic-v3.h       |   4 +-
+ 13 files changed, 635 insertions(+), 70 deletions(-)
+ create mode 100644 drivers/acpi/arm64/Kconfig
+ create mode 100644 drivers/acpi/arm64/Makefile
+ create mode 100644 drivers/acpi/arm64/iort.c
+ create mode 100644 include/linux/acpi_iort.h
+
+-- 
+1.9.1
