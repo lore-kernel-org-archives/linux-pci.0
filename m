@@ -1,84 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58436 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934553AbcIFTXt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 15:23:49 -0400
-Date: Tue, 6 Sep 2016 14:23:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci/aer: Add bus flag to skip source id matching
-Message-ID: <20160906192344.GD7554@localhost>
-References: <1472167571-11123-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+Date: Mon, 12 Sep 2016 11:10:50 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Aaron Durbin <adurbin@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: ACPI device using sub-resource of PCI device
+Message-ID: <20160912081050.GV15313@lahna.fi.intel.com>
+References: <CAE2855tofJV=HV2dYuC+1=pi2mb942zrRF7f0+wqxPPay44RGA@mail.gmail.com>
+ <3103060.86QBTjSLk3@vostro.rjw.lan>
+ <CAE2855sB73=1gznGFonGver_FtaCdoAa4-8Bz8sAXCXuBZvxfg@mail.gmail.com>
+ <3861743.KWBechkp08@vostro.rjw.lan>
+ <CAE2855sk2M_77W7dPUb-G43zaDgiNvH2fwpEUvZKOZCBZ-1UpQ@mail.gmail.com>
+ <CAE2855uNKxtSJSGdF9T7LcGV+F6HzqJhmgDEdgAEwrY=HjPnrQ@mail.gmail.com>
+ <20160816091502.GB1751@lahna.fi.intel.com>
+ <CAE2855ts_Xw2ahGRYpVWHAqCEvzNYV7BmOVejeErJ_e2oXZ1qg@mail.gmail.com>
+ <CAE2855u7vLDVSJ04gr8yrg+U=W2DwwNk2+8jGhb-_isixDWvHw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472167571-11123-1-git-send-email-jonathan.derrick@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE2855u7vLDVSJ04gr8yrg+U=W2DwwNk2+8jGhb-_isixDWvHw@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 25, 2016 at 05:26:10PM -0600, Jon Derrick wrote:
-> Allow root port buses to choose to skip source id matching when finding
-> the faulting device. Certain root port devices may return an incorrect
-> source id and recommend to scan child device registers for aer
-> notifications.
+On Fri, Sep 09, 2016 at 09:12:49AM -0500, Aaron Durbin wrote:
+> On Wed, Aug 17, 2016 at 6:02 PM, Aaron Durbin <adurbin@google.com> wrote:
+> > On Tue, Aug 16, 2016 at 2:15 AM, Mika Westerberg
+> > <mika.westerberg@linux.intel.com> wrote:
+> >> On Fri, Aug 12, 2016 at 11:45:30AM -0500, Aaron Durbin wrote:
+> >>> Was anyone able to take a look into a solution for the current
+> >>> problem?  Again, please feel free to ask if anyone would like help
+> >>> testing potential solutions.
+> >>
+> >> Below is one proposal for fixing the issue. It is just a prototype and
+> >> I'm not sure if it takes everything needed into account. Would you be
+> >> able to try it out and let us know if it works for you?
+> >
+> > Yes. I'll give it a go. I'm traveling this week so it won't likely be
+> > til early next week. Thanks for the proposed fix. I'll report back on
+> > my findings.
+> >
 > 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-
-Applied both of these to pci/host-vmd for v4.9, thanks!
-
-I think I might even go farther and remove the "nosourceid" module
-parameter.  Per Documentation/PCI/pcieaer-howto.txt, it's to work
-around broken hardware, but it's not otherwise documented.  With the
-flag you're adding, we could add quirks for that broken hardware,
-which would be far better.  I doubt anybody's actually using that
-module parameter.
-
-> ---
->  drivers/pci/pcie/aer/aerdrv_core.c | 7 +++++--
->  include/linux/pci.h                | 5 +++--
->  2 files changed, 8 insertions(+), 4 deletions(-)
+> Sorry for the late response. I tried the patch and it works with ACPI
+> devices in a hierarchy below PCI devices. I didn't have any ACPI
+> drivers probed but I was able to hang 2 ACPI devices off of a BAR that
+> had a driver for the PCI device without any resource conflicts
+> (snippet from /proc/iomem):
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 521e39c..3a0d839 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -132,7 +132,9 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
->  	 * When bus id is equal to 0, it might be a bad id
->  	 * reported by root port.
->  	 */
-> -	if (!nosourceid && (PCI_BUS_NUM(e_info->id) != 0)) {
-> +	if (!nosourceid &&
-> +	    (PCI_BUS_NUM(e_info->id) != 0) &&
-> +	    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
->  		/* Device ID match? */
->  		if (e_info->id == ((dev->bus->number << 8) | dev->devfn))
->  			return true;
-> @@ -147,7 +149,8 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
->  	 *      1) nosourceid==y;
->  	 *      2) bus id is equal to 0. Some ports might lose the bus
->  	 *              id of error source id;
-> -	 *      3) There are multiple errors and prior id comparing fails;
-> +	 *      3) bus flag PCI_BUS_FLAGS_NO_AERSID is set
-> +	 *      4) There are multiple errors and prior id comparing fails;
->  	 * We check AER status registers to find possible reporter.
->  	 */
->  	if (atomic_read(&dev->enable_cnt) == 0)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index b7d3aa2..5c08137 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -183,8 +183,9 @@ enum pci_irq_reroute_variant {
->  
->  typedef unsigned short __bitwise pci_bus_flags_t;
->  enum pci_bus_flags {
-> -	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
-> -	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-> +	PCI_BUS_FLAGS_NO_MSI	= (__force pci_bus_flags_t) 1,
-> +	PCI_BUS_FLAGS_NO_MMRBC	= (__force pci_bus_flags_t) 2,
-> +	PCI_BUS_FLAGS_NO_AERSID	= (__force pci_bus_flags_t) 4,
->  };
->  
->  /* These values come from the PCI Express Spec */
-> -- 
-> 1.8.3.1
-> 
+>     c2a43000-c2a43fff : 0000:00:1b.0
+>       c2a43000-c2a437ff : GOOG1234:00
+>       c2a43800-c2a43fff : GOOG1235:00
+
+Thanks for testing.
+
+> One observation that I don't think matters much, but I wanted to write
+> it down in case anyone pulls this thread up again. In the case of
+> finding the parent resource, the ACPI devcie's resources won't show up
+> in the resource tree until the pci parent devices' resources are
+> inserted.
+
+Right, that's expected as the parent PCI device resources will be
+allocated a bit later when pcibios_resource_survey_bus() is called.
+
+Rafael, Bjorn,
+
+What do you think? Should I clean up the code and send it out as a
+formal patch?
