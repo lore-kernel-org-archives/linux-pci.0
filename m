@@ -1,84 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:59640 "EHLO
-        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754024AbcI0L3u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2016 07:29:50 -0400
-Subject: Re: [RFC PATCH 07/11] pci: controller: designware: Add EP mode
- support
-To: Rob Herring <robh@kernel.org>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
- <1473829927-20466-8-git-send-email-kishon@ti.com>
- <20160923144141.GA24842@rob-hp-laptop>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
-        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
-        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Joao Pinto <jpinto@synopsys.com>, <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <57EA57DC.9030304@ti.com>
-Date: Tue, 27 Sep 2016 16:58:28 +0530
+Received: from mail.kernel.org ([198.145.29.136]:60760 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756226AbcILWAy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 18:00:54 -0400
+Date: Mon, 12 Sep 2016 17:00:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] vmd: allocate irq lists with correct msix count
+Message-ID: <20160912220049.GF23532@localhost>
+References: <1472491142-13783-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160923144141.GA24842@rob-hp-laptop>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472491142-13783-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Friday 23 September 2016 08:11 PM, Rob Herring wrote:
-> On Wed, Sep 14, 2016 at 10:42:03AM +0530, Kishon Vijay Abraham I wrote:
->> Add endpoint mode support to designware driver. This uses the
->> EP Core layer introduced recently to add endpoint mode support.
->> *Any* function driver can now use this designware device
->> to achieve the EP functionality.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  .../devicetree/bindings/pci/designware-pcie.txt    |   26 ++-
->>  drivers/pci/controller/Kconfig                     |    5 +
->>  drivers/pci/controller/Makefile                    |    1 +
->>  drivers/pci/controller/pcie-designware-ep.c        |  228 ++++++++++++++++++++
->>  drivers/pci/controller/pcie-designware.c           |   30 +++
->>  drivers/pci/controller/pcie-designware.h           |   45 ++++
->>  6 files changed, 324 insertions(+), 11 deletions(-)
->>  create mode 100644 drivers/pci/controller/pcie-designware-ep.c
->>
->> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> index 6c5322c..bb0b789 100644
->> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->> @@ -6,23 +6,27 @@ Required properties:
->>  - reg-names: Must be "config" for the PCIe configuration space.
->>      (The old way of getting the configuration address space from "ranges"
->>      is deprecated and should be avoided.)
->> -- #address-cells: set to <3>
->> -- #size-cells: set to <2>
->> -- device_type: set to "pci"
->> -- ranges: ranges for the PCI memory and I/O regions
->> -- #interrupt-cells: set to <1>
->> -- interrupt-map-mask and interrupt-map: standard PCI properties
->> -	to define the mapping of the PCIe interface to interrupt
->> +- #address-cells (only for host mode): set to <3>
->> +- #size-cells (only for host mode): set to <2>
->> +- device_type (only for host mode): set to "pci"
->> +- ranges (only for host mode): ranges for the PCI memory and I/O regions
->> +- num-ib-windows (only for EP mode): number of inbound address translation
->> +	windows
->> +- num-ob-windows (only for EP mode): number of outbound address translation
->> +	windows
->> +- #interrupt-cells (only for host mode): set to <1>
->> +- interrupt-map-mask and interrupt-map (only for host mode): standard PCI
->> +	properties to define the mapping of the PCIe interface to interrupt
+On Mon, Aug 29, 2016 at 11:19:01AM -0600, Jon Derrick wrote:
+> To reduce the amount of memory required for irq lists, only allocate
+> their space after calling pci_msix_enable_range which may reduce the
+> number of msix vectors allocated.
 > 
-> It may be clearer to just document EP mode in a separate section even if 
-> there's some duplication of properties. Other standard PCI binding 
-> properties probably also don't apply.
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 
-right, will change this accordingly.
+Applied both patches to pci/host-vmd for v4.9, with Keith's Reviewed-by,
+thanks!
 
-Thanks
-Kishon
+> ---
+>  arch/x86/pci/vmd.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index 8d6bb8a..514b446 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -679,11 +679,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  	if (vmd->msix_count < 0)
+>  		return -ENODEV;
+>  
+> -	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
+> -				 GFP_KERNEL);
+> -	if (!vmd->irqs)
+> -		return -ENOMEM;
+> -
+>  	vmd->msix_entries = devm_kcalloc(&dev->dev, vmd->msix_count,
+>  					 sizeof(*vmd->msix_entries),
+>  					 GFP_KERNEL);
+> @@ -697,6 +692,11 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  	if (vmd->msix_count < 0)
+>  		return vmd->msix_count;
+>  
+> +	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
+> +				 GFP_KERNEL);
+> +	if (!vmd->irqs)
+> +		return -ENOMEM;
+> +
+>  	for (i = 0; i < vmd->msix_count; i++) {
+>  		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+>  		vmd->irqs[i].vmd_vector = vmd->msix_entries[i].vector;
+> -- 
+> 1.8.3.1
+> 
