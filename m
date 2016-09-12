@@ -1,125 +1,180 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 2/4] PCI: Query platform firmware for device power state
-Date: Wed, 14 Sep 2016 23:36:40 +0200
-Message-ID: <9274580.osmZYI2u5K@vostro.rjw.lan>
-In-Reply-To: <2423504.PN3SurRX7i@vostro.rjw.lan>
-References: <cover.1472554278.git.lukas@wunner.de> <1707182.o83Q5WOaET@vostro.rjw.lan> <2423504.PN3SurRX7i@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:38056 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932341AbcILEuu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:50 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v4 10/16] IB/pvrdma: Add UAR support
+Date: Sun, 11 Sep 2016 21:49:20 -0700
+Message-ID: <1473655766-31628-11-git-send-email-aditr@vmware.com>
+In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 06:47:40 PM Rafael J. Wysocki wrote:
-> On Wednesday, September 14, 2016 03:01:33 PM Rafael J. Wysocki wrote:
-> > On Wednesday, September 14, 2016 12:50:24 PM Lukas Wunner wrote:
-> > > On Wed, Sep 14, 2016 at 02:21:30AM +0200, Rafael J. Wysocki wrote:
-> > > > On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
-> > > > > Usually the most accurate way to determine a PCI device's power state is
-> > > > > to read its PM Control & Status Register.  There are two cases however
-> > > > > when this is not an option:  If the device doesn't have the PM
-> > > > > capability at all, or if it is in D3cold.
-> > > > > 
-> > > > > In D3cold, reading from config space typically results in a fabricated
-> > > > > "all ones" response.  But in D3hot, the two bits representing the power
-> > > > > state in the PMCSR are *also* set to 1.  Thus D3hot and D3cold are not
-> > > > > discernible by just reading the PMCSR.
-> > > > > 
-> > > > > A (supposedly) reliable way to detect D3cold is to query the platform
-> > > > > firmware for its opinion on the device's power state.  To this end,
-> > > > > add a ->get_power callback to struct pci_platform_pm_ops, and an
-> > > > > implementation to acpi_pci_platform_pm.  (The only pci_platform_pm_ops
-> > > > > existing so far).
-> > > > > 
-> > > > > Amend pci_update_current_state() to query the platform firmware before
-> > > > > reading the PMCSR.
-> > > > > 
-> > > > > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> > > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > > > > ---
-> > > > >  drivers/pci/pci-acpi.c | 23 +++++++++++++++++++++++
-> > > > >  drivers/pci/pci.c      | 21 ++++++++++++++++-----
-> > > > >  drivers/pci/pci.h      |  3 +++
-> > > > >  3 files changed, 42 insertions(+), 5 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> > > > > index 9a033e8..89f2707 100644
-> > > > > --- a/drivers/pci/pci-acpi.c
-> > > > > +++ b/drivers/pci/pci-acpi.c
-> > > > > @@ -452,6 +452,28 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
-> > > > >  	return error;
-> > > > >  }
-> > > > >  
-> > > > > +static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
-> > > > > +{
-> > > > > +	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-> > > > > +	static const pci_power_t state_conv[] = {
-> > > > > +		[ACPI_STATE_D0]      = PCI_D0,
-> > > > > +		[ACPI_STATE_D1]      = PCI_D1,
-> > > > > +		[ACPI_STATE_D2]      = PCI_D2,
-> > > > > +		[ACPI_STATE_D3_HOT]  = PCI_D3hot,
-> > > > > +		[ACPI_STATE_D3_COLD] = PCI_D3cold,
-> > > > > +	};
-> > > > > +	int state;
-> > > > 
-> > > > ACPI_STATE_D3_HOT and ACPI_STATE_D3_COLD were introduced in ACPI 4.0.  For
-> > > > systems predating that, ACPI_STATE_D3_HOT is the deepest state returned by
-> > > > acpi_device_get_power().
-> > > 
-> > > Would it be possible to detect the ACPI spec version the platform
-> > > firmware conforms to, and amend acpi_device_get_power() to return
-> > > ACPI_STATE_D3_COLD if the device is in D3?
-> > > 
-> > > Then we could avoid the unnecessary runtime resume after direct_complete
-> > > also for these older machines.
-> > 
-> > Well, please see below.
-> > 
-> > > Can the revision in the FADT (offset 8) be used as a proxy?
-> > > => E.g. the old Clevo B7130 has revision 3 in the FADT and uses
-> > >    a _DSM and _PS3 to put the discrete GPU in D3cold:
-> > >    https://github.com/Lekensteyn/acpi-stuff/tree/master/dsl/Clevo_B7130
-> > > => Whereas the newer Clevo P651RA has revision 5 in the FADT and uses
-> > >    _PR3 to put the discrete GPU in D3cold:
-> > >    https://github.com/Lekensteyn/acpi-stuff/tree/master/dsl/Clevo_P651RA
-> > > 
-> > > However the FADT revision was already 4 in the ACPI 3.0 spec,
-> > > so we can only use it to discern ACPI 2.0 vs 3.0, not 3.0 vs 4.0,
-> > > which is what we'd actually want.  And there's a comment in
-> > > acpica/tbfadt.c that "The FADT revision value is unreliable."
-> > > 
-> > > Do you know of a better way to discern ACPI 3.0 vs 4.0?
-> > 
-> > I'm not sure if there is a reliable way to be honest.
-> > 
-> > Also even if the FADT etc tells you something, there's no guarantee that AML
-> > actually follows that.
-> > 
-> > In fact, whether or not acpi_device_get_power() will ever return D3cold
-> > for a device depends on whether or not _PR3 is there.  If it's not there,
-> > the deepest state returned will be D3hot in any case.
-> > 
-> > So I'm not sure how useful that is in the context of D3cold detection?
-> 
-> There is more to this.
-> 
-> In fact, we can't really trust _PSC too, because in some ACPI tables it is
-> implemented to always return 0 (seriously).
-> 
-> For this reason, I think the way to go would be to use something like
-> acpi_device_update_power() to ensure that the device really is in the
-> state we think it is in.
+This patch adds the UAR support for the paravirtual RDMA device. The UAR
+pages are MMIO pages from the virtual PCI space. We define offsets within
+this page to provide the fast data-path operations.
 
-Actually, it may be sufficient to simply check if the device is in any
-state different from D0 and leave it alone if that's the case.
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+Reviewed-by: George Zhang <georgezhang@vmware.com>
+Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+Reviewed-by: Bryan Tan <bryantan@vmware.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
+---
+Changes v3->v4:
+ - Removed an unnecessary comment.
 
-For that, acpi_device_update_power() should be good enough and the PCI
-native part would be simpler too I think.
+Changes v2->v3:
+ - Used is_power_of_2 function.
+ - Simplify pvrdma_uar_alloc function.
+---
+ drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c | 127 +++++++++++++++++++++++++
+ 1 file changed, 127 insertions(+)
+ create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c
 
-Thanks,
-Rafael
+diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c b/drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c
+new file mode 100644
+index 0000000..bf51357
+--- /dev/null
++++ b/drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c
+@@ -0,0 +1,127 @@
++/*
++ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of EITHER the GNU General Public License
++ * version 2 as published by the Free Software Foundation or the BSD
++ * 2-Clause License. This program is distributed in the hope that it
++ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
++ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License version 2 for more details at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program available in the file COPYING in the main
++ * directory of this source tree.
++ *
++ * The BSD 2-Clause License
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <linux/bitmap.h>
++#include <linux/errno.h>
++#include <linux/slab.h>
++
++#include "pvrdma.h"
++
++int pvrdma_uar_table_init(struct pvrdma_dev *dev)
++{
++	u32 num = dev->dsr->caps.max_uar;
++	u32 mask = num - 1;
++	struct pvrdma_id_table *tbl = &dev->uar_table.tbl;
++
++	if (!is_power_of_2(num))
++		return -EINVAL;
++
++	tbl->last = 0;
++	tbl->top = 0;
++	tbl->max = num;
++	tbl->mask = mask;
++	spin_lock_init(&tbl->lock);
++	tbl->table = kcalloc(BITS_TO_LONGS(num), sizeof(long), GFP_KERNEL);
++	if (!tbl->table)
++		return -ENOMEM;
++
++	/* 0th UAR is taken by the device. */
++	set_bit(0, tbl->table);
++
++	return 0;
++}
++
++void pvrdma_uar_table_cleanup(struct pvrdma_dev *dev)
++{
++	struct pvrdma_id_table *tbl = &dev->uar_table.tbl;
++
++	kfree(tbl->table);
++}
++
++int pvrdma_uar_alloc(struct pvrdma_dev *dev, struct pvrdma_uar_map *uar)
++{
++	struct pvrdma_id_table *tbl;
++	unsigned long flags;
++	u32 obj;
++
++	tbl = &dev->uar_table.tbl;
++
++	spin_lock_irqsave(&tbl->lock, flags);
++	obj = find_next_zero_bit(tbl->table, tbl->max, tbl->last);
++	if (obj >= tbl->max) {
++		tbl->top = (tbl->top + tbl->max) & tbl->mask;
++		obj = find_first_zero_bit(tbl->table, tbl->max);
++	}
++
++	if (obj >= tbl->max) {
++		spin_unlock_irqrestore(&tbl->lock, flags);
++		return -ENOMEM;
++	}
++
++	set_bit(obj, tbl->table);
++	obj |= tbl->top;
++
++	spin_unlock_irqrestore(&tbl->lock, flags);
++
++	uar->index = obj;
++	uar->pfn = (pci_resource_start(dev->pdev, PVRDMA_PCI_RESOURCE_UAR) >>
++		    PAGE_SHIFT) + uar->index;
++
++	return 0;
++}
++
++void pvrdma_uar_free(struct pvrdma_dev *dev, struct pvrdma_uar_map *uar)
++{
++	struct pvrdma_id_table *tbl = &dev->uar_table.tbl;
++	unsigned long flags;
++	u32 obj;
++
++	obj = uar->index & (tbl->max - 1);
++	spin_lock_irqsave(&tbl->lock, flags);
++	clear_bit(obj, tbl->table);
++	tbl->last = min(tbl->last, obj);
++	tbl->top = (tbl->top + tbl->max) & tbl->mask;
++	spin_unlock_irqrestore(&tbl->lock, flags);
++}
+-- 
+2.7.4
 
