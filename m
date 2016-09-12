@@ -1,226 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51716 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759041AbcIMP0B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 11:26:01 -0400
-Subject: Re: [PATCH v5 07/14] drivers: acpi: iort: add support for ARM SMMU
- platform devices creation
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
- <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <b0de32c2-01a5-2437-daa0-13044526b474@arm.com>
-Date: Tue, 13 Sep 2016 16:25:55 +0100
+Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:34218 "EHLO
+        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756576AbcILEuf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:35 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v4 08/16] IB/pvrdma: Add device command support
+Date: Sun, 11 Sep 2016 21:49:18 -0700
+Message-ID: <1473655766-31628-9-git-send-email-aditr@vmware.com>
+In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
 MIME-Version: 1.0
-In-Reply-To: <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/09/16 15:23, Lorenzo Pieralisi wrote:
-> In ARM ACPI systems, IOMMU components are specified through static
-> IORT table entries. In order to create platform devices for the
-> corresponding ARM SMMU components, IORT kernel code should be made
-> able to parse IORT table entries and create platform devices
-> dynamically.
-> 
-> This patch adds the generic IORT infrastructure required to create
-> platform devices for ARM SMMUs.
-> 
-> ARM SMMU versions have different resources requirement therefore this
-> patch also introduces an IORT specific structure (ie iort_iommu_config)
-> that contains hooks (to be defined when the corresponding ARM SMMU
-> driver support is added to the kernel) to be used to define the
-> platform devices names, init the IOMMUs, count their resources and
-> finally initialize them.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
->  drivers/acpi/arm64/iort.c | 131 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 131 insertions(+)
-> 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index b89b3d3..e0a9b16 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -22,6 +22,7 @@
->  #include <linux/kernel.h>
->  #include <linux/list.h>
->  #include <linux/pci.h>
-> +#include <linux/platform_device.h>
->  #include <linux/slab.h>
->  
->  struct iort_its_msi_chip {
-> @@ -424,6 +425,135 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
->  	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
->  }
->  
-> +struct iort_iommu_config {
-> +	const char *name;
-> +	int (*iommu_init)(struct acpi_iort_node *node);
-> +	bool (*iommu_is_coherent)(struct acpi_iort_node *node);
-> +	int (*iommu_count_resources)(struct acpi_iort_node *node);
-> +	void (*iommu_init_resources)(struct resource *res,
-> +				     struct acpi_iort_node *node);
-> +};
-> +
-> +static __init
-> +const struct iort_iommu_config *iort_get_iommu_cfg(struct acpi_iort_node *node)
-> +{
-> +	return NULL;
-> +}
-> +
-> +/**
-> + * iort_add_smmu_platform_device() - Allocate a platform device for SMMU
-> + * @fwnode: IORT node associated fwnode handle
-> + * @node: Pointer to SMMU ACPI IORT node
-> + *
-> + * Returns: 0 on success, <0 failure
-> + */
-> +static int __init iort_add_smmu_platform_device(struct fwnode_handle *fwnode,
-> +						struct acpi_iort_node *node)
-> +{
-> +	struct platform_device *pdev;
-> +	struct resource *r;
-> +	enum dev_dma_attr attr;
-> +	int ret, count;
-> +	const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
-> +
-> +	if (!ops)
-> +		return -ENODEV;
-> +
-> +	pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
-> +	if (!pdev)
-> +		return PTR_ERR(pdev);
-> +
-> +	count = ops->iommu_count_resources(node);
-> +
-> +	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
-> +	if (!r) {
-> +		ret = -ENOMEM;
-> +		goto dev_put;
-> +	}
-> +
-> +	ops->iommu_init_resources(r, node);
-> +
-> +	ret = platform_device_add_resources(pdev, r, count);
-> +	/*
-> +	 * Resources are duplicated in platform_device_add_resources,
-> +	 * free their allocated memory
-> +	 */
-> +	kfree(r);
-> +
-> +	if (ret)
-> +		goto dev_put;
-> +
-> +	/*
-> +	 * Add a copy of IORT node pointer to platform_data to
-> +	 * be used to retrieve IORT data information.
-> +	 */
-> +	ret = platform_device_add_data(pdev, &node, sizeof(node));
-> +	if (ret)
-> +		goto dev_put;
-> +
-> +	pdev->dev.dma_mask = kmalloc(sizeof(*pdev->dev.dma_mask), GFP_KERNEL);
-> +	if (!pdev->dev.dma_mask) {
-> +		ret = -ENOMEM;
-> +		goto dev_put;
-> +	}
+This patch enables posting Verb requests and receiving responses to/from
+the backend PVRDMA emulation layer.
 
-Since this is exclusively for creating SMMUs, and we know they should
-never have weird shenanigans going on requiring different masks, I'd be
-inclined to just point dev.dma_mask at dev.coherent_dma_mask and be done
-with it.
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+Reviewed-by: George Zhang <georgezhang@vmware.com>
+Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+Reviewed-by: Bryan Tan <bryantan@vmware.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
+---
+Changes v3->v4:
+ - Removed the min check and added a BUILD_BUG_ON check for size.
 
-> +
-> +	pdev->dev.fwnode = fwnode;
-> +
-> +	/*
-> +	 * Set default dma mask value for the table walker,
-> +	 * to be overridden on probing with correct value.
-> +	 */
-> +	*pdev->dev.dma_mask = DMA_BIT_MASK(32);
-> +	pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
-> +
-> +	attr = ops->iommu_is_coherent(node) ?
-> +			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
-> +
-> +	/* Configure DMA for the page table walker */
-> +	acpi_dma_configure(&pdev->dev, attr);
+Changes v2->v3:
+ - Converted pvrdma_cmd_recv to inline.
+ - Added a min check in the memcpy to cmd_slot.
+ - Removed the boolean from pvrdma_cmd_post.
+---
+ drivers/infiniband/hw/pvrdma/pvrdma_cmd.c | 108 ++++++++++++++++++++++++++++++
+ 1 file changed, 108 insertions(+)
+ create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
 
-Oh look, some more code which would be simpler if acpi_dma_configure()
-set the default mask itself ;)
-
-Robin.
-
-> +
-> +	ret = platform_device_add(pdev);
-> +	if (ret)
-> +		goto dma_deconfigure;
-> +
-> +	return 0;
-> +
-> +dma_deconfigure:
-> +	acpi_dma_deconfigure(&pdev->dev);
-> +	kfree(pdev->dev.dma_mask);
-> +
-> +dev_put:
-> +	platform_device_put(pdev);
-> +
-> +	return ret;
-> +}
-> +
-> +static acpi_status __init iort_match_iommu_callback(struct acpi_iort_node *node,
-> +						    void *context)
-> +{
-> +	int ret;
-> +	struct fwnode_handle *fwnode;
-> +
-> +	fwnode = iort_get_fwnode(node);
-> +
-> +	if (!fwnode)
-> +		return AE_NOT_FOUND;
-> +
-> +	ret = iort_add_smmu_platform_device(fwnode, node);
-> +	if (ret) {
-> +		pr_err("Error in platform device creation\n");
-> +		return AE_ERROR;
-> +	}
-> +
-> +	return AE_OK;
-> +}
-> +
-> +static void __init iort_smmu_init(void)
-> +{
-> +	iort_scan_node(ACPI_IORT_NODE_SMMU, iort_match_iommu_callback, NULL);
-> +	iort_scan_node(ACPI_IORT_NODE_SMMU_V3, iort_match_iommu_callback, NULL);
-> +}
-> +
->  void __init acpi_iort_init(void)
->  {
->  	acpi_status status;
-> @@ -436,4 +566,5 @@ void __init acpi_iort_init(void)
->  	}
->  
->  	acpi_probe_device_table(iort);
-> +	iort_smmu_init();
->  }
-> 
+diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
+new file mode 100644
+index 0000000..827e3ff
+--- /dev/null
++++ b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
+@@ -0,0 +1,108 @@
++/*
++ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of EITHER the GNU General Public License
++ * version 2 as published by the Free Software Foundation or the BSD
++ * 2-Clause License. This program is distributed in the hope that it
++ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
++ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License version 2 for more details at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program available in the file COPYING in the main
++ * directory of this source tree.
++ *
++ * The BSD 2-Clause License
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <linux/list.h>
++
++#include "pvrdma.h"
++
++#define PVRDMA_CMD_TIMEOUT	10000 /* ms */
++
++static inline int pvrdma_cmd_recv(struct pvrdma_dev *dev,
++				  union pvrdma_cmd_resp *resp)
++{
++	dev_dbg(&dev->pdev->dev, "receive response from device\n");
++
++	spin_lock(&dev->cmd_lock);
++	memcpy(resp, dev->resp_slot, sizeof(*resp));
++	spin_unlock(&dev->cmd_lock);
++
++	return 0;
++}
++
++int
++pvrdma_cmd_post(struct pvrdma_dev *dev, union pvrdma_cmd_req *req,
++		union pvrdma_cmd_resp *resp)
++{
++	int err;
++
++	dev_dbg(&dev->pdev->dev, "post request to device\n");
++
++	/* Serializiation */
++	down(&dev->cmd_sema);
++
++	BUILD_BUG_ON(sizeof(union pvrdma_cmd_req) !=
++		     sizeof(struct pvrdma_cmd_modify_qp));
++
++	spin_lock(&dev->cmd_lock);
++	memcpy(dev->cmd_slot, req, sizeof(*req));
++	spin_unlock(&dev->cmd_lock);
++
++	init_completion(&dev->cmd_done);
++	pvrdma_write_reg(dev, PVRDMA_REG_REQUEST, 0);
++
++	/* Make sure the request is written before reading status. */
++	mb();
++	err = pvrdma_read_reg(dev, PVRDMA_REG_ERR);
++	if (err == 0) {
++		if (resp != NULL) {
++			err = wait_for_completion_interruptible_timeout(
++				&dev->cmd_done,
++				msecs_to_jiffies(PVRDMA_CMD_TIMEOUT));
++			if (err == 0 || err == -ERESTARTSYS) {
++				dev_err(&dev->pdev->dev,
++					"completion timeout or interrupted\n");
++				err = -ETIMEDOUT;
++			} else {
++				err = pvrdma_cmd_recv(dev, resp);
++			}
++		}
++	} else {
++		dev_warn(&dev->pdev->dev, "failed to write request %d\n", err);
++	}
++
++	up(&dev->cmd_sema);
++
++	return err;
++}
+-- 
+2.7.4
 
