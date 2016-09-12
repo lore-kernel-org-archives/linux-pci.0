@@ -1,50 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <marc.zyngier@arm.com>
+Return-Path: <marc.zyngier@arm.com>
+Date: Mon, 12 Sep 2016 20:36:07 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
+ helgaas@kernel.org, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+ will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
+ shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+ okaya@codeaurora.org
+Subject: Re: [UPDATE PATCH V11 1/8] ACPI: I/O Remapping Table (IORT) initial
+ support
+Message-ID: <20160912203607.591773e6@why.wild-wind.fr.eu.org>
+In-Reply-To: <87c1d6a4-a760-9f8a-ddbe-7cf6655d575b@semihalf.com>
+References: <1473705147-6588-2-git-send-email-tn@semihalf.com>
+	<1473706460-9037-1-git-send-email-tn@semihalf.com>
+	<87c1d6a4-a760-9f8a-ddbe-7cf6655d575b@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 30 Sep 2016 09:14:42 -0400
-From: okaya@codeaurora.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        wim@djo.tudelft.nl, ravikanth.nalla@hpe.com
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-In-Reply-To: <201609300844.24325.linux@rainbow-software.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609292000.56943.linux@rainbow-software.org>
- <34355440-197d-44c7-b27d-535267d1161c@codeaurora.org>
- <201609300844.24325.linux@rainbow-software.org>
-Message-ID: <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016-09-30 02:44, Ondrej Zary wrote:
-> On Friday 30 September 2016, Sinan Kaya wrote:
->> On 9/29/2016 2:00 PM, Ondrej Zary wrote:
->> >> The previous two patches were in the right direction.
->> >>
->> >> > Can we also get the same output from 4.6 kernel with the attached
->> >> > patch for the same machine you sent these?
->> >
->> > Here it is.
->> >
->> >> > Something about SCI still doesn't feel right.
->> >> >
->> >> > The IRQ assignment fails if the penalty is greater than
->> >> > PIRQ_PENALTY_ISA_ALWAYS. This will happen if BIOS tells us to use an
->> >> > IRQ and same IRQ is in use by the SCI.
->> 
->> Thanks, I reverted penalize_sci function and dropped patch #1. Can you 
->> try
->> this again?
+On Mon, 12 Sep 2016 20:58:42 +0200
+Tomasz Nowicki <tn@semihalf.com> wrote:
+
+> On 12.09.2016 20:54, Tomasz Nowicki wrote:
+> > IORT shows representation of IO topology for ARM based systems.
+> > It describes how various components are connected together on
+> > parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+> > http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+> >
+> > Initial support allows to detect IORT table presence and save its
+> > root pointer obtained through acpi_get_table(). The pointer validity
+> > depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+> > is not set while using IORT nodes we would dereference unmapped pointers.
+> >
+> > For the aforementioned reason call acpi_iort_init() from acpi_init()
+> > which guarantees acpi_gbl_permanent_mmap to be set at that point.
+> >
+> > Add generic helpers which are helpful for scanning and retrieving
+> > information from IORT table content. List of the most important helpers:
+> > - iort_find_dev_node() finds IORT node for a given device
+> > - iort_node_map_rid() maps device RID and returns IORT node which provides
+> >   final translation
+> >
+> > IORT support is placed under drivers/acpi/arm64/ new directory due to its
+> > ARM64 specific nature. The code there is considered only for ARM64.
+> > The long term plan is to keep all ARM64 specific tables support
+> > in this place e.g. GTDT table.
+> >
+> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> > Acked-by: Rafael J. Wysocki <rjw@rjwysocki.net>
+> > Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> > Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>  
 > 
-> It seems to work, at least on one machine.
+> Hi Marc,
+> 
+> Series with updated patch 1 can be found:
+> https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v11)
+> 
+> Sorry for zillions of patch updates...
 
-Ok, that comfirms my suspicion. We are  having trouble detecting sci 
-interrupt  type and we end up penalizing the wrong value.
+I've swapped the two patches and pushed the result out again, but from
+now on, please send updates on top of irq/irqchip-4.9.
 
-Can you try your other machines too?
+Thanks,
 
-I need to do some research now.
+	M.
+-- 
+Without deviation from the norm, progress is not possible.
