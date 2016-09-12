@@ -1,40 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43126 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:54390 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753129AbcIBWJr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Sep 2016 18:09:47 -0400
-Date: Fri, 2 Sep 2016 17:09:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-kernel@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        linux-rockchip@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH v2 07/15] Simplify the confusing HIWORD_UPDATE scheme.
-Message-ID: <20160902220942.GA21718@localhost>
-References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160902155453.8650.29613.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160902213806.GA31011@roeck-us.net>
+        id S1757497AbcILVJh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 17:09:37 -0400
+Subject: [PATCH v2 5/8] PCI: pciehp: Don't re-read Slot Status when handling
+ surprise event
+To: Mayurkumar Patel <mayurkumar.patel@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
+        linux-pci@vger.kernel.org,
+        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
+        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Luis Antonio Tarazona-Duarte
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        mika.westerberg@linux.intel.com
+Date: Mon, 12 Sep 2016 16:09:28 -0500
+Message-ID: <20160912210928.22258.74566.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160902213806.GA31011@roeck-us.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 02, 2016 at 02:38:06PM -0700, Guenter Roeck wrote:
-> On Fri, Sep 02, 2016 at 10:54:53AM -0500, Bjorn Helgaas wrote:
+From: Mayurkumar Patel <mayurkumar.patel@intel.com>
 
-> > +#define HIWORD_UPDATE(mask, val)	((mask << 16) | val)
-> > +
-> > +#define ENCODE_LANES(x)			(((x >> 1) & 3) << 4)
-> 
-> (x) ?
+Previously we read Slot Status when handling a surprise event.  But Slot
+Status might have changed since we identified the event, and the event_type
+already tells us whether to enable or disable the slot, so there's no need
+to read it again.
 
-Done, thanks!  (And for "mask" and "val")
+Remove handle_surprise_event() and queue the power work directly.
+
+[bhelgaas: changelog]
+Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rajat Jain <rajatxjain@gmail.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c |   18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 7ea3e61..a787684 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -302,20 +302,6 @@ static void handle_button_press_event(struct slot *p_slot)
+ /*
+  * Note: This function must be called with slot->lock held
+  */
+-static void handle_surprise_event(struct slot *p_slot)
+-{
+-	u8 getstatus;
+-
+-	pciehp_get_adapter_status(p_slot, &getstatus);
+-	if (!getstatus)
+-		pciehp_queue_power_work(p_slot, DISABLE_REQ);
+-	else
+-		pciehp_queue_power_work(p_slot, ENABLE_REQ);
+-}
+-
+-/*
+- * Note: This function must be called with slot->lock held
+- */
+ static void handle_link_event(struct slot *p_slot, u32 event)
+ {
+ 	struct controller *ctrl = p_slot->ctrl;
+@@ -378,14 +364,14 @@ static void interrupt_event_handler(struct work_struct *work)
+ 		pciehp_green_led_off(p_slot);
+ 		break;
+ 	case INT_PRESENCE_ON:
+-		handle_surprise_event(p_slot);
++		pciehp_queue_power_work(p_slot, ENABLE_REQ);
+ 		break;
+ 	case INT_PRESENCE_OFF:
+ 		/*
+ 		 * Regardless of surprise capability, we need to
+ 		 * definitely remove a card that has been pulled out!
+ 		 */
+-		handle_surprise_event(p_slot);
++		pciehp_queue_power_work(p_slot, DISABLE_REQ);
+ 		break;
+ 	case INT_LINK_UP:
+ 	case INT_LINK_DOWN:
+
