@@ -1,184 +1,252 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45626 "EHLO mga01.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:54638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933558AbcI0NrJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 09:47:09 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v7 7/8] thunderbolt: Networking doc
-Date: Tue, 27 Sep 2016 16:43:40 +0300
-Message-Id: <1474983821-2313-8-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
-References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+        id S1757876AbcILVJt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 17:09:49 -0400
+Subject: [PATCH v2 7/8] PCI: pciehp: Clean up dmesg "Slot(%s)" messages
+To: Mayurkumar Patel <mayurkumar.patel@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
+        linux-pci@vger.kernel.org,
+        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
+        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Luis Antonio Tarazona-Duarte
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        mika.westerberg@linux.intel.com
+Date: Mon, 12 Sep 2016 16:09:43 -0500
+Message-ID: <20160912210943.22258.4748.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding Thunderbolt(TM) networking documentation.
+Print slot name consistently as "Slot(%s)".  I don't know whether that's
+ideal, but we can at least do it the same way all the time.  No functional
+change intended.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- Documentation/00-INDEX                   |   2 +
- Documentation/thunderbolt/networking.txt | 132 +++++++++++++++++++++++++++++++
- 2 files changed, 134 insertions(+)
- create mode 100644 Documentation/thunderbolt/networking.txt
+ drivers/pci/hotplug/pciehp_ctrl.c |   56 ++++++++++++++++++-------------------
+ drivers/pci/hotplug/pciehp_hpc.c  |   12 ++++----
+ 2 files changed, 33 insertions(+), 35 deletions(-)
 
-diff --git a/Documentation/00-INDEX b/Documentation/00-INDEX
-index cb9a6c6..a448ba1 100644
---- a/Documentation/00-INDEX
-+++ b/Documentation/00-INDEX
-@@ -439,6 +439,8 @@ this_cpu_ops.txt
- 	- List rationale behind and the way to use this_cpu operations.
- thermal/
- 	- directory with information on managing thermal issues (CPU/temp)
-+thunderbolt/
-+	- directory with info regarding Thunderbolt.
- trace/
- 	- directory with info on tracing technologies within linux
- unaligned-memory-access.txt
-diff --git a/Documentation/thunderbolt/networking.txt b/Documentation/thunderbolt/networking.txt
-new file mode 100644
-index 0000000..88d1c12
---- /dev/null
-+++ b/Documentation/thunderbolt/networking.txt
-@@ -0,0 +1,132 @@
-+Intel Thunderbolt(TM) Networking driver
-+=======================================
-+
-+Copyright(c) 2013 - 2016 Intel Corporation.
-+
-+Contact Information:
-+Intel Thunderbolt mailing list <thunderbolt-software@lists.01.org>
-+Edited by Amir Levy <amir.jer.levy@intel.com>
-+
-+Overview
-+========
-+
-+* The Thunderbolt Networking driver enables peer to peer networking on non-Apple
-+  platforms running Linux.
-+
-+* The driver creates a virtual Ethernet device that enables computer to computer
-+  communication over the Thunderbolt cable.
-+
-+* Using Thunderbolt Networking you can perform high speed file transfers between
-+  computers, perform PC migrations and/or set up small workgroups with shared
-+  storage without compromising any other Thunderbolt functionality.
-+
-+* The driver is located in drivers/thunderbolt/icm.
-+
-+* This driver will function only on non-Apple platforms with firmware based
-+  Thunderbolt controllers that support Thunderbolt Networking.
-+
-+  +----------------+            +----------------+
-+  |Host 1          |            |Host 2          |
-+  |                |            |                |
-+  |   +-------+    |            |    +-------+   |
-+  |   |Network|    |            |    |Network|   |
-+  |   |Stack  |    |            |    |Stack  |   |
-+  |   +-------+    |            |    +-------+   |
-+  |       ^        |            |        ^       |
-+  |       |        |            |        |       |
-+  |       v        |            |        v       |
-+  | +-----------+  |            |  +-----------+ |
-+  | |Thunderbolt|  |            |  |Thunderbolt| |
-+  | |Networking |  |            |  |Networking | |
-+  | |Driver     |  |            |  |Driver     | |
-+  | +-----------+  |            |  +-----------+ |
-+  |       ^        |            |        ^       |
-+  |       |        |            |        |       |
-+  |       v        |            |        v       |
-+  | +-----------+  |            |  +-----------+ |
-+  | |Thunderbolt|  |            |  |Thunderbolt| |
-+  | |Controller |<-+------------+->|Controller | |
-+  | |with ICM   |  |            |  |with ICM   | |
-+  | |enabled    |  |            |  |enabled    | |
-+  | +-----------+  |            |  +-----------+ |
-+  +----------------+            +----------------+
-+
-+Files
-+=====
-+
-+The following files are located in the drivers/thunderbolt/icm directory:
-+
-+- icm_nhi.c/h:	These files allow communication with the firmware (Intel
-+  Connection Manager) based controller. They also create an interface for
-+  netlink communication with a user space daemon.
-+
-+- net.c/net.h:	These files implement the 'eth' interface for the
-+  Thunderbolt(TM) Networking.
-+
-+Interface to User Space
-+=======================
-+
-+The interface to the user space module is implemented through a Generic Netlink.
-+This is the communications protocol between the Thunderbolt driver and the user
-+space application.
-+
-+Note that this interface mediates user space communication with ICM.
-+(Existing Linux tools can be used to configure the network interface.)
-+
-+The Thunderbolt Daemon utilizes this interface to communicate with the driver.
-+To be accessed by the user space module, both kernel and user space modules
-+have to register with the same GENL_NAME.
-+For the purpose of the Thunderbolt Network driver, "thunderbolt" is used.
-+The registration is done at driver initialization time for all instances
-+of the Thunderbolt controllers. The communication is carried through pre-defined
-+Thunderbolt messages. Each specific message has a callback function that is
-+called when the related message is received.
-+
-+Message Definitions:
-+* NHI_CMD_UNSPEC: Not used.
-+* NHI_CMD_SUBSCRIBE: Subscription request from daemon to driver to open the
-+  communication channel.
-+* NHI_CMD_UNSUBSCRIBE: Request from daemon to driver to unsubscribe and
-+  to close communication channel.
-+* NHI_CMD_QUERY_INFORMATION: Request information from the driver such as
-+  driver version, FW version offset, number of ports in the controller
-+  and DMA port.
-+* NHI_CMD_MSG_TO_ICM: Message from user space module to FW.
-+* NHI_CMD_MSG_FROM_ICM: Response from FW to user space module.
-+* NHI_CMD_MAILBOX: Message that uses mailbox mechanism such as FW policy
-+  changes or disconnect path.
-+* NHI_CMD_APPROVE_TBT_NETWORKING: Request from user space module to FW to
-+  establish path.
-+* NHI_CMD_ICM_IN_SAFE_MODE: Indication that the FW has entered safe mode.
-+
-+Communication with Intel Connection Manager(ICM) Firmware
-+=========================================================
-+
-+There are several circular buffers in Thunderbolt each using Direct Memory
-+Access (DMA).
-+
-+Communication with ICM utilizes circular buffer ring #0. (The other rings are
-+used for peer to peer communication, packet transmission and receiving).
-+
-+The driver allocates a shared memory that is physically mapped onto the DMA
-+physical space at ring #0.
-+For the software to communicate with the firmware, the driver sends a command
-+in ring #0. The command contains a pre-defined field (PDF) value notifying the
-+firmware that the driver is ready. To proceed, the driver must receive the
-+appropriate PDF value in response from the firmware.
-+
-+Once the exchange is completed, messages can be sent to the firmware through
-+the driver. Similarly, the firmware can now send notifications about hardware
-+and firmware events.
-+
-+Information
-+===========
-+
-+Mailing list:
-+	thunderbolt-software@lists.01.org
-+	Register at: https://lists.01.org/mailman/listinfo/thunderbolt-software
-+	Archives at: https://lists.01.org/pipermail/thunderbolt-software/
-+
-+For additional information about Thunderbolt technology visit:
-+	https://01.org/thunderbolt-sw
-+	https://thunderbolttechnology.net/
--- 
-2.7.4
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index a787684..bf50f26 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -106,7 +106,7 @@ static int board_added(struct slot *p_slot)
+ 
+ 	/* Check for a power fault */
+ 	if (ctrl->power_fault_detected || pciehp_query_power_fault(p_slot)) {
+-		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(p_slot));
++		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(p_slot));
+ 		retval = -EIO;
+ 		goto err_exit;
+ 	}
+@@ -254,11 +254,11 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		pciehp_get_power_status(p_slot, &getstatus);
+ 		if (getstatus) {
+ 			p_slot->state = BLINKINGOFF_STATE;
+-			ctrl_info(ctrl, "PCI slot #%s - powering off due to button press\n",
++			ctrl_info(ctrl, "Slot(%s): Powering off due to button press\n",
+ 				  slot_name(p_slot));
+ 		} else {
+ 			p_slot->state = BLINKINGON_STATE;
+-			ctrl_info(ctrl, "PCI slot #%s - powering on due to button press\n",
++			ctrl_info(ctrl, "Slot(%s) Powering on due to button press\n",
+ 				  slot_name(p_slot));
+ 		}
+ 		/* blink green LED and turn off amber */
+@@ -273,14 +273,14 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		 * press the attention again before the 5 sec. limit
+ 		 * expires to cancel hot-add or hot-remove
+ 		 */
+-		ctrl_info(ctrl, "Button cancel on Slot(%s)\n", slot_name(p_slot));
++		ctrl_info(ctrl, "Slot(%s): Button cancel\n", slot_name(p_slot));
+ 		cancel_delayed_work(&p_slot->work);
+ 		if (p_slot->state == BLINKINGOFF_STATE)
+ 			pciehp_green_led_on(p_slot);
+ 		else
+ 			pciehp_green_led_off(p_slot);
+ 		pciehp_set_attention_status(p_slot, 0);
+-		ctrl_info(ctrl, "PCI slot #%s - action canceled due to button press\n",
++		ctrl_info(ctrl, "Slot(%s): Action canceled due to button press\n",
+ 			  slot_name(p_slot));
+ 		p_slot->state = STATIC_STATE;
+ 		break;
+@@ -291,10 +291,12 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		 * this means that the previous attention button action
+ 		 * to hot-add or hot-remove is undergoing
+ 		 */
+-		ctrl_info(ctrl, "Button ignore on Slot(%s)\n", slot_name(p_slot));
++		ctrl_info(ctrl, "Slot(%s): Button ignored\n",
++			  slot_name(p_slot));
+ 		break;
+ 	default:
+-		ctrl_warn(ctrl, "ignoring invalid state %#x\n", p_slot->state);
++		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
++			 slot_name(p_slot), p_slot->state);
+ 		break;
+ 	}
+ }
+@@ -317,31 +319,27 @@ static void handle_link_event(struct slot *p_slot, u32 event)
+ 		break;
+ 	case POWERON_STATE:
+ 		if (event == INT_LINK_UP) {
+-			ctrl_info(ctrl,
+-				  "Link Up event ignored on slot(%s): already powering on\n",
++			ctrl_info(ctrl, "Slot(%s): Link Up event ignored; already powering on\n",
+ 				  slot_name(p_slot));
+ 		} else {
+-			ctrl_info(ctrl,
+-				  "Link Down event queued on slot(%s): currently getting powered on\n",
++			ctrl_info(ctrl, "Slot(%s): Link Down event queued; currently getting powered on\n",
+ 				  slot_name(p_slot));
+ 			pciehp_queue_power_work(p_slot, DISABLE_REQ);
+ 		}
+ 		break;
+ 	case POWEROFF_STATE:
+ 		if (event == INT_LINK_UP) {
+-			ctrl_info(ctrl,
+-				  "Link Up event queued on slot(%s): currently getting powered off\n",
++			ctrl_info(ctrl, "Slot(%s): Link Up event queued; currently getting powered off\n",
+ 				  slot_name(p_slot));
+ 			pciehp_queue_power_work(p_slot, ENABLE_REQ);
+ 		} else {
+-			ctrl_info(ctrl,
+-				  "Link Down event ignored on slot(%s): already powering off\n",
++			ctrl_info(ctrl, "Slot(%s): Link Down event ignored; already powering off\n",
+ 				  slot_name(p_slot));
+ 		}
+ 		break;
+ 	default:
+-		ctrl_err(ctrl, "ignoring invalid state %#x on slot(%s)\n",
+-			 p_slot->state, slot_name(p_slot));
++		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
++			 slot_name(p_slot), p_slot->state);
+ 		break;
+ 	}
+ }
+@@ -396,13 +394,13 @@ int pciehp_enable_slot(struct slot *p_slot)
+ 
+ 	pciehp_get_adapter_status(p_slot, &getstatus);
+ 	if (!getstatus) {
+-		ctrl_info(ctrl, "No adapter on slot(%s)\n", slot_name(p_slot));
++		ctrl_info(ctrl, "Slot(%s): No adapter\n", slot_name(p_slot));
+ 		return -ENODEV;
+ 	}
+ 	if (MRL_SENS(p_slot->ctrl)) {
+ 		pciehp_get_latch_status(p_slot, &getstatus);
+ 		if (getstatus) {
+-			ctrl_info(ctrl, "Latch open on slot(%s)\n",
++			ctrl_info(ctrl, "Slot(%s): Latch open\n",
+ 				  slot_name(p_slot));
+ 			return -ENODEV;
+ 		}
+@@ -411,7 +409,7 @@ int pciehp_enable_slot(struct slot *p_slot)
+ 	if (POWER_CTRL(p_slot->ctrl)) {
+ 		pciehp_get_power_status(p_slot, &getstatus);
+ 		if (getstatus) {
+-			ctrl_info(ctrl, "Already enabled on slot(%s)\n",
++			ctrl_info(ctrl, "Slot(%s): Already enabled\n",
+ 				  slot_name(p_slot));
+ 			return -EINVAL;
+ 		}
+@@ -440,7 +438,7 @@ int pciehp_disable_slot(struct slot *p_slot)
+ 	if (POWER_CTRL(p_slot->ctrl)) {
+ 		pciehp_get_power_status(p_slot, &getstatus);
+ 		if (!getstatus) {
+-			ctrl_info(ctrl, "Already disabled on slot(%s)\n",
++			ctrl_info(ctrl, "Slot(%s): Already disabled\n",
+ 				  slot_name(p_slot));
+ 			return -EINVAL;
+ 		}
+@@ -468,17 +466,17 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
+ 		p_slot->state = STATIC_STATE;
+ 		break;
+ 	case POWERON_STATE:
+-		ctrl_info(ctrl, "Slot %s is already in powering on state\n",
++		ctrl_info(ctrl, "Slot(%s): Already in powering on state\n",
+ 			  slot_name(p_slot));
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case POWEROFF_STATE:
+-		ctrl_info(ctrl, "Already enabled on slot %s\n",
++		ctrl_info(ctrl, "Slot(%s): Already enabled\n",
+ 			  slot_name(p_slot));
+ 		break;
+ 	default:
+-		ctrl_err(ctrl, "invalid state %#x on slot %s\n",
+-			 p_slot->state, slot_name(p_slot));
++		ctrl_err(ctrl, "Slot(%s): Invalid state %#x\n",
++			 slot_name(p_slot), p_slot->state);
+ 		break;
+ 	}
+ 	mutex_unlock(&p_slot->lock);
+@@ -505,17 +503,17 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
+ 		p_slot->state = STATIC_STATE;
+ 		break;
+ 	case POWEROFF_STATE:
+-		ctrl_info(ctrl, "Slot %s is already in powering off state\n",
++		ctrl_info(ctrl, "Slot(%s): Already in powering off state\n",
+ 			  slot_name(p_slot));
+ 		break;
+ 	case BLINKINGON_STATE:
+ 	case POWERON_STATE:
+-		ctrl_info(ctrl, "Already disabled on slot %s\n",
++		ctrl_info(ctrl, "Slot(%s): Already disabled\n",
+ 			  slot_name(p_slot));
+ 		break;
+ 	default:
+-		ctrl_err(ctrl, "invalid state %#x on slot %s\n",
+-			 p_slot->state, slot_name(p_slot));
++		ctrl_err(ctrl, "Slot(%s): Invalid state %#x\n",
++			 slot_name(p_slot), p_slot->state);
+ 		break;
+ 	}
+ 	mutex_unlock(&p_slot->lock);
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 60e1d55..4582fdf 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -592,7 +592,7 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 
+ 	/* Check Attention Button Pressed */
+ 	if (events & PCI_EXP_SLTSTA_ABP) {
+-		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
++		ctrl_info(ctrl, "Slot(%s): Attention button pressed\n",
+ 			  slot_name(slot));
+ 		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
+ 	}
+@@ -600,8 +600,8 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	/* Check Presence Detect Changed */
+ 	if (events & PCI_EXP_SLTSTA_PDC) {
+ 		present = !!(status & PCI_EXP_SLTSTA_PDS);
+-		ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
+-			  present ? "" : "not ", slot_name(slot));
++		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
++			  present ? "" : "not ");
+ 		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
+ 					     INT_PRESENCE_OFF);
+ 	}
+@@ -609,13 +609,13 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	/* Check Power Fault Detected */
+ 	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+ 		ctrl->power_fault_detected = 1;
+-		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(slot));
++		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(slot));
+ 		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
+ 	}
+ 
+ 	if (events & PCI_EXP_SLTSTA_DLLSC) {
+-		ctrl_info(ctrl, "slot(%s): Link %s event\n",
+-			  slot_name(slot), link ? "Up" : "Down");
++		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
++			  link ? "Up" : "Down");
+ 		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
+ 					     INT_LINK_DOWN);
+ 	}
 
