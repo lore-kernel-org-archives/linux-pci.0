@@ -1,127 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/2] PCI: add CRS support to error handling path
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
- alex.williamson@redhat.com, vikrams@codeaurora.org
-References: <1472770801-30671-1-git-send-email-okaya@codeaurora.org>
- <1472770801-30671-2-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <1ffb90c9-f531-adcb-2067-9f675cc5ffea@codeaurora.org>
-Date: Wed, 7 Sep 2016 14:56:12 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54426 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757535AbcILVJk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 17:09:40 -0400
+Subject: [PATCH v2 6/8] PCI: pciehp: Remove unnecessary guard
+To: Mayurkumar Patel <mayurkumar.patel@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
+        linux-pci@vger.kernel.org,
+        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
+        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Luis Antonio Tarazona-Duarte
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        mika.westerberg@linux.intel.com
+Date: Mon, 12 Sep 2016 16:09:36 -0500
+Message-ID: <20160912210936.22258.71755.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1472770801-30671-2-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+In pcie_isr(), we return early if no status bits other than
+PCI_EXP_SLTSTA_CC are set.  This was introduced by dbd79aed1aea ("pciehp:
+fix NULL dereference in interrupt handler"), but it is no longer necessary
+because all the subsequent pcie_isr() code is already predicated on a
+status bit being set.
 
-On 9/1/2016 7:00 PM, Sinan Kaya wrote:
-> The PCIE spec allows an endpoint device to extend the initialization time
-> beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
-> vendor ID read request.
-> 
-> This basically means "I'm busy now, please call me back later".
-> 
-> There are two moving parts to CRS support from the SW perspective. One part
-> is to determine if CRS is supported or not. The second part is to set the
-> CRS visibility register.
-> 
-> As part of the probe, the Linux kernel sets the above two conditions in
-> pci_enable_crs function. The kernel is also honoring the returned CRS in
-> pci_bus_read_dev_vendor_id function if supported. The function will poll up
-> to specified amount of time while endpoint is returning CRS response.
-> 
-> The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
-> resets.
-> 
-> The hot reset is initiated by starting a secondary bus reset. This patch is
-> adding vendor ID read immediately after a bus reset so that the
-> initialization procedure can be extended by the amount of time endpoint
-> requires.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 39 +++++++++++++++++++++++++++++++++++++++
->  1 file changed, 39 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b209378..ebd0fc6 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3829,6 +3829,44 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
->  	return 0;
->  }
->  
-> +/*
-> + * Mostly copy paste from pci_walk_bus with the exceptions of hard coded
-> + * work and removed locks.
-> + */
-> +static void pci_bus_probe_crs(struct pci_bus *top)
-> +{
-> +	struct pci_dev *dev;
-> +	struct pci_bus *bus;
-> +	struct list_head *next;
-> +	int retval;
-> +	u32 l;
-> +
-> +	bus = top;
-> +	next = top->devices.next;
-> +	for (;;) {
-> +		if (next == &bus->devices) {
-> +			/* end of this bus, go up or finish */
-> +			if (bus == top)
-> +				break;
-> +			next = bus->self->bus_list.next;
-> +			bus = bus->self->bus;
-> +			continue;
-> +		}
-> +		dev = list_entry(next, struct pci_dev, bus_list);
-> +		if (dev->subordinate) {
-> +			/* this is a pci-pci bridge, do its devices next */
-> +			next = dev->subordinate->devices.next;
-> +			bus = dev->subordinate;
-> +		} else
-> +			next = dev->bus_list.next;
-> +
-> +		retval = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l,
-> +						    60 * 1000);
-> +		if (retval)
-> +			break;
-> +	}
-> +}
-> +
->  void pci_reset_secondary_bus(struct pci_dev *dev)
->  {
->  	u16 ctrl;
-> @@ -4361,6 +4399,7 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
->  	pci_bus_save_and_disable(dev->bus);
->  	pcibios_reset_secondary_bus(dev);
->  	pci_bus_restore(dev->bus);
-> +	pci_bus_probe_crs(dev->subordinate);
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
->  
-> 
+Remove the unnecessary test for ~PCI_EXP_SLTSTA_CC.  No functional change
+intended.
 
-Any feedback on the direction?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index fe99b45..60e1d55 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -590,9 +590,6 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 		}
+ 	}
+ 
+-	if (!(events & ~PCI_EXP_SLTSTA_CC))
+-		return IRQ_HANDLED;
+-
+ 	/* Check Attention Button Pressed */
+ 	if (events & PCI_EXP_SLTSTA_ABP) {
+ 		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
