@@ -1,137 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-Date: Thu, 22 Sep 2016 14:14:31 +0200
-Message-ID: <9178320.n4yHmfyPA3@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <3538381.vOsx75UXVU@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [UPDATE PATCH V11 1/8] ACPI: I/O Remapping Table (IORT) initial
+ support
+To: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
+ rjw@rjwysocki.net, helgaas@kernel.org, rafael@kernel.org,
+ Lorenzo.Pieralisi@arm.com
+References: <1473705147-6588-2-git-send-email-tn@semihalf.com>
+ <1473706460-9037-1-git-send-email-tn@semihalf.com>
+Cc: will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
+ shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+ okaya@codeaurora.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <87c1d6a4-a760-9f8a-ddbe-7cf6655d575b@semihalf.com>
+Date: Mon, 12 Sep 2016 20:58:42 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "minyard@acm.org" <minyard@acm.org>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- John Garry <john.garry@huawei.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- zhichang <zhichang.yuan02@gmail.com>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- "kantyzc@163.com" <kantyzc@163.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1473706460-9037-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 22, 2016 11:55:45 AM CEST Gabriele Paoloni wrote:
-> > > I think extending of_empty_ranges_quirk() may be a reasonable
-> > solution.
-> > > What do you think Arnd?
-> > 
-> > I don't really like that idea, that quirk is meant to work around
-> > broken DTs, but we can just make the DT valid and implement the
-> > code properly.
-> 
-> Ok  I understand your point where it is not right to use of_empty_ranges_quirk()
-> As a quirk is used to work around broken HW or broken FW (as in this case)
-> rather than to fix code
-> 
-> What about the following? I think adding the check you suggested next to
-> of_empty_ranges_quirk() is adding the case we need in the right point (thus
-> avoiding any duplication)
->  
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -457,6 +457,15 @@ static struct of_bus *of_match_bus(struct device_node *np)
->         return NULL;
->  }
->  
-> +static inline int of_isa_indirect_io(struct device_node *np)
-> +{
-> +       /*
-> +        * check if the current node is an isa bus and if indirectio operation
-> +        * are registered
-> +        */
-> +       return (of_bus_isa_match(np) && arm64_extio_ops);
-> +}
-> +
->  static int of_empty_ranges_quirk(struct device_node *np)
->  {
->         if (IS_ENABLED(CONFIG_PPC)) {
-> @@ -503,7 +512,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
->          * This code is only enabled on powerpc. --gcl
->          */
->         ranges = of_get_property(parent, rprop, &rlen);
-> -       if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
-> +       if (ranges == NULL && !of_empty_ranges_quirk(parent) && !of_isa_indirect_io(parent)) {
->                 pr_debug("OF: no ranges; cannot translate\n");
->                 return 1;
->         }
+On 12.09.2016 20:54, Tomasz Nowicki wrote:
+> IORT shows representation of IO topology for ARM based systems.
+> It describes how various components are connected together on
+> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>
+> Initial support allows to detect IORT table presence and save its
+> root pointer obtained through acpi_get_table(). The pointer validity
+> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+> is not set while using IORT nodes we would dereference unmapped pointers.
+>
+> For the aforementioned reason call acpi_iort_init() from acpi_init()
+> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+>
+> Add generic helpers which are helpful for scanning and retrieving
+> information from IORT table content. List of the most important helpers:
+> - iort_find_dev_node() finds IORT node for a given device
+> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>   final translation
+>
+> IORT support is placed under drivers/acpi/arm64/ new directory due to its
+> ARM64 specific nature. The code there is considered only for ARM64.
+> The long term plan is to keep all ARM64 specific tables support
+> in this place e.g. GTDT table.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Acked-by: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-I don't see what effect that would have. What do you want to
-achieve with this?
+Hi Marc,
 
-I think all we need from this function is to return '1' if
-we hit an ISA I/O window, and that should happen for the two
-interesting cases, either no 'ranges' at all, or no translation
-for the range in question, so that __of_translate_address can
-return OF_BAD_ADDR, and we can enter the special case
-handling in the caller, that handles it like
+Series with updated patch 1 can be found:
+https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v11)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 02b2903fe9d2..a18d96843fae 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -685,17 +685,24 @@ static int __of_address_to_resource(struct device_node *dev,
- 	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
- 		return -EINVAL;
- 	taddr = of_translate_address(dev, addrp);
--	if (taddr == OF_BAD_ADDR)
--		return -EINVAL;
- 	memset(r, 0, sizeof(struct resource));
-+
- 	if (flags & IORESOURCE_IO) {
- 		unsigned long port;
--		port = pci_address_to_pio(taddr);
-+
-+		if (taddr == OF_BAD_ADDR)
-+			port = arch_of_address_to_pio(dev, addrp)
-+		else
-+			port = pci_address_to_pio(taddr);
-+
- 		if (port == (unsigned long)-1)
- 			return -EINVAL;
- 		r->start = port;
- 		r->end = port + size - 1;
- 	} else {
-+		if (taddr == OF_BAD_ADDR)
-+			return -EINVAL;
-+
- 		r->start = taddr;
- 		r->end = taddr + size - 1;
- 	}
+Sorry for zillions of patch updates...
 
-
-
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Tomasz
