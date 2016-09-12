@@ -1,92 +1,73 @@
-Return-Path: <tglx@linutronix.de>
-Return-Path: <tglx@linutronix.de>
-Date: Tue, 6 Sep 2016 11:50:17 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Tomasz Nowicki <tn@semihalf.com>
-cc: marc.zyngier@arm.com, jason@lakedaemon.net, rjw@rjwysocki.net,
-    helgaas@kernel.org, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
-    will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
-    shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
-    linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-    linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
-    linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-    al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
-    okaya@codeaurora.org
-Subject: Re: [PATCH V10 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that
- might be reused for ACPI
-In-Reply-To: <1473152938-17388-8-git-send-email-tn@semihalf.com>
-Message-ID: <alpine.DEB.2.20.1609061149090.5647@nanos>
-References: <1473152938-17388-1-git-send-email-tn@semihalf.com> <1473152938-17388-8-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:54040 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751490AbcILXQT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Sep 2016 19:16:19 -0400
+Date: Mon, 12 Sep 2016 17:16:15 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
+Message-ID: <20160912231615.GA31855@obsidianresearch.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <20160912180251.GH5843@obsidianresearch.com>
+ <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 6 Sep 2016, Tomasz Nowicki wrote:
-> -static int __init its_pci_msi_init(void)
-> +static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
-> +				       const char *name)
->  {
-> -	struct device_node *np;
->  	struct irq_domain *parent;
->  
-> +	parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
-> +	if (!parent || !msi_get_domain_info(parent)) {
-> +		pr_err("%s: Unable to locate ITS domain\n", name);
-> +		return -ENXIO;
-> +	}
-> +
-> +	if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
-> +				       parent)) {
-> +		pr_err("%s: Unable to create PCI domain\n", name);
-> +		return -ENOMEM;
+On Mon, Sep 12, 2016 at 10:43:00PM +0000, Adit Ranadive wrote:
+> On Mon, Sep 12, 2016 at 11:03:39 -0700, Jason Gunthorpe wrote:
+> > On Sun, Sep 11, 2016 at 09:49:10PM -0700, Adit Ranadive wrote:
+> > > [2] Libpvrdma User-level library - 
+> > > http://git.openfabrics.org/?p=~aditr/libpvrdma.git;a=summary
+> > 
+> > You will probably find that rdma-plumbing will be the best way to get
+> > your userspace component into the distributors.
 
-So you have error codes here.
+> Sorry I haven't paying attention to that discussion. Do you know how soon 
+> distros will pick up the rdma-plumbing stuff?
 
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int __init its_pci_of_msi_init(void)
-> +{
-> +	struct device_node *np;
-> +
->  	for (np = of_find_matching_node(NULL, its_device_id); np;
->  	     np = of_find_matching_node(np, its_device_id)) {
->  		if (!of_property_read_bool(np, "msi-controller"))
->  			continue;
->  
-> -		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
-> -		if (!parent || !msi_get_domain_info(parent)) {
-> -			pr_err("%s: unable to locate ITS domain\n",
-> -			       np->full_name);
-> +		if (its_pci_msi_init_one(of_node_to_fwnode(np), np->full_name))
->  			continue;
-> -		}
-> -
-> -		if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
-> -					       &its_pci_msi_domain_info,
-> -					       parent)) {
-> -			pr_err("%s: unable to create PCI domain\n",
-> -			       np->full_name);
-> -			continue;
-> -		}
->  
->  		pr_info("PCI/MSI: %s domain created\n", np->full_name);
->  	}
->  
->  	return 0;
+Hopefully things will be clearer after the call on Tuesday.
 
-And no matter what you return success
+I'm hoping we can begin the process sooner than later.
 
->  }
-> +
-> +static int __init its_pci_msi_init(void)
-> +{
-> +	its_pci_of_msi_init();
+There are 4 new drivers being submitted and at least 2-3 more kernel
+drivers that are not yet in Debian/SuSE/etc.
 
-Which you subsequently ignore here. What's the point?
+By far the simplest way to push those 6 new user space drivers into
+the distros will be via rdma-plumbing, I'm optimistic that the vendors
+will work together on this.
 
-Thanks,
+> It seems like it should be fairly straightforward to include the libpvrdma git
+> within the rdma-plumbing git as well. Let me know what the process is since
+> I may have to discuss it internally.
 
-	tglx
+For now, you can prepare your own clone and create a providers/pvrdma
+directory similar to the others. It should be very
+straightforward. Let me know if you have any problems.
+
+You should ensure clean compilation on FC24 (for instance using the
+provided docker tooling), and review the commit stream in
+rdma-plumbing to make sure you pick up all the systemic fixes that
+have already been done to the other providers.
+
+If Doug accepts your provider upstream before we finalize
+rdma-plumbing then I will add your git to the giant merge, however
+please make my life easier and ensure the code does not have any of
+the systemic problems I alreadly fixed in other providers :(
+
+After finalization you'll have to post your user space provider to the
+mailing list and Doug will pick it up.
+
+Jason
