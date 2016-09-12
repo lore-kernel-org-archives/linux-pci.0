@@ -1,125 +1,354 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52522 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932286AbcIFPtI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 11:49:08 -0400
-Date: Tue, 6 Sep 2016 10:48:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: netdev@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Santosh Raspatur <santosh@chelsio.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH kernel] PCI: Enable access to custom VPD for Chelsio
- devices (cxgb3)
-Message-ID: <20160906154804.GC1214@localhost>
-References: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
- <1470909809-11007-1-git-send-email-aik@ozlabs.ru>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:38044 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932341AbcILEui (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:38 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v4 07/16] IB/pvrdma: Add helper functions
+Date: Sun, 11 Sep 2016 21:49:17 -0700
+Message-ID: <1473655766-31628-8-git-send-email-aditr@vmware.com>
+In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470909809-11007-1-git-send-email-aik@ozlabs.ru>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alexey,
+This patch adds helper functions to store guest page addresses in a page
+directory structure. The page directory pointer is passed down to the
+backend which then maps the entire memory for the RDMA object by
+traversing the directory. We add some more helper functions for converting
+to/from RDMA stack address handles from/to PVRDMA ones.
 
-On Thu, Aug 11, 2016 at 08:03:29PM +1000, Alexey Kardashevskiy wrote:
-> There is at least one Chelsio 10Gb card which uses VPD area to store
-> some custom blocks (example below). However pci_vpd_size() returns
-> the length of the first block only assuming that there can be only
-> one VPD "End Tag" and VFIO blocks access beyond that offset
-> (since 4e1a63555) which leads to the situation when the guest "cxgb3"
-> driver fails to probe the device. The host system does not have this
-> problem as the drives accesses the config space directly without
-> pci_read_vpd()/...
-> 
-> This adds a quirk to override the VPD size to a bigger value.
-> 
-> This is the controller:
-> Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
-> 
-> This is its VPD:
-> #0000 Large item 42 bytes; name 0x2 Identifier String
-> 	b'10 Gigabit Ethernet-SR PCI Express Adapter'
-> #002d Large item 74 bytes; name 0x10
-> 	#00 [EC] len=7: b'D76809 '
-> 	#0a [FN] len=7: b'46K7897'
-> 	#14 [PN] len=7: b'46K7897'
-> 	#1e [MN] len=4: b'1037'
-> 	#25 [FC] len=4: b'5769'
-> 	#2c [SN] len=12: b'YL102035603V'
-> 	#3b [NA] len=12: b'00145E992ED1'
-> #007a Small item 1 bytes; name 0xf End Tag
-> ---
-> #0c00 Large item 16 bytes; name 0x2 Identifier String
-> 	b'S310E-SR-X      '
-> #0c13 Large item 234 bytes; name 0x10
-> 	#00 [PN] len=16: b'TBD             '
-> 	#13 [EC] len=16: b'110107730D2     '
-> 	#26 [SN] len=16: b'97YL102035603V  '
-> 	#39 [NA] len=12: b'00145E992ED1'
-> 	#48 [V0] len=6: b'175000'
-> 	#51 [V1] len=6: b'266666'
-> 	#5a [V2] len=6: b'266666'
-> 	#63 [V3] len=6: b'2000  '
-> 	#6c [V4] len=2: b'1 '
-> 	#71 [V5] len=6: b'c2    '
-> 	#7a [V6] len=6: b'0     '
-> 	#83 [V7] len=2: b'1 '
-> 	#88 [V8] len=2: b'0 '
-> 	#8d [V9] len=2: b'0 '
-> 	#92 [VA] len=2: b'0 '
-> 	#97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
-> #0d00 Large item 252 bytes; name 0x11
-> 	#00 [VC] len=16: b'122310_1222 dp  '
-> 	#13 [VD] len=16: b'610-0001-00 H1\x00\x00'
-> 	#26 [VE] len=16: b'122310_1353 fp  '
-> 	#39 [VF] len=16: b'610-0001-00 H1\x00\x00'
-> 	#4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
-> #0dff Small item 0 bytes; name 0xf End Tag
-> 
-> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> ---
->  drivers/pci/quirks.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index ee72ebe1..94d3fb5 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3241,6 +3241,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
->  			quirk_thunderbolt_hotplug_msi);
->  
-> +static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
-> +{
-> +	if (!dev->vpd || !dev->vpd->ops || !dev->vpd->ops->set_size)
-> +		return;
-> +
-> +	dev->vpd->ops->set_size(dev, max_t(unsigned int, dev->vpd->len, 0xe00));
-> +}
-> +
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO,
-> +			PCI_ANY_ID,
-> +			quirk_chelsio_extend_vpd);
+Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+Reviewed-by: George Zhang <georgezhang@vmware.com>
+Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+Reviewed-by: Bryan Tan <bryantan@vmware.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
+---
+Changes v3->v4:
+ - Updated conversion functions to func_name(dst, src) format.
+ - Removed unneeded local variables.
+---
+ drivers/infiniband/hw/pvrdma/pvrdma_misc.c | 303 +++++++++++++++++++++++++++++
+ 1 file changed, 303 insertions(+)
+ create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_misc.c
 
-Do you really want this for *all* Chelsio devices?  If you only need
-it for certain devices, the quirk could probably go in the driver.
+diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_misc.c b/drivers/infiniband/hw/pvrdma/pvrdma_misc.c
+new file mode 100644
+index 0000000..1f12cd6
+--- /dev/null
++++ b/drivers/infiniband/hw/pvrdma/pvrdma_misc.c
+@@ -0,0 +1,303 @@
++/*
++ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of EITHER the GNU General Public License
++ * version 2 as published by the Free Software Foundation or the BSD
++ * 2-Clause License. This program is distributed in the hope that it
++ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
++ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License version 2 for more details at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program available in the file COPYING in the main
++ * directory of this source tree.
++ *
++ * The BSD 2-Clause License
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <linux/errno.h>
++#include <linux/slab.h>
++#include <linux/bitmap.h>
++
++#include "pvrdma.h"
++
++int pvrdma_page_dir_init(struct pvrdma_dev *dev, struct pvrdma_page_dir *pdir,
++			 u64 npages, bool alloc_pages)
++{
++	u64 i;
++
++	if (npages > PVRDMA_PAGE_DIR_MAX_PAGES)
++		return -EINVAL;
++
++	memset(pdir, 0, sizeof(*pdir));
++
++	pdir->dir = dma_alloc_coherent(&dev->pdev->dev, PAGE_SIZE,
++				       &pdir->dir_dma, GFP_KERNEL);
++	if (!pdir->dir)
++		goto err;
++
++	pdir->ntables = PVRDMA_PAGE_DIR_TABLE(npages - 1) + 1;
++	pdir->tables = kcalloc(pdir->ntables, sizeof(*pdir->tables),
++			       GFP_KERNEL);
++	if (!pdir->tables)
++		goto err;
++
++	for (i = 0; i < pdir->ntables; i++) {
++		pdir->tables[i] = dma_alloc_coherent(&dev->pdev->dev, PAGE_SIZE,
++						     &pdir->dir[i], GFP_KERNEL);
++		if (!pdir->tables[i])
++			goto err;
++	}
++
++	pdir->npages = npages;
++
++	if (alloc_pages) {
++		pdir->pages = kcalloc(npages, sizeof(*pdir->pages),
++				      GFP_KERNEL);
++		if (!pdir->pages)
++			goto err;
++
++		for (i = 0; i < pdir->npages; i++) {
++			dma_addr_t page_dma;
++
++			pdir->pages[i] = dma_alloc_coherent(&dev->pdev->dev,
++							    PAGE_SIZE,
++							    &page_dma,
++							    GFP_KERNEL);
++			if (!pdir->pages[i])
++				goto err;
++
++			pvrdma_page_dir_insert_dma(pdir, i, page_dma);
++		}
++	}
++
++	return 0;
++
++err:
++	pvrdma_page_dir_cleanup(dev, pdir);
++
++	return -ENOMEM;
++}
++
++static u64 *pvrdma_page_dir_table(struct pvrdma_page_dir *pdir, u64 idx)
++{
++	return pdir->tables[PVRDMA_PAGE_DIR_TABLE(idx)];
++}
++
++dma_addr_t pvrdma_page_dir_get_dma(struct pvrdma_page_dir *pdir, u64 idx)
++{
++	return pvrdma_page_dir_table(pdir, idx)[PVRDMA_PAGE_DIR_PAGE(idx)];
++}
++
++static void pvrdma_page_dir_cleanup_pages(struct pvrdma_dev *dev,
++					  struct pvrdma_page_dir *pdir)
++{
++	if (pdir->pages) {
++		u64 i;
++
++		for (i = 0; i < pdir->npages && pdir->pages[i]; i++) {
++			dma_addr_t page_dma = pvrdma_page_dir_get_dma(pdir, i);
++
++			dma_free_coherent(&dev->pdev->dev, PAGE_SIZE,
++					  pdir->pages[i], page_dma);
++		}
++
++		kfree(pdir->pages);
++	}
++}
++
++static void pvrdma_page_dir_cleanup_tables(struct pvrdma_dev *dev,
++					   struct pvrdma_page_dir *pdir)
++{
++	if (pdir->tables) {
++		int i;
++
++		pvrdma_page_dir_cleanup_pages(dev, pdir);
++
++		for (i = 0; i < pdir->ntables; i++) {
++			u64 *table = pdir->tables[i];
++
++			if (table)
++				dma_free_coherent(&dev->pdev->dev, PAGE_SIZE,
++						  table, pdir->dir[i]);
++		}
++
++		kfree(pdir->tables);
++	}
++}
++
++void pvrdma_page_dir_cleanup(struct pvrdma_dev *dev,
++			     struct pvrdma_page_dir *pdir)
++{
++	if (pdir->dir) {
++		pvrdma_page_dir_cleanup_tables(dev, pdir);
++		dma_free_coherent(&dev->pdev->dev, PAGE_SIZE,
++				  pdir->dir, pdir->dir_dma);
++	}
++}
++
++int pvrdma_page_dir_insert_dma(struct pvrdma_page_dir *pdir, u64 idx,
++			       dma_addr_t daddr)
++{
++	u64 *table;
++
++	if (idx >= pdir->npages)
++		return -EINVAL;
++
++	table = pvrdma_page_dir_table(pdir, idx);
++	table[PVRDMA_PAGE_DIR_PAGE(idx)] = daddr;
++
++	return 0;
++}
++
++int pvrdma_page_dir_insert_umem(struct pvrdma_page_dir *pdir,
++				struct ib_umem *umem, u64 offset)
++{
++	u64 i = offset;
++	int j, entry;
++	int ret = 0, len = 0;
++	struct scatterlist *sg;
++
++	if (offset >= pdir->npages)
++		return -EINVAL;
++
++	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, entry) {
++		len = sg_dma_len(sg) >> PAGE_SHIFT;
++		for (j = 0; j < len; j++) {
++			dma_addr_t addr = sg_dma_address(sg) +
++					  umem->page_size * j;
++
++			ret = pvrdma_page_dir_insert_dma(pdir, i, addr);
++			if (ret)
++				goto exit;
++
++			i++;
++		}
++	}
++
++exit:
++	return ret;
++}
++
++int pvrdma_page_dir_insert_page_list(struct pvrdma_page_dir *pdir,
++				     u64 *page_list,
++				     int num_pages)
++{
++	int i;
++	int ret;
++
++	if (num_pages > pdir->npages)
++		return -EINVAL;
++
++	for (i = 0; i < num_pages; i++) {
++		ret = pvrdma_page_dir_insert_dma(pdir, i, page_list[i]);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++
++void pvrdma_qp_cap_to_ib(struct ib_qp_cap *dst, const struct pvrdma_qp_cap *src)
++{
++	dst->max_send_wr = src->max_send_wr;
++	dst->max_recv_wr = src->max_recv_wr;
++	dst->max_send_sge = src->max_send_sge;
++	dst->max_recv_sge = src->max_recv_sge;
++	dst->max_inline_data = src->max_inline_data;
++}
++
++void ib_qp_cap_to_pvrdma(struct pvrdma_qp_cap *dst, const struct ib_qp_cap *src)
++{
++	dst->max_send_wr = src->max_send_wr;
++	dst->max_recv_wr = src->max_recv_wr;
++	dst->max_send_sge = src->max_send_sge;
++	dst->max_recv_sge = src->max_recv_sge;
++	dst->max_inline_data = src->max_inline_data;
++}
++
++void pvrdma_gid_to_ib(union ib_gid *dst, const union pvrdma_gid *src)
++{
++	BUILD_BUG_ON(sizeof(union pvrdma_gid) != sizeof(union ib_gid));
++	memcpy(dst, src, sizeof(*src));
++}
++
++void ib_gid_to_pvrdma(union pvrdma_gid *dst, const union ib_gid *src)
++{
++	BUILD_BUG_ON(sizeof(union pvrdma_gid) != sizeof(union ib_gid));
++	memcpy(dst, src, sizeof(*src));
++}
++
++void pvrdma_global_route_to_ib(struct ib_global_route *dst,
++			       const struct pvrdma_global_route *src)
++{
++	pvrdma_gid_to_ib(&dst->dgid, &src->dgid);
++	dst->flow_label = src->flow_label;
++	dst->sgid_index = src->sgid_index;
++	dst->hop_limit = src->hop_limit;
++	dst->traffic_class = src->traffic_class;
++}
++
++void ib_global_route_to_pvrdma(struct pvrdma_global_route *dst,
++			       const struct ib_global_route *src)
++{
++	ib_gid_to_pvrdma(&dst->dgid, &src->dgid);
++	dst->flow_label = src->flow_label;
++	dst->sgid_index = src->sgid_index;
++	dst->hop_limit = src->hop_limit;
++	dst->traffic_class = src->traffic_class;
++}
++
++void pvrdma_ah_attr_to_ib(struct ib_ah_attr *dst,
++			  const struct pvrdma_ah_attr *src)
++{
++	pvrdma_global_route_to_ib(&dst->grh, &src->grh);
++	dst->dlid = src->dlid;
++	dst->sl = src->sl;
++	dst->src_path_bits = src->src_path_bits;
++	dst->static_rate = src->static_rate;
++	dst->ah_flags = src->ah_flags;
++	dst->port_num = src->port_num;
++	memcpy(&dst->dmac, &src->dmac, sizeof(dst->dmac));
++}
++
++void ib_ah_attr_to_pvrdma(struct pvrdma_ah_attr *dst,
++			  const struct ib_ah_attr *src)
++{
++	ib_global_route_to_pvrdma(&dst->grh, &src->grh);
++	dst->dlid = src->dlid;
++	dst->sl = src->sl;
++	dst->src_path_bits = src->src_path_bits;
++	dst->static_rate = src->static_rate;
++	dst->ah_flags = src->ah_flags;
++	dst->port_num = src->port_num;
++	memcpy(&dst->dmac, &src->dmac, sizeof(dst->dmac));
++}
+-- 
+2.7.4
 
-Can you use pci_set_vpd_size() instead?  There's already a use of that
-in cxgb4.
-
-> +
->  #ifdef CONFIG_ACPI
->  /*
->   * Apple: Shutdown Cactus Ridge Thunderbolt controller.
-> -- 
-> 2.5.0.rc3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
