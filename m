@@ -1,166 +1,56 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V10 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
-Date: Tue,  6 Sep 2016 11:08:56 +0200
-Message-Id: <1473152938-17388-7-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
-References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>, Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 0/4] PCI PM refinements
+Date: Tue, 13 Sep 2016 00:15:01 +0200
+Message-ID: <2965902.zGUbeGnQJl@vostro.rjw.lan>
+In-Reply-To: <20160912220710.GH23532@localhost>
+References: <cover.1472554278.git.lukas@wunner.de> <20160912220710.GH23532@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-ITS is prepared for being initialized different than DT,
-therefore we can initialize it in ACPI way. We collect register base
-address from MADT table and pass mandatory info to firmware-agnostic
-ITS init call.
+On Monday, September 12, 2016 05:07:10 PM Bjorn Helgaas wrote:
+> On Wed, Aug 31, 2016 at 08:15:18AM +0200, Lukas Wunner wrote:
+> > The following patches are part of my Thunderbolt Runtime PM series.
+> > I'm posting them separately to split the series into digestible chunks.
+> > 
+> > They benefit everyone, not just Thunderbolt, and Thunderbolt works fine
+> > without them (just not with the same degree of perfection).
+> > 
+> > Patch [1/4] affords direct-complete to devices which are not platform-
+> > power-manageable, yet can be suspended to D3cold with a nonstandard
+> > mechanism. It does so using a heuristic: If a device's current_state
+> > is D3cold and it is not power-manageable, it is assumed that a
+> > nonstandard PM mechanism is at work and the device is left asleep.
+> > The patch is the outcome of a discussion with Rafael and Alan on
+> > linux-pci@ and I would like to thank both for tirelessly responding
+> > to my questions.
+> > 
+> > Patch [3/4] replaces the unconditional resume after direct-complete with
+> > a conditional resume by determining if the platform firmware has put the
+> > device in reset-power-on or not.
+> > 
+> > Because the D3cold state cannot be determined from the PMCSR, patch [2/4]
+> > adds a hook to query the platform firmware for its opinion on the device's
+> > power state.
+> > 
+> > Finally, patch [4/4] changes the shutdown handling of PCI devices such
+> > that they are no longer woken without reason.
+> > 
+> > The result of these patches should be a speedup and decreased power
+> > consumption for system sleep and system shutdown (both for devices that
+> > are platform-power-manageable and those that aren't).
+> > 
+> > If you prefer point & click interfaces, the patches are browsable here:
+> > https://github.com/l1k/linux/commits/thunderbolt_runpm_v3
+> 
+> Rafael, do you have any comment on these?  I don't have any objections
+> myself, but I'd like your opinion as the PM expert :)
 
-Use here IORT lib to register ITS domain which then can be found and
-used on to build another PCI MSI domain in hierarchical stack domain.
+Please give me some more time (a day or two should be sufficient).
 
-NOTE: Waiting for proper ITS and NUMA node relation description in IORT
-table, we pass around NUMA_NO_NODE to the its_probe_one init call.
-This means that Cavium ThunderX erratum 23144 (pass1.1 only)
-is not supported for ACPI boot method yet.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/irqchip/Kconfig          |  1 +
- drivers/irqchip/irq-gic-v3-its.c | 61 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 61 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-index 7f87289..9aeea1d8 100644
---- a/drivers/irqchip/Kconfig
-+++ b/drivers/irqchip/Kconfig
-@@ -39,6 +39,7 @@ config ARM_GIC_V3_ITS
- 	bool
- 	depends on PCI
- 	depends on PCI_MSI
-+	select ACPI_IORT if ACPI
- 
- config ARM_NVIC
- 	bool
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index c7518c7..35c851c 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -15,10 +15,13 @@
-  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  */
- 
-+#include <linux/acpi.h>
- #include <linux/bitmap.h>
- #include <linux/cpu.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/irqdomain.h>
-+#include <linux/acpi_iort.h>
- #include <linux/log2.h>
- #include <linux/mm.h>
- #include <linux/msi.h>
-@@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
- 		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
- 		fwspec.param[1] = hwirq;
- 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
-+	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
-+		fwspec.fwnode = domain->parent->fwnode;
-+		fwspec.param_count = 2;
-+		fwspec.param[0] = hwirq;
-+		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
- 	} else {
- 		return -EINVAL;
- 	}
-@@ -1797,6 +1805,57 @@ static int __init its_of_probe(struct device_node *node)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ACPI
-+
-+#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
-+
-+static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
-+					  const unsigned long end)
-+{
-+	struct acpi_madt_generic_translator *its_entry;
-+	struct fwnode_handle *dom_handle;
-+	struct resource res;
-+	int err;
-+
-+	its_entry = (struct acpi_madt_generic_translator *)header;
-+	memset(&res, 0, sizeof(res));
-+	res.start = its_entry->base_address;
-+	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
-+	res.flags = IORESOURCE_MEM;
-+
-+	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
-+	if (!dom_handle) {
-+		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
-+		       &res.start);
-+		return -ENOMEM;
-+	}
-+
-+	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
-+	if (err) {
-+		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
-+		       &res.start, its_entry->translation_id);
-+		goto dom_err;
-+	}
-+
-+	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
-+	if (!err)
-+		return 0;
-+
-+	iort_deregister_domain_token(its_entry->translation_id);
-+dom_err:
-+	irq_domain_free_fwnode(dom_handle);
-+	return err;
-+}
-+
-+static void __init its_acpi_probe(void)
-+{
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
-+			      gic_acpi_parse_madt_its, 0);
-+}
-+#else
-+static void __init its_acpi_probe(void) { }
-+#endif
-+
- int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 		    struct irq_domain *parent_domain)
- {
-@@ -1807,7 +1866,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 	if (of_node)
- 		its_of_probe(of_node);
- 	else
--		return -ENODEV;
-+		its_acpi_probe();
- 
- 	if (list_empty(&its_nodes)) {
- 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
--- 
-1.9.1
+Thanks,
+Rafael
