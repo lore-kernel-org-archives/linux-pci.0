@@ -1,96 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:53595 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763787AbcINVdE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 17:33:04 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
-        gabriele.paoloni@huawei.com, minyard@acm.org,
-        gregkh@linuxfoundation.org, benh@kernel.crashing.org,
-        john.garry@huawei.com, will.deacon@arm.com,
-        linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
-        linuxarm@huawei.com, linux-serial@vger.kernel.org,
-        linux-pci@vger.kernel.org, zourongrong@gmail.com,
-        liviu.dudau@arm.com, kantyzc@163.com, zhichang.yuan02@gmail.com
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-Date: Wed, 14 Sep 2016 23:32:11 +0200
-Message-ID: <5869118.UilSPY9Sai@wuerfel>
-In-Reply-To: <57D963C4.4010406@hisilicon.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
+Return-Path: <marc.zyngier@arm.com>
+Return-Path: <marc.zyngier@arm.com>
+Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial
+ support
+To: Tomasz Nowicki <tn@semihalf.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, rjw@rjwysocki.net
+References: <1473152938-17388-2-git-send-email-tn@semihalf.com>
+ <1473249412-20226-1-git-send-email-tn@semihalf.com>
+ <20160909092012.GC19669@red-moon>
+ <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com>
+Cc: tglx@linutronix.de, jason@lakedaemon.net, helgaas@kernel.org,
+ rafael@kernel.org, will.deacon@arm.com, catalin.marinas@arm.com,
+ hanjun.guo@linaro.org, shijie.huang@arm.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
+ okaya@codeaurora.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57D6A7DD.1060305@arm.com>
+Date: Mon, 12 Sep 2016 14:04:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <38e36eee-cece-75db-4781-5727dd11c93d@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 10:50:44 PM CEST zhichang.yuan wrote:
+On 12/09/16 13:37, Tomasz Nowicki wrote:
+> Hi Rafael,
 > 
-> On 2016/9/14 20:33, Arnd Bergmann wrote:
-> > On Wednesday, September 14, 2016 8:15:52 PM CEST Zhichang Yuan wrote:
-> > 
-> >> +Required properties:
-> >> +- compatible: should be "hisilicon,low-pin-count"
-> >> +- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
-> >> +- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
-> >> +- reg: base address and length of the register set for the device.
-> >> +- ranges: define a 1:1 mapping between the I/O space of the child device and
-> >> +	  the parent.
-> > 
-> > Do we still need the "ranges" here? The property in your example seems
-> > wrong.
+> On 09.09.2016 11:20, Lorenzo Pieralisi wrote:
+>> Hi Rafael,
+>>
+>> On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
+>>> IORT shows representation of IO topology for ARM based systems.
+>>> It describes how various components are connected together on
+>>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
+>>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+>>>
+>>> Initial support allows to detect IORT table presence and save its
+>>> root pointer obtained through acpi_get_table(). The pointer validity
+>>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
+>>> is not set while using IORT nodes we would dereference unmapped pointers.
+>>>
+>>> For the aforementioned reason call iort_table_detect() from acpi_init()
+>>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
+>>>
+>>> Add generic helpers which are helpful for scanning and retrieving
+>>> information from IORT table content. List of the most important helpers:
+>>> - iort_find_dev_node() finds IORT node for a given device
+>>> - iort_node_map_rid() maps device RID and returns IORT node which provides
+>>>   final translation
+>>>
+>>> IORT support is placed under drivers/acpi/arm64/ new directory due to its
+>>> ARM64 specific nature. The code there is considered only for ARM64.
+>>> The long term plan is to keep all ARM64 specific tables support
+>>> in this place e.g. GTDT table.
+>>>
+>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>> ---
+>>
+>> Apart from the minor commit logs oversights we consider these two
+>> patches ready to go, please let us know if there is something you want
+>> changed since we are at risk of missing yet another merge window.
+>>
+>> It is ARM64 specific code, we created and moved the code to its
+>> ARM64 specific directory and we are happy to maintain it as such,
+>> we need your ACK to get this done so if there is something you
+>> want changed please let us know otherwise I would ask your ACK
+>> on these two patches to give Marc a go-ahead for -next and
+>> hopefully 4.9.
 > 
-> I think "ranges" is needed.
-> without this, of_translate_address --> __of_translate_address --> of_translate_one will fail when translating the child's IO resource.
->
-> > 
-> >> +	ranges = <0x01 0xe4 0x0 0xe4 0x1000>;
-> > 
-> > You translate I/O port 0x00e4 through 0x10e4 to CPU address 0x0e4?
-> The hip06 LPC is defined as isa type.
-> So, 0x01 0xe4 is the local IO address of 0xe4. With this ranges, 0xe4 of child will be 1:1 mapped as 0xe4.
-> It means no translation.
+> Kindly reminder. Is there anything we need to do more about these 
+> patches? Please let us know. Note this is the major thing for incoming 
+> IORT more advance feature.
 
-No, "no translation" would be leaving out the ranges, we should
-fix the code so it handles this case according to the specification
-of the ISA DT binding, rather than adding an incorrect ranges
-property to make it work with the incorrect Linux implementation.
+May I convey a slight sense of urgency here? I'd like to cut the irqchip
+branch for 4.9 pretty soon (this week), in order to let it sink in -next
+for a few days at the very least.
 
-of_translate_address() should fail here, and whichever code calls
-it should try something else, possibly something we have to
-implement that can return the correct IORESOURCE_* type.
+It'd be a bit disappointing if these patches missed the boat this time
+again.
 
-> > 
-> > I don't get this part. The bus driver should not care what its
-> > children are, just register and PIO ranges that the bus can handle
-> > in theory, i.e. from 0x000 to 0xfff.
-> 
-> Just as we discussed in V2, the legacy PIO range is specific to some
-> device, such as for ipmi bt, 0xe4 - 0xe7 will be populated.
-> I don't want to occupy a larger PIO range in which only small part PIOs
-> are used by our LPC. At this moment, two PIO ranges are using
-> through the device property configuration, 0xe4-0xe7, 0x2f8-0x2ff.
->
-> If we configure 0-0x1000 for the LPC to cover those two ranges, most
-> PIO are wasted and other PIO device on other buses lose the chance to
-> use the PIO below 0x1000.
-> Otherwise, PIO conflict will happen. So, My idea is only occupied
-> the PIO ranges which are really needed for the children.
+Thanks,
 
-The only thing it can realistically conflict with would be another
-LPC bus behind on a PCI host bridge. On ARM64, all regular PCI
-devices that have IORESOURCE_IO ports are intentionally moved
-to (bus) port numbers above 0x1000.
-
-> And there are probably multiple child devices under LPC, the global arm64_extio_ops only can cover one PIO range. It is fortunate only ipmi driver can not support I/O
-> operation registering, serial driver has serial_in/serial_out to
-> be registered. So, only the PIO range for ipmi device is stored
-> in arm64_extio_ops and the indirect-IO
-> works well for ipmi device.
-
-You should not do that in the serial driver, please just use the
-normal 8250 driver that works fine once you handle the entire
-port range.
- 
-
-	Arnd
+	M.
+-- 
+Jazz is not dead. It just smells funny...
