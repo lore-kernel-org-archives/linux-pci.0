@@ -1,109 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 21 Sep 2016 13:59:20 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56224 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752333AbcIMVCg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Sep 2016 17:02:36 -0400
+Date: Tue, 13 Sep 2016 16:02:31 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Message-ID: <20160921185920.GC20006@localhost>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-4-git-send-email-tn@semihalf.com>
- <20160919180900.GB13775@localhost>
- <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
- <20160920133327.GB13855@localhost>
- <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
- <20160920140518.GD13855@localhost>
- <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
- <20160920191744.GA4941@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F87CF8F@lhreml507-mbx>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH] PCI: Fix bridge_d3 update on device removal
+Message-ID: <20160913210231.GG4138@localhost>
+References: <9bc855a01d0f29cc8425cf50dce9812062309cfb.1473135221.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F87CF8F@lhreml507-mbx>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Rafael Wysocki <rafael@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Wangyijing <wangyijing@huawei.com>, Andrea Gallo <andrea.gallo@linaro.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Jeff Hugo <jhugo@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
- Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
- David Daney <ddaney@caviumnetworks.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Robert Richter <robert.richter@caviumnetworks.com>,
- "liudongdong \(C\)" <liudongdong3@huawei.com>,
- Mark Salter <msalter@redhat.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
- Arnd Bergmann <arnd@arndb.de>, Jon Masters <jcm@redhat.com>,
- Christopher Covington <cov@codeaurora.org>, Marcin Wojtas <mw@semihalf.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Jayachandran C <jchandra@broadcom.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Duc Dang <dhdang@apm.com>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jeremy Linton <jeremy.linton@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9bc855a01d0f29cc8425cf50dce9812062309cfb.1473135221.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 21, 2016 at 02:10:55PM +0000, Gabriele Paoloni wrote:
-> Hi Bjorn
+On Tue, Sep 06, 2016 at 06:20:46AM +0200, Lukas Wunner wrote:
+> Starting with v4.8, we allow a PCIe port to runtime suspend to D3hot if
+> the port itself and its children satisfy a number of conditions.  Once a
+> child is removed, we recheck those conditions in case the removed device
+> was blocking the port from suspending.
 > 
-> [...]
+> The rechecking needs to happen *after* the device has been removed from
+> the bus it resides on.  Otherwise when walking the port's subordinate
+> bus in pci_bridge_d3_update(), the device being removed would
+> erroneously still be taken into account.
 > 
+> However the device is removed from the bus_list in pci_destroy_dev() and
+> we currently recheck *before* that.  Fix it.
 > 
-> > 
-> > If future hardware is completely ECAM-compliant and we don't need any
-> > more MCFG quirks, that would be great.
-> > 
-> > But we'll still need to describe that memory-mapped config space
-> > somewhere.  If that's done with PNP0C02 or similar devices (as is done
-> > on my x86 laptop), we'd be all set.
-> > 
-> > If we need to work around firmware in the field that doesn't do that,
-> > one possibility is a PNP quirk along the lines of
-> > quirk_amd_mmconfig_area().
+> Fixes: 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+
+9d26d3a8f1b0 appeared in v4.8-rc1, so I assume this fix should be merged
+before v4.8, right?
+
+I applied it to for-linus with Mika's reviewed-by and Rafael's acked-by on
+that assumption.
+
+> ---
+>  drivers/pci/remove.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> So, if my understanding is correct, for platforms that have not been
-> shipped yet you propose to use PNP0C02 in the ACPI table in order to
-> declare a motherboard reserved resource whereas for shipped platforms
-> you propose to have a quirk along pnp_fixups in order to track the
-> resource usage even if values are hardcoded...correct?
-
-Yes.  I'm open to alternate proposals, but x86 uses PNP0C02, and
-following existing practice seems reasonable.
-
-> Before Tomasz came up with this patchset we had a call between the vendors
-> involved in this PCI quirks saga and other guys from Linaro and ARM.
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index d1ef7ac..f9357e0 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -40,6 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>  	list_del(&dev->bus_list);
+>  	up_write(&pci_bus_sem);
+>  
+> +	pci_bridge_d3_device_removed(dev);
+>  	pci_free_resources(dev);
+>  	put_device(&dev->dev);
+>  }
+> @@ -96,8 +97,6 @@ static void pci_remove_bus_device(struct pci_dev *dev)
+>  		dev->subordinate = NULL;
+>  	}
+>  
+> -	pci_bridge_d3_device_removed(dev);
+> -
+>  	pci_destroy_dev(dev);
+>  }
+>  
+> -- 
+> 2.9.3
 > 
-> Lorenzo summarized the outcome as in the following link
-> http://lkml.iu.edu/hypermail/linux/kernel/1606.2/03344.html
-> 
-> Since this quirks mechanism has been discussed for quite a long time now
-> IMHO it would be good to have a last call including also you (Bjorn) so
-> that we can all agree on what to do and we avoid changing our drivers again
-> and again...
-
-I think we're converging pretty fast.  As far as I'm concerned, the
-v6 ECAM quirks implementation is perfect.  The only remaining issue is
-reporting the ECAM resources, and I haven't seen objections to using
-PNP0C02 + PNP quirks for broken firmware.
-
-There is the question of how or whether to associate a PNP0A03 PCI
-bridge with resources from a different PNP0C02 device, but that's not
-super important.  If the hard-coded resources appear both in a quirk
-and in the PCI bridge driver, it's ugly but not the end of the world.
-We've still achieved the objective of avoiding landmines in the
-address space.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
