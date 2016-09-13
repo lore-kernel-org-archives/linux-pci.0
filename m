@@ -1,154 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:3430 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755838AbcIOO2v (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2016 10:28:51 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        John Garry <john.garry@huawei.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
-Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-Date: Thu, 15 Sep 2016 14:28:06 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F872391@lhreml507-mbx>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <8360154.kzsE8V8pTW@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F871F72@lhreml507-mbx>
- <26171742.fWcrANu6EP@wuerfel>
-In-Reply-To: <26171742.fWcrANu6EP@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:36711 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750927AbcIMIPj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 04:15:39 -0400
+Received: by mail-pf0-f176.google.com with SMTP id 128so61279539pfb.3
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 01:15:39 -0700 (PDT)
+Subject: Re: [PATCH v5 07/14] drivers: acpi: iort: add support for ARM SMMU
+ platform devices creation
+To: nwatters@codeaurora.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+ <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
+ <7a63cf312b6e9714cdce1d0aca88cf4d@codeaurora.org>
+Cc: iommu@lists.linux-foundation.org, Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <fb4acfd5-b7fd-636f-53f3-13dc6fb8b713@linaro.org>
+Date: Tue, 13 Sep 2016 16:15:31 +0800
 MIME-Version: 1.0
+In-Reply-To: <7a63cf312b6e9714cdce1d0aca88cf4d@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 15 September 2016 13:25
-> To: linux-arm-kernel@lists.infradead.org
-> Cc: Gabriele Paoloni; devicetree@vger.kernel.org;
-> lorenzo.pieralisi@arm.com; minyard@acm.org; linux-pci@vger.kernel.org;
-> gregkh@linuxfoundation.org; John Garry; will.deacon@arm.com; linux-
-> kernel@vger.kernel.org; Yuanzhichang; Linuxarm; xuwei (O); linux-
-> serial@vger.kernel.org; benh@kernel.crashing.org;
-> zourongrong@gmail.com; liviu.dudau@arm.com; kantyzc@163.com;
-> zhichang.yuan02@gmail.com
-> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
-> Hip06
-> 
-> On Thursday, September 15, 2016 12:05:51 PM CEST Gabriele Paoloni
-> wrote:
-> > > -----Original Message-----
-> > > On Thursday, September 15, 2016 8:02:27 AM CEST Gabriele Paoloni
-> wrote:
-> > > >
-> > > > From <<3.1.1. Open Firmware Properties for Bus Nodes>> in
-> > > > http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
-> > > >
-> > > > I quote:
-> > > > "There shall be an entry in the "ranges" property for each
-> > > > of the Memory and/or I/O spaces if that address space is
-> > > > mapped through the bridge."
-> > > >
-> > > > It seems to me that it is ok to have 1:1 address mapping and that
-> > > > therefore of_translate_address() should fail if "ranges" is not
-> > > > present.
-> > >
-> > > The key here is the definition of "mapped through the bridge".
-> > > I can only understand this as "directly mapped", i.e. an I/O
-> > > port of the child bus corresponds directly to a memory address
-> > > on the parent bus, but this is not the case here.
-> > >
-> > > The problem with adding the mapping here is that it looks
-> > > like it should be valid to create a page table entry for
-> > > the address returned from the translation and access it through
-> > > a pointer dereference, but that is clearly not possible.
-> >
-> > I understand that somehow we are abusing of the ranges property
-> > here however the point is that with the current implementation ranges
-> > is needed because otherwise the ipmi driver probe will fail here:
-> >
-> > of_ipmi_probe -> of_address_to_resource -> __of_address_to_resource
-> > -> of_translate_address -> __of_translate_address
-> >
-> > Now we had a bit of discussion internally and to avoid
-> > having ranges we came up with two possible solutions:
-> >
-> > 1) Using bit 3 of phys.hi cell in 2.2.1 of
-> > http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
-> > This would mean reworking of_bus_isa_get_flags in
-> > http://lxr.free-electrons.com/source/drivers/of/address.c#L398
-> > and setting a new flag to be checked in __of_address_to_resource
-> >
-> > 2) Adding a property in the bindings of each device that is
-> > a child of our LPC bus and modify __of_address_to_resource
-> > to check if the property is in the DT and eventually bypass
-> > of_translate_address
-> >
-> > However in both 1) and 2) there are some issues:
-> > in 1) we are not complying with the isa binding doc (we use
-> > a bit that should be zero); in 2) we need to modify the
-> > bindings documentation of the devices that are connected
-> > to our LPC controller (therefore modifying other devices
-> > bindings to fit our special case).
-> >
-> > I think that maybe having the 1:1 range mapping doesn't
-> > reflect well the reality but it is the less painful
-> > solution...
-> >
-> > What's your view?
-> 
-> We can check the 'i' bit for I/O space in of_bus_isa_get_flags,
-> and that should be enough to translate the I/O port number.
-> 
-> The only part we need to change here is to not go through
-> the crazy conversion all the way from PCI I/O space to a
-> physical address and back to a (logical) port number
-> that we do today with of_translate_address/pci_address_to_pio.
-> 
-> I can think of a several of ways to fix __of_address_to_resource
-> to just do the right thing according to the ISA binding to
-> make the normal drivers work.
-> 
-> The easiest solution is probably to hook into the
-> "taddr == OF_BAD_ADDR" case in __of_address_to_resource
-> and add a lookup for ISA buses there, and instead check
-> if some special I/O port operations were registered
-> for the port number, using an architecture specific
-> function that arm64 implements. Other architectures
-> like x86 that don't have a direct mapping between I/O
-> ports and MMIO addresses would implement that same
-> function differently.
+On 2016/9/13 15:46, nwatters@codeaurora.org wrote:
+> On 2016-09-09 10:23, Lorenzo Pieralisi wrote:
+>> In ARM ACPI systems, IOMMU components are specified through static
+>> IORT table entries. In order to create platform devices for the
+>> corresponding ARM SMMU components, IORT kernel code should be made
+>> able to parse IORT table entries and create platform devices
+>> dynamically.
+>>
+>> This patch adds the generic IORT infrastructure required to create
+>> platform devices for ARM SMMUs.
+>>
+>> ARM SMMU versions have different resources requirement therefore this
+>> patch also introduces an IORT specific structure (ie iort_iommu_config)
+>> that contains hooks (to be defined when the corresponding ARM SMMU
+>> driver support is added to the kernel) to be used to define the
+>> platform devices names, init the IOMMUs, count their resources and
+>> finally initialize them.
+>>
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+>> Cc: Tomasz Nowicki <tn@semihalf.com>
+>> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+>> ---
+>>  drivers/acpi/arm64/iort.c | 131
+>> ++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 131 insertions(+)
+>>
+>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>> index b89b3d3..e0a9b16 100644
+>> --- a/drivers/acpi/arm64/iort.c
+>> +++ b/drivers/acpi/arm64/iort.c
+>> @@ -22,6 +22,7 @@
+>>  #include <linux/kernel.h>
+>>  #include <linux/list.h>
+>>  #include <linux/pci.h>
+>> +#include <linux/platform_device.h>
+>>  #include <linux/slab.h>
+>>
+>>  struct iort_its_msi_chip {
+>> @@ -424,6 +425,135 @@ struct irq_domain *iort_get_device_domain(struct
+>> device *dev, u32 req_id)
+>>      return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+>>  }
+>>
+>> +struct iort_iommu_config {
+>> +    const char *name;
+>> +    int (*iommu_init)(struct acpi_iort_node *node);
+>> +    bool (*iommu_is_coherent)(struct acpi_iort_node *node);
+>> +    int (*iommu_count_resources)(struct acpi_iort_node *node);
+>> +    void (*iommu_init_resources)(struct resource *res,
+>> +                     struct acpi_iort_node *node);
+>> +};
+>> +
+>> +static __init
+>> +const struct iort_iommu_config *iort_get_iommu_cfg(struct
+>> acpi_iort_node *node)
+>> +{
+>> +    return NULL;
+>> +}
+>> +
+>> +/**
+>> + * iort_add_smmu_platform_device() - Allocate a platform device for SMMU
+>> + * @fwnode: IORT node associated fwnode handle
+>> + * @node: Pointer to SMMU ACPI IORT node
+>> + *
+>> + * Returns: 0 on success, <0 failure
+>> + */
+>> +static int __init iort_add_smmu_platform_device(struct fwnode_handle
+>> *fwnode,
+>> +                        struct acpi_iort_node *node)
+>> +{
+>> +    struct platform_device *pdev;
+>> +    struct resource *r;
+>> +    enum dev_dma_attr attr;
+>> +    int ret, count;
+>> +    const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
+>> +
+>> +    if (!ops)
+>> +        return -ENODEV;
+>> +
+>> +    pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
+>> +    if (!pdev)
+>> +        return PTR_ERR(pdev);
+>> +
+>> +    count = ops->iommu_count_resources(node);
+>> +
+>> +    r = kcalloc(count, sizeof(*r), GFP_KERNEL);
+>> +    if (!r) {
+>> +        ret = -ENOMEM;
+>> +        goto dev_put;
+>> +    }
+>> +
+>> +    ops->iommu_init_resources(r, node);
+>> +
+>> +    ret = platform_device_add_resources(pdev, r, count);
+>> +    /*
+>> +     * Resources are duplicated in platform_device_add_resources,
+>> +     * free their allocated memory
+>> +     */
+>> +    kfree(r);
+>> +
+>> +    if (ret)
+>> +        goto dev_put;
+>> +
+>> +    /*
+>> +     * Add a copy of IORT node pointer to platform_data to
+>> +     * be used to retrieve IORT data information.
+>> +     */
+>> +    ret = platform_device_add_data(pdev, &node, sizeof(node));
+>> +    if (ret)
+>> +        goto dev_put;
+>> +
+>> +    pdev->dev.dma_mask = kmalloc(sizeof(*pdev->dev.dma_mask),
+>> GFP_KERNEL);
+>> +    if (!pdev->dev.dma_mask) {
+>> +        ret = -ENOMEM;
+>> +        goto dev_put;
+>> +    }
+>> +
+>> +    pdev->dev.fwnode = fwnode;
+>> +
+>> +    /*
+>> +     * Set default dma mask value for the table walker,
+>> +     * to be overridden on probing with correct value.
+>> +     */
+>> +    *pdev->dev.dma_mask = DMA_BIT_MASK(32);
+>> +    pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
+>> +
+>> +    attr = ops->iommu_is_coherent(node) ?
+>> +                 DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
+>> +
+>> +    /* Configure DMA for the page table walker */
+>> +    acpi_dma_configure(&pdev->dev, attr);
+>> +
+>> +    ret = platform_device_add(pdev);
+>> +    if (ret)
+>> +        goto dma_deconfigure;
+>> +
+>> +    return 0;
+>> +
+>> +dma_deconfigure:
+>> +    acpi_dma_deconfigure(&pdev->dev);
+>> +    kfree(pdev->dev.dma_mask);
+>> +
+>> +dev_put:
+>> +    platform_device_put(pdev);
+>> +
+>> +    return ret;
+>> +}
+>> +
+>> +static acpi_status __init iort_match_iommu_callback(struct
+>> acpi_iort_node *node,
+>> +                            void *context)
+>> +{
+>> +    int ret;
+>> +    struct fwnode_handle *fwnode;
+>> +
+>> +    fwnode = iort_get_fwnode(node);
+>> +
+>> +    if (!fwnode)
+>> +        return AE_NOT_FOUND;
+>> +
+>> +    ret = iort_add_smmu_platform_device(fwnode, node);
+>> +    if (ret) {
+>> +        pr_err("Error in platform device creation\n");
+>> +        return AE_ERROR;
+>> +    }
+>> +
+>> +    return AE_OK;
+>> +}
+>> +
+>> +static void __init iort_smmu_init(void)
+>> +{
+>> +    iort_scan_node(ACPI_IORT_NODE_SMMU, iort_match_iommu_callback,
+>> NULL);
+>> +    iort_scan_node(ACPI_IORT_NODE_SMMU_V3, iort_match_iommu_callback,
+>> NULL);
+>
+> Since iort_scan_node() returns after the first successful match it finds,
+> only the first SMMU_V3 in my IORT is being enumerated. I think you need
+> to go back to the "iterator" like approach you had been using or make
+> iort_match_iommu_callback() always return a non-AE_OK value so the scan
+> continues and has a chance to visit all of the SMMU_V3 nodes.
 
-So with respect to this patchset once we enter the
-"taddr == OF_BAD_ADDR" case you would add an arch
-specific function that checks if the resource is an I/O 
-resource, if the parent node is an ISA bus (calling 
-of_bus_isa_match) and if arm64_extio_ops is non NULL. 
- 
-I think it can work for us and it doesn't affect current
-devices. I will talk to Zhichang about this for the next
-patchset version.
+Please use the updated version of IORT patch (aka Tomasz's v11)
+then things will work fine.
 
-Many Thanks for your ideas
-
-Gab
-
-
-> 
-> 	Arnd
+Thanks
+Hanjun
