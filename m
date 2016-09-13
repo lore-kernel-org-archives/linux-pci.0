@@ -1,103 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49544 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752998AbcIZF5G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Sep 2016 01:57:06 -0400
-Date: Mon, 26 Sep 2016 08:56:57 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
-        pv-drivers@vmware.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
-        georgezhang@vmware.com, bryantan@vmware.com
-Subject: Re: [PATCH v5 16/16] MAINTAINERS: Update for PVRDMA driver
-Message-ID: <20160926055657.GE4088@leon.nu>
-References: <cover.1474759181.git.aditr@vmware.com>
- <fe5e7704757254073963cd40bff5240421b1fce0.1474759181.git.aditr@vmware.com>
- <20160925073010.GW4088@leon.nu>
- <7ddc5906-6ba8-335e-c0b8-eb60427a1be8@vmware.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="gJgGjUUWrnN4mpen"
-In-Reply-To: <7ddc5906-6ba8-335e-c0b8-eb60427a1be8@vmware.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <mika.westerberg@linux.intel.com>
+Return-Path: <mika.westerberg@linux.intel.com>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Aaron Durbin <adurbin@google.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH 1/2] PCI: Add pci_find_resource()
+Date: Tue, 13 Sep 2016 15:19:41 +0300
+Message-Id: <20160913121942.80356-1-mika.westerberg@linux.intel.com>
+In-Reply-To: <CAJZ5v0gRm++9zcAtXc1jYKsrg=tw2K3Wd=kQRS=RbRxXRDj8yA@mail.gmail.com>
+References: <CAJZ5v0gRm++9zcAtXc1jYKsrg=tw2K3Wd=kQRS=RbRxXRDj8yA@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+Add a new helper function pci_find_resource() that can be used to find out
+whether a given resource (for example from a child device) is contained
+within given PCI device's standard resources.
 
---gJgGjUUWrnN4mpen
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pci.c   | 27 +++++++++++++++++++++++++++
+ include/linux/pci.h |  4 ++++
+ 2 files changed, 31 insertions(+)
 
-On Sun, Sep 25, 2016 at 10:22:02PM -0700, Adit Ranadive wrote:
-> On Sun, Sep 25 2016 at 10:30:10AM +0300, Leon Romanovsky wrote:
-> > On Sat, Sep 24, 2016 at 04:21:40PM -0700, Adit Ranadive wrote:
-> > > Add maintainer info for the PVRDMA driver.
-> > >
-> > > Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-> > > Reviewed-by: George Zhang <georgezhang@vmware.com>
-> > > Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-> > > Reviewed-by: Bryan Tan <bryantan@vmware.com>
-> > > Signed-off-by: Adit Ranadive <aditr@vmware.com>
-> > > ---
-> > > Changes v4->v5:
-> > >  - Added pvrdma files to common UAPI folder.
-> > > ---
-> > >  MAINTAINERS | 9 +++++++++
-> > >  1 file changed, 9 insertions(+)
-> > >
-> > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > index 87e23cd..5023dc0 100644
-> > > --- a/MAINTAINERS
-> > > +++ b/MAINTAINERS
-> > > @@ -12615,6 +12615,15 @@ S:	Maintained
-> > >  F:	drivers/scsi/vmw_pvscsi.c
-> > >  F:	drivers/scsi/vmw_pvscsi.h
-> > >
-> > > +VMWARE PVRDMA DRIVER
-> > > +M:	Adit Ranadive <aditr@vmware.com>
-> > > +M:	VMware PV-Drivers <pv-drivers@vmware.com>
-> > > +L:	linux-rdma@vger.kernel.org
-> > > +S:	Maintained
-> > > +F:	drivers/infiniband/hw/pvrdma/
-> > > +F:	include/uapi/rdma/pvrdma-abi.h
-> > > +F:	include/uapi/rdma/pvrdma-uapi.h
-> >
-> > Please remove the last two lines, these files will be maintained by
-> > Doug.
-> >
-> > Thanks
-> >
->
-> Ok. Based on your recent patch series on export vendor specific ABIs,
-> the ABI files were added to be maintained [1] by individual driver owners.
-> Is that not the case now?
-
-I based my answer on this response from Doug [1], maybe I'm wrong.
-
-[1] http://marc.info/?l=linux-rdma&m=147464894811998&w=2
-
->
-> [1] http://marc.info/?l=linux-rdma&m=147455473718235&w=2
-
---gJgGjUUWrnN4mpen
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX6LipAAoJEORje4g2clincckP/1fxA2jFABGw1a7XAg7AHLrh
-p749jZMLOmA5Yr1IEVtWD7YyTupZEQvkKZBIWhMAJTxhp4mzPhde2ZQ5Yoiky/3u
-rfH/wYFhVjO9KmEEFPgOmxyjl7t3Imb5fyTxbfAoXWe4qwOAV4/D5FOBWrd7EeJr
-jUE7M59hWArkevTEAOz8lxx7olAtzBa8D+Ik6c22ZTDV/mDfSmdlZrGr7xq2lNqw
-CUYLyObuUvsELZoSSfhNV5tt9Uc6YT4lAgGFar0+xoRo3WzR/WKx8Iv9DX2+xbCC
-LX4MsOMwqUxzUA7vD1J+tJKlG7Jjfm5WH5DQIx9/HBFOA2grEreY87z5YdQqTjNH
-lJ6h5nYA69QwEZwvIgh0CgpOj5lqIzLwzS3GMlCTErylIHSmV99u0MkLXG+LI5gv
-A+FDteV+lG1zOL7Xpfe8lolAyGMlykMEGKfXx3L2XwUUjvomCfUUejWzLEP1rgzG
-pCYHS2UL3iG74YfOSgzy5/jV3PyAwmFmC2rgdjx+UFipBICEqWCH9rbdXd6L+1Bp
-Va3Og52ZNS1MmBtcQbi+uvzultE1J1UdPGahJt3vthzzjh6+gYqhOR8LBzfnE/vu
-195lqR1NF07n0uDID8sdmfnsSOwl4FP2mqlaiMVfoJznFjyKgNoHtj8zz755F85M
-ALxeYVazTcTP8LHSe0ku
-=H3iT
------END PGP SIGNATURE-----
-
---gJgGjUUWrnN4mpen--
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d5115a5f..491f879f34cb 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -480,6 +480,33 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ EXPORT_SYMBOL(pci_find_parent_resource);
+ 
+ /**
++ * pci_find_resource - Return matching PCI device resource
++ * @dev: PCI device to query
++ * @res: Resource to look for
++ *
++ * Goes over standard PCI resources (BARs) and checks if the given resource
++ * is partially or fully contained in any of them. In that case the
++ * matching resource is returned, %NULL otherwise.
++ */
++struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res)
++{
++	int i;
++
++	if (!res)
++		return NULL;
++
++	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (r->start && resource_contains(r, res))
++			return r;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL(pci_find_resource);
++
++/**
+  * pci_find_pcie_root_port - return PCIe Root Port
+  * @dev: PCI device to query
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0ab835965669..a917d4b20554 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1126,6 +1126,7 @@ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ 		    int (*)(const struct pci_dev *, u8, u8));
++struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res);
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
+@@ -1542,6 +1543,9 @@ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 				  int enable)
+ { return 0; }
+ 
++static inline struct resource *pci_find_resource(struct pci_dev *dev,
++						 struct resource *res)
++{ return NULL; }
+ static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
+ { return -EIO; }
+ static inline void pci_release_regions(struct pci_dev *dev) { }
+-- 
+2.9.3
