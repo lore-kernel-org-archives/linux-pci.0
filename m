@@ -1,39 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f175.google.com ([209.85.213.175]:34649 "EHLO
-        mail-yb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751670AbcI2IWd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 04:22:33 -0400
-Date: Thu, 29 Sep 2016 10:22:29 +0200
-From: "tj@kernel.org" <tj@kernel.org>
-To: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "holler@ahsoftware.de" <holler@ahsoftware.de>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: ATA failure regression
-Message-ID: <20160929082229.GA11087@mtj.duckdns.org>
-References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
- <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
- <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH 1/2] PCI: save and restore device state during bus reset
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1472770801-30671-1-git-send-email-okaya@codeaurora.org>
+ <20160913215315.GJ4138@localhost>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
+ alex.williamson@redhat.com, vikrams@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <46a47bf2-ab39-0ee2-0faf-2f4050f2a89d@codeaurora.org>
+Date: Tue, 13 Sep 2016 19:20:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160913215315.GJ4138@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On 9/13/2016 5:53 PM, Bjorn Helgaas wrote:
+>> +	pci_bus_restore(dev->bus);
+> This path eventually writes the Bridge Control register:
+> 
+>   pci_reset_bridge_secondary_bus
+>     pcibios_reset_secondary_bus
+>       pci_reset_secondary_bus
+>         pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl)
+> 
+> But I think it'd be easy to call this on a non-bridge device, and I
+> don't think there's anything in the path that checks whether this is
+> actually a bridge.  I wonder if we should check that somewhere, or
+> maybe even change the interface so it takes a struct pci_bus instead
+> of a pci_dev.
+> 
 
-On Wed, Sep 28, 2016 at 05:45:08AM +0000, Shah, Nehal-bakulchandra wrote:
-> Can someone please help me to debug this issue?
+I'll change it to pci_bus.
 
-The only thing I can do from libata side is disbling msi on the
-affected platform, but the problem doesn't seem confined to ahci, so
-probably the right thing to do for now is disabling msi on the
-platform?
+>> > +}
 
-Thanks.
 
 -- 
-tejun
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
