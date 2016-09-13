@@ -1,179 +1,124 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 20 Sep 2016 09:05:18 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35764 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756512AbcIMVrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Sep 2016 17:47:14 -0400
+Date: Tue, 13 Sep 2016 16:47:09 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Message-ID: <20160920140518.GD13855@localhost>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-4-git-send-email-tn@semihalf.com>
- <20160919180900.GB13775@localhost>
- <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
- <20160920133327.GB13855@localhost>
- <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, alex.williamson@redhat.com,
+        vikrams@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: add CRS support to error handling path
+Message-ID: <20160913214709.GI4138@localhost>
+References: <1472770801-30671-1-git-send-email-okaya@codeaurora.org>
+ <1472770801-30671-2-git-send-email-okaya@codeaurora.org>
+ <20160913200152.GE4138@localhost>
+ <dd6d9d71-1ba0-84c8-7cab-21fe8b555f1c@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Yijing Wang <wangyijing@huawei.com>, Andrea Gallo <andrea.gallo@linaro.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Jeff Hugo <jhugo@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
- Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
- David Daney <ddaney@caviumnetworks.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Robert Richter <robert.richter@caviumnetworks.com>,
- Dongdong Liu <liudongdong3@huawei.com>, Mark Salter <msalter@redhat.com>,
- Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
- Jon Masters <jcm@redhat.com>, Christopher Covington <cov@codeaurora.org>,
- Marcin Wojtas <mw@semihalf.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Jayachandran C <jchandra@broadcom.com>, Duc Dang <dhdang@apm.com>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jeremy Linton <jeremy.linton@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <dd6d9d71-1ba0-84c8-7cab-21fe8b555f1c@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ard,
-
-On Tue, Sep 20, 2016 at 02:40:13PM +0100, Ard Biesheuvel wrote:
-> On 20 September 2016 at 14:33, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > [+cc Rafael (maybe already cc'd; I didn't recognize rafael@kernel.org, Duc]
-> >
-> > On Tue, Sep 20, 2016 at 09:23:21AM +0200, Tomasz Nowicki wrote:
-> >> On 19.09.2016 20:09, Bjorn Helgaas wrote:
-> >> >On Fri, Sep 09, 2016 at 09:24:05PM +0200, Tomasz Nowicki wrote:
-> >> >>thunder-pem driver stands for being ACPI based PCI host controller.
-> >> >>However, there is no standard way to describe its PEM-specific register
-> >> >>ranges in ACPI tables. Thus we add thunder_pem_init() ACPI extension
-> >> >>to obtain hardcoded addresses from static resource array.
-> >> >>Although it is not pretty, it prevents from creating standard mechanism to
-> >> >>handle similar cases in future.
-> >> >>
-> >> >>Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> >> >>---
-> >> >> drivers/pci/host/pci-thunder-pem.c | 61 ++++++++++++++++++++++++++++++--------
-> >> >> 1 file changed, 48 insertions(+), 13 deletions(-)
-> >> >>
-> >> >>diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> >> >>index 6abaf80..b048761 100644
-> >> >>--- a/drivers/pci/host/pci-thunder-pem.c
-> >> >>+++ b/drivers/pci/host/pci-thunder-pem.c
-> >> >>@@ -18,6 +18,7 @@
-> >> >> #include <linux/init.h>
-> >> >> #include <linux/of_address.h>
-> >> >> #include <linux/of_pci.h>
-> >> >>+#include <linux/pci-acpi.h>
-> >> >> #include <linux/pci-ecam.h>
-> >> >> #include <linux/platform_device.h>
-> >> >>
-> >> >>@@ -284,6 +285,40 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
-> >> >>    return pci_generic_config_write(bus, devfn, where, size, val);
-> >> >> }
-> >> >>
-> >> >>+#ifdef CONFIG_ACPI
-> >> >>+static struct resource thunder_pem_reg_res[] = {
-> >> >>+   [4] = DEFINE_RES_MEM(0x87e0c0000000UL, SZ_16M),
-> >> >>+   [5] = DEFINE_RES_MEM(0x87e0c1000000UL, SZ_16M),
-> >> >>+   [6] = DEFINE_RES_MEM(0x87e0c2000000UL, SZ_16M),
-> >> >>+   [7] = DEFINE_RES_MEM(0x87e0c3000000UL, SZ_16M),
-> >> >>+   [8] = DEFINE_RES_MEM(0x87e0c4000000UL, SZ_16M),
-> >> >>+   [9] = DEFINE_RES_MEM(0x87e0c5000000UL, SZ_16M),
-> >> >>+   [14] = DEFINE_RES_MEM(0x97e0c0000000UL, SZ_16M),
-> >> >>+   [15] = DEFINE_RES_MEM(0x97e0c1000000UL, SZ_16M),
-> >> >>+   [16] = DEFINE_RES_MEM(0x97e0c2000000UL, SZ_16M),
-> >> >>+   [17] = DEFINE_RES_MEM(0x97e0c3000000UL, SZ_16M),
-> >> >>+   [18] = DEFINE_RES_MEM(0x97e0c4000000UL, SZ_16M),
-> >> >>+   [19] = DEFINE_RES_MEM(0x97e0c5000000UL, SZ_16M),
-> >> >
-> >> >1) The "correct" way to discover the resources consumed by an ACPI
-> >> >   device is to use the _CRS method.  I know there are some issues
-> >> >   there for bridges (not the fault of ThunderX!) because there's not
-> >> >   a good way to distinguish windows from resources consumed directly
-> >> >   by the bridge.
-> >> >
-> >> >   But we should either do this correctly, or include a comment about
-> >> >   why we're doing it wrong, so we don't give the impression that this
-> >> >   is the right way to do it.
-> >> >
-> >> >   I seem to recall some discussion about why we're doing it this way,
-> >> >   but I don't remember the details.  It'd be nice to include a
-> >> >   summary here.
+On Tue, Sep 13, 2016 at 05:04:49PM -0400, Sinan Kaya wrote:
+> On 9/13/2016 4:01 PM, Bjorn Helgaas wrote:
+> > On Thu, Sep 01, 2016 at 07:00:01PM -0400, Sinan Kaya wrote:
+> >> The PCIE spec allows an endpoint device to extend the initialization time
+> >> beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
+> >> vendor ID read request.
 > >>
-> >> OK I will. The reason why we cannot use _CRS for this case is that
-> >> CONSUMER flag was not use consistently for the bridge so far.
-> >
-> > Yes, I'm aware of that problem, but hard-coding resources into drivers
-> > is just a disaster.  The PCI and ACPI cores need generic ways to learn
-> > what resources are consumed by devices.  For PCI devices, that's done
-> > with BARs.  For ACPI devices, it's done with _CRS.  Without generic
-> > resource discovery, we can't manage resources reliably at the system
-> > level [1].
-> >
-> > You have a PNP0A03/PNP0A08 device for the PCI host bridge.  Because of
-> > the BIOS bugs in CONSUMER flag usage, we assume everything in its _CRS
-> > is a window and not consumed by the bridge itself.  What if you added
-> > a companion ACPI device with a _CRS that contained the bridge
-> > resources?  Then you'd have some driver ugliness to find that device,
-> > but at least the ACPI core could tell what resources were in use.
-> >
-> > Maybe Rafael has a better idea?
+> >> This basically means "I'm busy now, please call me back later".
+> >>
+> >> There are two moving parts to CRS support from the SW perspective. One part
+> >> is to determine if CRS is supported or not. The second part is to set the
+> >> CRS visibility register.
+> >>
+> >> As part of the probe, the Linux kernel sets the above two conditions in
+> >> pci_enable_crs function. The kernel is also honoring the returned CRS in
+> >> pci_bus_read_dev_vendor_id function if supported. The function will poll up
+> >> to specified amount of time while endpoint is returning CRS response.
+> >>
+> >> The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
+> >> resets.
+> >>
+> >> The hot reset is initiated by starting a secondary bus reset. This patch is
+> >> adding vendor ID read immediately after a bus reset so that the
+> >> initialization procedure can be extended by the amount of time endpoint
+> >> requires.
+> >>
+> >> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> >> ---
+> >>  drivers/pci/pci.c | 39 +++++++++++++++++++++++++++++++++++++++
+> >>  1 file changed, 39 insertions(+)
+> >>
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index b209378..ebd0fc6 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -3829,6 +3829,44 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+> >>  	return 0;
+> >>  }
+> >>  
+> >> +/*
+> >> + * Mostly copy paste from pci_walk_bus with the exceptions of hard coded
+> >> + * work and removed locks.
+> >> + */
+> >> +static void pci_bus_probe_crs(struct pci_bus *top)
+> >> +{
+> >> +	struct pci_dev *dev;
+> >> +	struct pci_bus *bus;
+> >> +	struct list_head *next;
+> >> +	int retval;
+> >> +	u32 l;
+> >> +
+> >> +	bus = top;
+> >> +	next = top->devices.next;
+> >> +	for (;;) {
+> >> +		if (next == &bus->devices) {
+> >> +			/* end of this bus, go up or finish */
+> >> +			if (bus == top)
+> >> +				break;
+> >> +			next = bus->self->bus_list.next;
+> >> +			bus = bus->self->bus;
+> >> +			continue;
+> >> +		}
+> >> +		dev = list_entry(next, struct pci_dev, bus_list);
+> >> +		if (dev->subordinate) {
+> >> +			/* this is a pci-pci bridge, do its devices next */
+> >> +			next = dev->subordinate->devices.next;
+> >> +			bus = dev->subordinate;
+> >> +		} else
+> >> +			next = dev->bus_list.next;
+> >> +
+> >> +		retval = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l,
+> >> +						    60 * 1000);
+> >> +		if (retval)
+> >> +			break;
+> >> +	}
+> >> +}
+> > 
+> > Sigh.  Man, this is ugly.  Maybe we're locked into the current
+> > strategy and don't really have a choice, but I really don't like it.
 > 
-> In the discussions leading up to this, we tried very hard to make this
-> arm64/acpi quirks mechanism just as flexible as we need it to be to
-> cover the current crop of incompatible hardware, but not more so.
-> Going forward, we intend to require all arm64/acpi hardware to be spec
-> compliant, and so any parametrization beyond what is required for the
-> currently known broken hardware is only going to make it easier for
-> others to ship with tweaked ACPI descriptions so that an existing
-> quirk is triggered for hardware that it was not intended for. It also
-> implies that we have to deal with the ACPI descriptions as they were
-> shipped with the current hardware.
+> I can add a locked version of the walkbus API. 
+> Then, I can minimize this code to a couple of lines. How does that sound?
+
+I didn't mean that, I meant the whole idea of having to walk the whole
+hierarchy and touch each device.  It's sort of like we're enumerating
+things, but not really, so this checking is kinda sorta parallel to
+the enumeration path.
+
+> > You mentioned several kinds of reset where CRS is allowed.  Doesn't this
+> > fix only one of them?  I know we support at least FLR reset also.
 > 
-> That does not mean, of course, that we should use bare constants
-> rather than symbolic ones, but anything beyond that exceeds the
-> desired scope of quirks handling.
+> The CRS is for hot reset, warm reset and FLR reset. There is nothing we can do in SW
+> for warm reset. This patch is to address hot reset caused by SBR. 
+> 
+> I was hoping that Alex would help us for directions on the FLR reset later.
 
-Symbolic vs bare constants is the least of my worries.  I'm pretty
-happy with the current quirk implementation.  It's pretty simple and
-straightforward.
-
-Apparently you shipped broken firmware that doesn't accurately
-describe system resource usage.  Presumably that firmware could be
-updated, but maybe it's worthwhile to work around it in the kernel,
-depending on where it got shipped.
-
-I'd like to step back and come up with some understanding of how
-non-broken firmware *should* deal with this issue.  Then, if we *do*
-work around this particular broken firmware in the kernel, it would be
-nice to do it in a way that fits in with that understanding.
-
-For example, if a companion ACPI device is the preferred solution, an
-ACPI quirk could fabricate a device with the required resources.  That
-would address the problem closer to the source and make it more likely
-that the rest of the system will work correctly: /proc/iomem could
-make sense, things that look at _CRS generically would work (e.g,
-/sys/, an admittedly hypothetical "lsacpi", etc.)
-
-Hard-coding stuff in drivers is a point solution that doesn't provide
-any guidance for future platforms and makes it likely that the hack
-will get copied into even more drivers.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+What sort of help from Alex were you hoping for?  Is fixing the FLR
+path harder than this one?  If we're going to fix one path, I'd prefer
+to fix them all at the same time rather than tripping over this again
+later.
