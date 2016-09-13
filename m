@@ -1,166 +1,185 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 19 Sep 2016 13:09:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
-        dhdang@apm.com, ard.biesheuvel@linaro.org,
-        robert.richter@caviumnetworks.com, mw@semihalf.com,
-        Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-        wangyijing@huawei.com, msalter@redhat.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linaro-acpi@lists.linaro.org, jcm@redhat.com,
-        andrea.gallo@linaro.org, jeremy.linton@arm.com,
-        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
-        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Message-ID: <20160919180900.GB13775@localhost>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-4-git-send-email-tn@semihalf.com>
+Subject: Re: [PATCH v5 06/14] drivers: acpi: implement acpi_dma_configure
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+ <20160909142343.13314-7-lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <ea01f486-8be6-f87a-caed-96fadade054c@arm.com>
+Date: Tue, 13 Sep 2016 15:41:06 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473449047-10499-4-git-send-email-tn@semihalf.com>
+In-Reply-To: <20160909142343.13314-7-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 09, 2016 at 09:24:05PM +0200, Tomasz Nowicki wrote:
-> thunder-pem driver stands for being ACPI based PCI host controller.
-> However, there is no standard way to describe its PEM-specific register
-> ranges in ACPI tables. Thus we add thunder_pem_init() ACPI extension
-> to obtain hardcoded addresses from static resource array.
-> Although it is not pretty, it prevents from creating standard mechanism to
-> handle similar cases in future.
+On 09/09/16 15:23, Lorenzo Pieralisi wrote:
+> On DT based systems, the of_dma_configure() API implements DMA
+> configuration for a given device. On ACPI systems an API equivalent to
+> of_dma_configure() is missing which implies that it is currently not
+> possible to set-up DMA operations for devices through the ACPI generic
+> kernel layer.
 > 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+> calls that for now are just wrappers around arch_setup_dma_ops() and
+> arch_teardown_dma_ops() and also updates ACPI and PCI core code to use
+> the newly introduced acpi_dma_configure/acpi_dma_deconfigure functions.
+> 
+> The DMA range size passed to arch_setup_dma_ops() is sized according
+> to the device coherent_dma_mask (starting at address 0x0), mirroring the
+> DT probing path behaviour when a dma-ranges property is not provided
+> for the device being probed; this changes the current arch_setup_dma_ops()
+> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
+> is a NOP on all architectures but ARM/ARM64 this patch does not change
+> the current kernel behaviour on them.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com> [pci]
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 > ---
->  drivers/pci/host/pci-thunder-pem.c | 61 ++++++++++++++++++++++++++++++--------
->  1 file changed, 48 insertions(+), 13 deletions(-)
+>  drivers/acpi/glue.c     |  4 ++--
+>  drivers/acpi/scan.c     | 24 ++++++++++++++++++++++++
+>  drivers/pci/probe.c     |  3 +--
+>  include/acpi/acpi_bus.h |  2 ++
+>  include/linux/acpi.h    |  5 +++++
+>  5 files changed, 34 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index 6abaf80..b048761 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -18,6 +18,7 @@
->  #include <linux/init.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/pci-acpi.h>
->  #include <linux/pci-ecam.h>
->  #include <linux/platform_device.h>
+> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> index 5ea5dc2..f8d6564 100644
+> --- a/drivers/acpi/glue.c
+> +++ b/drivers/acpi/glue.c
+> @@ -227,8 +227,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
 >  
-> @@ -284,6 +285,40 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
->  	return pci_generic_config_write(bus, devfn, where, size, val);
+>  	attr = acpi_get_dma_attr(acpi_dev);
+>  	if (attr != DEV_DMA_NOT_SUPPORTED)
+> -		arch_setup_dma_ops(dev, 0, 0, NULL,
+> -				   attr == DEV_DMA_COHERENT);
+> +		acpi_dma_configure(dev, attr);
+>  
+>  	acpi_physnode_link_name(physical_node_name, node_id);
+>  	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+> @@ -251,6 +250,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>  	return 0;
+>  
+>   err:
+> +	acpi_dma_deconfigure(dev);
+>  	ACPI_COMPANION_SET(dev, NULL);
+>  	put_device(dev);
+>  	put_device(&acpi_dev->dev);
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index e878fc7..9614232 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -1370,6 +1370,30 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+>  		return DEV_DMA_NON_COHERENT;
 >  }
 >  
-> +#ifdef CONFIG_ACPI
-> +static struct resource thunder_pem_reg_res[] = {
-> +	[4] = DEFINE_RES_MEM(0x87e0c0000000UL, SZ_16M),
-> +	[5] = DEFINE_RES_MEM(0x87e0c1000000UL, SZ_16M),
-> +	[6] = DEFINE_RES_MEM(0x87e0c2000000UL, SZ_16M),
-> +	[7] = DEFINE_RES_MEM(0x87e0c3000000UL, SZ_16M),
-> +	[8] = DEFINE_RES_MEM(0x87e0c4000000UL, SZ_16M),
-> +	[9] = DEFINE_RES_MEM(0x87e0c5000000UL, SZ_16M),
-> +	[14] = DEFINE_RES_MEM(0x97e0c0000000UL, SZ_16M),
-> +	[15] = DEFINE_RES_MEM(0x97e0c1000000UL, SZ_16M),
-> +	[16] = DEFINE_RES_MEM(0x97e0c2000000UL, SZ_16M),
-> +	[17] = DEFINE_RES_MEM(0x97e0c3000000UL, SZ_16M),
-> +	[18] = DEFINE_RES_MEM(0x97e0c4000000UL, SZ_16M),
-> +	[19] = DEFINE_RES_MEM(0x97e0c5000000UL, SZ_16M),
-
-1) The "correct" way to discover the resources consumed by an ACPI
-   device is to use the _CRS method.  I know there are some issues
-   there for bridges (not the fault of ThunderX!) because there's not
-   a good way to distinguish windows from resources consumed directly
-   by the bridge.
-
-   But we should either do this correctly, or include a comment about
-   why we're doing it wrong, so we don't give the impression that this
-   is the right way to do it.
-
-   I seem to recall some discussion about why we're doing it this way,
-   but I don't remember the details.  It'd be nice to include a
-   summary here.
-
-2) This is a little weird because here we define the resource size as
-   16MB, in the OF case we get the resource size from OF, in either
-   case we ioremap 64K of it, and then as far as I can tell, we only
-   ever access PEM_CFG_WR and PEM_CFG_RD, at offsets 0x28 and 0x30
-   into the space.
-
-   If the hardware actually decodes the entire 16MB, we should ioremap
-   the whole 16MB.  (Strictly speaking, drivers only need to ioremap
-   the parts they're using, but in this case nobody claims the entire
-   resource because of deficiencies in the ACPI and OF cores, so the
-   driver should ioremap the entire thing to help prevent conflicts
-   with other devices.)
-
-   It'd be nice if we didn't have the 64KB magic number.  I think
-   using devm_ioremap_resource() would be nice.
-
-> +};
-> +
-> +static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
+> +/**
+> + * acpi_dma_configure - Set-up DMA configuration for the device.
+> + * @dev: The pointer to the device
+> + * @attr: device dma attributes
+> + */
+> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
 > +{
-> +	struct acpi_device *adev = to_acpi_device(cfg->parent);
-> +	struct acpi_pci_root *root = acpi_driver_data(adev);
-> +
-> +	if ((root->segment >= 4 && root->segment <= 9) ||
-> +	    (root->segment >= 14 && root->segment <= 19))
-> +		return &thunder_pem_reg_res[root->segment];
-> +
-> +	return NULL;
+> +	/*
+> +	 * Assume dma valid range starts at 0 and covers the whole
+> +	 * coherent_dma_mask.
+> +	 */
+> +	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
+> +			   attr == DEV_DMA_COHERENT);
+
+This looks a bit hairy - if we're setting up the DMA configuration at
+this point can we really always rely on the device already having a
+valid DMA mask? I think it would make sense to at least check, and apply
+the standard default 32-bit mask  if not.
+
 > +}
-> +#else
-> +static struct resource *thunder_pem_acpi_res(struct pci_config_window *cfg)
+> +
+> +/**
+> + * acpi_dma_deconfigure - Tear-down DMA configuration for the device.
+> + * @dev: The pointer to the device
+> + */
+> +void acpi_dma_deconfigure(struct device *dev)
 > +{
-> +	return NULL;
+> +	arch_teardown_dma_ops(dev);
 > +}
-> +#endif
+
+As touched upon in the dwc-usb3 thread, is it worth exporting these for
+the benefit of modular bus/glue code, to match of_dma_configure()?
+
 > +
->  static int thunder_pem_init(struct pci_config_window *cfg)
+>  static void acpi_init_coherency(struct acpi_device *adev)
 >  {
->  	struct device *dev = cfg->parent;
-> @@ -292,24 +327,24 @@ static int thunder_pem_init(struct pci_config_window *cfg)
->  	struct thunder_pem_pci *pem_pci;
->  	struct platform_device *pdev;
->  
-> -	/* Only OF support for now */
-> -	if (!dev->of_node)
-> -		return -EINVAL;
-> -
->  	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
->  	if (!pem_pci)
->  		return -ENOMEM;
->  
-> -	pdev = to_platform_device(dev);
-> -
-> -	/*
-> -	 * The second register range is the PEM bridge to the PCIe
-> -	 * bus.  It has a different config access method than those
-> -	 * devices behind the bridge.
-> -	 */
-> -	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> +	if (acpi_disabled) {
-> +		pdev = to_platform_device(dev);
-> +
-> +		/*
-> +		 * The second register range is the PEM bridge to the PCIe
-> +		 * bus.  It has a different config access method than those
-> +		 * devices behind the bridge.
-> +		 */
-> +		res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> +	} else {
-> +		res_pem = thunder_pem_acpi_res(cfg);
-> +	}
->  	if (!res_pem) {
-> -		dev_err(dev, "missing \"reg[1]\"property\n");
-> +		dev_err(dev, "missing configuration region\n");
->  		return -EINVAL;
+>  	unsigned long long cca = 0;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 93f280d..e96d482 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1734,8 +1734,7 @@ static void pci_dma_configure(struct pci_dev *dev)
+>  		if (attr == DEV_DMA_NOT_SUPPORTED)
+>  			dev_warn(&dev->dev, "DMA not supported.\n");
+>  		else
+> -			arch_setup_dma_ops(&dev->dev, 0, 0, NULL,
+> -					   attr == DEV_DMA_COHERENT);
+> +			acpi_dma_configure(&dev->dev, attr);
 >  	}
+
+What about non-PCI stuff? I see there's at least an
+acpi_create_platform_device() which I'd also kind of expect to see as a
+caller (which indeed might also tie in with the aforementioned default
+mask initialisation).
+
+Robin.
+
 >  
-> -- 
-> 1.9.1
+>  	pci_put_host_bridge_device(bridge);
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index c1a524d..4242c31 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -573,6 +573,8 @@ struct acpi_pci_root {
+>  
+>  bool acpi_dma_supported(struct acpi_device *adev);
+>  enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
+> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
+> +void acpi_dma_deconfigure(struct device *dev);
+>  
+>  struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+>  					   u64 address, bool check_children);
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index c5eaf2f..05d4e48 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -729,6 +729,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+>  	return DEV_DMA_NOT_SUPPORTED;
+>  }
+>  
+> +static inline void acpi_dma_configure(struct device *dev,
+> +				      enum dev_dma_attr attr) { }
+> +
+> +static inline void acpi_dma_deconfigure(struct device *dev) { }
+> +
+>  #define ACPI_PTR(_ptr)	(NULL)
+>  
+>  static inline void acpi_device_set_enumerated(struct acpi_device *adev)
 > 
+
