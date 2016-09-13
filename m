@@ -1,354 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:38044 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932341AbcILEui (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:38 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v4 07/16] IB/pvrdma: Add helper functions
-Date: Sun, 11 Sep 2016 21:49:17 -0700
-Message-ID: <1473655766-31628-8-git-send-email-aditr@vmware.com>
-In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+Received: from foss.arm.com ([217.140.101.70]:53512 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755003AbcIMQ3H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Sep 2016 12:29:07 -0400
+Date: Tue, 13 Sep 2016 17:29:25 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 07/14] drivers: acpi: iort: add support for ARM SMMU
+ platform devices creation
+Message-ID: <20160913162925.GC2436@red-moon>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+ <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
+ <b0de32c2-01a5-2437-daa0-13044526b474@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b0de32c2-01a5-2437-daa0-13044526b474@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds helper functions to store guest page addresses in a page
-directory structure. The page directory pointer is passed down to the
-backend which then maps the entire memory for the RDMA object by
-traversing the directory. We add some more helper functions for converting
-to/from RDMA stack address handles from/to PVRDMA ones.
+On Tue, Sep 13, 2016 at 04:25:55PM +0100, Robin Murphy wrote:
 
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
----
-Changes v3->v4:
- - Updated conversion functions to func_name(dst, src) format.
- - Removed unneeded local variables.
----
- drivers/infiniband/hw/pvrdma/pvrdma_misc.c | 303 +++++++++++++++++++++++++++++
- 1 file changed, 303 insertions(+)
- create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_misc.c
+[...]
 
-diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_misc.c b/drivers/infiniband/hw/pvrdma/pvrdma_misc.c
-new file mode 100644
-index 0000000..1f12cd6
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/pvrdma_misc.c
-@@ -0,0 +1,303 @@
-+/*
-+ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of EITHER the GNU General Public License
-+ * version 2 as published by the Free Software Foundation or the BSD
-+ * 2-Clause License. This program is distributed in the hope that it
-+ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ * See the GNU General Public License version 2 for more details at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program available in the file COPYING in the main
-+ * directory of this source tree.
-+ *
-+ * The BSD 2-Clause License
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+ * OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <linux/errno.h>
-+#include <linux/slab.h>
-+#include <linux/bitmap.h>
-+
-+#include "pvrdma.h"
-+
-+int pvrdma_page_dir_init(struct pvrdma_dev *dev, struct pvrdma_page_dir *pdir,
-+			 u64 npages, bool alloc_pages)
-+{
-+	u64 i;
-+
-+	if (npages > PVRDMA_PAGE_DIR_MAX_PAGES)
-+		return -EINVAL;
-+
-+	memset(pdir, 0, sizeof(*pdir));
-+
-+	pdir->dir = dma_alloc_coherent(&dev->pdev->dev, PAGE_SIZE,
-+				       &pdir->dir_dma, GFP_KERNEL);
-+	if (!pdir->dir)
-+		goto err;
-+
-+	pdir->ntables = PVRDMA_PAGE_DIR_TABLE(npages - 1) + 1;
-+	pdir->tables = kcalloc(pdir->ntables, sizeof(*pdir->tables),
-+			       GFP_KERNEL);
-+	if (!pdir->tables)
-+		goto err;
-+
-+	for (i = 0; i < pdir->ntables; i++) {
-+		pdir->tables[i] = dma_alloc_coherent(&dev->pdev->dev, PAGE_SIZE,
-+						     &pdir->dir[i], GFP_KERNEL);
-+		if (!pdir->tables[i])
-+			goto err;
-+	}
-+
-+	pdir->npages = npages;
-+
-+	if (alloc_pages) {
-+		pdir->pages = kcalloc(npages, sizeof(*pdir->pages),
-+				      GFP_KERNEL);
-+		if (!pdir->pages)
-+			goto err;
-+
-+		for (i = 0; i < pdir->npages; i++) {
-+			dma_addr_t page_dma;
-+
-+			pdir->pages[i] = dma_alloc_coherent(&dev->pdev->dev,
-+							    PAGE_SIZE,
-+							    &page_dma,
-+							    GFP_KERNEL);
-+			if (!pdir->pages[i])
-+				goto err;
-+
-+			pvrdma_page_dir_insert_dma(pdir, i, page_dma);
-+		}
-+	}
-+
-+	return 0;
-+
-+err:
-+	pvrdma_page_dir_cleanup(dev, pdir);
-+
-+	return -ENOMEM;
-+}
-+
-+static u64 *pvrdma_page_dir_table(struct pvrdma_page_dir *pdir, u64 idx)
-+{
-+	return pdir->tables[PVRDMA_PAGE_DIR_TABLE(idx)];
-+}
-+
-+dma_addr_t pvrdma_page_dir_get_dma(struct pvrdma_page_dir *pdir, u64 idx)
-+{
-+	return pvrdma_page_dir_table(pdir, idx)[PVRDMA_PAGE_DIR_PAGE(idx)];
-+}
-+
-+static void pvrdma_page_dir_cleanup_pages(struct pvrdma_dev *dev,
-+					  struct pvrdma_page_dir *pdir)
-+{
-+	if (pdir->pages) {
-+		u64 i;
-+
-+		for (i = 0; i < pdir->npages && pdir->pages[i]; i++) {
-+			dma_addr_t page_dma = pvrdma_page_dir_get_dma(pdir, i);
-+
-+			dma_free_coherent(&dev->pdev->dev, PAGE_SIZE,
-+					  pdir->pages[i], page_dma);
-+		}
-+
-+		kfree(pdir->pages);
-+	}
-+}
-+
-+static void pvrdma_page_dir_cleanup_tables(struct pvrdma_dev *dev,
-+					   struct pvrdma_page_dir *pdir)
-+{
-+	if (pdir->tables) {
-+		int i;
-+
-+		pvrdma_page_dir_cleanup_pages(dev, pdir);
-+
-+		for (i = 0; i < pdir->ntables; i++) {
-+			u64 *table = pdir->tables[i];
-+
-+			if (table)
-+				dma_free_coherent(&dev->pdev->dev, PAGE_SIZE,
-+						  table, pdir->dir[i]);
-+		}
-+
-+		kfree(pdir->tables);
-+	}
-+}
-+
-+void pvrdma_page_dir_cleanup(struct pvrdma_dev *dev,
-+			     struct pvrdma_page_dir *pdir)
-+{
-+	if (pdir->dir) {
-+		pvrdma_page_dir_cleanup_tables(dev, pdir);
-+		dma_free_coherent(&dev->pdev->dev, PAGE_SIZE,
-+				  pdir->dir, pdir->dir_dma);
-+	}
-+}
-+
-+int pvrdma_page_dir_insert_dma(struct pvrdma_page_dir *pdir, u64 idx,
-+			       dma_addr_t daddr)
-+{
-+	u64 *table;
-+
-+	if (idx >= pdir->npages)
-+		return -EINVAL;
-+
-+	table = pvrdma_page_dir_table(pdir, idx);
-+	table[PVRDMA_PAGE_DIR_PAGE(idx)] = daddr;
-+
-+	return 0;
-+}
-+
-+int pvrdma_page_dir_insert_umem(struct pvrdma_page_dir *pdir,
-+				struct ib_umem *umem, u64 offset)
-+{
-+	u64 i = offset;
-+	int j, entry;
-+	int ret = 0, len = 0;
-+	struct scatterlist *sg;
-+
-+	if (offset >= pdir->npages)
-+		return -EINVAL;
-+
-+	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, entry) {
-+		len = sg_dma_len(sg) >> PAGE_SHIFT;
-+		for (j = 0; j < len; j++) {
-+			dma_addr_t addr = sg_dma_address(sg) +
-+					  umem->page_size * j;
-+
-+			ret = pvrdma_page_dir_insert_dma(pdir, i, addr);
-+			if (ret)
-+				goto exit;
-+
-+			i++;
-+		}
-+	}
-+
-+exit:
-+	return ret;
-+}
-+
-+int pvrdma_page_dir_insert_page_list(struct pvrdma_page_dir *pdir,
-+				     u64 *page_list,
-+				     int num_pages)
-+{
-+	int i;
-+	int ret;
-+
-+	if (num_pages > pdir->npages)
-+		return -EINVAL;
-+
-+	for (i = 0; i < num_pages; i++) {
-+		ret = pvrdma_page_dir_insert_dma(pdir, i, page_list[i]);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+void pvrdma_qp_cap_to_ib(struct ib_qp_cap *dst, const struct pvrdma_qp_cap *src)
-+{
-+	dst->max_send_wr = src->max_send_wr;
-+	dst->max_recv_wr = src->max_recv_wr;
-+	dst->max_send_sge = src->max_send_sge;
-+	dst->max_recv_sge = src->max_recv_sge;
-+	dst->max_inline_data = src->max_inline_data;
-+}
-+
-+void ib_qp_cap_to_pvrdma(struct pvrdma_qp_cap *dst, const struct ib_qp_cap *src)
-+{
-+	dst->max_send_wr = src->max_send_wr;
-+	dst->max_recv_wr = src->max_recv_wr;
-+	dst->max_send_sge = src->max_send_sge;
-+	dst->max_recv_sge = src->max_recv_sge;
-+	dst->max_inline_data = src->max_inline_data;
-+}
-+
-+void pvrdma_gid_to_ib(union ib_gid *dst, const union pvrdma_gid *src)
-+{
-+	BUILD_BUG_ON(sizeof(union pvrdma_gid) != sizeof(union ib_gid));
-+	memcpy(dst, src, sizeof(*src));
-+}
-+
-+void ib_gid_to_pvrdma(union pvrdma_gid *dst, const union ib_gid *src)
-+{
-+	BUILD_BUG_ON(sizeof(union pvrdma_gid) != sizeof(union ib_gid));
-+	memcpy(dst, src, sizeof(*src));
-+}
-+
-+void pvrdma_global_route_to_ib(struct ib_global_route *dst,
-+			       const struct pvrdma_global_route *src)
-+{
-+	pvrdma_gid_to_ib(&dst->dgid, &src->dgid);
-+	dst->flow_label = src->flow_label;
-+	dst->sgid_index = src->sgid_index;
-+	dst->hop_limit = src->hop_limit;
-+	dst->traffic_class = src->traffic_class;
-+}
-+
-+void ib_global_route_to_pvrdma(struct pvrdma_global_route *dst,
-+			       const struct ib_global_route *src)
-+{
-+	ib_gid_to_pvrdma(&dst->dgid, &src->dgid);
-+	dst->flow_label = src->flow_label;
-+	dst->sgid_index = src->sgid_index;
-+	dst->hop_limit = src->hop_limit;
-+	dst->traffic_class = src->traffic_class;
-+}
-+
-+void pvrdma_ah_attr_to_ib(struct ib_ah_attr *dst,
-+			  const struct pvrdma_ah_attr *src)
-+{
-+	pvrdma_global_route_to_ib(&dst->grh, &src->grh);
-+	dst->dlid = src->dlid;
-+	dst->sl = src->sl;
-+	dst->src_path_bits = src->src_path_bits;
-+	dst->static_rate = src->static_rate;
-+	dst->ah_flags = src->ah_flags;
-+	dst->port_num = src->port_num;
-+	memcpy(&dst->dmac, &src->dmac, sizeof(dst->dmac));
-+}
-+
-+void ib_ah_attr_to_pvrdma(struct pvrdma_ah_attr *dst,
-+			  const struct ib_ah_attr *src)
-+{
-+	ib_global_route_to_pvrdma(&dst->grh, &src->grh);
-+	dst->dlid = src->dlid;
-+	dst->sl = src->sl;
-+	dst->src_path_bits = src->src_path_bits;
-+	dst->static_rate = src->static_rate;
-+	dst->ah_flags = src->ah_flags;
-+	dst->port_num = src->port_num;
-+	memcpy(&dst->dmac, &src->dmac, sizeof(dst->dmac));
-+}
--- 
-2.7.4
+> > +/**
+> > + * iort_add_smmu_platform_device() - Allocate a platform device for SMMU
+> > + * @fwnode: IORT node associated fwnode handle
+> > + * @node: Pointer to SMMU ACPI IORT node
+> > + *
+> > + * Returns: 0 on success, <0 failure
+> > + */
+> > +static int __init iort_add_smmu_platform_device(struct fwnode_handle *fwnode,
+> > +						struct acpi_iort_node *node)
+> > +{
+> > +	struct platform_device *pdev;
+> > +	struct resource *r;
+> > +	enum dev_dma_attr attr;
+> > +	int ret, count;
+> > +	const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
+> > +
+> > +	if (!ops)
+> > +		return -ENODEV;
+> > +
+> > +	pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
+> > +	if (!pdev)
+> > +		return PTR_ERR(pdev);
+> > +
+> > +	count = ops->iommu_count_resources(node);
+> > +
+> > +	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
+> > +	if (!r) {
+> > +		ret = -ENOMEM;
+> > +		goto dev_put;
+> > +	}
+> > +
+> > +	ops->iommu_init_resources(r, node);
+> > +
+> > +	ret = platform_device_add_resources(pdev, r, count);
+> > +	/*
+> > +	 * Resources are duplicated in platform_device_add_resources,
+> > +	 * free their allocated memory
+> > +	 */
+> > +	kfree(r);
+> > +
+> > +	if (ret)
+> > +		goto dev_put;
+> > +
+> > +	/*
+> > +	 * Add a copy of IORT node pointer to platform_data to
+> > +	 * be used to retrieve IORT data information.
+> > +	 */
+> > +	ret = platform_device_add_data(pdev, &node, sizeof(node));
+> > +	if (ret)
+> > +		goto dev_put;
+> > +
+> > +	pdev->dev.dma_mask = kmalloc(sizeof(*pdev->dev.dma_mask), GFP_KERNEL);
+> > +	if (!pdev->dev.dma_mask) {
+> > +		ret = -ENOMEM;
+> > +		goto dev_put;
+> > +	}
+> 
+> Since this is exclusively for creating SMMUs, and we know they should
+> never have weird shenanigans going on requiring different masks, I'd be
+> inclined to just point dev.dma_mask at dev.coherent_dma_mask and be done
+> with it.
 
+That sounds reasonable yes, I will do.
+
+> > +
+> > +	pdev->dev.fwnode = fwnode;
+> > +
+> > +	/*
+> > +	 * Set default dma mask value for the table walker,
+> > +	 * to be overridden on probing with correct value.
+> > +	 */
+> > +	*pdev->dev.dma_mask = DMA_BIT_MASK(32);
+> > +	pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
+> > +
+> > +	attr = ops->iommu_is_coherent(node) ?
+> > +			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
+> > +
+> > +	/* Configure DMA for the page table walker */
+> > +	acpi_dma_configure(&pdev->dev, attr);
+> 
+> Oh look, some more code which would be simpler if acpi_dma_configure()
+> set the default mask itself ;)
+
+Eheh I have no objections, apart from the effect that change can
+have on non-ARM probing paths, it could also help remove some code
+from ACPI core while at it.
+
+Thanks !
+Lorenzo
+
+> 
+> Robin.
+> 
+> > +
+> > +	ret = platform_device_add(pdev);
+> > +	if (ret)
+> > +		goto dma_deconfigure;
+> > +
+> > +	return 0;
+> > +
+> > +dma_deconfigure:
+> > +	acpi_dma_deconfigure(&pdev->dev);
+> > +	kfree(pdev->dev.dma_mask);
+> > +
+> > +dev_put:
+> > +	platform_device_put(pdev);
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static acpi_status __init iort_match_iommu_callback(struct acpi_iort_node *node,
+> > +						    void *context)
+> > +{
+> > +	int ret;
+> > +	struct fwnode_handle *fwnode;
+> > +
+> > +	fwnode = iort_get_fwnode(node);
+> > +
+> > +	if (!fwnode)
+> > +		return AE_NOT_FOUND;
+> > +
+> > +	ret = iort_add_smmu_platform_device(fwnode, node);
+> > +	if (ret) {
+> > +		pr_err("Error in platform device creation\n");
+> > +		return AE_ERROR;
+> > +	}
+> > +
+> > +	return AE_OK;
+> > +}
+> > +
+> > +static void __init iort_smmu_init(void)
+> > +{
+> > +	iort_scan_node(ACPI_IORT_NODE_SMMU, iort_match_iommu_callback, NULL);
+> > +	iort_scan_node(ACPI_IORT_NODE_SMMU_V3, iort_match_iommu_callback, NULL);
+> > +}
+> > +
+> >  void __init acpi_iort_init(void)
+> >  {
+> >  	acpi_status status;
+> > @@ -436,4 +566,5 @@ void __init acpi_iort_init(void)
+> >  	}
+> >  
+> >  	acpi_probe_device_table(iort);
+> > +	iort_smmu_init();
+> >  }
+> > 
+> 
