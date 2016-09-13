@@ -1,134 +1,144 @@
-Return-Path: <eric.auger@redhat.com>
-Return-Path: <eric.auger@redhat.com>
-Subject: Re: [PATCH V11 0/8] Introduce ACPI world to ITS irqchip
-To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com, tglx@linutronix.de,
-        jason@lakedaemon.net, rjw@rjwysocki.net, helgaas@kernel.org,
-        rafael@kernel.org, Lorenzo.Pieralisi@arm.com
-References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
-Cc: graeme.gregory@linaro.org, al.stone@linaro.org,
-        linaro-acpi@lists.linaro.org, catalin.marinas@arm.com,
-        will.deacon@arm.com, linux-kernel@vger.kernel.org,
-        okaya@codeaurora.org, linux-acpi@vger.kernel.org,
-        robert.richter@caviumnetworks.com, hanjun.guo@linaro.org,
-        ddaney.cavm@gmail.com, linux-pci@vger.kernel.org, shijie.huang@arm.com,
-        mw@semihalf.com, andrea.gallo@linaro.org,
-        linux-arm-kernel@lists.infradead.org
-From: Auger Eric <eric.auger@redhat.com>
-Message-ID: <d49bfc6c-c776-73b9-8444-bb5052a9af35@redhat.com>
-Date: Fri, 23 Sep 2016 14:30:59 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:35878
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750747AbcIMExL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Sep 2016 00:53:11 -0400
+From: Po Liu <po.liu@nxp.com>
+To: <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        "Marc Zyngier" <marc.zyngier@arm.com>,
+        Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Stuart Yoder <stuart.yoder@nxp.com>,
+        Yang-Leo Li <leoyang.li@nxp.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Minghuan Lian <minghuan.lian@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>, Po Liu <po.liu@nxp.com>
+Subject: [PATCH v5 2/3] arm64/dts: add pcie aer interrupt-name property in the dts
+Date: Tue, 13 Sep 2016 12:40:58 +0800
+Message-ID: <1473741659-17618-2-git-send-email-po.liu@nxp.com>
+In-Reply-To: <1473741659-17618-1-git-send-email-po.liu@nxp.com>
+References: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
+ <1473741659-17618-1-git-send-email-po.liu@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Some platforms(NXP Layerscape for example) aer interrupt was not
+MSI/MSI-X/INTx but using interrupt line independently. This patch
+add a "aer" interrupt-names for aer interrupt.
 
-On 12/09/2016 20:32, Tomasz Nowicki wrote:
-> The series builds the PCI/MSI domain stack based on initial IORT driver
-> which is added in first place. As a reference please see IORT spec:
-> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-> 
-> Tested on Cavium ThunderX server and Qualcomm Technologies server platform QDF2XXX.
-> The patches can be found here:
-> https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v11)
+With the interrupt-names "aer", code could probe aer interrupt line
+for pcie root port, replace the aer interrupt service irq.
 
-Tested-by: Eric Auger <eric.auger@redhat.com>
-on a Cavium QEMU guest with mach-virt.
+This is intend to fixup the Layerscape platforms which aer interrupt
+was not MSI/MSI-X/INTx, but using interrupt line independently.
 
-Thanks
+Signed-off-by: Po Liu <po.liu@nxp.com>
+---
+changes for v5:
+	- Seperate arm and arm64 dts modification into two patches
 
-Eric
+ arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi | 18 +++++++++---------
+ arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi | 16 ++++++++--------
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-> 
-> v10 -> v11
-> - rebased against v4.8-rc6
-> - bug fix for iort_match_node_callback() error handling
-> - patch 1-2 changelog updates
-> 
-> v9 -> v10
-> - error handling improvements for iort_match_node_callback() but no functional changes
-> - iort.h -> acpi_iort.h header name change
-> - style improvements
-> 
-> v8 -> v9
-> - rebased against v4.8-rc4
-> - move root IORT pointer validation to one place iort_scan_node()
-> - function names & Kconfig option name improvements
-> - remove annoying dev_err() appearances for non-IORT users
-> - for debug purpose print full ITS resource range
-> 
-> v7 -> v8
-> - rebased against v4.8-rc1
-> - move IORT support under new drivers/acpi/arm64 directory
-> - memory leak fix for iort_match_node_callback()
-> - iort_node_map_rid() algorithm improvements
-> - fix RID match check in iort_id_map()
-> - fix typos and white spaces
-> 
-> v6 -> v7
-> - rebased against irq/irqchip-4.8
-> - improvements for IORT ID mapping
-> - call IORT init call from acpi_init() instead of arch_initcall()
-> - split IORT driver in to two parts: core and ITS/MSI
-> 
-> v5 -> v6
-> - added locking mechanism for IORT list with domain token
-> - IORT function name improvements
-> - extended IORT RID mapping helper
-> - reworked IORT to be more SMMU friendly
-> - IORT functions which map RID and find corresponding domain are not
->   PCI specific any more (struct pci_dev -> struct device)
-> - bug fixes
-> 
-> v4 -> v5
-> - rebased against v4.7-rc1
-> - drop generic layer and call IORT functions directly
-> - improve resource abstraction and string formatting
-> 
-> v3 -> v4
-> - rebased against v4.5
-> - add ACPI support for IRQ domain handling on a per-device basis
-> - reorder domain setup step
-> - improve error handling
-> - code style improvements
-> 
-> v2 -> v3
-> - rebased on top of 4.4
-> - fixes and improvements for redistributor init via GICC structures
-> - fixes as per kbuild reports
-> 
-> v1 -> v2
-> - rebased on top of 4.4-rc4
-> - use pci_msi_domain_get_msi_rid for requester ID to device ID translation
-> 
-> Tomasz Nowicki (8):
->   ACPI: I/O Remapping Table (IORT) initial support
->   ACPI: Add new IORT functions to support MSI domain handling
->   PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
->   irqchip/gicv3-its: Cleanup for ITS domain initialization
->   irqchip/gicv3-its: Refactor ITS DT init code to prepare for ACPI
->   irqchip/gicv3-its: Probe ITS in the ACPI way
->   irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for
->     ACPI
->   irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain
->     initialization
-> 
->  drivers/acpi/Kconfig                     |   4 +
->  drivers/acpi/Makefile                    |   2 +
->  drivers/acpi/arm64/Kconfig               |   6 +
->  drivers/acpi/arm64/Makefile              |   1 +
->  drivers/acpi/arm64/iort.c                | 366 +++++++++++++++++++++++++++++++
->  drivers/acpi/bus.c                       |   2 +
->  drivers/irqchip/Kconfig                  |   1 +
->  drivers/irqchip/irq-gic-v3-its-pci-msi.c |  88 ++++++--
->  drivers/irqchip/irq-gic-v3-its.c         | 171 +++++++++++----
->  drivers/irqchip/irq-gic-v3.c             |   7 +-
->  drivers/pci/msi.c                        |  11 +-
->  include/linux/acpi_iort.h                |  42 ++++
->  include/linux/irqchip/arm-gic-v3.h       |   4 +-
->  13 files changed, 635 insertions(+), 70 deletions(-)
->  create mode 100644 drivers/acpi/arm64/Kconfig
->  create mode 100644 drivers/acpi/arm64/Makefile
->  create mode 100644 drivers/acpi/arm64/iort.c
->  create mode 100644 include/linux/acpi_iort.h
-> 
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
+index e669fbd..654071d 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
+@@ -527,9 +527,9 @@
+ 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
+ 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 118 0x4>, /* controller interrupt */
+-				     <0 117 0x4>; /* PME interrupt */
+-			interrupt-names = "intr", "pme";
++			interrupts = <0 117 0x4>, /* PME interrupt */
++					 <0 118 0x4>; /* aer interrupt */
++			interrupt-names = "pme", "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -552,9 +552,9 @@
+ 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
+ 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 128 0x4>,
+-				     <0 127 0x4>;
+-			interrupt-names = "intr", "pme";
++			interrupts = <0 127 0x4>,
++					 <0 128 0x4>;
++			interrupt-names = "pme", "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -577,9 +577,9 @@
+ 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
+ 			       0x50 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 162 0x4>,
+-				     <0 161 0x4>;
+-			interrupt-names = "intr", "pme";
++			interrupts = <0 161 0x4>,
++					 <0 162 0x4>;
++			interrupt-names = "pme", "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
+index 21023a3..58844e8 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
+@@ -583,8 +583,8 @@
+ 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
+ 			       0x10 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 108 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 108 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -607,8 +607,8 @@
+ 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
+ 			       0x12 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 113 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 113 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -631,8 +631,8 @@
+ 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
+ 			       0x14 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 118 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 118 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -655,8 +655,8 @@
+ 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
+ 			       0x16 0x00000000 0x0 0x00002000>; /* configuration space */
+ 			reg-names = "regs", "config";
+-			interrupts = <0 123 0x4>; /* Level high type */
+-			interrupt-names = "intr";
++			interrupts = <0 123 0x4>; /* aer interrupt */
++			interrupt-names = "aer";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+-- 
+2.1.0.27.g96db324
+
