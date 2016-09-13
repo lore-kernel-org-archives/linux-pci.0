@@ -1,90 +1,125 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 3/8] PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
-Date: Mon,  5 Sep 2016 22:05:35 +0200
-Message-Id: <1473105940-9761-4-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
-References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 13 Sep 2016 16:53:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, alex.williamson@redhat.com,
+        vikrams@codeaurora.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: save and restore device state during bus reset
+Message-ID: <20160913215315.GJ4138@localhost>
+References: <1472770801-30671-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472770801-30671-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible to provide information about which MSI controller to
-use on a per-device basis for DT. This patch supply this with ACPI support.
+On Thu, Sep 01, 2016 at 07:00:00PM -0400, Sinan Kaya wrote:
+> A secondary bus reset causes settings to be lost by all downstream
+> devices on the tree. The code is currently saving and restoring device
+> states only when called from the VFIO path via pci_probe_reset_bus
+> and pci_reset_bus functions.
+> 
+> Moving the save and restore into pci_reset_bridge_secondary_bus
+> so that all users of the API have the same behavior.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pci.c | 36 +++++++++++++++---------------------
+>  1 file changed, 15 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index aab9d51..b209378 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3860,19 +3860,6 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+>  	pci_reset_secondary_bus(dev);
+>  }
+>  
+> -/**
+> - * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
+> - * @dev: Bridge device
+> - *
+> - * Use the bridge control register to assert reset on the secondary bus.
+> - * Devices on the secondary bus are left in power-on state.
+> - */
+> -void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+> -{
+> -	pcibios_reset_secondary_bus(dev);
+> -}
+> -EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
+> -
+>  static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+>  {
+>  	struct pci_dev *pdev;
+> @@ -4362,6 +4349,21 @@ static void pci_slot_restore(struct pci_slot *slot)
+>  	}
+>  }
+>  
+> +/**
+> + * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
+> + * @dev: Bridge device
+> + *
+> + * Use the bridge control register to assert reset on the secondary bus.
+> + * Devices on the secondary bus are left in power-on state.
+> + */
+> +void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+> +{
+> +	pci_bus_save_and_disable(dev->bus);
+> +	pcibios_reset_secondary_bus(dev);
+> +	pci_bus_restore(dev->bus);
 
-Currently, IORT is the only one ACPI table which can provide such mapping.
-In order to plug IORT into MSI infrastructure we are adding ACPI
-equivalents for finding PCI device domain and its RID translation
-(pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
+This path eventually writes the Bridge Control register:
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+  pci_reset_bridge_secondary_bus
+    pcibios_reset_secondary_bus
+      pci_reset_secondary_bus
+        pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 98f1222..37f253a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -19,6 +19,7 @@
- #include <linux/smp.h>
- #include <linux/errno.h>
- #include <linux/io.h>
-+#include <linux/iort.h>
- #include <linux/slab.h>
- #include <linux/irqdomain.h>
- #include <linux/of_irq.h>
-@@ -1502,8 +1503,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
- 
- 	of_node = irq_domain_get_of_node(domain);
--	if (of_node)
--		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
-+	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
-+			iort_msi_map_rid(&pdev->dev, rid);
- 
- 	return rid;
- }
-@@ -1519,9 +1520,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
-  */
- struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
- {
-+	struct irq_domain *dom;
- 	u32 rid = 0;
- 
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
--	return of_msi_map_get_device_domain(&pdev->dev, rid);
-+	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
-+	if (!dom)
-+		dom = iort_get_device_domain(&pdev->dev, rid);
-+	return dom;
- }
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
--- 
-1.9.1
+But I think it'd be easy to call this on a non-bridge device, and I
+don't think there's anything in the path that checks whether this is
+actually a bridge.  I wonder if we should check that somewhere, or
+maybe even change the interface so it takes a struct pci_bus instead
+of a pci_dev.
+
+> +}
+> +EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
+> +
+>  static int pci_slot_reset(struct pci_slot *slot, int probe)
+>  {
+>  	int rc;
+> @@ -4504,12 +4506,8 @@ int pci_reset_bus(struct pci_bus *bus)
+>  	if (rc)
+>  		return rc;
+>  
+> -	pci_bus_save_and_disable(bus);
+> -
+>  	rc = pci_bus_reset(bus, 0);
+>  
+> -	pci_bus_restore(bus);
+> -
+>  	return rc;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_reset_bus);
+> @@ -4528,8 +4526,6 @@ int pci_try_reset_bus(struct pci_bus *bus)
+>  	if (rc)
+>  		return rc;
+>  
+> -	pci_bus_save_and_disable(bus);
+> -
+>  	if (pci_bus_trylock(bus)) {
+>  		might_sleep();
+>  		pci_reset_bridge_secondary_bus(bus->self);
+> @@ -4537,8 +4533,6 @@ int pci_try_reset_bus(struct pci_bus *bus)
+>  	} else
+>  		rc = -EAGAIN;
+>  
+> -	pci_bus_restore(bus);
+> -
+>  	return rc;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_try_reset_bus);
+> -- 
+> 1.9.1
+> 
