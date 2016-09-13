@@ -1,59 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:48792 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750899AbcI0Sxx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2016 14:53:53 -0400
-Subject: Re: [PATCH v5 13/16] IB/pvrdma: Add the main driver module for PVRDMA
-To: David Laight <David.Laight@ACULAB.COM>,
-        Yuval Shaia <yuval.shaia@oracle.com>
-References: <cover.1474759181.git.aditr@vmware.com>
- <8db982c37a0a96b37df02826564474a216922f25.1474759181.git.aditr@vmware.com>
- <20160926072739.GB6352@yuval-lap.Home>
- <651b18ee-55ca-0c72-af9c-c55c42b57fd1@vmware.com>
- <063D6719AE5E284EB5DD2968C1650D6DB010A6EA@AcuExch.aculab.com>
-From: Adit Ranadive <aditr@vmware.com>
-CC: "dledford@redhat.com" <dledford@redhat.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "pv-drivers@vmware.com" <pv-drivers@vmware.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jhansen@vmware.com" <jhansen@vmware.com>,
-        "asarwade@vmware.com" <asarwade@vmware.com>,
-        "georgezhang@vmware.com" <georgezhang@vmware.com>,
-        "bryantan@vmware.com" <bryantan@vmware.com>
-Message-ID: <979bf690-1566-8674-5c46-4108006fb32a@vmware.com>
-Date: Tue, 27 Sep 2016 11:50:44 -0700
-MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DB010A6EA@AcuExch.aculab.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50541 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755915AbcIMJAo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 05:00:44 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8D8wcNl082029
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:44 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25e3g5670m-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:43 -0400
+Received: from localhost
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 13 Sep 2016 03:00:43 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v5 3/4] PCI: Add a new option for resource_alignment to reassign alignment
+Date: Tue, 13 Sep 2016 17:00:33 +0800
+In-Reply-To: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 27, 2016 at 09:21:27AM +0000, David Laight wrote:
-> From: Adit Ranadive
-> > Sent: 26 September 2016 19:15
-> > On Mon, Sep 26, 2016 at 00:27:40AM -0700, Yuval Shaia wrote:
-> > > On Sat, Sep 24, 2016 at 04:21:37PM -0700, Adit Ranadive wrote:
-> > > > +
-> > > > +	/* Currently, the driver only supports RoCE mode. */
-> > > > +	if (dev->dsr->caps.mode != PVRDMA_DEVICE_MODE_ROCE) {
-> > > > +		dev_err(&pdev->dev, "unsupported transport %d\n",
-> > > > +			dev->dsr->caps.mode);
-> > > > +		ret = -EINVAL;
-> > >
-> > > This is some fatal error with the device, not that something wrong with the
-> > > function's argument.
-> > > Suggesting to replace with -EFAULT.
-> > >
-> > 
-> > Thanks, will fix this one and the others here.
-> 
-> Won't EFAULT generate SIGSEGV ?
+When using resource_alignment kernel parameter, the current
+implement reassigns the alignment by changing resources' size
+which can potentially break some drivers. For example, the driver
+uses the size to locate some register whose length is related
+to the size.
 
-Since this is called at module load time, wouldn't the module load fail with
-this error rather than generate a SIGSEGV?
+This patch adds a new option "noresize" for the parameter to
+solve this problem.
 
-I'm slightly unclear about what would if it is compiled into the kernel though
-I think it should fail with the error.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ Documentation/kernel-parameters.txt |    9 ++++++---
+ drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
+ 2 files changed, 33 insertions(+), 13 deletions(-)
 
-The only other error value to return here that could make sense is EIO.
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index a4f4d69..d6a340d 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -3023,9 +3023,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				window. The default value is 64 megabytes.
+ 		resource_alignment=
+ 				Format:
+-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+-				[<order of align>@]pci:<vendor>:<device>\
+-						[:<subvendor>:<subdevice>][; ...]
++				[<order of align>@][noresize@][<domain>:]
++				<bus>:<slot>.<func>[; ...]
++				[<order of align>@][noresize@]pci:<vendor>:<device>
++				[:<subvendor>:<subdevice>][; ...]
+ 				Specifies alignment and device to reassign
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+@@ -3036,6 +3037,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				instances of a device, the PCI vendor,
+ 				device, subvendor, and subdevice may be
+ 				specified, e.g., 4096@pci:8086:9c22:103c:198f
++				noresize: Don't change the resources' sizes when
++				reassigning alignment.
+ 		ecrc=		Enable/disable PCIe ECRC (transaction layer
+ 				end-to-end CRC checking).
+ 				bios: Use BIOS/firmware settings. This is the
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b8357d7..37f8062 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ /**
+  * pci_specified_resource_alignment - get resource alignment specified by user.
+  * @dev: the PCI device to get
++ * @resize: whether or not to change resources' size when reassigning alignment
+  *
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
+  */
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++		bool *resize)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+@@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 		} else {
+ 			align_order = -1;
+ 		}
++
++		if (!strncmp(p, "noresize@", 9)) {
++			*resize = false;
++			p += 9;
++		} else
++			*resize = true;
++
+ 		if (strncmp(p, "pci:", 4) == 0) {
+ 			/* PCI vendor/device (subvendor/subdevice) ids are specified */
+ 			p += 4;
+@@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ {
+ 	int i;
+ 	struct resource *r;
++	bool resize = true;
+ 	resource_size_t align, size;
+ 	u16 command;
+ 
+@@ -5058,7 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
+ 
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
+ 
+@@ -5086,15 +5096,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		}
+ 
+ 		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
++		if (resize) {
++			if (size < align) {
++				size = align;
++				dev_info(&dev->dev,
++					"Rounding up size of resource #%d to %#llx.\n",
++					i, (unsigned long long)size);
++			}
++			r->flags |= IORESOURCE_UNSET;
++			r->end = size - 1;
++			r->start = 0;
++		} else {
++			r->flags &= ~IORESOURCE_SIZEALIGN;
++			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
++			r->start = max(align, size);
++			r->end = r->start + size - 1;
+ 		}
+-		r->flags |= IORESOURCE_UNSET;
+-		r->end = size - 1;
+-		r->start = 0;
+ 	}
+ 	/* Need to disable bridge's resource window,
+ 	 * to enable the kernel to reassign new resource
+-- 
+1.7.9.5
+
