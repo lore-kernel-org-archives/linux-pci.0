@@ -1,85 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35696 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750868AbcIUFza (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Sep 2016 01:55:30 -0400
-Received: by mail-wm0-f68.google.com with SMTP id 133so6667455wmq.2
-        for <linux-pci@vger.kernel.org>; Tue, 20 Sep 2016 22:55:30 -0700 (PDT)
-Date: Wed, 21 Sep 2016 07:55:27 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: "Mintz, Yuval" <Yuval.Mintz@cavium.com>
-Cc: Yuval Mintz <Yuval.Mintz@qlogic.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "Chickles, Derek" <Derek.Chickles@cavium.com>
-Subject: Re: [RFC] PCI: Allow sysfs control over totalvfs
-Message-ID: <20160921055527.GB2078@nanopsycho.orion>
-References: <1474386588-16337-1-git-send-email-Yuval.Mintz@qlogic.com>
- <20160920193645.GA12677@nanopsycho.orion>
- <BL2PR07MB23061E60A3ABC771F05764C98DF70@BL2PR07MB2306.namprd07.prod.outlook.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:49414 "EHLO
+        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759799AbcIMRM6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 13:12:58 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
+        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
+        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>, <kishon@ti.com>,
+        <nsekhar@ti.com>
+Subject: [RFC PATCH] ARM: dts: DRA7: Modify pcie1 dt node for EP mode
+Date: Tue, 13 Sep 2016 22:40:52 +0530
+Message-ID: <1473786653-12759-11-git-send-email-kishon@ti.com>
+In-Reply-To: <1473786653-12759-1-git-send-email-kishon@ti.com>
+References: <1473786653-12759-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BL2PR07MB23061E60A3ABC771F05764C98DF70@BL2PR07MB2306.namprd07.prod.outlook.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tue, Sep 20, 2016 at 10:27:24PM CEST, Yuval.Mintz@cavium.com wrote:
->> >Some of the HW capable of SRIOV has resource limitations, where the
->> >PF and VFs resources are drawn from a common pool.
->> >In some cases, these limitations have to be considered early during
->> >chip initialization and can only be changed by tearing down the
->> >configuration and re-initializing.
->> >As a result, drivers for such HWs sometimes have to make unfavorable
->> >compromises where they reserve sufficient resources to accomadate
->> >the maximal number of VFs that can be created - at the expanse of
->> >resources that could have been used by the PF.
->> >
->> >If users were able to provide 'hints' regarding the required number
->> >of VFs *prior* to driver attachment, then such compromises could be
->> >avoided. As we already have sysfs nodes that can be queried for the
->> >number of totalvfs, it makes sense to let the user reduce the number
->> >of said totalvfs using same infrastrucure.
->> >Then, we can have drivers supporting SRIOV take that value into account
->> >when deciding how much resources to reserve, allowing the PF to benefit
->> >from the difference between the configuration space value and the actual
->> >number needed by user.
->
->> One of the motivations for introducing devlink interface was to allow
->> user to pass some kind of well defined option parameters or as you call
->> it hints to driver module. That would allow to replace module options
->> and introduce similar possibility to pre-configure hardware on probe time.
->> We plan to use devlink to allow user to change resource allocation for
->> mlxsw devices.
->
->Is IOV configuration something you're going to explore in the near
->future for mlxsw devices? Or are you merely pointing out that
+Modify pcie1 dt node in order for the controller to operate in
+endpoint mode. This is used only for testing EP mode.
 
-No, not sriov related directly.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi |   43 +++++++++++--------------------------------
+ 1 file changed, 11 insertions(+), 32 deletions(-)
 
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index d9bfb94..73f63d1 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -283,38 +283,17 @@
+ 			};
+ 		};
+ 
+-		axi@0 {
+-			compatible = "simple-bus";
+-			#size-cells = <1>;
+-			#address-cells = <1>;
+-			ranges = <0x51000000 0x51000000 0x3000
+-				  0x0	     0x20000000 0x10000000>;
+-			pcie1: pcie@51000000 {
+-				compatible = "ti,dra7-pcie";
+-				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
+-				reg-names = "rc_dbics", "ti_conf", "config";
+-				interrupts = <0 232 0x4>, <0 233 0x4>;
+-				#address-cells = <3>;
+-				#size-cells = <2>;
+-				device_type = "pci";
+-				ranges = <0x81000000 0 0          0x03000 0 0x00010000
+-					  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+-				#interrupt-cells = <1>;
+-				num-lanes = <1>;
+-				ti,hwmods = "pcie1";
+-				phys = <&pcie1_phy>;
+-				phy-names = "pcie-phy0";
+-				interrupt-map-mask = <0 0 0 7>;
+-				interrupt-map = <0 0 0 1 &pcie1_intc 1>,
+-						<0 0 0 2 &pcie1_intc 2>,
+-						<0 0 0 3 &pcie1_intc 3>,
+-						<0 0 0 4 &pcie1_intc 4>;
+-				pcie1_intc: interrupt-controller {
+-					interrupt-controller;
+-					#address-cells = <0>;
+-					#interrupt-cells = <1>;
+-				};
+-			};
++		pcie1: pcie@51000000 {
++			compatible = "ti,dra7-pcie-ep";
++			reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>;
++			reg-names = "ep_dbics", "ti_conf", "ep_dbics2";
++			interrupts = <0 232 0x4>;
++			num-lanes = <1>;
++			num-ib-windows = <4>;
++			num-ob-windows = <16>;
++			ti,hwmods = "pcie1";
++			phys = <&pcie1_phy>;
++			phy-names = "pcie-phy0";
+ 		};
+ 
+ 		axi@1 {
+-- 
+1.7.9.5
 
->devlink could provide a superior configuration infrastrucutre and
->should be investigated as a better alternative?
-
-Exactly. It is a general problem of how to pre-configure driver modules.
-
-
->
->> The plan is to allow to pre-create devlink instance before driver module
->> is loaded. Then the user will use this placeholder to do the options
->> setting. Once the driver module is loaded, it will fetch the options
->> from devlink core and process it accordingly.
->
->> I believe this is exactly what you need.
->
->While this sounds far-superior to anything we can do via pci sysfs,
->question is whether adding a devlink support for a device is 
->a reasonable cost for adding this specific configuration [given
->the existing sysfs nodes we already have].
-
-Adding devlink support is trivial in most cases, I bet you can do it in
-couple of minutes for your driver.
-
-
->I'm not sufficiently familiar with the infrastrucutre there, and I
->wonder whether it will set the bar too high for this sort of
->configuration to be used.
