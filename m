@@ -1,124 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35764 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:35176 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756512AbcIMVrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 17:47:14 -0400
-Date: Tue, 13 Sep 2016 16:47:09 -0500
+        id S1759145AbcIMVcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Sep 2016 17:32:16 -0400
+Date: Tue, 13 Sep 2016 16:32:05 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        cov@codeaurora.org, alex.williamson@redhat.com,
-        vikrams@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: add CRS support to error handling path
-Message-ID: <20160913214709.GI4138@localhost>
-References: <1472770801-30671-1-git-send-email-okaya@codeaurora.org>
- <1472770801-30671-2-git-send-email-okaya@codeaurora.org>
- <20160913200152.GE4138@localhost>
- <dd6d9d71-1ba0-84c8-7cab-21fe8b555f1c@codeaurora.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
+Subject: Re: [RFC] pci/aer: kmalloc the aer_err_info struct once
+Message-ID: <20160913213205.GH4138@localhost>
+References: <1473186952-8998-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dd6d9d71-1ba0-84c8-7cab-21fe8b555f1c@codeaurora.org>
+In-Reply-To: <1473186952-8998-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 13, 2016 at 05:04:49PM -0400, Sinan Kaya wrote:
-> On 9/13/2016 4:01 PM, Bjorn Helgaas wrote:
-> > On Thu, Sep 01, 2016 at 07:00:01PM -0400, Sinan Kaya wrote:
-> >> The PCIE spec allows an endpoint device to extend the initialization time
-> >> beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
-> >> vendor ID read request.
-> >>
-> >> This basically means "I'm busy now, please call me back later".
-> >>
-> >> There are two moving parts to CRS support from the SW perspective. One part
-> >> is to determine if CRS is supported or not. The second part is to set the
-> >> CRS visibility register.
-> >>
-> >> As part of the probe, the Linux kernel sets the above two conditions in
-> >> pci_enable_crs function. The kernel is also honoring the returned CRS in
-> >> pci_bus_read_dev_vendor_id function if supported. The function will poll up
-> >> to specified amount of time while endpoint is returning CRS response.
-> >>
-> >> The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
-> >> resets.
-> >>
-> >> The hot reset is initiated by starting a secondary bus reset. This patch is
-> >> adding vendor ID read immediately after a bus reset so that the
-> >> initialization procedure can be extended by the amount of time endpoint
-> >> requires.
-> >>
-> >> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> >> ---
-> >>  drivers/pci/pci.c | 39 +++++++++++++++++++++++++++++++++++++++
-> >>  1 file changed, 39 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >> index b209378..ebd0fc6 100644
-> >> --- a/drivers/pci/pci.c
-> >> +++ b/drivers/pci/pci.c
-> >> @@ -3829,6 +3829,44 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
-> >>  	return 0;
-> >>  }
-> >>  
-> >> +/*
-> >> + * Mostly copy paste from pci_walk_bus with the exceptions of hard coded
-> >> + * work and removed locks.
-> >> + */
-> >> +static void pci_bus_probe_crs(struct pci_bus *top)
-> >> +{
-> >> +	struct pci_dev *dev;
-> >> +	struct pci_bus *bus;
-> >> +	struct list_head *next;
-> >> +	int retval;
-> >> +	u32 l;
-> >> +
-> >> +	bus = top;
-> >> +	next = top->devices.next;
-> >> +	for (;;) {
-> >> +		if (next == &bus->devices) {
-> >> +			/* end of this bus, go up or finish */
-> >> +			if (bus == top)
-> >> +				break;
-> >> +			next = bus->self->bus_list.next;
-> >> +			bus = bus->self->bus;
-> >> +			continue;
-> >> +		}
-> >> +		dev = list_entry(next, struct pci_dev, bus_list);
-> >> +		if (dev->subordinate) {
-> >> +			/* this is a pci-pci bridge, do its devices next */
-> >> +			next = dev->subordinate->devices.next;
-> >> +			bus = dev->subordinate;
-> >> +		} else
-> >> +			next = dev->bus_list.next;
-> >> +
-> >> +		retval = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l,
-> >> +						    60 * 1000);
-> >> +		if (retval)
-> >> +			break;
-> >> +	}
-> >> +}
-> > 
-> > Sigh.  Man, this is ugly.  Maybe we're locked into the current
-> > strategy and don't really have a choice, but I really don't like it.
+On Tue, Sep 06, 2016 at 12:35:52PM -0600, Jon Derrick wrote:
+> AER injecting tests with many devices and nosourceid are resulting in
+> soft lockups, mostly due to the config reads, but there's also a
+> kmalloc/kfree pair for the aer_err_info struct for each p_device.
 > 
-> I can add a locked version of the walkbus API. 
-> Then, I can minimize this code to a couple of lines. How does that sound?
-
-I didn't mean that, I meant the whole idea of having to walk the whole
-hierarchy and touch each device.  It's sort of like we're enumerating
-things, but not really, so this checking is kinda sorta parallel to
-the enumeration path.
-
-> > You mentioned several kinds of reset where CRS is allowed.  Doesn't this
-> > fix only one of them?  I know we support at least FLR reset also.
+> When a device emits an error, it's not unreasonable to assume that it
+> may emit another error soon. Instead of mallocing the aer error info
+> struct each pass through the aer isr, malloc it once per root port and
+> hold the reference through the life of the root port. This may save a
+> few cycles if there are many devices downstream of the root port and
+> no-source-id checking is enabled, disabling the fast path and requiring
+> checking all devices for errors.
 > 
-> The CRS is for hot reset, warm reset and FLR reset. There is nothing we can do in SW
-> for warm reset. This patch is to address hot reset caused by SBR. 
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv.c      |  1 +
+>  drivers/pci/pcie/aer/aerdrv.h      |  1 +
+>  drivers/pci/pcie/aer/aerdrv_core.c | 23 +++++++++++++++--------
+>  3 files changed, 17 insertions(+), 8 deletions(-)
 > 
-> I was hoping that Alex would help us for directions on the FLR reset later.
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index 48d21e0..dab15d3 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -286,6 +286,7 @@ static void aer_remove(struct pcie_device *dev)
+>  
+>  		flush_work(&rpc->dpc_handler);
+>  		aer_disable_rootport(rpc);
+> +		kfree(rpc->e_info);
+>  		kfree(rpc);
+>  		set_service_data(dev, NULL);
+>  	}
+> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+> index 945c939..2c5a5b8 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.h
+> +++ b/drivers/pci/pcie/aer/aerdrv.h
+> @@ -60,6 +60,7 @@ struct aer_rpc {
+>  	struct pcie_device *rpd;	/* Root Port device */
+>  	struct work_struct dpc_handler;
+>  	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
+> +	struct aer_err_info *e_info;
+>  	unsigned short prod_idx;	/* Error Producer Index */
+>  	unsigned short cons_idx;	/* Error Consumer Index */
+>  	int isr;
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 521e39c..e1b2e6c 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -715,14 +715,23 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
+>  static void aer_isr_one_error(struct pcie_device *p_device,
+>  		struct aer_err_source *e_src)
+>  {
+> -	struct aer_err_info *e_info;
+> +	struct aer_rpc *rpc = get_service_data(p_device);
+> +	struct aer_err_info *e_info = rpc->e_info;
+>  
+> -	/* struct aer_err_info might be big, so we allocate it with slab */
+> -	e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
+> +	/*
+> +	 * struct aer_err_info might be big, so we allocate it with slab.
+> +	 * It's not unreasonable to assume a faulting device might emit
+> +	 * another error, so try to only malloc once and keep the
+> +	 * reference through the root port's life.
+> +	 */
+>  	if (!e_info) {
+> -		dev_printk(KERN_DEBUG, &p_device->port->dev,
+> -			"Can't allocate mem when processing AER errors\n");
+> -		return;
+> +		e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
+> +		if (!e_info) {
+> +			dev_printk(KERN_DEBUG, &p_device->port->dev,
+> +				"Can't allocate mem when processing AER errors\n");
+> +			return;
+> +		}
+> +		rpc->e_info = e_info;
 
-What sort of help from Alex were you hoping for?  Is fixing the FLR
-path harder than this one?  If we're going to fix one path, I'd prefer
-to fix them all at the same time rather than tripping over this again
-later.
+I like the idea of this.  The part I *don't* like is using kmalloc()
+in this path.
+
+We've always done this, and this patch means we would only do it the
+first time for each device, but the struct aer_rpc (which we allocate
+for each device at probe time) is over 900 bytes, while the struct
+aer_err_info is only about 70 bytes.  Why don't we just include
+aer_error_info directly in aer_rpc and allocate the whole shebang once
+at probe time?  I don't really see what we gain by doing the
+allocation in the runtime path.
+
+>  	}
+>  
+>  	/*
+> @@ -762,8 +771,6 @@ static void aer_isr_one_error(struct pcie_device *p_device,
+>  		if (find_source_device(p_device->port, e_info))
+>  			aer_process_err_devices(p_device, e_info);
+>  	}
+> -
+> -	kfree(e_info);
+>  }
+>  
+>  /**
+> -- 
+> 1.8.3.1
+> 
