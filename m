@@ -1,115 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: hans.verkuil@cisco.com, brking@us.ibm.com,
-        haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com,
-        alex.williamson@redhat.com
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/6] vfio_pci: use pci_irq_allocate_vectors
-Date: Sun, 11 Sep 2016 15:31:26 +0200
-Message-Id: <1473600688-24043-5-git-send-email-hch@lst.de>
-In-Reply-To: <1473600688-24043-1-git-send-email-hch@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60269 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1756751AbcIMJAj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 05:00:39 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8D8wd0E128299
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:39 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 25dwy0fnmj-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:38 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 13 Sep 2016 05:00:38 -0400
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v5 1/4] PCI: Ignore enforced alignment when kernel uses existing firmware setup
+Date: Tue, 13 Sep 2016 17:00:31 +0800
+In-Reply-To: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1473757234-5284-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simply the interrupt setup by using the new PCI layer helpers.
+PCI resources allocator will use firmware setup and not try to
+reassign resource when PCI_PROBE_ONLY or IORESOURCE_PCI_FIXED
+is set.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The enforced alignment in pci_reassigndev_resource_alignment()
+should be ignored in this case. Otherwise, some PCI devices'
+resources would be released here and not re-allocated.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/vfio/pci/vfio_pci_intrs.c   | 45 +++++++++----------------------------
- drivers/vfio/pci/vfio_pci_private.h |  1 -
- 2 files changed, 10 insertions(+), 36 deletions(-)
+ drivers/pci/pci.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-index 152b438..a1d283e 100644
---- a/drivers/vfio/pci/vfio_pci_intrs.c
-+++ b/drivers/vfio/pci/vfio_pci_intrs.c
-@@ -250,6 +250,7 @@ static irqreturn_t vfio_msihandler(int irq, void *arg)
- static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-+	unsigned int flag = msix ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
- 	int ret;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d51..2d85a96 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4959,6 +4959,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
  
- 	if (!is_irq_none(vdev))
-@@ -259,35 +260,13 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
- 	if (!vdev->ctx)
- 		return -ENOMEM;
- 
--	if (msix) {
--		int i;
--
--		vdev->msix = kzalloc(nvec * sizeof(struct msix_entry),
--				     GFP_KERNEL);
--		if (!vdev->msix) {
--			kfree(vdev->ctx);
--			return -ENOMEM;
--		}
--
--		for (i = 0; i < nvec; i++)
--			vdev->msix[i].entry = i;
--
--		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
--		if (ret < nvec) {
--			if (ret > 0)
--				pci_disable_msix(pdev);
--			kfree(vdev->msix);
--			kfree(vdev->ctx);
--			return ret;
--		}
--	} else {
--		ret = pci_enable_msi_range(pdev, 1, nvec);
--		if (ret < nvec) {
--			if (ret > 0)
--				pci_disable_msi(pdev);
--			kfree(vdev->ctx);
--			return ret;
--		}
-+	/* return the number of supported vectors if we can't get all: */
-+	ret = pci_alloc_irq_vectors(pdev, 1, nvec, flag);
-+	if (ret < nvec) {
-+		if (ret > 0)
-+			pci_free_irq_vectors(pdev);
-+		kfree(vdev->ctx);
-+		return ret;
- 	}
- 
- 	vdev->num_ctx = nvec;
-@@ -315,7 +294,7 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
- 	if (vector < 0 || vector >= vdev->num_ctx)
- 		return -EINVAL;
- 
--	irq = msix ? vdev->msix[vector].vector : pdev->irq + vector;
-+	irq = pci_irq_vector(pdev, vector);
- 
- 	if (vdev->ctx[vector].trigger) {
- 		free_irq(irq, vdev->ctx[vector].trigger);
-@@ -408,11 +387,7 @@ static void vfio_msi_disable(struct vfio_pci_device *vdev, bool msix)
- 
- 	vfio_msi_set_block(vdev, 0, vdev->num_ctx, NULL, msix);
- 
--	if (msix) {
--		pci_disable_msix(vdev->pdev);
--		kfree(vdev->msix);
--	} else
--		pci_disable_msi(pdev);
-+	pci_free_irq_vectors(pdev);
- 
- 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
- 	vdev->num_ctx = 0;
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 2128de8..f561ac1 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -72,7 +72,6 @@ struct vfio_pci_device {
- 	struct perm_bits	*msi_perm;
- 	spinlock_t		irqlock;
- 	struct mutex		igate;
--	struct msix_entry	*msix;
- 	struct vfio_pci_irq_ctx	*ctx;
- 	int			num_ctx;
- 	int			irq_type;
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		if (*p)
++			pr_info_once("PCI: resource_alignment ignored with PCI_PROBE_ONLY\n");
++		spin_unlock(&resource_alignment_lock);
++		return 0;
++	}
++
+ 	while (*p) {
+ 		count = 0;
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+@@ -5063,6 +5070,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
++		if (r->flags & IORESOURCE_PCI_FIXED) {
++			dev_info(&dev->dev, "No alignment for fixed BAR%d: %pR\n",
++				i, r);
++			continue;
++		}
++
+ 		size = resource_size(r);
+ 		if (size < align) {
+ 			size = align;
 -- 
-2.1.4
+1.7.9.5
+
