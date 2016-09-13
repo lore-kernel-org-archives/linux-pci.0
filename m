@@ -1,156 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:63406 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933296AbcINOYM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 10:24:12 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, devicetree@vger.kernel.org,
-        lorenzo.pieralisi@arm.com, benh@kernel.crashing.org,
-        minyard@acm.org, linux-pci@vger.kernel.org,
-        gabriele.paoloni@huawei.com, john.garry@huawei.com,
-        will.deacon@arm.com, xuwei5@hisilicon.com,
-        linux-serial@vger.kernel.org, gregkh@linuxfoundation.org,
-        zourongrong@gmail.com, liviu.dudau@arm.com, kantyzc@163.com,
-        zhichang.yuan02@gmail.com
-Subject: Re: [PATCH V3 1/4] ARM64 LPC: Indirect ISA port IO introduced
-Date: Wed, 14 Sep 2016 16:23:39 +0200
-Message-ID: <5264074.nuyDhEuOR4@wuerfel>
-In-Reply-To: <57D95BBC.9030405@hisilicon.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <8337589.pzGt0MZ9xn@wuerfel> <57D95BBC.9030405@hisilicon.com>
+Received: from mail.kernel.org ([198.145.29.136]:49152 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752227AbcIMN6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Sep 2016 09:58:02 -0400
+Date: Tue, 13 Sep 2016 08:57:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        "MikaWesterberg@linux.intel.com" <MikaWesterberg@linux.intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        "Tarazona-Duarte, Luis Antonio"
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v2 1/8] PCI: pciehp: Rename pcie_isr() locals for clarity
+Message-ID: <20160913135749.GA27748@localhost>
+References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160912210855.22258.32643.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <92EBB4272BF81E4089A7126EC1E7B284665ABBDA@IRSMSX101.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B284665ABBDA@IRSMSX101.ger.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 10:16:28 PM CEST zhichang.yuan wrote:
+On Tue, Sep 13, 2016 at 10:05:31AM +0000, Patel, Mayurkumar wrote:
+>  
+> > Rename "detected" and "intr_loc" to "status" and "events" for clarity.
+> > "status" is the value we read from the Slot Status register; "events" is
+> > the set of hot-plug events we need to process.  No functional change
+> > intended.
 > > 
-> > No need to guard includes with an #ifdef.
-> If remove #ifdef here, extio.h should not contain any function external declarations whose definitions are in
-> extio.c compiled only when CONFIG_ARM64_INDIRECT_PIO is yes.
- 
-There is no problem with making declarations visible for functions that
-are not part of the kernel, we do that all the time.
-
-> >> +#define BUILDS_RW(bwl, type)                                                \
-> >> +static inline void reads##bwl(const volatile void __iomem *addr,    \
-> >> +                            void *buffer, unsigned int count)       \
-> >> +{                                                                   \
-> >> +    if (count) {                                                    \
-> >> +            type *buf = buffer;                                     \
-> >> +                                                                    \
-> >> +            do {                                                    \
-> >> +                    type x = __raw_read##bwl(addr);                 \
-> >> +                    *buf++ = x;                                     \
-> >> +            } while (--count);                                      \
-> >> +    }                                                               \
-> >> +}                                                                   \
-> >> +                                                                    \
-> >> +static inline void writes##bwl(volatile void __iomem *addr,         \
-> >> +                            const void *buffer, unsigned int count) \
-> >> +{                                                                   \
-> >> +    if (count) {                                                    \
-> >> +            const type *buf = buffer;                               \
-> >> +                                                                    \
-> >> +            do {                                                    \
-> >> +                    __raw_write##bwl(*buf++, addr);                 \
-> >> +            } while (--count);                                      \
-> >> +    }                                                               \
-> >> +}
-> >> +
-> >> +BUILDS_RW(b, u8)
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/pci/hotplug/pciehp_hpc.c |   46 +++++++++++++++++++++-----------------
+> >  1 file changed, 25 insertions(+), 21 deletions(-)
 > > 
-> > Why is this in here?
-> the readsb/writesb are defined in asm-generic/io.h which is included later, but the redefined insb/outsb need
-> to call them. Without these readsb/writesb definition before insb/outsb redefined, compile error occur.
-> 
-> It seems that copy all the definitions of "asm-generic/io.h" is not a good idea, so I move the definitions of
-> those function needed here....
-> 
-> Ok. I think your idea below defining in(s)/out(s) in a c file can solve this issue.
-> 
-> #ifdef CONFIG_ARM64_INDIRECT_PIO
-> #define inb inb
-> extern u8 inb(unsigned long addr);
-> 
-> #define outb outb
-> extern void outb(u8 value, unsigned long addr);
-> 
-> #define insb insb
-> extern void insb(unsigned long addr, void *buffer, unsigned int count);
-> 
-> #define outsb outsb
-> extern void outsb(unsigned long addr, const void *buffer, unsigned int count);
-> #endif
-> 
-> and definitions of all these functions are in extio.c :
-> 
-> u8 inb(unsigned long addr)
-> {
->         if (!arm64_extio_ops || arm64_extio_ops->start > addr ||
->                         arm64_extio_ops->end < addr)
->                 return readb(PCI_IOBASE + addr);
->         else
->                 return arm64_extio_ops->pfin ?
->                         arm64_extio_ops->pfin(arm64_extio_ops->devpara,
->                                 addr + arm64_extio_ops->ptoffset, NULL,
->                                 sizeof(u8), 1) : -1;
-> }
-> .....
-
-Yes, sounds good.
-
-> >> @@ -149,6 +185,60 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-> >>  #define IO_SPACE_LIMIT              (PCI_IO_SIZE - 1)
-> >>  #define PCI_IOBASE          ((void __iomem *)PCI_IO_START)
-> >>  
-> >> +
-> >> +/*
-> >> + * redefine the in(s)b/out(s)b for indirect-IO.
-> >> + */
-> >> +#define inb inb
-> >> +static inline u8 inb(unsigned long addr)
-> >> +{
-> >> +#ifdef CONFIG_ARM64_INDIRECT_PIO
-> >> +    if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
-> >> +                    addr <= arm64_extio_ops->end)
-> >> +            return extio_inb(addr);
-> >> +#endif
-> >> +    return readb(PCI_IOBASE + addr);
-> >> +}
-> >> +
+> > diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> > index 08e84d6..264df36 100644
+> > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > @@ -542,7 +542,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+> >  	struct pci_bus *subordinate = pdev->subordinate;
+> >  	struct pci_dev *dev;
+> >  	struct slot *slot = ctrl->slot;
+> > -	u16 detected, intr_loc;
+> > +	u16 status, events;
+> >  	u8 present;
+> >  	bool link;
 > > 
-> > Looks ok, but you only seem to do this for the 8-bit
-> > accessors, when it should be done for 16-bit and 32-bit
-> > ones as well for consistency.
-> Hip06 LPC only support 8-bit I/O operations on the designated port.
-
-That is an interesting limitation. Maybe still call the extio operations
-and have them do WARN_ON_ONCE() instead?
-
-If you get a driver that calls inw/outw on the range that is owned
-by the LPC bus, you otherwise get an unhandled page fault in kernel
-space, which is not as nice.
-
-> >> diff --git a/drivers/bus/extio.c b/drivers/bus/extio.c
-> >> new file mode 100644
-> >> index 0000000..1e7a9c5
-> >> --- /dev/null
-> >> +++ b/drivers/bus/extio.c
-> >> @@ -0,0 +1,66 @@
+> > @@ -555,31 +555,35 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+> >  	 * serviced, we need to re-inspect Slot Status register after
+> >  	 * clearing what is presumed to be the last pending interrupt.
+> >  	 */
+> > -	intr_loc = 0;
+> > +	events = 0;
+> >  	do {
+> > -		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &detected);
+> > -		if (detected == (u16) ~0) {
+> > +		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
+> > +		if (status == (u16) ~0) {
+> >  			ctrl_info(ctrl, "%s: no response from device\n",
+> >  				  __func__);
+> >  			return IRQ_HANDLED;
+> >  		}
 > > 
-> > This is in a globally visible directory
+> > -		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+> > -			     PCI_EXP_SLTSTA_PDC |
+> > -			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+> > -		detected &= ~intr_loc;
+> > -		intr_loc |= detected;
+> > -		if (!intr_loc)
+> > +		/*
+> > +		 * Slot Status contains plain status bits as well as event
+> > +		 * notification bits; right now we only want the event bits.
+> > +		 */
+> > +		status &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+> > +			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
+> > +			   PCI_EXP_SLTSTA_DLLSC);
+> > +		status &= ~events;
+> > +		events |= status;
+> > +		if (!events)
+> >  			return IRQ_NONE;
+> > -		if (detected)
+> > +		if (status)
+> >  			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+> > -						   intr_loc);
+> > -	} while (detected);
+> > +						   events);
+> > +	} while (status);
 > > 
-> >> +
-> >> +struct extio_ops *arm64_extio_ops;
+> > -	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", intr_loc);
+> > +	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", events);
 > > 
-> > But the identifier uses an architecture specific prefix. Either
-> > move the whole file into arch/arm64, or make the naming so that
-> > it can be used for everything.
+> >  	/* Check Command Complete Interrupt Pending */
+> > -	if (intr_loc & PCI_EXP_SLTSTA_CC) {
+> > +	if (events & PCI_EXP_SLTSTA_CC) {
+> >  		ctrl->cmd_busy = 0;
+> >  		smp_mb();
+> >  		wake_up(&ctrl->queue);
+> > @@ -589,24 +593,24 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+> >  		list_for_each_entry(dev, &subordinate->devices, bus_list) {
+> >  			if (dev->ignore_hotplug) {
+> >  				ctrl_dbg(ctrl, "ignoring hotplug event %#06x (%s requested no hotplug)\n",
+> > -					 intr_loc, pci_name(dev));
+> > +					 events, pci_name(dev));
+> >  				return IRQ_HANDLED;
 > 
-> I perfer to move the whole file into arch/arm64, extio.h will be moved to arch/arm64/include/asm;
+> Does it make sense here also to return IRQ_NONE? 
 
-Ok, that simplifies it a lot, you can just do everything in asm/io.h then.
+I don't think so.  Here's my reasoning; see if it makes sense:
+IRQ_NONE means "I don't see any indication that my device needs
+service."  If every handler for the IRQ returns IRQ_NONE, the
+interrupt was spurious, and if we see enough spurious interrupts,
+we'll disable that IRQ completely.  In this case, our device
+definitely *did* request service; it's just that a driver wants us to
+ignore hotplug events.  From the point of view of the kernel, we did
+handle the IRQ (by ignoring it and clearing the interrupt request).
 
-	Arnd
+> >  			}
+> >  		}
+> >  	}
+> > 
+> > -	if (!(intr_loc & ~PCI_EXP_SLTSTA_CC))
+> > +	if (!(events & ~PCI_EXP_SLTSTA_CC))
+> >  		return IRQ_HANDLED;
+> > 
+> >  	/* Check Attention Button Pressed */
+> > -	if (intr_loc & PCI_EXP_SLTSTA_ABP) {
+> > +	if (events & PCI_EXP_SLTSTA_ABP) {
+> >  		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
+> >  			  slot_name(slot));
+> >  		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
+> >  	}
+> > 
+> >  	/* Check Presence Detect Changed */
+> > -	if (intr_loc & PCI_EXP_SLTSTA_PDC) {
+> > +	if (events & PCI_EXP_SLTSTA_PDC) {
+> >  		pciehp_get_adapter_status(slot, &present);
+> >  		ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
+> >  			  present ? "" : "not ", slot_name(slot));
+> > @@ -615,13 +619,13 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+> >  	}
+> > 
+> >  	/* Check Power Fault Detected */
+> > -	if ((intr_loc & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> > +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+> >  		ctrl->power_fault_detected = 1;
+> >  		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(slot));
+> >  		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
+> >  	}
+> > 
+> > -	if (intr_loc & PCI_EXP_SLTSTA_DLLSC) {
+> > +	if (events & PCI_EXP_SLTSTA_DLLSC) {
+> >  		link = pciehp_check_link_active(ctrl);
+> >  		ctrl_info(ctrl, "slot(%s): Link %s event\n",
+> >  			  slot_name(slot), link ? "Up" : "Down");
+> 
+> Intel Deutschland GmbH
+> Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+> Tel: +49 89 99 8853-0, www.intel.de
+> Managing Directors: Christin Eisenschmid, Christian Lamprechter
+> Chairperson of the Supervisory Board: Nicole Lau
+> Registered Office: Munich
+> Commercial Register: Amtsgericht Muenchen HRB 186928
