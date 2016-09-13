@@ -1,115 +1,83 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 8/8] irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain initialization
-Date: Mon,  5 Sep 2016 22:05:40 +0200
-Message-Id: <1473105940-9761-9-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
-References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46368 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756467AbcIMJAr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 05:00:47 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8D8wdUV101156
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:47 -0400
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25dxu44105-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:46 -0400
+Received: from localhost
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 13 Sep 2016 03:00:45 -0600
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v5 4/4] PCI: Add a macro to set default alignment for all PCI devices
+Date: Tue, 13 Sep 2016 17:00:34 +0800
+In-Reply-To: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1473757234-5284-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let ACPI build ITS PCI MSI domain. ACPI code is responsible for retrieving
-inner domain token and passing it on to its_pci_msi_init_one generic
-init call.
+When vfio passthroughs a PCI device of which MMIO BARs are
+smaller than PAGE_SIZE, guest will not handle the mmio
+accesses to the BARs which leads to mmio emulations in host.
 
-IORT maintains list of registered domain tokens and allows to find
-corresponding domain based on MADT ITS subtable ID info.
+This is because vfio will not allow to passthrough one BAR's
+mmio page which may be shared with other BARs. Otherwise,
+there will be a backdoor that guest can use to access BARs
+of other guest.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+This patch adds a macro to set default alignment for all
+PCI devices. Then we could solve this issue on some platforms
+which would easily hit this issue because of their 64K page
+such as PowerNV platform by defining this macro as PAGE_SIZE.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 ++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ arch/powerpc/include/asm/pci.h |    4 ++++
+ drivers/pci/pci.c              |    4 ++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index d2c2496..ae7221c 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -15,6 +15,7 @@
-  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  */
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index e9bd6cf..5e31bc2 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -28,6 +28,10 @@
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0x10000000
  
-+#include <linux/iort.h>
- #include <linux/msi.h>
- #include <linux/of.h>
- #include <linux/of_irq.h>
-@@ -144,9 +145,52 @@ static int __init its_pci_of_msi_init(void)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ACPI
-+
-+static int __init
-+its_pci_msi_parse_madt(struct acpi_subtable_header *header,
-+		       const unsigned long end)
-+{
-+	struct acpi_madt_generic_translator *its_entry;
-+	struct fwnode_handle *dom_handle;
-+	const char *node_name;
-+	int err = -ENXIO;
-+
-+	its_entry = (struct acpi_madt_generic_translator *)header;
-+	node_name = kasprintf(GFP_KERNEL, "ITS@0x%lx",
-+			      (long)its_entry->base_address);
-+	dom_handle = iort_find_domain_token(its_entry->translation_id);
-+	if (!dom_handle) {
-+		pr_err("%s: Unable to locate ITS domain handle\n", node_name);
-+		goto out;
-+	}
-+
-+	err = its_pci_msi_init_one(dom_handle, node_name);
-+	if (!err)
-+		pr_info("PCI/MSI: %s domain created\n", node_name);
-+
-+out:
-+	kfree(node_name);
-+	return err;
-+}
-+
-+static int __init its_pci_acpi_msi_init(void)
-+{
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
-+			      its_pci_msi_parse_madt, 0);
-+	return 0;
-+}
-+#else
-+static int __init its_pci_acpi_msi_init(void)
-+{
-+	return 0;
-+}
++#ifdef CONFIG_PPC_POWERNV
++#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
 +#endif
 +
- static int __init its_pci_msi_init(void)
- {
- 	its_pci_of_msi_init();
-+	its_pci_acpi_msi_init();
+ struct pci_dev;
  
- 	return 0;
- }
+ /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 37f8062..9c61cbe 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4959,6 +4959,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 	resource_size_t align = 0;
+ 	char *p;
+ 
++#ifdef PCIBIOS_DEFAULT_ALIGNMENT
++	align = PCIBIOS_DEFAULT_ALIGNMENT;
++	*resize = false;
++#endif
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	if (pci_has_flag(PCI_PROBE_ONLY)) {
 -- 
-1.9.1
+1.7.9.5
+
