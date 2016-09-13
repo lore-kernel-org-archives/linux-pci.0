@@ -1,90 +1,84 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V10 3/8] PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
-Date: Tue,  6 Sep 2016 11:08:53 +0200
-Message-Id: <1473152938-17388-4-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473152938-17388-1-git-send-email-tn@semihalf.com>
-References: <1473152938-17388-1-git-send-email-tn@semihalf.com>
+Return-Path: <thomas.petazzoni@free-electrons.com>
+Return-Path: <thomas.petazzoni@free-electrons.com>
+Date: Tue, 13 Sep 2016 17:50:28 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Bharat Kumar Gogada
+ <bharat.kumar.gogada@xilinx.com>, "robh@kernel.org" <robh@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, "colin.king@canonical.com"
+ <colin.king@canonical.com>, Soren Brinkmann <sorenb@xilinx.com>, Michal
+ Simek <michals@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, Ravikiran Gummaluri <rgummal@xilinx.com>,
+ Ley Foon Tan <lftan@altera.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+ Murali Karicheri <m-karicheri2@ti.com>
+Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
+ device for legacy interrupts.
+Message-ID: <20160913175028.0642d82f@free-electrons.com>
+In-Reply-To: <20160913153402.GA4138@localhost>
+References: <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+	<57C57975.7040306@arm.com>
+	<8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
+	<57C59FE8.30307@arm.com>
+	<8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
+	<57C6B7F1.5000001@arm.com>
+	<8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
+	<20160912220241.GG23532@localhost>
+	<57D7ADA8.5060201@arm.com>
+	<20160913150511.GC27748@localhost>
+	<20160913153402.GA4138@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible to provide information about which MSI controller to
-use on a per-device basis for DT. This patch supply this with ACPI support.
+Hello,
 
-Currently, IORT is the only one ACPI table which can provide such mapping.
-In order to plug IORT into MSI infrastructure we are adding ACPI
-equivalents for finding PCI device domain and its RID translation
-(pci_msi_domain_get_msi_rid and pci_msi_domain_get_msi_rid calls).
+On Tue, 13 Sep 2016 10:34:02 -0500, Bjorn Helgaas wrote:
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+> > After looking at this myself, I'm not happy with this either.  It feels
+> > like there are bugs lurking here and we're just hiding one of them.
+> > 
+> > Here are the callers of irq_domain_add_linear() for legacy INTx in
+> > drivers/pci/host:
+> > 
+> >   advk_pcie_init_irq_domain    LEGACY_IRQ_NUM   (4)
+> >   dra7xx_pcie_init_irq_domain  4
+> >   ks_dw_pcie_host_init         MAX_LEGACY_IRQS  (4)
+> >   altera_pcie_init_irq_domain  INTX_NUM + 1     (5)
+> >   nwl_pcie_init_irq_domain     INTX_NUM + 1     (5)
+> >   xilinx_pcie_init_irq_domain  4  
+> 
+> The altera change corresponding to this was 99496bd2971f ("PCI: altera: Fix
+> error when INTx is 4").  I should have noticed this inconsistency back
+> then.
+> 
+> Are aardvark, dra7xx, keystone, and xilinx (non-NWL) broken because they
+> only request 4 IRQs and only INTA, INTB, and INTC work?
+> 
+> > I think all of these use the of_irq_parse_and_map_pci() path you
+> > mentioned, so if the problem is in the way that path works, I would
+> > think these should *all* be requesting the same number of interrupts
+> > in the domain.
+> > 
+> > I agree with Marc that we should request 4 IRQs, because that's what
+> > we need.  If we can't do that for some reason, we ought to at least
+> > make all these callers the same.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 98f1222..137b4c5 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -19,6 +19,7 @@
- #include <linux/smp.h>
- #include <linux/errno.h>
- #include <linux/io.h>
-+#include <linux/acpi_iort.h>
- #include <linux/slab.h>
- #include <linux/irqdomain.h>
- #include <linux/of_irq.h>
-@@ -1502,8 +1503,8 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
- 
- 	of_node = irq_domain_get_of_node(domain);
--	if (of_node)
--		rid = of_msi_map_rid(&pdev->dev, of_node, rid);
-+	rid = of_node ? of_msi_map_rid(&pdev->dev, of_node, rid) :
-+			iort_msi_map_rid(&pdev->dev, rid);
- 
- 	return rid;
- }
-@@ -1519,9 +1520,13 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
-  */
- struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
- {
-+	struct irq_domain *dom;
- 	u32 rid = 0;
- 
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
--	return of_msi_map_get_device_domain(&pdev->dev, rid);
-+	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
-+	if (!dom)
-+		dom = iort_get_device_domain(&pdev->dev, rid);
-+	return dom;
- }
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
+Thanks for Cc'ing about this issue. Indeed, the Aardvark driver
+supports all of INT{A,B,C,D}, so the current situation doesn't work. As
+suggested, the simplest solution is to just allocate an irq domain with
+5 IRQs, like is done in the Altera driver.
+
+However, my feeling is that a more correct solution would be to have a
+translation between the PCI_INTERRUPT_PIN value (in the range 0x1 to
+0x4) to the hwirq value (in the range 0x0 to 0x3).
+
+Best regards,
+
+Thomas
 -- 
-1.9.1
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
