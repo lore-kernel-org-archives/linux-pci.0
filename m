@@ -1,51 +1,186 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
+To: Dongdong Liu <liudongdong3@huawei.com>, helgaas@kernel.org,
+ will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+ Lorenzo.Pieralisi@arm.com
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-3-git-send-email-tn@semihalf.com>
+ <57D76626.1050109@huawei.com>
+Cc: arnd@arndb.de, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ jchandra@broadcom.com, cov@codeaurora.org, dhdang@apm.com,
+ ard.biesheuvel@linaro.org, robert.richter@caviumnetworks.com,
+ mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+ wangyijing@huawei.com, msalter@redhat.com, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+ jcm@redhat.com, andrea.gallo@linaro.org, jeremy.linton@arm.com,
+ gabriele.paoloni@huawei.com, jhugo@codeaurora.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
+Date: Tue, 13 Sep 2016 08:32:01 +0200
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <CALAE=UDjBSMJJZMiJsadfd242jHSfqt7UXYFbsXGC_bHsZ5tOg@mail.gmail.com>
-References: <CALAE=UDqxjh1qt5OJexyonynj+uEyhiwdAtUF0_dD5ffRkUo=Q@mail.gmail.com>
- <20160919194122.GA21763@localhost> <CALAE=UDjBSMJJZMiJsadfd242jHSfqt7UXYFbsXGC_bHsZ5tOg@mail.gmail.com>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 30 Sep 2016 20:20:47 -0700
-Message-ID: <CAE9FiQV-vxubz-jfgSFF3jm63-uVFjJtKXWo2Mz6d_zMMmezDA@mail.gmail.com>
-Subject: Re: PCI Resource Allocation
-To: Robert Jones <rjones@gateworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>, Lucas Stach <l.stach@pengutronix.de>,
-	Tim Harvey <tharvey@gateworks.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <57D76626.1050109@huawei.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 19, 2016 at 1:59 PM, Robert Jones <rjones@gateworks.com> wrote:
-> [    0.312076] PCI host bridge /soc/pcie@0x01000000 ranges:
-> [    0.312098]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
-> [    0.312147]   err 0x01f00000..0x01f7ffff -> 0x01f00000
-> [    0.312186]    IO 0x01f80000..0x01f8ffff -> 0x00000000
-> [    0.312275]   MEM 0x01000000..0x01efffff -> 0x01000000
-> [    0.521249] imx6q-pcie 1ffc000.pcie: link up
-> [    0.521268] imx6q-pcie 1ffc000.pcie: Link: Gen2 disabled
-> [    0.521283] imx6q-pcie 1ffc000.pcie: link up
-> [    0.521296] imx6q-pcie 1ffc000.pcie: Link up, Gen1
-> [    0.521901] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
-> [    0.521927] pci_bus 0000:00: root bus resource [bus 00-ff]
-> [    0.521946] pci_bus 0000:00: root bus resource [??? 0x01f00000-0x01f7ffff flags 0x0]
-> [    0.521962] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> [    0.521978] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-...
-> [    0.682168] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-> [    0.682199] pci 0000:00:00.0: BAR 8: no space for [mem size 0x01400000]
-> [    0.682217] pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x01400000]
-> [    0.682237] pci 0000:00:00.0: BAR 6: assigned [mem > 0x01100000-0x0110ffff pref]
-> [    0.682257] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+Hi Liu,
 
-so one of resource resource flags is not right.
-> [    0.521946] pci_bus 0000:00: root bus resource [??? 0x01f00000-0x01f7ffff flags 0x0]
+On 13.09.2016 04:36, Dongdong Liu wrote:
+> Hi Tomasz
+>
+> ÔÚ 2016/9/10 3:24, Tomasz Nowicki Ð´µÀ:
+>> Some platforms may not be fully compliant with generic set of PCI config
+>> accessors. For these cases we implement the way to overwrite CFG
+>> accessors
+>> set and configuration space range.
+>>
+>> In first place pci_mcfg_parse() saves machine's IDs and revision number
+>> (these come from MCFG header) in order to match against known quirk
+>> entries.
+>> Then the algorithm traverses available quirk list (static array),
+>> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
+>> returns custom PCI config ops and/or CFG resource structure.
+>>
+>> When adding new quirk there are two possibilities:
+>> 1. Override default pci_generic_ecam_ops ops but CFG resource comes
+>> from MCFG
+>> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &foo_ops,
+>> MCFG_RES_EMPTY },
+>> 2. Override default pci_generic_ecam_ops ops and CFG resource. For
+>> this case
+>> it is also allowed get CFG resource from quirk entry w/o having it in
+>> MCFG.
+>> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &boo_ops,
+>>    DEFINE_RES_MEM(START, SIZE) },
+>>
+>> pci_generic_ecam_ops and MCFG entries will be used for platforms
+>> free from quirks.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
+>> ---
+>>   drivers/acpi/pci_mcfg.c | 80
+>> +++++++++++++++++++++++++++++++++++++++++++++----
+>>   1 file changed, 74 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>> index ffcc651..2b8acc7 100644
+>> --- a/drivers/acpi/pci_mcfg.c
+>> +++ b/drivers/acpi/pci_mcfg.c
+>> @@ -32,6 +32,59 @@ struct mcfg_entry {
+>>       u8            bus_start;
+>>       u8            bus_end;
+>>   };
+>> +struct mcfg_fixup {
+>> +    char oem_id[ACPI_OEM_ID_SIZE + 1];
+>> +    char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+>> +    u32 oem_revision;
+>> +    u16 seg;
+>> +    struct resource bus_range;
+>> +    struct pci_ecam_ops *ops;
+>> +    struct resource cfgres;
+>> +};
+>> +
+>> +#define MCFG_DOM_ANY            (-1)
+>> +#define MCFG_BUS_RANGE(start, end)    DEFINE_RES_NAMED((start),    \
+>> +                        ((end) - (start) + 1),    \
+>> +                        NULL, IORESOURCE_BUS)
+>> +#define MCFG_BUS_ANY        MCFG_BUS_RANGE(0x0, 0xff)
+>> +#define MCFG_RES_EMPTY        DEFINE_RES_NAMED(0, 0, NULL, 0)
+>> +
+>> +static struct mcfg_fixup mcfg_quirks[] = {
+>> +/*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+>> +};
+>> +
+>> +static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+>> +static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
+>> +static u32 mcfg_oem_revision;
+>> +
+>> +static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
+>> +                  struct resource *cfgres,
+>> +                  struct pci_ecam_ops **ecam_ops)
+>> +{
+>> +    struct mcfg_fixup *f;
+>> +    int i;
+>> +
+>> +    /*
+>> +     * First match against PCI topology <domain:bus> then use OEM ID,
+>> OEM
+>> +     * table ID, and OEM revision from MCFG table standard header.
+>> +     */
+>> +    for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++,
+>> f++) {
+>> +        if (f->seg == root->segment &&
+>
+> why not use MCFG_DOM_RANGE, I think MCFG_DOM_RANGE is better.
+> if drop MCFG_DOM_RANGE, mcfg_quirks[] will be more complex.
+>
+> static struct mcfg_fixup mcfg_quirks[] = {
+> /*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+> #ifdef CONFIG_PCI_HOST_THUNDER_ECAM
+>     /* SoC pass1.x */
+>     { "CAVIUM", "THUNDERX", 2, 0, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+>     { "CAVIUM", "THUNDERX", 2, 1, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+>     { "CAVIUM", "THUNDERX", 2, 2, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+>     { "CAVIUM", "THUNDERX", 2, 3, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+>     { "CAVIUM", "THUNDERX", 2, 10, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+>     { "CAVIUM", "THUNDERX", 2, 11, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+>     { "CAVIUM", "THUNDERX", 2, 12, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+>     { "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>       MCFG_RES_EMPTY},
+> #endif
+> .....
+> };
+>
+> As PATCH v5 we only need define mcfg_quirks as below, It looks better.
+> static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
+> /*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook
+> }, */
+> #ifdef CONFIG_PCI_HOST_THUNDER_PEM
+>     /* Pass2.0 */
+>     { "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(4, 9), MCFG_BUS_ANY, NULL,
+>       thunder_pem_cfg_init },
+>     { "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(14, 19), MCFG_BUS_ANY, NULL,
+>       thunder_pem_cfg_init },
+> #endif
+> #ifdef CONFIG_PCI_HISI_ACPI
+>     { "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+>       NULL, hisi_pcie_acpi_hip05_init},
+>     { "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+>       NULL, hisi_pcie_acpi_hip06_init},
+>     { "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
+>       NULL, hisi_pcie_acpi_hip07_init},
+> #endif
+> };
 
-also need a big range, but root bus does not have enough space.
+Note this series disallow hisi_pcie_acpi_hip07_init() call. According to 
+the Bjorn suggestion I rework quirk code to override ops and CFG 
+resources only. Giving that I do not see the way to use MCFG_DOM_RANGE 
+macro. For HISI you would need to get CFG range for each possible case:
 
-please check if you can increase resource size for hostbridge.
+#ifdef CONFIG_PCI_HISI_ACPI
+     { "HISI  ", "HIP05   ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_ops,
+	  DEFINE_RES_MEM(start0, size0)},
+     { "HISI  ", "HIP05   ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_ops,
+	  DEFINE_RES_MEM(start1, size1)},
+     { "HISI  ", "HIP05   ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_ops,
+	  DEFINE_RES_MEM(start2, size2)},
+     { "HISI  ", "HIP05   ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_ops,
+	  DEFINE_RES_MEM(start3, size3)},
+[...]
+#endif
 
-Thanks
+Indeed there are more entries here but you do not have to define the 
+same resource array in driver.
 
-Yinghai
+Thanks,
+Tomasz
