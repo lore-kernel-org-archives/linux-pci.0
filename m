@@ -1,91 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lb2-smtp-cloud6.xs4all.net ([194.109.24.28]:53600 "EHLO
-        lb2-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1758377AbcIPIBu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 04:01:50 -0400
-Subject: Re: [PATCH 6/6] media/cobalt: use pci_irq_allocate_vectors
-To: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com,
-        brking@us.ibm.com, haver@linux.vnet.ibm.com,
-        ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
- <1473600688-24043-7-git-send-email-hch@lst.de>
-Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Hans Verkuil <hverkuil@xs4all.nl>
-Message-ID: <1c24ae65-067f-52fc-edfa-af2d0e222a19@xs4all.nl>
-Date: Fri, 16 Sep 2016 10:01:42 +0200
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34252 "EHLO
+        mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755774AbcIMISI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 04:18:08 -0400
+Received: by mail-pa0-f48.google.com with SMTP id wk8so5629927pab.1
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 01:18:08 -0700 (PDT)
+Subject: Re: [PATCH v5 14/14] drivers: acpi: iort: introduce
+ iort_iommu_configure
+To: Nate Watterson <nwatters@codeaurora.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, tn@semihalf.com
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+ <20160909142343.13314-15-lorenzo.pieralisi@arm.com>
+ <57647b7518907dd9bd682e5e5a55ca80@codeaurora.org>
+Cc: iommu@lists.linux-foundation.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <54744f49-f1f5-be5e-313e-e38e51c0004e@linaro.org>
+Date: Tue, 13 Sep 2016 16:18:01 +0800
 MIME-Version: 1.0
-In-Reply-To: <1473600688-24043-7-git-send-email-hch@lst.de>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <57647b7518907dd9bd682e5e5a55ca80@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph,
+Hi Nate,
 
-On 09/11/2016 03:31 PM, Christoph Hellwig wrote:
-> Simply the interrupt setup by using the new PCI layer helpers.
-> 
-> Despite using pci_enable_msi_range, this driver was only requesting a
-> single MSI vector anyway.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/media/pci/cobalt/cobalt-driver.c | 8 ++------
->  drivers/media/pci/cobalt/cobalt-driver.h | 2 --
->  2 files changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/media/pci/cobalt/cobalt-driver.c b/drivers/media/pci/cobalt/cobalt-driver.c
-> index 476f7f0..5a0a9e4 100644
-> --- a/drivers/media/pci/cobalt/cobalt-driver.c
-> +++ b/drivers/media/pci/cobalt/cobalt-driver.c
-> @@ -307,9 +307,7 @@ static void cobalt_pci_iounmap(struct cobalt *cobalt, struct pci_dev *pci_dev)
->  static void cobalt_free_msi(struct cobalt *cobalt, struct pci_dev *pci_dev)
->  {
->  	free_irq(pci_dev->irq, (void *)cobalt);
-> -
-> -	if (cobalt->msi_enabled)
-> -		pci_disable_msi(pci_dev);
-> +	pci_free_irq_vectors(pci_dev);
->  }
->  
->  static int cobalt_setup_pci(struct cobalt *cobalt, struct pci_dev *pci_dev,
-> @@ -386,14 +384,12 @@ static int cobalt_setup_pci(struct cobalt *cobalt, struct pci_dev *pci_dev,
->  	   from being generated. */
->  	cobalt_set_interrupt(cobalt, false);
->  
-> -	if (pci_enable_msi_range(pci_dev, 1, 1) < 1) {
-> +	if (pci_alloc_irq_vectors(pci_dev, 1, 1, PCI_IRQ_MSI) < 1) {
+On 2016/9/13 16:14, Nate Watterson wrote:
+> On 2016-09-09 10:23, Lorenzo Pieralisi wrote:
+>> DT based systems have a generic kernel API to configure IOMMUs
+>> for devices (ie of_iommu_configure()).
+>>
+>> On ARM based ACPI systems, the of_iommu_configure() equivalent can
+>> be implemented atop ACPI IORT kernel API, with the corresponding
+>> functions to map device identifiers to IOMMUs and retrieve the
+>> corresponding IOMMU operations necessary for DMA operations set-up.
+>>
+>> By relying on the iommu_fwspec generic kernel infrastructure,
+>> implement the IORT based IOMMU configuration for ARM ACPI systems
+>> and hook it up in the ACPI kernel layer that implements DMA
+>> configuration for a device.
+>>
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+>> Cc: Tomasz Nowicki <tn@semihalf.com>
+>> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+>> ---
+>>  drivers/acpi/arm64/iort.c | 96
+>> +++++++++++++++++++++++++++++++++++++++++++++++
+>>  drivers/acpi/scan.c       |  7 +++-
+>>  include/linux/acpi_iort.h |  6 +++
+>>  3 files changed, 108 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>> index 7c68eb4..55a4ae9 100644
+>> --- a/drivers/acpi/arm64/iort.c
+>> +++ b/drivers/acpi/arm64/iort.c
+>> @@ -19,6 +19,7 @@
+>>  #define pr_fmt(fmt)    "ACPI: IORT: " fmt
+>>
+>>  #include <linux/acpi_iort.h>
+>> +#include <linux/iommu-fwspec.h>
+>>  #include <linux/kernel.h>
+>>  #include <linux/list.h>
+>>  #include <linux/pci.h>
+>> @@ -27,6 +28,8 @@
+>>
+>>  #define IORT_TYPE_MASK(type)    (1 << (type))
+>>  #define IORT_MSI_TYPE        (1 << ACPI_IORT_NODE_ITS_GROUP)
+>> +#define IORT_IOMMU_TYPE        ((1 << ACPI_IORT_NODE_SMMU) |    \
+>> +                (1 << ACPI_IORT_NODE_SMMU_V3))
+>>
+>>  struct iort_its_msi_chip {
+>>      struct list_head    list;
+>> @@ -467,6 +470,99 @@ struct irq_domain *iort_get_device_domain(struct
+>> device *dev, u32 req_id)
+>>      return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+>>  }
+>>
+>> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>> +{
+>> +    u32 *rid = data;
+>> +
+>> +    *rid = alias;
+>> +    return 0;
+>> +}
+>> +
+>> +static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
+>> +                   struct fwnode_handle *fwnode)
+>> +{
+>> +    int ret = iommu_fwspec_init(dev, fwnode);
+>> +
+>> +    if (!ret)
+>> +        ret = iommu_fwspec_add_ids(dev, &streamid, 1);
+>> +
+>> +    return ret;
+>> +}
+>> +
+>> +static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+>> +                    struct acpi_iort_node *node,
+>> +                    u32 streamid)
+>> +{
+>> +    struct fwnode_handle *iort_fwnode = NULL;
+>> +    int ret;
+>> +
+>> +    if (node) {
+>> +        iort_fwnode = iort_get_fwnode(node);
+>> +        if (!iort_fwnode)
+>> +            return NULL;
+>> +
+>> +        ret = arm_smmu_iort_xlate(dev, streamid,
+>> +                      iort_fwnode);
+>> +        if (!ret)
+>> +            return fwspec_iommu_get_ops(iort_fwnode);
+>> +    }
+>> +
+>> +    return NULL;
+>> +}
+>> +
+>> +/**
+>> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
+>> + *
+>> + * @dev: device to configure
+>> + *
+>> + * Returns: iommu_ops pointer on configuration success
+>> + *          NULL on configuration failure
+>> + */
+>> +const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>> +{
+>> +    struct acpi_iort_node *node, *parent;
+>> +    const struct iommu_ops *ops = NULL;
+>> +    u32 streamid = 0;
+>> +
+>> +    if (dev_is_pci(dev)) {
+>> +        struct pci_bus *bus = to_pci_dev(dev)->bus;
+>> +        u32 rid;
+>> +
+>> +        pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
+>> +                       &rid);
+>> +
+>> +        node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+>> +                      iort_match_node_callback, &bus->dev);
+>> +        if (!node)
+>> +            return NULL;
+>> +
+>> +        parent = iort_node_map_rid(node, rid, &streamid,
+>> +                       IORT_IOMMU_TYPE);
+>> +
+>> +        ops = iort_iommu_xlate(dev, parent, streamid);
+>> +
+>> +    } else {
+>> +        int i = 0;
+>> +
+>> +        node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+>> +                      iort_match_node_callback, dev);
+>> +        if (!node)
+>> +            return NULL;
+>> +
+>
+> Nothing wrong with your code here, but wanted to warn you that there
+> appears to be a bug in iort_match_node_callback() for NAMED_COMPONENTS.
+>
+> iort_match_node_callback() {
+>     acpi_status status = AE_NOT_FOUND;
+>     ...
+>     case ACPI_IORT_NODE_NAMED_COMPONENT: {
+>         ...
+>         status = acpi_get_name(adev->handle, ACPI_FULL_PATHNAME, &buf);
+>         if (ACPI_FAILURE(status)) {
+>             dev_warn(dev, "Can't get device full path name\n");
+>             break;
+>         }
+>
+>         ncomp = (struct acpi_iort_named_component *)node->node_data;
+>         if (!strcmp(ncomp->device_name, buf.pointer))
+>             status = AE_OK;
+>
+>         acpi_os_free(buf.pointer);
+>         break;
+>     }
+>     ...
+>     return status;
+> }
+>
+> Notice how if strcmp() fails, status remains set to the status of the call
+> to acpi_get_name() which must have been OK since we would have broken out
+> of the switch statement otherwise. This is causing all manner of platform
+> devices not even described in the IORT to get hooked up using the IDs of
+> the first properly iommu-attached NAMED_COMPONENT device found in the IORT.
 
-PCI_IRQ_MSI is unknown, I assume that this will appear in 4.9?
+As I said in previous email, please use the new version of IORT patch
+set :)
 
-Looks good otherwise.
-
-Regards,
-
-	Hans
-
->  		cobalt_err("Could not enable MSI\n");
-> -		cobalt->msi_enabled = false;
->  		ret = -EIO;
->  		goto err_release;
->  	}
->  	msi_config_show(cobalt, pci_dev);
-> -	cobalt->msi_enabled = true;
->  
->  	/* Register IRQ */
->  	if (request_irq(pci_dev->irq, cobalt_irq_handler, IRQF_SHARED,
-> diff --git a/drivers/media/pci/cobalt/cobalt-driver.h b/drivers/media/pci/cobalt/cobalt-driver.h
-> index ed00dc9..00f773e 100644
-> --- a/drivers/media/pci/cobalt/cobalt-driver.h
-> +++ b/drivers/media/pci/cobalt/cobalt-driver.h
-> @@ -287,8 +287,6 @@ struct cobalt {
->  	u32 irq_none;
->  	u32 irq_full_fifo;
->  
-> -	bool msi_enabled;
-> -
->  	/* omnitek dma */
->  	int dma_channels;
->  	int first_fifo_channel;
-> 
+Thanks
+Hanjun
