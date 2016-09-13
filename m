@@ -1,57 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33360 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751219AbcIJXVG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Sep 2016 19:21:06 -0400
+Received: from mail.kernel.org ([198.145.29.136]:38926 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756054AbcIMSUW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Sep 2016 14:20:22 -0400
+Date: Tue, 13 Sep 2016 13:20:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>,
+        Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
+        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
+        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Luis Antonio Tarazona-Duarte
+        <luis.antonio.tarazona-duarte@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        mika.westerberg@linux.intel.com
+Subject: Re: [PATCH v2 0/8] PCI: pciehp: Rework hotplug interrupt routine
+Message-ID: <20160913182013.GA14368@localhost>
+References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160913162052.GA1343@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <1470054233-4309-2-git-send-email-amir.jer.levy@intel.com>
-References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com> <1470054233-4309-2-git-send-email-amir.jer.levy@intel.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Sun, 11 Sep 2016 01:20:44 +0200
-Message-ID: <CAMxnaaW0vBFeUcLg6oC=FuRx3sqStQ4pht2HUzyHqDMtf8oR2g@mail.gmail.com>
-Subject: Re: [PATCH v6 1/8] thunderbolt: Macro rename
-To: Amir Levy <amir.jer.levy@intel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, corbet@lwn.net,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160913162052.GA1343@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 1, 2016 at 2:23 PM, Amir Levy <amir.jer.levy@intel.com> wrote:
-> This first patch updates the registers file to
-> reflect that it isn't only for Cactus Ridge.
-> No functional change intended.
->
-> Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-> ---
->  drivers/thunderbolt/nhi_regs.h | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
-> index 86b996c..75cf069 100644
-> --- a/drivers/thunderbolt/nhi_regs.h
-> +++ b/drivers/thunderbolt/nhi_regs.h
-> @@ -1,11 +1,11 @@
->  /*
-> - * Thunderbolt Cactus Ridge driver - NHI registers
-> + * Thunderbolt driver - NHI registers
->   *
->   * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
->   */
->
-> -#ifndef DSL3510_REGS_H_
-> -#define DSL3510_REGS_H_
-> +#ifndef NHI_REGS_H_
-> +#define NHI_REGS_H_
->
->  #include <linux/types.h>
->
-> --
-> 2.7.4
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+On Tue, Sep 13, 2016 at 06:20:52PM +0200, Lukas Wunner wrote:
+> On Mon, Sep 12, 2016 at 04:08:47PM -0500, Bjorn Helgaas wrote:
+> > This is mostly Mayurkumar's work from [1] and [2].  I split [2] into two
+> > patches and reworked it to keep the enclosing loop around the pciehp ISR.
+> > 
+> > The patches I added are trivial ones to clarify variable names, make dmesg
+> > messages consistent, and remove useless code.
+> > 
+> > [1] 1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com
+> > [2] 92EBB4272BF81E4089A7126EC1E7B28466598F35@IRSMSX101.ger.corp.intel.com
+> 
+> I've tested this series with Thunderbolt on the Mac, seems to work fine,
+> no regressions. I'll keep it on my branch and will shout if I do come
+> across issues over time.
+> 
+> Tested-by: Lukas Wunner <lukas@wunner.de>
+
+Thanks a lot for testing this, Lukas!  I added your Tested-by to the
+series.
