@@ -1,46 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38926 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756054AbcIMSUW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 14:20:22 -0400
-Date: Tue, 13 Sep 2016 13:20:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        mika.westerberg@linux.intel.com
-Subject: Re: [PATCH v2 0/8] PCI: pciehp: Rework hotplug interrupt routine
-Message-ID: <20160913182013.GA14368@localhost>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160913162052.GA1343@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Long Li <longli@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH 2/2] pci-hyperv: properly handle device eject
+Date: Tue, 13 Sep 2016 17:33:24 +0000
+Message-ID: <BN3PR03MB22277BEB00D3BFE0C1C06F5ACEFE0@BN3PR03MB2227.namprd03.prod.outlook.com>
+References: <1473724441-21207-1-git-send-email-longli@exchange.microsoft.com>
+ <1473724441-21207-2-git-send-email-longli@exchange.microsoft.com>
+ <MWHPR03MB2669F839E1B02D2A35D4FFE3BFFE0@MWHPR03MB2669.namprd03.prod.outlook.com>
+In-Reply-To: <MWHPR03MB2669F839E1B02D2A35D4FFE3BFFE0@MWHPR03MB2669.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160913162052.GA1343@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 13, 2016 at 06:20:52PM +0200, Lukas Wunner wrote:
-> On Mon, Sep 12, 2016 at 04:08:47PM -0500, Bjorn Helgaas wrote:
-> > This is mostly Mayurkumar's work from [1] and [2].  I split [2] into two
-> > patches and reworked it to keep the enclosing loop around the pciehp ISR.
-> > 
-> > The patches I added are trivial ones to clarify variable names, make dmesg
-> > messages consistent, and remove useless code.
-> > 
-> > [1] 1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com
-> > [2] 92EBB4272BF81E4089A7126EC1E7B28466598F35@IRSMSX101.ger.corp.intel.com
-> 
-> I've tested this series with Thunderbolt on the Mac, seems to work fine,
-> no regressions. I'll keep it on my branch and will shout if I do come
-> across issues over time.
-> 
-> Tested-by: Lukas Wunner <lukas@wunner.de>
 
-Thanks a lot for testing this, Lukas!  I added your Tested-by to the
-series.
+
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Tuesday, September 13, 2016 2:51 AM
+> To: Long Li <longli@microsoft.com>; KY Srinivasan <kys@microsoft.com>;
+> Haiyang Zhang <haiyangz@microsoft.com>; Bjorn Helgaas
+> <bhelgaas@google.com>
+> Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; linux-
+> pci@vger.kernel.org
+> Subject: RE: [PATCH 2/2] pci-hyperv: properly handle device eject
+>=20
+> > From: devel [mailto:driverdev-devel-bounces@linuxdriverproject.org] On
+> > Behalf Of Long Li
+> > Sent: Tuesday, September 13, 2016 7:54 ...
+> > A PCI_EJECT message can arrive at the same time we are calling
+> > pci_scan_child_bus in the workqueue for the previous
+> PCI_BUS_RELATIONS
+> > message, in this case we could potentailly modify the bus from two plac=
+es.
+> > Properly lock the bus access.
+> >
+> > --- a/drivers/pci/host/pci-hyperv.c
+> > +++ b/drivers/pci/host/pci-hyperv.c
+> > @@ -1587,7 +1587,7 @@ static void hv_eject_device_work(struct
+> > work_struct
+> > *work)
+> >         pdev =3D pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domai=
+n,
+> 0,
+> >                                            wslot);
+> >         if (pdev) {
+> > -               pci_stop_and_remove_bus_device(pdev);
+> > +               pci_stop_and_remove_bus_device_locked(pdev);
+> >                 pci_dev_put(pdev);
+> >         }
+>=20
+> The _locked version tries to get the mutex pci_rescan_remove_lock.
+>=20
+> But it looks pci_scan_child_bus() doesn't try to get the mutex(?), so how=
+ can
+> this patch make sure the 2 code paths are not running simultaneously?
+
+Thanks for the review.
+
+The lock is to protect the following call to pci_scan_child_bus() in pci_de=
+vices_present_work():
+
+                /*
+                 * Tell the core to rescan bus
+                 * because there may have been changes.
+                 */
+                pci_lock_rescan_remove();
+                pci_scan_child_bus(hbus->pci_bus);
+                pci_unlock_rescan_remove();
+
+This race condition has shown up in the tests.
+
+You raised a valid concern in create_root_hv_pci_bus(). There might be anot=
+her race condition there. I'll look into this.
+
+>=20
+> Thanks,
+> -- Dexuan
