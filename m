@@ -1,301 +1,231 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V9 1/8] ACPI: I/O Remapping Table (IORT) initial support
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
- <1473105940-9761-2-git-send-email-tn@semihalf.com>
- <CAJZ5v0iJGycCVaQ9gdpWL55wFcX5X=RXTze_-Fw+5TaSvjH3yQ@mail.gmail.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner
- <tglx@linutronix.de>, Jason Cooper <jason@lakedaemon.net>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, Bjorn Helgaas <helgaas@kernel.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Will Deacon <will.deacon@arm.com>, Catalin Marinas
- <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
- shijie.huang@arm.com, robert.richter@caviumnetworks.com,
- Marcin Wojtas <mw@semihalf.com>, Linux PCI <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- Andrea Gallo <andrea.gallo@linaro.org>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Al Stone <al.stone@linaro.org>, G Gregory <graeme.gregory@linaro.org>,
- David Daney <ddaney.cavm@gmail.com>, Sinan Kaya <okaya@codeaurora.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <a950814b-6bfb-7435-b137-c42cf2c1908c@semihalf.com>
-Date: Tue, 6 Sep 2016 09:24:35 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0iJGycCVaQ9gdpWL55wFcX5X=RXTze_-Fw+5TaSvjH3yQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 13 Sep 2016 03:46:26 -0400
+From: nwatters@codeaurora.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Will Deacon <will.deacon@arm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 07/14] drivers: acpi: iort: add support for ARM SMMU
+ platform devices creation
+In-Reply-To: <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+ <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
+Message-ID: <7a63cf312b6e9714cdce1d0aca88cf4d@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+On 2016-09-09 10:23, Lorenzo Pieralisi wrote:
+> In ARM ACPI systems, IOMMU components are specified through static
+> IORT table entries. In order to create platform devices for the
+> corresponding ARM SMMU components, IORT kernel code should be made
+> able to parse IORT table entries and create platform devices
+> dynamically.
+> 
+> This patch adds the generic IORT infrastructure required to create
+> platform devices for ARM SMMUs.
+> 
+> ARM SMMU versions have different resources requirement therefore this
+> patch also introduces an IORT specific structure (ie iort_iommu_config)
+> that contains hooks (to be defined when the corresponding ARM SMMU
+> driver support is added to the kernel) to be used to define the
+> platform devices names, init the IOMMUs, count their resources and
+> finally initialize them.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>  drivers/acpi/arm64/iort.c | 131 
+> ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 131 insertions(+)
+> 
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index b89b3d3..e0a9b16 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/list.h>
+>  #include <linux/pci.h>
+> +#include <linux/platform_device.h>
+>  #include <linux/slab.h>
+> 
+>  struct iort_its_msi_chip {
+> @@ -424,6 +425,135 @@ struct irq_domain *iort_get_device_domain(struct
+> device *dev, u32 req_id)
+>  	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
+>  }
+> 
+> +struct iort_iommu_config {
+> +	const char *name;
+> +	int (*iommu_init)(struct acpi_iort_node *node);
+> +	bool (*iommu_is_coherent)(struct acpi_iort_node *node);
+> +	int (*iommu_count_resources)(struct acpi_iort_node *node);
+> +	void (*iommu_init_resources)(struct resource *res,
+> +				     struct acpi_iort_node *node);
+> +};
+> +
+> +static __init
+> +const struct iort_iommu_config *iort_get_iommu_cfg(struct 
+> acpi_iort_node *node)
+> +{
+> +	return NULL;
+> +}
+> +
+> +/**
+> + * iort_add_smmu_platform_device() - Allocate a platform device for 
+> SMMU
+> + * @fwnode: IORT node associated fwnode handle
+> + * @node: Pointer to SMMU ACPI IORT node
+> + *
+> + * Returns: 0 on success, <0 failure
+> + */
+> +static int __init iort_add_smmu_platform_device(struct fwnode_handle 
+> *fwnode,
+> +						struct acpi_iort_node *node)
+> +{
+> +	struct platform_device *pdev;
+> +	struct resource *r;
+> +	enum dev_dma_attr attr;
+> +	int ret, count;
+> +	const struct iort_iommu_config *ops = iort_get_iommu_cfg(node);
+> +
+> +	if (!ops)
+> +		return -ENODEV;
+> +
+> +	pdev = platform_device_alloc(ops->name, PLATFORM_DEVID_AUTO);
+> +	if (!pdev)
+> +		return PTR_ERR(pdev);
+> +
+> +	count = ops->iommu_count_resources(node);
+> +
+> +	r = kcalloc(count, sizeof(*r), GFP_KERNEL);
+> +	if (!r) {
+> +		ret = -ENOMEM;
+> +		goto dev_put;
+> +	}
+> +
+> +	ops->iommu_init_resources(r, node);
+> +
+> +	ret = platform_device_add_resources(pdev, r, count);
+> +	/*
+> +	 * Resources are duplicated in platform_device_add_resources,
+> +	 * free their allocated memory
+> +	 */
+> +	kfree(r);
+> +
+> +	if (ret)
+> +		goto dev_put;
+> +
+> +	/*
+> +	 * Add a copy of IORT node pointer to platform_data to
+> +	 * be used to retrieve IORT data information.
+> +	 */
+> +	ret = platform_device_add_data(pdev, &node, sizeof(node));
+> +	if (ret)
+> +		goto dev_put;
+> +
+> +	pdev->dev.dma_mask = kmalloc(sizeof(*pdev->dev.dma_mask), 
+> GFP_KERNEL);
+> +	if (!pdev->dev.dma_mask) {
+> +		ret = -ENOMEM;
+> +		goto dev_put;
+> +	}
+> +
+> +	pdev->dev.fwnode = fwnode;
+> +
+> +	/*
+> +	 * Set default dma mask value for the table walker,
+> +	 * to be overridden on probing with correct value.
+> +	 */
+> +	*pdev->dev.dma_mask = DMA_BIT_MASK(32);
+> +	pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
+> +
+> +	attr = ops->iommu_is_coherent(node) ?
+> +			     DEV_DMA_COHERENT : DEV_DMA_NON_COHERENT;
+> +
+> +	/* Configure DMA for the page table walker */
+> +	acpi_dma_configure(&pdev->dev, attr);
+> +
+> +	ret = platform_device_add(pdev);
+> +	if (ret)
+> +		goto dma_deconfigure;
+> +
+> +	return 0;
+> +
+> +dma_deconfigure:
+> +	acpi_dma_deconfigure(&pdev->dev);
+> +	kfree(pdev->dev.dma_mask);
+> +
+> +dev_put:
+> +	platform_device_put(pdev);
+> +
+> +	return ret;
+> +}
+> +
+> +static acpi_status __init iort_match_iommu_callback(struct
+> acpi_iort_node *node,
+> +						    void *context)
+> +{
+> +	int ret;
+> +	struct fwnode_handle *fwnode;
+> +
+> +	fwnode = iort_get_fwnode(node);
+> +
+> +	if (!fwnode)
+> +		return AE_NOT_FOUND;
+> +
+> +	ret = iort_add_smmu_platform_device(fwnode, node);
+> +	if (ret) {
+> +		pr_err("Error in platform device creation\n");
+> +		return AE_ERROR;
+> +	}
+> +
+> +	return AE_OK;
+> +}
+> +
+> +static void __init iort_smmu_init(void)
+> +{
+> +	iort_scan_node(ACPI_IORT_NODE_SMMU, iort_match_iommu_callback, NULL);
+> +	iort_scan_node(ACPI_IORT_NODE_SMMU_V3, iort_match_iommu_callback, 
+> NULL);
 
-On 05.09.2016 22:29, Rafael J. Wysocki wrote:
-> On Mon, Sep 5, 2016 at 10:05 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
->> IORT shows representation of IO topology for ARM based systems.
->> It describes how various components are connected together on
->> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
->> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>
->> Initial support allows to detect IORT table presence and save its
->> root pointer obtained through acpi_get_table(). The pointer validity
->> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
->> is not set while using IORT nodes we would dereference unmapped pointers.
->>
->> For the aforementioned reason call iort_table_detect() from acpi_init()
->> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->>
->> Add generic helpers which are helpful for scanning and retrieving
->> information from IORT table content. List of the most important helpers:
->> - iort_find_dev_node() finds IORT node for a given device
->> - iort_node_map_rid() maps device RID and returns IORT node which provides
->>   final translation
->>
->> IORT support is placed under drivers/acpi/arm64/ new directory due to its
->> ARM64 specific nature. The code there is considered only for ARM64.
->> The long term plan is to keep all ARM64 specific tables support
->> in this place e.g. GTDT table.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->
-> Some cosmetic stuff below.
->
+Since iort_scan_node() returns after the first successful match it 
+finds,
+only the first SMMU_V3 in my IORT is being enumerated. I think you need
+to go back to the "iterator" like approach you had been using or make
+iort_match_iommu_callback() always return a non-AE_OK value so the scan
+continues and has a chance to visit all of the SMMU_V3 nodes.
 
-[...]
+> +}
+> +
+>  void __init acpi_iort_init(void)
+>  {
+>  	acpi_status status;
+> @@ -436,4 +566,5 @@ void __init acpi_iort_init(void)
+>  	}
+> 
+>  	acpi_probe_device_table(iort);
+> +	iort_smmu_init();
+>  }
 
->> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
->> new file mode 100644
->> index 0000000..82d5e7d
->> --- /dev/null
->> +++ b/drivers/acpi/arm64/iort.c
->> @@ -0,0 +1,221 @@
->> +/*
->> + * Copyright (C) 2016, Semihalf
->> + *     Author: Tomasz Nowicki <tn@semihalf.com>
->> + *
->> + * This program is free software; you can redistribute it and/or modify it
->> + * under the terms and conditions of the GNU General Public License,
->> + * version 2, as published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope it will be useful, but WITHOUT
->> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
->> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
->> + * more details.
->> + *
->> + * This file implements early detection/parsing of I/O mapping
->> + * reported to OS through firmware via I/O Remapping Table (IORT)
->> + * IORT document number: ARM DEN 0049A
->> + */
->> +
->> +#define pr_fmt(fmt)    "ACPI: IORT: " fmt
->> +
->> +#include <linux/iort.h>
->
-> Do we need a separate header file for this?
-
-IMO yes. It's well isolated functionality and more will be added in 
-patch 2 and IOMMU support by Lorenzo. Also, it's the same convention as 
-for DMAR support.
-
->
->> +#include <linux/kernel.h>
->> +#include <linux/pci.h>
->> +
->> +typedef acpi_status (*iort_find_node_callback)
->> +       (struct acpi_iort_node *node, void *context);
->> +
->> +/* Root pointer to the mapped IORT table */
->> +static struct acpi_table_header *iort_table;
->> +
->> +static struct acpi_iort_node *
->> +iort_scan_node(enum acpi_iort_node_type type,
->
-> Please do not break function headers like this.  Specifically, the
-> return type and the name should be located in the same line.
-
-OK
-
->
->> +              iort_find_node_callback callback, void *context)
->> +{
->> +       struct acpi_iort_node *iort_node, *iort_end;
->> +       struct acpi_table_iort *iort;
->> +       int i;
->> +
->> +       if (!iort_table)
->> +               return NULL;
->> +
->> +       /* Get the first IORT node */
->> +       iort = (struct acpi_table_iort *)iort_table;
->> +       iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
->> +                                iort->node_offset);
->> +       iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
->> +                               iort_table->length);
->> +
->> +       for (i = 0; i < iort->node_count; i++) {
->> +               if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
->> +                              "IORT node pointer overflows, bad table!\n"))
->> +                       return NULL;
->> +
->> +               if (iort_node->type == type) {
->> +                       if (ACPI_SUCCESS(callback(iort_node, context)))
->> +                               return iort_node;
->
-> It's better to write this as
->
-> if (iort_node->type == type && ACPI_SUCCESS(callback(iort_node, context))
->         return iort_node;
-
-OK
-
->
->> +               }
->> +
->> +               iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
->> +                                        iort_node->length);
->> +       }
->> +
->> +       return NULL;
->> +}
->> +
->> +static acpi_status
->> +iort_match_node_callback(struct acpi_iort_node *node, void *context)
->> +{
->> +       struct device *dev = context;
->> +
->> +       switch (node->type) {
->> +       case ACPI_IORT_NODE_NAMED_COMPONENT: {
->> +               struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
->> +               struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
->> +               struct acpi_iort_named_component *ncomp;
->> +
->> +               if (!adev)
->> +                       break;
->> +
->> +               ncomp = (struct acpi_iort_named_component *)node->node_data;
->> +
->> +               if (ACPI_FAILURE(acpi_get_name(adev->handle,
->> +                                              ACPI_FULL_PATHNAME, &buffer))) {
->> +                       dev_warn(dev, "Can't get device full path name\n");
->
-> I'd switch the branches so that the one to be executed on success goes first.
->
-> Also consider using acpi_status variables for things like this.
->
->         status = acpi_get_name(adev->handle, ACPI_FULL_PATHNAME, &buffer);
->         if (ACPI_SUCCESS(status)) {
->
-> is much easier to follow than what you are doing here.
-
-Agree, actually I rewrite this function as follow:
-
-static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
-					    void *context)
-{
-	struct device *dev = context;
-	acpi_status status = AE_NOT_FOUND;
-
-	switch (node->type) {
-	case ACPI_IORT_NODE_NAMED_COMPONENT: {
-		struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER, NULL };
-		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
-		struct acpi_iort_named_component *ncomp;
-
-		if (!adev)
-			break;
-
-		status = acpi_get_name(adev->handle, ACPI_FULL_PATHNAME, &buf);
-		if (ACPI_FAILURE(status)) {
-			dev_warn(dev, "Can't get device full path name\n");
-			break;
-		}
-
-		ncomp = (struct acpi_iort_named_component *)node->node_data;
-		if (!strcmp(ncomp->device_name, buf.pointer))
-			status = AE_OK;
-
-		acpi_os_free(buf.pointer);
-		break;
-	}
-	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
-		struct acpi_iort_root_complex *pci_rc;
-		struct pci_bus *bus;
-
-		bus = to_pci_bus(dev);
-		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
-
-		/*
-		 * It is assumed that PCI segment numbers maps one-to-one
-		 * with root complexes. Each segment number can represent only
-		 * one root complex.
-		 */
-		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
-			status = AE_OK;
-
-		break;
-	}
-	}
-
-	return status;
-}
-
->
->> +               } else {
->> +                       int match;
->> +
->> +                       match = !strcmp(ncomp->device_name, buffer.pointer);
->> +                       acpi_os_free(buffer.pointer);
->> +
->> +                       if (match)
->> +                               return AE_OK;
->> +               }
->> +
->> +               break;
->> +       }
->> +       case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
->
-> What is the brace for?
-
-To create namespace for below local variables. The same for 
-ACPI_IORT_NODE_NAMED_COMPONENT case.
-
->
->> +               struct acpi_iort_root_complex *pci_rc;
->> +               struct pci_bus *bus;
->> +
->> +               bus = to_pci_bus(dev);
->> +               pci_rc = (struct acpi_iort_root_complex *)node->node_data;
->> +
->> +               /*
->> +                * It is assumed that PCI segment numbers maps one-to-one
->> +                * with root complexes. Each segment number can represent only
->> +                * one root complex.
->> +                */
->> +               if (pci_rc->pci_segment_number == pci_domain_nr(bus))
->> +                       return AE_OK;
->> +
->> +               break;
->> +       }
->> +       }
->> +
->> +       return AE_NOT_FOUND;
->> +}
->> +
-
-[...]
-
->> diff --git a/include/linux/iort.h b/include/linux/iort.h
->> new file mode 100644
->> index 0000000..f4d5d45
->> --- /dev/null
->> +++ b/include/linux/iort.h
->
-> If the new file header is necessary, it should be called acpi_iort.h IMO.
-
-OK
-
-Thanks,
-Tomasz
+-- 
+Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
+Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
+Linux Foundation Collaborative Project.
