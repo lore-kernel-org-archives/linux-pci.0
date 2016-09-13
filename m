@@ -1,267 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27878 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965546AbcIPUH4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:07:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v14 13/17] PCI: Check pref compatible bit for mem64 resource of PCIe device
-Date: Fri, 16 Sep 2016 13:02:03 -0700
-Message-Id: <20160916200207.21439-14-yinghai@kernel.org>
-In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
-References: <20160916200207.21439-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <marc.zyngier@arm.com>
+Return-Path: <marc.zyngier@arm.com>
+Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
+ device for legacy interrupts.
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+ <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+ <57C57975.7040306@arm.com>
+ <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57C59FE8.30307@arm.com>
+ <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57C6B7F1.5000001@arm.com>
+ <8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160912220241.GG23532@localhost>
+Cc: "robh@kernel.org" <robh@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ Soren Brinkmann <sorenb@xilinx.com>, Michal Simek <michals@xilinx.com>,
+ "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ravikiran Gummaluri <rgummal@xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <57D7ADA8.5060201@arm.com>
+Date: Tue, 13 Sep 2016 08:41:28 +0100
+MIME-Version: 1.0
+In-Reply-To: <20160912220241.GG23532@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-We still get "no compatible bridge window" warning on sparc T5-8
-after we add support for 64bit resource parsing for root bus.
+On 12/09/16 23:02, Bjorn Helgaas wrote:
+> On Thu, Sep 01, 2016 at 05:19:55AM +0000, Bharat Kumar Gogada wrote:
+>>>>>>> Hi Bharat,
+>>>>>>>> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct
+>>>>>>>> nwl_pcie
+>>>>>>> *pcie)
+>>>>>>>>     }
+>>>>>>>>
+>>>>>>>>     pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
+>>>>>>>> -                                                   INTX_NUM,
+>>>>>>>> +                                                   INTX_NUM + 1,
+>>>>>>>>                                                     &legacy_domain_ops,
+>>>>>>>>                                                     pcie);
+>>>>>>>
+>>>>>>> This feels like the wrong thing to do. You have INTX_NUM irqs, so
+>>>>>>> the domain allocation should reflect this. On the other hand, the
+>>>>>>> way the driver currently deals with mappings is quite broken
+>>>>>>> (consistently adding 1 to
+>>>>> the HW interrupt).
+>>>>>>>
+>>>>>> Hi Marc,
+>>>>>>
+>>>>>> Without above change I get following crash in kernel while booting.
+>>>>>>
+>>>>>> [    2.441684] error: hwirq 0x4 is too large for dummy
+>>>>>>
+>>>>>> [    2.441694] ------------[ cut here ]------------
+>>>>>>
+>>>>>> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
+>>>>>>
+>>>>>> [    2.441702] Modules linked in:
+>>>>>>
+>>>>>> [    2.441706]
+>>>>>>
+>>>>>> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0 #8
+>>>>>>
+>>>>>> [    2.441718] Hardware name: xlnx,zynqmp (DT)
+>>>>>>
+>>>>>> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 task.ti:
+>>>>> ffffffc071888000
+>>>>>>
+>>>>>> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
+>>>>>>
+>>>>>> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
+>>>>>>
+>>>>>> In kernel/irq/irqdomain.c function irq_domain_associate
+>>>>>>
+>>>>>> if (WARN(hwirq >= domain->hwirq_max,
+>>>>>>                  "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain-
+>>>> name))
+>>>>>>                 return -EINVAL;
+>>>>>>
+>>>>>> Here the hwirq and hwirq_max are equal to 4 without the above
+>>>>>> condition
+>>>>> (INTX_NUM + 1) due to which crash is coming.
+>>>>>> This is happening as the legacy interrupts are starting from 1 (INTA).
+>>>>>
+>>>>> I understood that. I'm still persisting in saying that you have the wrong fix.
+>>>>>
+>>>>> Your domain should always allocate many interrupts as you have
+>>>>> interrupt sources. These interrupts (hwirq) should be numbered from 0 to (n-
+>>> 1).
+>>>>
+>>>> Agreed, but here comes the problem the hwirq for legacy interrupts
+>>>> will start at 0x1 to 0x4 (INTA to INTD) and these values are as per
+>>>> PCIe specification for legacy interrupts. So these cannot be numbered
+>>>> from 0. So when 0x4 (INTD) for a multi-function device comes the crash
+>>>> occurs.
+>>>
+>>> So who provides this hwirq? Who calls irq_domain_associate() with hwirq set to
+>>> 4?
+>>>
+>> PCIe subsystem invokes pcibios_add_device function in arch/arm64/kernel/pci.c for every pci device.
+>> The purpose of this function is to assign dev->irq using of_irq_parse_and_map_pci.
+>> of_irq_parse_and_map_pci invokes of_irq_parse_pci where it reads PCI_INTERRUPT_PIN from configuration space and saves it
+>> in parameter of struct of_phandle_args.
+>> This structure is passed to irq_create_of_mapping where it invokes irq_create_fwspec_mapping.
+>> irq_create_fwspec_mapping invokes irq_domain_translate and gets hwirq, here the above saved PCI_INTERRUPT_PIN value is assigned 
+>> to hwirq (*hwirq = fwspec->param[0]).
+>> And then using this hwirq irq_create_mapping -> irq_domain_associate were invoked and mapping is created for virtual irq with this hwirq.
+>> So for any end point PCI_INTERRUPT_PIN value starts from 0x1 to 0x4 and so hwirq starts from 0x1 to 0x4.
+>>
+>> So the values are more generic w.r.t to protocol, that's why hwirq will range from 0x1 to 0x4. 
+>> And then if you check pcie-altera.c they are doing this adding one in their handler and while creating legacy domain.
+> 
+> Is this resolved yet?  Marc, are you happy, or should we iterate on this
+> again?
 
- PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
- PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
- PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
- pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
 
-All the bridges 64-bit resource have pref bit, but the device resource does not
-have pref set, then we can not find parent for the device resource,
-as we can not put non-pref mmio under pref mmio.
+Ah, sorry to have dropped the ball on this patch.
 
-According to pcie spec errta
-https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-page 13, in some case it is ok to mark some as pref.
+I guess that given that the infrastructure imposes the hwirq range on
+the host drivers, Bharat's approach is the only way (and a number of
+other host drivers are already slightly broken). I'll try and have a
+look at solving this at the generic level. In the meantime:
 
-Mark if the entire path from the host to the adapter is over PCI Express.
-Set pref compatible bit for claim/sizing/assign for 64bit mem resource
-on that pcie device.
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
 
--v2: set pref for mmio 64 when whole path is PCI Express, according to David Miller.
--v3: don't set pref directly, change to UNDER_PREF, and set PREF before
-     sizing and assign resource, and cleart PREF afterwards. requested by BenH.
--v4: use on_all_pcie_path device flag instead.
--v6: update after pci_find_bus_resource() change
+Thanks,
 
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: sparclinux@vger.kernel.org
----
- arch/sparc/kernel/pci_common.c |  2 +-
- drivers/pci/pci.c              |  8 +++++---
- drivers/pci/pci.h              |  2 ++
- drivers/pci/probe.c            | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c        | 23 +++++++++++++++++++----
- drivers/pci/setup-res.c        |  4 ++++
- include/linux/pci.h            |  3 ++-
- 7 files changed, 66 insertions(+), 9 deletions(-)
-
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 1ebc7ff..6f206a1 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -343,7 +343,7 @@ static void pci_register_region(struct pci_bus *bus, const char *name,
- 	region.start = rstart;
- 	region.end = rstart + size - 1UL;
- 	pcibios_bus_to_resource(bus, res, &region);
--	bus_res = pci_find_bus_resource(bus, res);
-+	bus_res = pci_find_bus_resource(bus, res, res->flags);
- 	if (!bus_res) {
- 		kfree(res);
- 		return;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6dfecdd..df7aaf1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -437,7 +437,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
- 
- struct resource *pci_find_bus_resource(const struct pci_bus *bus,
--					struct resource *res)
-+					struct resource *res, int flags)
- {
- 	struct resource *r;
- 	int i;
-@@ -452,7 +452,7 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- 			 * not, the allocator made a mistake.
- 			 */
- 			if (r->flags & IORESOURCE_PREFETCH &&
--			    !(res->flags & IORESOURCE_PREFETCH))
-+			    !(flags & IORESOURCE_PREFETCH))
- 				return NULL;
- 
- 			/*
-@@ -480,7 +480,9 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 					  struct resource *res)
- {
--	return pci_find_bus_resource(dev->bus, res);
-+	int flags = pci_resource_pref_compatible(dev, res);
-+
-+	return pci_find_bus_resource(dev->bus, res, flags);
- }
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 2b5db4b..8cf7645 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -347,4 +347,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- }
- #endif
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 93f280d..55539dd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1741,6 +1741,36 @@ static void pci_dma_configure(struct pci_dev *dev)
- 	pci_put_host_bridge_device(bridge);
- }
- 
-+static bool pci_up_path_over_pcie(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !pci_is_pcie(bus->self))
-+		return false;
-+
-+	return pci_up_path_over_pcie(bus->parent);
-+}
-+
-+/*
-+ * According to
-+ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-+ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-+ * on some cases.
-+ * Let's mark if entire path from the host to the adapter is over PCI
-+ * Express. later will use that compute pref compaitable bit.
-+ */
-+static void pci_set_on_all_pcie_path(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!pci_up_path_over_pcie(dev->bus))
-+		return;
-+
-+	dev->on_all_pcie_path = 1;
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1771,6 +1801,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
- 
-+	/* After pcie_cap is assigned */
-+	pci_set_on_all_pcie_path(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c74059e..986db1c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -743,6 +743,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res)
-+{
-+	if (res->flags & IORESOURCE_PREFETCH)
-+		return res->flags;
-+
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    (res->flags & IORESOURCE_MEM_64) &&
-+	    dev->on_all_pcie_path)
-+		return res->flags | IORESOURCE_PREFETCH;
-+
-+	return res->flags;
-+}
-+
- /* Check whether the bridge supports optional I/O and
-    prefetchable memory ranges. If not, the respective
-    base/limit registers must be read-only and read as 0. */
-@@ -1040,11 +1054,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size;
-+			int flags = pci_resource_pref_compatible(dev, r);
- 
--			if (r->parent || (r->flags & IORESOURCE_PCI_FIXED) ||
--			    ((r->flags & mask) != type &&
--			     (r->flags & mask) != type2 &&
--			     (r->flags & mask) != type3))
-+			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
-+			    ((flags & mask) != type &&
-+			     (flags & mask) != type2 &&
-+			     (flags & mask) != type3))
- 				continue;
- 			r_size = resource_size(r);
- #ifdef CONFIG_PCI_IOV
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 66c4d8f..f741fed 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -257,15 +257,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 				resource_size_t size, resource_size_t min_align)
- {
-+	struct resource *res = dev->resource + resno;
-+	int old_flags = res->flags;
- 	struct pci_bus *bus;
- 	int ret;
- 
-+	res->flags = pci_resource_pref_compatible(dev, res);
- 	bus = dev->bus;
- 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
- 		if (!bus->parent || !bus->self->transparent)
- 			break;
- 		bus = bus->parent;
- 	}
-+	res->flags = old_flags;
- 
- 	return ret;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c1c1def..cf54188 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -308,6 +308,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
-@@ -803,7 +804,7 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
- struct resource *pci_find_bus_resource(const struct pci_bus *bus,
--					struct resource *res);
-+					struct resource *res, int flags);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+	M.
 -- 
-2.8.3
-
+Jazz is not dead. It just smells funny...
