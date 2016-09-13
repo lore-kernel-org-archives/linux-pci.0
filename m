@@ -1,134 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 23 Sep 2016 09:52:59 -0500
-From: Rob Herring <robh@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Jingoo Han <jingoohan1@gmail.com>, hch@infradead.org,
-        Joao.Pinto@synopsys.com, mingkai.hu@nxp.com, m-karicheri2@ti.com,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Joao Pinto <jpinto@synopsys.com>, nsekhar@ti.com
-Subject: Re: [RFC PATCH 08/11] pci: controller: dra7xx: Add EP mode support
-Message-ID: <20160923145259.GA28285@rob-hp-laptop>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
- <1473829927-20466-9-git-send-email-kishon@ti.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH 2/2] PCI: add CRS support to error handling path
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1472770801-30671-1-git-send-email-okaya@codeaurora.org>
+ <1472770801-30671-2-git-send-email-okaya@codeaurora.org>
+ <20160913200152.GE4138@localhost>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
+ alex.williamson@redhat.com, vikrams@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <dd6d9d71-1ba0-84c8-7cab-21fe8b555f1c@codeaurora.org>
+Date: Tue, 13 Sep 2016 17:04:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473829927-20466-9-git-send-email-kishon@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160913200152.GE4138@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 10:42:04AM +0530, Kishon Vijay Abraham I wrote:
-> The PCIe controller integrated in dra7xx SoCs is capable of operating
-> in endpoint mode. Add support for dra7xx SoCs to operate in endpoint
-> mode.
+On 9/13/2016 4:01 PM, Bjorn Helgaas wrote:
+> On Thu, Sep 01, 2016 at 07:00:01PM -0400, Sinan Kaya wrote:
+>> The PCIE spec allows an endpoint device to extend the initialization time
+>> beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
+>> vendor ID read request.
+>>
+>> This basically means "I'm busy now, please call me back later".
+>>
+>> There are two moving parts to CRS support from the SW perspective. One part
+>> is to determine if CRS is supported or not. The second part is to set the
+>> CRS visibility register.
+>>
+>> As part of the probe, the Linux kernel sets the above two conditions in
+>> pci_enable_crs function. The kernel is also honoring the returned CRS in
+>> pci_bus_read_dev_vendor_id function if supported. The function will poll up
+>> to specified amount of time while endpoint is returning CRS response.
+>>
+>> The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
+>> resets.
+>>
+>> The hot reset is initiated by starting a secondary bus reset. This patch is
+>> adding vendor ID read immediately after a bus reset so that the
+>> initialization procedure can be extended by the amount of time endpoint
+>> requires.
+>>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/pci/pci.c | 39 +++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 39 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index b209378..ebd0fc6 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3829,6 +3829,44 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+>>  	return 0;
+>>  }
+>>  
+>> +/*
+>> + * Mostly copy paste from pci_walk_bus with the exceptions of hard coded
+>> + * work and removed locks.
+>> + */
+>> +static void pci_bus_probe_crs(struct pci_bus *top)
+>> +{
+>> +	struct pci_dev *dev;
+>> +	struct pci_bus *bus;
+>> +	struct list_head *next;
+>> +	int retval;
+>> +	u32 l;
+>> +
+>> +	bus = top;
+>> +	next = top->devices.next;
+>> +	for (;;) {
+>> +		if (next == &bus->devices) {
+>> +			/* end of this bus, go up or finish */
+>> +			if (bus == top)
+>> +				break;
+>> +			next = bus->self->bus_list.next;
+>> +			bus = bus->self->bus;
+>> +			continue;
+>> +		}
+>> +		dev = list_entry(next, struct pci_dev, bus_list);
+>> +		if (dev->subordinate) {
+>> +			/* this is a pci-pci bridge, do its devices next */
+>> +			next = dev->subordinate->devices.next;
+>> +			bus = dev->subordinate;
+>> +		} else
+>> +			next = dev->bus_list.next;
+>> +
+>> +		retval = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l,
+>> +						    60 * 1000);
+>> +		if (retval)
+>> +			break;
+>> +	}
+>> +}
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  Documentation/devicetree/bindings/pci/ti-pci.txt |   30 ++-
->  drivers/pci/controller/Kconfig                   |   21 +++
->  drivers/pci/controller/pci-dra7xx.c              |  211 +++++++++++++++++++---
->  3 files changed, 225 insertions(+), 37 deletions(-)
+> Sigh.  Man, this is ugly.  Maybe we're locked into the current
+> strategy and don't really have a choice, but I really don't like it.
+
+I can add a locked version of the walkbus API. 
+Then, I can minimize this code to a couple of lines. How does that sound?
+
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> index 60e2516..b0e76f6 100644
-> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> @@ -1,17 +1,22 @@
->  TI PCI Controllers
->  
->  PCIe Designware Controller
-> - - compatible: Should be "ti,dra7-pcie""
-> - - reg : Two register ranges as listed in the reg-names property
-> - - reg-names : The first entry must be "ti-conf" for the TI specific registers
-> -	       The second entry must be "rc-dbics" for the designware pcie
-> -	       registers
-> -	       The third entry must be "config" for the PCIe configuration space
-> + - compatible: Should be "ti,dra7-pcie" for RC
-> +	       Should be "ti,dra7-pcie-ep" for EP
->   - phys : list of PHY specifiers (used by generic PHY framework)
->   - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
->  	       number of PHYs as specified in *phys* property.
->   - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
->  	       where <X> is the instance number of the pcie from the HW spec.
-> + - num-lanes as specified in ../designware-pcie.txt
-> +
-> +HOST MODE
-> +=========
-> + - reg : Two register ranges as listed in the reg-names property
-> + - reg-names : The first entry must be "ti-conf" for the TI specific registers
-> +	       The second entry must be "rc-dbics" for the designware pcie
-> +	       registers
-> +	       The third entry must be "config" for the PCIe configuration space
->   - interrupts : Two interrupt entries must be specified. The first one is for
->  		main interrupt line and the second for MSI interrupt line.
->   - #address-cells,
-> @@ -19,13 +24,24 @@ PCIe Designware Controller
->     #interrupt-cells,
->     device_type,
->     ranges,
-> -   num-lanes,
->     interrupt-map-mask,
->     interrupt-map : as specified in ../designware-pcie.txt
->  
->  Optional Property:
->   - gpios : Should be added if a gpio line is required to drive PERST# line
+>> +
+>>  void pci_reset_secondary_bus(struct pci_dev *dev)
+>>  {
+>>  	u16 ctrl;
+>> @@ -4361,6 +4399,7 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+>>  	pci_bus_save_and_disable(dev->bus);
+>>  	pcibios_reset_secondary_bus(dev);
+>>  	pci_bus_restore(dev->bus);
+>> +	pci_bus_probe_crs(dev->subordinate);
+> 
+> This looks backwards -- pci_bus_restore() uses config accesses, so surely
+> you want to do the CRS check *before* that, right?  Oh, never mind, I see
+> you already caught this.
 
-Don't you need gpios as the input side of GPIO outputs in RC mode? Or 
-for EP mode they are all handled by h/w?
+Yep, I was waiting for your feedback before re-posting.
 
->  
-> +DEVICE MODE
-> +===========
-> + - reg : Two register ranges as listed in the reg-names property
-> + - reg-names : "ti-conf" for the TI specific registers
-> +	       "ep_dbics" for the standard configuration registers as
-> +		they are locally accessed within the DIF CS space
-> +	       "ep_dbics2" for the standard configuration registers as
-> +		they are locally accessed within the DIF CS2 space
-> + - interrupts : one interrupt entries must be specified for main interrupt.
-> + - num-ib-windows : number of inbound address translation windows
-> + - num-ob-windows : number of outbound address translation windows
-> +
->  Example:
->  axi {
->  	compatible = "simple-bus";
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> index 8574828..4d70981 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -23,6 +23,27 @@ config PCI_DRA7XX_HOST
->  	 Enables support for the PCIe controller in the DRA7xx SoC to work in
->  	 host mode.
->  
-> +config PCI_DRA7XX_EP
-> +	bool "Endpoint Only Mode"
-> +	depends on PCI_ENDPOINT
-> +	select PCIE_DW_EP
-> +	help
-> +	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-> +	 endpoint mode.
-> +
-> +config PCI_DRA7XX_HOST_EP
+> 
+> You mentioned several kinds of reset where CRS is allowed.  Doesn't this
+> fix only one of them?  I know we support at least FLR reset also.
 
-I'd make these 2 options just RC and EP depending on PCI_DRA7XX_HOST 
-with RC option being default yes.
+The CRS is for hot reset, warm reset and FLR reset. There is nothing we can do in SW
+for warm reset. This patch is to address hot reset caused by SBR. 
+
+I was hoping that Alex would help us for directions on the FLR reset later.
+
+> 
+>>  }
+>>  EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
+>>  
+>> -- 
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-> +	bool "Both Host and Endpoint Mode"
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	depends on PCI
-> +	depends on PCI_ENDPOINT
-> +	select PCIE_DW_HOST
-> +	select PCIE_DW_EP
-> +	help
-> +	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-> +	 both endpoint mode and host mode. If the board has 2 PCIe ports and
-> +	 one of them has to work in host mode and the other has to work in
-> +	 EP mode then this option has to be enabled.
-> +
->  endchoice
->  
->  endif
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
