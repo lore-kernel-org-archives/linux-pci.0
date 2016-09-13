@@ -1,49 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42342 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752737AbcITTlJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Sep 2016 15:41:09 -0400
-Date: Tue, 20 Sep 2016 14:41:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tyler Baicar <tbaicar@codeaurora.org>
-Cc: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-        paul.gortmaker@windriver.com, sudipm.mukherjee@gmail.com,
-        axboe@fb.com, izumi.taku@jp.fujitsu.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, bp@suse.de
-Subject: Re: [PATCH V2 0/2] Correct AER severity for printing AER information
-Message-ID: <20160920194103.GD4941@localhost>
-References: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:52666 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756751AbcIMJAi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 05:00:38 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8D8wbwt031966
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:38 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25e3v0ndef-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2016 05:00:37 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 13 Sep 2016 05:00:36 -0400
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
+        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
+Subject: [PATCH v5 0/4] PCI: Introduce a way to enforce all MMIO BARs not to share PAGE_SIZE
+Date: Tue, 13 Sep 2016 17:00:30 +0800
+Message-Id: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 03:14:44PM -0600, Tyler Baicar wrote:
-> AER severity handling has two issues that cause the AER information to
-> be printed incorrectly. The first issue is that the function to calculate
-> the AER severity is called twice in the code path to print the AER
-> information. The second issue is that the original call to calculate the
-> AER severity expects the CPER severity but is recieving the GHES
-> severity.
-> 
-> V2: Fix minor typo in commit text.
-> 
-> V1: https://lkml.org/lkml/2016/9/12/1075
-> 
-> Tyler Baicar (2):
->   PCI/AER: Remove duplicate AER severity translation
->   acpi: apei: send correct severity to calculate AER severity
-> 
->  drivers/acpi/apei/ghes.c               | 2 +-
->  drivers/pci/pcie/aer/aerdrv_errprint.c | 6 ++----
->  include/linux/aer.h                    | 2 +-
->  3 files changed, 4 insertions(+), 6 deletions(-)
+This series introduces a way for PCI resource allocator to force
+MMIO BARs not to share PAGE_SIZE. This would make sense to VFIO
+driver. Because current VFIO implementation disallows to mmap
+sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page
+with other BARs for security reasons. Thus, we have to handle mmio
+access to these BARs in QEMU emulation rather than in guest which
+will cause some performance loss.
 
-I applied both to pci/aer for v4.9, thanks!
+In our solution, we try to make use of the existing code path of
+resource_alignment kernel parameter and add a macro to set default
+alignment for it. Thus we can define this macro by default on some
+archs which may easily hit the performance issue because of their
+64K page.
 
-Rafael, the second one is strictly ACPI, and I'd be happy to let you
-deal with it if you prefer.
+In this series, patch 1,2 fixed bugs of using resource_alignment;
+patch 3 tried to add a new option for resource_alignment to use
+IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 4
+adds a macro to set the default alignment of all MMIO BARs.
 
-Bjorn
+Changelog v5:
+- Rebased against v4.8-rc6
+- Drop the patch that forbidding disable memory decoding in
+  pci_reassigndev_resource_alignment()
+
+Changelog v4:
+- Rebased against v4.8-rc1
+- Drop one irrelevant patch
+- Drop the patch that adding wildcard to resource_alignment to enforce
+  the alignment of all MMIO BARs to be at least PAGE_SIZE
+- Change the format of option "noresize" of resource_alignment
+- Code style improvements
+
+Changelog v3:
+- Ignore enforced alignment to fixed BARs
+- Fix issue that disabling memory decoding when reassigning the alignment
+- Only enable default alignment on PowerNV platform
+
+Changelog v2:
+- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
+
+Yongji Xie (4):
+  PCI: Ignore enforced alignment when kernel uses existing firmware setup
+  PCI: Ignore enforced alignment to VF BARs
+  PCI: Add a new option for resource_alignment to reassign alignment
+  PCI: Add a macro to set default alignment for all PCI devices
+
+ Documentation/kernel-parameters.txt |    9 +++--
+ arch/powerpc/include/asm/pci.h      |    4 +++
+ drivers/pci/pci.c                   |   63 +++++++++++++++++++++++++++++------
+ 3 files changed, 63 insertions(+), 13 deletions(-)
+
+-- 
+1.7.9.5
+
