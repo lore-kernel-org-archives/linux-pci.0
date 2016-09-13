@@ -1,234 +1,268 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:47383 "EHLO arroyo.ext.ti.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754739AbcIOIea (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Sep 2016 04:34:30 -0400
-Subject: Re: [RFC PATCH 00/11] pci: support for configurable PCI endpoint
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
- <2837059.ka7z3gzjF2@wuerfel>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
-        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
-        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Rob Herring <robh+dt@kernel.org>, <nsekhar@ti.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>, <linux-ntb@googlegroups.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <57DA5CC1.6030502@ti.com>
-Date: Thu, 15 Sep 2016 14:03:05 +0530
+Return-Path: <liudongdong3@huawei.com>
+Return-Path: <liudongdong3@huawei.com>
+Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
+To: Tomasz Nowicki <tn@semihalf.com>, <helgaas@kernel.org>,
+        <will.deacon@arm.com>, <catalin.marinas@arm.com>, <rafael@kernel.org>,
+        <Lorenzo.Pieralisi@arm.com>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-3-git-send-email-tn@semihalf.com>
+ <57D76626.1050109@huawei.com>
+ <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
+CC: <arnd@arndb.de>, <hanjun.guo@linaro.org>, <okaya@codeaurora.org>,
+        <jchandra@broadcom.com>, <cov@codeaurora.org>, <dhdang@apm.com>,
+        <ard.biesheuvel@linaro.org>, <robert.richter@caviumnetworks.com>,
+        <mw@semihalf.com>, <Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
+        <wangyijing@huawei.com>, <msalter@redhat.com>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <linaro-acpi@lists.linaro.org>, <jcm@redhat.com>,
+        <andrea.gallo@linaro.org>, <jeremy.linton@arm.com>,
+        <gabriele.paoloni@huawei.com>, <jhugo@codeaurora.org>,
+        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <57D7E53F.1000106@huawei.com>
+Date: Tue, 13 Sep 2016 19:38:39 +0800
 MIME-Version: 1.0
-In-Reply-To: <2837059.ka7z3gzjF2@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+Hi Tomasz
 
-On Wednesday 14 September 2016 06:55 PM, Arnd Bergmann wrote:
-> On Wednesday, September 14, 2016 10:41:56 AM CEST Kishon Vijay Abraham I wrote:
->> This patch series
->> 	*) adds PCI endpoint core layer
->> 	*) modifies designware/dra7xx driver to be configured in EP mode
->> 	*) adds a PCI endpoint *test* function driver
-> 
-> Hi Kishon,
-> 
-> I think this is a great start, thanks for posting early with a clear
-> list of limitations and TODO items.
+在 2016/9/13 14:32, Tomasz Nowicki 写道:
+> Hi Liu,
+>
+> On 13.09.2016 04:36, Dongdong Liu wrote:
+>> Hi Tomasz
+>>
+>> 在 2016/9/10 3:24, Tomasz Nowicki 写道:
+>>> Some platforms may not be fully compliant with generic set of PCI config
+>>> accessors. For these cases we implement the way to overwrite CFG
+>>> accessors
+>>> set and configuration space range.
+>>>
+>>> In first place pci_mcfg_parse() saves machine's IDs and revision number
+>>> (these come from MCFG header) in order to match against known quirk
+>>> entries.
+>>> Then the algorithm traverses available quirk list (static array),
+>>> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
+>>> returns custom PCI config ops and/or CFG resource structure.
+>>>
+>>> When adding new quirk there are two possibilities:
+>>> 1. Override default pci_generic_ecam_ops ops but CFG resource comes
+>>> from MCFG
+>>> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &foo_ops,
+>>> MCFG_RES_EMPTY },
+>>> 2. Override default pci_generic_ecam_ops ops and CFG resource. For
+>>> this case
+>>> it is also allowed get CFG resource from quirk entry w/o having it in
+>>> MCFG.
+>>> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &boo_ops,
+>>>    DEFINE_RES_MEM(START, SIZE) },
+>>>
+>>> pci_generic_ecam_ops and MCFG entries will be used for platforms
+>>> free from quirks.
+>>>
+>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>>> Signed-off-by: Christopher Covington <cov@codeaurora.org>
+>>> ---
+>>>   drivers/acpi/pci_mcfg.c | 80
+>>> +++++++++++++++++++++++++++++++++++++++++++++----
+>>>   1 file changed, 74 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>>> index ffcc651..2b8acc7 100644
+>>> --- a/drivers/acpi/pci_mcfg.c
+>>> +++ b/drivers/acpi/pci_mcfg.c
+>>> @@ -32,6 +32,59 @@ struct mcfg_entry {
+>>>       u8            bus_start;
+>>>       u8            bus_end;
+>>>   };
+>>> +struct mcfg_fixup {
+>>> +    char oem_id[ACPI_OEM_ID_SIZE + 1];
+>>> +    char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+>>> +    u32 oem_revision;
+>>> +    u16 seg;
+>>> +    struct resource bus_range;
+>>> +    struct pci_ecam_ops *ops;
+>>> +    struct resource cfgres;
+>>> +};
+>>> +
+>>> +#define MCFG_DOM_ANY            (-1)
+>>> +#define MCFG_BUS_RANGE(start, end)    DEFINE_RES_NAMED((start),    \
+>>> +                        ((end) - (start) + 1),    \
+>>> +                        NULL, IORESOURCE_BUS)
+>>> +#define MCFG_BUS_ANY        MCFG_BUS_RANGE(0x0, 0xff)
+>>> +#define MCFG_RES_EMPTY        DEFINE_RES_NAMED(0, 0, NULL, 0)
+>>> +
+>>> +static struct mcfg_fixup mcfg_quirks[] = {
+>>> +/*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+>>> +};
+>>> +
+>>> +static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+>>> +static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
+>>> +static u32 mcfg_oem_revision;
+>>> +
+>>> +static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
+>>> +                  struct resource *cfgres,
+>>> +                  struct pci_ecam_ops **ecam_ops)
+>>> +{
+>>> +    struct mcfg_fixup *f;
+>>> +    int i;
+>>> +
+>>> +    /*
+>>> +     * First match against PCI topology <domain:bus> then use OEM ID,
+>>> OEM
+>>> +     * table ID, and OEM revision from MCFG table standard header.
+>>> +     */
+>>> +    for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++,
+>>> f++) {
+>>> +        if (f->seg == root->segment &&
+>>
+>> why not use MCFG_DOM_RANGE, I think MCFG_DOM_RANGE is better.
+>> if drop MCFG_DOM_RANGE, mcfg_quirks[] will be more complex.
+>>
+>> static struct mcfg_fixup mcfg_quirks[] = {
+>> /*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+>> #ifdef CONFIG_PCI_HOST_THUNDER_ECAM
+>>     /* SoC pass1.x */
+>>     { "CAVIUM", "THUNDERX", 2, 0, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>>     { "CAVIUM", "THUNDERX", 2, 1, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>>     { "CAVIUM", "THUNDERX", 2, 2, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>>     { "CAVIUM", "THUNDERX", 2, 3, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>>     { "CAVIUM", "THUNDERX", 2, 10, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>>     { "CAVIUM", "THUNDERX", 2, 11, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>>     { "CAVIUM", "THUNDERX", 2, 12, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>>     { "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>>       MCFG_RES_EMPTY},
+>> #endif
+>> .....
+>> };
+>>
+>> As PATCH v5 we only need define mcfg_quirks as below, It looks better.
+>> static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
+>> /*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook
+>> }, */
+>> #ifdef CONFIG_PCI_HOST_THUNDER_PEM
+>>     /* Pass2.0 */
+>>     { "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(4, 9), MCFG_BUS_ANY, NULL,
+>>       thunder_pem_cfg_init },
+>>     { "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(14, 19), MCFG_BUS_ANY, NULL,
+>>       thunder_pem_cfg_init },
+>> #endif
+>> #ifdef CONFIG_PCI_HISI_ACPI
+>>     { "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+>>       NULL, hisi_pcie_acpi_hip05_init},
+>>     { "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+>>       NULL, hisi_pcie_acpi_hip06_init},
+>>     { "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
+>>       NULL, hisi_pcie_acpi_hip07_init},
+>> #endif
+>> };
+>
+> Note this series disallow hisi_pcie_acpi_hip07_init() call. According to the Bjorn suggestion I rework quirk code to override ops and CFG resources only. Giving that I do not see the way to use MCFG_DOM_RANGE macro. For HISI you would need to get CFG range for each possible case:
+>
+> #ifdef CONFIG_PCI_HISI_ACPI
+>      { "HISI  ", "HIP05   ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_ops,
+>        DEFINE_RES_MEM(start0, size0)},
+>      { "HISI  ", "HIP05   ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_ops,
+>        DEFINE_RES_MEM(start1, size1)},
+>      { "HISI  ", "HIP05   ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_ops,
+>        DEFINE_RES_MEM(start2, size2)},
+>      { "HISI  ", "HIP05   ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_ops,
+>        DEFINE_RES_MEM(start3, size3)},
+> [...]
+> #endif
+>
+> Indeed there are more entries here but you do not have to define the same resource array in driver.
 
-Thank you :-)
-> 
-> I've added the drivers/ntb maintainers to Cc, given that there is
-> a certain degree of overlap between your work and the existing
-> code, I think they should be part of the discussion.
->  
->> Known Limitation:
->> 	*) Does not support multi-function devices
-> 
-> If I understand it right, this was a problem for USB and adding
-> it later made it somewhat inconsistent. Maybe we can at least
-> try to come up with an idea of how multi-function devices
-> could be handled even if we don't implement it until someone
-> actually needs it.
+Our host bridge is non ECAM only for the RC bus config space;
+for any other bus underneath the root bus we support ECAM access.
 
-Actually IMO multi-function device in PCI should be much simpler than it is for
-USB. In the case of USB, all the functions in a multi-function device will
-share the same *usb configuration* . (USB device can have multiple
-configuration but only one can be enabled at a time). A multi-function USB
-device will still have a single vendor-id/product-id/class... So I think a
-separate library (composite.c) in USB makes sense.
+RC config resource with hardcode as DEFINE_RES_MEM(0xb0070000, SZ_4K),
+EP config resource we get it from MCFG table.
+So we need to override ops, but config resource we only need to hardcode with RC config resource.
 
-But in the case of PCI, every function can be treated independently since all
-the functions have it's own 4KB configuration space. Each function can be
-configured independently. Each can have it's own vendor-id/product-id/class..
-I'm not sure if we'll need a separate library for PCI like we have for USB.
+Our host controller ACPI support patch can be found:
+https://lkml.org/lkml/2016/8/31/340
+This patch is based on RFC V5 quirk mechanism.
 
-Now the restriction for not allowing multi-function device is because of the
-following structure definition.
+Based on V6 quirk mechanism, we have to change it as below:
 
-struct pci_epc {
-	..
-        struct pci_epf *epf;
-	..
+#ifdef CONFIG_PCI_HISI_ACPI
+	{ "HISI ", "HIP05 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP05 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP05 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP05 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP06 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP06 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP06 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP06 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+          MCFG_RES_EMPTY},
+	{ "HISI ", "HIP07 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+	  MCFG_RES_EMPTY},
+	{ "HISI ", "HIP07 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+	  MCFG_RES_EMPTY},
+	....
+	
+	{ "HISI ", "HIP07 ", 0, 15, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+	  MCFG_RES_EMPTY},
+
+#endif
+
+struct pci_ecam_ops hisi_pci_hip05_ops = {
+	.bus_shift	= 20,
+	.init		=  hisi_pci_hip05_init,
+	.pci_ops	= {
+		.map_bus	= pci_ecam_map_bus,
+		.read		= hisi_pcie_acpi_rd_conf,
+		.write		= hisi_pcie_acpi_wr_conf,
+	}
 };
 
-EPC has a single reference to EPF and it is used *only* to notify the function
-driver when the link is up. (If this can be changed to use notification
-mechanism, multi-function devices can be supported here)
-
-One more place where this restriction arises is in designware driver
-
-struct dw_pcie_ep {
-	..
-        u8 bar_to_atu[6];
-	..
+struct pci_ecam_ops hisi_pci_hip06_ops = {
+	.bus_shift = 20,
+	.init = hisi_pci_hip06_init,
+	.pci_ops = {
+		.map_bus = pci_ecam_map_bus,
+		.read = hisi_pcie_acpi_rd_conf,
+		.write = hisi_pcie_acpi_wr_conf,
+	}
 };
 
-We use single ATU window to configure a BAR (in BAR). If there are multiple
-functions, then this should also be modified since each function has 6 BARs.
+hisi_pci_hipxx_init function is used to get RC config resource with hardcode.
+.....
 
-This can be fixed without much effort unless some other issue props up.
+So I hope we can use MCFG_DOM_RANGE, Then I can change it as below.
 
-> 
-> Is your hardware able to make the PCIe endpoint look like
-> a device with multiple PCI functions, or would one have to
-> do this in software inside of a single PCI function if we
-> ever need it?
-
-The hardware I have doesn't support multiple PCI functions (like having a
-separate configuration space for each function). It has a dedicated space for
-configuration space supporting only one function. [Section 24.9.7.3.2
-PCIe_SS_EP_CFG_DBICS Register Description in  [1]].
-
-yeah, it has to be done in software (but that won't be multi-function device in
-PCI terms).
-
-[1] -> http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf
-> 
->> TODO:
->> 	*) access buffers in RC
->> 	*) raise MSI interrupts
->> 	*) Enable user space control for the RC side PCI driver
-> 
-> The user space control would end up just being one of several
-> gadget drivers, right? E.g. gadget drivers for standard hardware
-> (8250 uart, ATA, NVMe, some ethernet) could be done as kernel
-> drivers while a user space driver can be used for things that
-> are more unusual and that don't need to interface to another
-> part of the kernel?
-
-Actually I didn't mean that. It was more with respect to the host side PCI test
-driver (drivers/misc/pci_endpoint_test.c). Right now it validates BAR, irq
-itself. I wanted to change this so that the user controls which tests to run.
-(Like for USB gadget zero tests, testusb.c invokes ioctls to perform various
-tests). Similarly I want to have a userspace program invoke pci_endpoint_test
-to perform various PCI tests.
-> 
->> 	*) Adapt all other users of designware to use the new design (only
->> 	   dra7xx has been adapted)
-> 
-> I don't fully understand this part. Does every designware based
-> driver need modifications, or are the changes to the
-> generic parts of the designware driver enough to make it
-> work for the simpler platforms?
-
-I have changed the core designware driver structures (like previously the
-platform drivers will only use pcie_port, but now I introduced struct dw_pcie
-to support both host and endpoint). This will break (compilation failure) all
-the designware based drivers (except dra7xx). All these drivers should be
-adapted to the new change (even if they work only in host mode these has to be
-adapted).
-> 
->> HOW TO:
->>
->> ON THE EP SIDE:
->> ***************
->>
->> /* EP function is configured using configfs */
->> # mount -t configfs none /sys/kernel/config
->>
->> /* PCI EP core layer creates "pci_ep" entry in configfs */
->> # cd /sys/kernel/config/pci_ep/
->>
->> /*
->>  * This is the 1st step in creating an endpoint function. This
->>  * creates the endpoint function device *instance*. The string
->>  * before the .<num> suffix will identify the driver this
->>  * EP function will bind to.
->>  * Just pci_epf_test is also valid. The .<num> suffix is used
->>  * if there are multiple PCI controllers and all of them wants
->>  * to use the same function.
->>  */
->> # mkdir pci_epf_test.0
-> 
-> I haven't used USB gadgets, but I assume this is modeled around
-> the same interface. If there are notable differences, please mention
-> what they are. Otherwise the general concept seems rather nice to me.
-
-Yeah, both USB gadget and PCI endpoint use configfs interface but the semantics
-are quite different.
-
-Every directory in *usb_gadget* corresponds to a gadget device, and the gadget
-device has a functions sub-directory which has the USB functions. And these
-directories have fields or attributes specific to USB.
-
-But in the case of PCI, every directory in *pci_ep* corresponds to a PCI
-function and it has fields or attributes specific to PCI function.
-
-The main reason for using configfs for PCI endpoint is to give the users to
-control "which function has to be bound to which controller". The same concept
-is used for USB gadget as well but there it is "which gadget device has to be
-bound to which controller".
-> 
->>  drivers/pci/{host => controller}/Kconfig           |  109 +++++-
->>  drivers/pci/{host => controller}/Makefile          |    2 +
->>  drivers/pci/{host => controller}/pci-aardvark.c    |    0
->>  drivers/pci/{host => controller}/pci-dra7xx.c      |  340 +++++++++++++----
->>  drivers/pci/{host => controller}/pci-exynos.c      |    0
->>  drivers/pci/{host => controller}/pci-host-common.c |    0
->>  .../pci/{host => controller}/pci-host-generic.c    |    0
->>  drivers/pci/{host => controller}/pci-hyperv.c      |    0
->>  drivers/pci/{host => controller}/pci-imx6.c        |    0
->>  drivers/pci/{host => controller}/pci-keystone-dw.c |    0
->>  drivers/pci/{host => controller}/pci-keystone.c    |    0
->>  drivers/pci/{host => controller}/pci-keystone.h    |    0
-> 
-> Maybe it's better to wait before moving it around, this will make
-> it harder for you to rebase the patch series while you are working on
-> it and other people are working on the existing code.
-
-These patches just do "mv drivers/pci/host  drivers/pci/controller", so I guess
-irrespective of the changes in the existing driver it should just move. Anyways
-I have to check this.
-> 
-> I'd suggest dropping the rename patches for the moment and just work
-> in drivers/pci/host.
-
-Okay.
-> 
-> Let's talk (high-level) about the DT binding. I see that the way
-> you have done it here, one will need to have a different .dtb file
-> for a machine depending on whether the PCIe is used in host or
-> endpoint mode. The advantage of this way is that it's a much
-> cleaner binding (PCIe host bindings are a mess, and adding more
-> options to it will only make it worse), the downside is that
-> you can't decide at runtime what you want to use it for. E.g.
-> connecting two identical machines over PCIe requires deciding
-> in the bootloader which one is the endpoint, or using DT
-> overlays, which may be awkward for some users. Is this a realistic
-> use case, or do you expect that all machines will only ever be
-> used in one of the two ways?
-
-It would definitely be nice to select the mode at runtime. Even for this patch
-series, I added a temporary dtsi patch to configure the pci controller in EP
-mode (which can't be merged since the same controller is also used to test RC).
+#ifdef CONFIG_PCI_HISI_ACPI
+	{ "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+	 &hisi_pcie_hip05_ops, MCFG_RES_EMPTY},
+	{ "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+	 &hisi_pcie_hip06_ops, MCFG_RES_EMPTY},
+	{ "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
+	  &hisi_pcie_hip07_ops, MCFG_RES_EMPTY},
+#endif
 
 Thanks
-Kishon
+Dongdong
+>
+> Thanks,
+> Tomasz
+>
+> .
+>
