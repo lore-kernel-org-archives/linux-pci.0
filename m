@@ -1,175 +1,601 @@
-Return-Path: <aik@ozlabs.ru>
-Return-Path: <aik@ozlabs.ru>
-Subject: Re: [RFC PATCH kernel] PCI: Enable access to custom VPD for Chelsio
- devices (cxgb3)
-To: Alexander Duyck <alexander.duyck@gmail.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <307b33c6-786e-f910-c456-fda94e8fdb98@suse.de>
- <1470909809-11007-1-git-send-email-aik@ozlabs.ru>
- <20160906154804.GC1214@localhost>
- <CAKgT0UfOn=eU4DaA7j01w7JMQS3ea4YKV7Ewavk1Mm96Szs60A@mail.gmail.com>
-Cc: Netdev <netdev@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Santosh Raspatur <santosh@chelsio.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Paul Mackerras <paulus@samba.org>, Hannes Reinecke <hare@suse.de>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <92a8b94b-1e48-66cd-0687-3942c3d424ad@ozlabs.ru>
-Date: Wed, 21 Sep 2016 20:53:59 +1000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v5 05/14] drivers: iommu: make iommu_fwspec OF agnostic
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org
+References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
+ <20160909142343.13314-6-lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Prem Mallappa <prem.mallappa@broadcom.com>,
+        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <4e8110c4-edf3-15db-206c-b83794f138a0@arm.com>
+Date: Tue, 13 Sep 2016 14:38:35 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAKgT0UfOn=eU4DaA7j01w7JMQS3ea4YKV7Ewavk1Mm96Szs60A@mail.gmail.com>
-Content-Type: text/plain; charset=koi8-r
+In-Reply-To: <20160909142343.13314-6-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/09/16 04:30, Alexander Duyck wrote:
-> On Tue, Sep 6, 2016 at 8:48 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> Hi Alexey,
->>
->> On Thu, Aug 11, 2016 at 08:03:29PM +1000, Alexey Kardashevskiy wrote:
->>> There is at least one Chelsio 10Gb card which uses VPD area to store
->>> some custom blocks (example below). However pci_vpd_size() returns
->>> the length of the first block only assuming that there can be only
->>> one VPD "End Tag" and VFIO blocks access beyond that offset
->>> (since 4e1a63555) which leads to the situation when the guest "cxgb3"
->>> driver fails to probe the device. The host system does not have this
->>> problem as the drives accesses the config space directly without
->>> pci_read_vpd()/...
->>>
->>> This adds a quirk to override the VPD size to a bigger value.
->>>
->>> This is the controller:
->>> Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
->>>
->>> This is its VPD:
->>> #0000 Large item 42 bytes; name 0x2 Identifier String
->>>       b'10 Gigabit Ethernet-SR PCI Express Adapter'
->>> #002d Large item 74 bytes; name 0x10
->>>       #00 [EC] len=7: b'D76809 '
->>>       #0a [FN] len=7: b'46K7897'
->>>       #14 [PN] len=7: b'46K7897'
->>>       #1e [MN] len=4: b'1037'
->>>       #25 [FC] len=4: b'5769'
->>>       #2c [SN] len=12: b'YL102035603V'
->>>       #3b [NA] len=12: b'00145E992ED1'
->>> #007a Small item 1 bytes; name 0xf End Tag
->>> ---
->>> #0c00 Large item 16 bytes; name 0x2 Identifier String
->>>       b'S310E-SR-X      '
->>> #0c13 Large item 234 bytes; name 0x10
->>>       #00 [PN] len=16: b'TBD             '
->>>       #13 [EC] len=16: b'110107730D2     '
->>>       #26 [SN] len=16: b'97YL102035603V  '
->>>       #39 [NA] len=12: b'00145E992ED1'
->>>       #48 [V0] len=6: b'175000'
->>>       #51 [V1] len=6: b'266666'
->>>       #5a [V2] len=6: b'266666'
->>>       #63 [V3] len=6: b'2000  '
->>>       #6c [V4] len=2: b'1 '
->>>       #71 [V5] len=6: b'c2    '
->>>       #7a [V6] len=6: b'0     '
->>>       #83 [V7] len=2: b'1 '
->>>       #88 [V8] len=2: b'0 '
->>>       #8d [V9] len=2: b'0 '
->>>       #92 [VA] len=2: b'0 '
->>>       #97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
->>> #0d00 Large item 252 bytes; name 0x11
->>>       #00 [VC] len=16: b'122310_1222 dp  '
->>>       #13 [VD] len=16: b'610-0001-00 H1\x00\x00'
->>>       #26 [VE] len=16: b'122310_1353 fp  '
->>>       #39 [VF] len=16: b'610-0001-00 H1\x00\x00'
->>>       #4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
->>> #0dff Small item 0 bytes; name 0xf End Tag
->>>
->>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->>> ---
->>>  drivers/pci/quirks.c | 12 ++++++++++++
->>>  1 file changed, 12 insertions(+)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index ee72ebe1..94d3fb5 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -3241,6 +3241,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
->>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
->>>                       quirk_thunderbolt_hotplug_msi);
->>>
->>> +static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
->>> +{
->>> +     if (!dev->vpd || !dev->vpd->ops || !dev->vpd->ops->set_size)
->>> +             return;
->>> +
->>> +     dev->vpd->ops->set_size(dev, max_t(unsigned int, dev->vpd->len, 0xe00));
->>> +}
->>> +
+Hi Lorenzo,
+
+On 09/09/16 15:23, Lorenzo Pieralisi wrote:
+> The iommu_fwspec structure, used to hold per device iommu configuration
+> data is not OF specific and therefore can be moved to a generic
+> and OF independent compilation unit.
 > 
-> So one thing you might want to look at doing is actually validating
-> there is something there before increasing the size.  If you look at
-> the get_vpd_params function from the cxgb3 driver you will see what
-> they do is verify the first tag located at 0xC00 is 0x82 before they
-> do any further reads.  You might do something similar just to verify
-> there is something there before you open it up to access by anyone.
+> In particular, the iommu_fwspec handling hinges on the device_node
+> pointer to identify the IOMMU device associated with the iommu_fwspec
+> structure, that is easily converted to a more generic fwnode_handle
+> pointer that can cater for OF and non-OF (ie ACPI) systems.
 > 
-> One option would be to modify pci_vpd_size so that you can use it
-> outside of access.c and can pass it an offset.  Then you could update
-> your quirk so that you call pci_vpd_size and pass it the offset of
-> 0xC00.  It should then be able to walk from that starting point and
-> reach the end of the list.  If you do then pci_vpd_size will return
-> the total size, else it returns 0.  So if size comes back as a
-> non-zero value then you could pass that into pci_set_vpd_size,
-> otherwise we can assume the starting offset is 0 and let the existing
-> code run its course.
-
-
-I could do this but I can predict endless argument whether a generic
-pci_vpd_size() should scan for something which looks like VPD but it is
-not, etc. I'd read at 0xc00, if it is 0x82, then pci_set_vpd_size(0xe00)
-and that's it.
-
-
+> Create the files and related Kconfig entry to decouple iommu_fwspec
+> structure from the OF iommu kernel layer.
 > 
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO,
->>> +                     PCI_ANY_ID,
->>> +                     quirk_chelsio_extend_vpd);
->>
->> Do you really want this for *all* Chelsio devices?  
-
-Well, no. When I did this, I just wanted opinions :) I'll have a list here
-in next revision.
-
-
-> If you only need it for certain devices, the quirk could probably go in the driver.
-
-It cannot, the cxgb3 driver is not running on the host, vfio-pci controls it
-.
-
->
->>
->> Can you use pci_set_vpd_size() instead?  There's already a use of that
->> in cxgb4.
->>
+> Given that the current iommu_fwspec implementation relies on
+> the arch specific struct device.archdata.iommu field in its
+> implementation, by making the code standalone and independent
+> of the OF layer this patch makes sure that the iommu_fwspec
+> kernel code can be selected only on arches implementing the
+> struct device.archdata.iommu field by adding an explicit
+> arch dependency in its config entry.
 > 
-> I would assume this quirk needs to support the same device IDs as
-> supported by the cxgb3 driver.  If so you might just clone the ID list
-> from cxgb3_pci_tbl for this quirk.
+> Current drivers using the iommu_fwspec for streamid translation
+> are converted to the new iommu_fwspec API by simply converting
+> the device_node to its fwnode_handle pointer.
 > 
-> Also from the looks of it the cxgb3 driver probably needs to be
-> updated to use the VPD accessor functions instead of just open coding
-> it themselves.  Otherwise we run the risk of the driver having issues
-> if it attempts to access the EEPROM at the same time as other
-> applications attempting to access the VPD for the device.
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> ---
+>  drivers/iommu/Kconfig        |   4 ++
+>  drivers/iommu/Makefile       |   1 +
+>  drivers/iommu/arm-smmu-v3.c  |  16 ++++--
+>  drivers/iommu/arm-smmu.c     |  17 +++---
+>  drivers/iommu/iommu-fwspec.c | 126 +++++++++++++++++++++++++++++++++++++++++++
+>  drivers/iommu/of_iommu.c     |  93 --------------------------------
+>  include/linux/iommu-fwspec.h |  70 ++++++++++++++++++++++++
+>  include/linux/of_iommu.h     |  38 ++++---------
+>  8 files changed, 234 insertions(+), 131 deletions(-)
+>  create mode 100644 drivers/iommu/iommu-fwspec.c
+>  create mode 100644 include/linux/iommu-fwspec.h
+> 
+> diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+> index 101cb17..873bd41 100644
+> --- a/drivers/iommu/Kconfig
+> +++ b/drivers/iommu/Kconfig
+> @@ -70,6 +70,10 @@ config OF_IOMMU
+>  config HAVE_IOMMU_FWSPEC
+>  	bool
+>  
+> +config IOMMU_FWSPEC
+> +       def_bool y
+> +       depends on IOMMU_API
+> +
+>  # IOMMU-agnostic DMA-mapping layer
+>  config IOMMU_DMA
+>  	bool
+> diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
+> index 195f7b9..bbbc6d6 100644
+> --- a/drivers/iommu/Makefile
+> +++ b/drivers/iommu/Makefile
+> @@ -6,6 +6,7 @@ obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
+>  obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
+>  obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
+>  obj-$(CONFIG_IOMMU_IOVA) += iova.o
+> +obj-$(CONFIG_IOMMU_FWSPEC) += iommu-fwspec.o
+>  obj-$(CONFIG_OF_IOMMU)	+= of_iommu.o
+>  obj-$(CONFIG_MSM_IOMMU) += msm_iommu.o
+>  obj-$(CONFIG_AMD_IOMMU) += amd_iommu.o amd_iommu_init.o
+> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+> index be293b5..a7e9de9 100644
+> --- a/drivers/iommu/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm-smmu-v3.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/err.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/iommu.h>
+> +#include <linux/iommu-fwspec.h>
+>  #include <linux/iopoll.h>
+>  #include <linux/module.h>
+>  #include <linux/msi.h>
+> @@ -1720,13 +1721,18 @@ static struct platform_driver arm_smmu_driver;
+>  
+>  static int arm_smmu_match_node(struct device *dev, void *data)
+>  {
+> -	return dev->of_node == data;
+> +	struct fwnode_handle *fwnode;
+> +
+> +	fwnode = dev->of_node ? &dev->of_node->fwnode : dev->fwnode;
+> +
+> +	return fwnode == data;
+>  }
 
+Maybe we should hoist the dev_fwnode() helper from property.c up to
+property.h so we can just have "return dev_fwnode(dev) == data;" here?
 
-In this particular case cxgb3 driver is not running, vfio-pci controls the
-device on the host side and does all the filtering so I have to add a quirk
-to  drivers/pci/quirks.c with all 13 PCI IDs of cxgb3 hardware OOOOOR
-implement quirks in vfio-pci (it has one already but I seriously doubt we
-should extend it).
+>  
+> -static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
+> +static struct arm_smmu_device *
+> +arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+>  {
+>  	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+> -						np, arm_smmu_match_node);
+> +						fwnode, arm_smmu_match_node);
+>  	put_device(dev);
+>  	return dev ? dev_get_drvdata(dev) : NULL;
+>  }
+> @@ -1762,7 +1768,7 @@ static int arm_smmu_add_device(struct device *dev)
+>  		master = fwspec->iommu_priv;
+>  		smmu = master->smmu;
+>  	} else {
+> -		smmu = arm_smmu_get_by_node(fwspec->iommu_np);
+> +		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+>  		if (!smmu)
+>  			return -ENODEV;
+>  		master = kzalloc(sizeof(*master), GFP_KERNEL);
+> @@ -1874,7 +1880,7 @@ out_unlock:
+>  
+>  static int arm_smmu_of_xlate(struct device *dev, struct of_phandle_args *args)
+>  {
+> -	int ret = iommu_fwspec_init(dev, args->np);
+> +	int ret = iommu_fwspec_init(dev, &args->np->fwnode);
+>  
+>  	if (!ret)
+>  		ret = iommu_fwspec_add_ids(dev, &args->args[0], 1);
+> diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+> index 2e20cdc..d453c55 100644
+> --- a/drivers/iommu/arm-smmu.c
+> +++ b/drivers/iommu/arm-smmu.c
+> @@ -517,7 +517,7 @@ static int arm_smmu_register_legacy_master(struct device *dev,
+>  		it.cur_count = 1;
+>  	}
+>  
+> -	err = iommu_fwspec_init(dev, smmu_dev->of_node);
+> +	err = iommu_fwspec_init(dev, &smmu_dev->of_node->fwnode);
+>  	if (err)
+>  		return err;
+>  
+> @@ -1368,13 +1368,18 @@ static bool arm_smmu_capable(enum iommu_cap cap)
+>  
+>  static int arm_smmu_match_node(struct device *dev, void *data)
+>  {
+> -	return dev->of_node == data;
+> +	struct fwnode_handle *fwnode;
+> +
+> +	fwnode = dev->of_node ? &dev->of_node->fwnode : dev->fwnode;
+> +
+> +	return fwnode == data;
+>  }
+>  
+> -static struct arm_smmu_device *arm_smmu_get_by_node(struct device_node *np)
+> +static struct arm_smmu_device *
+> +arm_smmu_get_by_fwnode(struct fwnode_handle *fwnode)
+>  {
+>  	struct device *dev = driver_find_device(&arm_smmu_driver.driver, NULL,
+> -						np, arm_smmu_match_node);
+> +						fwnode, arm_smmu_match_node);
+>  	put_device(dev);
+>  	return dev ? dev_get_drvdata(dev) : NULL;
+>  }
+> @@ -1392,7 +1397,7 @@ static int arm_smmu_add_device(struct device *dev)
+>  		if (ret)
+>  			goto out_free;
+>  	} else if (fwspec) {
+> -		smmu = arm_smmu_get_by_node(fwspec->iommu_np);
+> +		smmu = arm_smmu_get_by_fwnode(fwspec->iommu_fwnode);
+>  	} else {
+>  		return -ENODEV;
+>  	}
+> @@ -1524,7 +1529,7 @@ out_unlock:
+>  static int arm_smmu_of_xlate(struct device *dev, struct of_phandle_args *args)
+>  {
+>  	u32 fwid = 0;
+> -	int ret = iommu_fwspec_init(dev, args->np);
+> +	int ret = iommu_fwspec_init(dev, &args->np->fwnode);
+>  
+>  	if (ret)
+>  		return ret;
+> diff --git a/drivers/iommu/iommu-fwspec.c b/drivers/iommu/iommu-fwspec.c
+> new file mode 100644
+> index 0000000..be19102
+> --- /dev/null
+> +++ b/drivers/iommu/iommu-fwspec.c
+> @@ -0,0 +1,126 @@
+> +/*
+> + * Firmware handling helpers for IOMMU
+> + *
+> + * Copyright (c) 2016 ARM Ltd.  All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+> + * more details.
+> + */
+> +
+> +#include <linux/iommu.h>
+> +#include <linux/iommu-fwspec.h>
+> +#include <linux/of_iommu.h>
+> +#include <linux/slab.h>
+> +
+> +struct fwspec_iommu_node {
+> +	struct list_head list;
+> +	struct fwnode_handle *fwnode;
+> +	const struct iommu_ops *ops;
+> +};
+> +static LIST_HEAD(fwnode_iommu_list);
+> +static DEFINE_SPINLOCK(fwspec_iommu_lock);
+> +
+> +void fwspec_iommu_set_ops(struct fwnode_handle *fwnode,
+> +			  const struct iommu_ops *ops)
+> +{
+> +	struct fwspec_iommu_node *iommu =
+> +				kzalloc(sizeof(*iommu), GFP_KERNEL);
+> +
+> +	if (WARN_ON(!iommu))
+> +		return;
+> +
+> +	if (is_of_node(fwnode))
+> +		of_node_get(to_of_node(fwnode));
+> +
+> +	INIT_LIST_HEAD(&iommu->list);
+> +	iommu->fwnode = fwnode;
+> +	iommu->ops = ops;
+> +	spin_lock(&fwspec_iommu_lock);
+> +	list_add_tail(&iommu->list, &fwnode_iommu_list);
+> +	spin_unlock(&fwspec_iommu_lock);
+> +}
+> +
+> +const struct iommu_ops *fwspec_iommu_get_ops(struct fwnode_handle *fwnode)
+> +{
+> +	struct fwspec_iommu_node *node;
+> +	const struct iommu_ops *ops = NULL;
+> +
+> +	spin_lock(&fwspec_iommu_lock);
+> +	list_for_each_entry(node, &fwnode_iommu_list, list)
+> +		if (node->fwnode == fwnode) {
+> +			ops = node->ops;
+> +			break;
+> +		}
+> +	spin_unlock(&fwspec_iommu_lock);
+> +	return ops;
+> +}
+> +
+> +int iommu_fwspec_init(struct device *dev,
+> +		      struct fwnode_handle *iommu_fwnode)
+> +{
+> +	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+> +	const struct iommu_ops *ops;
+> +
+> +	if (fwspec)
+> +		return 0;
+> +
+> +	fwspec = kzalloc(sizeof(*fwspec), GFP_KERNEL);
+> +	if (!fwspec)
+> +		return -ENOMEM;
+> +
+> +	if (is_of_node(iommu_fwnode)) {
+> +		ops = of_iommu_get_ops(to_of_node(iommu_fwnode));
+> +		of_node_get(to_of_node(iommu_fwnode));
+> +	} else {
+> +		ops = fwspec_iommu_get_ops(iommu_fwnode);
+> +	}
+> +
+> +	fwspec->iommu_fwnode = iommu_fwnode;
+> +	fwspec->iommu_ops = ops;
+> +
+> +	arch_set_iommu_fwspec(dev, fwspec);
+> +	return 0;
+> +}
+> +
+> +void iommu_fwspec_free(struct device *dev)
+> +{
+> +	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+> +
+> +	if (fwspec) {
+> +		if (is_of_node(fwspec->iommu_fwnode))
+> +			of_node_put(to_of_node(fwspec->iommu_fwnode));
+> +
+> +		kfree(fwspec);
+> +	}
+> +}
+> +
+> +int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+> +{
+> +	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+> +	size_t size;
+> +
+> +	if (!fwspec)
+> +		return -EINVAL;
+> +
+> +	size = offsetof(struct iommu_fwspec, ids[fwspec->num_ids + 1]);
+> +	fwspec = krealloc(fwspec, size, GFP_KERNEL);
+> +	if (!fwspec)
+> +		return -ENOMEM;
+> +
+> +	while (num_ids--)
+> +		fwspec->ids[fwspec->num_ids++] = *ids++;
 
-Fixing cxgb3 in the guest won't make any difference.
+You've still got the +1 bug and incomprehensible loop from the old code
+here, rather than the fixed version being removed below. Although now
+that I've taken the plunge and done it properly in core code from the
+outset, that should hopefully become moot.
 
-So where should I put the quirks? Thanks.
+Robin.
 
+> +
+> +	arch_set_iommu_fwspec(dev, fwspec);
+> +	return 0;
+> +}
+> +
+> +inline struct iommu_fwspec *dev_iommu_fwspec(struct device *dev)
+> +{
+> +	return arch_get_iommu_fwspec(dev);
+> +}
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 38669b8..ab3c069 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -96,45 +96,6 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+>  }
+>  EXPORT_SYMBOL_GPL(of_get_dma_window);
+>  
+> -struct of_iommu_node {
+> -	struct list_head list;
+> -	struct device_node *np;
+> -	const struct iommu_ops *ops;
+> -};
+> -static LIST_HEAD(of_iommu_list);
+> -static DEFINE_SPINLOCK(of_iommu_lock);
+> -
+> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops)
+> -{
+> -	struct of_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> -
+> -	if (WARN_ON(!iommu))
+> -		return;
+> -
+> -	of_node_get(np);
+> -	INIT_LIST_HEAD(&iommu->list);
+> -	iommu->np = np;
+> -	iommu->ops = ops;
+> -	spin_lock(&of_iommu_lock);
+> -	list_add_tail(&iommu->list, &of_iommu_list);
+> -	spin_unlock(&of_iommu_lock);
+> -}
+> -
+> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+> -{
+> -	struct of_iommu_node *node;
+> -	const struct iommu_ops *ops = NULL;
+> -
+> -	spin_lock(&of_iommu_lock);
+> -	list_for_each_entry(node, &of_iommu_list, list)
+> -		if (node->np == np) {
+> -			ops = node->ops;
+> -			break;
+> -		}
+> -	spin_unlock(&of_iommu_lock);
+> -	return ops;
+> -}
+> -
+>  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>  {
+>  	struct of_phandle_args *iommu_spec = data;
+> @@ -226,57 +187,3 @@ static int __init of_iommu_init(void)
+>  	return 0;
+>  }
+>  postcore_initcall_sync(of_iommu_init);
+> -
+> -int iommu_fwspec_init(struct device *dev, struct device_node *iommu_np)
+> -{
+> -	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+> -
+> -	if (fwspec)
+> -		return 0;
+> -
+> -	fwspec = kzalloc(sizeof(*fwspec), GFP_KERNEL);
+> -	if (!fwspec)
+> -		return -ENOMEM;
+> -
+> -	fwspec->iommu_np = of_node_get(iommu_np);
+> -	fwspec->iommu_ops = of_iommu_get_ops(iommu_np);
+> -	arch_set_iommu_fwspec(dev, fwspec);
+> -	return 0;
+> -}
+> -
+> -void iommu_fwspec_free(struct device *dev)
+> -{
+> -	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+> -
+> -	if (fwspec) {
+> -		of_node_put(fwspec->iommu_np);
+> -		kfree(fwspec);
+> -	}
+> -}
+> -
+> -int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+> -{
+> -	struct iommu_fwspec *fwspec = arch_get_iommu_fwspec(dev);
+> -	size_t size;
+> -	int i;
+> -
+> -	if (!fwspec)
+> -		return -EINVAL;
+> -
+> -	size = offsetof(struct iommu_fwspec, ids[fwspec->num_ids + num_ids]);
+> -	fwspec = krealloc(fwspec, size, GFP_KERNEL);
+> -	if (!fwspec)
+> -		return -ENOMEM;
+> -
+> -	for (i = 0; i < num_ids; i++)
+> -		fwspec->ids[fwspec->num_ids + i] = ids[i];
+> -
+> -	fwspec->num_ids += num_ids;
+> -	arch_set_iommu_fwspec(dev, fwspec);
+> -	return 0;
+> -}
+> -
+> -inline struct iommu_fwspec *dev_iommu_fwspec(struct device *dev)
+> -{
+> -	return arch_get_iommu_fwspec(dev);
+> -}
+> diff --git a/include/linux/iommu-fwspec.h b/include/linux/iommu-fwspec.h
+> new file mode 100644
+> index 0000000..f88b635
+> --- /dev/null
+> +++ b/include/linux/iommu-fwspec.h
+> @@ -0,0 +1,70 @@
+> +#ifndef __IOMMU_FWSPEC_H
+> +#define __IOMMU_FWSPEC_H
+> +
+> +#include <linux/device.h>
+> +#include <linux/iommu.h>
+> +
+> +struct iommu_fwspec {
+> +	const struct iommu_ops	*iommu_ops;
+> +	struct fwnode_handle	*iommu_fwnode;
+> +	void			*iommu_priv;
+> +	unsigned int		num_ids;
+> +	u32			ids[];
+> +};
+> +
+> +#ifdef CONFIG_IOMMU_FWSPEC
+> +int iommu_fwspec_init(struct device *dev,
+> +		      struct fwnode_handle *iommu_fwnode);
+> +void iommu_fwspec_free(struct device *dev);
+> +int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+> +struct iommu_fwspec *dev_iommu_fwspec(struct device *dev);
+> +
+> +void fwspec_iommu_set_ops(struct fwnode_handle *fwnode,
+> +			  const struct iommu_ops *ops);
+> +const struct iommu_ops *fwspec_iommu_get_ops(struct fwnode_handle *fwnode);
+> +
+> +#ifdef CONFIG_HAVE_IOMMU_FWSPEC
+> +#include <asm/iommu-fwspec.h>
+> +#else /* !CONFIG_HAVE_IOMMU_FWSPEC */
+> +static inline void arch_set_iommu_fwspec(struct device *dev,
+> +					 struct iommu_fwspec *fwspec) {}
+> +
+> +static inline struct iommu_fwspec *
+> +arch_get_iommu_fwspec(struct device *dev) { return NULL; }
+> +#endif
+> +#else /* CONFIG_IOMMU_FWSPEC */
+> +static inline int iommu_fwspec_init(struct device *dev,
+> +				    struct fwnode_handle *iommu_fwnode)
+> +{
+> +	return -ENODEV;
+> +}
+> +
+> +static inline void iommu_fwspec_free(struct device *dev)
+> +{
+> +}
+> +
+> +static inline int iommu_fwspec_add_ids(struct device *dev, u32 *ids,
+> +				       int num_ids)
+> +{
+> +	return -ENODEV;
+> +}
+> +
+> +static inline struct iommu_fwspec *dev_iommu_fwspec(struct device *dev)
+> +{
+> +	return NULL;
+> +}
+> +
+> +static inline void fwspec_iommu_set_ops(struct fwnode_handle *fwnode,
+> +					const struct iommu_ops *ops)
+> +{
+> +}
+> +
+> +static inline const struct iommu_ops *
+> +fwspec_iommu_get_ops(struct fwnode_handle *fwnode)
+> +{
+> +	return NULL;
+> +}
+> +
+> +#endif /* CONFIG_IOMMU_FWSPEC */
+> +
+> +#endif /* __IOMMU_FWSPEC_H */
+> diff --git a/include/linux/of_iommu.h b/include/linux/of_iommu.h
+> index 358db49..4b02861 100644
+> --- a/include/linux/of_iommu.h
+> +++ b/include/linux/of_iommu.h
+> @@ -3,6 +3,7 @@
+>  
+>  #include <linux/device.h>
+>  #include <linux/iommu.h>
+> +#include <linux/iommu-fwspec.h>
+>  #include <linux/of.h>
+>  
+>  #ifdef CONFIG_OF_IOMMU
+> @@ -14,14 +15,6 @@ extern int of_get_dma_window(struct device_node *dn, const char *prefix,
+>  extern const struct iommu_ops *of_iommu_configure(struct device *dev,
+>  					struct device_node *master_np);
+>  
+> -struct iommu_fwspec {
+> -	const struct iommu_ops	*iommu_ops;
+> -	struct device_node	*iommu_np;
+> -	void			*iommu_priv;
+> -	unsigned int		num_ids;
+> -	u32			ids[];
+> -};
+> -
+>  #else
+>  
+>  static inline int of_get_dma_window(struct device_node *dn, const char *prefix,
+> @@ -36,28 +29,19 @@ static inline const struct iommu_ops *of_iommu_configure(struct device *dev,
+>  {
+>  	return NULL;
+>  }
+> -
+> -struct iommu_fwspec;
+> -
+>  #endif	/* CONFIG_OF_IOMMU */
+>  
+> -int iommu_fwspec_init(struct device *dev, struct device_node *iommu_np);
+> -void iommu_fwspec_free(struct device *dev);
+> -int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
+> -struct iommu_fwspec *dev_iommu_fwspec(struct device *dev);
+> -
+> -#ifdef CONFIG_HAVE_IOMMU_FWSPEC
+> -#include <asm/iommu-fwspec.h>
+> -#else /* !CONFIG_HAVE_IOMMU_FWSPEC */
+> -static inline void arch_set_iommu_fwspec(struct device *dev,
+> -					 struct iommu_fwspec *fwspec) {}
+> -
+> -static inline struct iommu_fwspec *
+> -arch_get_iommu_fwspec(struct device *dev) { return NULL; }
+> -#endif
+> +static inline void of_iommu_set_ops(struct device_node *np,
+> +				    const struct iommu_ops *ops)
+> +{
+> +	fwspec_iommu_set_ops(&np->fwnode, ops);
+> +}
+>  
+> -void of_iommu_set_ops(struct device_node *np, const struct iommu_ops *ops);
+> -const struct iommu_ops *of_iommu_get_ops(struct device_node *np);
+> +static inline const struct iommu_ops *
+> +of_iommu_get_ops(struct device_node *np)
+> +{
+> +	return fwspec_iommu_get_ops(&np->fwnode);
+> +}
+>  
+>  extern struct of_device_id __iommu_of_table;
+>  
+> 
 
--- 
-Alexey
