@@ -1,68 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.136]:36262 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034081AbcIWCFA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 22:05:00 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Rajat Jain <rajatja@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 2/2] PCI: rockchip: fix wrong transmitted FTS count
-Date: Fri, 23 Sep 2016 10:06:00 +0800
-Message-Id: <1474596360-23483-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1474596360-23483-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1474596360-23483-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+From: "Busch, Keith" <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, "Derrick, Jonathan"
+	<jonathan.derrick@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [RFCv2 0/3] vmd irq list shortening, map allocation
+Date: Tue, 13 Sep 2016 22:16:19 +0000
+Message-ID: <B58D82457FDA0744A320A2FC5AC253B93D722BF9@fmsmsx104.amr.corp.intel.com>
+References: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
+ <20160913205745.GF4138@localhost>
+In-Reply-To: <20160913205745.GF4138@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-If the expected numbers of FTS aren't recevied by RC when
-exiting from L0s, the LTSSM will fall into recover state.
-So it will need to send TS for retraining which makes the
-latency of exiting from L0s a little longer than expected.
-This issue is caused by the wrong reset value of FTS count
-on PLC1 register(offset 0x4). The expected value for Gen1/2
-should be more than 240 and we may leave a little margin here.
-Let's fix this before starting Gen1 traning which will makes
-TS1 contains the correct FTS count.
+Sorry for the delay. I've been looking into these new PCI IRQ API's and fou=
+nd an unrelated issue that I stuck myself with working through with Christo=
+ph and Thomas. :)
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Patches 1/3 and 2/3 look good to me.
 
- drivers/pci/host/pcie-rockchip.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 5e51121..6a7a9df 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -95,6 +95,10 @@
- #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
- #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
- #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
-+#define PCIE_CORE_CTRL_PLC1		(PCIE_CORE_CTRL_MGMT_BASE + 0x004)
-+#define   PCIE_CORE_CTRL_PLC1_FTS_MASK		GENMASK(23, 8)
-+#define   PCIE_CORE_CTRL_PLC1_FTS_SHIFT	8
-+#define   PCIE_CORE_CTRL_PLC1_FTS_CNT		0xffff
- #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
- #define   PCIE_CORE_INT_PRFPE			BIT(0)
- #define   PCIE_CORE_INT_CRFPE			BIT(1)
-@@ -470,6 +474,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
- 
-+	/* Fix the transmitted FTS count desired to exit from L0s. */
-+	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
-+	status = (status & PCIE_CORE_CTRL_PLC1_FTS_MASK) |
-+		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
-+	rockchip_pcie_write(rockchip, status, PCIE_CORE_CTRL_PLC1);
-+
- 	/* Enable Gen1 training */
- 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
- 			    PCIE_CLIENT_CONFIG);
--- 
-2.3.7
+I'm not convinced 3/3 is an improvement. At the very least, we don't want t=
+o BUG_ON from a failed kmalloc when we can return an appropriate error inst=
+ead. I'll take a closer look at 3/3 and get back to Jon with more feedback.
 
 
+
+-----Original Message-----=09
+From: Bjorn Helgaas [mailto:helgaas@kernel.org]=20
+Sent: Tuesday, September 13, 2016 2:58 PM
+To: Derrick, Jonathan <jonathan.derrick@intel.com>
+Cc: Busch, Keith <keith.busch@intel.com>; linux-pci@vger.kernel.org
+Subject: Re: [RFCv2 0/3] vmd irq list shortening, map allocation
+
+On Fri, Sep 02, 2016 at 11:53:03AM -0600, Jon Derrick wrote:
+> V2:
+> Added a map for vmd irqs to attempt to allocate all vmd irqs within an
+> irq list into a single page. Once we start getting many devices
+> sharing the irq in an irq list, this may help the list traversal latency.
+>=20
+> V1:
+> Couple of RFC patches here. I don't really notice a positive benefit but
+> it does reduce the struct size of vmd_irq_list and hopefully we gain some
+> cache benefits from that.
+>=20
+> Both are based on:
+> https://patchwork.kernel.org/patch/9304179/
+> https://patchwork.kernel.org/patch/9304181/
+>=20
+> Jon Derrick (3):
+>   vmd: eliminate vmd_vector member from list type
+>   vmd: eliminate index member from irq list
+>   pci/vmd: Create irq map for irq nodes
+>=20
+>  arch/x86/pci/vmd.c | 94 ++++++++++++++++++++++++++++++++++++++++++------=
+------
+>  1 file changed, 73 insertions(+), 21 deletions(-)
+
+These look OK to me, so if Keith acks them I'll merge them.
