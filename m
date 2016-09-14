@@ -1,168 +1,296 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:52081 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935005AbcI2Xxv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 19:53:51 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8TNqoku114214
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 19:53:51 -0400
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25s8srs1jr-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 19:53:50 -0400
-Received: from localhost
-        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Fri, 30 Sep 2016 09:53:48 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-        by d23dlp02.au.ibm.com (Postfix) with ESMTP id EF2872BB005C
-        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8TNri854784460
-        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-        by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8TNrhWV005304
-        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-        benh@au1.ibm.com, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        clsoto@us.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v2 2/2] PCI: Don't disable PF's memory decoding when enabling SRIOV
-Date: Fri, 30 Sep 2016 09:47:50 +1000
-In-Reply-To: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Message-Id: <1475192870-7763-2-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:29962 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756007AbcINOQw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 10:16:52 -0400
+Subject: Re: [PATCH V3 1/4] ARM64 LPC: Indirect ISA port IO introduced
+To: Arnd Bergmann <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1473855354-150093-2-git-send-email-yuanzhichang@hisilicon.com>
+ <8337589.pzGt0MZ9xn@wuerfel>
+CC: <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <devicetree@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <benh@kernel.crashing.org>, <minyard@acm.org>,
+        <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <john.garry@huawei.com>, <will.deacon@arm.com>,
+        <xuwei5@hisilicon.com>, <linux-serial@vger.kernel.org>,
+        <gregkh@linuxfoundation.org>, <zourongrong@gmail.com>,
+        <liviu.dudau@arm.com>, <kantyzc@163.com>,
+        <zhichang.yuan02@gmail.com>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <57D95BBC.9030405@hisilicon.com>
+Date: Wed, 14 Sep 2016 22:16:28 +0800
+MIME-Version: 1.0
+In-Reply-To: <8337589.pzGt0MZ9xn@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_update_resource() might be called to update (shift) IOV BARs
-in PPC PowerNV specific pcibios_sriov_enable() when enabling PF's
-SRIOV capability. At that point, the PF have been functional if
-the SRIOV is enabled through sysfs entry "sriov_numvfs". The PF's
-memory decoding (0x2 in PCI_COMMAND) shouldn't be disabled when
-updating its IOV BARs with pci_update_resource(). Otherwise, we
-receives EEH error caused by MMIO access to PF's memory BARs during
-the window when PF's memory decoding is disabled.
+Hi, Arnd
 
-   sriov_numvfs_store
-   pdev->driver->sriov_configure
-   mlx5_core_sriov_configure
-   pci_enable_sriov
-   sriov_enable
-   pcibios_sriov_enable
-   pnv_pci_sriov_enable
-   pnv_pci_vf_resource_shift
-   pci_update_resource
+On 2016/9/14 20:24, Arnd Bergmann wrote:
+> On Wednesday, September 14, 2016 8:15:51 PM CEST Zhichang Yuan wrote:
+>> From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+>>
+>> For arm64, there is no I/O space as other architectural platforms, such as
+>> X86. Most I/O accesses are achieved based on MMIO. But for some arm64 SoCs,
+>> such as Hip06, when accessing some legacy ISA devices connected to LPC, those
+>> known port addresses are used to control the corresponding target devices, for
+>> example, 0x2f8 is for UART, 0xe4 is for ipmi-bt. It is different from the
+>> normal MMIO mode in using.
+>>
+>> To drive these devices, this patch introduces a method named indirect-IO.
+>> In this method the in/out pair in arch/arm64/include/asm/io.h will be
+>> redefined. When upper layer drivers call in/out with those known legacy port
+>> addresses to access the peripherals, the hooking functions corrresponding to
+>> those target peripherals will be called. Through this way, those upper layer
+>> drivers which depend on in/out can run on Hip06 without any changes.
+>>
+>> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+> 
+> Looks ok overall, but I have a couple of comments for details.
+> 
+>> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+>> index bc3f00f..9579479 100644
+>> --- a/arch/arm64/Kconfig
+>> +++ b/arch/arm64/Kconfig
+>> @@ -161,6 +161,12 @@ config ARCH_MMAP_RND_COMPAT_BITS_MIN
+>>  config ARCH_MMAP_RND_COMPAT_BITS_MAX
+>>         default 16
+>>  
+>> +config ARM64_INDIRECT_PIO
+>> +	def_bool n
+> 
+> 'def_bool n' is the same as the shorter and more common 'bool'.
+Yes. Will modify as bool "access peripherals with legacy I/O port"
 
-This doesn't change the PF's memory decoding in the path by introducing
-additional parameter (@mmio_force_on) to pci_update_resource() in
-the above path.
+> 
+>> diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+>> index 9b6e408..d3acf1f 100644
+>> --- a/arch/arm64/include/asm/io.h
+>> +++ b/arch/arm64/include/asm/io.h
+>> @@ -34,6 +34,10 @@
+>>  
+>>  #include <xen/xen.h>
+>>  
+>> +#ifdef CONFIG_ARM64_INDIRECT_PIO
+>> +#include <linux/extio.h>
+>> +#endif
+> 
+> No need to guard includes with an #ifdef.
+If remove #ifdef here, extio.h should not contain any function external declarations whose definitions are in
+extio.c compiled only when CONFIG_ARM64_INDIRECT_PIO is yes.
 
-Reported-by: Carol Soto <clsoto@us.ibm.com>
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Tested-by: Carol Soto <clsoto@us.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 2 +-
- drivers/pci/iov.c                         | 2 +-
- drivers/pci/pci.c                         | 2 +-
- drivers/pci/setup-res.c                   | 9 +++++----
- include/linux/pci.h                       | 2 +-
- 5 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 38a5c65..f4ccc5b 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1006,7 +1006,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- 		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
- 			 i, &res2, res, (offset > 0) ? "En" : "Dis",
- 			 num_vfs, offset);
--		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
-+		pci_update_resource(dev, i + PCI_IOV_RESOURCES, true);
- 	}
- 	return 0;
- }
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index f1343f0..db31966 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -511,7 +511,7 @@ static void sriov_restore_state(struct pci_dev *dev)
- 		return;
- 
- 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
--		pci_update_resource(dev, i);
-+		pci_update_resource(dev, i, false);
- 
- 	pci_write_config_dword(dev, iov->pos + PCI_SRIOV_SYS_PGSIZE, iov->pgsz);
- 	pci_iov_set_numvfs(dev, iov->num_VFs);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d51..87a33c0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -545,7 +545,7 @@ static void pci_restore_bars(struct pci_dev *dev)
- 		return;
- 
- 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
--		pci_update_resource(dev, i);
-+		pci_update_resource(dev, i, false);
- }
- 
- static const struct pci_platform_pm_ops *pci_platform_pm;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 66c4d8f..e8a50ff 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -26,7 +26,7 @@
- #include "pci.h"
- 
- 
--void pci_update_resource(struct pci_dev *dev, int resno)
-+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on)
- {
- 	struct pci_bus_region region;
- 	bool disable;
-@@ -81,7 +81,8 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	 * disable decoding so that a half-updated BAR won't conflict
- 	 * with another device.
- 	 */
--	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
-+	disable = (res->flags & IORESOURCE_MEM_64) &&
-+		  !mmio_force_on && !dev->mmio_always_on;
- 	if (disable) {
- 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
- 		pci_write_config_word(dev, PCI_COMMAND,
-@@ -310,7 +311,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	res->flags &= ~IORESOURCE_STARTALIGN;
- 	dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
- 	if (resno < PCI_BRIDGE_RESOURCES)
--		pci_update_resource(dev, resno);
-+		pci_update_resource(dev, resno, false);
- 
- 	return 0;
- }
-@@ -350,7 +351,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	dev_info(&dev->dev, "BAR %d: reassigned %pR (expanded by %#llx)\n",
- 		 resno, res, (unsigned long long) addsize);
- 	if (resno < PCI_BRIDGE_RESOURCES)
--		pci_update_resource(dev, resno);
-+		pci_update_resource(dev, resno, false);
- 
- 	return 0;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0ab8359..99231d1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1039,7 +1039,7 @@ int pci_try_reset_bus(struct pci_bus *bus);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
--void pci_update_resource(struct pci_dev *dev, int resno);
-+void pci_update_resource(struct pci_dev *dev, int resno, bool mmio_force_on);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
- int pci_select_bars(struct pci_dev *dev, unsigned long flags);
--- 
-2.1.0
+How about removing everything about the configure item "ARM64_INDIRECT_PIO"?
+This will make the indirect-IO mechanism global on ARM64.
+I worry about this mechanism is not so common, so using "ARM64_INDIRECT_PIO" make this feature optional.
+
+> 
+>> +#define BUILDS_RW(bwl, type)						\
+>> +static inline void reads##bwl(const volatile void __iomem *addr,	\
+>> +				void *buffer, unsigned int count)	\
+>> +{									\
+>> +	if (count) {							\
+>> +		type *buf = buffer;					\
+>> +									\
+>> +		do {							\
+>> +			type x = __raw_read##bwl(addr);			\
+>> +			*buf++ = x;					\
+>> +		} while (--count);					\
+>> +	}								\
+>> +}									\
+>> +									\
+>> +static inline void writes##bwl(volatile void __iomem *addr,		\
+>> +				const void *buffer, unsigned int count)	\
+>> +{									\
+>> +	if (count) {							\
+>> +		const type *buf = buffer;				\
+>> +									\
+>> +		do {							\
+>> +			__raw_write##bwl(*buf++, addr);			\
+>> +		} while (--count);					\
+>> +	}								\
+>> +}
+>> +
+>> +BUILDS_RW(b, u8)
+> 
+> Why is this in here?
+the readsb/writesb are defined in asm-generic/io.h which is included later, but the redefined insb/outsb need
+to call them. Without these readsb/writesb definition before insb/outsb redefined, compile error occur.
+
+It seems that copy all the definitions of "asm-generic/io.h" is not a good idea, so I move the definitions of
+those function needed here....
+
+Ok. I think your idea below defining in(s)/out(s) in a c file can solve this issue.
+
+#ifdef CONFIG_ARM64_INDIRECT_PIO
+#define inb inb
+extern u8 inb(unsigned long addr);
+
+#define outb outb
+extern void outb(u8 value, unsigned long addr);
+
+#define insb insb
+extern void insb(unsigned long addr, void *buffer, unsigned int count);
+
+#define outsb outsb
+extern void outsb(unsigned long addr, const void *buffer, unsigned int count);
+#endif
+
+and definitions of all these functions are in extio.c :
+
+u8 inb(unsigned long addr)
+{
+	if (!arm64_extio_ops || arm64_extio_ops->start > addr ||
+			arm64_extio_ops->end < addr)
+		return readb(PCI_IOBASE + addr);
+	else
+		return arm64_extio_ops->pfin ?
+			arm64_extio_ops->pfin(arm64_extio_ops->devpara,
+				addr + arm64_extio_ops->ptoffset, NULL,
+				sizeof(u8), 1) : -1;
+}
+.....
+
+
+> 
+>> @@ -149,6 +185,60 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+>>  #define IO_SPACE_LIMIT		(PCI_IO_SIZE - 1)
+>>  #define PCI_IOBASE		((void __iomem *)PCI_IO_START)
+>>  
+>> +
+>> +/*
+>> + * redefine the in(s)b/out(s)b for indirect-IO.
+>> + */
+>> +#define inb inb
+>> +static inline u8 inb(unsigned long addr)
+>> +{
+>> +#ifdef CONFIG_ARM64_INDIRECT_PIO
+>> +	if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
+>> +			addr <= arm64_extio_ops->end)
+>> +		return extio_inb(addr);
+>> +#endif
+>> +	return readb(PCI_IOBASE + addr);
+>> +}
+>> +
+> 
+> Looks ok, but you only seem to do this for the 8-bit
+> accessors, when it should be done for 16-bit and 32-bit
+> ones as well for consistency.
+Hip06 LPC only support 8-bit I/O operations on the designated port.
+
+> 
+>> diff --git a/drivers/bus/extio.c b/drivers/bus/extio.c
+>> new file mode 100644
+>> index 0000000..1e7a9c5
+>> --- /dev/null
+>> +++ b/drivers/bus/extio.c
+>> @@ -0,0 +1,66 @@
+> 
+> This is in a globally visible directory
+> 
+>> +
+>> +struct extio_ops *arm64_extio_ops;
+> 
+> But the identifier uses an architecture specific prefix. Either
+> move the whole file into arch/arm64, or make the naming so that
+> it can be used for everything.
+
+I perfer to move the whole file into arch/arm64, extio.h will be moved to arch/arm64/include/asm;
+
+> 
+>> +u8 __weak extio_inb(unsigned long addr)
+>> +{
+>> +	return arm64_extio_ops->pfin ?
+>> +		arm64_extio_ops->pfin(arm64_extio_ops->devpara,
+>> +			addr + arm64_extio_ops->ptoffset, NULL,
+>> +			sizeof(u8), 1) : -1;
+>> +}
+> 
+> No need for the __weak attribute, just make sure that the
+> code is always built-in when needed.
+> 
+> Also, it doesn't seem necessary to have an extern function if
+> all it does is call the one callback that you have already 
+> checked earlier. Either put it all into the inline
+> definition in asm/io.h, or put it all into the extern
+> version like this.
+> 
+> #ifdef CONFIG_ARM64_INDIRECT_PIO /* otherwise use default from asm-generic */
+> #define inb inb
+> extern u8 inb(unsigned long addr);
+> #endif
+> 
+Yes. This is good!
+Although the in(s)/out(s) are not inline anymore.
+
+I had applied this way above.
+
+> u8 inb(unsigned long addr)
+> {
+> 	if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
+> 			addr <= arm64_extio_ops->end)
+> 		arm64_extio_ops->pfin(arm64_extio_ops->devpara,addr + arm64_extio_ops->ptoffset, NULL,sizeof(u8), 1) : -1;
+> 	return extio_inb(addr);
+> }
+> 
+>> +#define inb inb
+>> +static inline u8 inb(unsigned long addr)
+>> +{
+>> +#ifdef CONFIG_ARM64_INDIRECT_PIO
+>> +	if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
+>> +			addr <= arm64_extio_ops->end)
+>> +		return extio_inb(addr);
+>> +#endif
+>> +	return readb(PCI_IOBASE + addr);
+>> +}
+> 
+>> diff --git a/include/linux/extio.h b/include/linux/extio.h
+>> new file mode 100644
+>> index 0000000..08d1fca
+>> --- /dev/null
+>> +++ b/include/linux/extio.h
+>> @@ -0,0 +1,49 @@
+>> +/*
+>> + * Copyright (C) 2016 Hisilicon Limited, All Rights Reserved.
+>> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+>> + * Author: Zou Rongrong <@huawei.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify
+>> + * it under the terms of the GNU General Public License version 2 as
+>> + * published by the Free Software Foundation.
+>> + *
+>> + * This program is distributed in the hope that it will be useful,
+>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> + * GNU General Public License for more details.
+>> + *
+>> + * You should have received a copy of the GNU General Public License
+>> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+>> + */
+>> +
+>> +#ifndef __LINUX_EXTIO_H
+>> +#define __LINUX_EXTIO_H
+>> +
+>> +
+>> +typedef u64 (*inhook)(void *devobj, unsigned long ptaddr, void *inbuf,
+>> +				size_t dlen, unsigned int count);
+>> +typedef void (*outhook)(void *devobj, unsigned long ptaddr,
+>> +				const void *outbuf, size_t dlen,
+>> +				unsigned int count);
+> 
+> I would drop the typedef and just declare the types directly in the
+> only place that references them.
+> 
+Ok. Will apply it.
+
+Thanks!
+Zhichang
+
+> 	Arnd
+> 
+> .
+> 
 
