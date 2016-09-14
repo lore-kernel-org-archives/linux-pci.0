@@ -1,93 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52514 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:41586 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753305AbcI0UpP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 16:45:15 -0400
-Date: Tue, 27 Sep 2016 15:45:10 -0500
+        id S1754743AbcINWKp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 18:10:45 -0400
+Date: Wed, 14 Sep 2016 17:10:40 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Move the error info struct into the root port
- container
-Message-ID: <20160927204510.GA20252@localhost>
-References: <1473871135-29088-1-git-send-email-jonathan.derrick@intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCH 2/2] vmd: Synchronize with RCU freeing msi irq descs
+Message-ID: <20160914221040.GF16581@localhost>
+References: <1470348549-10855-1-git-send-email-keith.busch@intel.com>
+ <1470348549-10855-2-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473871135-29088-1-git-send-email-jonathan.derrick@intel.com>
+In-Reply-To: <1470348549-10855-2-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 10:38:55AM -0600, Jon Derrick wrote:
-> AER injecting tests with many devices and nosourceid are resulting in
-> soft lockups, mostly due to the config reads (which have been helped
-> by recent aer capability position caching patches), but also due to a
-> superfluous kmalloc/kfree pair executed for each p_device.
+On Thu, Aug 04, 2016 at 04:09:09PM -0600, Keith Busch wrote:
+> This patch fixes a potential race when disabling MSI/MSI-x on a VMD domain
+> device. If the vmd interrupt service is running, it may see a disabled
+> irq. We can synchronize rcu just before freeing the msi descriptor. This
+> is safe since the irq_desc lock isn't held, and the descriptor is valid
+> even though it is disabled. After vmd_msi_free, though, the handler is
+> reinitialiazed to handle_bad_irq, so we can't let the vmd isr's list
+> iteration see the disabled irq after this.
 > 
-> When a device emits an error notification, it's not unreasonable to
-> assume that it may emit another error notification soon. Instead of
-> kmallocing and kfreeing the aer_err_info struct for each p_device during
-> an aer_isr pass, move the struct into the aer root port container and
-> kill the allocation.
-> 
-> The current code suggests the aer_err_info struct could be huge, but is
-> actually only about 70 bytes. Whereas the aer_rpc root port container is
-> over 900 bytes. Because of the already large size of the root port
-> container, moving the struct into it should not adversely impact access
-> to the root port container.
-> 
-> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-Applied to pci/aer for v4.9, thanks, Jon!
+Applied with Jon's ack to pci/host-vmd for v4.9, thanks!
+
+If anybody else reads this, this patch got lost for a while because it
+was posted as the second patch of a series.  I had some comments on
+the first patch that led to a little rework.  When that happens, I
+mark the *entire* series as "Changes requested" or "Superseded"
+because I'm expecting a complete repost with the rework.
+
+It's too much work for me to track individual patches within a series.
+So if you update one patch in a series, please just repost the entire
+series, including other patches that may be unmodified.
+
+Bjorn
 
 > ---
->  drivers/pci/pcie/aer/aerdrv.h      |  1 +
->  drivers/pci/pcie/aer/aerdrv_core.c | 13 ++-----------
->  2 files changed, 3 insertions(+), 11 deletions(-)
+>  arch/x86/pci/vmd.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> index f15ca8d..d51e4a5 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.h
-> +++ b/drivers/pci/pcie/aer/aerdrv.h
-> @@ -60,6 +60,7 @@ struct aer_rpc {
->  	struct pcie_device *rpd;	/* Root Port device */
->  	struct work_struct dpc_handler;
->  	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
-> +	struct aer_err_info e_info;
->  	unsigned short prod_idx;	/* Error Producer Index */
->  	unsigned short cons_idx;	/* Error Consumer Index */
->  	int isr;
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 8262527..9fd18a0 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -711,15 +711,8 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
->  static void aer_isr_one_error(struct pcie_device *p_device,
->  		struct aer_err_source *e_src)
->  {
-> -	struct aer_err_info *e_info;
-> -
-> -	/* struct aer_err_info might be big, so we allocate it with slab */
-> -	e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
-> -	if (!e_info) {
-> -		dev_printk(KERN_DEBUG, &p_device->port->dev,
-> -			"Can't allocate mem when processing AER errors\n");
-> -		return;
-> -	}
-> +	struct aer_rpc *rpc = get_service_data(p_device);
-> +	struct aer_err_info *e_info = &rpc->e_info;
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index 2294907..e3c9b9e 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -213,6 +213,8 @@ static void vmd_msi_free(struct irq_domain *domain,
+>  	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
+>  	unsigned long flags;
 >  
->  	/*
->  	 * There is a possibility that both correctable error and
-> @@ -758,8 +751,6 @@ static void aer_isr_one_error(struct pcie_device *p_device,
->  		if (find_source_device(p_device->port, e_info))
->  			aer_process_err_devices(p_device, e_info);
->  	}
-> -
-> -	kfree(e_info);
->  }
->  
->  /**
+> +	synchronize_rcu();
+> +
+>  	/* XXX: Potential optimization to rebalance */
+>  	raw_spin_lock_irqsave(&list_lock, flags);
+>  	vmdirq->irq->count--;
 > -- 
-> 1.8.3.1
+> 2.7.2
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
