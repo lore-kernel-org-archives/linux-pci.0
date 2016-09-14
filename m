@@ -1,50 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36714 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932372AbcIBPBg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Sep 2016 11:01:36 -0400
-Date: Fri, 2 Sep 2016 10:01:34 -0500
-From: Rob Herring <robh@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Joao Pinto <jpinto@synopsys.com>,
+Received: from mail.kernel.org ([198.145.29.136]:38476 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759948AbcINVuJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 17:50:09 -0400
+Date: Wed, 14 Sep 2016 16:50:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Ian Campbell <ijc+devicetree@hellion.org.uk>,
-        Pawel Moll <pawel.moll@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kumar Gala <galak@codeaurora.org>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH 1/3] dt-bindings: designware-pcie: document optional
- msi-parent property
-Message-ID: <20160902150134.GA17819@rob-hp-laptop>
-References: <1472561830-20932-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1472561830-20932-2-git-send-email-thomas.petazzoni@free-electrons.com>
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-pci@vger.kernel.org,
+        Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [PATCH -next] PCI: spear: Use builtin_platform_driver to
+ simplify the code
+Message-ID: <20160914215003.GE16581@localhost>
+References: <1473510634-23872-1-git-send-email-weiyj.lk@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472561830-20932-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1473510634-23872-1-git-send-email-weiyj.lk@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 02:57:08PM +0200, Thomas Petazzoni wrote:
-> This commit updates the Designware PCIe Device Tree binding
-> documentation to document the optional msi-parent property. This
-> property allows to point to an external MSI controller, which can
-> optionally be provided. If provided, this external MSI controller is
-> used in preference over the internal MSI controller of the Designware
-> PCIe IP.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  Documentation/devicetree/bindings/pci/designware-pcie.txt | 2 ++
->  1 file changed, 2 insertions(+)
+[+cc Paul]
 
-Acked-by: Rob Herring <robh@kernel.org>
+On Sat, Sep 10, 2016 at 12:30:34PM +0000, Wei Yongjun wrote:
+> From: Wei Yongjun <weiyongjun1@huawei.com>
+> 
+> Use the builtin_platform_driver() macro to make the code simpler.
+> 
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> ---
+>  drivers/pci/host/pcie-spear13xx.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index 09aed85..1c957eb 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -364,8 +364,4 @@ static struct platform_driver spear13xx_pcie_driver = {
+>  	},
+>  };
+>  
+> -static int __init spear13xx_pcie_init(void)
+> -{
+> -	return platform_driver_register(&spear13xx_pcie_driver);
+> -}
+> -device_initcall(spear13xx_pcie_init);
+> +builtin_platform_driver(spear13xx_pcie_driver);
+
+Hmm.  It looks like maybe we could use builtin_platform_driver_probe()?
+In most or all of the drivers/pci/host drivers?
+
+If you want to do that, please base your patches on my
+pci/demodularize branch, since that's where I would apply them.
+
+I have to say that the plethora of helper macros is getting a little
+confusing:
+
+  module_driver
+  module_platform_driver
+  module_platform_driver_probe
+  module_pci_driver
+  ...
+  builtin_driver
+  builtin_platform_driver
+  builtin_platform_driver_probe
+  builtin_pci_driver
+  ...
+
+Actually, seeing the list organized like this makes me feel better,
+like there really is some underlying structure here.  It's just hard
+to discover in the middle of all the comments and CPP magic.
+
+It is kind of amusing that each one has a big comment header like:
+
+  /* module_platform_driver_probe() - Helper macro for drivers that don't do
+   * anything special in module init/exit.  This eliminates a lot of
+   * boilerplate.  Each module may only use this macro once, and
+   * calling it replaces module_init() and module_exit()
+   */
+
+It amuses me that the comments about eliminating boilerplate are
+*themselves* boilerplate.  I guess I'm easily amused.
+
+Bjorn
