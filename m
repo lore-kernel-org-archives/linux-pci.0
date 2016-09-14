@@ -1,120 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35176 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759145AbcIMVcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 17:32:16 -0400
-Date: Tue, 13 Sep 2016 16:32:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [RFC] pci/aer: kmalloc the aer_err_info struct once
-Message-ID: <20160913213205.GH4138@localhost>
-References: <1473186952-8998-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>
+CC: "robh@kernel.org" <robh@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "colin.king@canonical.com" <colin.king@canonical.com>,
+        Soren Brinkmann <sorenb@xilinx.com>,
+        Michal Simek <michals@xilinx.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        "Ley Foon Tan" <lftan@altera.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Murali Karicheri <m-karicheri2@ti.com>
+Subject: RE: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
+ device for legacy interrupts.
+Date: Wed, 14 Sep 2016 05:34:19 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258D6182@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
+ <57C57975.7040306@arm.com>
+ <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57C59FE8.30307@arm.com>
+ <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <57C6B7F1.5000001@arm.com>
+ <8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160912220241.GG23532@localhost> <57D7ADA8.5060201@arm.com>
+ <20160913150511.GC27748@localhost> <20160913153402.GA4138@localhost>
+In-Reply-To: <20160913153402.GA4138@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473186952-8998-1-git-send-email-jonathan.derrick@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 06, 2016 at 12:35:52PM -0600, Jon Derrick wrote:
-> AER injecting tests with many devices and nosourceid are resulting in
-> soft lockups, mostly due to the config reads, but there's also a
-> kmalloc/kfree pair for the aer_err_info struct for each p_device.
-> 
-> When a device emits an error, it's not unreasonable to assume that it
-> may emit another error soon. Instead of mallocing the aer error info
-> struct each pass through the aer isr, malloc it once per root port and
-> hold the reference through the life of the root port. This may save a
-> few cycles if there are many devices downstream of the root port and
-> no-source-id checking is enabled, disabling the fast path and requiring
-> checking all devices for errors.
-> 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv.c      |  1 +
->  drivers/pci/pcie/aer/aerdrv.h      |  1 +
->  drivers/pci/pcie/aer/aerdrv_core.c | 23 +++++++++++++++--------
->  3 files changed, 17 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 48d21e0..dab15d3 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -286,6 +286,7 @@ static void aer_remove(struct pcie_device *dev)
->  
->  		flush_work(&rpc->dpc_handler);
->  		aer_disable_rootport(rpc);
-> +		kfree(rpc->e_info);
->  		kfree(rpc);
->  		set_service_data(dev, NULL);
->  	}
-> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> index 945c939..2c5a5b8 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.h
-> +++ b/drivers/pci/pcie/aer/aerdrv.h
-> @@ -60,6 +60,7 @@ struct aer_rpc {
->  	struct pcie_device *rpd;	/* Root Port device */
->  	struct work_struct dpc_handler;
->  	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
-> +	struct aer_err_info *e_info;
->  	unsigned short prod_idx;	/* Error Producer Index */
->  	unsigned short cons_idx;	/* Error Consumer Index */
->  	int isr;
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 521e39c..e1b2e6c 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -715,14 +715,23 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
->  static void aer_isr_one_error(struct pcie_device *p_device,
->  		struct aer_err_source *e_src)
->  {
-> -	struct aer_err_info *e_info;
-> +	struct aer_rpc *rpc = get_service_data(p_device);
-> +	struct aer_err_info *e_info = rpc->e_info;
->  
-> -	/* struct aer_err_info might be big, so we allocate it with slab */
-> -	e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
-> +	/*
-> +	 * struct aer_err_info might be big, so we allocate it with slab.
-> +	 * It's not unreasonable to assume a faulting device might emit
-> +	 * another error, so try to only malloc once and keep the
-> +	 * reference through the root port's life.
-> +	 */
->  	if (!e_info) {
-> -		dev_printk(KERN_DEBUG, &p_device->port->dev,
-> -			"Can't allocate mem when processing AER errors\n");
-> -		return;
-> +		e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
-> +		if (!e_info) {
-> +			dev_printk(KERN_DEBUG, &p_device->port->dev,
-> +				"Can't allocate mem when processing AER errors\n");
-> +			return;
-> +		}
-> +		rpc->e_info = e_info;
+> [+cc Ley Foon (altera), Thomas (aardvark), Kishon (dra7xx), Murali (keyst=
+one)]
+>=20
+> On Tue, Sep 13, 2016 at 10:05:11AM -0500, Bjorn Helgaas wrote:
+> > On Tue, Sep 13, 2016 at 08:41:28AM +0100, Marc Zyngier wrote:
+> > > On 12/09/16 23:02, Bjorn Helgaas wrote:
+> > > > On Thu, Sep 01, 2016 at 05:19:55AM +0000, Bharat Kumar Gogada wrote=
+:
+> > > >>>>>>> Hi Bharat,
+> > > >>>>>>>> @@ -561,7 +561,7 @@ static int
+> > > >>>>>>>> nwl_pcie_init_irq_domain(struct nwl_pcie
+> > > >>>>>>> *pcie)
+> > > >>>>>>>>     }
+> > > >>>>>>>>
+> > > >>>>>>>>     pcie->legacy_irq_domain =3D
+> irq_domain_add_linear(legacy_intc_node,
+> > > >>>>>>>> -                                                   INTX_NUM=
+,
+> > > >>>>>>>> +
+> > > >>>>>>>> + INTX_NUM + 1,
+> > > >>>>>>>>                                                     &legacy_=
+domain_ops,
+> > > >>>>>>>>                                                     pcie);
+> > > >>>>>>>
+> > > >>>>>>> This feels like the wrong thing to do. You have INTX_NUM
+> > > >>>>>>> irqs, so the domain allocation should reflect this. On the
+> > > >>>>>>> other hand, the way the driver currently deals with mappings
+> > > >>>>>>> is quite broken (consistently adding 1 to
+> > > >>>>> the HW interrupt).
+> > > >>>>>>>
+> > > >>>>>> Hi Marc,
+> > > >>>>>>
+> > > >>>>>> Without above change I get following crash in kernel while boo=
+ting.
+> > > >>>>>>
+> > > >>>>>> [    2.441684] error: hwirq 0x4 is too large for dummy
+> > > >>>>>>
+> > > >>>>>> [    2.441694] ------------[ cut here ]------------
+> > > >>>>>>
+> > > >>>>>> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
+> > > >>>>>>
+> > > >>>>>> [    2.441702] Modules linked in:
+> > > >>>>>>
+> > > >>>>>> [    2.441706]
+> > > >>>>>>
+> > > >>>>>> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0=
+ #8
+> > > >>>>>>
+> > > >>>>>> [    2.441718] Hardware name: xlnx,zynqmp (DT)
+> > > >>>>>>
+> > > >>>>>> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 tas=
+k.ti:
+> > > >>>>> ffffffc071888000
+> > > >>>>>>
+> > > >>>>>> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
+> > > >>>>>>
+> > > >>>>>> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
+> > > >>>>>>
+> > > >>>>>> In kernel/irq/irqdomain.c function irq_domain_associate
+> > > >>>>>>
+> > > >>>>>> if (WARN(hwirq >=3D domain->hwirq_max,
+> > > >>>>>>                  "error: hwirq 0x%x is too large for %s\n",
+> > > >>>>>> (int)hwirq, domain-
+> > > >>>> name))
+> > > >>>>>>                 return -EINVAL;
+> > > >>>>>>
+> > > >>>>>> Here the hwirq and hwirq_max are equal to 4 without the above
+> > > >>>>>> condition
+> > > >>>>> (INTX_NUM + 1) due to which crash is coming.
+> > > >>>>>> This is happening as the legacy interrupts are starting from 1=
+ (INTA).
+> > > >>>>>
+> > > >>>>> I understood that. I'm still persisting in saying that you have=
+ the wrong
+> fix.
+> > > >>>>>
+> > > >>>>> Your domain should always allocate many interrupts as you have
+> > > >>>>> interrupt sources. These interrupts (hwirq) should be numbered
+> > > >>>>> from 0 to (n-
+> > > >>> 1).
+> > > >>>>
+> > > >>>> Agreed, but here comes the problem the hwirq for legacy
+> > > >>>> interrupts will start at 0x1 to 0x4 (INTA to INTD) and these
+> > > >>>> values are as per PCIe specification for legacy interrupts. So
+> > > >>>> these cannot be numbered from 0. So when 0x4 (INTD) for a
+> > > >>>> multi-function device comes the crash occurs.
+> > > >>>
+> > > >>> So who provides this hwirq? Who calls irq_domain_associate()
+> > > >>> with hwirq set to 4?
+> > > >>>
+> > > >> PCIe subsystem invokes pcibios_add_device function in
+> arch/arm64/kernel/pci.c for every pci device.
+> > > >> The purpose of this function is to assign dev->irq using
+> of_irq_parse_and_map_pci.
+> > > >> of_irq_parse_and_map_pci invokes of_irq_parse_pci where it reads
+> > > >> PCI_INTERRUPT_PIN from configuration space and saves it in paramet=
+er
+> of struct of_phandle_args.
+> > > >> This structure is passed to irq_create_of_mapping where it invokes
+> irq_create_fwspec_mapping.
+> > > >> irq_create_fwspec_mapping invokes irq_domain_translate and gets
+> > > >> hwirq, here the above saved PCI_INTERRUPT_PIN value is assigned to
+> hwirq (*hwirq =3D fwspec->param[0]).
+> > > >> And then using this hwirq irq_create_mapping -> irq_domain_associa=
+te
+> were invoked and mapping is created for virtual irq with this hwirq.
+> > > >> So for any end point PCI_INTERRUPT_PIN value starts from 0x1 to 0x=
+4
+> and so hwirq starts from 0x1 to 0x4.
+> > > >>
+> > > >> So the values are more generic w.r.t to protocol, that's why hwirq=
+ will
+> range from 0x1 to 0x4.
+> > > >> And then if you check pcie-altera.c they are doing this adding one=
+ in their
+> handler and while creating legacy domain.
+> > > >
+> > > > Is this resolved yet?  Marc, are you happy, or should we iterate
+> > > > on this again?
+> > >
+> > > Ah, sorry to have dropped the ball on this patch.
+> >
+> > No problem, I wasn't making forward progress anyway.
+> >
+> > > I guess that given that the infrastructure imposes the hwirq range
+> > > on the host drivers, Bharat's approach is the only way (and a number
+> > > of other host drivers are already slightly broken). I'll try and
+> > > have a look at solving this at the generic level. In the meantime:
+> > >
+> > > Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> >
+> > After looking at this myself, I'm not happy with this either.  It
+> > feels like there are bugs lurking here and we're just hiding one of the=
+m.
+> >
+> > Here are the callers of irq_domain_add_linear() for legacy INTx in
+> > drivers/pci/host:
+> >
+> >   advk_pcie_init_irq_domain    LEGACY_IRQ_NUM   (4)
+> >   dra7xx_pcie_init_irq_domain  4
+> >   ks_dw_pcie_host_init         MAX_LEGACY_IRQS  (4)
+> >   altera_pcie_init_irq_domain  INTX_NUM + 1     (5)
+> >   nwl_pcie_init_irq_domain     INTX_NUM + 1     (5)
+> >   xilinx_pcie_init_irq_domain  4
+>=20
+> The altera change corresponding to this was 99496bd2971f ("PCI: altera: F=
+ix
+> error when INTx is 4").  I should have noticed this inconsistency back th=
+en.
+>=20
+> Are aardvark, dra7xx, keystone, and xilinx (non-NWL) broken because they =
+only
+> request 4 IRQs and only INTA, INTB, and INTC work?
+>=20
+Hi Bjorn,
 
-I like the idea of this.  The part I *don't* like is using kmalloc()
-in this path.
+xilinx (non-NWL) will also work with all 4 INTA, INTB, INTc and INTD, but I=
+ haven't sent patches
+for this yet, because by that time marc has already raised issue regarding =
+the fix w.r.t this. So
+once a proper fix was agreed upon for Xilinx-nwl, I will send fix for this =
+also.
 
-We've always done this, and this patch means we would only do it the
-first time for each device, but the struct aer_rpc (which we allocate
-for each device at probe time) is over 900 bytes, while the struct
-aer_err_info is only about 70 bytes.  Why don't we just include
-aer_error_info directly in aer_rpc and allocate the whole shebang once
-at probe time?  I don't really see what we gain by doing the
-allocation in the runtime path.
-
->  	}
->  
->  	/*
-> @@ -762,8 +771,6 @@ static void aer_isr_one_error(struct pcie_device *p_device,
->  		if (find_source_device(p_device->port, e_info))
->  			aer_process_err_devices(p_device, e_info);
->  	}
-> -
-> -	kfree(e_info);
->  }
->  
->  /**
-> -- 
-> 1.8.3.1
-> 
+Thanks & Regards,
+Bharat
