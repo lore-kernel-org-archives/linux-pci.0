@@ -1,97 +1,286 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46296 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934334AbcIFWUF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 18:20:05 -0400
-Subject: [PATCH 1/2] PCI/AER: Remove aerdriver.nosourceid kernel parameter
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lance Ortiz <lance.ortiz@hpe.com>, Betty Dall <betty.dall@hpe.com>,
-        Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-        Chen Gong <gong.chen@linux.intel.com>,
-        KeithBuschkeith.busch@intel.com,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, Shuah Khan <shuahkh@osg.samsung.com>,
-        Huang Ying <ying.huang@intel.com>,
-        Vijay Mohan Pandarathil <vijaymohan.pandarathil@hpe.com>,
-        Jon Derrick <jonathan.derrick@intel.com>
-Date: Tue, 06 Sep 2016 17:19:42 -0500
-Message-ID: <20160906221942.23655.87117.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160906221522.23655.66321.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160906221522.23655.66321.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Wed, 14 Sep 2016 13:40:16 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	arnd@arndb.de, hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jchandra@broadcom.com, cov@codeaurora.org, dhdang@apm.com,
+	ard.biesheuvel@linaro.org, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org, jcm@redhat.com,
+	andrea.gallo@linaro.org, jeremy.linton@arm.com,
+	gabriele.paoloni@huawei.com, jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
+Message-ID: <20160914124016.GA4123@red-moon>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-3-git-send-email-tn@semihalf.com>
+ <57D76626.1050109@huawei.com>
+ <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
+ <57D7E53F.1000106@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57D7E53F.1000106@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The aerdriver.nosourceid kernel parameter was intended for working around
-broken chipsets don't supply the source ID for AER events.  We recently
-added PCI_BUS_FLAGS_NO_AERSID, which can be set by quirks for the same
-purpose.
+On Tue, Sep 13, 2016 at 07:38:39PM +0800, Dongdong Liu wrote:
+> Hi Tomasz
+> 
+> ?? 2016/9/13 14:32, Tomasz Nowicki ????:
+> >Hi Liu,
+> >
+> >On 13.09.2016 04:36, Dongdong Liu wrote:
+> >>Hi Tomasz
+> >>
+> >>?? 2016/9/10 3:24, Tomasz Nowicki ????:
+> >>>Some platforms may not be fully compliant with generic set of PCI config
+> >>>accessors. For these cases we implement the way to overwrite CFG
+> >>>accessors
+> >>>set and configuration space range.
+> >>>
+> >>>In first place pci_mcfg_parse() saves machine's IDs and revision number
+> >>>(these come from MCFG header) in order to match against known quirk
+> >>>entries.
+> >>>Then the algorithm traverses available quirk list (static array),
+> >>>matches against <oem_id, oem_table_id, rev, domain, bus number range> and
+> >>>returns custom PCI config ops and/or CFG resource structure.
+> >>>
+> >>>When adding new quirk there are two possibilities:
+> >>>1. Override default pci_generic_ecam_ops ops but CFG resource comes
+> >>>from MCFG
+> >>>{ "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &foo_ops,
+> >>>MCFG_RES_EMPTY },
+> >>>2. Override default pci_generic_ecam_ops ops and CFG resource. For
+> >>>this case
+> >>>it is also allowed get CFG resource from quirk entry w/o having it in
+> >>>MCFG.
+> >>>{ "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &boo_ops,
+> >>>   DEFINE_RES_MEM(START, SIZE) },
+> >>>
+> >>>pci_generic_ecam_ops and MCFG entries will be used for platforms
+> >>>free from quirks.
+> >>>
+> >>>Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> >>>Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> >>>Signed-off-by: Christopher Covington <cov@codeaurora.org>
+> >>>---
+> >>>  drivers/acpi/pci_mcfg.c | 80
+> >>>+++++++++++++++++++++++++++++++++++++++++++++----
+> >>>  1 file changed, 74 insertions(+), 6 deletions(-)
+> >>>
+> >>>diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> >>>index ffcc651..2b8acc7 100644
+> >>>--- a/drivers/acpi/pci_mcfg.c
+> >>>+++ b/drivers/acpi/pci_mcfg.c
+> >>>@@ -32,6 +32,59 @@ struct mcfg_entry {
+> >>>      u8            bus_start;
+> >>>      u8            bus_end;
+> >>>  };
+> >>>+struct mcfg_fixup {
+> >>>+    char oem_id[ACPI_OEM_ID_SIZE + 1];
+> >>>+    char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+> >>>+    u32 oem_revision;
+> >>>+    u16 seg;
+> >>>+    struct resource bus_range;
+> >>>+    struct pci_ecam_ops *ops;
+> >>>+    struct resource cfgres;
+> >>>+};
+> >>>+
+> >>>+#define MCFG_DOM_ANY            (-1)
+> >>>+#define MCFG_BUS_RANGE(start, end)    DEFINE_RES_NAMED((start),    \
+> >>>+                        ((end) - (start) + 1),    \
+> >>>+                        NULL, IORESOURCE_BUS)
+> >>>+#define MCFG_BUS_ANY        MCFG_BUS_RANGE(0x0, 0xff)
+> >>>+#define MCFG_RES_EMPTY        DEFINE_RES_NAMED(0, 0, NULL, 0)
+> >>>+
+> >>>+static struct mcfg_fixup mcfg_quirks[] = {
+> >>>+/*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+> >>>+};
+> >>>+
+> >>>+static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+> >>>+static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
+> >>>+static u32 mcfg_oem_revision;
+> >>>+
+> >>>+static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
+> >>>+                  struct resource *cfgres,
+> >>>+                  struct pci_ecam_ops **ecam_ops)
+> >>>+{
+> >>>+    struct mcfg_fixup *f;
+> >>>+    int i;
+> >>>+
+> >>>+    /*
+> >>>+     * First match against PCI topology <domain:bus> then use OEM ID,
+> >>>OEM
+> >>>+     * table ID, and OEM revision from MCFG table standard header.
+> >>>+     */
+> >>>+    for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++,
+> >>>f++) {
+> >>>+        if (f->seg == root->segment &&
+> >>
+> >>why not use MCFG_DOM_RANGE, I think MCFG_DOM_RANGE is better.
+> >>if drop MCFG_DOM_RANGE, mcfg_quirks[] will be more complex.
+> >>
+> >>static struct mcfg_fixup mcfg_quirks[] = {
+> >>/*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+> >>#ifdef CONFIG_PCI_HOST_THUNDER_ECAM
+> >>    /* SoC pass1.x */
+> >>    { "CAVIUM", "THUNDERX", 2, 0, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>    { "CAVIUM", "THUNDERX", 2, 1, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>    { "CAVIUM", "THUNDERX", 2, 2, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>    { "CAVIUM", "THUNDERX", 2, 3, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>    { "CAVIUM", "THUNDERX", 2, 10, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>    { "CAVIUM", "THUNDERX", 2, 11, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>    { "CAVIUM", "THUNDERX", 2, 12, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>    { "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+> >>      MCFG_RES_EMPTY},
+> >>#endif
+> >>.....
+> >>};
+> >>
+> >>As PATCH v5 we only need define mcfg_quirks as below, It looks better.
+> >>static struct pci_cfg_fixup mcfg_quirks[] __initconst = {
+> >>/*    { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, pci_ops, init_hook
+> >>}, */
+> >>#ifdef CONFIG_PCI_HOST_THUNDER_PEM
+> >>    /* Pass2.0 */
+> >>    { "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(4, 9), MCFG_BUS_ANY, NULL,
+> >>      thunder_pem_cfg_init },
+> >>    { "CAVIUM", "THUNDERX", 1, MCFG_DOM_RANGE(14, 19), MCFG_BUS_ANY, NULL,
+> >>      thunder_pem_cfg_init },
+> >>#endif
+> >>#ifdef CONFIG_PCI_HISI_ACPI
+> >>    { "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> >>      NULL, hisi_pcie_acpi_hip05_init},
+> >>    { "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> >>      NULL, hisi_pcie_acpi_hip06_init},
+> >>    { "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
+> >>      NULL, hisi_pcie_acpi_hip07_init},
+> >>#endif
+> >>};
+> >
+> >Note this series disallow hisi_pcie_acpi_hip07_init() call. According to the Bjorn suggestion I rework quirk code to override ops and CFG resources only. Giving that I do not see the way to use MCFG_DOM_RANGE macro. For HISI you would need to get CFG range for each possible case:
+> >
+> >#ifdef CONFIG_PCI_HISI_ACPI
+> >     { "HISI  ", "HIP05   ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_ops,
+> >       DEFINE_RES_MEM(start0, size0)},
+> >     { "HISI  ", "HIP05   ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_ops,
+> >       DEFINE_RES_MEM(start1, size1)},
+> >     { "HISI  ", "HIP05   ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_ops,
+> >       DEFINE_RES_MEM(start2, size2)},
+> >     { "HISI  ", "HIP05   ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_ops,
+> >       DEFINE_RES_MEM(start3, size3)},
+> >[...]
+> >#endif
+> >
+> >Indeed there are more entries here but you do not have to define the same resource array in driver.
+> 
+> Our host bridge is non ECAM only for the RC bus config space;
+> for any other bus underneath the root bus we support ECAM access.
+> 
+> RC config resource with hardcode as DEFINE_RES_MEM(0xb0070000, SZ_4K),
+> EP config resource we get it from MCFG table.
+> So we need to override ops, but config resource we only need to hardcode with RC config resource.
+> 
+> Our host controller ACPI support patch can be found:
+> https://lkml.org/lkml/2016/8/31/340
+> This patch is based on RFC V5 quirk mechanism.
+> 
+> Based on V6 quirk mechanism, we have to change it as below:
 
-Remove the aerdriver.nosourceid kernel parameter.  For anything other than
-debugging, asking users to find and use kernel parameters is a poor user
-experience.  Instead, we should add PCI_BUS_FLAGS_NO_AERSID quirks for any
-hardware that needs it.
+That's because you are hacking around the quirk mechanism to define
+resources that have nothing to do with PCI config regions (that you
+ioremap and use to check the PCI link status) and of top of that you are
+*still* using the MCFG to describe config regions that are NOT ECAM
+compliant, which is the exact opposite of what this patchset is meant
+to achieve.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- Documentation/PCI/pcieaer-howto.txt |    4 ----
- drivers/pci/pcie/aer/aerdrv_core.c  |   12 ++++--------
- 2 files changed, 4 insertions(+), 12 deletions(-)
+If a config region is not ECAM compliant having it defined in the MCFG
+is a firmware bug and the way you are using this patchset is not what
+we designed it for, please correct me if I am wrong.
 
-diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.txt
-index b4987c0..4956df3 100644
---- a/Documentation/PCI/pcieaer-howto.txt
-+++ b/Documentation/PCI/pcieaer-howto.txt
-@@ -61,10 +61,6 @@ be initiated although firmwares have no _OSC support. To enable the
- walkaround, pls. add aerdriver.forceload=y to kernel boot parameter line
- when booting kernel. Note that forceload=n by default.
- 
--nosourceid, another parameter of type bool, can be used when broken
--hardware (mostly chipsets) has root ports that cannot obtain the reporting
--source ID. nosourceid=n by default.
--
- 2.3 AER error output
- When a PCI-E AER error is captured, an error message will be outputted to
- console. If it's a correctable error, it is outputted as a warning.
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 8f5e14c..f8a9b17 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -28,9 +28,7 @@
- #include "aerdrv.h"
- 
- static bool forceload;
--static bool nosourceid;
- module_param(forceload, bool, 0);
--module_param(nosourceid, bool, 0);
- 
- #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
- 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
-@@ -132,8 +130,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	 * When bus id is equal to 0, it might be a bad id
- 	 * reported by root port.
- 	 */
--	if (!nosourceid &&
--	    (PCI_BUS_NUM(e_info->id) != 0) &&
-+	if ((PCI_BUS_NUM(e_info->id) != 0) &&
- 	    !(dev->bus->bus_flags & PCI_BUS_FLAGS_NO_AERSID)) {
- 		/* Device ID match? */
- 		if (e_info->id == ((dev->bus->number << 8) | dev->devfn))
-@@ -146,11 +143,10 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 
- 	/*
- 	 * When either
--	 *      1) nosourceid==y;
--	 *      2) bus id is equal to 0. Some ports might lose the bus
-+	 *      1) bus id is equal to 0. Some ports might lose the bus
- 	 *              id of error source id;
--	 *      3) bus flag PCI_BUS_FLAGS_NO_AERSID is set
--	 *      4) There are multiple errors and prior ID comparing fails;
-+	 *      2) bus flag PCI_BUS_FLAGS_NO_AERSID is set
-+	 *      3) There are multiple errors and prior ID comparing fails;
- 	 * We check AER status registers to find possible reporter.
- 	 */
- 	if (atomic_read(&dev->enable_cnt) == 0)
+Thanks,
+Lorenzo
 
+> 
+> #ifdef CONFIG_PCI_HISI_ACPI
+> 	{ "HISI ", "HIP05 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP05 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP05 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP05 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+>          MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP07 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP07 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> 	  MCFG_RES_EMPTY},
+> 	....
+> 	
+> 	{ "HISI ", "HIP07 ", 0, 15, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> 	  MCFG_RES_EMPTY},
+> 
+> #endif
+> 
+> struct pci_ecam_ops hisi_pci_hip05_ops = {
+> 	.bus_shift	= 20,
+> 	.init		=  hisi_pci_hip05_init,
+> 	.pci_ops	= {
+> 		.map_bus	= pci_ecam_map_bus,
+> 		.read		= hisi_pcie_acpi_rd_conf,
+> 		.write		= hisi_pcie_acpi_wr_conf,
+> 	}
+> };
+> 
+> struct pci_ecam_ops hisi_pci_hip06_ops = {
+> 	.bus_shift = 20,
+> 	.init = hisi_pci_hip06_init,
+> 	.pci_ops = {
+> 		.map_bus = pci_ecam_map_bus,
+> 		.read = hisi_pcie_acpi_rd_conf,
+> 		.write = hisi_pcie_acpi_wr_conf,
+> 	}
+> };
+> 
+> hisi_pci_hipxx_init function is used to get RC config resource with hardcode.
+> .....
+> 
+> So I hope we can use MCFG_DOM_RANGE, Then I can change it as below.
+> 
+> #ifdef CONFIG_PCI_HISI_ACPI
+> 	{ "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> 	 &hisi_pcie_hip05_ops, MCFG_RES_EMPTY},
+> 	{ "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> 	 &hisi_pcie_hip06_ops, MCFG_RES_EMPTY},
+> 	{ "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
+> 	  &hisi_pcie_hip07_ops, MCFG_RES_EMPTY},
+> #endif
+> 
+> Thanks
+> Dongdong
+> >
+> >Thanks,
+> >Tomasz
+> >
+> >.
+> >
+> 
