@@ -1,129 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.ru ([83.169.36.222]:44246 "EHLO ozlabs.ru"
+Received: from mail.kernel.org ([198.145.29.136]:34184 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753230AbcI2Fat (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 01:30:49 -0400
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Netdev <netdev@vger.kernel.org>,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        Santosh Raspatur <santosh@chelsio.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH kernel v2] PCI: Enable access to custom VPD for Chelsio devices (cxgb3)
-Date: Thu, 29 Sep 2016 15:21:52 +1000
-Message-Id: <1475126512-10722-1-git-send-email-aik@ozlabs.ru>
+        id S1765396AbcINVQX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 17:16:23 -0400
+Date: Wed, 14 Sep 2016 16:16:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] pcie-rcar: MSI range allocation support
+Message-ID: <20160914211618.GA16581@localhost>
+References: <2520843.q5xC3E7R5B@wasted.cogentembedded.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2520843.q5xC3E7R5B@wasted.cogentembedded.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is at least one Chelsio 10Gb card which uses VPD area to store
-some custom blocks (example below). However pci_vpd_size() returns
-the length of the first block only assuming that there can be only
-one VPD "End Tag" and VFIO blocks access beyond that offset
-(since 4e1a63555) which leads to the situation when the guest "cxgb3"
-driver fails to probe the device. The host system does not have this
-problem as the drives accesses the config space directly without
-pci_read_vpd()/...
+On Thu, Sep 08, 2016 at 10:32:59PM +0300, Sergei Shtylyov wrote:
+> From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+> 
+> Impelment MSI setup_irqs() method which enables allocation of several MSIs
+> at once.
+> 
+> [Sergei Shtylyov: removed unrelated/unneeded changes, fixed too long lines,
+> reordered the variable declarations, reworded the summary/description.]
+> 
+> Signed-off-by: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-This adds a quirk to override the VPD size to a bigger value.
-The maximum size is taken from EEPROMSIZE in
-drivers/net/ethernet/chelsio/cxgb3/common.h. We do not read the tag
-as the cxgb3 driver does as the driver supports writing to EEPROM/VPD
-and when it writes, it only checks for 8192 bytes boundary. The quirk
-is registerted for all devices supported by the cxgb3 driver.
+Applied with Simon's ack to pci/host-rcar for v4.9, thanks!
 
-This adds a quirk to the PCI layer (not to the cxgb3 driver) as
-the cxgb3 driver itself accesses VPD directly and the problem only exists
-with the vfio-pci driver (when cxgb3 is not running on the host and
-may not be even loaded) which blocks accesses beyond the first block
-of VPD data. However vfio-pci itself does not have quirks mechanism so
-we add it to PCI.
-
-Tested on:
-Ethernet controller [0200]: Chelsio Communications Inc T310 10GbE Single Port Adapter [1425:0030]
-
-This is its VPD:
-0000 Large item 42 bytes; name 0x2 Identifier String
-	b'10 Gigabit Ethernet-SR PCI Express Adapter'
-	#00 [EC] len=7: b'D76809 '
-	#0a [FN] len=7: b'46K7897'
-	#14 [PN] len=7: b'46K7897'
-	#1e [MN] len=4: b'1037'
-	#25 [FC] len=4: b'5769'
-	#2c [SN] len=12: b'YL102035603V'
-	#3b [NA] len=12: b'00145E992ED1'
-
-0c00 Large item 16 bytes; name 0x2 Identifier String
-        b'S310E-SR-X      '
-0c13 Large item 234 bytes; name 0x10
-        #00 [PN] len=16: b'TBD             '
-        #13 [EC] len=16: b'110107730D2     '
-        #26 [SN] len=16: b'97YL102035603V  '
-        #39 [NA] len=12: b'00145E992ED1'
-        #48 [V0] len=6: b'175000'
-        #51 [V1] len=6: b'266666'
-        #5a [V2] len=6: b'266666'
-        #63 [V3] len=6: b'2000  '
-        #6c [V4] len=2: b'1 '
-        #71 [V5] len=6: b'c2    '
-        #7a [V6] len=6: b'0     '
-        #83 [V7] len=2: b'1 '
-        #88 [V8] len=2: b'0 '
-        #8d [V9] len=2: b'0 '
-        #92 [VA] len=2: b'0 '
-        #97 [RV] len=80: b's\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
-0d00 Large item 252 bytes; name 0x11
-        #00 [VC] len=16: b'122310_1222 dp  '
-        #13 [VD] len=16: b'610-0001-00 H1\x00\x00'
-        #26 [VE] len=16: b'122310_1353 fp  '
-        #39 [VF] len=16: b'610-0001-00 H1\x00\x00'
-        #4c [RW] len=173: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'...
-0dff Small item 0 bytes; name 0xf End Tag
-
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
-Changes:
-v2:
-* used pci_set_vpd_size() helper
-* added explicit list of IDs from cxgb3 driver
-* added a note in the commit log why the quirk is not in cxgb3
----
- drivers/pci/quirks.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 44e0ff3..b22fce5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3243,6 +3243,28 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
- 			quirk_thunderbolt_hotplug_msi);
- 
-+static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
-+{
-+	if (!dev->vpd)
-+		return;
-+
-+	pci_set_vpd_size(dev, max_t(unsigned int, dev->vpd->len, 8192));
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x20, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x21, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x22, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x23, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x24, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x25, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x26, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x30, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x31, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x32, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x35, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x36, quirk_chelsio_extend_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x37, quirk_chelsio_extend_vpd);
-+
- #ifdef CONFIG_ACPI
- /*
-  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
--- 
-2.5.0.rc3
-
+> ---
+> The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo plus
+> the patch posted yesterday.
+> 
+>  drivers/pci/host/pcie-rcar.c |   72 +++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 70 insertions(+), 2 deletions(-)
+> 
+> Index: pci/drivers/pci/host/pcie-rcar.c
+> ===================================================================
+> --- pci.orig/drivers/pci/host/pcie-rcar.c
+> +++ pci/drivers/pci/host/pcie-rcar.c
+> @@ -673,6 +673,18 @@ static int rcar_msi_alloc(struct rcar_ms
+>  	return msi;
+>  }
+>  
+> +static int rcar_msi_alloc_region(struct rcar_msi *chip, int no_irqs)
+> +{
+> +	int msi;
+> +
+> +	mutex_lock(&chip->lock);
+> +	msi = bitmap_find_free_region(chip->used, INT_PCI_MSI_NR,
+> +				      order_base_2(no_irqs));
+> +	mutex_unlock(&chip->lock);
+> +
+> +	return msi;
+> +}
+> +
+>  static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
+>  {
+>  	mutex_lock(&chip->lock);
+> @@ -768,7 +780,7 @@ static int rcar_msi_setup_irq(struct msi
+>  	if (hwirq < 0)
+>  		return hwirq;
+>  
+> -	irq = irq_create_mapping(msi->domain, hwirq);
+> +	irq = irq_find_mapping(msi->domain, hwirq);
+>  	if (!irq) {
+>  		rcar_msi_free(msi, hwirq);
+>  		return -EINVAL;
+> @@ -785,6 +797,58 @@ static int rcar_msi_setup_irq(struct msi
+>  	return 0;
+>  }
+>  
+> +static int rcar_msi_setup_irqs(struct msi_controller *chip,
+> +			       struct pci_dev *pdev, int nvec, int type)
+> +{
+> +	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
+> +	struct rcar_msi *msi = to_rcar_msi(chip);
+> +	struct msi_desc *desc;
+> +	struct msi_msg msg;
+> +	unsigned int irq;
+> +	int hwirq;
+> +	int i;
+> +
+> +	/* MSI-X interrupts are not supported */
+> +	if (type == PCI_CAP_ID_MSIX)
+> +		return -EINVAL;
+> +
+> +	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
+> +	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
+> +
+> +	hwirq = rcar_msi_alloc_region(msi, nvec);
+> +	if (hwirq < 0)
+> +		return -ENOSPC;
+> +
+> +	irq = irq_find_mapping(msi->domain, hwirq);
+> +	if (!irq)
+> +		return -ENOSPC;
+> +
+> +	for (i = 0; i < nvec; i++) {
+> +		/*
+> +		 * irq_create_mapping() called from rcar_pcie_probe() pre-
+> +		 * allocates descs,  so there is no need to allocate descs here.
+> +		 * We can therefore assume that if irq_find_mapping() above
+> +		 * returns non-zero, then the descs are also successfully
+> +		 * allocated.
+> +		 */
+> +		if (irq_set_msi_desc_off(irq, i, desc)) {
+> +			/* TODO: clear */
+> +			return -EINVAL;
+> +		}
+> +	}
+> +
+> +	desc->nvec_used = nvec;
+> +	desc->msi_attrib.multiple = order_base_2(nvec);
+> +
+> +	msg.address_lo = rcar_pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
+> +	msg.address_hi = rcar_pci_read_reg(pcie, PCIEMSIAUR);
+> +	msg.data = hwirq;
+> +
+> +	pci_write_msi_msg(irq, &msg);
+> +
+> +	return 0;
+> +}
+> +
+>  static void rcar_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+>  {
+>  	struct rcar_msi *msi = to_rcar_msi(chip);
+> @@ -819,12 +883,13 @@ static int rcar_pcie_enable_msi(struct r
+>  	struct platform_device *pdev = to_platform_device(pcie->dev);
+>  	struct rcar_msi *msi = &pcie->msi;
+>  	unsigned long base;
+> -	int err;
+> +	int err, i;
+>  
+>  	mutex_init(&msi->lock);
+>  
+>  	msi->chip.dev = pcie->dev;
+>  	msi->chip.setup_irq = rcar_msi_setup_irq;
+> +	msi->chip.setup_irqs = rcar_msi_setup_irqs;
+>  	msi->chip.teardown_irq = rcar_msi_teardown_irq;
+>  
+>  	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
+> @@ -834,6 +899,9 @@ static int rcar_pcie_enable_msi(struct r
+>  		return -ENOMEM;
+>  	}
+>  
+> +	for (i = 0; i < INT_PCI_MSI_NR; i++)
+> +		irq_create_mapping(msi->domain, i);
+> +
+>  	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
+>  	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
+>  			       IRQF_SHARED | IRQF_NO_THREAD,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
