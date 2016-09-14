@@ -1,53 +1,70 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Tue, 13 Sep 2016 23:13:07 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] PCI: Fix bridge_d3 update on device removal
-Message-ID: <20160913211307.GA1521@wunner.de>
-References: <9bc855a01d0f29cc8425cf50dce9812062309cfb.1473135221.git.lukas@wunner.de>
- <20160913210231.GG4138@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:51571 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1761706AbcINW7Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 18:59:16 -0400
+Date: Wed, 14 Sep 2016 16:59:10 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: "Woodruff, Robert J" <robert.j.woodruff@intel.com>
+Cc: Adit Ranadive <aditr@vmware.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
+Message-ID: <20160914225910.GB3567@obsidianresearch.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <20160912180251.GH5843@obsidianresearch.com>
+ <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+ <20160914173636.GA10309@obsidianresearch.com>
+ <DM2PR0501MB844473AE0FCAD0FD748D43DC5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
+ <9C6B67F36DCAFC479B1CF6A967258A8C7DE14CE8@ORSMSX115.amr.corp.intel.com>
+ <9C6B67F36DCAFC479B1CF6A967258A8C7DE14D3E@ORSMSX115.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160913210231.GG4138@localhost>
+In-Reply-To: <9C6B67F36DCAFC479B1CF6A967258A8C7DE14D3E@ORSMSX115.amr.corp.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 13, 2016 at 04:02:31PM -0500, Bjorn Helgaas wrote:
-> On Tue, Sep 06, 2016 at 06:20:46AM +0200, Lukas Wunner wrote:
-> > Starting with v4.8, we allow a PCIe port to runtime suspend to D3hot if
-> > the port itself and its children satisfy a number of conditions.  Once a
-> > child is removed, we recheck those conditions in case the removed device
-> > was blocking the port from suspending.
-> > 
-> > The rechecking needs to happen *after* the device has been removed from
-> > the bus it resides on.  Otherwise when walking the port's subordinate
-> > bus in pci_bridge_d3_update(), the device being removed would
-> > erroneously still be taken into account.
-> > 
-> > However the device is removed from the bus_list in pci_destroy_dev() and
-> > we currently recheck *before* that.  Fix it.
-> > 
-> > Fixes: 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
-> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+On Wed, Sep 14, 2016 at 10:20:22PM +0000, Woodruff, Robert J wrote:
+
+> >this new scheme works with >kernel.org 4.8, then it is possible
+> >that it could go into that OFED-4.8 Release, but again, we are
+> >still looking at the new scheme and evaluating how it affects >the
+> >community OFED.
 > 
-> 9d26d3a8f1b0 appeared in v4.8-rc1, so I assume this fix should be merged
-> before v4.8, right?
+> One other question.  Jason, the OFA (and its members) want to
+> maintain the dual-license (BSD/GPL) for the code, as is the case for
+> all the code that was in the OFA git trees on the OFA server that
+> you pulled from.
 
-Yes, it's a bug in the new runtime PM code for PCIe ports,
-albeit a relatively harmless one:  I think the worst that
-can happen is that a port which should suspend doesn't.
+The code in the OFA trees has a mixture of licenses. It is all GPLv2
+compatible for sure, but there are at least three variations of the
+'BSD' license. As far as I know, only the 2 clause OpenIB.org BSD
+license is approved for use in OFA projects. Someone from the board
+could correct me if I am wrong.
 
-But it's still a bug, so if this could still go into 4.8
-it would be ideal.
+This means the 3 projects with the BSD patent clause, hosted on the
+OFA servers, were already not conforming.
 
-> I applied it to for-linus with Mika's reviewed-by and Rafael's acked-by on
-> that assumption.
+As is Intels HFI1 driver which uses a three clause BSD license.
 
-Perfect, thanks!
+> package follows that licensing model for accepting any new code into
+> that combined repo ?
 
-Lukas
+As with the kernel we'd discourage 're-licensing' existing files.
+
+However, since this is not a OFA project, I, personally, would not
+turn away a GPLv2 compatible contribution, but I am proposing that the
+'default' license for the project be OFA compatible.
+
+I think license enforcement of its members falls to the OFA.
+
+Doug may feel differently.
+
+Jason
