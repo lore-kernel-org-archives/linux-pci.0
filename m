@@ -1,33 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38707 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751795AbcI2SiA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Sep 2016 14:38:00 -0400
-Date: Thu, 29 Sep 2016 20:37:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com,
-        brking@us.ibm.com, haver@linux.vnet.ibm.com,
-        ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com,
-        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/6] genwqe: use pci_irq_allocate_vectors
-Message-ID: <20160929183757.GA4106@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de> <1473600688-24043-6-git-send-email-hch@lst.de> <87twcyk1cd.fsf@linux.vnet.ibm.com>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:49742 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1764194AbcINTo4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 15:44:56 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
+Date: Wed, 14 Sep 2016 19:44:45 +0000
+Message-ID: <DM2PR0501MB844473AE0FCAD0FD748D43DC5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <20160912180251.GH5843@obsidianresearch.com>
+ <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+ <20160914173636.GA10309@obsidianresearch.com>
+In-Reply-To: <20160914173636.GA10309@obsidianresearch.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87twcyk1cd.fsf@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 29, 2016 at 03:28:02PM -0300, Gabriel Krisman Bertazi wrote:
-> Christoph Hellwig <hch@lst.de> writes:
-> 
-> > Simply the interrupt setup by using the new PCI layer helpers.
-> 
-> Good clean up.  Tested and:
-> 
-> Acked-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+On Wed, Sep 14, 2016 at 10:37:00 -0700, Jason Gunthorpe wrote:
+> We desire to use this as the vehical for the userspace included with the =
+4.9
+> kernel.
+>=20
+> I anticipate the tree will be running by Oct 1.
 
-Which tree should this go in through?
+Thanks. So does this mean that the libraries distributed via OFED (openfabr=
+ics.org)
+will be now from the rdma-plumbing git tree?
+Or is the switch to happen only when distros start shipping with the 4.9 ke=
+rnel by
+default?
