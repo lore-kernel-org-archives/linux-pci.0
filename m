@@ -1,145 +1,138 @@
-Return-Path: <fu.wei@linaro.org>
-Return-Path: <fu.wei@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.130]:64636 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760242AbcINN1D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 09:27:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>, hch@infradead.org,
+        Joao.Pinto@synopsys.com, mingkai.hu@nxp.com, m-karicheri2@ti.com,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Joao Pinto <jpinto@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>, nsekhar@ti.com,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>, linux-ntb@googlegroups.com
+Subject: Re: [RFC PATCH 00/11] pci: support for configurable PCI endpoint
+Date: Wed, 14 Sep 2016 15:25:41 +0200
+Message-ID: <2837059.ka7z3gzjF2@wuerfel>
+In-Reply-To: <1473829927-20466-1-git-send-email-kishon@ti.com>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <e287da4e-63bd-2d90-4fdd-dccce9b86459@semihalf.com>
-References: <1470909998-16710-1-git-send-email-tn@semihalf.com>
- <1470909998-16710-2-git-send-email-tn@semihalf.com> <CADyBb7u+PMFZ8kbSsxPpe8Ws3ik3HKpYakf066-sFd-9gv8_-w@mail.gmail.com>
- <e287da4e-63bd-2d90-4fdd-dccce9b86459@semihalf.com>
-From: Fu Wei <fu.wei@linaro.org>
-Date: Mon, 5 Sep 2016 23:31:32 +0800
-Message-ID: <CADyBb7uT3sOsnQmWTYDsBXBt+D60PgECxsCaziTb9Zw0bigHpg@mail.gmail.com>
-Subject: Re: [Linaro-acpi] [PATCH V8 1/8] ACPI: I/O Remapping Table (IORT)
- initial support
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>, jason@lakedaemon.net,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, helgaas@kernel.org, Rafael Wysocki <rafael@kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>, Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, okaya@codeaurora.org,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, robert.richter@caviumnetworks.com,
-	ddaney.cavm@gmail.com, linux-pci@vger.kernel.org, shijie.huang@arm.com,
-	Marcin Wojtas <mw@semihalf.com>, Andrea Gallo <andrea.gallo@linaro.org>,
-	linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+On Wednesday, September 14, 2016 10:41:56 AM CEST Kishon Vijay Abraham I wrote:
+> This patch series
+> 	*) adds PCI endpoint core layer
+> 	*) modifies designware/dra7xx driver to be configured in EP mode
+> 	*) adds a PCI endpoint *test* function driver
 
-On 5 September 2016 at 14:12, Tomasz Nowicki <tn@semihalf.com> wrote:
-> On 02.09.2016 13:52, Fu Wei wrote:
->>
->> Hi Tomasz,
->>
->> On 11 August 2016 at 18:06, Tomasz Nowicki <tn@semihalf.com> wrote:
->>>
->>> IORT shows representation of IO topology for ARM based systems.
->>> It describes how various components are connected together on
->>> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
->>>
->>> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
->>>
->>> Initial support allows to detect IORT table presence and save its
->>> root pointer obtained through acpi_get_table(). The pointer validity
->>> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
->>> is not set while using IORT nodes we would dereference unmapped pointers.
->>>
->>> For the aforementioned reason call iort_table_detect() from acpi_init()
->>> which guarantees acpi_gbl_permanent_mmap to be set at that point.
->>>
->>> Add generic helpers which are helpful for scanning and retrieving
->>> information from IORT table content. List of the most important helpers:
->>> - iort_find_dev_node() finds IORT node for a given device
->>> - iort_node_map_rid() maps device RID and returns IORT node which
->>> provides
->>>   final translation
->>>
->>> IORT support is placed under drivers/acpi/arm64/ new directory due to its
->>> ARM64 specific nature. The code there is considered only for ARM64.
->>> The long term plan is to keep all ARM64 specific tables support
->>> in this place e.g. GTDT table.
->>>
->>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->>> ---
->>>  drivers/acpi/Kconfig        |   5 +
->>>  drivers/acpi/Makefile       |   2 +
->>>  drivers/acpi/arm64/Kconfig  |   6 ++
->>>  drivers/acpi/arm64/Makefile |   1 +
->>>  drivers/acpi/arm64/iort.c   | 218
->>> ++++++++++++++++++++++++++++++++++++++++++++
->>>  drivers/acpi/bus.c          |   2 +
->>>  include/linux/iort.h        |  30 ++++++
->>>  7 files changed, 264 insertions(+)
->>>  create mode 100644 drivers/acpi/arm64/Kconfig
->>>  create mode 100644 drivers/acpi/arm64/Makefile
->>>  create mode 100644 drivers/acpi/arm64/iort.c
->>>  create mode 100644 include/linux/iort.h
->>>
->>> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
->>> index 445ce28..6cef2d1 100644
->>> --- a/drivers/acpi/Kconfig
->>> +++ b/drivers/acpi/Kconfig
->>> @@ -521,4 +521,9 @@ config ACPI_CONFIGFS
->>>           userspace. The configurable ACPI groups will be visible under
->>>           /config/acpi, assuming configfs is mounted under /config.
->>>
->>> +if ARM64
->>> +source "drivers/acpi/arm64/Kconfig"
->>> +
->>> +endif
->>> +
->>>  endif  # ACPI
->>> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
->>> index 5ae9d85..e5ada78 100644
->>> --- a/drivers/acpi/Makefile
->>> +++ b/drivers/acpi/Makefile
->>> @@ -105,3 +105,5 @@ obj-$(CONFIG_ACPI_CONFIGFS) += acpi_configfs.o
->>>
->>>  video-objs                     += acpi_video.o video_detect.o
->>>  obj-y                          += dptf/
->>> +
->>> +obj-$(CONFIG_ARM64)            += arm64/
->>> diff --git a/drivers/acpi/arm64/Kconfig b/drivers/acpi/arm64/Kconfig
->>> new file mode 100644
->>> index 0000000..fc818dc
->>> --- /dev/null
->>> +++ b/drivers/acpi/arm64/Kconfig
->>> @@ -0,0 +1,6 @@
->>> +#
->>> +# ACPI Configuration for ARM64
->>> +#
->>> +
->>> +config IORT_TABLE
->>
->>
->> Sorry for nit-picking, but is that better to use ACPI_IORT
->> or maybe ARM64__IORT ??
->
->
-> ACPI_IORT sounds good.
+Hi Kishon,
 
-Thanks, Tomasz :-)
-I have rebaseed my GTDT patchset on your v8 patchset,
-But before I post my new patchset, I  hope we can harmonize with each
-other on these:
+I think this is a great start, thanks for posting early with a clear
+list of limitations and TODO items.
 
-1. ACPI_IORT --  ACPI_GTDT
-2. for the file name,  maybe can follow "/drivers/acpi/acpi_*.c" like
-acpi_iort.c and acpi_gtdt.c
-or  follow "/drivers/acpi/apei/*.c" like iort.c and gtdt.c.
+I've added the drivers/ntb maintainers to Cc, given that there is
+a certain degree of overlap between your work and the existing
+code, I think they should be part of the discussion.
+ 
+> Known Limitation:
+> 	*) Does not support multi-function devices
 
-looking forward to you new patchset :-)
-Thanks :-)
+If I understand it right, this was a problem for USB and adding
+it later made it somewhat inconsistent. Maybe we can at least
+try to come up with an idea of how multi-function devices
+could be handled even if we don't implement it until someone
+actually needs it.
 
->
-> Tomasz
+Is your hardware able to make the PCIe endpoint look like
+a device with multiple PCI functions, or would one have to
+do this in software inside of a single PCI function if we
+ever need it?
 
+> TODO:
+> 	*) access buffers in RC
+> 	*) raise MSI interrupts
+> 	*) Enable user space control for the RC side PCI driver
 
+The user space control would end up just being one of several
+gadget drivers, right? E.g. gadget drivers for standard hardware
+(8250 uart, ATA, NVMe, some ethernet) could be done as kernel
+drivers while a user space driver can be used for things that
+are more unusual and that don't need to interface to another
+part of the kernel?
 
--- 
-Best regards,
+> 	*) Adapt all other users of designware to use the new design (only
+> 	   dra7xx has been adapted)
 
-Fu Wei
-Software Engineer
-Red Hat
+I don't fully understand this part. Does every designware based
+driver need modifications, or are the changes to the
+generic parts of the designware driver enough to make it
+work for the simpler platforms?
+
+> HOW TO:
+> 
+> ON THE EP SIDE:
+> ***************
+> 
+> /* EP function is configured using configfs */
+> # mount -t configfs none /sys/kernel/config
+> 
+> /* PCI EP core layer creates "pci_ep" entry in configfs */
+> # cd /sys/kernel/config/pci_ep/
+> 
+> /*
+>  * This is the 1st step in creating an endpoint function. This
+>  * creates the endpoint function device *instance*. The string
+>  * before the .<num> suffix will identify the driver this
+>  * EP function will bind to.
+>  * Just pci_epf_test is also valid. The .<num> suffix is used
+>  * if there are multiple PCI controllers and all of them wants
+>  * to use the same function.
+>  */
+> # mkdir pci_epf_test.0
+
+I haven't used USB gadgets, but I assume this is modeled around
+the same interface. If there are notable differences, please mention
+what they are. Otherwise the general concept seems rather nice to me.
+
+>  drivers/pci/{host => controller}/Kconfig           |  109 +++++-
+>  drivers/pci/{host => controller}/Makefile          |    2 +
+>  drivers/pci/{host => controller}/pci-aardvark.c    |    0
+>  drivers/pci/{host => controller}/pci-dra7xx.c      |  340 +++++++++++++----
+>  drivers/pci/{host => controller}/pci-exynos.c      |    0
+>  drivers/pci/{host => controller}/pci-host-common.c |    0
+>  .../pci/{host => controller}/pci-host-generic.c    |    0
+>  drivers/pci/{host => controller}/pci-hyperv.c      |    0
+>  drivers/pci/{host => controller}/pci-imx6.c        |    0
+>  drivers/pci/{host => controller}/pci-keystone-dw.c |    0
+>  drivers/pci/{host => controller}/pci-keystone.c    |    0
+>  drivers/pci/{host => controller}/pci-keystone.h    |    0
+
+Maybe it's better to wait before moving it around, this will make
+it harder for you to rebase the patch series while you are working on
+it and other people are working on the existing code.
+
+I'd suggest dropping the rename patches for the moment and just work
+in drivers/pci/host.
+
+Let's talk (high-level) about the DT binding. I see that the way
+you have done it here, one will need to have a different .dtb file
+for a machine depending on whether the PCIe is used in host or
+endpoint mode. The advantage of this way is that it's a much
+cleaner binding (PCIe host bindings are a mess, and adding more
+options to it will only make it worse), the downside is that
+you can't decide at runtime what you want to use it for. E.g.
+connecting two identical machines over PCIe requires deciding
+in the bootloader which one is the endpoint, or using DT
+overlays, which may be awkward for some users. Is this a realistic
+use case, or do you expect that all machines will only ever be
+used in one of the two ways?
+
+	Arnd
