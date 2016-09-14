@@ -1,87 +1,392 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35537 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S934896AbcI2Xxv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 19:53:51 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8TNqoIx125271
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 19:53:50 -0400
-Received: from e23smtp06.au.ibm.com (e23smtp06.au.ibm.com [202.81.31.148])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 25s8suh4us-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 19:53:50 -0400
-Received: from localhost
-        by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Fri, 30 Sep 2016 09:53:47 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-        by d23dlp03.au.ibm.com (Postfix) with ESMTP id E960D357805A
-        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8TNriN44915678
-        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-        by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8TNrhbR026932
-        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 09:53:44 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
-        benh@au1.ibm.com, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        clsoto@us.ibm.com, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v2 1/2] pci: Call pcibios_sriov_enable() before IOV BARs are enabled
-Date: Fri, 30 Sep 2016 09:47:49 +1000
-Message-Id: <1475192870-7763-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22707 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755879AbcINMq4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 08:46:56 -0400
+Date: Wed, 14 Sep 2016 15:46:45 +0300
+From: Yuval Shaia <yuval.shaia@oracle.com>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v4 11/16] IB/pvrdma: Add support for memory regions
+Message-ID: <20160914124644.GF15800@yuval-lap.uk.oracle.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-12-git-send-email-aditr@vmware.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473655766-31628-12-git-send-email-aditr@vmware.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In current implementation, pcibios_sriov_enable() is used by PPC
-PowerNV platform only. In PowerNV specific pcibios_sriov_enable(),
-PF's IOV BARs might be updated (shifted) by pci_update_resource().
-It means the IOV BARs aren't ready for decoding incoming memory
-address until pcibios_sriov_enable() returns.
+No more comments.
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
 
-This calls pcibios_sriov_enable() earlier before the IOV BARs are
-enabled. As the result, the IOV BARs have been configured correctly
-when they are enabled.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Tested-by: Carol Soto <clsoto@us.ibm.com>
----
- drivers/pci/iov.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 2194b44..f1343f0 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -303,13 +303,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 			return rc;
- 	}
- 
--	pci_iov_set_numvfs(dev, nr_virtfn);
--	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
--	pci_cfg_access_lock(dev);
--	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
--	msleep(100);
--	pci_cfg_access_unlock(dev);
--
- 	iov->initial_VFs = initial;
- 	if (nr_virtfn < initial)
- 		initial = nr_virtfn;
-@@ -320,6 +313,13 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		goto err_pcibios;
- 	}
- 
-+	pci_iov_set_numvfs(dev, nr_virtfn);
-+	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
-+	pci_cfg_access_lock(dev);
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-+	msleep(100);
-+	pci_cfg_access_unlock(dev);
-+
- 	for (i = 0; i < initial; i++) {
- 		rc = pci_iov_add_virtfn(dev, i, 0);
- 		if (rc)
--- 
-2.1.0
-
+On Sun, Sep 11, 2016 at 09:49:21PM -0700, Adit Ranadive wrote:
+> This patch adds support for creating and destroying memory regions. The
+> PVRDMA device supports User MRs, DMA MRs (no Remote Read/Write support),
+> Fast Register MRs.
+> 
+> Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+> Reviewed-by: George Zhang <georgezhang@vmware.com>
+> Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+> Reviewed-by: Bryan Tan <bryantan@vmware.com>
+> Signed-off-by: Adit Ranadive <aditr@vmware.com>
+> ---
+> Changes v3->v4:
+>  - Changed access flag check for DMA MR to using bit operation.
+>  - Removed some local variables.
+> 
+> Changes v2->v3:
+>  - Removed boolean in pvrdma_cmd_post.
+> ---
+>  drivers/infiniband/hw/pvrdma/pvrdma_mr.c | 332 +++++++++++++++++++++++++++++++
+>  1 file changed, 332 insertions(+)
+>  create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_mr.c
+> 
+> diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_mr.c b/drivers/infiniband/hw/pvrdma/pvrdma_mr.c
+> new file mode 100644
+> index 0000000..6163f17
+> --- /dev/null
+> +++ b/drivers/infiniband/hw/pvrdma/pvrdma_mr.c
+> @@ -0,0 +1,332 @@
+> +/*
+> + * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of EITHER the GNU General Public License
+> + * version 2 as published by the Free Software Foundation or the BSD
+> + * 2-Clause License. This program is distributed in the hope that it
+> + * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
+> + * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+> + * See the GNU General Public License version 2 for more details at
+> + * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program available in the file COPYING in the main
+> + * directory of this source tree.
+> + *
+> + * The BSD 2-Clause License
+> + *
+> + *     Redistribution and use in source and binary forms, with or
+> + *     without modification, are permitted provided that the following
+> + *     conditions are met:
+> + *
+> + *      - Redistributions of source code must retain the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer.
+> + *
+> + *      - Redistributions in binary form must reproduce the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer in the documentation and/or other materials
+> + *        provided with the distribution.
+> + *
+> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+> + * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+> + * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+> + * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+> + * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+> + * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+> + * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+> + * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+> + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+> + * OF THE POSSIBILITY OF SUCH DAMAGE.
+> + */
+> +
+> +#include <linux/list.h>
+> +#include <linux/slab.h>
+> +
+> +#include "pvrdma.h"
+> +
+> +/**
+> + * pvrdma_get_dma_mr - get a DMA memory region
+> + * @pd: protection domain
+> + * @acc: access flags
+> + *
+> + * @return: ib_mr pointer on success, otherwise returns an errno.
+> + */
+> +struct ib_mr *pvrdma_get_dma_mr(struct ib_pd *pd, int acc)
+> +{
+> +	struct pvrdma_dev *dev = to_vdev(pd->device);
+> +	struct pvrdma_user_mr *mr;
+> +	union pvrdma_cmd_req req;
+> +	union pvrdma_cmd_resp rsp;
+> +	struct pvrdma_cmd_create_mr *cmd = &req.create_mr;
+> +	struct pvrdma_cmd_create_mr_resp *resp = &rsp.create_mr_resp;
+> +	int ret;
+> +
+> +	if (!(acc & IB_ACCESS_LOCAL_WRITE)) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "unsupported dma mr access flags %#x\n", acc);
+> +		return ERR_PTR(-EOPNOTSUPP);
+> +	}
+> +
+> +	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
+> +	if (!mr)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	memset(cmd, 0, sizeof(*cmd));
+> +	cmd->hdr.cmd = PVRDMA_CMD_CREATE_MR;
+> +	cmd->pd_handle = to_vpd(pd)->pd_handle;
+> +	cmd->access_flags = acc;
+> +	cmd->flags = PVRDMA_MR_FLAG_DMA;
+> +
+> +	ret = pvrdma_cmd_post(dev, &req, &rsp);
+> +	if (ret < 0) {
+> +		dev_warn(&dev->pdev->dev, "could not get DMA mem region\n");
+> +		kfree(mr);
+> +		return ERR_PTR(ret);
+> +	}
+> +
+> +	mr->mmr.mr_handle = resp->mr_handle;
+> +	mr->ibmr.lkey = resp->lkey;
+> +	mr->ibmr.rkey = resp->rkey;
+> +
+> +	return &mr->ibmr;
+> +}
+> +
+> +/**
+> + * pvrdma_reg_user_mr - register a userspace memory region
+> + * @pd: protection domain
+> + * @start: starting address
+> + * @length: length of region
+> + * @virt_addr: I/O virtual address
+> + * @access_flags: access flags for memory region
+> + * @udata: user data
+> + *
+> + * @return: ib_mr pointer on success, otherwise returns an errno.
+> + */
+> +struct ib_mr *pvrdma_reg_user_mr(struct ib_pd *pd, u64 start, u64 length,
+> +				 u64 virt_addr, int access_flags,
+> +				 struct ib_udata *udata)
+> +{
+> +	struct pvrdma_dev *dev = to_vdev(pd->device);
+> +	struct pvrdma_user_mr *mr = NULL;
+> +	struct ib_umem *umem;
+> +	union pvrdma_cmd_req req;
+> +	union pvrdma_cmd_resp rsp;
+> +	struct pvrdma_cmd_create_mr *cmd = &req.create_mr;
+> +	struct pvrdma_cmd_create_mr_resp *resp = &rsp.create_mr_resp;
+> +	int nchunks;
+> +	int ret;
+> +	int entry;
+> +	struct scatterlist *sg;
+> +
+> +	if (length == 0 || length > dev->dsr->caps.max_mr_size) {
+> +		dev_warn(&dev->pdev->dev, "invalid mem region length\n");
+> +		return ERR_PTR(-EINVAL);
+> +	}
+> +
+> +	umem = ib_umem_get(pd->uobject->context, start,
+> +			   length, access_flags, 0);
+> +	if (IS_ERR(umem)) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "could not get umem for mem region\n");
+> +		return ERR_CAST(umem);
+> +	}
+> +
+> +	nchunks = 0;
+> +	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, entry)
+> +		nchunks += sg_dma_len(sg) >> PAGE_SHIFT;
+> +
+> +	if (nchunks < 0 || nchunks > PVRDMA_PAGE_DIR_MAX_PAGES) {
+> +		dev_warn(&dev->pdev->dev, "overflow %d pages in mem region\n",
+> +			 nchunks);
+> +		ret = -EINVAL;
+> +		goto err_umem;
+> +	}
+> +
+> +	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
+> +	if (!mr) {
+> +		ret = -ENOMEM;
+> +		goto err_umem;
+> +	}
+> +
+> +	mr->mmr.iova = virt_addr;
+> +	mr->mmr.size = length;
+> +	mr->umem = umem;
+> +
+> +	ret = pvrdma_page_dir_init(dev, &mr->pdir, nchunks, false);
+> +	if (ret) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "could not allocate page directory\n");
+> +		goto err_umem;
+> +	}
+> +
+> +	ret = pvrdma_page_dir_insert_umem(&mr->pdir, mr->umem, 0);
+> +	if (ret)
+> +		goto err_pdir;
+> +
+> +	/* Send to device */
+> +	memset(cmd, 0, sizeof(*cmd));
+> +	cmd->hdr.cmd = PVRDMA_CMD_CREATE_MR;
+> +	cmd->start = start;
+> +	cmd->length = length;
+> +	cmd->pd_handle = to_vpd(pd)->pd_handle;
+> +	cmd->access_flags = access_flags;
+> +	cmd->nchunks = nchunks;
+> +	cmd->pdir_dma = mr->pdir.dir_dma;
+> +
+> +	ret = pvrdma_cmd_post(dev, &req, &rsp);
+> +
+> +	if (ret < 0 || rsp.hdr.ack != PVRDMA_CMD_CREATE_MR_RESP) {
+> +		dev_warn(&dev->pdev->dev, "could not register mem region\n");
+> +		goto err_pdir;
+> +	}
+> +
+> +	mr->mmr.mr_handle = resp->mr_handle;
+> +	mr->ibmr.lkey = resp->lkey;
+> +	mr->ibmr.rkey = resp->rkey;
+> +
+> +	return &mr->ibmr;
+> +
+> +err_pdir:
+> +	pvrdma_page_dir_cleanup(dev, &mr->pdir);
+> +err_umem:
+> +	ib_umem_release(umem);
+> +	kfree(mr);
+> +
+> +	return ERR_PTR(ret);
+> +}
+> +
+> +/**
+> + * pvrdma_alloc_mr - allocate a memory region
+> + * @pd: protection domain
+> + * @mr_type: type of memory region
+> + * @max_num_sg: maximum number of pages
+> + *
+> + * @return: ib_mr pointer on success, otherwise returns an errno.
+> + */
+> +struct ib_mr *pvrdma_alloc_mr(struct ib_pd *pd, enum ib_mr_type mr_type,
+> +			      u32 max_num_sg)
+> +{
+> +	struct pvrdma_dev *dev = to_vdev(pd->device);
+> +	struct pvrdma_user_mr *mr;
+> +	union pvrdma_cmd_req req;
+> +	union pvrdma_cmd_resp rsp;
+> +	struct pvrdma_cmd_create_mr *cmd = &req.create_mr;
+> +	struct pvrdma_cmd_create_mr_resp *resp = &rsp.create_mr_resp;
+> +	int size = max_num_sg * sizeof(u64);
+> +	int ret;
+> +
+> +	if (mr_type != IB_MR_TYPE_MEM_REG ||
+> +	    max_num_sg > PVRDMA_MAX_FAST_REG_PAGES)
+> +		return ERR_PTR(-EINVAL);
+> +
+> +	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
+> +	if (!mr)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	mr->pages = kzalloc(size, GFP_KERNEL);
+> +	if (!mr->pages) {
+> +		ret = -ENOMEM;
+> +		goto freemr;
+> +	}
+> +
+> +	ret = pvrdma_page_dir_init(dev, &mr->pdir, max_num_sg, false);
+> +	if (ret) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "failed to allocate page dir for mr\n");
+> +		ret = -ENOMEM;
+> +		goto freepages;
+> +	}
+> +
+> +	memset(cmd, 0, sizeof(*cmd));
+> +	cmd->hdr.cmd = PVRDMA_CMD_CREATE_MR;
+> +	cmd->pd_handle = to_vpd(pd)->pd_handle;
+> +	cmd->access_flags = 0;
+> +	cmd->flags = PVRDMA_MR_FLAG_FRMR;
+> +	cmd->nchunks = max_num_sg;
+> +
+> +	ret = pvrdma_cmd_post(dev, &req, &rsp);
+> +	if (ret < 0) {
+> +		dev_warn(&dev->pdev->dev, "could not create FR mem region\n");
+> +		ret = -EINVAL;
+> +		goto freepdir;
+> +	}
+> +
+> +	mr->max_pages = max_num_sg;
+> +	mr->mmr.mr_handle = resp->mr_handle;
+> +	mr->ibmr.lkey = resp->lkey;
+> +	mr->ibmr.rkey = resp->rkey;
+> +	mr->page_shift = PAGE_SHIFT;
+> +	mr->umem = NULL;
+> +
+> +	return &mr->ibmr;
+> +
+> +freepdir:
+> +	pvrdma_page_dir_cleanup(dev, &mr->pdir);
+> +freepages:
+> +	kfree(mr->pages);
+> +freemr:
+> +	kfree(mr);
+> +	return ERR_PTR(ret);
+> +}
+> +
+> +/**
+> + * pvrdma_dereg_mr - deregister a memory region
+> + * @ibmr: memory region
+> + *
+> + * @return: 0 on success.
+> + */
+> +int pvrdma_dereg_mr(struct ib_mr *ibmr)
+> +{
+> +	struct pvrdma_user_mr *mr = to_vmr(ibmr);
+> +	struct pvrdma_dev *dev = to_vdev(ibmr->device);
+> +	union pvrdma_cmd_req req;
+> +	struct pvrdma_cmd_destroy_mr *cmd = &req.destroy_mr;
+> +	int ret;
+> +
+> +	memset(cmd, 0, sizeof(*cmd));
+> +	cmd->hdr.cmd = PVRDMA_CMD_DESTROY_MR;
+> +	cmd->mr_handle = mr->mmr.mr_handle;
+> +	ret = pvrdma_cmd_post(dev, &req, NULL);
+> +	if (ret < 0)
+> +		dev_warn(&dev->pdev->dev, "could not deregister mem region\n");
+> +
+> +	pvrdma_page_dir_cleanup(dev, &mr->pdir);
+> +	if (mr->umem)
+> +		ib_umem_release(mr->umem);
+> +
+> +	kfree(mr->pages);
+> +	kfree(mr);
+> +
+> +	return 0;
+> +}
+> +
+> +static int pvrdma_set_page(struct ib_mr *ibmr, u64 addr)
+> +{
+> +	struct pvrdma_user_mr *mr = to_vmr(ibmr);
+> +
+> +	if (mr->npages == mr->max_pages)
+> +		return -ENOMEM;
+> +
+> +	mr->pages[mr->npages++] = addr;
+> +	return 0;
+> +}
+> +
+> +int pvrdma_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg, int sg_nents,
+> +		     unsigned int *sg_offset)
+> +{
+> +	struct pvrdma_user_mr *mr = to_vmr(ibmr);
+> +	struct pvrdma_dev *dev = to_vdev(ibmr->device);
+> +	int ret;
+> +
+> +	mr->npages = 0;
+> +
+> +	ret = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, pvrdma_set_page);
+> +	if (ret < 0)
+> +		dev_warn(&dev->pdev->dev, "could not map sg to pages\n");
+> +
+> +	return ret;
+> +}
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
