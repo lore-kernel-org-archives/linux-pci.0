@@ -1,64 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:38056 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932581AbcILEuo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:44 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v4 14/16] IB/pvrdma: Add Kconfig and Makefile
-Date: Sun, 11 Sep 2016 21:49:24 -0700
-Message-ID: <1473655766-31628-15-git-send-email-aditr@vmware.com>
-In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:42911 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762659AbcINVO7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 17:14:59 -0400
+From: Tyler Baicar <tbaicar@codeaurora.org>
+To: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
+        paul.gortmaker@windriver.com, sudipm.mukherjee@gmail.com,
+        axboe@fb.com, izumi.taku@jp.fujitsu.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc: bp@suse.de, Tyler Baicar <tbaicar@codeaurora.org>
+Subject: [PATCH V2 2/2] acpi: apei: send correct severity to calculate AER severity
+Date: Wed, 14 Sep 2016 15:14:46 -0600
+Message-Id: <1473887686-24420-3-git-send-email-tbaicar@codeaurora.org>
+In-Reply-To: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
+References: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a Kconfig and Makefile for the PVRDMA driver.
+Currently the AER severity is calculated by calling
+cper_severity_to_aer(), but the parameter sent is actually the
+GHES severity. This causes the AER severity to be incorrect.
+Fix the parameter to be the CPER severity instead of the GHES
+severity.
 
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
+Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
+Reviewed-by: Borislav Petkov <bp@suse.de>
 ---
-Changes v3->v4:
- - Enforced dependency on VMXNet3
----
- drivers/infiniband/hw/pvrdma/Kconfig  | 7 +++++++
- drivers/infiniband/hw/pvrdma/Makefile | 3 +++
- 2 files changed, 10 insertions(+)
- create mode 100644 drivers/infiniband/hw/pvrdma/Kconfig
- create mode 100644 drivers/infiniband/hw/pvrdma/Makefile
+ drivers/acpi/apei/ghes.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/hw/pvrdma/Kconfig b/drivers/infiniband/hw/pvrdma/Kconfig
-new file mode 100644
-index 0000000..b345679
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/Kconfig
-@@ -0,0 +1,7 @@
-+config INFINIBAND_PVRDMA
-+	tristate "VMware Paravirtualized RDMA Driver"
-+	depends on NETDEVICES && ETHERNET && PCI && INET && VMXNET3
-+	---help---
-+	  This driver provides low-level support for VMware Paravirtual
-+	  RDMA adapter. It interacts with the VMXNet3 driver to provide
-+	  Ethernet capabilities.
-diff --git a/drivers/infiniband/hw/pvrdma/Makefile b/drivers/infiniband/hw/pvrdma/Makefile
-new file mode 100644
-index 0000000..e6f078b
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/Makefile
-@@ -0,0 +1,3 @@
-+obj-$(CONFIG_INFINIBAND_PVRDMA) += pvrdma.o
-+
-+pvrdma-y := pvrdma_cmd.o pvrdma_cq.o pvrdma_doorbell.o pvrdma_main.o pvrdma_misc.o pvrdma_mr.o pvrdma_qp.o pvrdma_verbs.o
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 60746ef..f0a029e 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -457,7 +457,7 @@ static void ghes_do_proc(struct ghes *ghes,
+ 
+ 				devfn = PCI_DEVFN(pcie_err->device_id.device,
+ 						  pcie_err->device_id.function);
+-				aer_severity = cper_severity_to_aer(sev);
++				aer_severity = cper_severity_to_aer(gdata->error_severity);
+ 
+ 				/*
+ 				 * If firmware reset the component to contain
 -- 
-2.7.4
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
 
