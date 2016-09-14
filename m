@@ -1,268 +1,63 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V11 5/8] irqchip/gicv3-its: Refactor ITS DT init code to prepare for ACPI
-Date: Mon, 12 Sep 2016 20:32:24 +0200
-Message-Id: <1473705147-6588-6-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
-References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:52558 "HELO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with SMTP id S932550AbcINAXp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 20:23:45 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 4/4] PCI: Avoid unnecessary resume on shutdown
+Date: Wed, 14 Sep 2016 02:29:52 +0200
+Message-ID: <2217882.yevB8EWaHc@vostro.rjw.lan>
+In-Reply-To: <9f9152c11c6178bbac53fd3d0ef0d38173ad4b0b.1472554278.git.lukas@wunner.de>
+References: <cover.1472554278.git.lukas@wunner.de> <9f9152c11c6178bbac53fd3d0ef0d38173ad4b0b.1472554278.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to add ACPI support we need to isolate ACPI&DT common code and
-move DT logic to corresponding functions. To achieve this we are using
-firmware agnostic handle which can be unpacked to either DT or ACPI node.
+On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
+> We currently perform a mandatory runtime resume of all PCI devices on
+> ->shutdown.  However it is pointless to wake devices only to immediately
+> power them down afterwards.  (Or have the firmware reset them, in case
+> of a reboot.)
+> 
+> It seems there are only two cases when a runtime resume is actually
+> necessary:  If the driver has declared a ->shutdown callback or if kexec
+> is in progress.
+> 
+> Constrain resume of a device to these cases and let it slumber
+> otherwise, thereby conserving energy and speeding up shutdown.
+> 
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> ---
+>  drivers/pci/pci-driver.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index fd4b9c4..09a4e56 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -459,6 +459,11 @@ static void pci_device_shutdown(struct device *dev)
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+>  	struct pci_driver *drv = pci_dev->driver;
+>  
+> +	/* Fast path for suspended devices */
+> +	if (pm_runtime_suspended(dev) && (!drv || !drv->shutdown) &&
+> +	    !kexec_in_progress)
 
-No functional changes other than a very minor one:
-1. Terminate its_init call with -ENODEV for non-DT case which allows
-to remove hack from its-gic-v3.c.
-2. Fix ITS base register address type (from 'unsigned long' to 'phys_addr_t'),
-as a bonus we get nice string formatting.
-3. Since there is only one of ITS parent domain convert it to static global
-variable and drop the parameter from its_probe_one. Users can refer to it
-in more convenient way then.
+What happens if runtime suspend or resume of the device happens here?
 
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/irqchip/irq-gic-v3-its.c   | 65 ++++++++++++++++++++++----------------
- drivers/irqchip/irq-gic-v3.c       |  7 ++--
- include/linux/irqchip/arm-gic-v3.h |  4 +--
- 3 files changed, 42 insertions(+), 34 deletions(-)
+> +		return;
+> +
+>  	pm_runtime_resume(dev);
+>  
+>  	if (drv && drv->shutdown)
+> 
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 943442d..c7518c7 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -75,7 +75,7 @@ struct its_node {
- 	raw_spinlock_t		lock;
- 	struct list_head	entry;
- 	void __iomem		*base;
--	unsigned long		phys_base;
-+	phys_addr_t		phys_base;
- 	struct its_cmd_block	*cmd_base;
- 	struct its_cmd_block	*cmd_write;
- 	struct its_baser	tables[GITS_BASER_NR_REGS];
-@@ -115,6 +115,7 @@ struct its_device {
- static LIST_HEAD(its_nodes);
- static DEFINE_SPINLOCK(its_lock);
- static struct rdists *gic_rdists;
-+static struct irq_domain *its_parent;
- 
- #define gic_data_rdist()		(raw_cpu_ptr(gic_rdists->rdist))
- #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
-@@ -1614,8 +1615,7 @@ static void its_enable_quirks(struct its_node *its)
- 	gic_enable_quirks(iidr, its_quirks, its);
- }
- 
--static int its_init_domain(struct device_node *node, struct its_node *its,
--			   struct irq_domain *parent)
-+static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
- {
- 	struct irq_domain *inner_domain;
- 	struct msi_domain_info *info;
-@@ -1624,13 +1624,13 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
- 	if (!info)
- 		return -ENOMEM;
- 
--	inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
-+	inner_domain = irq_domain_create_tree(handle, &its_domain_ops, its);
- 	if (!inner_domain) {
- 		kfree(info);
- 		return -ENOMEM;
- 	}
- 
--	inner_domain->parent = parent;
-+	inner_domain->parent = its_parent;
- 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
- 	info->ops = &its_msi_domain_ops;
- 	info->data = its;
-@@ -1639,43 +1639,35 @@ static int its_init_domain(struct device_node *node, struct its_node *its,
- 	return 0;
- }
- 
--static int __init its_probe(struct device_node *node,
--			    struct irq_domain *parent)
-+static int __init its_probe_one(struct resource *res,
-+				struct fwnode_handle *handle, int numa_node)
- {
--	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
- 
--	err = of_address_to_resource(node, 0, &res);
--	if (err) {
--		pr_warn("%s: no regs?\n", node->full_name);
--		return -ENXIO;
--	}
--
--	its_base = ioremap(res.start, resource_size(&res));
-+	its_base = ioremap(res->start, resource_size(res));
- 	if (!its_base) {
--		pr_warn("%s: unable to map registers\n", node->full_name);
-+		pr_warn("ITS@%pa: Unable to map ITS registers\n", &res->start);
- 		return -ENOMEM;
- 	}
- 
- 	val = readl_relaxed(its_base + GITS_PIDR2) & GIC_PIDR2_ARCH_MASK;
- 	if (val != 0x30 && val != 0x40) {
--		pr_warn("%s: no ITS detected, giving up\n", node->full_name);
-+		pr_warn("ITS@%pa: No ITS detected, giving up\n", &res->start);
- 		err = -ENODEV;
- 		goto out_unmap;
- 	}
- 
- 	err = its_force_quiescent(its_base);
- 	if (err) {
--		pr_warn("%s: failed to quiesce, giving up\n",
--			node->full_name);
-+		pr_warn("ITS@%pa: Failed to quiesce, giving up\n", &res->start);
- 		goto out_unmap;
- 	}
- 
--	pr_info("ITS: %s\n", node->full_name);
-+	pr_info("ITS %pR\n", res);
- 
- 	its = kzalloc(sizeof(*its), GFP_KERNEL);
- 	if (!its) {
-@@ -1687,9 +1679,9 @@ static int __init its_probe(struct device_node *node,
- 	INIT_LIST_HEAD(&its->entry);
- 	INIT_LIST_HEAD(&its->its_device_list);
- 	its->base = its_base;
--	its->phys_base = res.start;
-+	its->phys_base = res->start;
- 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
--	its->numa_node = of_node_to_nid(node);
-+	its->numa_node = numa_node;
- 
- 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
- 	if (!its->cmd_base) {
-@@ -1736,7 +1728,7 @@ static int __init its_probe(struct device_node *node,
- 	writeq_relaxed(0, its->base + GITS_CWRITER);
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
--	err = its_init_domain(node, its, parent);
-+	err = its_init_domain(handle, its);
- 	if (err)
- 		goto out_free_tables;
- 
-@@ -1754,7 +1746,7 @@ out_free_its:
- 	kfree(its);
- out_unmap:
- 	iounmap(its_base);
--	pr_err("ITS: failed probing %s (%d)\n", node->full_name, err);
-+	pr_err("ITS@%pa: failed probing (%d)\n", &res->start, err);
- 	return err;
- }
- 
-@@ -1782,10 +1774,10 @@ static struct of_device_id its_device_id[] = {
- 	{},
- };
- 
--int __init its_init(struct device_node *node, struct rdists *rdists,
--	     struct irq_domain *parent_domain)
-+static int __init its_of_probe(struct device_node *node)
- {
- 	struct device_node *np;
-+	struct resource res;
- 
- 	for (np = of_find_matching_node(node, its_device_id); np;
- 	     np = of_find_matching_node(np, its_device_id)) {
-@@ -1795,8 +1787,27 @@ int __init its_init(struct device_node *node, struct rdists *rdists,
- 			continue;
- 		}
- 
--		its_probe(np, parent_domain);
-+		if (of_address_to_resource(np, 0, &res)) {
-+			pr_warn("%s: no regs?\n", np->full_name);
-+			continue;
-+		}
-+
-+		its_probe_one(&res, &np->fwnode, of_node_to_nid(np));
- 	}
-+	return 0;
-+}
-+
-+int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
-+		    struct irq_domain *parent_domain)
-+{
-+	struct device_node *of_node;
-+
-+	its_parent = parent_domain;
-+	of_node = to_of_node(handle);
-+	if (of_node)
-+		its_of_probe(of_node);
-+	else
-+		return -ENODEV;
- 
- 	if (list_empty(&its_nodes)) {
- 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
-diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
-index ede5672..1efc02a 100644
---- a/drivers/irqchip/irq-gic-v3.c
-+++ b/drivers/irqchip/irq-gic-v3.c
-@@ -910,7 +910,6 @@ static int __init gic_init_bases(void __iomem *dist_base,
- 				 u64 redist_stride,
- 				 struct fwnode_handle *handle)
- {
--	struct device_node *node;
- 	u32 typer;
- 	int gic_irqs;
- 	int err;
-@@ -951,10 +950,8 @@ static int __init gic_init_bases(void __iomem *dist_base,
- 
- 	set_handle_irq(gic_handle_irq);
- 
--	node = to_of_node(handle);
--	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis() &&
--	    node) /* Temp hack to prevent ITS init for ACPI */
--		its_init(node, &gic_data.rdists, gic_data.domain);
-+	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis())
-+		its_init(handle, &gic_data.rdists, gic_data.domain);
- 
- 	gic_smp_init();
- 	gic_dist_init();
-diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-index 99ac022..8361c8d 100644
---- a/include/linux/irqchip/arm-gic-v3.h
-+++ b/include/linux/irqchip/arm-gic-v3.h
-@@ -430,9 +430,9 @@ struct rdists {
- };
- 
- struct irq_domain;
--struct device_node;
-+struct fwnode_handle;
- int its_cpu_init(void);
--int its_init(struct device_node *node, struct rdists *rdists,
-+int its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 	     struct irq_domain *domain);
- 
- static inline bool gic_enable_sre(void)
--- 
-1.9.1
+Thanks,
+Rafael
+
