@@ -1,119 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:32837 "EHLO
-        mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933190AbcIFMIW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Sep 2016 08:08:22 -0400
-Received: by mail-pa0-f45.google.com with SMTP id cm16so23269797pac.0
-        for <linux-pci@vger.kernel.org>; Tue, 06 Sep 2016 05:08:22 -0700 (PDT)
-Subject: Re: [PATCH v4 05/15] drivers: platform: add fwnode base platform
- devices retrieval
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1471274620-20754-6-git-send-email-lorenzo.pieralisi@arm.com>
- <7659b956-c49d-bd0d-7a1d-8dfc3da6f409@linaro.org>
- <20160905145751.GA7480@red-moon>
-Cc: iommu@lists.linux-foundation.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <06a6d839-639f-8a86-14a5-4c43bff593b7@linaro.org>
-Date: Tue, 6 Sep 2016 20:08:12 +0800
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+Date: Wed, 14 Sep 2016 08:44:22 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: "Busch, Keith" <keith.busch@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [RFCv2 0/3] vmd irq list shortening, map allocation
+Message-ID: <20160914144422.GA8315@localhost.localdomain>
+References: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
+ <20160913205745.GF4138@localhost>
+ <B58D82457FDA0744A320A2FC5AC253B93D722BF9@fmsmsx104.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160905145751.GA7480@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <B58D82457FDA0744A320A2FC5AC253B93D722BF9@fmsmsx104.amr.corp.intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/9/5 22:57, Lorenzo Pieralisi wrote:
-> On Mon, Sep 05, 2016 at 09:19:43PM +0800, Hanjun Guo wrote:
->> On 2016/8/15 23:23, Lorenzo Pieralisi wrote:
->>> The platform device kernel API does not provide functions to
->>> retrieve a platform device through the corresponding struct
->>> device fwnode pointer.
->>>
->>> Implement the fwnode platform_device look-up in drivers core
->>> code by using the bus_find_device() API and a corresponding
->>> matching function. The OF equivalent (eg of_find_device_by_node())
->>> will reuse the newly introduced function when OF code will
->>> take care of setting up the device->fwnode value that is
->>> currently left dangling for platform devices instantiated out
->>> of device tree nodes.
->>>
->>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
->>> ---
->>> drivers/base/platform.c         | 23 +++++++++++++++++++++++
->>> include/linux/platform_device.h |  3 +++
->>> 2 files changed, 26 insertions(+)
->>>
->>> diff --git a/drivers/base/platform.c b/drivers/base/platform.c
->>> index 6482d47..3ef150d 100644
->>> --- a/drivers/base/platform.c
->>> +++ b/drivers/base/platform.c
->>> @@ -760,6 +760,29 @@ err_out:
->>> }
->>> EXPORT_SYMBOL_GPL(__platform_create_bundle);
->>>
->>> +static int fwnode_dev_match(struct device *dev, void *data)
->>> +{
->>> +	return dev->fwnode == data;
->>> +}
->>> +
->>> +/**
->>> + * platform_find_device_by_fwnode() - Find the platform_device associated
->>> + *				      with a fwnode
->>> + * @fwnode: Pointer to firmware node
->>> + *
->>> + * Returns platform_device pointer, or NULL if not found
->>> + */
->>> +struct platform_device *
->>> +platform_find_device_by_fwnode(struct fwnode_handle *fwnode)
->>> +{
->>> +	struct device *dev;
->>> +
->>> +	dev = bus_find_device(&platform_bus_type, NULL, fwnode,
->>> +			      fwnode_dev_match);
->>> +	return dev ? to_platform_device(dev) : NULL;
->>> +}
->>> +EXPORT_SYMBOL(platform_find_device_by_fwnode);
->>
->> As SMMU is registered as platform devices, I think we need such
->> API to retrieve the platform device with fwnode handle, actually
->> Kefeng introduced a similar patch [1], but your patch is more
->> generic, so this patch make sense to me,
->>
->> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->
-> Thanks ! Strictly speaking, with Robin's new series:
->
-> https://lists.linuxfoundation.org/pipermail/iommu/2016-August/018230.html
->
->
-> (and corresponding v5 of this one that I have rebased on top of it) we
-> do not need this patch any longer and it is not really that generic
-> keeping in mind that it can't be used for DT matching (because in DT
-> dev->fwnode is dangling); I will see if I keep this patch according
-> to dependencies.
+Hi Keith,
 
-OK, I think I will wait for your new version, then try another test
-and review it, does it make sense?
+Thanks for the review
 
->
-> Side note: I have a problem with [1], since that code is there to
-> implement DT phandles in ACPI IIUC and we must really prevent that :)
+On Tue, Sep 13, 2016 at 04:16:19PM -0600, Busch, Keith wrote:
+> Sorry for the delay. I've been looking into these new PCI IRQ API's and found an unrelated issue that I stuck myself with working through with Christoph and Thomas. :)
+> 
+> Patches 1/3 and 2/3 look good to me.
+> 
+> I'm not convinced 3/3 is an improvement. At the very least, we don't want to BUG_ON from a failed kmalloc when we can return an appropriate error instead. I'll take a closer look at 3/3 and get back to Jon with more feedback.
+> 
+Yes the BUG_ON was a mistake I would have removed for the next rev. But I agree with you where I am not convinced either. I have been trying to put together a test vehicle to prove that this is actually an improvement, but I have not had much luck yet.
 
-Agreed :)
+Also, from what I can tell as well, nobody is using ida for indexing into a map, so that would be converted to the bitmap api instead.
 
-Thanks
-Hanjun
+I'll follow up in a (long) while when I get the test case figured out and some real results.
+
+If it's not clear yet, 3/3 can be killed :)
+
+> 
+> 
+> -----Original Message-----	
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org] 
+> Sent: Tuesday, September 13, 2016 2:58 PM
+> To: Derrick, Jonathan <jonathan.derrick@intel.com>
+> Cc: Busch, Keith <keith.busch@intel.com>; linux-pci@vger.kernel.org
+> Subject: Re: [RFCv2 0/3] vmd irq list shortening, map allocation
+> 
+> On Fri, Sep 02, 2016 at 11:53:03AM -0600, Jon Derrick wrote:
+> > V2:
+> > Added a map for vmd irqs to attempt to allocate all vmd irqs within an
+> > irq list into a single page. Once we start getting many devices
+> > sharing the irq in an irq list, this may help the list traversal latency.
+> > 
+> > V1:
+> > Couple of RFC patches here. I don't really notice a positive benefit but
+> > it does reduce the struct size of vmd_irq_list and hopefully we gain some
+> > cache benefits from that.
+> > 
+> > Both are based on:
+> > https://patchwork.kernel.org/patch/9304179/
+> > https://patchwork.kernel.org/patch/9304181/
+> > 
+> > Jon Derrick (3):
+> >   vmd: eliminate vmd_vector member from list type
+> >   vmd: eliminate index member from irq list
+> >   pci/vmd: Create irq map for irq nodes
+> > 
+> >  arch/x86/pci/vmd.c | 94 ++++++++++++++++++++++++++++++++++++++++++------------
+> >  1 file changed, 73 insertions(+), 21 deletions(-)
+> 
+> These look OK to me, so if Keith acks them I'll merge them.
