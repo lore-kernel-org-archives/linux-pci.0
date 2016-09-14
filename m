@@ -1,101 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: Rob Herring <robh@kernel.org>
-Subject: RE: [PATCH v4 2/2] pci:aer: add support aer interrupt with none
- MSI/MSI-X/INTx mode
-Date: Mon, 5 Sep 2016 06:05:49 +0000
-Message-ID: <VI1PR0401MB1709ED029763A20726FF5CD392E60@VI1PR0401MB1709.eurprd04.prod.outlook.com>
-References: <1465892645-32381-2-git-send-email-po.liu@nxp.com>
- <1472625442-23309-1-git-send-email-po.liu@nxp.com>
- <1472625442-23309-2-git-send-email-po.liu@nxp.com>
- <20160902151725.GA25273@rob-hp-laptop>
-In-Reply-To: <20160902151725.GA25273@rob-hp-laptop>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:49555 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1765152AbcINUrD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 16:47:03 -0400
+Date: Wed, 14 Sep 2016 14:47:02 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [pci:pci/host-vmd 2/4] arch/x86/pci/vmd.c:674:6: error:
+ 'PCI_IRQ_MSIX' undeclared
+Message-ID: <20160914204701.GA1591@localhost.localdomain>
+References: <201609150417.nlp7t2XD%fengguang.wu@intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, Roy Zang <roy.zang@nxp.com>,
- Marc Zyngier <marc.zyngier@arm.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stuart Yoder <stuart.yoder@nxp.com>, Minghuan Lian <minghuan.lian@nxp.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Shawn Guo <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201609150417.nlp7t2XD%fengguang.wu@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
+Fortunately these symbols are resolved as of v4.8-rc4
 
 
-Best regards,
-Liu Po
+On Thu, Sep 15, 2016 at 04:41:20AM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-vmd
+> head:   e8debf9c6734726d4fcc5aae5bee48e5e2fcc9c6
+> commit: b500e7733fd77bd282caf2f218f2d281c4bdb202 [2/4] x86/PCI: VMD: Convert to use pci_alloc_irq_vectors() API
+> config: i386-randconfig-x014-201637 (attached as .config)
+> compiler: gcc-6 (Debian 6.1.1-9) 6.1.1 20160705
+> reproduce:
+>         git checkout b500e7733fd77bd282caf2f218f2d281c4bdb202
+>         # save the attached .config to linux build tree
+>         make ARCH=i386 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    arch/x86/pci/vmd.c: In function 'vmd_probe':
+> >> arch/x86/pci/vmd.c:674:6: error: 'PCI_IRQ_MSIX' undeclared (first use in this function)
+>          PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+>          ^~~~~~~~~~~~
+>    arch/x86/pci/vmd.c:674:6: note: each undeclared identifier is reported only once for each function it appears in
+> >> arch/x86/pci/vmd.c:674:21: error: 'PCI_IRQ_AFFINITY' undeclared (first use in this function)
+>          PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+>                         ^~~~~~~~~~~~~~~~
+> 
+> vim +/PCI_IRQ_MSIX +674 arch/x86/pci/vmd.c
+> 
+>    668	
+>    669		vmd->msix_count = pci_msix_vec_count(dev);
+>    670		if (vmd->msix_count < 0)
+>    671			return -ENODEV;
+>    672	
+>    673		vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
+>  > 674						PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+>    675		if (vmd->msix_count < 0)
+>    676			return vmd->msix_count;
+>    677	
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
->  -----Original Message-----
->  From: Rob Herring [mailto:robh@kernel.org]
->  Sent: Friday, September 02, 2016 11:17 PM
->  To: Po Liu
->  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Bjorn Helgaas;
->  Shawn Guo; Marc Zyngier; Roy Zang; Mingkai Hu; Stuart Yoder; Yang-Leo Li;
->  Arnd Bergmann; Minghuan Lian; Murali Karicheri
->  Subject: Re: [PATCH v4 2/2] pci:aer: add support aer interrupt with none
->  MSI/MSI-X/INTx mode
->  
->  On Wed, Aug 31, 2016 at 02:37:22PM +0800, Po Liu wrote:
->  > On some platforms, root port doesn't support MSI/MSI-X/INTx in RC mode.
->  > When chip support the aer interrupt with none MSI/MSI-X/INTx mode,
->  > maybe there is interrupt line for aer pme etc. Search the interrupt
->  > number in the fdt file. Then fixup the dev->irq with it.
->  >
->  > Signed-off-by: Po Liu <po.liu@nxp.com>
->  > ---
->  > Changes for v4:
->  > 	- re-use the patch changes in the root port driver;
->  > 	- add binding information;
->  >
->  >  .../devicetree/bindings/pci/layerscape-pci.txt     |  4 +--
->  >  drivers/pci/pcie/portdrv_core.c                    | 31
->  +++++++++++++++++++---
->  >  2 files changed, 30 insertions(+), 5 deletions(-)
->  >
->  > diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > index 41e9f55..1dfb1da 100644
->  > --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
->  > @@ -19,7 +19,7 @@ Required properties:
->  >  - interrupts: A list of interrupt outputs of the controller. Must
->  contain an
->  >    entry for each entry in the interrupt-names property.
->  >  - interrupt-names: Must include the following entries:
->  > -  "intr": The interrupt that is asserted for controller interrupts
->  > +  "aer": The interrupt that is asserted for aer interrupts
->  
->  You can't just change this. That breaks compatibility with old dts files.
->  Plus, it is just a name. Why does it even matter? Not to mention having
->  the name for a single irq is a bit pointless.
-Sorry, this binding comments maybe not clear. 
-"aer" is just one of the interrupt names from host controller. There are "aer" "pme" and so on for further applications. 
-This patch is to fix the Layerscape owning independent aer irq issue. So the 'aer' is used for this patch. The 'intr' will never be used, so removed.
-I may remove the 'must include' for mis-understanding.
 
-Thanks!
-
-Po Liu
-
->  
->  Rob
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
