@@ -1,173 +1,51 @@
-Return-Path: <dhdang@apm.com>
-Return-Path: <dhdang@apm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:51185 "EHLO
+        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1761984AbcINTgq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 15:36:46 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: Yuval Shaia <yuval.shaia@oracle.com>
+CC: "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 01/16] vmxnet3: Move PCI Id to pci_ids.h
+Date: Wed, 14 Sep 2016 19:36:34 +0000
+Message-ID: <DM2PR0501MB84422A1029EE72FC727F960C5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-2-git-send-email-aditr@vmware.com>
+ <20160914110854.GA15800@yuval-lap.uk.oracle.com>
+ <DM2PR0501MB844852987661859C6654E40C5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
+ <20160914162452.GA3216@yuval-lap.Home>
+In-Reply-To: <20160914162452.GA3216@yuval-lap.Home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1473449047-10499-3-git-send-email-tn@semihalf.com>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com> <1473449047-10499-3-git-send-email-tn@semihalf.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Mon, 12 Sep 2016 15:24:05 -0700
-Message-ID: <CADaLNDk0JPJYT_pqjWYwrMBvbyWkpL+6=dEDU9H9qDGMhnQvyw@mail.gmail.com>
-Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Hanjun Guo <hanjun.guo@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Jayachandran C <jchandra@broadcom.com>, Christopher Covington <cov@codeaurora.org>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Robert Richter <robert.richter@caviumnetworks.com>, Marcin Wojtas <mw@semihalf.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, David Daney <ddaney@caviumnetworks.com>,
-	Yijing Wang <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>, jeremy.linton@arm.com,
-	Dongdong Liu <liudongdong3@huawei.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jeffrey Hugo <jhugo@codeaurora.org>, linux-acpi@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 9, 2016 at 12:24 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
->
-> Some platforms may not be fully compliant with generic set of PCI config
-> accessors. For these cases we implement the way to overwrite CFG accessors
-> set and configuration space range.
->
-> In first place pci_mcfg_parse() saves machine's IDs and revision number
-> (these come from MCFG header) in order to match against known quirk entries.
-> Then the algorithm traverses available quirk list (static array),
-> matches against <oem_id, oem_table_id, rev, domain, bus number range> and
-> returns custom PCI config ops and/or CFG resource structure.
->
-> When adding new quirk there are two possibilities:
-> 1. Override default pci_generic_ecam_ops ops but CFG resource comes from MCFG
-> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &foo_ops, MCFG_RES_EMPTY },
-> 2. Override default pci_generic_ecam_ops ops and CFG resource. For this case
-> it is also allowed get CFG resource from quirk entry w/o having it in MCFG.
-> { "OEM_ID", "OEM_TABLE_ID", <REV>, <DOMAIN>, <BUS_NR>, &boo_ops,
->   DEFINE_RES_MEM(START, SIZE) },
->
-> pci_generic_ecam_ops and MCFG entries will be used for platforms
-> free from quirks.
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> Signed-off-by: Christopher Covington <cov@codeaurora.org>
-> ---
->  drivers/acpi/pci_mcfg.c | 80 +++++++++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 74 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index ffcc651..2b8acc7 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -32,6 +32,59 @@ struct mcfg_entry {
->         u8                      bus_start;
->         u8                      bus_end;
->  };
-> +struct mcfg_fixup {
-> +       char oem_id[ACPI_OEM_ID_SIZE + 1];
-> +       char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
-> +       u32 oem_revision;
-> +       u16 seg;
-> +       struct resource bus_range;
-> +       struct pci_ecam_ops *ops;
-> +       struct resource cfgres;
-> +};
-> +
-> +#define MCFG_DOM_ANY                   (-1)
-> +#define MCFG_BUS_RANGE(start, end)     DEFINE_RES_NAMED((start),       \
-> +                                               ((end) - (start) + 1),  \
-> +                                               NULL, IORESOURCE_BUS)
-> +#define MCFG_BUS_ANY           MCFG_BUS_RANGE(0x0, 0xff)
-> +#define MCFG_RES_EMPTY         DEFINE_RES_NAMED(0, 0, NULL, 0)
-> +
-> +static struct mcfg_fixup mcfg_quirks[] = {
-> +/*     { OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
-> +};
-> +
-> +static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-> +static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
-> +static u32 mcfg_oem_revision;
-> +
-> +static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
-> +                                 struct resource *cfgres,
-> +                                 struct pci_ecam_ops **ecam_ops)
-> +{
-> +       struct mcfg_fixup *f;
-> +       int i;
-> +
-> +       /*
-> +        * First match against PCI topology <domain:bus> then use OEM ID, OEM
-> +        * table ID, and OEM revision from MCFG table standard header.
-> +        */
-> +       for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
-> +               if (f->seg == root->segment &&
+On Wed, Sep 14, 2016 at 09:25:18 -0700, Yuval Shaia wrote:
+> On Wed, Sep 14, 2016 at 04:00:25PM +0000, Adit Ranadive wrote:
+> > On Wed, Sep 14, 2016 at 04:09:12 -0700, Yuval Shaia wrote:
+> > > Please update vmxnet3_drv.c accordingly.
+> >
+> > Any reason why? I don't think we need to. Vmxnet3 should just pick up
+> > the moved PCI device id from pci_ids.h file.
+>=20
+> So now you need to include it from vmxnet3_drv.c.
+> Same with pvrdma_main.c
 
-Is dropping the comparison with MCFG_DOM_ANY intended? It is useful if
-all the controllers (segs) can use the same quirk (X-Gene case).
-If you decide to drop it, then we can remove MCFG_DOM_ANY definition as well.
+If you're asking me to include pci_ids.h in our drivers we already do that
+by including pci.h in both the drivers.=20
+pci.h already includes pci_ids.h -=20
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/includ=
+e/linux/pci.h#n35
 
-> +                   resource_contains(&f->bus_range, &root->secondary) &&
-> +                   !memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
-> +                   !memcmp(f->oem_table_id, mcfg_oem_table_id,
-> +                           ACPI_OEM_TABLE_ID_SIZE) &&
-> +                   f->oem_revision == mcfg_oem_revision) {
-> +                       if (f->cfgres.start)
-> +                               *cfgres = f->cfgres;
-> +                       if (f->ops)
-> +                               *ecam_ops =  f->ops;
-> +                       dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
-> +                                f->oem_id, f->oem_table_id, f->oem_revision);
-> +                       return;
-> +               }
-> +       }
-> +}
->
->  /* List to save MCFG entries */
->  static LIST_HEAD(pci_mcfg_list);
-> @@ -61,14 +114,24 @@ int pci_mcfg_lookup(struct acpi_pci_root *root, struct resource *cfgres,
->
->         }
->
-> -       if (!root->mcfg_addr)
-> -               return -ENXIO;
-> -
->  skip_lookup:
->         memset(&res, 0, sizeof(res));
-> -       res.start = root->mcfg_addr + (bus_res->start << 20);
-> -       res.end = res.start + (resource_size(bus_res) << 20) - 1;
-> -       res.flags = IORESOURCE_MEM;
-> +       if (root->mcfg_addr) {
-> +               res.start = root->mcfg_addr + (bus_res->start << 20);
-> +               res.end = res.start + (resource_size(bus_res) << 20) - 1;
-> +               res.flags = IORESOURCE_MEM;
-> +       }
-> +
-> +       /*
-> +        * Let to override default ECAM ops and CFG resource range.
-> +        * Also, this might even retrieve CFG resource range in case MCFG
-> +        * does not have it. Invalid CFG start address means MCFG firmware bug
-> +        * or we need another quirk in array.
-> +        */
-> +       pci_mcfg_match_quirks(root, &res, &ops);
-> +       if (!res.start)
-> +               return -ENXIO;
-> +
->         *cfgres = res;
->         *ecam_ops = ops;
->         return 0;
-> @@ -101,6 +164,11 @@ static __init int pci_mcfg_parse(struct acpi_table_header *header)
->                 list_add(&e->list, &pci_mcfg_list);
->         }
->
-> +       /* Save MCFG IDs and revision for quirks matching */
-> +       memcpy(mcfg_oem_id, header->oem_id, ACPI_OEM_ID_SIZE);
-> +       memcpy(mcfg_oem_table_id, header->oem_table_id, ACPI_OEM_TABLE_ID_SIZE);
-> +       mcfg_oem_revision = header->revision;
-> +
->         pr_info("MCFG table detected, %d entries\n", n);
->         return 0;
->  }
-> --
-> 1.9.1
-Regards,
-Duc Dang.
+If that's going to change maybe someone from the PCI group can comment on.
+
+Thanks,
+Adit
