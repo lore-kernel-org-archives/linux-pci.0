@@ -1,42 +1,35 @@
-Return-Path: <rui.y.wang@intel.com>
-Return-Path: <rui.y.wang@intel.com>
-From: Rui Wang <rui.y.wang@intel.com>
-To: bp@alien8.de
-Cc: bhelgaas@google.com,
-	torvalds@linux-foundation.org,
-	peterz@infradead.org,
-	tglx@linutronix.de,
-	helgaas@kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	rjw@rjwysocki.net,
-	tony.luck@intel.com,
-	mingo@kernel.org,
-	x86@kernel.org,
-	linux-kernel@vger.kernel.org,
-	Rui Wang <rui.y.wang@intel.com>
-Subject: 584c5c422f6c ("x86/ioapic: Support hot-removal of IOAPICs present during boot")
-Date: Sat, 10 Sep 2016 08:14:04 +0800
-Message-Id: <1473466444-25519-1-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <20160909220710.etdw5zzubb72xv53@pd.tnic>
-References: <20160909220710.etdw5zzubb72xv53@pd.tnic>
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+Date: Wed, 14 Sep 2016 16:47:24 -0600
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [pci:pci/host-vmd 2/4] arch/x86/pci/vmd.c:674:6: error:
+ 'PCI_IRQ_MSIX' undeclared
+Message-ID: <20160914224723.GA1894@localhost.localdomain>
+References: <201609150417.nlp7t2XD%fengguang.wu@intel.com>
+ <20160914204701.GA1591@localhost.localdomain>
+ <20160914223016.GH16581@localhost>
+ <20160914225049.GC16556@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160914225049.GC16556@localhost.localdomain>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, September 10, 2016 6:07 AM, Borislav Petkov wrote:
+On Wed, Sep 14, 2016 at 06:50:49PM -0400, Keith Busch wrote:
+> On Wed, Sep 14, 2016 at 05:30:16PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 14, 2016 at 02:47:02PM -0600, Jon Derrick wrote:
+> > > Fortunately these symbols are resolved as of v4.8-rc4
+> > 
+> > Can you point me to the commit that adds them?  I don't really want to
+> > rebase all my branches to -rc4, but maybe I should.  I'm pretty
+> > unsophisticated in my git usage.
 > 
-> Hi,
+> If it's easier to get it from the pci repo, the commit is also currently
+> in your 'for-linus' branch:
 > 
-> commit in $Subject from tip breaks booting on my SNB test box, it freezes
-> somewhere very early during boot. When I revert the aforementioned
-> commit ontop of Linus' master + tip/master from today, it boots fine.
-> 
-> Additional info is available upon request.
-> 
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=4fe0d154880bb6eb833cbe84fa6f385f400f0b9c
 
-Hi Boris,
-
-Is it a Romley-EP ? What kind of SNB box is it? I'll try to find one
-to reproduce the problem.
-
-Thanks
-Rui
+Thanks Keith! Just tested and it looks like that was all that was needed
