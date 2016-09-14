@@ -1,495 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:3077 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S965622AbcIXXWR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2016 19:22:17 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v5 03/16] IB/pvrdma: Add virtual device RDMA structures
-Date: Sat, 24 Sep 2016 16:21:27 -0700
-Message-ID: <6f75650d1087788f5f7788c74254b9fbae948069.1474759181.git.aditr@vmware.com>
-In-Reply-To: <cover.1474759181.git.aditr@vmware.com>
-References: <cover.1474759181.git.aditr@vmware.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
+        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
+        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>, <kishon@ti.com>,
+        <nsekhar@ti.com>
+Subject: [RFC PATCH 10/11] ARM: dts: DRA7: Modify pcie1 dt node for EP mode
+Date: Wed, 14 Sep 2016 10:42:06 +0530
+Message-ID: <1473829927-20466-11-git-send-email-kishon@ti.com>
+In-Reply-To: <1473829927-20466-1-git-send-email-kishon@ti.com>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the various Verbs structures that we support in the
-virtual RDMA device. We have re-mapped the ones from the RDMA core stack
-to make sure we can maintain compatibility with our backend.
+Modify pcie1 dt node in order for the controller to operate in
+endpoint mode. This is used only for testing EP mode.
 
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-Changes v4->v5:
- - Removed __ prefix for unsigned vars.
+ arch/arm/boot/dts/dra7.dtsi |   43 +++++++++++--------------------------------
+ 1 file changed, 11 insertions(+), 32 deletions(-)
 
-Changes v3->v4:
- - Moved the pvrdma_sge struct to pvrdma_uapi.h.
----
- drivers/infiniband/hw/pvrdma/pvrdma_ib_verbs.h | 444 +++++++++++++++++++++++++
- 1 file changed, 444 insertions(+)
- create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_ib_verbs.h
-
-diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_ib_verbs.h b/drivers/infiniband/hw/pvrdma/pvrdma_ib_verbs.h
-new file mode 100644
-index 0000000..290b6d8
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/pvrdma_ib_verbs.h
-@@ -0,0 +1,444 @@
-+/*
-+ * [PLEASE NOTE:  VMWARE, INC. ELECTS TO USE AND DISTRIBUTE THIS COMPONENT
-+ * UNDER THE TERMS OF THE OpenIB.org BSD license.  THE ORIGINAL LICENSE TERMS
-+ * ARE REPRODUCED BELOW ONLY AS A REFERENCE.]
-+ *
-+ * Copyright (c) 2004 Mellanox Technologies Ltd.  All rights reserved.
-+ * Copyright (c) 2004 Infinicon Corporation.  All rights reserved.
-+ * Copyright (c) 2004 Intel Corporation.  All rights reserved.
-+ * Copyright (c) 2004 Topspin Corporation.  All rights reserved.
-+ * Copyright (c) 2004 Voltaire Corporation.  All rights reserved.
-+ * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
-+ * Copyright (c) 2005, 2006, 2007 Cisco Systems.  All rights reserved.
-+ * Copyright (c) 2015-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This software is available to you under a choice of one of two
-+ * licenses.  You may choose to be licensed under the terms of the GNU
-+ * General Public License (GPL) Version 2, available from the file
-+ * COPYING in the main directory of this source tree, or the
-+ * OpenIB.org BSD license below:
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ */
-+
-+#ifndef __PVRDMA_IB_VERBS_H__
-+#define __PVRDMA_IB_VERBS_H__
-+
-+#include <linux/types.h>
-+
-+union pvrdma_gid {
-+	u8	raw[16];
-+	struct {
-+		__be64	subnet_prefix;
-+		__be64	interface_id;
-+	} global;
-+};
-+
-+enum pvrdma_link_layer {
-+	PVRDMA_LINK_LAYER_UNSPECIFIED,
-+	PVRDMA_LINK_LAYER_INFINIBAND,
-+	PVRDMA_LINK_LAYER_ETHERNET,
-+};
-+
-+enum pvrdma_mtu {
-+	PVRDMA_MTU_256  = 1,
-+	PVRDMA_MTU_512  = 2,
-+	PVRDMA_MTU_1024 = 3,
-+	PVRDMA_MTU_2048 = 4,
-+	PVRDMA_MTU_4096 = 5,
-+};
-+
-+static inline int pvrdma_mtu_enum_to_int(enum pvrdma_mtu mtu)
-+{
-+	switch (mtu) {
-+	case PVRDMA_MTU_256:	return  256;
-+	case PVRDMA_MTU_512:	return  512;
-+	case PVRDMA_MTU_1024:	return 1024;
-+	case PVRDMA_MTU_2048:	return 2048;
-+	case PVRDMA_MTU_4096:	return 4096;
-+	default:		return   -1;
-+	}
-+}
-+
-+static inline enum pvrdma_mtu pvrdma_mtu_int_to_enum(int mtu)
-+{
-+	switch (mtu) {
-+	case 256:	return PVRDMA_MTU_256;
-+	case 512:	return PVRDMA_MTU_512;
-+	case 1024:	return PVRDMA_MTU_1024;
-+	case 2048:	return PVRDMA_MTU_2048;
-+	case 4096:
-+	default:	return PVRDMA_MTU_4096;
-+	}
-+}
-+
-+enum pvrdma_port_state {
-+	PVRDMA_PORT_NOP			= 0,
-+	PVRDMA_PORT_DOWN		= 1,
-+	PVRDMA_PORT_INIT		= 2,
-+	PVRDMA_PORT_ARMED		= 3,
-+	PVRDMA_PORT_ACTIVE		= 4,
-+	PVRDMA_PORT_ACTIVE_DEFER	= 5,
-+};
-+
-+enum pvrdma_port_cap_flags {
-+	PVRDMA_PORT_SM				= 1 <<  1,
-+	PVRDMA_PORT_NOTICE_SUP			= 1 <<  2,
-+	PVRDMA_PORT_TRAP_SUP			= 1 <<  3,
-+	PVRDMA_PORT_OPT_IPD_SUP			= 1 <<  4,
-+	PVRDMA_PORT_AUTO_MIGR_SUP		= 1 <<  5,
-+	PVRDMA_PORT_SL_MAP_SUP			= 1 <<  6,
-+	PVRDMA_PORT_MKEY_NVRAM			= 1 <<  7,
-+	PVRDMA_PORT_PKEY_NVRAM			= 1 <<  8,
-+	PVRDMA_PORT_LED_INFO_SUP		= 1 <<  9,
-+	PVRDMA_PORT_SM_DISABLED			= 1 << 10,
-+	PVRDMA_PORT_SYS_IMAGE_GUID_SUP		= 1 << 11,
-+	PVRDMA_PORT_PKEY_SW_EXT_PORT_TRAP_SUP	= 1 << 12,
-+	PVRDMA_PORT_EXTENDED_SPEEDS_SUP		= 1 << 14,
-+	PVRDMA_PORT_CM_SUP			= 1 << 16,
-+	PVRDMA_PORT_SNMP_TUNNEL_SUP		= 1 << 17,
-+	PVRDMA_PORT_REINIT_SUP			= 1 << 18,
-+	PVRDMA_PORT_DEVICE_MGMT_SUP		= 1 << 19,
-+	PVRDMA_PORT_VENDOR_CLASS_SUP		= 1 << 20,
-+	PVRDMA_PORT_DR_NOTICE_SUP		= 1 << 21,
-+	PVRDMA_PORT_CAP_MASK_NOTICE_SUP		= 1 << 22,
-+	PVRDMA_PORT_BOOT_MGMT_SUP		= 1 << 23,
-+	PVRDMA_PORT_LINK_LATENCY_SUP		= 1 << 24,
-+	PVRDMA_PORT_CLIENT_REG_SUP		= 1 << 25,
-+	PVRDMA_PORT_IP_BASED_GIDS		= 1 << 26,
-+	PVRDMA_PORT_CAP_FLAGS_MAX		= PVRDMA_PORT_IP_BASED_GIDS,
-+};
-+
-+enum pvrdma_port_width {
-+	PVRDMA_WIDTH_1X		= 1,
-+	PVRDMA_WIDTH_4X		= 2,
-+	PVRDMA_WIDTH_8X		= 4,
-+	PVRDMA_WIDTH_12X	= 8,
-+};
-+
-+static inline int pvrdma_width_enum_to_int(enum pvrdma_port_width width)
-+{
-+	switch (width) {
-+	case PVRDMA_WIDTH_1X:	return  1;
-+	case PVRDMA_WIDTH_4X:	return  4;
-+	case PVRDMA_WIDTH_8X:	return  8;
-+	case PVRDMA_WIDTH_12X:	return 12;
-+	default:		return -1;
-+	}
-+}
-+
-+enum pvrdma_port_speed {
-+	PVRDMA_SPEED_SDR	= 1,
-+	PVRDMA_SPEED_DDR	= 2,
-+	PVRDMA_SPEED_QDR	= 4,
-+	PVRDMA_SPEED_FDR10	= 8,
-+	PVRDMA_SPEED_FDR	= 16,
-+	PVRDMA_SPEED_EDR	= 32,
-+};
-+
-+struct pvrdma_port_attr {
-+	enum pvrdma_port_state	state;
-+	enum pvrdma_mtu		max_mtu;
-+	enum pvrdma_mtu		active_mtu;
-+	u32			gid_tbl_len;
-+	u32			port_cap_flags;
-+	u32			max_msg_sz;
-+	u32			bad_pkey_cntr;
-+	u32			qkey_viol_cntr;
-+	u16			pkey_tbl_len;
-+	u16			lid;
-+	u16			sm_lid;
-+	u8			lmc;
-+	u8			max_vl_num;
-+	u8			sm_sl;
-+	u8			subnet_timeout;
-+	u8			init_type_reply;
-+	u8			active_width;
-+	u8			active_speed;
-+	u8			phys_state;
-+	u8			reserved[2];
-+};
-+
-+struct pvrdma_global_route {
-+	union pvrdma_gid	dgid;
-+	u32			flow_label;
-+	u8			sgid_index;
-+	u8			hop_limit;
-+	u8			traffic_class;
-+	u8			reserved;
-+};
-+
-+struct pvrdma_grh {
-+	__be32			version_tclass_flow;
-+	__be16			paylen;
-+	u8			next_hdr;
-+	u8			hop_limit;
-+	union pvrdma_gid	sgid;
-+	union pvrdma_gid	dgid;
-+};
-+
-+enum pvrdma_ah_flags {
-+	PVRDMA_AH_GRH = 1,
-+};
-+
-+enum pvrdma_rate {
-+	PVRDMA_RATE_PORT_CURRENT	= 0,
-+	PVRDMA_RATE_2_5_GBPS		= 2,
-+	PVRDMA_RATE_5_GBPS		= 5,
-+	PVRDMA_RATE_10_GBPS		= 3,
-+	PVRDMA_RATE_20_GBPS		= 6,
-+	PVRDMA_RATE_30_GBPS		= 4,
-+	PVRDMA_RATE_40_GBPS		= 7,
-+	PVRDMA_RATE_60_GBPS		= 8,
-+	PVRDMA_RATE_80_GBPS		= 9,
-+	PVRDMA_RATE_120_GBPS		= 10,
-+	PVRDMA_RATE_14_GBPS		= 11,
-+	PVRDMA_RATE_56_GBPS		= 12,
-+	PVRDMA_RATE_112_GBPS		= 13,
-+	PVRDMA_RATE_168_GBPS		= 14,
-+	PVRDMA_RATE_25_GBPS		= 15,
-+	PVRDMA_RATE_100_GBPS		= 16,
-+	PVRDMA_RATE_200_GBPS		= 17,
-+	PVRDMA_RATE_300_GBPS		= 18,
-+};
-+
-+struct pvrdma_ah_attr {
-+	struct pvrdma_global_route	grh;
-+	u16				dlid;
-+	u16				vlan_id;
-+	u8				sl;
-+	u8				src_path_bits;
-+	u8				static_rate;
-+	u8				ah_flags;
-+	u8				port_num;
-+	u8				dmac[6];
-+	u8				reserved;
-+};
-+
-+enum pvrdma_wc_status {
-+	PVRDMA_WC_SUCCESS,
-+	PVRDMA_WC_LOC_LEN_ERR,
-+	PVRDMA_WC_LOC_QP_OP_ERR,
-+	PVRDMA_WC_LOC_EEC_OP_ERR,
-+	PVRDMA_WC_LOC_PROT_ERR,
-+	PVRDMA_WC_WR_FLUSH_ERR,
-+	PVRDMA_WC_MW_BIND_ERR,
-+	PVRDMA_WC_BAD_RESP_ERR,
-+	PVRDMA_WC_LOC_ACCESS_ERR,
-+	PVRDMA_WC_REM_INV_REQ_ERR,
-+	PVRDMA_WC_REM_ACCESS_ERR,
-+	PVRDMA_WC_REM_OP_ERR,
-+	PVRDMA_WC_RETRY_EXC_ERR,
-+	PVRDMA_WC_RNR_RETRY_EXC_ERR,
-+	PVRDMA_WC_LOC_RDD_VIOL_ERR,
-+	PVRDMA_WC_REM_INV_RD_REQ_ERR,
-+	PVRDMA_WC_REM_ABORT_ERR,
-+	PVRDMA_WC_INV_EECN_ERR,
-+	PVRDMA_WC_INV_EEC_STATE_ERR,
-+	PVRDMA_WC_FATAL_ERR,
-+	PVRDMA_WC_RESP_TIMEOUT_ERR,
-+	PVRDMA_WC_GENERAL_ERR,
-+};
-+
-+enum pvrdma_wc_opcode {
-+	PVRDMA_WC_SEND,
-+	PVRDMA_WC_RDMA_WRITE,
-+	PVRDMA_WC_RDMA_READ,
-+	PVRDMA_WC_COMP_SWAP,
-+	PVRDMA_WC_FETCH_ADD,
-+	PVRDMA_WC_BIND_MW,
-+	PVRDMA_WC_LSO,
-+	PVRDMA_WC_LOCAL_INV,
-+	PVRDMA_WC_FAST_REG_MR,
-+	PVRDMA_WC_MASKED_COMP_SWAP,
-+	PVRDMA_WC_MASKED_FETCH_ADD,
-+	PVRDMA_WC_RECV = 1 << 7,
-+	PVRDMA_WC_RECV_RDMA_WITH_IMM,
-+};
-+
-+enum pvrdma_wc_flags {
-+	PVRDMA_WC_GRH			= 1 << 0,
-+	PVRDMA_WC_WITH_IMM		= 1 << 1,
-+	PVRDMA_WC_WITH_INVALIDATE	= 1 << 2,
-+	PVRDMA_WC_IP_CSUM_OK		= 1 << 3,
-+	PVRDMA_WC_WITH_SMAC		= 1 << 4,
-+	PVRDMA_WC_WITH_VLAN		= 1 << 5,
-+	PVRDMA_WC_FLAGS_MAX		= PVRDMA_WC_WITH_VLAN,
-+};
-+
-+enum pvrdma_cq_notify_flags {
-+	PVRDMA_CQ_SOLICITED		= 1 << 0,
-+	PVRDMA_CQ_NEXT_COMP		= 1 << 1,
-+	PVRDMA_CQ_SOLICITED_MASK	= PVRDMA_CQ_SOLICITED |
-+					  PVRDMA_CQ_NEXT_COMP,
-+	PVRDMA_CQ_REPORT_MISSED_EVENTS	= 1 << 2,
-+};
-+
-+struct pvrdma_qp_cap {
-+	u32	max_send_wr;
-+	u32	max_recv_wr;
-+	u32	max_send_sge;
-+	u32	max_recv_sge;
-+	u32	max_inline_data;
-+	u32	reserved;
-+};
-+
-+enum pvrdma_sig_type {
-+	PVRDMA_SIGNAL_ALL_WR,
-+	PVRDMA_SIGNAL_REQ_WR,
-+};
-+
-+enum pvrdma_qp_type {
-+	PVRDMA_QPT_SMI,
-+	PVRDMA_QPT_GSI,
-+	PVRDMA_QPT_RC,
-+	PVRDMA_QPT_UC,
-+	PVRDMA_QPT_UD,
-+	PVRDMA_QPT_RAW_IPV6,
-+	PVRDMA_QPT_RAW_ETHERTYPE,
-+	PVRDMA_QPT_RAW_PACKET = 8,
-+	PVRDMA_QPT_XRC_INI = 9,
-+	PVRDMA_QPT_XRC_TGT,
-+	PVRDMA_QPT_MAX,
-+};
-+
-+enum pvrdma_qp_create_flags {
-+	PVRDMA_QP_CREATE_IPOPVRDMA_UD_LSO		= 1 << 0,
-+	PVRDMA_QP_CREATE_BLOCK_MULTICAST_LOOPBACK	= 1 << 1,
-+};
-+
-+enum pvrdma_qp_attr_mask {
-+	PVRDMA_QP_STATE			= 1 << 0,
-+	PVRDMA_QP_CUR_STATE		= 1 << 1,
-+	PVRDMA_QP_EN_SQD_ASYNC_NOTIFY	= 1 << 2,
-+	PVRDMA_QP_ACCESS_FLAGS		= 1 << 3,
-+	PVRDMA_QP_PKEY_INDEX		= 1 << 4,
-+	PVRDMA_QP_PORT			= 1 << 5,
-+	PVRDMA_QP_QKEY			= 1 << 6,
-+	PVRDMA_QP_AV			= 1 << 7,
-+	PVRDMA_QP_PATH_MTU		= 1 << 8,
-+	PVRDMA_QP_TIMEOUT		= 1 << 9,
-+	PVRDMA_QP_RETRY_CNT		= 1 << 10,
-+	PVRDMA_QP_RNR_RETRY		= 1 << 11,
-+	PVRDMA_QP_RQ_PSN		= 1 << 12,
-+	PVRDMA_QP_MAX_QP_RD_ATOMIC	= 1 << 13,
-+	PVRDMA_QP_ALT_PATH		= 1 << 14,
-+	PVRDMA_QP_MIN_RNR_TIMER		= 1 << 15,
-+	PVRDMA_QP_SQ_PSN		= 1 << 16,
-+	PVRDMA_QP_MAX_DEST_RD_ATOMIC	= 1 << 17,
-+	PVRDMA_QP_PATH_MIG_STATE	= 1 << 18,
-+	PVRDMA_QP_CAP			= 1 << 19,
-+	PVRDMA_QP_DEST_QPN		= 1 << 20,
-+	PVRDMA_QP_ATTR_MASK_MAX		= PVRDMA_QP_DEST_QPN,
-+};
-+
-+enum pvrdma_qp_state {
-+	PVRDMA_QPS_RESET,
-+	PVRDMA_QPS_INIT,
-+	PVRDMA_QPS_RTR,
-+	PVRDMA_QPS_RTS,
-+	PVRDMA_QPS_SQD,
-+	PVRDMA_QPS_SQE,
-+	PVRDMA_QPS_ERR,
-+};
-+
-+enum pvrdma_mig_state {
-+	PVRDMA_MIG_MIGRATED,
-+	PVRDMA_MIG_REARM,
-+	PVRDMA_MIG_ARMED,
-+};
-+
-+enum pvrdma_mw_type {
-+	PVRDMA_MW_TYPE_1 = 1,
-+	PVRDMA_MW_TYPE_2 = 2,
-+};
-+
-+struct pvrdma_qp_attr {
-+	enum pvrdma_qp_state	qp_state;
-+	enum pvrdma_qp_state	cur_qp_state;
-+	enum pvrdma_mtu		path_mtu;
-+	enum pvrdma_mig_state	path_mig_state;
-+	u32			qkey;
-+	u32			rq_psn;
-+	u32			sq_psn;
-+	u32			dest_qp_num;
-+	u32			qp_access_flags;
-+	u16			pkey_index;
-+	u16			alt_pkey_index;
-+	u8			en_sqd_async_notify;
-+	u8			sq_draining;
-+	u8			max_rd_atomic;
-+	u8			max_dest_rd_atomic;
-+	u8			min_rnr_timer;
-+	u8			port_num;
-+	u8			timeout;
-+	u8			retry_cnt;
-+	u8			rnr_retry;
-+	u8			alt_port_num;
-+	u8			alt_timeout;
-+	u8			reserved[5];
-+	struct pvrdma_qp_cap	cap;
-+	struct pvrdma_ah_attr	ah_attr;
-+	struct pvrdma_ah_attr	alt_ah_attr;
-+};
-+
-+enum pvrdma_wr_opcode {
-+	PVRDMA_WR_RDMA_WRITE,
-+	PVRDMA_WR_RDMA_WRITE_WITH_IMM,
-+	PVRDMA_WR_SEND,
-+	PVRDMA_WR_SEND_WITH_IMM,
-+	PVRDMA_WR_RDMA_READ,
-+	PVRDMA_WR_ATOMIC_CMP_AND_SWP,
-+	PVRDMA_WR_ATOMIC_FETCH_AND_ADD,
-+	PVRDMA_WR_LSO,
-+	PVRDMA_WR_SEND_WITH_INV,
-+	PVRDMA_WR_RDMA_READ_WITH_INV,
-+	PVRDMA_WR_LOCAL_INV,
-+	PVRDMA_WR_FAST_REG_MR,
-+	PVRDMA_WR_MASKED_ATOMIC_CMP_AND_SWP,
-+	PVRDMA_WR_MASKED_ATOMIC_FETCH_AND_ADD,
-+	PVRDMA_WR_BIND_MW,
-+	PVRDMA_WR_REG_SIG_MR,
-+};
-+
-+enum pvrdma_send_flags {
-+	PVRDMA_SEND_FENCE	= 1 << 0,
-+	PVRDMA_SEND_SIGNALED	= 1 << 1,
-+	PVRDMA_SEND_SOLICITED	= 1 << 2,
-+	PVRDMA_SEND_INLINE	= 1 << 3,
-+	PVRDMA_SEND_IP_CSUM	= 1 << 4,
-+	PVRDMA_SEND_FLAGS_MAX	= PVRDMA_SEND_IP_CSUM,
-+};
-+
-+enum pvrdma_access_flags {
-+	PVRDMA_ACCESS_LOCAL_WRITE	= 1 << 0,
-+	PVRDMA_ACCESS_REMOTE_WRITE	= 1 << 1,
-+	PVRDMA_ACCESS_REMOTE_READ	= 1 << 2,
-+	PVRDMA_ACCESS_REMOTE_ATOMIC	= 1 << 3,
-+	PVRDMA_ACCESS_MW_BIND		= 1 << 4,
-+	PVRDMA_ZERO_BASED		= 1 << 5,
-+	PVRDMA_ACCESS_ON_DEMAND		= 1 << 6,
-+	PVRDMA_ACCESS_FLAGS_MAX		= PVRDMA_ACCESS_ON_DEMAND,
-+};
-+
-+#endif /* __PVRDMA_IB_VERBS_H__ */
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index d9bfb94..73f63d1 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -283,38 +283,17 @@
+ 			};
+ 		};
+ 
+-		axi@0 {
+-			compatible = "simple-bus";
+-			#size-cells = <1>;
+-			#address-cells = <1>;
+-			ranges = <0x51000000 0x51000000 0x3000
+-				  0x0	     0x20000000 0x10000000>;
+-			pcie1: pcie@51000000 {
+-				compatible = "ti,dra7-pcie";
+-				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
+-				reg-names = "rc_dbics", "ti_conf", "config";
+-				interrupts = <0 232 0x4>, <0 233 0x4>;
+-				#address-cells = <3>;
+-				#size-cells = <2>;
+-				device_type = "pci";
+-				ranges = <0x81000000 0 0          0x03000 0 0x00010000
+-					  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
+-				#interrupt-cells = <1>;
+-				num-lanes = <1>;
+-				ti,hwmods = "pcie1";
+-				phys = <&pcie1_phy>;
+-				phy-names = "pcie-phy0";
+-				interrupt-map-mask = <0 0 0 7>;
+-				interrupt-map = <0 0 0 1 &pcie1_intc 1>,
+-						<0 0 0 2 &pcie1_intc 2>,
+-						<0 0 0 3 &pcie1_intc 3>,
+-						<0 0 0 4 &pcie1_intc 4>;
+-				pcie1_intc: interrupt-controller {
+-					interrupt-controller;
+-					#address-cells = <0>;
+-					#interrupt-cells = <1>;
+-				};
+-			};
++		pcie1: pcie@51000000 {
++			compatible = "ti,dra7-pcie-ep";
++			reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>;
++			reg-names = "ep_dbics", "ti_conf", "ep_dbics2";
++			interrupts = <0 232 0x4>;
++			num-lanes = <1>;
++			num-ib-windows = <4>;
++			num-ob-windows = <16>;
++			ti,hwmods = "pcie1";
++			phys = <&pcie1_phy>;
++			phy-names = "pcie-phy0";
+ 		};
+ 
+ 		axi@1 {
 -- 
-2.7.4
-
+1.7.9.5
