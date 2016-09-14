@@ -1,73 +1,145 @@
-Return-Path: <marc.zyngier@arm.com>
-Return-Path: <marc.zyngier@arm.com>
-Date: Mon, 12 Sep 2016 20:36:07 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: tglx@linutronix.de, jason@lakedaemon.net, rjw@rjwysocki.net,
- helgaas@kernel.org, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
- will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
- shijie.huang@arm.com, robert.richter@caviumnetworks.com, mw@semihalf.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, andrea.gallo@linaro.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- al.stone@linaro.org, graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
- okaya@codeaurora.org
-Subject: Re: [UPDATE PATCH V11 1/8] ACPI: I/O Remapping Table (IORT) initial
- support
-Message-ID: <20160912203607.591773e6@why.wild-wind.fr.eu.org>
-In-Reply-To: <87c1d6a4-a760-9f8a-ddbe-7cf6655d575b@semihalf.com>
-References: <1473705147-6588-2-git-send-email-tn@semihalf.com>
-	<1473706460-9037-1-git-send-email-tn@semihalf.com>
-	<87c1d6a4-a760-9f8a-ddbe-7cf6655d575b@semihalf.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 15 Sep 2016 00:58:57 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 2/4] PCI: Query platform firmware for device power state
+Message-ID: <20160914225857.GA1966@wunner.de>
+References: <cover.1472554278.git.lukas@wunner.de>
+ <20160914105024.GC1597@wunner.de>
+ <1707182.o83Q5WOaET@vostro.rjw.lan>
+ <2423504.PN3SurRX7i@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2423504.PN3SurRX7i@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 12 Sep 2016 20:58:42 +0200
-Tomasz Nowicki <tn@semihalf.com> wrote:
-
-> On 12.09.2016 20:54, Tomasz Nowicki wrote:
-> > IORT shows representation of IO topology for ARM based systems.
-> > It describes how various components are connected together on
-> > parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
-> > http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-> >
-> > Initial support allows to detect IORT table presence and save its
-> > root pointer obtained through acpi_get_table(). The pointer validity
-> > depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
-> > is not set while using IORT nodes we would dereference unmapped pointers.
-> >
-> > For the aforementioned reason call acpi_iort_init() from acpi_init()
-> > which guarantees acpi_gbl_permanent_mmap to be set at that point.
-> >
-> > Add generic helpers which are helpful for scanning and retrieving
-> > information from IORT table content. List of the most important helpers:
-> > - iort_find_dev_node() finds IORT node for a given device
-> > - iort_node_map_rid() maps device RID and returns IORT node which provides
-> >   final translation
-> >
-> > IORT support is placed under drivers/acpi/arm64/ new directory due to its
-> > ARM64 specific nature. The code there is considered only for ARM64.
-> > The long term plan is to keep all ARM64 specific tables support
-> > in this place e.g. GTDT table.
-> >
-> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > Acked-by: Rafael J. Wysocki <rjw@rjwysocki.net>
-> > Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> > Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>  
+On Wed, Sep 14, 2016 at 06:47:40PM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, September 14, 2016 03:01:33 PM Rafael J. Wysocki wrote:
+> > On Wednesday, September 14, 2016 12:50:24 PM Lukas Wunner wrote:
+> > > On Wed, Sep 14, 2016 at 02:21:30AM +0200, Rafael J. Wysocki wrote:
+> > > > On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
+> > > > > Usually the most accurate way to determine a PCI device's power state
+> > > > > is to read its PM Control & Status Register.  There are two cases
+> > > > > however when this is not an option:  If the device doesn't have the
+> > > > > PM capability at all, or if it is in D3cold.
+> > > > > 
+> > > > > In D3cold, reading from config space typically results in a
+> > > > > fabricated "all ones" response.  But in D3hot, the two bits
+> > > > > representing the power state in the PMCSR are *also* set to 1.
+> > > > > Thus D3hot and D3cold are not discernible by just reading the PMCSR.
+> > > > > 
+> > > > > A (supposedly) reliable way to detect D3cold is to query the platform
+> > > > > firmware for its opinion on the device's power state.  To this end,
+> > > > > add a ->get_power callback to struct pci_platform_pm_ops, and an
+> > > > > implementation to acpi_pci_platform_pm.  (The only
+> > > > > pci_platform_pm_ops existing so far).
+> > > > > 
+> > > > > Amend pci_update_current_state() to query the platform firmware before
+> > > > > reading the PMCSR.
+> > > > > 
+> > > > > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> > > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > > > > ---
+> > > > >  drivers/pci/pci-acpi.c | 23 +++++++++++++++++++++++
+> > > > >  drivers/pci/pci.c      | 21 ++++++++++++++++-----
+> > > > >  drivers/pci/pci.h      |  3 +++
+> > > > >  3 files changed, 42 insertions(+), 5 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > > > > index 9a033e8..89f2707 100644
+> > > > > --- a/drivers/pci/pci-acpi.c
+> > > > > +++ b/drivers/pci/pci-acpi.c
+> > > > > @@ -452,6 +452,28 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+> > > > >  	return error;
+> > > > >  }
+> > > > >  
+> > > > > +static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
+> > > > > +{
+> > > > > +	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+> > > > > +	static const pci_power_t state_conv[] = {
+> > > > > +		[ACPI_STATE_D0]      = PCI_D0,
+> > > > > +		[ACPI_STATE_D1]      = PCI_D1,
+> > > > > +		[ACPI_STATE_D2]      = PCI_D2,
+> > > > > +		[ACPI_STATE_D3_HOT]  = PCI_D3hot,
+> > > > > +		[ACPI_STATE_D3_COLD] = PCI_D3cold,
+> > > > > +	};
+> > > > > +	int state;
+> > > > 
+> > > > ACPI_STATE_D3_HOT and ACPI_STATE_D3_COLD were introduced in ACPI 4.0.
+> > > > For systems predating that, ACPI_STATE_D3_HOT is the deepest state
+> > > > returned by acpi_device_get_power().
+> > > 
+> > > Would it be possible to detect the ACPI spec version the platform
+> > > firmware conforms to, and amend acpi_device_get_power() to return
+> > > ACPI_STATE_D3_COLD if the device is in D3?
+> > > 
+> > > Then we could avoid the unnecessary runtime resume after direct_complete
+> > > also for these older machines.
+> > 
+> > Well, please see below.
+> > 
+> > > Can the revision in the FADT (offset 8) be used as a proxy?
+> > > => E.g. the old Clevo B7130 has revision 3 in the FADT and uses
+> > >    a _DSM and _PS3 to put the discrete GPU in D3cold:
+> > >    https://github.com/Lekensteyn/acpi-stuff/tree/master/dsl/Clevo_B7130
+> > > => Whereas the newer Clevo P651RA has revision 5 in the FADT and uses
+> > >    _PR3 to put the discrete GPU in D3cold:
+> > >    https://github.com/Lekensteyn/acpi-stuff/tree/master/dsl/Clevo_P651RA
+> > > 
+> > > However the FADT revision was already 4 in the ACPI 3.0 spec,
+> > > so we can only use it to discern ACPI 2.0 vs 3.0, not 3.0 vs 4.0,
+> > > which is what we'd actually want.  And there's a comment in
+> > > acpica/tbfadt.c that "The FADT revision value is unreliable."
+> > > 
+> > > Do you know of a better way to discern ACPI 3.0 vs 4.0?
+> > 
+> > I'm not sure if there is a reliable way to be honest.
+> > 
+> > Also even if the FADT etc tells you something, there's no guarantee that
+> > AML actually follows that.
+> > 
+> > In fact, whether or not acpi_device_get_power() will ever return D3cold
+> > for a device depends on whether or not _PR3 is there.  If it's not there,
+> > the deepest state returned will be D3hot in any case.
+> > 
+> > So I'm not sure how useful that is in the context of D3cold detection?
 > 
-> Hi Marc,
+> There is more to this.
 > 
-> Series with updated patch 1 can be found:
-> https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v11)
+> In fact, we can't really trust _PSC too, because in some ACPI tables it is
+> implemented to always return 0 (seriously).
 > 
-> Sorry for zillions of patch updates...
+> For this reason, I think the way to go would be to use something like
+> acpi_device_update_power() to ensure that the device really is in the
+> state we think it is in.
 
-I've swapped the two patches and pushed the result out again, but from
-now on, please send updates on top of irq/irqchip-4.9.
+The patch only trusts the platform firmware to report D3cold correctly.
+If it reports anything else the patch reads the PMCSR.
 
-Thanks,
+Thus if _PSC returns a bogus D0 status, worst that can happen is that we
+incorrectly assume D3hot while the device is actually in D3cold.  Which
+is still kind of a bummer.
 
-	M.
--- 
-Without deviation from the norm, progress is not possible.
+We've got this handy pci_device_is_present() function which reads the
+vendor ID and returns false if it's "all ones" (which is what we'd get
+in D3cold).
+
+What if we ask the platform firmware first.  If it says D3cold, assume
+that's true.  In all other cases, call pci_device_is_present().  If
+that returns false, assume D3cold.  Otherwise read the PMCSR.
+
+That would also work for devices that are suspended to D3cold in a
+nonstandard way, such as Thunderbolt.  Having a function that updates
+the current_state in a robust way and correctly discerns D3cold and
+D3hot would be really useful I think.
+
+Thanks a lot for sharing these ACPI intricacies, it wasn't clear to me
+in how far we can trust the platform firmware.
+
+Best regards,
+
+Lukas
