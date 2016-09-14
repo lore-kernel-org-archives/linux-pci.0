@@ -1,101 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v5 03/14] drivers: acpi: iort: introduce linker section for IORT entries probing
-Date: Fri,  9 Sep 2016 15:23:32 +0100
-Message-Id: <20160909142343.13314-4-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0069.outbound.protection.outlook.com ([104.47.42.69]:13308
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751091AbcINF2e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 01:28:34 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "robh@kernel.org" <robh@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "colin.king@canonical.com" <colin.king@canonical.com>,
+        Soren Brinkmann <sorenb@xilinx.com>,
+        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        Michal Simek <michals@xilinx.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH 1/3] PCI: Xilinx NWL PCIe: Expanding PCIe core errors
+ and printing event occurred.
+Date: Wed, 14 Sep 2016 05:28:27 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258D616B@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+ <20160913151805.GD27748@localhost>
+In-Reply-To: <20160913151805.GD27748@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit e647b532275b ("ACPI: Add early device probing
-infrastructure") the kernel has gained the infrastructure that allows
-adding linker script section entries to execute ACPI driver callbacks
-(ie probe routines) for all subsystems that register a table entry
-in the respective kernel section (eg clocksource, irqchip).
-
-Since ARM IOMMU devices data is described through IORT tables when
-booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
-callback routines that are called to probe IORT entries and initialize
-the respective IOMMU devices.
-
-To avoid adding driver specific hooks into IORT table initialization
-code (breaking therefore code modularity - ie ACPI IORT code must be made
-aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
-that allows ARM SMMU drivers to take advantage of the ACPI early probing
-infrastructure, so that they can add linker script section entries
-containing drivers callback to be executed on IORT tables detection.
-
-Since IORT nodes are differentiated by a type, the callback routines
-can easily parse the IORT table entries, check the IORT nodes and
-carry out some actions whenever the IORT node type associated with
-the driver specific callback is matched.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/acpi/arm64/iort.c         | 3 +++
- include/asm-generic/vmlinux.lds.h | 1 +
- include/linux/acpi_iort.h         | 3 +++
- 3 files changed, 7 insertions(+)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index a6fba4d..4cbeb707 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -367,5 +367,8 @@ void __init acpi_iort_init(void)
- 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
- 		const char *msg = acpi_format_exception(status);
- 		pr_err("Failed to get table, %s\n", msg);
-+		return;
- 	}
-+
-+	acpi_probe_device_table(iort);
- }
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 2456397..7ee4e0c 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -546,6 +546,7 @@
- 	IRQCHIP_OF_MATCH_TABLE()					\
- 	ACPI_PROBE_TABLE(irqchip)					\
- 	ACPI_PROBE_TABLE(clksrc)					\
-+	ACPI_PROBE_TABLE(iort)						\
- 	EARLYCON_TABLE()
- 
- #define INIT_TEXT							\
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index 0e32dac..d16fdda 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -39,4 +39,7 @@ static inline struct irq_domain *iort_get_device_domain(struct device *dev,
- { return NULL; }
- #endif
- 
-+#define IORT_ACPI_DECLARE(name, table_id, fn)		\
-+	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
-+
- #endif /* __ACPI_IORT_H__ */
--- 
-2.10.0
-
+> On Tue, Aug 30, 2016 at 04:09:16PM +0530, Bharat Kumar Gogada wrote:
+> > The current driver prints pcie core error, for all core events.
+> > Instead of just printing PCIe core error, now adding prints to show
+> > individual core events occurred.
+> >
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>=20
+> I applied the first two patches to pci/host-xilinx for v4.9, thanks!
+>=20
+> I'd like to work on the third one a little more, as I mentioned in my res=
+ponse to
+> it.
+>=20
+Thanks Bjorn, yes I agree that third one needs better way of handling.
