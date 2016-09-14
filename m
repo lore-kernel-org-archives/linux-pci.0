@@ -1,162 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36676 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754132AbcIMPFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 11:05:21 -0400
-Date: Tue, 13 Sep 2016 10:05:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        Soren Brinkmann <sorenb@xilinx.com>,
-        Michal Simek <michals@xilinx.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH 3/3] PCI: Xilinx NWL PCIe: Fix Error for multi function
- device for legacy interrupts.
-Message-ID: <20160913150511.GC27748@localhost>
-References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
- <1472553558-27215-3-git-send-email-bharatku@xilinx.com>
- <57C57975.7040306@arm.com>
- <8520D5D51A55D047800579B094147198258D239D@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57C59FE8.30307@arm.com>
- <8520D5D51A55D047800579B094147198258D28AF@XAP-PVEXMBX01.xlnx.xilinx.com>
- <57C6B7F1.5000001@arm.com>
- <8520D5D51A55D047800579B094147198258D2C99@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160912220241.GG23532@localhost>
- <57D7ADA8.5060201@arm.com>
+Received: from mout.kundenserver.de ([217.72.192.75]:53595 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763787AbcINVdE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 17:33:04 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+        devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+        gabriele.paoloni@huawei.com, minyard@acm.org,
+        gregkh@linuxfoundation.org, benh@kernel.crashing.org,
+        john.garry@huawei.com, will.deacon@arm.com,
+        linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
+        linuxarm@huawei.com, linux-serial@vger.kernel.org,
+        linux-pci@vger.kernel.org, zourongrong@gmail.com,
+        liviu.dudau@arm.com, kantyzc@163.com, zhichang.yuan02@gmail.com
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Wed, 14 Sep 2016 23:32:11 +0200
+Message-ID: <5869118.UilSPY9Sai@wuerfel>
+In-Reply-To: <57D963C4.4010406@hisilicon.com>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57D7ADA8.5060201@arm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 13, 2016 at 08:41:28AM +0100, Marc Zyngier wrote:
-> On 12/09/16 23:02, Bjorn Helgaas wrote:
-> > On Thu, Sep 01, 2016 at 05:19:55AM +0000, Bharat Kumar Gogada wrote:
-> >>>>>>> Hi Bharat,
-> >>>>>>>> @@ -561,7 +561,7 @@ static int nwl_pcie_init_irq_domain(struct
-> >>>>>>>> nwl_pcie
-> >>>>>>> *pcie)
-> >>>>>>>>     }
-> >>>>>>>>
-> >>>>>>>>     pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
-> >>>>>>>> -                                                   INTX_NUM,
-> >>>>>>>> +                                                   INTX_NUM + 1,
-> >>>>>>>>                                                     &legacy_domain_ops,
-> >>>>>>>>                                                     pcie);
-> >>>>>>>
-> >>>>>>> This feels like the wrong thing to do. You have INTX_NUM irqs, so
-> >>>>>>> the domain allocation should reflect this. On the other hand, the
-> >>>>>>> way the driver currently deals with mappings is quite broken
-> >>>>>>> (consistently adding 1 to
-> >>>>> the HW interrupt).
-> >>>>>>>
-> >>>>>> Hi Marc,
-> >>>>>>
-> >>>>>> Without above change I get following crash in kernel while booting.
-> >>>>>>
-> >>>>>> [    2.441684] error: hwirq 0x4 is too large for dummy
-> >>>>>>
-> >>>>>> [    2.441694] ------------[ cut here ]------------
-> >>>>>>
-> >>>>>> [    2.441698] WARNING: at kernel/irq/irqdomain.c:344
-> >>>>>>
-> >>>>>> [    2.441702] Modules linked in:
-> >>>>>>
-> >>>>>> [    2.441706]
-> >>>>>>
-> >>>>>> [    2.441714] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.4.0 #8
-> >>>>>>
-> >>>>>> [    2.441718] Hardware name: xlnx,zynqmp (DT)
-> >>>>>>
-> >>>>>> [    2.441723] task: ffffffc071886b80 ti: ffffffc071888000 task.ti:
-> >>>>> ffffffc071888000
-> >>>>>>
-> >>>>>> [    2.441732] PC is at irq_domain_associate+0x138/0x1c0
-> >>>>>>
-> >>>>>> [    2.441738] LR is at irq_domain_associate+0x138/0x1c0
-> >>>>>>
-> >>>>>> In kernel/irq/irqdomain.c function irq_domain_associate
-> >>>>>>
-> >>>>>> if (WARN(hwirq >= domain->hwirq_max,
-> >>>>>>                  "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain-
-> >>>> name))
-> >>>>>>                 return -EINVAL;
-> >>>>>>
-> >>>>>> Here the hwirq and hwirq_max are equal to 4 without the above
-> >>>>>> condition
-> >>>>> (INTX_NUM + 1) due to which crash is coming.
-> >>>>>> This is happening as the legacy interrupts are starting from 1 (INTA).
-> >>>>>
-> >>>>> I understood that. I'm still persisting in saying that you have the wrong fix.
-> >>>>>
-> >>>>> Your domain should always allocate many interrupts as you have
-> >>>>> interrupt sources. These interrupts (hwirq) should be numbered from 0 to (n-
-> >>> 1).
-> >>>>
-> >>>> Agreed, but here comes the problem the hwirq for legacy interrupts
-> >>>> will start at 0x1 to 0x4 (INTA to INTD) and these values are as per
-> >>>> PCIe specification for legacy interrupts. So these cannot be numbered
-> >>>> from 0. So when 0x4 (INTD) for a multi-function device comes the crash
-> >>>> occurs.
-> >>>
-> >>> So who provides this hwirq? Who calls irq_domain_associate() with hwirq set to
-> >>> 4?
-> >>>
-> >> PCIe subsystem invokes pcibios_add_device function in arch/arm64/kernel/pci.c for every pci device.
-> >> The purpose of this function is to assign dev->irq using of_irq_parse_and_map_pci.
-> >> of_irq_parse_and_map_pci invokes of_irq_parse_pci where it reads PCI_INTERRUPT_PIN from configuration space and saves it
-> >> in parameter of struct of_phandle_args.
-> >> This structure is passed to irq_create_of_mapping where it invokes irq_create_fwspec_mapping.
-> >> irq_create_fwspec_mapping invokes irq_domain_translate and gets hwirq, here the above saved PCI_INTERRUPT_PIN value is assigned 
-> >> to hwirq (*hwirq = fwspec->param[0]).
-> >> And then using this hwirq irq_create_mapping -> irq_domain_associate were invoked and mapping is created for virtual irq with this hwirq.
-> >> So for any end point PCI_INTERRUPT_PIN value starts from 0x1 to 0x4 and so hwirq starts from 0x1 to 0x4.
-> >>
-> >> So the values are more generic w.r.t to protocol, that's why hwirq will range from 0x1 to 0x4. 
-> >> And then if you check pcie-altera.c they are doing this adding one in their handler and while creating legacy domain.
+On Wednesday, September 14, 2016 10:50:44 PM CEST zhichang.yuan wrote:
+> 
+> On 2016/9/14 20:33, Arnd Bergmann wrote:
+> > On Wednesday, September 14, 2016 8:15:52 PM CEST Zhichang Yuan wrote:
 > > 
-> > Is this resolved yet?  Marc, are you happy, or should we iterate on this
-> > again?
+> >> +Required properties:
+> >> +- compatible: should be "hisilicon,low-pin-count"
+> >> +- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
+> >> +- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
+> >> +- reg: base address and length of the register set for the device.
+> >> +- ranges: define a 1:1 mapping between the I/O space of the child device and
+> >> +	  the parent.
+> > 
+> > Do we still need the "ranges" here? The property in your example seems
+> > wrong.
 > 
-> Ah, sorry to have dropped the ball on this patch.
+> I think "ranges" is needed.
+> without this, of_translate_address --> __of_translate_address --> of_translate_one will fail when translating the child's IO resource.
+>
+> > 
+> >> +	ranges = <0x01 0xe4 0x0 0xe4 0x1000>;
+> > 
+> > You translate I/O port 0x00e4 through 0x10e4 to CPU address 0x0e4?
+> The hip06 LPC is defined as isa type.
+> So, 0x01 0xe4 is the local IO address of 0xe4. With this ranges, 0xe4 of child will be 1:1 mapped as 0xe4.
+> It means no translation.
 
-No problem, I wasn't making forward progress anyway.
+No, "no translation" would be leaving out the ranges, we should
+fix the code so it handles this case according to the specification
+of the ISA DT binding, rather than adding an incorrect ranges
+property to make it work with the incorrect Linux implementation.
 
-> I guess that given that the infrastructure imposes the hwirq range on
-> the host drivers, Bharat's approach is the only way (and a number of
-> other host drivers are already slightly broken). I'll try and have a
-> look at solving this at the generic level. In the meantime:
+of_translate_address() should fail here, and whichever code calls
+it should try something else, possibly something we have to
+implement that can return the correct IORESOURCE_* type.
+
+> > 
+> > I don't get this part. The bus driver should not care what its
+> > children are, just register and PIO ranges that the bus can handle
+> > in theory, i.e. from 0x000 to 0xfff.
 > 
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> Just as we discussed in V2, the legacy PIO range is specific to some
+> device, such as for ipmi bt, 0xe4 - 0xe7 will be populated.
+> I don't want to occupy a larger PIO range in which only small part PIOs
+> are used by our LPC. At this moment, two PIO ranges are using
+> through the device property configuration, 0xe4-0xe7, 0x2f8-0x2ff.
+>
+> If we configure 0-0x1000 for the LPC to cover those two ranges, most
+> PIO are wasted and other PIO device on other buses lose the chance to
+> use the PIO below 0x1000.
+> Otherwise, PIO conflict will happen. So, My idea is only occupied
+> the PIO ranges which are really needed for the children.
 
-After looking at this myself, I'm not happy with this either.  It feels
-like there are bugs lurking here and we're just hiding one of them.
+The only thing it can realistically conflict with would be another
+LPC bus behind on a PCI host bridge. On ARM64, all regular PCI
+devices that have IORESOURCE_IO ports are intentionally moved
+to (bus) port numbers above 0x1000.
 
-Here are the callers of irq_domain_add_linear() for legacy INTx in
-drivers/pci/host:
+> And there are probably multiple child devices under LPC, the global arm64_extio_ops only can cover one PIO range. It is fortunate only ipmi driver can not support I/O
+> operation registering, serial driver has serial_in/serial_out to
+> be registered. So, only the PIO range for ipmi device is stored
+> in arm64_extio_ops and the indirect-IO
+> works well for ipmi device.
 
-  advk_pcie_init_irq_domain    LEGACY_IRQ_NUM   (4)
-  dra7xx_pcie_init_irq_domain  4
-  ks_dw_pcie_host_init         MAX_LEGACY_IRQS  (4)
-  altera_pcie_init_irq_domain  INTX_NUM + 1     (5)
-  nwl_pcie_init_irq_domain     INTX_NUM + 1     (5)
-  xilinx_pcie_init_irq_domain  4
+You should not do that in the serial driver, please just use the
+normal 8250 driver that works fine once you handle the entire
+port range.
+ 
 
-I think all of these use the of_irq_parse_and_map_pci() path you
-mentioned, so if the problem is in the way that path works, I would
-think these should *all* be requesting the same number of interrupts
-in the domain.
-
-I agree with Marc that we should request 4 IRQs, because that's what
-we need.  If we can't do that for some reason, we ought to at least
-make all these callers the same.
-
-Bjorn
+	Arnd
