@@ -1,189 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45594 "EHLO mga01.intel.com"
+Received: from arroyo.ext.ti.com ([198.47.19.12]:39442 "EHLO arroyo.ext.ti.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932947AbcI0Nqq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 09:46:46 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v7 2/8] thunderbolt: Updating the register definitions
-Date: Tue, 27 Sep 2016 16:43:35 +0300
-Message-Id: <1474983821-2313-3-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
-References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+        id S1754272AbcINFOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 01:14:19 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
+        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
+        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>, <kishon@ti.com>,
+        <nsekhar@ti.com>
+Subject: [RFC PATCH 11/11] HACK: pci: controller: dra7xx: disable smart idle
+Date: Wed, 14 Sep 2016 10:42:07 +0530
+Message-ID: <1473829927-20466-12-git-send-email-kishon@ti.com>
+In-Reply-To: <1473829927-20466-1-git-send-email-kishon@ti.com>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding more Thunderbolt(TM) register definitions
-and some helper macros.
+Smart idle prevents RC to access the memory space of this
+controller. Set the idle mode to smart idle wakeup. This
+should ideally be done in hwmod. Till it's figured out how
+to configure it in hwmod, mark this as HACK.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/thunderbolt/nhi_regs.h | 109 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 109 insertions(+)
+ drivers/pci/controller/pci-dra7xx.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
-index 75cf069..b8e961f 100644
---- a/drivers/thunderbolt/nhi_regs.h
-+++ b/drivers/thunderbolt/nhi_regs.h
-@@ -9,6 +9,11 @@
+diff --git a/drivers/pci/controller/pci-dra7xx.c b/drivers/pci/controller/pci-dra7xx.c
+index 5b49367..31211e6 100644
+--- a/drivers/pci/controller/pci-dra7xx.c
++++ b/drivers/pci/controller/pci-dra7xx.c
+@@ -30,6 +30,14 @@
  
- #include <linux/types.h>
+ /* PCIe controller wrapper DRA7XX configuration registers */
  
-+#define NHI_MMIO_BAR 0
++#define	PCIECTRL_DRA7XX_CONF_SYSCONFIG			0x0010
++#define SIDLE_MASK					3
++#define SIDLE_SHIFT					2
++#define SIDLE_FORCE					0x0
++#define SIDLE_NO					0x1
++#define SIDLE_SMART					0x2
++#define SIDLE_SMART_WKUP				0x3
 +
-+#define TBT_RING_MIN_NUM_BUFFERS	2
-+#define TBT_RING_MAX_FRAME_SIZE		(4 * 1024)
-+
- enum ring_flags {
- 	RING_FLAG_ISOCH_ENABLE = 1 << 27, /* TX only? */
- 	RING_FLAG_E2E_FLOW_CONTROL = 1 << 28,
-@@ -39,6 +44,33 @@ struct ring_desc {
- 	u32 time; /* write zero */
- } __packed;
- 
-+/**
-+ * struct tbt_buf_desc - TX/RX ring buffer descriptor.
-+ * This is same as struct ring_desc, but without the use of bitfields and
-+ * with explicit endianity.
-+ */
-+struct tbt_buf_desc {
-+	__le64 phys;
-+	__le32 attributes;
-+	__le32 time;
-+};
-+
-+#define DESC_ATTR_LEN_SHIFT		0
-+#define DESC_ATTR_LEN_MASK		GENMASK(11, DESC_ATTR_LEN_SHIFT)
-+#define DESC_ATTR_EOF_SHIFT		12
-+#define DESC_ATTR_EOF_MASK		GENMASK(15, DESC_ATTR_EOF_SHIFT)
-+#define DESC_ATTR_SOF_SHIFT		16
-+#define DESC_ATTR_SOF_MASK		GENMASK(19, DESC_ATTR_SOF_SHIFT)
-+#define DESC_ATTR_TX_ISOCH_DMA_EN	BIT(20)	/* TX */
-+#define DESC_ATTR_RX_CRC_ERR		BIT(20)	/* RX after use */
-+#define DESC_ATTR_DESC_DONE		BIT(21)
-+#define DESC_ATTR_REQ_STS		BIT(22)	/* TX and RX before use */
-+#define DESC_ATTR_RX_BUF_OVRN_ERR	BIT(22)	/* RX after use */
-+#define DESC_ATTR_INT_EN		BIT(23)
-+#define DESC_ATTR_OFFSET_SHIFT		24
-+#define DESC_ATTR_OFFSET_MASK		GENMASK(31, DESC_ATTR_OFFSET_SHIFT)
-+
-+
- /* NHI registers in bar 0 */
- 
- /*
-@@ -60,6 +92,30 @@ struct ring_desc {
-  */
- #define REG_RX_RING_BASE	0x08000
- 
-+#define REG_RING_STEP			16
-+#define REG_RING_PHYS_LO_OFFSET		0
-+#define REG_RING_PHYS_HI_OFFSET		4
-+#define REG_RING_CONS_PROD_OFFSET	8	/* cons - RO, prod - RW */
-+#define REG_RING_CONS_SHIFT		0
-+#define REG_RING_CONS_MASK		GENMASK(15, REG_RING_CONS_SHIFT)
-+#define REG_RING_PROD_SHIFT		16
-+#define REG_RING_PROD_MASK		GENMASK(31, REG_RING_PROD_SHIFT)
-+#define REG_RING_SIZE_OFFSET		12
-+#define REG_RING_SIZE_SHIFT		0
-+#define REG_RING_SIZE_MASK		GENMASK(15, REG_RING_SIZE_SHIFT)
-+#define REG_RING_BUF_SIZE_SHIFT		16
-+#define REG_RING_BUF_SIZE_MASK		GENMASK(27, REG_RING_BUF_SIZE_SHIFT)
-+
-+#define TBT_RING_CONS_PROD_REG(iobase, ringbase, ringnumber) \
-+			      ((iobase) + (ringbase) + \
-+			      ((ringnumber) * REG_RING_STEP) + \
-+			      REG_RING_CONS_PROD_OFFSET)
-+
-+#define TBT_REG_RING_PROD_EXTRACT(val) (((val) & REG_RING_PROD_MASK) >> \
-+				       REG_RING_PROD_SHIFT)
-+
-+#define TBT_REG_RING_CONS_EXTRACT(val) (((val) & REG_RING_CONS_MASK) >> \
-+				       REG_RING_CONS_SHIFT)
- /*
-  * 32 bytes per entry, one entry for every hop (REG_HOP_COUNT)
-  * 00: enum_ring_flags
-@@ -77,6 +133,19 @@ struct ring_desc {
-  * ..: unknown
-  */
- #define REG_RX_OPTIONS_BASE	0x29800
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT	12
-+#define REG_RX_OPTS_TX_E2E_HOP_ID_MASK	\
-+				GENMASK(22, REG_RX_OPTS_TX_E2E_HOP_ID_SHIFT)
-+#define REG_RX_OPTS_MASK_OFFSET		4
-+#define REG_RX_OPTS_MASK_EOF_SHIFT	0
-+#define REG_RX_OPTS_MASK_EOF_MASK	GENMASK(15, REG_RX_OPTS_MASK_EOF_SHIFT)
-+#define REG_RX_OPTS_MASK_SOF_SHIFT	16
-+#define REG_RX_OPTS_MASK_SOF_MASK	GENMASK(31, REG_RX_OPTS_MASK_SOF_SHIFT)
-+
-+#define REG_OPTS_STEP			32
-+#define REG_OPTS_E2E_EN			BIT(28)
-+#define REG_OPTS_RAW			BIT(30)
-+#define REG_OPTS_VALID			BIT(31)
- 
- /*
-  * three bitfields: tx, rx, rx overflow
-@@ -86,6 +155,7 @@ struct ring_desc {
-  */
- #define REG_RING_NOTIFY_BASE	0x37800
- #define RING_NOTIFY_REG_COUNT(nhi) ((31 + 3 * nhi->hop_count) / 32)
-+#define REG_RING_NOTIFY_STEP	4
- 
- /*
-  * two bitfields: rx, tx
-@@ -94,8 +164,47 @@ struct ring_desc {
-  */
- #define REG_RING_INTERRUPT_BASE	0x38200
- #define RING_INTERRUPT_REG_COUNT(nhi) ((31 + 2 * nhi->hop_count) / 32)
-+#define REG_RING_INT_TX_PROCESSED(ring_num)		BIT(ring_num)
-+#define REG_RING_INT_RX_PROCESSED(ring_num, num_paths)	BIT((ring_num) + \
-+							    (num_paths))
-+#define RING_INT_DISABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) & ~(val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_ENABLE(base, val) iowrite32( \
-+			ioread32((base) + REG_RING_INTERRUPT_BASE) | (val), \
-+			(base) + REG_RING_INTERRUPT_BASE)
-+#define RING_INT_DISABLE_TX(base, ring_num) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_DISABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_ENABLE_TX(base, ring_num) \
-+	RING_INT_ENABLE(base, REG_RING_INT_TX_PROCESSED(ring_num))
-+#define RING_INT_ENABLE_RX(base, ring_num, num_paths) \
-+	RING_INT_ENABLE(base, REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+#define RING_INT_DISABLE_TX_RX(base, ring_num, num_paths) \
-+	RING_INT_DISABLE(base, REG_RING_INT_TX_PROCESSED(ring_num) | \
-+			       REG_RING_INT_RX_PROCESSED(ring_num, num_paths))
-+
-+#define REG_RING_INTERRUPT_STEP	4
-+
-+#define REG_INT_THROTTLING_RATE	0x38c00
-+#define REG_INT_THROTTLING_RATE_STEP	4
-+#define NUM_INT_VECTORS			16
-+
-+#define REG_INT_VEC_ALLOC_BASE	0x38c40
-+#define REG_INT_VEC_ALLOC_STEP		4
-+#define REG_INT_VEC_ALLOC_FIELD_BITS	4
-+#define REG_INT_VEC_ALLOC_FIELD_MASK	(BIT(REG_INT_VEC_ALLOC_FIELD_BITS) - 1)
-+#define REG_INT_VEC_ALLOC_PER_REG	((BITS_PER_BYTE * sizeof(u32)) / \
-+					 REG_INT_VEC_ALLOC_FIELD_BITS)
- 
- /* The last 11 bits contain the number of hops supported by the NHI port. */
- #define REG_HOP_COUNT		0x39640
-+#define REG_HOP_COUNT_TOTAL_PATHS_MASK	GENMASK(10, 0)
-+
-+#define REG_HOST_INTERFACE_RST	0x39858
-+
-+#define REG_DMA_MISC		0x39864
-+#define REG_DMA_MISC_INT_AUTO_CLEAR	BIT(2)
- 
- #endif
+ #define	PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN		0x0024
+ #define	PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN		0x0028
+ #define	ERR_SYS						BIT(0)
+@@ -606,6 +614,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 			goto err_gpio;
+ 		break;
+ 	case DW_PCIE_EP_TYPE:
++		reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_SYSCONFIG);
++		reg &= ~(SIDLE_MASK << SIDLE_SHIFT);
++		reg |= SIDLE_SMART_WKUP << SIDLE_SHIFT;
++		dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_SYSCONFIG, reg);
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
+ 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
 -- 
-2.7.4
+1.7.9.5
 
