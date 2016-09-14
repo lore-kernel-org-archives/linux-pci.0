@@ -1,180 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:38056 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932341AbcILEuu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:50 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v4 10/16] IB/pvrdma: Add UAR support
-Date: Sun, 11 Sep 2016 21:49:20 -0700
-Message-ID: <1473655766-31628-11-git-send-email-aditr@vmware.com>
-In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:40975 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755775AbcINPFF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 11:05:05 -0400
+Subject: Re: [PATCH V3 3/4] ARM64 LPC: support serial based on low-pin-count
+To: Arnd Bergmann <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1473855354-150093-4-git-send-email-yuanzhichang@hisilicon.com>
+ <4340181.AghlmQIy28@wuerfel>
+CC: <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <devicetree@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <benh@kernel.crashing.org>, <minyard@acm.org>,
+        <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <john.garry@huawei.com>, <will.deacon@arm.com>,
+        <xuwei5@hisilicon.com>, <linux-serial@vger.kernel.org>,
+        <gregkh@linuxfoundation.org>, <zourongrong@gmail.com>,
+        <liviu.dudau@arm.com>, <kantyzc@163.com>,
+        <zhichang.yuan02@gmail.com>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <57D96701.4050700@hisilicon.com>
+Date: Wed, 14 Sep 2016 23:04:33 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4340181.AghlmQIy28@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the UAR support for the paravirtual RDMA device. The UAR
-pages are MMIO pages from the virtual PCI space. We define offsets within
-this page to provide the fast data-path operations.
 
-Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
----
-Changes v3->v4:
- - Removed an unnecessary comment.
 
-Changes v2->v3:
- - Used is_power_of_2 function.
- - Simplify pvrdma_uar_alloc function.
----
- drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c | 127 +++++++++++++++++++++++++
- 1 file changed, 127 insertions(+)
- create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c
+On 2016/9/14 20:25, Arnd Bergmann wrote:
+> On Wednesday, September 14, 2016 8:15:53 PM CEST Zhichang Yuan wrote:
+>> From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+>>
+>> On Hip06 platform, a 16550 compatible UART is connected to low-pin-count and
+>> controlled through the LPC I/O cycles. After registering the LPC uart specific
+>> serial_in/serial_out to 8250 core driver, serial data can be read/written
+>> through the LPC.
+>>
+>> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+>>
+> 
+> I still think this should be handled by 8250_of.c after the addition of
+> support for IORESOURCE_IO.
 
-diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c b/drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c
-new file mode 100644
-index 0000000..bf51357
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/pvrdma_doorbell.c
-@@ -0,0 +1,127 @@
-+/*
-+ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of EITHER the GNU General Public License
-+ * version 2 as published by the Free Software Foundation or the BSD
-+ * 2-Clause License. This program is distributed in the hope that it
-+ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ * See the GNU General Public License version 2 for more details at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program available in the file COPYING in the main
-+ * directory of this source tree.
-+ *
-+ * The BSD 2-Clause License
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+ * OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <linux/bitmap.h>
-+#include <linux/errno.h>
-+#include <linux/slab.h>
-+
-+#include "pvrdma.h"
-+
-+int pvrdma_uar_table_init(struct pvrdma_dev *dev)
-+{
-+	u32 num = dev->dsr->caps.max_uar;
-+	u32 mask = num - 1;
-+	struct pvrdma_id_table *tbl = &dev->uar_table.tbl;
-+
-+	if (!is_power_of_2(num))
-+		return -EINVAL;
-+
-+	tbl->last = 0;
-+	tbl->top = 0;
-+	tbl->max = num;
-+	tbl->mask = mask;
-+	spin_lock_init(&tbl->lock);
-+	tbl->table = kcalloc(BITS_TO_LONGS(num), sizeof(long), GFP_KERNEL);
-+	if (!tbl->table)
-+		return -ENOMEM;
-+
-+	/* 0th UAR is taken by the device. */
-+	set_bit(0, tbl->table);
-+
-+	return 0;
-+}
-+
-+void pvrdma_uar_table_cleanup(struct pvrdma_dev *dev)
-+{
-+	struct pvrdma_id_table *tbl = &dev->uar_table.tbl;
-+
-+	kfree(tbl->table);
-+}
-+
-+int pvrdma_uar_alloc(struct pvrdma_dev *dev, struct pvrdma_uar_map *uar)
-+{
-+	struct pvrdma_id_table *tbl;
-+	unsigned long flags;
-+	u32 obj;
-+
-+	tbl = &dev->uar_table.tbl;
-+
-+	spin_lock_irqsave(&tbl->lock, flags);
-+	obj = find_next_zero_bit(tbl->table, tbl->max, tbl->last);
-+	if (obj >= tbl->max) {
-+		tbl->top = (tbl->top + tbl->max) & tbl->mask;
-+		obj = find_first_zero_bit(tbl->table, tbl->max);
-+	}
-+
-+	if (obj >= tbl->max) {
-+		spin_unlock_irqrestore(&tbl->lock, flags);
-+		return -ENOMEM;
-+	}
-+
-+	set_bit(obj, tbl->table);
-+	obj |= tbl->top;
-+
-+	spin_unlock_irqrestore(&tbl->lock, flags);
-+
-+	uar->index = obj;
-+	uar->pfn = (pci_resource_start(dev->pdev, PVRDMA_PCI_RESOURCE_UAR) >>
-+		    PAGE_SHIFT) + uar->index;
-+
-+	return 0;
-+}
-+
-+void pvrdma_uar_free(struct pvrdma_dev *dev, struct pvrdma_uar_map *uar)
-+{
-+	struct pvrdma_id_table *tbl = &dev->uar_table.tbl;
-+	unsigned long flags;
-+	u32 obj;
-+
-+	obj = uar->index & (tbl->max - 1);
-+	spin_lock_irqsave(&tbl->lock, flags);
-+	clear_bit(obj, tbl->table);
-+	tbl->last = min(tbl->last, obj);
-+	tbl->top = (tbl->top + tbl->max) & tbl->mask;
-+	spin_unlock_irqrestore(&tbl->lock, flags);
-+}
--- 
-2.7.4
+The 8250_hisi_lpc.c support both ACPI and dts similar to 8250_dw :
+
++static struct platform_driver hs_lpc8250_driver = {
++	.driver = {
++		.name		= "hisi-lpc-uart",
++		.of_match_table	= hs8250_of_match,
++		.acpi_match_table = ACPI_PTR(hs8250_acpi_match),
+
+So, I am a little confused why we need to support dts in 8250_of.c and support ACPI in another
+driver file.
+
+best,
+Zhichang
+
+
+> 
+> 	Arnd
+> 
+> 
+> .
+> 
 
