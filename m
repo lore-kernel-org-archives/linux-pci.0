@@ -1,204 +1,281 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56258 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934274AbcI0VFv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 17:05:51 -0400
-Date: Tue, 27 Sep 2016 16:05:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>
-Subject: Re: [PATCHv3 4/5] pcie/aer: Cache capability position
-Message-ID: <20160927210546.GB20252@localhost>
-References: <1475007815-28354-1-git-send-email-keith.busch@intel.com>
- <1475007815-28354-5-git-send-email-keith.busch@intel.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:52385 "EHLO
+        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750920AbcINFHz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 01:07:55 -0400
+Subject: Re: [RFC PATCH] pci: support for configurable PCI endpoint
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
+        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
+        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>
+References: <1473786653-12759-1-git-send-email-kishon@ti.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>, <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57D8DAE4.5030007@ti.com>
+Date: Wed, 14 Sep 2016 10:36:44 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475007815-28354-5-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1473786653-12759-1-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 27, 2016 at 04:23:34PM -0400, Keith Busch wrote:
-> This saves the position of the error reporting capability so that it
-> doesn't need to be rediscovered during error handling.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> Cc: Lukas Wunner <lukas@wunner.de>
+Hi,
 
-Applied to pci/aer for v4.9, thanks, Keith!
+Will resend the series with patch numbering.
 
-> ---
->  drivers/pci/pcie/aer/aerdrv.c      | 10 +++++-----
->  drivers/pci/pcie/aer/aerdrv_core.c | 18 ++++++++++++------
->  drivers/pci/probe.c                |  3 ++-
->  include/linux/pci.h                |  5 +++++
->  4 files changed, 24 insertions(+), 12 deletions(-)
+Thanks
+Kishon
+
+On Tuesday 13 September 2016 10:40 PM, Kishon Vijay Abraham I wrote:
+> This patch series
+> 	*) adds PCI endpoint core layer
+> 	*) modifies designware/dra7xx driver to be configured in EP mode
+> 	*) adds a PCI endpoint *test* function driver
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 48d21e0..24c6722 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -134,7 +134,7 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
->  	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
->  				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
->  
-> -	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-> +	aer_pos = pdev->aer_cap;
->  	/* Clear error status */
->  	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
->  	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
-> @@ -173,7 +173,7 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
->  	 */
->  	set_downstream_devices_error_reporting(pdev, false);
->  
-> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-> +	pos = pdev->aer_cap;
->  	/* Disable Root's interrupt in response to error messages */
->  	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
->  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-> @@ -200,7 +200,7 @@ irqreturn_t aer_irq(int irq, void *context)
->  	unsigned long flags;
->  	int pos;
->  
-> -	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
-> +	pos = pdev->port->aer_cap;
->  	/*
->  	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
->  	 * and Root error producer/consumer index
-> @@ -343,7 +343,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
->  	u32 reg32;
->  	int pos;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  
->  	/* Disable Root's interrupt in response to error messages */
->  	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> @@ -396,7 +396,7 @@ static void aer_error_resume(struct pci_dev *dev)
->  	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
->  
->  	/* Clean AER Root Error Status */
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
->  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
->  	if (dev->error_state == pci_channel_io_normal)
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 521e39c..d9175ef 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -40,7 +40,7 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
->  	if (pcie_aer_get_firmware_first(dev))
->  		return -EIO;
->  
-> -	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
-> +	if (!dev->aer_cap)
->  		return -EIO;
->  
->  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
-> @@ -62,7 +62,7 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->  	int pos;
->  	u32 status;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	if (!pos)
->  		return -EIO;
->  
-> @@ -83,7 +83,7 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->  	if (!pci_is_pcie(dev))
->  		return -ENODEV;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	if (!pos)
->  		return -EIO;
->  
-> @@ -102,6 +102,12 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->  	return 0;
->  }
->  
-> +int pci_aer_init(struct pci_dev *dev)
-> +{
-> +	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	return pci_cleanup_aer_error_status_regs(dev);
-> +}
-> +
->  /**
->   * add_error_device - list device to be handled
->   * @e_info: pointer to error info
-> @@ -158,7 +164,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
->  	if (!(reg16 & PCI_EXP_AER_FLAGS))
->  		return false;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  	if (!pos)
->  		return false;
->  
-> @@ -555,7 +561,7 @@ static void handle_error_source(struct pcie_device *aerdev,
->  		 * Correctable error does not need software intervention.
->  		 * No need to go through error recovery process.
->  		 */
-> -		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +		pos = dev->aer_cap;
->  		if (pos)
->  			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
->  					info->status);
-> @@ -647,7 +653,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
->  	info->status = 0;
->  	info->tlp_header_valid = 0;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	pos = dev->aer_cap;
->  
->  	/* The device might not support AER */
->  	if (!pos)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 93f280d..1575724 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1666,7 +1666,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	/* Enable ACS P2P upstream forwarding */
->  	pci_enable_acs(dev);
->  
-> -	pci_cleanup_aer_error_status_regs(dev);
-> +	/* Advanced Error Reporting */
-> +	pci_aer_init(dev);
->  }
->  
->  /*
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 7a320ca..306e5c6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -268,6 +268,9 @@ struct pci_dev {
->  	unsigned int	class;		/* 3 bytes: (base,sub,prog-if) */
->  	u8		revision;	/* PCI revision, low byte of class word */
->  	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
-> +#ifdef CONFIG_PCIEAER
-> +	u16		aer_cap;	/* AER capability offset */
-> +#endif
->  	u8		pcie_cap;	/* PCIe capability offset */
->  	u8		msi_cap;	/* MSI capability offset */
->  	u8		msix_cap;	/* MSI-X capability offset */
-> @@ -1390,9 +1393,11 @@ static inline bool pcie_aspm_support_enabled(void) { return false; }
->  #ifdef CONFIG_PCIEAER
->  void pci_no_aer(void);
->  bool pci_aer_available(void);
-> +int pci_aer_init(struct pci_dev *dev);
->  #else
->  static inline void pci_no_aer(void) { }
->  static inline bool pci_aer_available(void) { return false; }
-> +static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
->  #endif
->  
->  #ifdef CONFIG_PCIE_ECRC
-> -- 
-> 2.7.2
+> Known Limitation:
+> 	*) Does not support multi-function devices
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> TODO:
+> 	*) access buffers in RC
+> 	*) MSI interrupts
+> 	*) Enable user space control for the RC side PCI driver
+> 	*) Adapt all other users of designware to use the new design
+> 
+> HOW TO:
+> 
+> ON THE EP SIDE:
+> ***************
+> 
+> /* EP function is configured using configfs */
+> # mount -t configfs none /sys/kernel/config
+> 
+> /* PCI EP core layer creates "pci_ep" entry in configfs */
+> # cd /sys/kernel/config/pci_ep/
+> 
+> /*
+>  * This is the 1st step in creating an endpoint function. This
+>  * creates the endpoint function device *instance*. The string
+>  * before the .<num> suffix will identify the driver this
+>  * EP function will bind to.
+>  * Just pci_epf_test is also valid. The .<num> suffix is used
+>  * if there are multiple PCI controllers and all of them wants
+>  * to use the same function.
+>  */
+> # mkdir pci_epf_test.0
+> 
+> /*
+>  * When the above command is given, the function device will
+>  * also be bound to a function driver. To find the list of
+>  * function drivers available in the system, use the following
+>  * command. To create a new driver, the following can be referred
+>  * drivers/pci/endpoint/functions/pci-epf-test.c
+>  */
+> # ls /sys/bus/pci-epf/drivers
+> pci_epf_test
+> 
+> /* Now configure the endpoint function */
+> # cd pci_epf_test.0
+> 
+> /* These are the fields that can be configured */
+> # ls
+> baseclass_code    function          revid             vendorid
+> cache_line_size   interrupt_pin     subclass_code
+> deviceid          peripheral        subsys_id
+> epc               progif_code       subsys_vendor_id
+> 
+> /* The function driver will populate these fields with default values */
+> # cat vendorid 
+> 0xffff
+> 
+> # cat interrupt_pin 
+> 0x0001
+> 
+> /* The user can configure any of these fields */
+> # echo 0x104c > vendorid
+> 
+> /*
+>  * Next is binding this function driver to the controller driver. In
+>  * order to find the possible controller drivers that this function
+>  * driver can be bound to, the following sysfs entry can be used
+>  */
+> # ls /sys/class/pci_epc/
+> 51000000.pci
+> 
+> /* Now bind the function driver to the controller driver */
+> # echo "51000000.pcie" > epc
+> [  494.743487] dra7-pcie 51000000.pcie: no free inbound window
+> [  494.749367] pci_epf_test pci_epf_test.0: failed to set BAR4
+> [  494.755238] dra7-pcie 51000000.pcie: no free inbound window
+> [  494.761451] pci_epf_test pci_epf_test.0: failed to set BAR5
+> 
+> /*
+>  * the above error messages are due to non availability of free
+>  * inbound windows. So the function drivers in dra7xx can use
+>  * only 4 (BAR0..BAR3) BARs
+>  */
+> 
+> /****** PCI endpoint is configured ******/
+> 
+> ON THE HOST SIDE:
+> *****************
+> # modprobe pci_endpoint_test
+> [    8.197560] ****** Testing pci-endpoint-test Device ******
+> [    9.056990] Reset: OKAY
+> [    9.059753] BAR1 OKAY
+> [    9.062419] BAR2 OKAY
+> [    9.069506] BAR3 OKAY
+> [    9.071880] BAR4 NOT OKAY
+> [    9.074618] BAR5 NOT OKAY
+> [    9.379257] Legacy IRQ: OKAY
+> [    9.382281] ****** End Test ******
+> 
+> /*
+>  * Rightnow these tests gets executed as soon as the pci_endpoint_test
+>  * module gets inserted. These will be modified so that user/user script
+>  * can control this. Once the functionality for EP to access RC buffer
+>  * is added, more tests can be added including throughput measurement tests.
+>  */ 
+> 
+> 
+> Kishon Vijay Abraham I (11):
+>   pci: endpoint: add EP core layer to enable EP controller and EP
+>     functions
+>   pci: endpoint: introduce configfs entry for configuring EP functions
+>   Documentation: PCI: guide to use PCI Endpoint Core Layer
+>   pci: endpoint: functions: add an EP function to test PCI
+>   pci: rename *host* directory to *controller*
+>   pci: controller: split designware into *core* and *host*
+>   pci: controller: designware: Add EP mode support
+>   pci: controller: dra7xx: Add EP mode support
+>   misc: add a new host side PCI endpoint test driver
+>   ARM: dts: DRA7: Modify pcie1 dt node for EP mode
+>   HACK: pci: controller: dra7xx: disable smart idle
+> 
+>  Documentation/PCI/00-INDEX                         |    5 +
+>  Documentation/PCI/pci-endpoint.txt                 |  199 ++++++++++
+>  Documentation/PCI/pci-test.txt                     |   79 ++++
+>  .../devicetree/bindings/pci/designware-pcie.txt    |   26 +-
+>  Documentation/devicetree/bindings/pci/ti-pci.txt   |   30 +-
+>  MAINTAINERS                                        |   50 +--
+>  arch/arm/boot/dts/dra7.dtsi                        |   43 +--
+>  drivers/Makefile                                   |    4 +
+>  drivers/misc/Kconfig                               |    7 +
+>  drivers/misc/Makefile                              |    1 +
+>  drivers/misc/pci_endpoint_test.c                   |  291 +++++++++++++++
+>  drivers/pci/Kconfig                                |    3 +-
+>  drivers/pci/Makefile                               |    3 -
+>  drivers/pci/{host => controller}/Kconfig           |  109 +++++-
+>  drivers/pci/{host => controller}/Makefile          |    2 +
+>  drivers/pci/{host => controller}/pci-aardvark.c    |    0
+>  drivers/pci/{host => controller}/pci-dra7xx.c      |  340 +++++++++++++----
+>  drivers/pci/{host => controller}/pci-exynos.c      |    0
+>  drivers/pci/{host => controller}/pci-host-common.c |    0
+>  .../pci/{host => controller}/pci-host-generic.c    |    0
+>  drivers/pci/{host => controller}/pci-hyperv.c      |    0
+>  drivers/pci/{host => controller}/pci-imx6.c        |    0
+>  drivers/pci/{host => controller}/pci-keystone-dw.c |    0
+>  drivers/pci/{host => controller}/pci-keystone.c    |    0
+>  drivers/pci/{host => controller}/pci-keystone.h    |    0
+>  drivers/pci/{host => controller}/pci-layerscape.c  |    0
+>  drivers/pci/{host => controller}/pci-mvebu.c       |    0
+>  drivers/pci/{host => controller}/pci-rcar-gen2.c   |    0
+>  drivers/pci/{host => controller}/pci-tegra.c       |    0
+>  .../pci/{host => controller}/pci-thunder-ecam.c    |    0
+>  drivers/pci/{host => controller}/pci-thunder-pem.c |    0
+>  drivers/pci/{host => controller}/pci-versatile.c   |    0
+>  drivers/pci/{host => controller}/pci-xgene-msi.c   |    0
+>  drivers/pci/{host => controller}/pci-xgene.c       |    0
+>  drivers/pci/{host => controller}/pcie-altera-msi.c |    0
+>  drivers/pci/{host => controller}/pcie-altera.c     |    0
+>  drivers/pci/{host => controller}/pcie-armada8k.c   |    0
+>  drivers/pci/{host => controller}/pcie-artpec6.c    |    0
+>  drivers/pci/controller/pcie-designware-ep.c        |  228 ++++++++++++
+>  .../pcie-designware-host.c}                        |  294 +++------------
+>  .../{host => controller}/pcie-designware-plat.c    |    0
+>  drivers/pci/controller/pcie-designware.c           |  233 ++++++++++++
+>  drivers/pci/controller/pcie-designware.h           |  238 ++++++++++++
+>  drivers/pci/{host => controller}/pcie-hisi.c       |    0
+>  drivers/pci/{host => controller}/pcie-iproc-bcma.c |    0
+>  drivers/pci/{host => controller}/pcie-iproc-msi.c  |    0
+>  .../pci/{host => controller}/pcie-iproc-platform.c |    0
+>  drivers/pci/{host => controller}/pcie-iproc.c      |    0
+>  drivers/pci/{host => controller}/pcie-iproc.h      |    0
+>  drivers/pci/{host => controller}/pcie-qcom.c       |    0
+>  drivers/pci/{host => controller}/pcie-rcar.c       |    0
+>  drivers/pci/{host => controller}/pcie-spear13xx.c  |    0
+>  drivers/pci/{host => controller}/pcie-xilinx-nwl.c |    0
+>  drivers/pci/{host => controller}/pcie-xilinx.c     |    0
+>  drivers/pci/endpoint/Kconfig                       |   25 ++
+>  drivers/pci/endpoint/Makefile                      |    6 +
+>  drivers/pci/endpoint/functions/Kconfig             |   12 +
+>  drivers/pci/endpoint/functions/Makefile            |    5 +
+>  drivers/pci/endpoint/functions/pci-epf-test.c      |  272 ++++++++++++++
+>  drivers/pci/endpoint/pci-ep-cfs.c                  |  275 ++++++++++++++
+>  drivers/pci/endpoint/pci-epc-core.c                |  389 ++++++++++++++++++++
+>  drivers/pci/endpoint/pci-epf-core.c                |  338 +++++++++++++++++
+>  drivers/pci/host/pcie-designware.h                 |   89 -----
+>  include/linux/mod_devicetable.h                    |   10 +
+>  include/linux/pci-epc.h                            |  100 +++++
+>  include/linux/pci-epf.h                            |  159 ++++++++
+>  66 files changed, 3373 insertions(+), 492 deletions(-)
+>  create mode 100644 Documentation/PCI/pci-endpoint.txt
+>  create mode 100644 Documentation/PCI/pci-test.txt
+>  create mode 100644 drivers/misc/pci_endpoint_test.c
+>  rename drivers/pci/{host => controller}/Kconfig (79%)
+>  rename drivers/pci/{host => controller}/Makefile (93%)
+>  rename drivers/pci/{host => controller}/pci-aardvark.c (100%)
+>  rename drivers/pci/{host => controller}/pci-dra7xx.c (62%)
+>  rename drivers/pci/{host => controller}/pci-exynos.c (100%)
+>  rename drivers/pci/{host => controller}/pci-host-common.c (100%)
+>  rename drivers/pci/{host => controller}/pci-host-generic.c (100%)
+>  rename drivers/pci/{host => controller}/pci-hyperv.c (100%)
+>  rename drivers/pci/{host => controller}/pci-imx6.c (100%)
+>  rename drivers/pci/{host => controller}/pci-keystone-dw.c (100%)
+>  rename drivers/pci/{host => controller}/pci-keystone.c (100%)
+>  rename drivers/pci/{host => controller}/pci-keystone.h (100%)
+>  rename drivers/pci/{host => controller}/pci-layerscape.c (100%)
+>  rename drivers/pci/{host => controller}/pci-mvebu.c (100%)
+>  rename drivers/pci/{host => controller}/pci-rcar-gen2.c (100%)
+>  rename drivers/pci/{host => controller}/pci-tegra.c (100%)
+>  rename drivers/pci/{host => controller}/pci-thunder-ecam.c (100%)
+>  rename drivers/pci/{host => controller}/pci-thunder-pem.c (100%)
+>  rename drivers/pci/{host => controller}/pci-versatile.c (100%)
+>  rename drivers/pci/{host => controller}/pci-xgene-msi.c (100%)
+>  rename drivers/pci/{host => controller}/pci-xgene.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-altera-msi.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-altera.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-armada8k.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-artpec6.c (100%)
+>  create mode 100644 drivers/pci/controller/pcie-designware-ep.c
+>  rename drivers/pci/{host/pcie-designware.c => controller/pcie-designware-host.c} (64%)
+>  rename drivers/pci/{host => controller}/pcie-designware-plat.c (100%)
+>  create mode 100644 drivers/pci/controller/pcie-designware.c
+>  create mode 100644 drivers/pci/controller/pcie-designware.h
+>  rename drivers/pci/{host => controller}/pcie-hisi.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc-bcma.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc-msi.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc-platform.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc.h (100%)
+>  rename drivers/pci/{host => controller}/pcie-qcom.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-rcar.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-spear13xx.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-xilinx-nwl.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-xilinx.c (100%)
+>  create mode 100644 drivers/pci/endpoint/Kconfig
+>  create mode 100644 drivers/pci/endpoint/Makefile
+>  create mode 100644 drivers/pci/endpoint/functions/Kconfig
+>  create mode 100644 drivers/pci/endpoint/functions/Makefile
+>  create mode 100644 drivers/pci/endpoint/functions/pci-epf-test.c
+>  create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
+>  create mode 100644 drivers/pci/endpoint/pci-epc-core.c
+>  create mode 100644 drivers/pci/endpoint/pci-epf-core.c
+>  delete mode 100644 drivers/pci/host/pcie-designware.h
+>  create mode 100644 include/linux/pci-epc.h
+>  create mode 100644 include/linux/pci-epf.h
+> 
