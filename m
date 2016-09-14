@@ -1,156 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46636 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751594AbcI0T3n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 15:29:43 -0400
-Date: Tue, 27 Sep 2016 14:29:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Long Li <longli@exchange.microsoft.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
-Subject: Re: [PATCH 1/2 v2] pci-hyperv: properly handle pci bus remove
-Message-ID: <20160927192935.GB14642@localhost>
-References: <1473905402-2375-1-git-send-email-longli@exchange.microsoft.com>
+Received: from mout.kundenserver.de ([212.227.126.134]:63406 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933296AbcINOYM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 10:24:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, devicetree@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, benh@kernel.crashing.org,
+        minyard@acm.org, linux-pci@vger.kernel.org,
+        gabriele.paoloni@huawei.com, john.garry@huawei.com,
+        will.deacon@arm.com, xuwei5@hisilicon.com,
+        linux-serial@vger.kernel.org, gregkh@linuxfoundation.org,
+        zourongrong@gmail.com, liviu.dudau@arm.com, kantyzc@163.com,
+        zhichang.yuan02@gmail.com
+Subject: Re: [PATCH V3 1/4] ARM64 LPC: Indirect ISA port IO introduced
+Date: Wed, 14 Sep 2016 16:23:39 +0200
+Message-ID: <5264074.nuyDhEuOR4@wuerfel>
+In-Reply-To: <57D95BBC.9030405@hisilicon.com>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <8337589.pzGt0MZ9xn@wuerfel> <57D95BBC.9030405@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473905402-2375-1-git-send-email-longli@exchange.microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 07:10:01PM -0700, Long Li wrote:
-> From: Long Li <longli@microsoft.com>
-> 
-> hv_pci_devices_present is called in hv_pci_remove when we remove a PCI device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove, the bus is already removed before the call, so we don't need to rescan the bus in the workqueue scheduled from hv_pci_devices_present. By introducing status hv_pcibus_removed, we can avoid this situation.
-> 
-> The patch fixes the following kernel panic.
-> 
-> [  383.853124] Workqueue: events pci_devices_present_work [pci_hyperv]
-> [  383.853124] task: ffff88007f5f8000 ti: ffff88007f600000 task.ti:
-> ffff88007f600000
-> [  383.853124] RIP: 0010:[<ffffffff81349806>]  [<ffffffff81349806>]
-> pci_is_pcie+0x6/0x20
-> [  383.853124] RSP: 0018:ffff88007f603d38  EFLAGS: 00010206
-> [  383.853124] RAX: ffff88007f5f8000 RBX: 642f3d4854415056 RCX:
-> ffff88007f603fd8
-> [  383.853124] RDX: 0000000000000000 RSI: 0000000000000000 RDI:
-> 642f3d4854415056
-> [  383.853124] RBP: ffff88007f603d68 R08: 0000000000000246 R09:
-> ffffffffa045eb9e
-> [  383.853124] R10: ffff88007b419a80 R11: ffffea0001c0ef40 R12:
-> ffff880003ee1c00
-> [  383.853124] R13: 63702f30303a3137 R14: 0000000000000000 R15:
-> 0000000000000246
-> [  383.853124] FS:  0000000000000000(0000) GS:ffff88007b400000(0000)
-> knlGS:0000000000000000
-> [  383.853124] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  383.853124] CR2: 00007f68b3f52350 CR3: 0000000003546000 CR4:
-> 00000000000406f0
-> [  383.853124] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> 0000000000000000
-> [  383.853124] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> 0000000000000400
-> [  383.853124] Stack:
-> [  383.853124]  ffff88007f603d68 ffffffff8134db17 0000000000000008
-> ffff880003ee1c00
-> [  383.853124]  63702f30303a3137 ffff880003d8edb8 ffff88007f603da0
-> ffffffff8134ee2d
-> [  383.853124]  ffff880003d8ed00 ffff88007f603dd8 ffff880075fec320
-> ffff880003d8edb8
-> [  383.853124] Call Trace:
-> [  383.853124]  [<ffffffff8134db17>] ? pci_scan_slot+0x27/0x140
-> [  383.853124]  [<ffffffff8134ee2d>] pci_scan_child_bus+0x3d/0x150
-> [  383.853124]  [<ffffffffa045ef5a>]
-> pci_devices_present_work+0x3ea/0x400 [pci_hyperv]
-> [  383.853124]  [<ffffffff810a682b>] process_one_work+0x17b/0x470
-> [  383.853124]  [<ffffffff810a7666>] worker_thread+0x126/0x410
-> [  383.853124]  [<ffffffff810a7540>] ? rescuer_thread+0x460/0x460
-> [  383.853124]  [<ffffffff810aee1f>] kthread+0xcf/0xe0
-> [  383.853124]  [<ffffffff810aed50>] ?
-> kthread_create_on_node+0x140/0x140
-> [  383.853124]  [<ffffffff81699958>] ret_from_fork+0x58/0x90
-> [  383.853124]  [<ffffffff810aed50>] ?
-> kthread_create_on_node+0x140/0x140
-> [  383.853124] Code: 89 e5 5d 25 f0 00 00 00 c1 f8 04 c3 66 0f 1f 84 00
-> 00 00 00 00 66 66 66 66 90 55 0f b6 47 4a 48 89 e5 5d c3 90 66 66 66 66
-> 90 55 <80> 7f 4a 00 48 89 e5 5d 0f 95 c0 c3 0f 1f 40 00 66 2e 0f 1f 84
-> [  383.853124] RIP  [<ffffffff81349806>] pci_is_pcie+0x6/0x20
-> [  383.853124]  RSP <ffff88007f603d38>
+On Wednesday, September 14, 2016 10:16:28 PM CEST zhichang.yuan wrote:
+> > 
+> > No need to guard includes with an #ifdef.
+> If remove #ifdef here, extio.h should not contain any function external declarations whose definitions are in
+> extio.c compiled only when CONFIG_ARM64_INDIRECT_PIO is yes.
+ 
+There is no problem with making declarations visible for functions that
+are not part of the kernel, we do that all the time.
 
-Personally, I would remove the timestamps and addresses from this trace
-because I don't think they contribute to diagnosing the problem.
-
-> Signed-off-by: Long Li <longli@microsoft.com>
-
-I'm ready to apply these but am waiting for an ack from the maintainers
-listed in MAINTAINERS (feel free to update that if it's out of date).
-
-> ---
->  drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
->  1 file changed, 17 insertions(+), 3 deletions(-)
+> >> +#define BUILDS_RW(bwl, type)                                                \
+> >> +static inline void reads##bwl(const volatile void __iomem *addr,    \
+> >> +                            void *buffer, unsigned int count)       \
+> >> +{                                                                   \
+> >> +    if (count) {                                                    \
+> >> +            type *buf = buffer;                                     \
+> >> +                                                                    \
+> >> +            do {                                                    \
+> >> +                    type x = __raw_read##bwl(addr);                 \
+> >> +                    *buf++ = x;                                     \
+> >> +            } while (--count);                                      \
+> >> +    }                                                               \
+> >> +}                                                                   \
+> >> +                                                                    \
+> >> +static inline void writes##bwl(volatile void __iomem *addr,         \
+> >> +                            const void *buffer, unsigned int count) \
+> >> +{                                                                   \
+> >> +    if (count) {                                                    \
+> >> +            const type *buf = buffer;                               \
+> >> +                                                                    \
+> >> +            do {                                                    \
+> >> +                    __raw_write##bwl(*buf++, addr);                 \
+> >> +            } while (--count);                                      \
+> >> +    }                                                               \
+> >> +}
+> >> +
+> >> +BUILDS_RW(b, u8)
+> > 
+> > Why is this in here?
+> the readsb/writesb are defined in asm-generic/io.h which is included later, but the redefined insb/outsb need
+> to call them. Without these readsb/writesb definition before insb/outsb redefined, compile error occur.
 > 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index a8deeca..4a37598 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -348,6 +348,7 @@ enum hv_pcibus_state {
->  	hv_pcibus_init = 0,
->  	hv_pcibus_probed,
->  	hv_pcibus_installed,
-> +	hv_pcibus_removed,
->  	hv_pcibus_maximum
->  };
->  
-> @@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_struct *work)
->  		put_pcichild(hpdev, hv_pcidev_ref_initial);
->  	}
->  
-> -	/* Tell the core to rescan bus because there may have been changes. */
-> -	if (hbus->state == hv_pcibus_installed) {
-> +	switch (hbus->state) {
-> +	case hv_pcibus_installed:
-> +		/*
-> +		 * Tell the core to rescan bus
-> +		 * because there may have been changes.
-> +		 */
->  		pci_lock_rescan_remove();
->  		pci_scan_child_bus(hbus->pci_bus);
->  		pci_unlock_rescan_remove();
-> -	} else {
-> +		break;
-> +
-> +	case hv_pcibus_init:
-> +	case hv_pcibus_probed:
->  		survey_child_resources(hbus);
-> +		break;
-> +
-> +	default:
-> +		break;
->  	}
->  
->  	up(&hbus->enum_sem);
-> @@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
->  	if (!hbus)
->  		return -ENOMEM;
-> +	hbus->state = hv_pcibus_init;
->  
->  	/*
->  	 * The PCI bus "domain" is what is called "segment" in ACPI and
-> @@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
->  		pci_stop_root_bus(hbus->pci_bus);
->  		pci_remove_root_bus(hbus->pci_bus);
->  		pci_unlock_rescan_remove();
-> +		hbus->state = hv_pcibus_removed;
->  	}
->  
->  	ret = hv_send_resources_released(hdev);
-> -- 
-> 1.8.5.6
+> It seems that copy all the definitions of "asm-generic/io.h" is not a good idea, so I move the definitions of
+> those function needed here....
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Ok. I think your idea below defining in(s)/out(s) in a c file can solve this issue.
+> 
+> #ifdef CONFIG_ARM64_INDIRECT_PIO
+> #define inb inb
+> extern u8 inb(unsigned long addr);
+> 
+> #define outb outb
+> extern void outb(u8 value, unsigned long addr);
+> 
+> #define insb insb
+> extern void insb(unsigned long addr, void *buffer, unsigned int count);
+> 
+> #define outsb outsb
+> extern void outsb(unsigned long addr, const void *buffer, unsigned int count);
+> #endif
+> 
+> and definitions of all these functions are in extio.c :
+> 
+> u8 inb(unsigned long addr)
+> {
+>         if (!arm64_extio_ops || arm64_extio_ops->start > addr ||
+>                         arm64_extio_ops->end < addr)
+>                 return readb(PCI_IOBASE + addr);
+>         else
+>                 return arm64_extio_ops->pfin ?
+>                         arm64_extio_ops->pfin(arm64_extio_ops->devpara,
+>                                 addr + arm64_extio_ops->ptoffset, NULL,
+>                                 sizeof(u8), 1) : -1;
+> }
+> .....
+
+Yes, sounds good.
+
+> >> @@ -149,6 +185,60 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+> >>  #define IO_SPACE_LIMIT              (PCI_IO_SIZE - 1)
+> >>  #define PCI_IOBASE          ((void __iomem *)PCI_IO_START)
+> >>  
+> >> +
+> >> +/*
+> >> + * redefine the in(s)b/out(s)b for indirect-IO.
+> >> + */
+> >> +#define inb inb
+> >> +static inline u8 inb(unsigned long addr)
+> >> +{
+> >> +#ifdef CONFIG_ARM64_INDIRECT_PIO
+> >> +    if (arm64_extio_ops && arm64_extio_ops->start <= addr &&
+> >> +                    addr <= arm64_extio_ops->end)
+> >> +            return extio_inb(addr);
+> >> +#endif
+> >> +    return readb(PCI_IOBASE + addr);
+> >> +}
+> >> +
+> > 
+> > Looks ok, but you only seem to do this for the 8-bit
+> > accessors, when it should be done for 16-bit and 32-bit
+> > ones as well for consistency.
+> Hip06 LPC only support 8-bit I/O operations on the designated port.
+
+That is an interesting limitation. Maybe still call the extio operations
+and have them do WARN_ON_ONCE() instead?
+
+If you get a driver that calls inw/outw on the range that is owned
+by the LPC bus, you otherwise get an unhandled page fault in kernel
+space, which is not as nice.
+
+> >> diff --git a/drivers/bus/extio.c b/drivers/bus/extio.c
+> >> new file mode 100644
+> >> index 0000000..1e7a9c5
+> >> --- /dev/null
+> >> +++ b/drivers/bus/extio.c
+> >> @@ -0,0 +1,66 @@
+> > 
+> > This is in a globally visible directory
+> > 
+> >> +
+> >> +struct extio_ops *arm64_extio_ops;
+> > 
+> > But the identifier uses an architecture specific prefix. Either
+> > move the whole file into arch/arm64, or make the naming so that
+> > it can be used for everything.
+> 
+> I perfer to move the whole file into arch/arm64, extio.h will be moved to arch/arm64/include/asm;
+
+Ok, that simplifies it a lot, you can just do everything in asm/io.h then.
+
+	Arnd
