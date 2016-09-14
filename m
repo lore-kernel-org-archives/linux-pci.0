@@ -1,58 +1,102 @@
-Return-Path: <cov@codeaurora.org>
-Return-Path: <cov@codeaurora.org>
-Subject: Re: [PATCH V6 0/5] ECAM quirks handling for ARM64 platforms
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <20160920192636.GB4941@localhost>
- <0429663d51ed8e93fb0c96261dd2ecc7@codeaurora.org>
- <20160921131107.GB10804@localhost>
-Cc: Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
- catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
- arnd@arndb.de, hanjun.guo@linaro.org, okaya@codeaurora.org,
- jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
- jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Christopher Covington <cov@codeaurora.org>
-Message-ID: <304377c6-554d-60ea-30df-006e557c7279@codeaurora.org>
-Date: Wed, 21 Sep 2016 18:40:47 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47720 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752470AbcINM2X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 08:28:23 -0400
+Date: Wed, 14 Sep 2016 15:28:12 +0300
+From: Yuval Shaia <yuval.shaia@oracle.com>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v4 05/16] IB/pvrdma: Add functions for Verbs support
+Message-ID: <20160914122811.GD15800@yuval-lap.uk.oracle.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-6-git-send-email-aditr@vmware.com>
 MIME-Version: 1.0
-In-Reply-To: <20160921131107.GB10804@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473655766-31628-6-git-send-email-aditr@vmware.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Sun, Sep 11, 2016 at 09:49:15PM -0700, Adit Ranadive wrote:
+> +
+> +/**
+> + * pvrdma_alloc_pd - allocate protection domain
+> + * @ibdev: the IB device
+> + * @context: user context
+> + * @udata: user data
+> + *
+> + * @return: the ib_pd protection domain pointer on success, otherwise errno.
+> + */
+> +struct ib_pd *pvrdma_alloc_pd(struct ib_device *ibdev,
+> +			      struct ib_ucontext *context,
+> +			      struct ib_udata *udata)
+> +{
+> +	struct pvrdma_pd *pd;
+> +	struct pvrdma_dev *dev = to_vdev(ibdev);
+> +	union pvrdma_cmd_req req;
+> +	union pvrdma_cmd_resp rsp;
+> +	struct pvrdma_cmd_create_pd *cmd = &req.create_pd;
+> +	struct pvrdma_cmd_create_pd_resp *resp = &rsp.create_pd_resp;
+> +	int ret;
+> +	void *ptr;
+> +
+> +	/* Check allowed max pds */
+> +	if (!atomic_add_unless(&dev->num_pds, 1, dev->dsr->caps.max_pd))
+> +		return ERR_PTR(-EINVAL);
+> +
+> +	memset(cmd, 0, sizeof(*cmd));
+> +	cmd->hdr.cmd = PVRDMA_CMD_CREATE_PD;
+> +	cmd->ctx_handle = (context) ? to_vucontext(context)->ctx_handle : 0;
+> +	ret = pvrdma_cmd_post(dev, &req, &rsp);
+> +	if (ret < 0) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "failed to allocate protection domain, error: %d\n",
+> +			 ret);
+> +		ptr = ERR_PTR(ret);
+> +		goto err;
+> +	} else if (resp->hdr.ack != PVRDMA_CMD_CREATE_PD_RESP) {
+> +		dev_warn(&dev->pdev->dev,
+> +			 "unknown response for allocate protection domain\n");
+> +		ptr = ERR_PTR(-EFAULT);
+> +		goto err;
+> +	}
+> +
+> +	pd = kmalloc(sizeof(*pd), GFP_KERNEL);
+> +	if (!pd) {
+> +		ptr = ERR_PTR(-ENOMEM);
+> +		goto err;
+> +	}
 
-On 09/21/2016 09:11 AM, Bjorn Helgaas wrote:
-> On Tue, Sep 20, 2016 at 09:15:14PM -0400, cov@codeaurora.org wrote:
+I know that this was my suggestion but also remember that you raised a
+(correct) argument that it is preferred to first do other allocation and
+free them if command fails then the other way around where failure of
+memory allocation (like here) will force us to do the opposite command
+(pvrdma_dealloc_pd in this case).
 
->>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->>> index eb14f74..bb3b8ad 100644
->>> --- a/drivers/acpi/pci_mcfg.c
->>> +++ b/drivers/acpi/pci_mcfg.c
->>> @@ -42,86 +42,59 @@ struct mcfg_fixup {
->>> 	struct resource cfgres;
->>> };
->>>
->>> -#define MCFG_DOM_ANY			(-1)
->>
->> Did you delete this because there were no current users, because you'd
->> prefer users just use "-1", or for some other reason?
-> 
-> I removed it because there were no users of it and, more importantly,
-> the code doesn't implement support for it.
+So either accept your way (better) or call pvrdma_dealloc_pd when kmalloc
+fails.
 
-It looks like a stale "First match against PCI topology <domain:bus>..."
-comment remains.
-
-Thanks,
-Cov
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
-Technologies, Inc. Qualcomm Technologies, Inc. is a member of the Code
-Aurora Forum, a Linux Foundation Collaborative Project.
+> +
+> +	pd->privileged = !context;
+> +	pd->pd_handle = resp->pd_handle;
+> +	pd->pdn = resp->pd_handle;
+> +
+> +	if (context) {
+> +		if (ib_copy_to_udata(udata, &pd->pdn, sizeof(__u32))) {
+> +			dev_warn(&dev->pdev->dev,
+> +				 "failed to copy back protection domain\n");
+> +			pvrdma_dealloc_pd(&pd->ibpd);
+> +			return ERR_PTR(-EFAULT);
+> +		}
+> +	}
+> +
+> +	/* u32 pd handle */
+> +	return  &pd->ibpd;
+> +
+> +err:
+> +	atomic_dec(&dev->num_pds);
+> +	return ptr;
+> +}
