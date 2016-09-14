@@ -1,54 +1,349 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54426 "EHLO mail.kernel.org"
+Received: from comal.ext.ti.com ([198.47.26.152]:57332 "EHLO comal.ext.ti.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757535AbcILVJk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 17:09:40 -0400
-Subject: [PATCH v2 6/8] PCI: pciehp: Remove unnecessary guard
-To: Mayurkumar Patel <mayurkumar.patel@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
-        linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        mika.westerberg@linux.intel.com
-Date: Mon, 12 Sep 2016 16:09:36 -0500
-Message-ID: <20160912210936.22258.71755.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S1754710AbcINFN1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 01:13:27 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
+        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
+        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>, <kishon@ti.com>,
+        <nsekhar@ti.com>
+Subject: [RFC PATCH 02/11] pci: endpoint: introduce configfs entry for configuring EP functions
+Date: Wed, 14 Sep 2016 10:41:58 +0530
+Message-ID: <1473829927-20466-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1473829927-20466-1-git-send-email-kishon@ti.com>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In pcie_isr(), we return early if no status bits other than
-PCI_EXP_SLTSTA_CC are set.  This was introduced by dbd79aed1aea ("pciehp:
-fix NULL dereference in interrupt handler"), but it is no longer necessary
-because all the subsequent pcie_isr() code is already predicated on a
-status bit being set.
+Introduce a new configfs entry to configure the EP function (like
+configuring the standard configuration header entries) and to
+bind the function with a controller.
 
-Remove the unnecessary test for ~PCI_EXP_SLTSTA_CC.  No functional change
-intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |    3 ---
- 1 file changed, 3 deletions(-)
+ drivers/pci/endpoint/Kconfig      |    4 +-
+ drivers/pci/endpoint/Makefile     |    3 +-
+ drivers/pci/endpoint/pci-ep-cfs.c |  275 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 280 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index fe99b45..60e1d55 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -590,9 +590,6 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 		}
- 	}
+diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
+index a6d827c..f1dd206 100644
+--- a/drivers/pci/endpoint/Kconfig
++++ b/drivers/pci/endpoint/Kconfig
+@@ -13,7 +13,9 @@ config PCI_ENDPOINT
  
--	if (!(events & ~PCI_EXP_SLTSTA_CC))
--		return IRQ_HANDLED;
--
- 	/* Check Attention Button Pressed */
- 	if (events & PCI_EXP_SLTSTA_ABP) {
- 		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
+ 	   Enabling this option will build the endpoint library, which
+ 	   includes endpoint controller library and endpoint function
+-	   library.
++	   library. This will also enable the configfs entry required to
++	   configure the endpoint function and used to bind the
++	   function with a endpoint controller.
+ 
+ 	   If in doubt, say "N" to disable Endpoint support.
+ 
+diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
+index dbc5517..67c88bf 100644
+--- a/drivers/pci/endpoint/Makefile
++++ b/drivers/pci/endpoint/Makefile
+@@ -2,4 +2,5 @@
+ # Makefile for PCI Endpoint Support
+ #
+ 
+-obj-$(CONFIG_PCI_ENDPOINT)		:= pci-epc-core.o pci-epf-core.o
++obj-$(CONFIG_PCI_ENDPOINT)		:= pci-epc-core.o pci-epf-core.o \
++					   pci-ep-cfs.o
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+new file mode 100644
+index 0000000..d11ae34
+--- /dev/null
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -0,0 +1,275 @@
++/**
++ * pci-ep-cfs.c - configfs to configure the PCI endpoint
++ *
++ * Copyright (C) 2016 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/configfs.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++
++#include <linux/pci-epc.h>
++#include <linux/pci-epf.h>
++
++struct pci_epf_info {
++	struct config_item pci_epf;
++	struct pci_epf *epf;
++};
++
++static inline struct pci_epf_info *to_pci_epf_info(struct config_item *item)
++{
++	return container_of(item, struct pci_epf_info, pci_epf);
++}
++
++#define PCI_EPF_HEADER_R(_name)	\
++static ssize_t pci_epf_##_name##_show(struct config_item *item,		\
++			char *page)					       \
++{									       \
++	return sprintf(page, "0x%04x\n",				       \
++		       to_pci_epf_info(item)->epf->header->_name);	       \
++}
++
++#define PCI_EPF_HEADER_W_u32(_name)	\
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++					     const char *page, size_t len)     \
++{									       \
++	u32 val;							       \
++	int ret;							       \
++	ret = kstrtou32(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	to_pci_epf_info(item)->epf->header->_name = val;		       \
++	return len;							       \
++}
++
++#define PCI_EPF_HEADER_W_u16(_name)	\
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++					     const char *page, size_t len)     \
++{									       \
++	u16 val;							       \
++	int ret;							       \
++	ret = kstrtou16(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	to_pci_epf_info(item)->epf->header->_name = val;		       \
++	return len;							       \
++}
++
++#define PCI_EPF_HEADER_W_u8(_name)	\
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++					     const char *page, size_t len)     \
++{									       \
++	u8 val;								       \
++	int ret;							       \
++	ret = kstrtou8(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	to_pci_epf_info(item)->epf->header->_name = val;		       \
++	return len;							       \
++}
++
++#define PCI_EPF_HEADER_RW(_name, _type)	\
++	PCI_EPF_HEADER_R(_name)		\
++	PCI_EPF_HEADER_W_##_type(_name)
++
++static ssize_t pci_epf_peripheral_store(struct config_item *item,
++					    const char *page, size_t len)
++{
++	struct pci_epf_info *epf_info = to_pci_epf_info(item);
++	char *dev_name;
++
++	dev_name = kstrdup(page, GFP_KERNEL);
++	if (!dev_name)
++		return -ENOMEM;
++	if (dev_name[len - 1] == '\n')
++		dev_name[len - 1] = '\0';
++
++	epf_info->epf->hw_devname = dev_name;
++	return len;
++}
++
++static ssize_t pci_epf_peripheral_show(struct config_item *item,
++					   char *page)
++{
++	return sprintf(page, "%s\n",
++		       to_pci_epf_info(item)->epf->hw_devname);
++}
++
++static ssize_t pci_epf_function_show(struct config_item *item,
++					   char *page)
++{
++	return sprintf(page, "%s\n",
++		       to_pci_epf_info(item)->epf->name);
++}
++
++static ssize_t pci_epf_epc_store(struct config_item *item,
++					    const char *page, size_t len)
++{
++	int ret;
++	struct pci_epf_info *epf_info = to_pci_epf_info(item);
++	char *epc_name;
++
++	epc_name = kstrdup(page, GFP_KERNEL);
++	if (!epc_name)
++		return -ENOMEM;
++	if (epc_name[len - 1] == '\n')
++		epc_name[len - 1] = '\0';
++
++	if (epf_info->epf->epc)
++		pci_epc_unbind_epf(epf_info->epf);
++
++	epf_info->epf->pci_epc_name = epc_name;
++	ret = pci_epc_bind_epf(epf_info->epf);
++	if (ret)
++		return -EINVAL;
++
++	return len;
++}
++
++static ssize_t pci_epf_epc_show(struct config_item *item,
++					   char *page)
++{
++	return sprintf(page, "%s\n",
++		       to_pci_epf_info(item)->epf->pci_epc_name);
++}
++
++PCI_EPF_HEADER_RW(vendorid, u16);
++PCI_EPF_HEADER_RW(deviceid, u16);
++PCI_EPF_HEADER_RW(revid, u16);
++PCI_EPF_HEADER_RW(progif_code, u16);
++PCI_EPF_HEADER_RW(subclass_code, u16);
++PCI_EPF_HEADER_RW(baseclass_code, u16);
++PCI_EPF_HEADER_RW(cache_line_size, u16);
++PCI_EPF_HEADER_RW(subsys_vendor_id, u16);
++PCI_EPF_HEADER_RW(subsys_id, u16);
++PCI_EPF_HEADER_RW(interrupt_pin, u16);
++
++CONFIGFS_ATTR(pci_epf_, vendorid);
++CONFIGFS_ATTR(pci_epf_, deviceid);
++CONFIGFS_ATTR(pci_epf_, revid);
++CONFIGFS_ATTR(pci_epf_, progif_code);
++CONFIGFS_ATTR(pci_epf_, subclass_code);
++CONFIGFS_ATTR(pci_epf_, baseclass_code);
++CONFIGFS_ATTR(pci_epf_, cache_line_size);
++CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
++CONFIGFS_ATTR(pci_epf_, subsys_id);
++CONFIGFS_ATTR(pci_epf_, interrupt_pin);
++CONFIGFS_ATTR(pci_epf_, peripheral);
++CONFIGFS_ATTR_RO(pci_epf_, function);
++CONFIGFS_ATTR(pci_epf_, epc);
++
++static struct configfs_attribute *pci_epf_attrs[] = {
++	&pci_epf_attr_vendorid,
++	&pci_epf_attr_deviceid,
++	&pci_epf_attr_revid,
++	&pci_epf_attr_progif_code,
++	&pci_epf_attr_subclass_code,
++	&pci_epf_attr_baseclass_code,
++	&pci_epf_attr_cache_line_size,
++	&pci_epf_attr_subsys_vendor_id,
++	&pci_epf_attr_subsys_id,
++	&pci_epf_attr_interrupt_pin,
++	&pci_epf_attr_peripheral,
++	&pci_epf_attr_function,
++	&pci_epf_attr_epc,
++	NULL,
++};
++
++static void pci_epf_release(struct config_item *item)
++{
++	struct pci_epf_info *epf_info = to_pci_epf_info(item);
++
++	pci_epf_destroy(epf_info->epf);
++	kfree(epf_info);
++}
++
++static struct configfs_item_operations pci_epf_ops = {
++	.release		= pci_epf_release,
++};
++
++static struct config_item_type pci_epf_type = {
++	.ct_item_ops	= &pci_epf_ops,
++	.ct_attrs	= pci_epf_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_item *pci_epf_make(struct config_group *group,
++					const char *name)
++{
++	struct pci_epf_info *epf_info;
++	struct pci_epf *epf;
++
++	epf_info = kzalloc(sizeof(*epf_info), GFP_KERNEL);
++	if (!epf_info)
++		return ERR_PTR(-ENOMEM);
++
++	epf = pci_epf_create(name);
++	if (IS_ERR(epf)) {
++		pr_err("failed to create endpoint function device\n");
++		return ERR_PTR(-EINVAL);
++	}
++
++	epf_info->epf = epf;
++
++	config_item_init_type_name(&epf_info->pci_epf, name,
++				   &pci_epf_type);
++
++	return &epf_info->pci_epf;
++}
++
++static struct configfs_group_operations pci_ep_ops = {
++	.make_item	= pci_epf_make,
++};
++
++static struct config_item_type pci_ep_type = {
++	.ct_group_ops	= &pci_ep_ops,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct configfs_subsystem pci_ep_cfs_subsys = {
++	.su_group = {
++		.cg_item = {
++			.ci_namebuf = "pci_ep",
++			.ci_type = &pci_ep_type,
++		},
++	},
++	.su_mutex = __MUTEX_INITIALIZER(pci_ep_cfs_subsys.su_mutex),
++};
++
++static int __init pci_ep_cfs_init(void)
++{
++	int ret;
++
++	config_group_init(&pci_ep_cfs_subsys.su_group);
++
++	ret = configfs_register_subsystem(&pci_ep_cfs_subsys);
++	if (ret)
++		pr_err("Error %d while registering subsystem %s\n",
++		       ret, pci_ep_cfs_subsys.su_group.cg_item.ci_namebuf);
++
++	return ret;
++}
++module_init(pci_ep_cfs_init);
++
++static void __exit pci_ep_cfs_exit(void)
++{
++	configfs_unregister_subsystem(&pci_ep_cfs_subsys);
++}
++module_exit(pci_ep_cfs_exit);
++
++MODULE_DESCRIPTION("PCI EP CONFIGFS");
++MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
++MODULE_LICENSE("GPL v2");
+-- 
+1.7.9.5
 
