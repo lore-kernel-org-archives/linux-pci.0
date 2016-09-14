@@ -1,126 +1,218 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 3/4] PCI: Avoid unnecessary resume after direct-complete
-Date: Wed, 14 Sep 2016 15:14:37 +0200
-Message-ID: <1922917.c92rJWRLH6@vostro.rjw.lan>
-In-Reply-To: <20160914095640.GB1597@wunner.de>
-References: <cover.1472554278.git.lukas@wunner.de> <2963851.chF2hIakqz@vostro.rjw.lan> <20160914095640.GB1597@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:57978 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753970AbcINUyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Sep 2016 16:54:36 -0400
+Date: Wed, 14 Sep 2016 15:54:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] pcie-rcar: try setting PCIe speed to 5 GT/s at boot
+Message-ID: <20160914205431.GC13189@localhost>
+References: <6896977.DKiraAXap6@wasted.cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6896977.DKiraAXap6@wasted.cogentembedded.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 11:56:40 AM Lukas Wunner wrote:
-> On Wed, Sep 14, 2016 at 02:50:13AM +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
-> > > Commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might have been
-> > > reset by firmware") added a runtime resume for devices that were runtime
-> > > suspended when the system entered sleep.
-> > > 
-> > > The motivation was that devices might be in a reset-power-on state after
-> > > waking from system sleep, so their power state as perceived by Linux
-> > > (stored in pci_dev->current_state) would no longer reflect reality.
-> > > By resuming such devices, we allow them to return to a low-power state
-> > > via autosuspend and also bring their current_state in sync with reality.
-> > > 
-> > > However for devices that are *not* in a reset-power-on state, doing an
-> > > unconditional resume wastes energy.  A more refined approach is called
-> > > for which issues a runtime resume only if the power state after
-> > > direct-complete is shallower than it was before. To achieve this, update
-> > > the device's current_state by querying the platform firmware and reading
-> > > its PMCSR.
-> > > 
-> > > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > > ---
-> > >  drivers/pci/pci-driver.c | 15 +++++++++++++--
-> > >  1 file changed, 13 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > > index e39a67c..fd4b9c4 100644
-> > > --- a/drivers/pci/pci-driver.c
-> > > +++ b/drivers/pci/pci-driver.c
-> > > @@ -684,8 +684,19 @@ static int pci_pm_prepare(struct device *dev)
-> > >  
-> > >  static void pci_pm_complete(struct device *dev)
-> > >  {
-> > > -	pci_dev_complete_resume(to_pci_dev(dev));
-> > > -	pm_complete_with_resume_check(dev);
-> > > +	struct pci_dev *pci_dev = to_pci_dev(dev);
-> > > +
-> > > +	pci_dev_complete_resume(pci_dev);
-> > > +	pm_generic_complete(dev);
-> > > +
-> > > +	/* Resume device if platform firmware has put it in reset-power-on */
-> > > +	if (dev->power.direct_complete && pm_resume_via_firmware()) {
-> > > +		pci_power_t pre_sleep_state = pci_dev->current_state;
-> > > +
-> > > +		pci_update_current_state(pci_dev, pci_dev->current_state);
-> > 
-> > I'm not sure if this can be made reliable enough for all of the systems out
-> > there (including the pre-ACPI-4.0 ones and so on).  I'm a bit concerned that
-> > we'll uncover firmware issues and such by doing this.
-> > 
-> > How much of a problem the existing code is in practice?
+On Wed, Sep 07, 2016 at 11:22:14PM +0300, Sergei Shtylyov wrote:
+> From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
 > 
-> Where's your ambition?  Do you want your power management to be as good
-> as Apple's or are you going to waste energy for fear of uncovering
-> firmware bugs?
-
-That's not about my ambition or lack thereof, but about avoiding introducing
-regressions on systems that are not Apple because of the ambition to be as
-good as Apple.
-
-And I'm not even talking about this particular piece of code, but about the
-other code that calls pci_update_current_state().
-
-> I first tried to solve this only for Thunderbolt by opting out of the
-> mandatory resume after direct_complete.  It worked, but it was ugly.
+> Initially, the PCIe link speed is set up only at 2.5 GT/s.
+> For better performance,  we're trying to increase link speed to 5 GT/s.
 > 
-> (I have to clear the direct_complete flag in the ->complete hook, but
-> the device tree is walked bottom-up during ->complete, and since the
-> Thunderbolt controller exposes multiple devices, I have to clear the
-> flag for all devices from the bottom-most device, which is the NHI.
-> And all the rest of the s/r code lives on the top-most device, which
-> is the upstream bridge.)
+> [Sergei Shtylyov: indented the macro definitions with tabs, renamed the
+> SPCHG register bits for consistency, renamed the link speed field/values,
+> fixed too long lines, fixed redundancy in clearing the MACSR register bits,
+> fixed grammar/typos in  the comments/messages, removed unrelated/useless
+> changes, fixed bugs in rcar_rwm32() calls done to set the bits, removed
+> unneeded braces, removed non-informative comment, reworded the patch
+> summary/description.]
 > 
-> You suggested in your e-mail of July 18: "maybe it's better to change
-> the PCI bus type to do something different from calling the generic
-> function?"
+> Signed-off-by: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 > 
-> So there, I did what you suggested and tried to fix it not just for
-> Thunderbolt but for everyone.
+> ---
+> The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
 > 
-> And you're still not happy.
+>  drivers/pci/host/pcie-rcar.c |  103 +++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 103 insertions(+)
 > 
-> *sigh*
+> Index: pci/drivers/pci/host/pcie-rcar.c
+> ===================================================================
+> --- pci.orig/drivers/pci/host/pcie-rcar.c
+> +++ pci/drivers/pci/host/pcie-rcar.c
+> @@ -48,6 +48,10 @@
+>  #define  CFINIT			1
+>  #define PCIETSTR		0x02004
+>  #define  DATA_LINK_ACTIVE	1
+> +#define PCIEINTR		0x02008
+> +#define  PCIEINTMAC		(1 << 13)
+> +#define PCIEINTER		0x0200C
+> +#define  PCIEINTMACE		(1 << 13)
+>  #define PCIEERRFR		0x02020
+>  #define  UNSUPPORTED_REQUEST	(1 << 4)
+>  #define PCIEMSIFR		0x02044
+> @@ -84,8 +88,21 @@
+>  #define IDSETR1			0x011004
+>  #define TLCTLR			0x011048
+>  #define MACSR			0x011054
+> +#define  SPCHG			(1 << 5)
+> +#define  SPCHGFIN		(1 << 4)
+> +#define  SPCHGSUC		(1 << 7)
+> +#define  SPCHGFAIL		(1 << 6)
+> +#define  LINK_SPEED		(0xf << 16)
+> +#define  LINK_SPEED_2_5GTS	(1 << 16)
+> +#define  LINK_SPEED_5_0GTS	(2 << 16)
+>  #define MACCTLR			0x011058
+> +#define  SPEED_CHANGE		(1 << 24)
+>  #define  SCRAMBLE_DISABLE	(1 << 27)
+> +#define MACINTENR		0x01106C
+> +#define  SPCHGFINE		(1 << 4)
+> +#define MACS2R			0x011078
+> +#define MACCGSPSETR		0x011084
+> +#define  SPCNGRSN		(1 << 31)
+>  
+>  /* R-Car H1 PHY */
+>  #define H1_PCIEPHYADRR		0x04000c
+> @@ -385,6 +402,51 @@ static int rcar_pcie_setup(struct list_h
+>  	return 1;
+>  }
+>  
+> +void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
+> +{
+> +	u32 macsr;
+> +
+> +	dev_info(pcie->dev, "Trying speed up to 5 GT/s\n");
+> +
+> +	if ((rcar_pci_read_reg(pcie, MACSR) & SPCHGFIN) ||
+> +	    (rcar_pci_read_reg(pcie, MACCTLR) & SPEED_CHANGE)) {
+> +		dev_err(pcie->dev, "Speed changing is in progress\n");
 
-Sorry for disappointing you.
+Are these messages all really errors?
 
-I have concerns, so I talk about them.  Is that wrong?  If so, what's wrong
-about it?
+> +		return;
+> +	}
+> +
+> +	if ((rcar_pci_read_reg(pcie, MACSR) & LINK_SPEED) ==
+> +	    LINK_SPEED_5_0GTS) {
+> +		dev_err(pcie->dev, "Current link speed is already 5 GT/s\n");
+> +		return;
+> +	}
+> +
+> +	if ((rcar_pci_read_reg(pcie, MACS2R) & LINK_SPEED) !=
+> +	    LINK_SPEED_5_0GTS) {
+> +		dev_err(pcie->dev,
+> +			"Current max support link speed not 5 GT/s\n");
+> +		return;
+> +	}
+> +
+> +	/* Set target link speed to 5.0 GT/s */
+> +	rcar_rmw32(pcie, EXPCAP(12), PCI_EXP_LNKSTA_CLS,
+> +		   PCI_EXP_LNKSTA_CLS_5_0GB);
+> +
+> +	/* Set speed change reason as intentional factor */
+> +	rcar_rmw32(pcie, MACCGSPSETR, SPCNGRSN, 0);
+> +
+> +	/* Clear SPCHGFIN, SPCHGSUC, and SPCHGFAIL */
+> +	macsr = rcar_pci_read_reg(pcie, MACSR);
+> +	if (macsr & (SPCHGFIN | SPCHGSUC | SPCHGFAIL))
+> +		rcar_pci_write_reg(pcie, macsr, MACSR);
+> +
+> +	/* Enable interrupt */
+> +	rcar_rmw32(pcie, MACINTENR, SPCHGFINE, SPCHGFINE);
+> +	rcar_rmw32(pcie, PCIEINTER, PCIEINTMACE, PCIEINTMACE);
+> +
+> +	/* Start link speed change */
+> +	rcar_rmw32(pcie, MACCTLR, SPEED_CHANGE, SPEED_CHANGE);
+> +}
+> +
+>  static int rcar_pcie_enable(struct rcar_pcie *pcie)
+>  {
+>  	struct pci_bus *bus, *child;
+> @@ -416,6 +478,9 @@ static int rcar_pcie_enable(struct rcar_
+>  
+>  	pci_bus_add_devices(bus);
+>  
+> +	/* Try setting 5 GT/s link speed */
+> +	rcar_pcie_force_speedup(pcie);
 
-My time goes into that as well, mind you.
+I assume it's safe to change the link speed even while the downstream
+devices are in use?  As soon as we call pci_bus_add_devices(), drivers
+can claim the devices and start using them.
 
-> If on pre ACPI 4.0 systems, the device state is incorrectly reported
-> as D3hot although the device is still in D3cold, the device will be
-> runtime resumed to D0, just as it is now.  In other words, the benefit
-> of avoiding an unnecessary runtime resume after direct_complete is
-> only granted if the platform firmware reports the device state
-> correctly.
+>  	return 0;
+>  }
+>  
+> @@ -621,6 +686,44 @@ static irqreturn_t rcar_pcie_msi_irq(int
+>  	struct rcar_msi *msi = &pcie->msi;
+>  	unsigned long reg;
+>  
+> +	if (rcar_pci_read_reg(pcie, PCIEINTR) & PCIEINTMAC) {
+> +		dev_dbg(pcie->dev, "MAC interrupt received\n");
 
-OK
+I guess you don't need to write PCIEINTR or any other register to
+acknowledge the interrupt?
 
-Which as I said in the other message I've just sent, if you use
-acpi_device_get_power() for that, it will only report D3cold if (a) the device
-has a _PR3 and (b) the power resources configuration in there indicates D3cold.
+> +
+> +		rcar_rmw32(pcie, MACSR, SPCHGFIN, SPCHGFIN);
+> +
+> +		/* Disable this interrupt */
+> +		rcar_rmw32(pcie, MACINTENR, SPCHGFINE, 0);
+> +		rcar_rmw32(pcie, PCIEINTER, PCIEINTMACE, 0);
+> +
+> +		if (rcar_pci_read_reg(pcie, MACSR) & SPCHGFAIL) {
+> +			dev_err(pcie->dev, "Speed change failed\n");
+> +
+> +			rcar_rmw32(pcie, MACSR, SPCHGFAIL, SPCHGFAIL);
+> +			/*
+> +			 * TODO: if speed change failed we need to enable
+> +			 * "L0 enter" interrupt and set "speed change disabled"
+> +			 * state. After L0 interrupt rising, we must clear it,
+> +			 * wait for 200 ms and set "speed change enabled" state
+> +			 * according to the R-Car Series, 2nd Generation User's
+> +			 * Manual, section 50.3.9.
+> +			 */
+> +			return IRQ_HANDLED;
+> +		}
+> +
+> +		if (rcar_pci_read_reg(pcie, MACSR) & SPCHGSUC)
+> +			rcar_rmw32(pcie, MACSR, SPCHGSUC, SPCHGSUC);
+> +
+> +		/* Check speed */
+> +		if ((rcar_pci_read_reg(pcie, MACSR) & LINK_SPEED) ==
+> +		    LINK_SPEED_5_0GTS)
+> +			dev_info(pcie->dev, "Current link speed now 5 GT/s\n");
+> +		else
+> +			dev_info(pcie->dev,
+> +				 "Current link speed now 2.5 GT/s\n");
+> +
+> +		return IRQ_HANDLED;
+> +	}
+> +
+>  	reg = rcar_pci_read_reg(pcie, PCIEMSIFR);
+>  
+>  	/* MSI & INTx share an interrupt - we only handle MSI here */
 
-Does that cover the Thunderbolt case even?
+Is this patch adding handling for INTx events?  If so, it looks like
+this comment is now out of date, and possibly the code should be along
+these lines in case both MSI and INTx signal an interrupt
+simultaneously:
 
-Thanks,
-Rafael
+  irqreturn_t handled = IRQ_NONE;
 
+  reg = rcar_pci_read_reg(pcie, PCIEINTR) & PCIEINTMAC;
+  if (reg) {
+    handled = IRQ_HANDLED;
+    ...
+  }
+
+  reg = rcar_pci_read_reg(pcie, PCIEMSIFR);
+  while (reg) {
+    handled = IRQ_HANDLED;
+    ...
+  }
+
+  return handled;
