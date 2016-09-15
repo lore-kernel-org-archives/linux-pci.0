@@ -1,48 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:34683 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753947AbcIKNTp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 11 Sep 2016 09:19:45 -0400
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from userp1040.oracle.com ([156.151.31.81]:38267 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763275AbcIOHzi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2016 03:55:38 -0400
+Date: Thu, 15 Sep 2016 10:55:26 +0300
+From: Yuval Shaia <yuval.shaia@oracle.com>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
         "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        thunderbolt-linux <thunderbolt-linux@intel.com>,
-        "Westerberg, Mika" <mika.westerberg@intel.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v6 2/8] thunderbolt: Updating the register definitions
-Date: Sun, 11 Sep 2016 13:19:38 +0000
-Message-ID: <E607265CB020454880711A6F96C05A03AA3F434E@hasmsx107.ger.corp.intel.com>
-References: <1470054233-4309-1-git-send-email-amir.jer.levy@intel.com>
- <1470054233-4309-3-git-send-email-amir.jer.levy@intel.com>
- <CAMxnaaUnY5XtXWpYPbeZiXqEJYJ6_RprCPCEwG-_G4NB3PUTNQ@mail.gmail.com>
-In-Reply-To: <CAMxnaaUnY5XtXWpYPbeZiXqEJYJ6_RprCPCEwG-_G4NB3PUTNQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 01/16] vmxnet3: Move PCI Id to pci_ids.h
+Message-ID: <20160915075525.GB3851@yuval-lap.uk.oracle.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-2-git-send-email-aditr@vmware.com>
+ <20160914110854.GA15800@yuval-lap.uk.oracle.com>
+ <DM2PR0501MB844852987661859C6654E40C5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
+ <20160914162452.GA3216@yuval-lap.Home>
+ <DM2PR0501MB84422A1029EE72FC727F960C5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <DM2PR0501MB84422A1029EE72FC727F960C5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gU3VuLCBTZXAgMTEgMjAxNiwgMDM6MDIgQU0sIEFuZHJlYXMgTm9ldmVyIHdyb3RlOg0KPiBP
-biBNb24sIEF1ZyAxLCAyMDE2IGF0IDI6MjMgUE0sIEFtaXIgTGV2eSA8YW1pci5qZXIubGV2eUBp
-bnRlbC5jb20+IHdyb3RlOg0KPiA+IEFkZGluZyBtb3JlIFRodW5kZXJib2x0KFRNKSByZWdpc3Rl
-ciBkZWZpbml0aW9ucyBhbmQgc29tZSBoZWxwZXINCj4gPiBtYWNyb3MuDQo+IA0KPiBUaGlua2lu
-ZyBhYm91dCB0aGlzIGFnYWluIEkgd291bGQgcHJlZmVyIGl0IGlmIHlvdSB3b3VsZCBwdXQgeW91
-ciBkZWZpbml0aW9ucw0KPiBpbnRvIGEgc2VwYXJhdGUgZmlsZSB1bmRlciBpY20vIChldmVuIGlm
-IHRoZXJlIGlzIHNvbWUgZHVwbGljYXRpb24pLiBUaGUgc3R5bGUNCj4gKGJpdGZpZWxkcyB2cy4g
-Z2VubWFzaykgaXMgZGlmZmVyZW50IGJldHdlZW4gdGhlIGRyaXZlcnMgYW5kIGZvciBhIHJlYWRl
-ciBpdCBpcw0KPiBkaWZmaWN1bHQgdG8gZmluZCBvdXQgd2hhdCBpcyBhY3R1YWxseSBzdXBwb3Nl
-ZCB0byBiZSB1c2VkIGJ5IHRoZSB0d28gZHJpdmVycw0KPiAocmluZ19kZXNjIHZzIHRidF9idWZf
-ZGVzYyBvciB0aGUgcmluZyBSSU5HX0lOVF9FTi9ESVNBQkxFIG1hY3JvcyBpbiB0aGUNCj4gaGVh
-ZGVyIGZpbGUgdnMuIHJpbmdfaW50ZXJydXB0X2FjdGl2ZSBpbiBuaGkuYykuDQo+IA0KPiBUaGlz
-IHdvdWxkIGFsc28gY29tcGxldGVseSBzZXBhcmF0ZSB0aGUgdHdvIGRyaXZlcnMuDQo+IA0KPiBB
-bmRyZWFzDQo+IA0KDQpJJ20gYWxzbyBpbiBmYXZvciBvZiBjb21wbGV0ZWx5IHNlcGFyYXRpbmcg
-dGhlIGRyaXZlcnMsIGJ1dCBpcyBpdCB0aGUgcmlnaHQgdGhpbmcgdG8gZG8gd2l0aCB0aGUgcmVn
-aXN0ZXIgZGVmaW5pdGlvbnMNCndoZW4gdGhlIHVuZGVybHlpbmcgcmVnaXN0ZXJzIGxheW91dCBp
-cyBleGFjdGx5IHRoZSBzYW1lPw0KDQpOb3RlIHRoYXQgYml0ZmllbGRzIGFyZSBub3Qgc28gcmVj
-b21tZW5kZWQgd2hlbiB5b3UgY2FyZSBhYm91dCB0aGUgZm9ybWF0L29yZGVyIG9mIGJpdHMsIGxp
-a2UgaW4gdGhlIHJpbmcgZGVzY3JpcHRvci4NCg0KQW1pcg0K
+Besides that no more comments.
+
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+
+On Wed, Sep 14, 2016 at 07:36:34PM +0000, Adit Ranadive wrote:
+> On Wed, Sep 14, 2016 at 09:25:18 -0700, Yuval Shaia wrote:
+> > On Wed, Sep 14, 2016 at 04:00:25PM +0000, Adit Ranadive wrote:
+> > > On Wed, Sep 14, 2016 at 04:09:12 -0700, Yuval Shaia wrote:
+> > > > Please update vmxnet3_drv.c accordingly.
+> > >
+> > > Any reason why? I don't think we need to. Vmxnet3 should just pick up
+> > > the moved PCI device id from pci_ids.h file.
+> > 
+> > So now you need to include it from vmxnet3_drv.c.
+> > Same with pvrdma_main.c
+> 
+> If you're asking me to include pci_ids.h in our drivers we already do that
+> by including pci.h in both the drivers. 
+> pci.h already includes pci_ids.h - 
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/include/linux/pci.h#n35
+> 
+> If that's going to change maybe someone from the PCI group can comment on.
+> 
+> Thanks,
+> Adit
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
