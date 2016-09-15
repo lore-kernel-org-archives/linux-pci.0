@@ -1,33 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 23 Sep 2016 16:46:16 -0500
-From: Rob Herring <robh@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        devicetree@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH] PCI: rockchip: Support quirk to disable 5 GT/s (PCIe
- 2.x) link rate
-Message-ID: <20160923214616.GA30743@rob-hp-laptop>
-References: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54468 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933845AbcIOHPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Sep 2016 03:15:45 -0400
+Date: Thu, 15 Sep 2016 10:15:16 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Adit Ranadive <aditr@vmware.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 05/16] IB/pvrdma: Add functions for Verbs support
+Message-ID: <20160915071516.GQ26069@leon.nu>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-6-git-send-email-aditr@vmware.com>
+ <20160914124947.GA14616@infradead.org>
+ <BLUPR0501MB836AB8BF5108322033C5DD6C5F00@BLUPR0501MB836.namprd05.prod.outlook.com>
+ <20160915061537.GC4869@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="2D20dG0OqTzqkNh7"
+In-Reply-To: <20160915061537.GC4869@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 22, 2016 at 10:31:18AM -0700, Brian Norris wrote:
-> rk3399 supports PCIe 2.x link speeds marginally at best, and on some
-> boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
-> ms waiting for training that will never happen, let's support a device
-> tree quirk flag to disable generation 2 speeds entirely.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
->  .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
->  drivers/pci/host/pcie-rockchip.c                   | 57 +++++++++++++---------
->  2 files changed, 37 insertions(+), 22 deletions(-)
 
-Acked-by: Rob Herring <robh@kernel.org>
+--2D20dG0OqTzqkNh7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Wed, Sep 14, 2016 at 11:15:37PM -0700, Christoph Hellwig wrote:
+> On Thu, Sep 15, 2016 at 12:10:10AM +0000, Adit Ranadive wrote:
+> > On Wed, Sep 14, 2016 at 05:49:50 -0700 Christoph Hellwig wrote:
+> > > > +	props->max_fmr = dev->dsr->caps.max_fmr;
+> > > > +	props->max_map_per_fmr = dev->dsr->caps.max_map_per_fmr;
+> > >
+> > > Please don't add FMR support to any new drivers.
+> >
+> > We don't and our device reports these as 0. If you want me to more explicit I
+> > can remove the zero'd out properties.
+>
+> Oh, ok.  I'll withdraw my comment then.
+
+I would suggest to remove zero assignments to struct which is zero from
+the beginning. It will eliminate the confusions.
+
+Thanks
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--2D20dG0OqTzqkNh7
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX2kqEAAoJEORje4g2clin2kUQAJyxl81bO5ry5w41MxzvdezM
+azeczl/QTUnkUMItIHBMD6MWWhRjKg0BgZrg9+KOYnnmO5l9ZzFt6KPCNOiO8DbN
+Up6eOaLHtfDoMzWR0Cw6yFL6PfXZXqBVCs30j6XpoD6LNTnQXTroLRHonwqJ+T1+
+2Xnu9rLIc/N6KB8RW3aSpI7ESYfJkIxxKFk3K0srxSOKSC9cXuIkfWSw20vNGNSJ
+Ixk12SlWUe/W/YVmD6HS+iVNXoGOAoZt4Pu5DdaZZyuhCGeV7wiIuwS1SIU3DrLW
+7NErMwasQkAwrhnrORc0mor8qHPBSxZDeivfhEMryYsM2j8GCGuHIj+vaKeq85PI
+pCCr2N3DxPY8yro8GDX2wlM618FTtRypoQAJwaspAVQgz5PEbedtucXLGsRA/dkW
+Nm65vwzQU95EsX8ObvyIPn9bmHhOiJUzbCJHQSTpD769LA8sjgjnhf6RvCLnUPsT
+dn+ixYaIYLKRuwecP4lDmnGSh5pBkHMUUgSvDa9HpffLjEAhUUEIGt6MPOtlK5KH
+JdUyu+lGeJ8TOXraXaxQoPEiC7DRoNYuNYKrRlipzVRxNaAULliKOquuyglffcDc
+JDI6KVQXh/NxZ9iu/z/f2JawKoo3fc3JEhHXVvOWwMnMB8dRCYk6aHCL1Kl7+C2/
+wWrodwgKQVCKCWcmEfvD
+=tL4W
+-----END PGP SIGNATURE-----
+
+--2D20dG0OqTzqkNh7--
