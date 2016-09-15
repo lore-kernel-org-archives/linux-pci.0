@@ -1,50 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:55508 "HELO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with SMTP id S932550AbcINAXF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 20:23:05 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 3/4] PCI: Avoid unnecessary resume after direct-complete
-Date: Wed, 14 Sep 2016 02:29:12 +0200
-Message-ID: <1727866.mELYGZAK8C@vostro.rjw.lan>
-In-Reply-To: <4935437e0bfbab9079db2c8b1fbac66cef7dc569.1472554278.git.lukas@wunner.de>
-References: <cover.1472554278.git.lukas@wunner.de> <4935437e0bfbab9079db2c8b1fbac66cef7dc569.1472554278.git.lukas@wunner.de>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Thu, 15 Sep 2016 11:58:58 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	arnd@arndb.de, hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jchandra@broadcom.com, cov@codeaurora.org, dhdang@apm.com,
+	ard.biesheuvel@linaro.org, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linaro-acpi@lists.linaro.org, jcm@redhat.com,
+	andrea.gallo@linaro.org, jeremy.linton@arm.com,
+	gabriele.paoloni@huawei.com, jhugo@codeaurora.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
+Message-ID: <20160915105849.GA10345@red-moon>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-3-git-send-email-tn@semihalf.com>
+ <57D76626.1050109@huawei.com>
+ <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
+ <57D7E53F.1000106@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57D7E53F.1000106@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
-> Commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might have been
-> reset by firmware") added a runtime resume for devices that were runtime
-> suspended when the system entered sleep.
+On Tue, Sep 13, 2016 at 07:38:39PM +0800, Dongdong Liu wrote:
+
+[...]
+
+> Our host bridge is non ECAM only for the RC bus config space;
+> for any other bus underneath the root bus we support ECAM access.
 > 
-> The motivation was that devices might be in a reset-power-on state after
-> waking from system sleep, so their power state as perceived by Linux
-> (stored in pci_dev->current_state) would no longer reflect reality.
-> By resuming such devices, we allow them to return to a low-power state
-> via autosuspend and also bring their current_state in sync with reality.
+> RC config resource with hardcode as DEFINE_RES_MEM(0xb0070000, SZ_4K),
+> EP config resource we get it from MCFG table.
+> So we need to override ops, but config resource we only need to hardcode with RC config resource.
+> 
+> Our host controller ACPI support patch can be found:
+> https://lkml.org/lkml/2016/8/31/340
 
-Not only that.
+Sorry I misread your code. IIUC you create an array of resources that
+represent non-ECAM config space (and incidentally contain debug
+registers to check the link status - that you need to check for every
+given config access (?)), but you still need to have an MCFG entry that
+covers the bus number subject to quirk to make sure this mechanism
+works. Correct ?
 
-It allows those devices to respond more timely to user space requests
-occuring right after resume.
+This also means that, with the MCFG tables you have and current
+mainline kernel you are able to probe a root bridge (because the MCFG
+table covers the bus number that is not ECAM), with enumeration
+going haywire because it is trying to carry out ECAM accesses on
+non-ECAM space.
 
-Those user space requests often occur sequentially (read from device A,
-write to device B, read from device C, write to device D, for example)
-and without that pre-emptive resume each of them needs to wait for another
-device to (runtime-)resume which results in quite annoying latencies
-observable by users.
+Is my reading correct ?
 
-> However for devices that are *not* in a reset-power-on state, doing an
-> unconditional resume wastes energy.
-
-It may or may not waste it and this really is a tradeoff.
+Anyway, that's not stricly related to this discussion, it is time we
+converge on this patchset, we can add a domain range if that
+simplifies things.
 
 Thanks,
-Rafael
+Lorenzo
 
+> This patch is based on RFC V5 quirk mechanism.
+> 
+> Based on V6 quirk mechanism, we have to change it as below:
+> 
+> #ifdef CONFIG_PCI_HISI_ACPI
+> 	{ "HISI ", "HIP05 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP05 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP05 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP05 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP06 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+>          MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP07 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> 	  MCFG_RES_EMPTY},
+> 	{ "HISI ", "HIP07 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> 	  MCFG_RES_EMPTY},
+> 	....
+> 	
+> 	{ "HISI ", "HIP07 ", 0, 15, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> 	  MCFG_RES_EMPTY},
+> 
+> #endif
+> 
+> struct pci_ecam_ops hisi_pci_hip05_ops = {
+> 	.bus_shift	= 20,
+> 	.init		=  hisi_pci_hip05_init,
+> 	.pci_ops	= {
+> 		.map_bus	= pci_ecam_map_bus,
+> 		.read		= hisi_pcie_acpi_rd_conf,
+> 		.write		= hisi_pcie_acpi_wr_conf,
+> 	}
+> };
+> 
+> struct pci_ecam_ops hisi_pci_hip06_ops = {
+> 	.bus_shift = 20,
+> 	.init = hisi_pci_hip06_init,
+> 	.pci_ops = {
+> 		.map_bus = pci_ecam_map_bus,
+> 		.read = hisi_pcie_acpi_rd_conf,
+> 		.write = hisi_pcie_acpi_wr_conf,
+> 	}
+> };
+> 
+> hisi_pci_hipxx_init function is used to get RC config resource with hardcode.
+> .....
+> 
+> So I hope we can use MCFG_DOM_RANGE, Then I can change it as below.
+> 
+> #ifdef CONFIG_PCI_HISI_ACPI
+> 	{ "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> 	 &hisi_pcie_hip05_ops, MCFG_RES_EMPTY},
+> 	{ "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> 	 &hisi_pcie_hip06_ops, MCFG_RES_EMPTY},
+> 	{ "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
+> 	  &hisi_pcie_hip07_ops, MCFG_RES_EMPTY},
+> #endif
+> 
+> Thanks
+> Dongdong
+> >
+> >Thanks,
+> >Tomasz
+> >
+> >.
+> >
+> 
