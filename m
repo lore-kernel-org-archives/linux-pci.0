@@ -1,190 +1,234 @@
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [PATCH v5 3/4] PCI: Add a new option for resource_alignment to
- reassign alignment
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1473757234-5284-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1473757234-5284-4-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160928224246.GC20897@localhost>
- <6e4d1079-a3a6-5d3f-7339-ae4d0e1ee828@linux.vnet.ibm.com>
- <20160929115422.GA31048@localhost>
-Cc: zhong@linux.vnet.ibm.com, aik@ozlabs.ru, linux-pci@vger.kernel.org,
-        gwshan@linux.vnet.ibm.com, alex.williamson@redhat.com,
-        paulus@samba.org, bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Fri, 30 Sep 2016 11:56:46 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([198.47.19.12]:47383 "EHLO arroyo.ext.ti.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754739AbcIOIea (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Sep 2016 04:34:30 -0400
+Subject: Re: [RFC PATCH 00/11] pci: support for configurable PCI endpoint
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
+ <2837059.ka7z3gzjF2@wuerfel>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
+        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
+        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>, <nsekhar@ti.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>, <linux-ntb@googlegroups.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57DA5CC1.6030502@ti.com>
+Date: Thu, 15 Sep 2016 14:03:05 +0530
 MIME-Version: 1.0
-In-Reply-To: <20160929115422.GA31048@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <aa83b424-e037-1e86-906f-f231b6195429@linux.vnet.ibm.com>
+In-Reply-To: <2837059.ka7z3gzjF2@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/9/29 19:54, Bjorn Helgaas wrote:
+Hi Arnd,
 
-> On Thu, Sep 29, 2016 at 10:38:01AM +0800, Yongji Xie wrote:
->> On 2016/9/29 6:42, Bjorn Helgaas wrote:
+On Wednesday 14 September 2016 06:55 PM, Arnd Bergmann wrote:
+> On Wednesday, September 14, 2016 10:41:56 AM CEST Kishon Vijay Abraham I wrote:
+>> This patch series
+>> 	*) adds PCI endpoint core layer
+>> 	*) modifies designware/dra7xx driver to be configured in EP mode
+>> 	*) adds a PCI endpoint *test* function driver
+> 
+> Hi Kishon,
+> 
+> I think this is a great start, thanks for posting early with a clear
+> list of limitations and TODO items.
+
+Thank you :-)
+> 
+> I've added the drivers/ntb maintainers to Cc, given that there is
+> a certain degree of overlap between your work and the existing
+> code, I think they should be part of the discussion.
+>  
+>> Known Limitation:
+>> 	*) Does not support multi-function devices
+> 
+> If I understand it right, this was a problem for USB and adding
+> it later made it somewhat inconsistent. Maybe we can at least
+> try to come up with an idea of how multi-function devices
+> could be handled even if we don't implement it until someone
+> actually needs it.
+
+Actually IMO multi-function device in PCI should be much simpler than it is for
+USB. In the case of USB, all the functions in a multi-function device will
+share the same *usb configuration* . (USB device can have multiple
+configuration but only one can be enabled at a time). A multi-function USB
+device will still have a single vendor-id/product-id/class... So I think a
+separate library (composite.c) in USB makes sense.
+
+But in the case of PCI, every function can be treated independently since all
+the functions have it's own 4KB configuration space. Each function can be
+configured independently. Each can have it's own vendor-id/product-id/class..
+I'm not sure if we'll need a separate library for PCI like we have for USB.
+
+Now the restriction for not allowing multi-function device is because of the
+following structure definition.
+
+struct pci_epc {
+	..
+        struct pci_epf *epf;
+	..
+};
+
+EPC has a single reference to EPF and it is used *only* to notify the function
+driver when the link is up. (If this can be changed to use notification
+mechanism, multi-function devices can be supported here)
+
+One more place where this restriction arises is in designware driver
+
+struct dw_pcie_ep {
+	..
+        u8 bar_to_atu[6];
+	..
+};
+
+We use single ATU window to configure a BAR (in BAR). If there are multiple
+functions, then this should also be modified since each function has 6 BARs.
+
+This can be fixed without much effort unless some other issue props up.
+
+> 
+> Is your hardware able to make the PCIe endpoint look like
+> a device with multiple PCI functions, or would one have to
+> do this in software inside of a single PCI function if we
+> ever need it?
+
+The hardware I have doesn't support multiple PCI functions (like having a
+separate configuration space for each function). It has a dedicated space for
+configuration space supporting only one function. [Section 24.9.7.3.2
+PCIe_SS_EP_CFG_DBICS Register Description in  [1]].
+
+yeah, it has to be done in software (but that won't be multi-function device in
+PCI terms).
+
+[1] -> http://www.ti.com/lit/ug/spruhz6g/spruhz6g.pdf
+> 
+>> TODO:
+>> 	*) access buffers in RC
+>> 	*) raise MSI interrupts
+>> 	*) Enable user space control for the RC side PCI driver
+> 
+> The user space control would end up just being one of several
+> gadget drivers, right? E.g. gadget drivers for standard hardware
+> (8250 uart, ATA, NVMe, some ethernet) could be done as kernel
+> drivers while a user space driver can be used for things that
+> are more unusual and that don't need to interface to another
+> part of the kernel?
+
+Actually I didn't mean that. It was more with respect to the host side PCI test
+driver (drivers/misc/pci_endpoint_test.c). Right now it validates BAR, irq
+itself. I wanted to change this so that the user controls which tests to run.
+(Like for USB gadget zero tests, testusb.c invokes ioctls to perform various
+tests). Similarly I want to have a userspace program invoke pci_endpoint_test
+to perform various PCI tests.
+> 
+>> 	*) Adapt all other users of designware to use the new design (only
+>> 	   dra7xx has been adapted)
+> 
+> I don't fully understand this part. Does every designware based
+> driver need modifications, or are the changes to the
+> generic parts of the designware driver enough to make it
+> work for the simpler platforms?
+
+I have changed the core designware driver structures (like previously the
+platform drivers will only use pcie_port, but now I introduced struct dw_pcie
+to support both host and endpoint). This will break (compilation failure) all
+the designware based drivers (except dra7xx). All these drivers should be
+adapted to the new change (even if they work only in host mode these has to be
+adapted).
+> 
+>> HOW TO:
 >>
->>> On Tue, Sep 13, 2016 at 05:00:33PM +0800, Yongji Xie wrote:
->>>> When using resource_alignment kernel parameter, the current
->>>> implement reassigns the alignment by changing resources' size
->>>> which can potentially break some drivers. For example, the driver
->>>> uses the size to locate some register whose length is related
->>>> to the size.
->>>>
->>>> This patch adds a new option "noresize" for the parameter to
->>>> solve this problem.
->>>>
->>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->>>> ---
->>>>   Documentation/kernel-parameters.txt |    9 ++++++---
->>>>   drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
->>>>   2 files changed, 33 insertions(+), 13 deletions(-)
->>>>
->>>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->>>> index a4f4d69..d6a340d 100644
->>>> --- a/Documentation/kernel-parameters.txt
->>>> +++ b/Documentation/kernel-parameters.txt
->>>> @@ -3023,9 +3023,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>>>   				window. The default value is 64 megabytes.
->>>>   		resource_alignment=
->>>>   				Format:
->>>> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
->>>> -				[<order of align>@]pci:<vendor>:<device>\
->>>> -						[:<subvendor>:<subdevice>][; ...]
->>>> +				[<order of align>@][noresize@][<domain>:]
->>>> +				<bus>:<slot>.<func>[; ...]
->>>> +				[<order of align>@][noresize@]pci:<vendor>:<device>
->>>> +				[:<subvendor>:<subdevice>][; ...]
->>>>   				Specifies alignment and device to reassign
->>>>   				aligned memory resources.
->>>>   				If <order of align> is not specified,
->>>> @@ -3036,6 +3037,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>>>   				instances of a device, the PCI vendor,
->>>>   				device, subvendor, and subdevice may be
->>>>   				specified, e.g., 4096@pci:8086:9c22:103c:198f
->>>> +				noresize: Don't change the resources' sizes when
->>>> +				reassigning alignment.
->>>>   		ecrc=		Enable/disable PCIe ECRC (transaction layer
->>>>   				end-to-end CRC checking).
->>>>   				bios: Use BIOS/firmware settings. This is the
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index b8357d7..37f8062 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -4946,11 +4946,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
->>>>   /**
->>>>    * pci_specified_resource_alignment - get resource alignment specified by user.
->>>>    * @dev: the PCI device to get
->>>> + * @resize: whether or not to change resources' size when reassigning alignment
->>>>    *
->>>>    * RETURNS: Resource alignment if it is specified.
->>>>    *          Zero if it is not specified.
->>>>    */
->>>> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->>>> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->>>> +		bool *resize)
->>>>   {
->>>>   	int seg, bus, slot, func, align_order, count;
->>>>   	unsigned short vendor, device, subsystem_vendor, subsystem_device;
->>>> @@ -4974,6 +4976,13 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->>>>   		} else {
->>>>   			align_order = -1;
->>>>   		}
->>>> +
->>>> +		if (!strncmp(p, "noresize@", 9)) {
->>>> +			*resize = false;
->>>> +			p += 9;
->>>> +		} else
->>>> +			*resize = true;
->>>> +
->>>>   		if (strncmp(p, "pci:", 4) == 0) {
->>>>   			/* PCI vendor/device (subvendor/subdevice) ids are specified */
->>>>   			p += 4;
->>>> @@ -5045,6 +5054,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>>>   {
->>>>   	int i;
->>>>   	struct resource *r;
->>>> +	bool resize = true;
->>>>   	resource_size_t align, size;
->>>>   	u16 command;
->>>> @@ -5058,7 +5068,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>>>   		return;
->>>>   	/* check if specified PCI is target device to reassign */
->>>> -	align = pci_specified_resource_alignment(dev);
->>>> +	align = pci_specified_resource_alignment(dev, &resize);
->>>>   	if (!align)
->>>>   		return;
->>>> @@ -5086,15 +5096,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>>>   		}
->>>>   		size = resource_size(r);
->>>> -		if (size < align) {
->>>> -			size = align;
->>>> -			dev_info(&dev->dev,
->>>> -				"Rounding up size of resource #%d to %#llx.\n",
->>>> -				i, (unsigned long long)size);
->>>> +		if (resize) {
->>>> +			if (size < align) {
->>>> +				size = align;
->>>> +				dev_info(&dev->dev,
->>>> +					"Rounding up size of resource #%d to %#llx.\n",
->>>> +					i, (unsigned long long)size);
->>>> +			}
->>>> +			r->flags |= IORESOURCE_UNSET;
->>>> +			r->end = size - 1;
->>>> +			r->start = 0;
->>> Why do you want to keep this code that changes the size of the resource?
->>> Can't we just *always* use IORESOURCE_STARTALIGN as below?  It seems like
->>> that would potentially fix bugs, as you mention.
->>>
->>> I think it'd be better if we didn't change the size, even if the user
->>> didn't specify "noresize@".  We wouldn't even need the "noresize@" option
->>> then.
->>>
->>> Or is there some reason to keep the resize?  If it's just a question of
->>> being afraid to change the existing behavior because of the risk, I'm
->>> willing to take that risk.
->> Hi Bjorn,
+>> ON THE EP SIDE:
+>> ***************
 >>
->> Thanks for your time. The reason is just like what you said.  I'm worried
->> that this may break the existing behavior.  I'll updated this patch as
->> you suggested.
-> I guess one problem is that if we *don't* change the size, there's
-> nothing to prevent something else from being allocated right after the
-> resource.  For example, if we have a 1K BAR, and the objective is to
-> make sure it's on a 4K page by itself, not only do we have to align
-> the BAR on 4K, we *also* have to keep anything else from using the
-> remaining 3K of that page.
+>> /* EP function is configured using configfs */
+>> # mount -t configfs none /sys/kernel/config
+>>
+>> /* PCI EP core layer creates "pci_ep" entry in configfs */
+>> # cd /sys/kernel/config/pci_ep/
+>>
+>> /*
+>>  * This is the 1st step in creating an endpoint function. This
+>>  * creates the endpoint function device *instance*. The string
+>>  * before the .<num> suffix will identify the driver this
+>>  * EP function will bind to.
+>>  * Just pci_epf_test is also valid. The .<num> suffix is used
+>>  * if there are multiple PCI controllers and all of them wants
+>>  * to use the same function.
+>>  */
+>> # mkdir pci_epf_test.0
+> 
+> I haven't used USB gadgets, but I assume this is modeled around
+> the same interface. If there are notable differences, please mention
+> what they are. Otherwise the general concept seems rather nice to me.
 
-In VFIO module, a dummy resource would be allocated into the
-right after the resource which can make sure the BAR is on an exclusive
-page.
+Yeah, both USB gadget and PCI endpoint use configfs interface but the semantics
+are quite different.
 
-If the resource_alignment is used for other purpose, it's true that
-some other resources may be allocated into the right after the resource.
-But I'm not sure whether we need to care about this in those cases.
-It may be a problem when there are some existing applications
-need this guarantee.
+Every directory in *usb_gadget* corresponds to a gadget device, and the gadget
+device has a functions sub-directory which has the USB functions. And these
+directories have fields or attributes specific to USB.
 
-> Maybe it's easier to fix the drivers so they don't rely on the size.
-> Do you have examples of such drivers?
+But in the case of PCI, every directory in *pci_ep* corresponds to a PCI
+function and it has fields or attributes specific to PCI function.
 
-ata/sata_sis.c:    (pci_resource_len(pdev, SIS_SCR_PCI_BAR) < 128))) {
+The main reason for using configfs for PCI endpoint is to give the users to
+control "which function has to be bound to which controller". The same concept
+is used for USB gadget as well but there it is "which gadget device has to be
+bound to which controller".
+> 
+>>  drivers/pci/{host => controller}/Kconfig           |  109 +++++-
+>>  drivers/pci/{host => controller}/Makefile          |    2 +
+>>  drivers/pci/{host => controller}/pci-aardvark.c    |    0
+>>  drivers/pci/{host => controller}/pci-dra7xx.c      |  340 +++++++++++++----
+>>  drivers/pci/{host => controller}/pci-exynos.c      |    0
+>>  drivers/pci/{host => controller}/pci-host-common.c |    0
+>>  .../pci/{host => controller}/pci-host-generic.c    |    0
+>>  drivers/pci/{host => controller}/pci-hyperv.c      |    0
+>>  drivers/pci/{host => controller}/pci-imx6.c        |    0
+>>  drivers/pci/{host => controller}/pci-keystone-dw.c |    0
+>>  drivers/pci/{host => controller}/pci-keystone.c    |    0
+>>  drivers/pci/{host => controller}/pci-keystone.h    |    0
+> 
+> Maybe it's better to wait before moving it around, this will make
+> it harder for you to rebase the patch series while you are working on
+> it and other people are working on the existing code.
 
-> I'm hesitant to add a new option to the "pci=resource_alignment"
-> parameter because it's already very complicated and it exposes more
-> kernel internals than I'm really comfortable with.  If we can figure
-> out a way to make the existing parameter work for everybody, I would
-> prefer that.
+These patches just do "mv drivers/pci/host  drivers/pci/controller", so I guess
+irrespective of the changes in the existing driver it should just move. Anyways
+I have to check this.
+> 
+> I'd suggest dropping the rename patches for the moment and just work
+> in drivers/pci/host.
 
-If we can make sure the PCI driver only use pci_resource_len() to get
-the BAR's length,  we can enhance this function to have an ability to
-get the original length of the BAR so that we can still change resource's
-size when using resource_alignment. For example, we can introduce an
-addtional field to "struct resource::ori_lengh". In pci_resource_len(),
-we do something like:
+Okay.
+> 
+> Let's talk (high-level) about the DT binding. I see that the way
+> you have done it here, one will need to have a different .dtb file
+> for a machine depending on whether the PCIe is used in host or
+> endpoint mode. The advantage of this way is that it's a much
+> cleaner binding (PCIe host bindings are a mess, and adding more
+> options to it will only make it worse), the downside is that
+> you can't decide at runtime what you want to use it for. E.g.
+> connecting two identical machines over PCIe requires deciding
+> in the bootloader which one is the endpoint, or using DT
+> overlays, which may be awkward for some users. Is this a realistic
+> use case, or do you expect that all machines will only ever be
+> used in one of the two ways?
 
-if (resource->ori_length)
-     return resource->ori_length;
+It would definitely be nice to select the mode at runtime. Even for this patch
+series, I added a temporary dtsi patch to configure the pci controller in EP
+mode (which can't be merged since the same controller is also used to test RC).
 
-Thanks,
-Yongji
+Thanks
+Kishon
