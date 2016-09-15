@@ -1,50 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54078 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932404AbcILVIw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 17:08:52 -0400
-Subject: [PATCH v2 0/8] PCI: pciehp: Rework hotplug interrupt routine
-To: Mayurkumar Patel <mayurkumar.patel@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
-        linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        mika.westerberg@linux.intel.com
-Date: Mon, 12 Sep 2016 16:08:47 -0500
-Message-ID: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <bharat.kumar.gogada@xilinx.com>
+Return-Path: <bharat.kumar.gogada@xilinx.com>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>, Soren Brinkmann
+	<sorenb@xilinx.com>, "christophe.jaillet@wanadoo.fr"
+	<christophe.jaillet@wanadoo.fr>, "grygorii.strashko@ti.com"
+	<grygorii.strashko@ti.com>, "yinghai@kernel.org" <yinghai@kernel.org>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"fengguang.wu@intel.com" <fengguang.wu@intel.com>, Michal Simek
+	<michals@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Ravikiran Gummaluri
+	<rgummal@xilinx.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH 1/6] PCI: xilinx: Keep both legacy and MSI interrupt
+ references.
+Date: Thu, 15 Sep 2016 05:09:37 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258D6806@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
+ <20160913155641.GB4138@localhost>
+ <8520D5D51A55D047800579B094147198258D6418@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160914191704.GA9208@localhost>
+In-Reply-To: <20160914191704.GA9208@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is mostly Mayurkumar's work from [1] and [2].  I split [2] into two
-patches and reworked it to keep the enclosing loop around the pciehp ISR.
+On Wed, Sep 14, 2016 at 03:32:44PM +0000, Bharat Kumar Gogada wrote:
+> On Thu, Sep 01, 2016 at 03:44:41PM +0530, Bharat Kumar Gogada wrote:
+> > When built with MSI support the legacy domain reference is being=20
+> > overwritten with MSI.
+> > Instead creating two separate domains for MSI and legacy interrupts.
+> >=20
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>=20
+> Applied all these (except [5/6]) with Michal's ack to pci/host-xilinx for=
+ v4.9, thanks!
+>=20
+> I already applied Po Liu's patch ("PCI: xilinx: Relax device number check=
+ing to allow SR-IOV") to pci/virtualization.  This is identical to [5/6], s=
+o I dropped [5/6] to avoid a conflict.
+>=20
+> Thanks Bjorn.=20
+> Some how I couldn't find Po Liu's patch, can you provide git link of patc=
+h that was applied.=20
 
-The patches I added are trivial ones to clarify variable names, make dmesg
-messages consistent, and remove useless code.
+Sure, here it is: https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.=
+git/commit/?h=3Dpci/virtualization&id=3D8e7ca8ca5fd8a3242289105723c429733be=
+8b73b
 
-[1] 1471554479-42083-1-git-send-email-mayurkumar.patel@intel.com
-[2] 92EBB4272BF81E4089A7126EC1E7B28466598F35@IRSMSX101.ger.corp.intel.com
-
----
-
-Bjorn Helgaas (5):
-      PCI: pciehp: Rename pcie_isr() locals for clarity
-      PCI: pciehp: Return IRQ_NONE when we can't read interrupt status
-      PCI: pciehp: Remove unnecessary guard
-      PCI: pciehp: Clean up dmesg "Slot(%s)" messages
-      PCI: pciehp: Remove useless pciehp_get_latch_status() calls
-
-Mayurkumar Patel (3):
-      PCI: pciehp: Process all hotplug events before looking for new ones
-      PCI: pciehp: Don't re-read Slot Status when queuing hotplug event
-      PCI: pciehp: Don't re-read Slot Status when handling surprise event
-
-
- drivers/pci/hotplug/pciehp_ctrl.c |   83 ++++++++++++---------------------
- drivers/pci/hotplug/pciehp_hpc.c  |   94 ++++++++++++++++++++-----------------
- 2 files changed, 82 insertions(+), 95 deletions(-)
+Thanks Bjorn, this patch is similar to [5/6] patch.=20
