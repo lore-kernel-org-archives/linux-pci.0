@@ -1,75 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51268 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933869AbcIUMPi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Sep 2016 08:15:38 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8LCDOEZ026257
-        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 08:15:38 -0400
-Received: from e23smtp01.au.ibm.com (e23smtp01.au.ibm.com [202.81.31.143])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 25khh8wmph-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 08:15:37 -0400
-Received: from localhost
-        by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Wed, 21 Sep 2016 22:15:34 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-        by d23dlp01.au.ibm.com (Postfix) with ESMTP id CB2312CE8046
-        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 22:15:31 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8LCFVIM6816058
-        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 22:15:31 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-        by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8LCFVBY010335
-        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 22:15:31 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
-Cc: bhelgaas@google.com, mpe@ellerman.id.au,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 3/4] powerpc/powernv: Unfreeze PE on allocation
-Date: Wed, 21 Sep 2016 22:15:29 +1000
-In-Reply-To: <1474460130-8316-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1474460130-8316-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Message-Id: <1474460130-8316-4-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:55346 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1764233AbcIOH1n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Sep 2016 03:27:43 -0400
+Date: Thu, 15 Sep 2016 10:27:38 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Adit Ranadive <aditr@vmware.com>, dledford@redhat.com,
+        linux-rdma@vger.kernel.org, pv-drivers@vmware.com,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+        jhansen@vmware.com, asarwade@vmware.com, georgezhang@vmware.com,
+        bryantan@vmware.com
+Subject: Re: [PATCH v4 16/16] MAINTAINERS: Update for PVRDMA driver
+Message-ID: <20160915072738.GS26069@leon.nu>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-17-git-send-email-aditr@vmware.com>
+ <20160912175222.GG5843@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="8DtChEGCcMdSgkU2"
+In-Reply-To: <20160912175222.GG5843@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This unfreezes PE when it's initialized because the PE might be put
-into frozen state in the last hot remove path. It's not harmful to
-do so if the PE is already in unfrozen state.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+--8DtChEGCcMdSgkU2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index c38a6a1..5122257 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -126,9 +126,21 @@ static inline bool pnv_pci_is_m64(struct pnv_phb *phb, struct resource *r)
- 
- static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
- {
-+	s64 rc;
-+
- 	phb->ioda.pe_array[pe_no].phb = phb;
- 	phb->ioda.pe_array[pe_no].pe_number = pe_no;
- 
-+	/* Clear the PE frozen state as it might be put into frozen state
-+	 * in the last PCI remove path. It's not harmful to do so when the
-+	 * PE is already in unfrozen state.
-+	 */
-+	rc = opal_pci_eeh_freeze_clear(phb->opal_id, pe_no,
-+				       OPAL_EEH_ACTION_CLEAR_FREEZE_ALL);
-+	if (rc != OPAL_SUCCESS)
-+		pr_warn("%s: Error %lld unfreezing PHB#%d-PE#%d\n",
-+			__func__, rc, phb->hose->global_number, pe_no);
-+
- 	return &phb->ioda.pe_array[pe_no];
- }
- 
--- 
-2.1.0
+On Mon, Sep 12, 2016 at 11:52:22AM -0600, Jason Gunthorpe wrote:
+> On Sun, Sep 11, 2016 at 09:49:26PM -0700, Adit Ranadive wrote:
+> > Add maintainer info for the PVRDMA driver.
+>
+> You can probably squash the last three patches.
 
+It doesn't matter, Doug will squash the whole series anyway.
+
+--8DtChEGCcMdSgkU2
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX2k1qAAoJEORje4g2clinlOwP/iew8hHwKAWmAPt7kU4JriHZ
+KPeBpC31OMajPCQffQElK9fnIbyZ/jBPWUt5vR69dgtz8AhGOcx/13tLQZw6rMJ/
+yG3IeaTJHsY8rLZq0qtvpN7jcc92YFgkTd6Lg2Prulh+5zILVx/wPSYn0epnekra
+3ZHVbFHL30RP2cd00Pph+eXSiYh47fL+omHY5C7ex++p2ZmpSrtycTnGv1z6J7/J
+FhCl/l+ZgRWqAUM60iBvSk479iQ0YHBC7089YjDYtVFJe7REU1JkOzX3YqZGWffC
+eGtMa/6jFM67GK3kNI+9z+NP46q+l8Lu7h2NXJhmi9nNUlRwyrsEQhsaGs0w5/u+
+UKeQcXTeGyeMHirRnaR54tVnYfn6SiBmFJ4VwfhWoIdKy2475F6+k1emHckDeR0X
+J1Z2WeYMd87W+TWmSRMT+6+jkSLGoFFWXnASNvG6vjhxkrePpNhkyt4daexCaMNj
+FzBiHH0GDixF5Kp+h8ZOiUnRy/Z/xg3XfKvujYY21u8zGm4EHRFri8RBvENuYWbW
+FDu7uFhl7hDmGKBBd5dnVn566JtVAE/eZ/tWzksOFjDD00Fcu6T0YTCxeHLVcOgo
+AT9Bay8sz0sQ0R6jdpBCrmDYYSOC/rPGnzdHRyp7WyI+Yl5Ed92H62UHv3XjBD5r
+i2gQ4EujnN9/nrMWO67s
+=F+Pl
+-----END PGP SIGNATURE-----
+
+--8DtChEGCcMdSgkU2--
