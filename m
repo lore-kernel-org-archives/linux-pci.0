@@ -1,73 +1,164 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35300 "EHLO
-        mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964901AbcIVVAc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 17:00:32 -0400
-Received: by mail-pa0-f51.google.com with SMTP id oz2so32700711pac.2
-        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 14:00:32 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>
-Cc: Rajat Jain <rajatja@google.com>
-Subject: [PATCH] rockchip: Increase the Max Credit update interval.
-Date: Thu, 22 Sep 2016 14:00:27 -0700
-Message-Id: <1474578027-64292-1-git-send-email-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 15 Sep 2016 08:02:27 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F871B01@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <5140357.dcW9ibtZJ6@wuerfel> <57D963C4.4010406@hisilicon.com>
+ <5869118.UilSPY9Sai@wuerfel>
+In-Reply-To: <5869118.UilSPY9Sai@wuerfel>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ John Garry <john.garry@huawei.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ "kantyzc@163.com" <kantyzc@163.com>,
+ "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This increases the likelihood of link state to automatically go to L1
-and save some power.
+Hi Arnd
 
-The default credit update interval of 7.5 us results in the rootport
-sending UpdateFC packets too often, thus reulting in the link never
-going to L1, and always staying in L0/L0s. The value 24 us was chosen
-after some experiments and peeking over the PCIe bus to see that we do
-enter L1 substate when there is not enough traffic on the PCIe bus.
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 14 September 2016 22:32
+> To: linux-arm-kernel@lists.infradead.org
+> Cc: Yuanzhichang; devicetree@vger.kernel.org;
+> lorenzo.pieralisi@arm.com; Gabriele Paoloni; minyard@acm.org;
+> gregkh@linuxfoundation.org; benh@kernel.crashing.org; John Garry;
+> will.deacon@arm.com; linux-kernel@vger.kernel.org; xuwei (O); Linuxarm;
+> linux-serial@vger.kernel.org; linux-pci@vger.kernel.org;
+> zourongrong@gmail.com; liviu.dudau@arm.com; kantyzc@163.com;
+> zhichang.yuan02@gmail.com
+> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
+> Hip06
+> 
+> On Wednesday, September 14, 2016 10:50:44 PM CEST zhichang.yuan wrote:
+> >
+> > On 2016/9/14 20:33, Arnd Bergmann wrote:
+> > > On Wednesday, September 14, 2016 8:15:52 PM CEST Zhichang Yuan
+> wrote:
+> > >
+> > >> +Required properties:
+> > >> +- compatible: should be "hisilicon,low-pin-count"
+> > >> +- #address-cells: must be 2 which stick to the ISA/EISA binding
+> doc.
+> > >> +- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
+> > >> +- reg: base address and length of the register set for the
+> device.
+> > >> +- ranges: define a 1:1 mapping between the I/O space of the child
+> device and
+> > >> +	  the parent.
+> > >
+> > > Do we still need the "ranges" here? The property in your example
+> seems
+> > > wrong.
+> >
+> > I think "ranges" is needed.
+> > without this, of_translate_address --> __of_translate_address -->
+> of_translate_one will fail when translating the child's IO resource.
+> >
+> > >
+> > >> +	ranges = <0x01 0xe4 0x0 0xe4 0x1000>;
+> > >
+> > > You translate I/O port 0x00e4 through 0x10e4 to CPU address 0x0e4?
+> > The hip06 LPC is defined as isa type.
+> > So, 0x01 0xe4 is the local IO address of 0xe4. With this ranges, 0xe4
+> of child will be 1:1 mapped as 0xe4.
+> > It means no translation.
+> 
+> No, "no translation" would be leaving out the ranges, we should
+> fix the code so it handles this case according to the specification
+> of the ISA DT binding, rather than adding an incorrect ranges
+> property to make it work with the incorrect Linux implementation.
+> 
+> of_translate_address() should fail here, and whichever code calls
+> it should try something else, possibly something we have to
+> implement that can return the correct IORESOURCE_* type.
 
-The register value gets lost on a Link speed/width change, and the
-ideal fix should reprogram this on that event (refer "Link Bandwidth
-Management Interrupt Enable" & "Link Autonomous Bandwidth Interrupt Enable"
-in link control reg?). But the rockchip platforms doesn't support hotplug
-and I've verified that the retraining doesn't work as well, so this
-should be OK.
+>From <<3.1.1. Open Firmware Properties for Bus Nodes>> in 
+http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
- drivers/pci/host/pcie-rockchip.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+I quote:
+"There shall be an entry in the "ranges" property for each
+of the Memory and/or I/O spaces if that address space is
+mapped through the bridge."
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index c3593e6..e537413 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -95,6 +95,11 @@
- #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
- #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
- #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
-+#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
-+#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
-+#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
-+#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
-+		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
- #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
- #define   PCIE_CORE_INT_PRFPE			BIT(0)
- #define   PCIE_CORE_INT_CRFPE			BIT(1)
-@@ -523,6 +528,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			  PCIE_CORE_PL_CONF_LANE_MASK);
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
-+	/* Update credit update interval */
-+	status = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
-+	status &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
-+	status |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
-+	rockchip_pcie_write(rockchip, status, PCIE_CORE_TXCREDIT_CFG1);
-+
- 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
- 			    PCIE_RC_CONFIG_VENDOR);
- 	rockchip_pcie_write(rockchip,
--- 
-2.8.0.rc3.226.g39d4020
+It seems to me that it is ok to have 1:1 address mapping and that
+therefore of_translate_address() should fail if "ranges" is not
+present.
 
+This is also explained quite well in
+http://lxr.free-electrons.com/source/drivers/of/address.c#L490
+
+what do you think?
+
+Thanks
+
+Gab
+
+> 
+> > >
+> > > I don't get this part. The bus driver should not care what its
+> > > children are, just register and PIO ranges that the bus can handle
+> > > in theory, i.e. from 0x000 to 0xfff.
+> >
+> > Just as we discussed in V2, the legacy PIO range is specific to some
+> > device, such as for ipmi bt, 0xe4 - 0xe7 will be populated.
+> > I don't want to occupy a larger PIO range in which only small part
+> PIOs
+> > are used by our LPC. At this moment, two PIO ranges are using
+> > through the device property configuration, 0xe4-0xe7, 0x2f8-0x2ff.
+> >
+> > If we configure 0-0x1000 for the LPC to cover those two ranges, most
+> > PIO are wasted and other PIO device on other buses lose the chance to
+> > use the PIO below 0x1000.
+> > Otherwise, PIO conflict will happen. So, My idea is only occupied
+> > the PIO ranges which are really needed for the children.
+> 
+> The only thing it can realistically conflict with would be another
+> LPC bus behind on a PCI host bridge. On ARM64, all regular PCI
+> devices that have IORESOURCE_IO ports are intentionally moved
+> to (bus) port numbers above 0x1000.
+> 
+> > And there are probably multiple child devices under LPC, the global
+> arm64_extio_ops only can cover one PIO range. It is fortunate only ipmi
+> driver can not support I/O
+> > operation registering, serial driver has serial_in/serial_out to
+> > be registered. So, only the PIO range for ipmi device is stored
+> > in arm64_extio_ops and the indirect-IO
+> > works well for ipmi device.
+> 
+> You should not do that in the serial driver, please just use the
+> normal 8250 driver that works fine once you handle the entire
+> port range.
+> 
+> 
+> 	Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
