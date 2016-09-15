@@ -1,121 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38288 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758240AbcIMPSK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 11:18:10 -0400
-Date: Tue, 13 Sep 2016 10:18:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: robh@kernel.org, bhelgaas@google.com, colin.king@canonical.com,
-        soren.brinkmann@xilinx.com, marc.zyngier@arm.com,
-        michal.simek@xilinx.com, arnd@arndb.de,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, rgummal@xilinx.com,
-        Bharat Kumar Gogada <bharatku@xilinx.com>
-Subject: Re: [PATCH 1/3] PCI: Xilinx NWL PCIe: Expanding PCIe core errors and
- printing event occurred.
-Message-ID: <20160913151805.GD27748@localhost>
-References: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:44928 "EHLO
+        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934061AbcIOIjO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2016 04:39:14 -0400
+Subject: Re: LPC16 PCI microconference - Call for sessions proposals
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>
+References: <20160613171823.GA29621@red-moon>
+CC: David Woodhouse <dwmw2@infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jesse Barnes <jbarnes@virtuousgeek.org>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Auger Eric <eric.auger@redhat.com>,
+        Yinghai Lu <yinghai@kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57DA5DF7.8040003@ti.com>
+Date: Thu, 15 Sep 2016 14:08:15 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472553558-27215-1-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <20160613171823.GA29621@red-moon>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 04:09:16PM +0530, Bharat Kumar Gogada wrote:
-> The current driver prints pcie core error, for all core events.
-> Instead of just printing PCIe core error, now adding prints to show
-> individual core events occurred.
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Hi,
 
-I applied the first two patches to pci/host-xilinx for v4.9, thanks!
+Recently I sent a patch series to add support for configurable PCI endpoint
+[1]. It would be nice if we can allocate time to discuss this in LPC. I've also
+submitted a proposal for this in [2]. Let me know your thoughts.
 
-I'd like to work on the third one a little more, as I mentioned in my
-response to it.
+Thanks
+Kishon
 
-> ---
->  drivers/pci/host/pcie-xilinx-nwl.c | 48 +++++++++++++++++++++++++++++++-------
->  1 file changed, 40 insertions(+), 8 deletions(-)
+
+[1] -> https://lkml.org/lkml/2016/9/13/543
+[2] -> http://www.linuxplumbersconf.org/2016/ocw/proposals/3657
+
+On Monday 13 June 2016 10:48 PM, Lorenzo Pieralisi wrote:
+> Hi,
 > 
-> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-> index 3479d30..86c1834 100644
-> --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> @@ -85,10 +85,15 @@
->  #define MSGF_MISC_SR_MASTER_ERR		BIT(5)
->  #define MSGF_MISC_SR_I_ADDR_ERR		BIT(6)
->  #define MSGF_MISC_SR_E_ADDR_ERR		BIT(7)
-> -#define MSGF_MISC_SR_UR_DETECT          BIT(20)
-> -
-> -#define MSGF_MISC_SR_PCIE_CORE		GENMASK(18, 16)
-> -#define MSGF_MISC_SR_PCIE_CORE_ERR	GENMASK(31, 22)
-> +#define MSGF_MISC_SR_FATAL_AER		BIT(16)
-> +#define MSGF_MISC_SR_NON_FATAL_AER	BIT(17)
-> +#define MSGF_MISC_SR_CORR_AER		BIT(18)
-> +#define MSGF_MISC_SR_UR_DETECT		BIT(20)
-> +#define MSGF_MISC_SR_NON_FATAL_DEV	BIT(22)
-> +#define MSGF_MISC_SR_FATAL_DEV		BIT(23)
-> +#define MSGF_MISC_SR_LINK_DOWN		BIT(24)
-> +#define MSGF_MSIC_SR_LINK_AUTO_BWIDTH	BIT(25)
-> +#define MSGF_MSIC_SR_LINK_BWIDTH	BIT(26)
->  
->  #define MSGF_MISC_SR_MASKALL		(MSGF_MISC_SR_RXMSG_AVAIL | \
->  					MSGF_MISC_SR_RXMSG_OVER | \
-> @@ -96,9 +101,15 @@
->  					MSGF_MISC_SR_MASTER_ERR | \
->  					MSGF_MISC_SR_I_ADDR_ERR | \
->  					MSGF_MISC_SR_E_ADDR_ERR | \
-> +					MSGF_MISC_SR_FATAL_AER | \
-> +					MSGF_MISC_SR_NON_FATAL_AER | \
-> +					MSGF_MISC_SR_CORR_AER | \
->  					MSGF_MISC_SR_UR_DETECT | \
-> -					MSGF_MISC_SR_PCIE_CORE | \
-> -					MSGF_MISC_SR_PCIE_CORE_ERR)
-> +					MSGF_MISC_SR_NON_FATAL_DEV | \
-> +					MSGF_MISC_SR_FATAL_DEV | \
-> +					MSGF_MISC_SR_LINK_DOWN | \
-> +					MSGF_MSIC_SR_LINK_AUTO_BWIDTH | \
-> +					MSGF_MSIC_SR_LINK_BWIDTH)
->  
->  /* Legacy interrupt status mask bits */
->  #define MSGF_LEG_SR_INTA		BIT(0)
-> @@ -291,8 +302,29 @@ static irqreturn_t nwl_pcie_misc_handler(int irq, void *data)
->  		dev_err(pcie->dev,
->  			"In Misc Egress address translation error\n");
->  
-> -	if (misc_stat & MSGF_MISC_SR_PCIE_CORE_ERR)
-> -		dev_err(pcie->dev, "PCIe Core error\n");
-> +	if (misc_stat & MSGF_MISC_SR_FATAL_AER)
-> +		dev_err(pcie->dev, "Fatal Error in AER Capability\n");
-> +
-> +	if (misc_stat & MSGF_MISC_SR_NON_FATAL_AER)
-> +		dev_err(pcie->dev, "Non-Fatal Error in AER Capability\n");
-> +
-> +	if (misc_stat & MSGF_MISC_SR_CORR_AER)
-> +		dev_err(pcie->dev, "Correctable Error in AER Capability\n");
-> +
-> +	if (misc_stat & MSGF_MISC_SR_UR_DETECT)
-> +		dev_err(pcie->dev, "Unsupported request Detected\n");
-> +
-> +	if (misc_stat & MSGF_MISC_SR_NON_FATAL_DEV)
-> +		dev_err(pcie->dev, "Non-Fatal Error Detected\n");
-> +
-> +	if (misc_stat & MSGF_MISC_SR_FATAL_DEV)
-> +		dev_err(pcie->dev, "Fatal Error Detected\n");
-> +
-> +	if (misc_stat & MSGF_MSIC_SR_LINK_AUTO_BWIDTH)
-> +		dev_info(pcie->dev, "Link Autonomous Bandwidth Management Status bit set\n");
-> +
-> +	if (misc_stat & MSGF_MSIC_SR_LINK_BWIDTH)
-> +		dev_info(pcie->dev, "Link Bandwidth Management Status bit set\n");
->  
->  	/* Clear misc interrupt status */
->  	nwl_bridge_writel(pcie, misc_stat, MSGF_MISC_STATUS);
-> -- 
-> 2.1.1
+> following the official LPC16 PCI uconf acceptance notification:
 > 
+> https://www.linuxplumbersconf.org/2016/pci-microconference-accepted-into-2016-linux-plumbers-conference/
+> 
+> I am sending out a call for sessions proposals open to all developers
+> interested/involved in Linux kernel PCI development.
+> 
+> The LPC16 uconf wiki provides a list of topics that we put forward for
+> the microconference submission:
+> 
+> http://wiki.linuxplumbersconf.org/2016:pci
+> 
+> The wiki is there to provide a list of topics that we considered key
+> and it should not be considered final, actually it is a starting point
+> to define a possible schedule structure.
+> 
+> Session proposals for the LPC16 PCI microconference are warmly encouraged
+> and can be submitted here:
+> 
+> http://www.linuxplumbersconf.org/2016/ocw/events/LPC2016/tracks/531
+> 
+> Maintainers in CC, as an initial step we singled out the main subtracks
+> below and I would be grateful if you could add a session through the link
+> above and run the respective session (in brackets people whom I know are
+> involved in the topic and are likely to be asked to run/take part in the
+> session; NB: it is obviously incomplete, and it is based on what we
+> could infer from current PCI related patches, please do manifest your
+> interest):
+> 
+> - PCI resources allocation/validation/cross-arch consolidation
+>   ([Bjorn, Lorenzo, Yinghai, Benjamin, Jesse, Arnd])
+> - PCI Virtualization (cross-topic)
+>   ([Alex, Bjorn, Eric, Marc, Joerg, Will, David])
+> - PCI MSI ([Alex, Eric, Marc])
+> - PCI IOMMU ([Joerg, David, Jesse, Will, Marc])
+> - PCIe (ATS, PRI) ([Jesse, Will])
+> - PCIe root ports power management ([Rafael])
+> - PCI DT/ACPI - consolidation ([Bjorn, Lorenzo, Arnd, Rob])
+> 
+> Anyone involved in PCI kernel development, if you wish to add sessions and
+> attend the microconference consider yourself welcome, for any questions
+> just reply to this thread or drop me a line.
+> 
+> Looking forward to meeting you all in Santa Fe for this interesting track !
+> 
+> Lorenzo
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
