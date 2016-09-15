@@ -1,200 +1,126 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:3429 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934512AbcIOMGn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2016 08:06:43 -0400
 From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Christopher Covington <cov@codeaurora.org>,
-        Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>
-CC: Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        John Garry <john.garry@huawei.com>,
         "will.deacon@arm.com" <will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org"
-	<rafael@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "dhdang@apm.com"
-	<dhdang@apm.com>,
-        "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>,
-        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "Liviu.Dudau@arm.com"
-	<Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
-	<ddaney@caviumnetworks.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "linaro-acpi@lists.linaro.org"
-	<linaro-acpi@lists.linaro.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "jeremy.linton@arm.com"
-	<jeremy.linton@arm.com>,
-        "jhugo@codeaurora.org" <jhugo@codeaurora.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
-Date: Fri, 16 Sep 2016 13:42:02 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8754AD@lhreml507-mbx>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-3-git-send-email-tn@semihalf.com>
- <57D76626.1050109@huawei.com>
- <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
- <57D7E53F.1000106@huawei.com> <20160915105849.GA10345@red-moon>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F8730EA@lhreml507-mbx>
- <42c3f965-b40c-f2bb-e12c-34da6af1a4b7@codeaurora.org>
-In-Reply-To: <42c3f965-b40c-f2bb-e12c-34da6af1a4b7@codeaurora.org>
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 15 Sep 2016 12:05:51 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F871F72@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <5869118.UilSPY9Sai@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F871B01@lhreml507-mbx>
+ <8360154.kzsE8V8pTW@wuerfel>
+In-Reply-To: <8360154.kzsE8V8pTW@wuerfel>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Cov
+Hi Arnd
 
 > -----Original Message-----
-> From: Christopher Covington [mailto:cov@codeaurora.org]
-> Sent: 16 September 2016 13:28
-> To: Gabriele Paoloni; Lorenzo Pieralisi; liudongdong (C)
-> Cc: Tomasz Nowicki; helgaas@kernel.org; will.deacon@arm.com;
-> catalin.marinas@arm.com; rafael@kernel.org; arnd@arndb.de;
-> hanjun.guo@linaro.org; okaya@codeaurora.org; jchandra@broadcom.com;
-> dhdang@apm.com; ard.biesheuvel@linaro.org;
-> robert.richter@caviumnetworks.com; mw@semihalf.com;
-> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
-> msalter@redhat.com; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linaro-acpi@lists.linaro.org;
-> jcm@redhat.com; andrea.gallo@linaro.org; jeremy.linton@arm.com;
-> jhugo@codeaurora.org; linux-acpi@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM
-> quirks
->=20
-> On 09/16/2016 05:02 AM, Gabriele Paoloni wrote:
-> > Hi Lorenzo and Tomasz
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 15 September 2016 09:22
+> To: Gabriele Paoloni
+> Cc: linux-arm-kernel@lists.infradead.org; Yuanzhichang;
+> devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
+> gregkh@linuxfoundation.org; benh@kernel.crashing.org; John Garry;
+> will.deacon@arm.com; linux-kernel@vger.kernel.org; xuwei (O); Linuxarm;
+> linux-serial@vger.kernel.org; linux-pci@vger.kernel.org;
+> zourongrong@gmail.com; liviu.dudau@arm.com; kantyzc@163.com;
+> zhichang.yuan02@gmail.com
+> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
+> Hip06
+> 
+> On Thursday, September 15, 2016 8:02:27 AM CEST Gabriele Paoloni wrote:
 > >
-> > Many Thanks for looking at this
+> > From <<3.1.1. Open Firmware Properties for Bus Nodes>> in
+> > http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
 > >
-> >> -----Original Message-----
-> >> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-> >> Sent: 15 September 2016 11:59
-> >> To: liudongdong (C)
-> >> Cc: Tomasz Nowicki; helgaas@kernel.org; will.deacon@arm.com;
-> >> catalin.marinas@arm.com; rafael@kernel.org; arnd@arndb.de;
-> >> hanjun.guo@linaro.org; okaya@codeaurora.org; jchandra@broadcom.com;
-> >> cov@codeaurora.org; dhdang@apm.com; ard.biesheuvel@linaro.org;
-> >> robert.richter@caviumnetworks.com; mw@semihalf.com;
-> >> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
-> >> msalter@redhat.com; linux-pci@vger.kernel.org; linux-arm-
-> >> kernel@lists.infradead.org; linaro-acpi@lists.linaro.org;
-> >> jcm@redhat.com; andrea.gallo@linaro.org; jeremy.linton@arm.com;
-> >> Gabriele Paoloni; jhugo@codeaurora.org; linux-acpi@vger.kernel.org;
-> >> linux-kernel@vger.kernel.org
-> >> Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM
-> >> quirks
-> >>
-> >> On Tue, Sep 13, 2016 at 07:38:39PM +0800, Dongdong Liu wrote:
-> >>
-> >> [...]
-> >>
-> >>> Our host bridge is non ECAM only for the RC bus config space;
-> >>> for any other bus underneath the root bus we support ECAM access.
-> >>>
-> >>> RC config resource with hardcode as DEFINE_RES_MEM(0xb0070000,
-> >> SZ_4K),
-> >>> EP config resource we get it from MCFG table.
-> >>> So we need to override ops, but config resource we only need to
-> >> hardcode with RC config resource.
-> >>>
-> >>> Our host controller ACPI support patch can be found:
-> >>> https://lkml.org/lkml/2016/8/31/340
-> >>
-> >> Sorry I misread your code. IIUC you create an array of resources
-> that
-> >> represent non-ECAM config space (and incidentally contain debug
-> >> registers to check the link status - that you need to check for
-> every
-> >> given config access (?)), but you still need to have an MCFG entry
-> that
+> > I quote:
+> > "There shall be an entry in the "ranges" property for each
+> > of the Memory and/or I/O spaces if that address space is
+> > mapped through the bridge."
 > >
-> > The link status check is inherited from the designware framework (see
-> > http://lxr.free-electrons.com/source/drivers/pci/host/pcie-
-> designware.c#L678)
-> >
-> > However I think that in this case we can just check the link status
-> > in our init function and return an error if the link is down
-> >
-> >> covers the bus number subject to quirk to make sure this mechanism
-> >> works. Correct ?
-> >
-> > Well we need the quirks for the root bus numbers but if read this v6
-> > quirk mechanism correctly even if we do not specify an mcfg entry for
-> > bus 0 oci_mcfg_match_quirks() is called anyway and we can set our
-> > special configuration space addresses for the root buses (i.e. I
-> think
-> > we can have a clean MCFG table with entries only for those bus ranges
-> > that are really ECAM)
-> >
-> >>
-> >> This also means that, with the MCFG tables you have and current
-> >> mainline kernel you are able to probe a root bridge (because the
-> MCFG
-> >> table covers the bus number that is not ECAM), with enumeration
-> >> going haywire because it is trying to carry out ECAM accesses on
-> >> non-ECAM space.
-> >
-> > Yes correct, we cannot access the host controller configuration space
-> > with our current MCFG table and current Linux mainline
-> >
-> >>
-> >> Is my reading correct ?
-> >>
-> >> Anyway, that's not stricly related to this discussion, it is time we
-> >> converge on this patchset, we can add a domain range if that
-> >> simplifies things.
-> >
-> > IMO it would be better to have the domain range to avoid
-> > a very large and repetitive static quirk array
->=20
-> The v6 framework requires what, 21 additional lines of quirk data? What
-> if you were to define some preprocessor macros to slim it down? I think
-> something like the following would bring it down to roughly 7
-> additional
-> lines.
+> > It seems to me that it is ok to have 1:1 address mapping and that
+> > therefore of_translate_address() should fail if "ranges" is not
+> > present.
+> 
+> The key here is the definition of "mapped through the bridge".
+> I can only understand this as "directly mapped", i.e. an I/O
+> port of the child bus corresponds directly to a memory address
+> on the parent bus, but this is not the case here.
+> 
+> The problem with adding the mapping here is that it looks
+> like it should be valid to create a page table entry for
+> the address returned from the translation and access it through
+> a pointer dereference, but that is clearly not possible.
 
-Thanks, yes this would work as well. To be honest this is not a big issue.
-So either we go this way or we introduce domain range...
+I understand that somehow we are abusing of the ranges property
+here however the point is that with the current implementation ranges
+is needed because otherwise the ipmi driver probe will fail here:
 
-Cheers
+of_ipmi_probe -> of_address_to_resource -> __of_address_to_resource
+-> of_translate_address -> __of_translate_address
+
+Now we had a bit of discussion internally and to avoid
+having ranges we came up with two possible solutions:
+
+1) Using bit 3 of phys.hi cell in 2.2.1 of
+http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
+This would mean reworking of_bus_isa_get_flags in 
+http://lxr.free-electrons.com/source/drivers/of/address.c#L398
+and setting a new flag to be checked in __of_address_to_resource
+
+2) Adding a property in the bindings of each device that is
+a child of our LPC bus and modify __of_address_to_resource
+to check if the property is in the DT and eventually bypass
+of_translate_address
+
+However in both 1) and 2) there are some issues:
+in 1) we are not complying with the isa binding doc (we use
+a bit that should be zero); in 2) we need to modify the
+bindings documentation of the devices that are connected
+to our LPC controller (therefore modifying other devices
+bindings to fit our special case).
+
+I think that maybe having the 1:1 range mapping doesn't
+reflect well the reality but it is the less painful
+solution...
+
+What's your view?
+ 
+Many Thanks
 
 Gab
 
->=20
-> #define PCI_ACPI_QUIRK_QUAD_DOM(rev, dom, ops) \
->     { "HISI ", rev, 0, dom+0, MCFG_BUS_ANY, ops,
->       MCFG_RES_EMPTY}, \
->     { "HISI ", rev, 0, dom+1, MCFG_BUS_ANY, ops,
->       MCFG_RES_EMPTY}, \
->     { "HISI ", rev, 0, dom+2, MCFG_BUS_ANY, ops,
->       MCFG_RES_EMPTY}, \
->     { "HISI ", rev, 0, dom+3, MCFG_BUS_ANY, ops,
->       MCFG_RES_EMPTY},
->=20
-> PCI_ACPI_QUIRK_QUAD_DOM("HIP05 ", 0, &hisi_pcie_hip05_ops)
-> PCI_ACPI_QUIRK_QUAD_DOM("HIP06 ", 0, &hisi_pcie_hip05_ops)
-> PCI_ACPI_QUIRK_QUAD_DOM("HIP07 ", 0, &hisi_pcie_hip06_ops)
-> PCI_ACPI_QUIRK_QUAD_DOM("HIP07 ", 4, &hisi_pcie_hip07_ops)
-> PCI_ACPI_QUIRK_QUAD_DOM("HIP07 ", 8, &hisi_pcie_hip07_ops)
-> PCI_ACPI_QUIRK_QUAD_DOM("HIP07 ", 12, &hisi_pcie_hip07_ops)
->=20
-> Cov
-> --
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
-> Technologies, Inc. Qualcomm Technologies, Inc. is a member of the Code
-> Aurora Forum, a Linux Foundation Collaborative Project.
+> 
+> > This is also explained quite well in
+> > http://lxr.free-electrons.com/source/drivers/of/address.c#L490
+> >
+> > what do you think?
+> 
+> This is a separate issue, and only relevant for Apple Macintosh
+> machines as well as the PA-Semi sdc.
+> 
+> 	Arnd
