@@ -1,59 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:24765 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935933AbcIXXXS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2016 19:23:18 -0400
+Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:5805 "EHLO
+        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1760345AbcIOAKT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 20:10:19 -0400
 From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v5 16/16] MAINTAINERS: Update for PVRDMA driver
-Date: Sat, 24 Sep 2016 16:21:40 -0700
-Message-ID: <fe5e7704757254073963cd40bff5240421b1fce0.1474759181.git.aditr@vmware.com>
-In-Reply-To: <cover.1474759181.git.aditr@vmware.com>
-References: <cover.1474759181.git.aditr@vmware.com>
+To: Christoph Hellwig <hch@infradead.org>
+CC: "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: RE: [PATCH v4 05/16] IB/pvrdma: Add functions for Verbs support
+Date: Thu, 15 Sep 2016 00:10:10 +0000
+Message-ID: <BLUPR0501MB836AB8BF5108322033C5DD6C5F00@BLUPR0501MB836.namprd05.prod.outlook.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-6-git-send-email-aditr@vmware.com>
+ <20160914124947.GA14616@infradead.org>
+In-Reply-To: <20160914124947.GA14616@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add maintainer info for the PVRDMA driver.
+On Wed, Sep 14, 2016 at 05:49:50 -0700 Christoph Hellwig wrote:
+> > +	props->max_fmr =3D dev->dsr->caps.max_fmr;
+> > +	props->max_map_per_fmr =3D dev->dsr->caps.max_map_per_fmr;
+>=20
+> Please don't add FMR support to any new drivers.
 
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
----
-Changes v4->v5:
- - Added pvrdma files to common UAPI folder.
----
- MAINTAINERS | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 87e23cd..5023dc0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12615,6 +12615,15 @@ S:	Maintained
- F:	drivers/scsi/vmw_pvscsi.c
- F:	drivers/scsi/vmw_pvscsi.h
- 
-+VMWARE PVRDMA DRIVER
-+M:	Adit Ranadive <aditr@vmware.com>
-+M:	VMware PV-Drivers <pv-drivers@vmware.com>
-+L:	linux-rdma@vger.kernel.org
-+S:	Maintained
-+F:	drivers/infiniband/hw/pvrdma/
-+F:	include/uapi/rdma/pvrdma-abi.h
-+F:	include/uapi/rdma/pvrdma-uapi.h
-+
- VOLTAGE AND CURRENT REGULATOR FRAMEWORK
- M:	Liam Girdwood <lgirdwood@gmail.com>
- M:	Mark Brown <broonie@kernel.org>
--- 
-2.7.4
-
+We don't and our device reports these as 0. If you want me to more explicit=
+ I
+can remove the zero'd out properties.
