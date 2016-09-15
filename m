@@ -1,92 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:49414 "EHLO
-        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759799AbcIMRM6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 13:12:58 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Jingoo Han <jingoohan1@gmail.com>, <hch@infradead.org>,
-        <Joao.Pinto@synopsys.com>, <mingkai.hu@nxp.com>,
-        <m-karicheri2@ti.com>, Pratyush Anand <pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
+Received: from mout.kundenserver.de ([212.227.126.187]:60643 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934027AbcIOIXV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2016 04:23:21 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
         <linux-arm-kernel@lists.infradead.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Rob Herring <robh+dt@kernel.org>, <kishon@ti.com>,
-        <nsekhar@ti.com>
-Subject: [RFC PATCH] ARM: dts: DRA7: Modify pcie1 dt node for EP mode
-Date: Tue, 13 Sep 2016 22:40:52 +0530
-Message-ID: <1473786653-12759-11-git-send-email-kishon@ti.com>
-In-Reply-To: <1473786653-12759-1-git-send-email-kishon@ti.com>
-References: <1473786653-12759-1-git-send-email-kishon@ti.com>
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 15 Sep 2016 10:22:23 +0200
+Message-ID: <8360154.kzsE8V8pTW@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F871B01@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <5869118.UilSPY9Sai@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F871B01@lhreml507-mbx>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Modify pcie1 dt node in order for the controller to operate in
-endpoint mode. This is used only for testing EP mode.
+On Thursday, September 15, 2016 8:02:27 AM CEST Gabriele Paoloni wrote:
+> 
+> From <<3.1.1. Open Firmware Properties for Bus Nodes>> in 
+> http://www.firmware.org/1275/bindings/isa/isa0_4d.ps
+> 
+> I quote:
+> "There shall be an entry in the "ranges" property for each
+> of the Memory and/or I/O spaces if that address space is
+> mapped through the bridge."
+> 
+> It seems to me that it is ok to have 1:1 address mapping and that
+> therefore of_translate_address() should fail if "ranges" is not
+> present.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/boot/dts/dra7.dtsi |   43 +++++++++++--------------------------------
- 1 file changed, 11 insertions(+), 32 deletions(-)
+The key here is the definition of "mapped through the bridge".
+I can only understand this as "directly mapped", i.e. an I/O
+port of the child bus corresponds directly to a memory address
+on the parent bus, but this is not the case here.
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index d9bfb94..73f63d1 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -283,38 +283,17 @@
- 			};
- 		};
- 
--		axi@0 {
--			compatible = "simple-bus";
--			#size-cells = <1>;
--			#address-cells = <1>;
--			ranges = <0x51000000 0x51000000 0x3000
--				  0x0	     0x20000000 0x10000000>;
--			pcie1: pcie@51000000 {
--				compatible = "ti,dra7-pcie";
--				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
--				reg-names = "rc_dbics", "ti_conf", "config";
--				interrupts = <0 232 0x4>, <0 233 0x4>;
--				#address-cells = <3>;
--				#size-cells = <2>;
--				device_type = "pci";
--				ranges = <0x81000000 0 0          0x03000 0 0x00010000
--					  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
--				#interrupt-cells = <1>;
--				num-lanes = <1>;
--				ti,hwmods = "pcie1";
--				phys = <&pcie1_phy>;
--				phy-names = "pcie-phy0";
--				interrupt-map-mask = <0 0 0 7>;
--				interrupt-map = <0 0 0 1 &pcie1_intc 1>,
--						<0 0 0 2 &pcie1_intc 2>,
--						<0 0 0 3 &pcie1_intc 3>,
--						<0 0 0 4 &pcie1_intc 4>;
--				pcie1_intc: interrupt-controller {
--					interrupt-controller;
--					#address-cells = <0>;
--					#interrupt-cells = <1>;
--				};
--			};
-+		pcie1: pcie@51000000 {
-+			compatible = "ti,dra7-pcie-ep";
-+			reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>;
-+			reg-names = "ep_dbics", "ti_conf", "ep_dbics2";
-+			interrupts = <0 232 0x4>;
-+			num-lanes = <1>;
-+			num-ib-windows = <4>;
-+			num-ob-windows = <16>;
-+			ti,hwmods = "pcie1";
-+			phys = <&pcie1_phy>;
-+			phy-names = "pcie-phy0";
- 		};
- 
- 		axi@1 {
--- 
-1.7.9.5
+The problem with adding the mapping here is that it looks
+like it should be valid to create a page table entry for
+the address returned from the translation and access it through
+a pointer dereference, but that is clearly not possible.
 
+> This is also explained quite well in
+> http://lxr.free-electrons.com/source/drivers/of/address.c#L490
+> 
+> what do you think?
+
+This is a separate issue, and only relevant for Apple Macintosh
+machines as well as the PA-Semi sdc.
+
+	Arnd
