@@ -1,97 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:17211 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932916AbcI1OsA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Sep 2016 10:48:00 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v8 6/8] thunderbolt: Kconfig for Thunderbolt Networking
-Date: Wed, 28 Sep 2016 17:44:28 +0300
-Message-Id: <1475073870-2126-7-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
-References: <1475073870-2126-1-git-send-email-amir.jer.levy@intel.com>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35725 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758555AbcIPORL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 10:17:11 -0400
+Date: Fri, 16 Sep 2016 09:17:08 -0500
+From: Rob Herring <robh@kernel.org>
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] pcie: qcom: add support to msm8996 PCIE controller
+Message-ID: <20160916141708.GA21504@rob-hp-laptop>
+References: <1473246412-24616-1-git-send-email-srinivas.kandagatla@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473246412-24616-1-git-send-email-srinivas.kandagatla@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Update to the Kconfig Thunderbolt description to add
-Thunderbolt networking as an option.
-The menu item "Thunderbolt support" now offers:
-"Apple Hardware Support" (existing)
-        and/or
-"Thunderbolt Networking" (new)
+On Wed, Sep 07, 2016 at 12:06:52PM +0100, Srinivas Kandagatla wrote:
+> This patch adds support to msm8996/apq8096 pcie, MSM8996 supports
+> Gen 1/2, One lane, 3 pcie root-complex with support to MSI and
+> legacy interrupts and it conforms to PCI Express Base 2.1 specification.
+> 
+> This patch adds post_init callback to qcom_pcie_ops, as this is pcie
+> pipe clocks and smmu configuration are only setup after the phy is
+> powered on. It also adds ltssm_enable callback as it is very much
+> different to other supported SOCs in the driver.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> ---
+> 
+> I tested this patch along with phy driver patch on DB820c based on
+> APQ8096 on port A and port B using sata and ethernet controllers.
+> 
+> Thanks
+> srini
+> 
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  88 +++++++-
+>  drivers/pci/host/pcie-qcom.c                       | 237 ++++++++++++++++++++-
+>  2 files changed, 318 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> index 4059a6f..1ddfcb4 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> @@ -92,6 +92,18 @@
+>  			- "aux"		Auxiliary (AUX) clock
+>  			- "bus_master"	Master AXI clock
+>  			- "bus_slave"	Slave AXI clock
+> +
+> +- clock-names:
+> +	Usage: required for msm8996/apq8096
+> +	Value type: <stringlist>
+> +	Definition: Should contain the following entries
+> +			- "aux"		Auxiliary (AUX) clock
+> +			- "bus_master"	Master AXI clock
+> +			- "bus_slave"	Slave AXI clock
+> +			- "pipe"	Pipe Clock driving internal logic.
+> +			- "cfg"		Configuration clk.
+> +			- "snoc_axi"	SNOC AXI clk
+> +			- "cnoc_ahb"	CNOC AHB clk
+>  - resets:
+>  	Usage: required
+>  	Value type: <prop-encoded-array>
+> @@ -114,8 +126,15 @@
+>  	Definition: Should contain the following entries
+>  			- "core" Core reset
+>  
+> +- iommus:
+> +	Usage: required for msm8996/apq8096
+> +	Value type: <prop-encoded-array>
+> +	Definition: Should point to the respective IOMMU block with master port
+> +		    as argument, see Documentation/devicetree/bindings/iommu/
+> +		    mediatek,iommu.txt for details.
+> +
+>  - power-domains:
+> -	Usage: required for apq8084
+> +	Usage: required for apq8084 and msm8996/apq8096
+>  	Value type: <prop-encoded-array>
+>  	Definition: A phandle and power domain specifier pair to the
+>  		    power domain which is responsible for collapsing
+> @@ -137,6 +156,11 @@
+>  	Definition: A phandle to the analog power supply for IC which generates
+>  		    reference clock
+>  
+> +- vdda_1p8-supply:
 
-You can choose the driver for your platform or build both drivers -
-each driver will detect if it can run on the specific platform.
-If the Thunderbolt Networking option is chosen, Thunderbolt Networking
-will be enabled between Linux non-Apple systems, macOS and
-Windows based systems.
-Thunderbolt Networking will not affect any other Thunderbolt feature that
-was previous available to Linux users on either Apple or
-non-Apple platforms.
+Don't use '_' in property names.
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 27 +++++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  3 ++-
- 2 files changed, 25 insertions(+), 5 deletions(-)
+> +	Usage: required for msm8996/apq8096
+> +	Value type: <phandle>
+> +	Definition: A phandle to the analog power supply for PCIE_1P8
+> +
+>  - phys:
+>  	Usage: required for apq8084
+>  	Value type: <phandle>
+> @@ -231,3 +255,65 @@
+>  		pinctrl-0 = <&pcie0_pins_default>;
+>  		pinctrl-names = "default";
+>  	};
+> +
+> +* Example for apq8096:
+> +	pcie1: qcom,pcie@00608000 {
 
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..376e5bb 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,32 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt Networking"
-+	help
-+	  This driver is required if you want Thunderbolt Networking on
-+	  non-Apple hardware.
-+	  It creates a virtual Ethernet device that enables computer to
-+	  computer communication over a Thunderbolt cable.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..b6aa6a3 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,4 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
-+obj-${CONFIG_THUNDERBOLT_ICM} += icm/
--- 
-2.7.4
+pcie@...
 
+> +		compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
+> +		power-domains = <&gcc PCIE1_GDSC>;
+> +		bus-range = <0x00 0xff>;
+> +		num-lanes = <1>;
+> +
+> +		status  = "disabled";
+> +
+> +		reg = <0x00608000 0x2000>,
+> +		      <0x0d000000 0xf1d>,
+> +		      <0x0d000f20 0xa8>,
+> +		      <0x0d100000 0x100000>;
+> +
+> +		reg-names = "parf", "dbi", "elbi","config";
+> +
+> +		phys = <&pcie_phy 1>;
+> +		phy-names = "pciephy";
+> +
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		ranges = <0x01000000 0x0 0x0d200000 0x0d200000 0x0 0x100000>,
+> +			<0x02000000 0x0 0x0d300000 0x0d300000 0x0 0xd00000>;
+> +
+> +		interrupts = <GIC_SPI 413 IRQ_TYPE_NONE>;
+> +		interrupt-names = "msi";
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 0x7>;
+> +		interrupt-map = <0 0 0 1 &intc 0 272 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
+> +				<0 0 0 2 &intc 0 273 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
+> +				<0 0 0 3 &intc 0 274 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
+> +				<0 0 0 4 &intc 0 275 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+> +
+> +		pinctrl-names = "default", "sleep";
+> +		pinctrl-0 = <&pcie1_clkreq_default &pcie1_perst_default &pcie1_wake_default>;
+> +		pinctrl-1 = <&pcie1_clkreq_sleep &pcie1_perst_default &pcie1_wake_sleep>;
+> +
+> +
+> +		vreg-1.8-supply = <&pm8994_l12>;
+> +		vreg-0.9-supply = <&pm8994_l28>;
+
+Doesn't match binding?
+
+> +		iommus = <&anoc0_smmu>;
+> +
+> +		linux,pci-domain = <1>;
+> +
+> +		clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
+> +			<&gcc GCC_PCIE_1_AUX_CLK>,
+> +			<&gcc GCC_PCIE_1_CFG_AHB_CLK>,
+> +			<&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
+> +			<&gcc GCC_PCIE_1_SLV_AXI_CLK>,
+> +			<&gcc GCC_AGGRE0_SNOC_AXI_CLK>,
+> +			<&gcc GCC_AGGRE0_CNOC_AHB_CLK>;
+> +
+> +		clock-names =  "pipe",
+> +				"aux",
+> +				"cfg",
+> +				"bus_master",
+> +				"bus_slave",
+> +				"snoc_axi",
+> +				"cnoc_ahb";
+> +
+> +	};
