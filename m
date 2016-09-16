@@ -1,49 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40770 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756703AbcILU57 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 16:57:59 -0400
-From: Tyler Baicar <tbaicar@codeaurora.org>
-To: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-        matt.fleming@intel.com, paul.gortmaker@windriver.com, bp@suse.de,
-        zjzhang@codeaurora.org, sudipm.mukherjee@gmail.com, axboe@fb.com,
-        izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: Tyler Baicar <tbaicar@codeaurora.org>
-Subject: [PATCH 2/2] acpi: apei: send correct severity to calculate AER severity
-Date: Mon, 12 Sep 2016 14:57:25 -0600
-Message-Id: <1473713845-23613-3-git-send-email-tbaicar@codeaurora.org>
-In-Reply-To: <1473713845-23613-1-git-send-email-tbaicar@codeaurora.org>
-References: <1473713845-23613-1-git-send-email-tbaicar@codeaurora.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:39614 "EHLO quartz.orcorp.ca"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935781AbcIPQcH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Sep 2016 12:32:07 -0400
+Date: Fri, 16 Sep 2016 10:32:01 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: "Woodruff, Robert J" <robert.j.woodruff@intel.com>
+Cc: Adit Ranadive <aditr@vmware.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
+Message-ID: <20160916163201.GC13911@obsidianresearch.com>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <20160912180251.GH5843@obsidianresearch.com>
+ <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+ <20160914173636.GA10309@obsidianresearch.com>
+ <DM2PR0501MB844473AE0FCAD0FD748D43DC5F10@DM2PR0501MB844.namprd05.prod.outlook.com>
+ <9C6B67F36DCAFC479B1CF6A967258A8C7DE14CE8@ORSMSX115.amr.corp.intel.com>
+ <9C6B67F36DCAFC479B1CF6A967258A8C7DE14D3E@ORSMSX115.amr.corp.intel.com>
+ <20160914225910.GB3567@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160914225910.GB3567@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the AER severity is calculated by calling
-cper_severity_to_aer(), but the parameter sent is actually the
-GHES severity. This causes the AER severity to be incorrect.
-Fix the parameter to be the CPER severity instead of the GHES
-severity.
+On Wed, Sep 14, 2016 at 04:59:10PM -0600, Jason Gunthorpe wrote:
 
-Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
----
- drivers/acpi/apei/ghes.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> > package follows that licensing model for accepting any new code into
+> > that combined repo ?
+> 
+> As with the kernel we'd discourage 're-licensing' existing files.
+> 
+> However, since this is not a OFA project, I, personally, would not
+> turn away a GPLv2 compatible contribution, but I am proposing that the
+> 'default' license for the project be OFA compatible.
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index 60746ef..f0a029e 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -457,7 +457,7 @@ static void ghes_do_proc(struct ghes *ghes,
- 
- 				devfn = PCI_DEVFN(pcie_err->device_id.device,
- 						  pcie_err->device_id.function);
--				aer_severity = cper_severity_to_aer(sev);
-+				aer_severity = cper_severity_to_aer(gdata->error_severity);
- 
- 				/*
- 				 * If firmware reset the component to contain
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+I should be clearer here. I am *strongly* opposed to anything that
+changes the license of the existing 4 core libraries away from the
+GPLv2 or OpenIB.org situation we have today. (that includes to other
+varients of the BSD license)
 
+I just checked and we appear to be completely OK on this point today.
+
+Jason
