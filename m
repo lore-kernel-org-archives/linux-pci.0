@@ -1,86 +1,50 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 21 Sep 2016 14:18:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Message-ID: <20160921191845.GD20006@localhost>
-References: <20160919180900.GB13775@localhost>
- <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
- <20160920133327.GB13855@localhost>
- <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
- <20160920140518.GD13855@localhost>
- <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
- <20160920191744.GA4941@localhost> <20160921140549.GA11968@red-moon>
- <20160921180457.GB20006@localhost>
- <CADaLNDn4CeoB+sELQ5yQDQUS158raEu5QohPH2PsVtuGpfGKHg@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CADaLNDn4CeoB+sELQ5yQDQUS158raEu5QohPH2PsVtuGpfGKHg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Rafael Wysocki <rafael@kernel.org>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Yijing Wang <wangyijing@huawei.com>, Andrea Gallo <andrea.gallo@linaro.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jeff Hugo <jhugo@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
- Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
- David Daney <ddaney@caviumnetworks.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Robert Richter <robert.richter@caviumnetworks.com>,
- Dongdong Liu <liudongdong3@huawei.com>, Mark Salter <msalter@redhat.com>,
- Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
- Jon Masters <jcm@redhat.com>, Christopher Covington <cov@codeaurora.org>,
- Marcin Wojtas <mw@semihalf.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Jayachandran C <jchandra@broadcom.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jeremy Linton <jeremy.linton@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, alex.williamson@redhat.com,
+        vikrams@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 0/5] PCI: error handling clean up and add CRS support
+Date: Fri, 16 Sep 2016 16:06:29 -0400
+Message-Id: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 21, 2016 at 11:58:22AM -0700, Duc Dang wrote:
-> On Wed, Sep 21, 2016 at 11:04 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Sep 21, 2016 at 03:05:49PM +0100, Lorenzo Pieralisi wrote:
+Device states on the bus are not saved and restored for some of the bus
+reset paths as:
 
-> > The existing x86 practice is to use PNP0C02 devices for this purpose,
-> > and I think we should just follow that practice.
-> >
-> > ...
-> >
-> > My point is that the hard-coding should not be buried in a driver
-> > where it's invisible to the rest of the kernel.  If we hard-code it in
-> > a quirk that adds _CRS entries, then the kernel will work just like it
-> > would if the firmware had been correct in the first place.  The
-> > resource will appear in /sys/devices/pnp*/*/resources and /proc/iomem,
-> > and if we ever used _SRS to assign or move ACPI devices, we would know
-> > to avoid the bridge resource.
-> 
-> Are you suggesting to add code similar to functions in
-> linux/drivers/pnp/quirks.c to declare/attach the additional resource
-> that the host need to have when the resource is not in MCFG table?
+1. IB/hfi1 via pci_reset_bridge_secondary_bus
+2. PCI/AER via pci_reset_bridge_secondary_bus
+3. PCI: dev_reset via parent bus reset
 
-Yes, but what I'm suggesting is actually a little stronger.  This has
-nothing to do with whether a resource is in the MCFG table or not.
+Changing the external API usage to pci_reset_bus outside of PCI code and
+adding save/restore into pci_parent_bus_reset function. Note that
+pci_parent_bus_reset is called with a device lock held.
 
-I'm suggesting ACPI firmware should always describe the resource.  If the
-firmware is defective and doesn't describe it, we should add a quirk in
-pnp/quirks.c to add a resource for it.
+A PCIe endpoint is allowed to issue CRS following an FLR request to
+indicate that it is not ready to accept new requests. Changing the polling
+mechanism in FLR wait function to go read the vendor ID instead of the
+command/status register. A CRS indication will only be given if the address
+to be read is vendor ID.
 
-Bjorn
+v1:
+http://www.spinics.net/lists/linux-pci/msg53596.html
+* initial implementation
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sinan Kaya (5):
+  PCI/AER: replace pci_reset_bridge_secondary_bus with pci_reset_bus
+  IB/hfi1: replace pci_reset_bridge_secondary_bus with pci_reset_bus
+  PCI: save and restore bus on parent bus reset
+  PCI: add CRS support to error handling path
+  PCI: handle CRS returned by device after FLR
+
+ drivers/infiniband/hw/hfi1/pcie.c  |  4 +---
+ drivers/pci/pci.c                  | 28 +++++++++++++++++++++++++++-
+ drivers/pci/pcie/aer/aerdrv.c      |  2 +-
+ drivers/pci/pcie/aer/aerdrv_core.c |  2 +-
+ 4 files changed, 30 insertions(+), 6 deletions(-)
+
+-- 
+1.9.1
