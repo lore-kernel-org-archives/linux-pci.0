@@ -1,43 +1,89 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 1 Sep 2016 12:33:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>,
-        Doug Anderson <dianders@chromium.org>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: Re: [v10,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
-Message-ID: <20160901173348.GB9471@localhost>
-References: <1471570498-3284-1-git-send-email-shawn.lin@rock-chips.com>
- <20160831181754.GA7460@roeck-us.net>
- <9075a2c1-c787-986f-31b4-4d5b7c92b771@rock-chips.com>
- <20160901163455.GA9471@localhost>
- <20160901165757.GA3253@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160901165757.GA3253@localhost>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v14 06/17] PCI: Add pci_find_bus_resource()
+Date: Fri, 16 Sep 2016 13:01:56 -0700
+Message-Id: <20160916200207.21439-7-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 01, 2016 at 09:57:58AM -0700, Brian Norris wrote:
-> On Thu, Sep 01, 2016 at 11:34:55AM -0500, Bjorn Helgaas wrote:
-> > I can't conveniently build it, so I'm sure I've broken things.  I
-> 
-> Indeed, you have :)
-> 
-> > pushed the current work-in-progress branch to pci/host-rockchip-wip.
-> > After we fix build errors and other thinkos, I'll rename it and put it
-> > in -next.
-> 
-> I'll append a patch that gets things building and working for me. With
-> that:
-> 
-> Tested-by: Brian Norris <briannorris@chromium.org>
+Add pci_find_bus_resource() to return bus resource for input resource.
 
-Thanks, I added your fixes.
+In some case, we may only have bus instead of dev.
+It is same as pci_find_parent_resource, but take bus as input.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci.c   | 27 ++++++++++++++++-----------
+ include/linux/pci.h |  2 ++
+ 2 files changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aab9d51..6dfecdd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -436,18 +436,9 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
+ }
+ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+ 
+-/**
+- * pci_find_parent_resource - return resource region of parent bus of given region
+- * @dev: PCI device structure contains resources to be searched
+- * @res: child resource record for which parent is sought
+- *
+- *  For given resource region of given device, return the resource
+- *  region of parent bus the given region is contained in.
+- */
+-struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+-					  struct resource *res)
++struct resource *pci_find_bus_resource(const struct pci_bus *bus,
++					struct resource *res)
+ {
+-	const struct pci_bus *bus = dev->bus;
+ 	struct resource *r;
+ 	int i;
+ 
+@@ -477,6 +468,20 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 	}
+ 	return NULL;
+ }
++
++/**
++ * pci_find_parent_resource - return resource region of parent bus of given region
++ * @dev: PCI device structure contains resources to be searched
++ * @res: child resource record for which parent is sought
++ *
++ *  For given resource region of given device, return the resource
++ *  region of parent bus the given region is contained in.
++ */
++struct resource *pci_find_parent_resource(const struct pci_dev *dev,
++					  struct resource *res)
++{
++	return pci_find_bus_resource(dev->bus, res);
++}
+ EXPORT_SYMBOL(pci_find_parent_resource);
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0ab8359..c1c1def 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -802,6 +802,8 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 			     struct resource *res);
+ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region);
++struct resource *pci_find_bus_resource(const struct pci_bus *bus,
++					struct resource *res);
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-- 
+2.8.3
