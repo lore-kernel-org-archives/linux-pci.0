@@ -1,53 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:33888 "EHLO
-        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752395AbcJAAog (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Sep 2016 20:44:36 -0400
-Received: by mail-yw0-f182.google.com with SMTP id g192so78757854ywh.1
-        for <linux-pci@vger.kernel.org>; Fri, 30 Sep 2016 17:44:36 -0700 (PDT)
+Received: from lhrrgout.huawei.com ([194.213.3.17]:3431 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752032AbcIPJDG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 05:03:06 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>
+CC: Tomasz Nowicki <tn@semihalf.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>,
+        "cov@codeaurora.org" <cov@codeaurora.org>,
+        "dhdang@apm.com" <dhdang@apm.com>,
+        "ard.biesheuvel@linaro.org" <ard.biesheuvel@linaro.org>,
+        "robert.richter@caviumnetworks.com"
+        <robert.richter@caviumnetworks.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+        Wangyijing <wangyijing@huawei.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+        "jcm@redhat.com" <jcm@redhat.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "jhugo@codeaurora.org" <jhugo@codeaurora.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM quirks
+Date: Fri, 16 Sep 2016 09:02:15 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8730EA@lhreml507-mbx>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-3-git-send-email-tn@semihalf.com>
+ <57D76626.1050109@huawei.com>
+ <bac9f822-ce0a-7070-94df-4d66fc30f774@semihalf.com>
+ <57D7E53F.1000106@huawei.com> <20160915105849.GA10345@red-moon>
+In-Reply-To: <20160915105849.GA10345@red-moon>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <mj+md-20160926.182825.94359.nikam@ucw.cz>
-References: <1472747248-60993-1-git-send-email-rajatja@google.com>
- <1473379530-70905-1-git-send-email-rajatja@google.com> <CACK8Z6HKhduwFj7LBoN52WBJaZB01LojNaA6J4u0cUx5RZzdpg@mail.gmail.com>
- <mj+md-20160926.182229.10984.albireo@ucw.cz> <CACK8Z6EFzB8VzGP7jqZJkKfO3_wS=K0XB7Q30ym0M=tkwtWuqA@mail.gmail.com>
- <CACK8Z6EChX9d99-=z=6HZYuKwusuVcZDHx4wkGY-_aO=yvUsOQ@mail.gmail.com> <mj+md-20160926.182825.94359.nikam@ucw.cz>
-From: Rajat Jain <rajatja@google.com>
-Date: Fri, 30 Sep 2016 17:43:55 -0700
-Message-ID: <CACK8Z6EbxJqFcmek_nEabZhfa9Ct7yCjghrqOYhRtWx2UOEi=w@mail.gmail.com>
-Subject: Re: [PATCH v2] lspci: Parse all the L1 PM substate capability regs
-To: Martin Mares <mj@ucw.cz>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        David Box <david.e.box@linux.intel.com>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Brian Norris <briannorris@google.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
+Hi Lorenzo and Tomasz
 
-Sorry, it took me a while to respond. I've just sent out a patch for
-tests/cap-l1-pm that has the data for tests.
+Many Thanks for looking at this
 
-Yes, your new patch worked fine.
+> -----Original Message-----
+> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> Sent: 15 September 2016 11:59
+> To: liudongdong (C)
+> Cc: Tomasz Nowicki; helgaas@kernel.org; will.deacon@arm.com;
+> catalin.marinas@arm.com; rafael@kernel.org; arnd@arndb.de;
+> hanjun.guo@linaro.org; okaya@codeaurora.org; jchandra@broadcom.com;
+> cov@codeaurora.org; dhdang@apm.com; ard.biesheuvel@linaro.org;
+> robert.richter@caviumnetworks.com; mw@semihalf.com;
+> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
+> msalter@redhat.com; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; linaro-acpi@lists.linaro.org;
+> jcm@redhat.com; andrea.gallo@linaro.org; jeremy.linton@arm.com;
+> Gabriele Paoloni; jhugo@codeaurora.org; linux-acpi@vger.kernel.org;
+> linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH V6 2/5] PCI/ACPI: Check platform specific ECAM
+> quirks
+> 
+> On Tue, Sep 13, 2016 at 07:38:39PM +0800, Dongdong Liu wrote:
+> 
+> [...]
+> 
+> > Our host bridge is non ECAM only for the RC bus config space;
+> > for any other bus underneath the root bus we support ECAM access.
+> >
+> > RC config resource with hardcode as DEFINE_RES_MEM(0xb0070000,
+> SZ_4K),
+> > EP config resource we get it from MCFG table.
+> > So we need to override ops, but config resource we only need to
+> hardcode with RC config resource.
+> >
+> > Our host controller ACPI support patch can be found:
+> > https://lkml.org/lkml/2016/8/31/340
+> 
+> Sorry I misread your code. IIUC you create an array of resources that
+> represent non-ECAM config space (and incidentally contain debug
+> registers to check the link status - that you need to check for every
+> given config access (?)), but you still need to have an MCFG entry that
 
-Thanks,
+The link status check is inherited from the designware framework (see
+http://lxr.free-electrons.com/source/drivers/pci/host/pcie-designware.c#L678)
 
-Rajat
+However I think that in this case we can just check the link status
+in our init function and return an error if the link is down
 
-On Mon, Sep 26, 2016 at 11:28 AM, Martin Mares <mj@ucw.cz> wrote:
-> Hi!
->
->> I'll send the hex dump, however I do not know how to actually run the
->> test. I assume it is fine to just send a patch to tests/ that has the
->> hex dump.
->
-> Exactly.
->
-> So far, the tests are conducted manually.
->
->                                 Have a nice fortnight
-> --
-> Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-> Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-> System going down at 5 pm to install scheduler bug.
+> covers the bus number subject to quirk to make sure this mechanism
+> works. Correct ?
+
+Well we need the quirks for the root bus numbers but if read this v6
+quirk mechanism correctly even if we do not specify an mcfg entry for
+bus 0 oci_mcfg_match_quirks() is called anyway and we can set our
+special configuration space addresses for the root buses (i.e. I think
+we can have a clean MCFG table with entries only for those bus ranges
+that are really ECAM)  
+
+> 
+> This also means that, with the MCFG tables you have and current
+> mainline kernel you are able to probe a root bridge (because the MCFG
+> table covers the bus number that is not ECAM), with enumeration
+> going haywire because it is trying to carry out ECAM accesses on
+> non-ECAM space.
+
+Yes correct, we cannot access the host controller configuration space
+with our current MCFG table and current Linux mainline
+
+> 
+> Is my reading correct ?
+> 
+> Anyway, that's not stricly related to this discussion, it is time we
+> converge on this patchset, we can add a domain range if that
+> simplifies things.
+
+IMO it would be better to have the domain range to avoid
+a very large and repetitive static quirk array
+
+Thanks
+
+Gab
+
+> 
+> Thanks,
+> Lorenzo
+> 
+> > This patch is based on RFC V5 quirk mechanism.
+> >
+> > Based on V6 quirk mechanism, we have to change it as below:
+> >
+> > #ifdef CONFIG_PCI_HISI_ACPI
+> > 	{ "HISI ", "HIP05 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP05 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP05 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP05 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip05_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP06 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP06 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP06 ", 0, 2, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP06 ", 0, 3, MCFG_BUS_ANY, &hisi_pcie_hip06_ops,
+> >          MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP07 ", 0, 0, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	{ "HISI ", "HIP07 ", 0, 1, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> > 	  MCFG_RES_EMPTY},
+> > 	....
+> >
+> > 	{ "HISI ", "HIP07 ", 0, 15, MCFG_BUS_ANY, &hisi_pcie_hip07_ops,
+> > 	  MCFG_RES_EMPTY},
+> >
+> > #endif
+> >
+> > struct pci_ecam_ops hisi_pci_hip05_ops = {
+> > 	.bus_shift	= 20,
+> > 	.init		=  hisi_pci_hip05_init,
+> > 	.pci_ops	= {
+> > 		.map_bus	= pci_ecam_map_bus,
+> > 		.read		= hisi_pcie_acpi_rd_conf,
+> > 		.write		= hisi_pcie_acpi_wr_conf,
+> > 	}
+> > };
+> >
+> > struct pci_ecam_ops hisi_pci_hip06_ops = {
+> > 	.bus_shift = 20,
+> > 	.init = hisi_pci_hip06_init,
+> > 	.pci_ops = {
+> > 		.map_bus = pci_ecam_map_bus,
+> > 		.read = hisi_pcie_acpi_rd_conf,
+> > 		.write = hisi_pcie_acpi_wr_conf,
+> > 	}
+> > };
+> >
+> > hisi_pci_hipxx_init function is used to get RC config resource with
+> hardcode.
+> > .....
+> >
+> > So I hope we can use MCFG_DOM_RANGE, Then I can change it as below.
+> >
+> > #ifdef CONFIG_PCI_HISI_ACPI
+> > 	{ "HISI  ", "HIP05   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> > 	 &hisi_pcie_hip05_ops, MCFG_RES_EMPTY},
+> > 	{ "HISI  ", "HIP06   ", 0, MCFG_DOM_RANGE(0, 3), MCFG_BUS_ANY,
+> > 	 &hisi_pcie_hip06_ops, MCFG_RES_EMPTY},
+> > 	{ "HISI  ", "HIP07   ", 0, MCFG_DOM_RANGE(0, 15), MCFG_BUS_ANY,
+> > 	  &hisi_pcie_hip07_ops, MCFG_RES_EMPTY},
+> > #endif
+> >
+> > Thanks
+> > Dongdong
+> > >
+> > >Thanks,
+> > >Tomasz
+> > >
+> > >.
+> > >
+> >
