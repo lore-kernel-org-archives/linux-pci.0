@@ -1,62 +1,141 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 3/5] PCI: save and restore bus on parent bus reset
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
- <1474056395-21843-4-git-send-email-okaya@codeaurora.org>
- <20160929214942.GD20897@localhost>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
- alex.williamson@redhat.com, vikrams@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <8dbad89c-2646-773a-e114-42d21ce14cc7@codeaurora.org>
-Date: Thu, 29 Sep 2016 19:50:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160929214942.GD20897@localhost>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v14 17/17] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+Date: Fri, 16 Sep 2016 13:02:07 -0700
+Message-Id: <20160916200207.21439-18-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+>From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+resources), we change the logic for pref mmio allocation:
+When bridge pref support mmio64, we will only put children pref
+that support mmio64 into it, and will put children pref mmio32
+into bridge's non-pref mmio32.
 
-On 9/29/2016 5:49 PM, Bjorn Helgaas wrote:
->> +	}
-> This pattern of "unlock, do something, relock" needs some
-> justification.  In general it's unsafe because the lock is protecting
-> *something*, and you have to assume that something can change as soon
-> as you unlock.  Maybe you know it's safe in this situation, and if so,
-> the explanation of why it's safe is what I'm looking for.
+That could leave bridge pref bar not used when that pref bar is mmio64,
+and children res only has mmio32.
+Also could have allocation failure when non-pref mmio32 is not big
+enough space for those children pref mmio32.
 
-Agreed. 
+That is not rational when the host bridge does not have 64bit mmio
+above 4g at all.
 
-The problem is that save and restore routines obtain the lock again and
-they fails as the lock is already held.
+The patch restore to old logic:
+when host bridge does not have has_mem64, put children pref mmio64 and
+pref mmio32 all under bridges pref bars.
 
-The alternative is to change the dev_locks in save and restore to try_lock
-so that it will work if locks were previously obtained or not. 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ drivers/pci/bus.c       |  4 +++-
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ drivers/pci/setup-res.c |  9 ++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
-> 
-> Also, you're now calling pci_reset_bridge_secondary_bus() with the dev
-> unlocked, where we called it with the dev locked before.  Some (but
-> worryingly, not all) of the other pci_reset_bridge_secondary_bus()
-> callers also have the dev locked.  I didn't look long enough to figure
-> out if there is a strategy there or if these inconsistencies are
-> latent bugs.
-> 
-
-The goal of this routine is to reset the device not the bridge and the code
-will use FLR or others if available. Therefore, it makes perfect sense to
-obtain the device lock while doing this. 
-
-The code tries to reset the bus if none of the other resets work. This is
-where the problem is. It destroys the context for other devices.
-
-I can fix get rid of this unlock, do something and then lock again business
-by rewriting the locks in save and restore.
-
-Sinan
-
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index c288e5a..33a56a4 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -233,8 +233,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+-	if (res->flags & IORESOURCE_MEM_64) {
++	if (res->flags & mmio64) {
+ 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					       type_mask, alignf, alignf_data,
+ 					       &pci_high);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1fcfa13..89d8c88 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1316,7 +1316,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (b_res[2].flags & IORESOURCE_MEM_64) {
++		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
++		    pci_find_host_bridge(bus)->has_mem64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+@@ -1586,17 +1587,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 *	  io port.
+ 	 *     2. if there is non pref mmio assign fail, release bridge
+ 	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *     3. if there is pref mmio assign fail, and host bridge does
++	 *	  have 64bit mmio, release bridge pref mmio.
++	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
+ 	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *     5. if there is pref mmio assign fail, and bridge pref is
+ 	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *     6. if there is pref mmio assign fail, and bridge pref is not
+ 	 *	  assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+ 	else if (!(type & IORESOURCE_PREFETCH))
+ 		idx = 1;
++	else if (!pci_find_host_bridge(bus)->has_mem64)
++		idx = 2;
+ 	else if ((type & IORESOURCE_MEM_64) &&
+ 		 (b_res[2].flags & IORESOURCE_MEM_64))
+ 		idx = 2;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index f741fed..59271ee 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -212,6 +212,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
+ 	int ret;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+ 
+@@ -223,7 +225,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * things differently than they were sized, not everything will fit.
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
++				     IORESOURCE_PREFETCH | mmio64,
+ 				     pcibios_align_resource, dev);
+ 	if (ret == 0)
+ 		return 0;
+@@ -232,7 +234,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * If the prefetchable window is only 32 bits wide, we can put
+ 	 * 64-bit prefetchable resources in it.
+ 	 */
+-	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
++	if (mmio64 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+@@ -247,7 +250,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * non-prefetchable, the first call already tried the only possibility
+ 	 * so we don't need to try again.
+ 	 */
+-	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
++	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+ 					     pcibios_align_resource, dev);
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.8.3
