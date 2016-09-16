@@ -1,163 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21141 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933750AbcIFWA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 18:00:26 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 3/4] pcie/aer: Cache capability position
-Date: Tue,  6 Sep 2016 16:00:18 -0600
-Message-Id: <1473199219-3369-4-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
-References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27839 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965274AbcIPUHo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:07:44 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v14 05/17] sparc/PCI: Use correct offset for bus address to resource
+Date: Fri, 16 Sep 2016 13:01:55 -0700
+Message-Id: <20160916200207.21439-6-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This saves the postition of the error reporting capability so that it
-doesn't need to be rediscovered during error handling.
+After we added 64bit mmio parsing, we got some "no compatible bridge window"
+warning on anther new model that support 64bit resource.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+It turns out that we can not use mem_space.start as 64bit mem space
+offset, aka there is mem_space.start != offset.
+
+Use child_phys_addr to calculate exact offset and record offset in
+pbm.
+
+After patch we get correct offset.
+
+/pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
+/pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
+/pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
+...
+pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
+
+-v3: put back mem64_offset, as we found T4 has mem_offset != mem64_offset
+     check overlapping between mem64_space and mem_space.
+-v7: after new pci_mmap_page_range patches.
+-v8: remove change in pci_resource_to_user()
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: sparclinux@vger.kernel.org
 ---
- drivers/pci/pcie/aer/aerdrv.c      | 10 +++++-----
- drivers/pci/pcie/aer/aerdrv_core.c | 12 ++++++------
- drivers/pci/probe.c                |  2 ++
- include/linux/pci.h                |  1 +
- 4 files changed, 14 insertions(+), 11 deletions(-)
+ arch/sparc/kernel/pci.c        |  6 +++---
+ arch/sparc/kernel/pci_common.c | 32 ++++++++++++++++++++++++--------
+ arch/sparc/kernel/pci_impl.h   |  4 ++++
+ 3 files changed, 31 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 49805a4..df64adb 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -130,7 +130,7 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
- 	pcie_capability_clear_word(pdev, PCI_EXP_RTCTL,
- 				   SYSTEM_ERROR_INTR_ON_MESG_MASK);
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index c7d2ce6..e16da35 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -663,12 +663,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	printk("PCI: Scanning PBM %s\n", node->full_name);
  
--	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-+	aer_pos = pdev->aer_cap;
- 	/* Clear error status */
- 	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, &reg32);
- 	pci_write_config_dword(pdev, aer_pos + PCI_ERR_ROOT_STATUS, reg32);
-@@ -169,7 +169,7 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
- 	 */
- 	set_downstream_devices_error_reporting(pdev, false);
+ 	pci_add_resource_offset(&resources, &pbm->io_space,
+-				pbm->io_space.start);
++				pbm->io_offset);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+-				pbm->mem_space.start);
++				pbm->mem_offset);
+ 	if (pbm->mem64_space.flags)
+ 		pci_add_resource_offset(&resources, &pbm->mem64_space,
+-					pbm->mem_space.start);
++					pbm->mem64_offset);
+ 	pbm->busn.start = pbm->pci_first_busno;
+ 	pbm->busn.end	= pbm->pci_last_busno;
+ 	pbm->busn.flags	= IORESOURCE_BUS;
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 33524c1..76998f8 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -410,13 +410,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
  
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
-+	pos = pdev->aer_cap;
- 	/* Disable Root's interrupt in response to error messages */
- 	pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
- 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-@@ -196,7 +196,7 @@ irqreturn_t aer_irq(int irq, void *context)
- 	unsigned long flags;
- 	int pos;
+ 	for (i = 0; i < num_pbm_ranges; i++) {
+ 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+-		unsigned long a, size;
++		unsigned long a, size, region_a;
+ 		u32 parent_phys_hi, parent_phys_lo;
++		u32 child_phys_mid, child_phys_lo;
+ 		u32 size_hi, size_lo;
+ 		int type;
  
--	pos = pci_find_ext_capability(pdev->port, PCI_EXT_CAP_ID_ERR);
-+	pos = pdev->port->aer_cap;
- 	/*
- 	 * Must lock access to Root Error Status Reg, Root Error ID Reg,
- 	 * and Root error producer/consumer index
-@@ -339,7 +339,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	u32 reg32;
- 	int pos;
+ 		parent_phys_hi = pr->parent_phys_hi;
+ 		parent_phys_lo = pr->parent_phys_lo;
++		child_phys_mid = pr->child_phys_mid;
++		child_phys_lo = pr->child_phys_lo;
+ 		if (tlb_type == hypervisor)
+ 			parent_phys_hi &= 0x0fffffff;
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	pos = dev->aer_cap;
+@@ -426,6 +429,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		type = (pr->child_phys_hi >> 24) & 0x3;
+ 		a = (((unsigned long)parent_phys_hi << 32UL) |
+ 		     ((unsigned long)parent_phys_lo  <<  0UL));
++		region_a = (((unsigned long)child_phys_mid << 32UL) |
++		     ((unsigned long)child_phys_lo  <<  0UL));
+ 		size = (((unsigned long)size_hi << 32UL) |
+ 			((unsigned long)size_lo  <<  0UL));
  
- 	/* Disable Root's interrupt in response to error messages */
- 	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, &reg32);
-@@ -392,7 +392,7 @@ static void aer_error_resume(struct pci_dev *dev)
- 	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+@@ -440,6 +445,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			pbm->io_space.start = a;
+ 			pbm->io_space.end = a + size - 1UL;
+ 			pbm->io_space.flags = IORESOURCE_IO;
++			pbm->io_offset = a - region_a;
+ 			saw_io = 1;
+ 			break;
  
- 	/* Clean AER Root Error Status */
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	pos = dev->aer_cap;
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
- 	if (dev->error_state == pci_channel_io_normal)
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 521e39c..47ac510 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -40,7 +40,7 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
- 	if (pcie_aer_get_firmware_first(dev))
- 		return -EIO;
+@@ -448,6 +454,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			pbm->mem_space.start = a;
+ 			pbm->mem_space.end = a + size - 1UL;
+ 			pbm->mem_space.flags = IORESOURCE_MEM;
++			pbm->mem_offset = a - region_a;
+ 			saw_mem = 1;
+ 			break;
  
--	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
-+	if (!dev->aer_cap)
- 		return -EIO;
+@@ -456,6 +463,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			pbm->mem64_space.start = a;
+ 			pbm->mem64_space.end = a + size - 1UL;
+ 			pbm->mem64_space.flags = IORESOURCE_MEM;
++			pbm->mem64_offset = a - region_a;
+ 			saw_mem = 1;
+ 			break;
  
- 	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
-@@ -62,7 +62,7 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- 	int pos;
- 	u32 status;
+@@ -471,14 +479,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		prom_halt();
+ 	}
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	pos = dev->aer_cap;
- 	if (!pos)
- 		return -EIO;
+-	printk("%s: PCI IO[%llx] MEM[%llx]",
+-	       pbm->name,
+-	       pbm->io_space.start,
+-	       pbm->mem_space.start);
++	if (pbm->io_space.flags)
++		printk("%s: PCI IO %pR offset %llx\n",
++		       pbm->name, &pbm->io_space, pbm->io_offset);
++	if (pbm->mem_space.flags)
++		printk("%s: PCI MEM %pR offset %llx\n",
++		       pbm->name, &pbm->mem_space, pbm->mem_offset);
++	if (pbm->mem64_space.flags && pbm->mem_space.flags) {
++		if (pbm->mem64_space.start <= pbm->mem_space.end)
++			pbm->mem64_space.start = pbm->mem_space.end + 1;
++		if (pbm->mem64_space.start > pbm->mem64_space.end)
++			pbm->mem64_space.flags = 0;
++	}
++
+ 	if (pbm->mem64_space.flags)
+-		printk(" MEM64[%llx]",
+-		       pbm->mem64_space.start);
+-	printk("\n");
++		printk("%s: PCI MEM64 %pR offset %llx\n",
++		       pbm->name, &pbm->mem64_space, pbm->mem64_offset);
  
-@@ -83,7 +83,7 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	if (!pci_is_pcie(dev))
- 		return -ENODEV;
+ 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
+ 	pbm->mem64_space.name = pbm->name;
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 37222ca..2853af7 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -99,6 +99,10 @@ struct pci_pbm_info {
+ 	struct resource			mem_space;
+ 	struct resource			mem64_space;
+ 	struct resource			busn;
++	/* offset */
++	resource_size_t			io_offset;
++	resource_size_t			mem_offset;
++	resource_size_t			mem64_offset;
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	pos = dev->aer_cap;
- 	if (!pos)
- 		return -EIO;
- 
-@@ -158,7 +158,7 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	if (!(reg16 & PCI_EXP_AER_FLAGS))
- 		return false;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	pos = dev->aer_cap;
- 	if (!pos)
- 		return false;
- 
-@@ -555,7 +555,7 @@ static void handle_error_source(struct pcie_device *aerdev,
- 		 * Correctable error does not need software intervention.
- 		 * No need to go through error recovery process.
- 		 */
--		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+		pos = dev->aer_cap;
- 		if (pos)
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
-@@ -647,7 +647,7 @@ static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
- 	info->status = 0;
- 	info->tlp_header_valid = 0;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	pos = dev->aer_cap;
- 
- 	/* The device might not support AER */
- 	if (!pos)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e2e4244..7c3fcba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1666,6 +1666,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Enable ACS P2P upstream forwarding */
- 	pci_enable_acs(dev);
- 
-+	/* Advanced Error Reporting */
-+	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 	pci_cleanup_aer_error_status_regs(dev);
- 
- 	/* Precision Time Measurement */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1b62f7a..ee289da 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -268,6 +268,7 @@ struct pci_dev {
- 	unsigned int	class;		/* 3 bytes: (base,sub,prog-if) */
- 	u8		revision;	/* PCI revision, low byte of class word */
- 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
-+	u16		aer_cap;	/* AER capability offset */
- 	u8		pcie_cap;	/* PCIe capability offset */
- 	u8		msi_cap;	/* MSI capability offset */
- 	u8		msix_cap;	/* MSI-X capability offset */
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
+ 	unsigned long			config_space;
 -- 
-2.7.2
+2.8.3
 
