@@ -1,338 +1,317 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 22 Sep 2016 13:31:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        David Daney <ddaney@caviumnetworks.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Rafael Wysocki <rafael@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Christopher Covington <cov@codeaurora.org>,
-        Duc Dang <dhdang@apm.com>,
-        Robert Richter <robert.richter@caviumnetworks.com>,
-        Marcin Wojtas <mw@semihalf.com>,
-        Liviu Dudau <Liviu.Dudau@arm.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        Mark Salter <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Andrea Gallo <andrea.gallo@linaro.org>,
-        Jeremy Linton <jeremy.linton@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        Jeff Hugo <jhugo@codeaurora.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Message-ID: <20160922183101.GA14510@localhost>
-References: <20160920133327.GB13855@localhost>
- <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
- <20160920140518.GD13855@localhost>
- <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
- <20160920191744.GA4941@localhost>
- <20160921140549.GA11968@red-moon>
- <20160921180457.GB20006@localhost>
- <20160922094955.GB18637@red-moon>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F8815A9@lhreml507-mbx>
- <20160922124446.GA21681@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160922124446.GA21681@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:23873 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965293AbcIPUCp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:02:45 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+        sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.org
+Subject: [PATCH v14 02/17] PCI: Let pci_mmap_page_range() take resource address
+Date: Fri, 16 Sep 2016 13:01:52 -0700
+Message-Id: <20160916200207.21439-3-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 22, 2016 at 01:44:46PM +0100, Lorenzo Pieralisi wrote:
-> On Thu, Sep 22, 2016 at 11:10:13AM +0000, Gabriele Paoloni wrote:
-> > Hi Lorenzo, Bjorn
-> > 
-> > > -----Original Message-----
-> > > From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-> > > Sent: 22 September 2016 10:50
-> > > To: Bjorn Helgaas
-> > > Cc: Ard Biesheuvel; Tomasz Nowicki; David Daney; Will Deacon; Catalin
-> > > Marinas; Rafael Wysocki; Arnd Bergmann; Hanjun Guo; Sinan Kaya;
-> > > Jayachandran C; Christopher Covington; Duc Dang; Robert Richter; Marcin
-> > > Wojtas; Liviu Dudau; Wangyijing; Mark Salter; linux-
-> > > pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Linaro ACPI
-> > > Mailman List; Jon Masters; Andrea Gallo; Jeremy Linton; liudongdong
-> > > (C); Gabriele Paoloni; Jeff Hugo; linux-acpi@vger.kernel.org; linux-
-> > > kernel@vger.kernel.org; Rafael J. Wysocki
-> > > Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-
-> > > specific register range for ACPI case
-> > > 
-> > > On Wed, Sep 21, 2016 at 01:04:57PM -0500, Bjorn Helgaas wrote:
-> > > > On Wed, Sep 21, 2016 at 03:05:49PM +0100, Lorenzo Pieralisi wrote:
-> > > > > On Tue, Sep 20, 2016 at 02:17:44PM -0500, Bjorn Helgaas wrote:
-> > > > > > On Tue, Sep 20, 2016 at 04:09:25PM +0100, Ard Biesheuvel wrote:
-> > > > >
-> > > > > [...]
-> > > > >
-> > > > > > > None of these platforms can be fixed entirely in software, and
-> > > given
-> > > > > > > that we will not be adding quirks for new broken hardware, we
-> > > should
-> > > > > > > ask ourselves whether having two versions of a quirk, i.e., one
-> > > for
-> > > > > > > broken hardware + currently shipping firmware, and one for the
-> > > same
-> > > > > > > broken hardware with fixed firmware is really an improvement
-> > > over what
-> > > > > > > has been proposed here.
-> > > > > >
-> > > > > > We're talking about two completely different types of quirks:
-> > > > > >
-> > > > > >   1) MCFG quirks to use memory-mapped config space that doesn't
-> > > quite
-> > > > > >      conform to the ECAM model in the PCIe spec, and
-> > > > > >
-> > > > > >   2) Some yet-to-be-determined method to describe address space
-> > > > > >      consumed by a bridge.
-> > > > > >
-> > > > > > The first two patches of this series are a nice implementation
-> > > for 1).
-> > > > > > The third patch (ThunderX-specific) is one possibility for 2),
-> > > but I
-> > > > > > don't like it because there's no way for generic software like
-> > > the
-> > > > > > ACPI core to discover these resources.
-> > > > >
-> > > > > Ok, so basically this means that to implement (2) we need to assign
-> > > > > some sort of _HID to these quirky PCI bridges (so that we know what
-> > > > > device they represent and we can retrieve their _CRS). I take from
-> > > > > this discussion that the goal is to make sure that all non-config
-> > > > > resources have to be declared through _CRS device objects, which is
-> > > > > fine but that requires a FW update (unless we can fabricate ACPI
-> > > > > devices and corresponding _CRS in the kernel whenever we match a
-> > > > > given MCFG table signature).
-> > > >
-> > > > All resources consumed by ACPI devices should be declared through
-> > > > _CRS.  If you want to fabricate ACPI devices or _CRS via kernel
-> > > > quirks, that's fine with me.  This could be triggered via MCFG
-> > > > signature, DMI info, host bridge _HID, etc.
-> > > 
-> > > I think the PNP quirk approach + PNP0c02 resource put forward by Gab
-> > > is enough.
-> > 
-> > Great thanks as we take a final decision I will ask Dogndgong to submit
-> > another RFC based on this approach
-> > 
-> > > 
-> > > > > We discussed this already and I think we should make a decision:
-> > > > >
-> > > > > http://lists.infradead.org/pipermail/linux-arm-kernel/2016-
-> > > March/414722.html
-> > > > >
-> > > > > > > > I'd like to step back and come up with some understanding of
-> > > how
-> > > > > > > > non-broken firmware *should* deal with this issue.  Then, if
-> > > we *do*
-> > > > > > > > work around this particular broken firmware in the kernel, it
-> > > would be
-> > > > > > > > nice to do it in a way that fits in with that understanding.
-> > > > > > > >
-> > > > > > > > For example, if a companion ACPI device is the preferred
-> > > solution, an
-> > > > > > > > ACPI quirk could fabricate a device with the required
-> > > resources.  That
-> > > > > > > > would address the problem closer to the source and make it
-> > > more likely
-> > > > > > > > that the rest of the system will work correctly: /proc/iomem
-> > > could
-> > > > > > > > make sense, things that look at _CRS generically would work
-> > > (e.g,
-> > > > > > > > /sys/, an admittedly hypothetical "lsacpi", etc.)
-> > > > > > > >
-> > > > > > > > Hard-coding stuff in drivers is a point solution that doesn't
-> > > provide
-> > > > > > > > any guidance for future platforms and makes it likely that
-> > > the hack
-> > > > > > > > will get copied into even more drivers.
-> > > > > > > >
-> > > > > > >
-> > > > > > > OK, I see. But the guidance for future platforms should be 'do
-> > > not
-> > > > > > > rely on quirks', and what I am arguing here is that the more we
-> > > polish
-> > > > > > > up this code and make it clean and reusable, the more likely it
-> > > is
-> > > > > > > that will end up getting abused by new broken hardware that we
-> > > set out
-> > > > > > > to reject entirely in the first place.
-> > > > > > >
-> > > > > > > So of course, if the quirk involves claiming resources, let's
-> > > make
-> > > > > > > sure that this occurs in the cleanest and most compliant way
-> > > possible.
-> > > > > > > But any factoring/reuse concerns other than for the current
-> > > crop of
-> > > > > > > broken hardware should be avoided imo.
-> > > > > >
-> > > > > > If future hardware is completely ECAM-compliant and we don't need
-> > > any
-> > > > > > more MCFG quirks, that would be great.
-> > > > >
-> > > > > Yes.
-> > > > >
-> > > > > > But we'll still need to describe that memory-mapped config space
-> > > > > > somewhere.  If that's done with PNP0C02 or similar devices (as is
-> > > done
-> > > > > > on my x86 laptop), we'd be all set.
-> > > > >
-> > > > > I am not sure I understand what you mean here. Are you referring
-> > > > > to MCFG regions reported as PNP0c02 resources through its _CRS ?
-> > > >
-> > > > Yes.  PCI Firmware Spec r3.0, Table 4-2, note 2 says address ranges
-> > > > reported via MCFG or _CBA should be reserved by _CRS of a PNP0C02
-> > > > device.
-> > > 
-> > > Ok, that's agreed. It goes without saying that since you are quoting
-> > > the PCI spec, if FW fails to report MCFG regions in a PNP0c02 device
-> > > _CRS I will consider that a FW bug.
-> > > 
-> > > > > IIUC PNP0C02 is a reservation mechanism, but it does not help us
-> > > > > associate its _CRS to a specific PCI host bridge instance, right ?
-> > > >
-> > > > Gab proposed a hierarchy that *would* associate a PNP0C02 device with
-> > > > a PCI bridge:
-> > > >
-> > > >   Device (PCI1) {
-> > > >     Name (_HID, "HISI0080") // PCI Express Root Bridge
-> > > >     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
-> > > >     Method (_CRS, 0, Serialized) { // Root complex resources
-> > > (windows) }
-> > > >     Device (RES0) {
-> > > >       Name (_HID, "HISI0081") // HiSi PCIe RC config base address
-> > > >       Name (_CID, "PNP0C02")  // Motherboard reserved resource
-> > > >       Name (_CRS, ResourceTemplate () { ... }
-> > > >     }
-> > > >   }
-> > > >
-> > > > That's a possibility.  The PCI Firmware Spec suggests putting RES0 at
-> > > > the root (under \_SB), but I don't know why.
-> > > >
-> > > > Putting it at the root means we couldn't generically associate it
-> > > with
-> > > > a bridge, although I could imagine something like this:
-> > > >
-> > > >   Device (RES1) {
-> > > >     Name (_HID, "HISI0081") // HiSi PCIe RC config base address
-> > > >     Name (_CID, "PNP0C02")  // Motherboard reserved resource
-> > > >     Name (_CRS, ResourceTemplate () { ... }
-> > > >     Method (BRDG) { "PCI1" }  // hand-wavy ASL
-> > > >   }
-> > > >   Device (PCI1) {
-> > > >     Name (_HID, "HISI0080") // PCI Express Root Bridge
-> > > >     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
-> > > >     Method (_CRS, 0, Serialized) { // Root complex resources
-> > > (windows) }
-> > > >   }
-> > > >
-> > > > Where you could search PNP0C02 devices for a cookie that matched the
-> > > > host bridge.o
-> > > 
-> > > Ok, I am fine with both and I think we are converging, but the way
-> > > to solve this problem has to be uniform for all ARM partners (and
-> > > not only ARM). Two points here:
-> > > 
-> > > 1) Adding a device/subdevice allows people to add a _CRS reporting the
-> > >    non-window bridge resources. Fine. It also allows people to chuck in
-> > >    there all sorts of _DSD properties to describe their PCI host bridge
-> > >    as it is done with DT properties (those _DSD can contain eg clocks
-> > >    etc.), this may be tempting (so that they can reuse the same DT
-> > >    driver and do not have to update their firmware) but I want to be
-> > >    clear here: that must not happen. So, a subdevice with a _CRS to
-> > >    report resources, yes, but it will stop there.
-> > > 2) It is unclear to me how to formalize the above. People should not
-> > >    write FW by reading the PCI mailing list, so these guidelines have
-> > > to
-> > >    be written, somehow. I do not want to standardize quirks, I want
-> > >    to prevent random ACPI table content, which is different.
-> > >    Should I report this to the ACPI spec working group ? If we do
-> > >    not do that everyone will go solve this problem as they deem fit.
-> > > 
-> > 
-> > Do we really need to formalize this?
-> > 
-> > As we discussed in the Linaro call at the moment we have few vendors
-> > that need quirks and we want to avoid promoting/accepting quirks for
-> > the future.
-> > 
-> > At the time of the call I think we decided to informally accept a set
-> > of quirks for the current platforms and reject any other quirk coming
-> > after a certain date/kernel version (this to be decided).
-> > 
-> > I am not sure if there is a way to document/formalize a temporary
-> > exception from the rule...
-> 
-> - (1) will be enforced.
+Original pci_mmap_page_range() is taking PCI BAR value aka usr_address.
 
-I'm not sure it's necessary or possible to enforce a "no future
-quirks" rule.  For one thing, there's already a pretty strong
-incentive to avoid quirks: if your hardware doesn't require quirks,
-it works with OSes already in the field.
+Bjorn found out that it would be much simple to pass resource address
+directly and avoid extra those __pci_mmap_make_offset.
 
-MCFG quirks allow us to use the generic ACPI pci_root.c driver even if
-the hardware doesn't support ECAM quite according to the spec.
+In this patch:
+1. in proc path: proc_bus_pci_mmap, try convert back to resource
+   before calling pci_mmap_page_range
+2. in sysfs path: pci_mmap_resource will just offset with resource start.
+3. all pci_mmap_page_range will have vma->vm_pgoff with in resource
+   range instead of BAR value.
+4. skip calling __pci_mmap_make_offset, as the checking is done
+   in pci_mmap_fits().
 
-PNP0C02 usage is a workaround for the failure of the Consumer/Producer
-bit.  PNP0C02 quirks compensate for firmware that doesn't describe
-resource usage accurately.  It's possible the ACPI spec folks could
-come up with a better Consumer/Producer workaround, if that's needed.
-Apparently x86 hasn't needed it yet.
+-v2: add pci_user_to_resource and remove __pci_mmap_make_offset
+-v3: pass resource pointer with pci_mmap_page_range()
+-v4: put __pci_mmap_make_offset() removing to following patch
+     separate /sys io access alignment checking to another patch
+     updated after Bjorn's pci_resource_to_user() changes.
+-v5: update after fix for pci_mmap with proc path according to
+     Bjorn.
 
-If people add _DSD methods for clocks or whatnot, the hardware won't
-work with the generic pci_root.c driver, so there's already an
-incentive for avoiding them.  x86 has managed without such methods;
-arm64 should be able to do the same.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: sparclinux@vger.kernel.org
+Cc: linux-xtensa@linux-xtensa.org
+---
+ arch/microblaze/pci/pci-common.c | 11 +++++---
+ arch/powerpc/kernel/pci-common.c | 11 +++++---
+ arch/sparc/kernel/pci.c          |  4 ---
+ arch/xtensa/kernel/pci.c         | 13 +++++++--
+ drivers/pci/pci-sysfs.c          | 32 ++++++++++-----------
+ drivers/pci/pci.h                |  2 +-
+ drivers/pci/proc.c               | 60 ++++++++++++++++++++++++++++++++++------
+ 7 files changed, 93 insertions(+), 40 deletions(-)
 
-> - We do not know whether PNP0c02 can be used in non-root devices _CRS
-> - Are we sure (given that we are implementing this to make sure we are
->   able to validate resources) that it is valid to have a subdevice with
->   a _CRS whose resources are not contained in its parent _CRS address
->   space (because that's exactly the case for these quirks) ?
->
-> That's what I mean by formalizing, I want to know how PNP0c02 should
-> be used. We all want platforms with quirks to be enabled asap but only
-> if we stick to the ACPI specifications. On top of that, with the
-> bindings above, the kernel would end up creating a platform device for
-> the "fake" device with a _CRS approach, which is questionable.
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 81556b8..9e3bc05 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -282,12 +282,15 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ {
+ 	resource_size_t offset =
+ 		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
+-	struct resource *rp;
+ 	int ret;
+ 
+-	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
+-	if (rp == NULL)
+-		return -EINVAL;
++	if (mmap_state == pci_mmap_io) {
++		struct pci_controller *hose = pci_bus_to_host(dev->bus);
++
++		/* hose should never be NULL */
++		offset += hose->io_base_phys -
++			 ((unsigned long)hose->io_base_virt - _IO_BASE);
++	}
+ 
+ 	vma->vm_pgoff = offset >> PAGE_SHIFT;
+ 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index e589080..67b2e68 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -515,12 +515,15 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ {
+ 	resource_size_t offset =
+ 		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
+-	struct resource *rp;
+ 	int ret;
+ 
+-	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
+-	if (rp == NULL)
+-		return -EINVAL;
++	if (mmap_state == pci_mmap_io) {
++		struct pci_controller *hose = pci_bus_to_host(dev->bus);
++
++		/* hose should never be NULL */
++		offset += hose->io_base_phys -
++			  ((unsigned long)hose->io_base_virt - _IO_BASE);
++	}
+ 
+ 	vma->vm_pgoff = offset >> PAGE_SHIFT;
+ 	if (write_combine)
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 9c1878f..5f2d78e 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -868,10 +868,6 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ {
+ 	int ret;
+ 
+-	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
+-	if (ret < 0)
+-		return ret;
+-
+ 	__pci_mmap_set_pgprot(dev, vma, mmap_state);
+ 
+ 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index b848cc3..4c5f1fa 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -366,11 +366,18 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state,
+ 			int write_combine)
+ {
++	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
+ 	int ret;
+ 
+-	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
+-	if (ret < 0)
+-		return ret;
++	if (mmap_state == pci_mmap_io) {
++		struct pci_controller *pci_ctrl =
++					 (struct pci_controller *)dev->sysdata;
++
++		/* pci_ctrl should never be NULL */
++		offset += pci_ctrl->io_space.start - pci_ctrl->io_space.base;
++	}
++
++	vma->vm_pgoff = offset >> PAGE_SHIFT;
+ 
+ 	__pci_mmap_set_pgprot(dev, vma, mmap_state, write_combine);
+ 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index e907154..d55d93d 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -972,22 +972,28 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ #ifdef HAVE_PCI_MMAP
+ 
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
++		  enum pci_mmap_state mmap_type,
+ 		  enum pci_mmap_api mmap_api)
+ {
+ 	unsigned long nr, start, size, pci_start = 0;
++	int flags;
+ 
+ 	if (pci_resource_len(pdev, resno) == 0)
+ 		return 0;
++
++	if (mmap_type == pci_mmap_mem)
++		flags = IORESOURCE_MEM;
++	else
++		flags = IORESOURCE_IO;
++
++	if (!(pci_resource_flags(pdev, resno) & flags))
++		return 0;
++
+ 	nr = vma_pages(vma);
+ 	start = vma->vm_pgoff;
+ 	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+-	if (mmap_api == PCI_MMAP_PROCFS) {
+-		resource_size_t user_start, user_end;
+-
+-		pci_resource_to_user(pdev, resno, &pdev->resource[resno],
+-					&user_start, &user_end);
+-		pci_start = user_start >> PAGE_SHIFT;
+-	}
++	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
++			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+ 	if (start >= pci_start && start < pci_start + size &&
+ 			start + nr <= pci_start + size)
+ 		return 1;
+@@ -1009,7 +1015,6 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	struct resource *res = attr->private;
+ 	enum pci_mmap_state mmap_type;
+-	resource_size_t start, end;
+ 	int i;
+ 
+ 	for (i = 0; i < PCI_ROM_RESOURCE; i++)
+@@ -1021,7 +1026,8 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+-	if (!pci_mmap_fits(pdev, i, vma, PCI_MMAP_SYSFS)) {
++	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
++	if (!pci_mmap_fits(pdev, i, vma, mmap_type, PCI_MMAP_SYSFS)) {
+ 		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
+ 			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
+ 			pci_name(pdev), i,
+@@ -1030,13 +1036,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 		return -EINVAL;
+ 	}
+ 
+-	/* pci_mmap_page_range() expects the same kind of entry as coming
+-	 * from /proc/bus/pci/ which is a "user visible" value. If this is
+-	 * different from the resource itself, arch will do necessary fixup.
+-	 */
+-	pci_resource_to_user(pdev, i, res, &start, &end);
+-	vma->vm_pgoff += start >> PAGE_SHIFT;
+-	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
++	vma->vm_pgoff += res->start >> PAGE_SHIFT;
+ 	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
+ }
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 9730c47..2b5db4b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -30,7 +30,7 @@ enum pci_mmap_api {
+ 	PCI_MMAP_PROCFS	/* mmap on /proc/bus/pci/<BDF> */
+ };
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+-		  enum pci_mmap_api mmap_api);
++		  enum pci_mmap_state mmap_type, enum pci_mmap_api mmap_api);
+ #endif
+ int pci_probe_reset_function(struct pci_dev *dev);
+ 
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 2408abe..fadab8a 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -227,24 +227,68 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
+ }
+ 
+ #ifdef HAVE_PCI_MMAP
++
++static int pci_user_to_resource(struct pci_dev *dev, resource_size_t *offset,
++				int flags)
++{
++	int i;
++
++	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
++		resource_size_t start, end;
++		struct resource *res = &dev->resource[i];
++
++		if (!(res->flags & flags))
++			continue;
++
++		if (pci_resource_len(dev, i) == 0)
++			continue;
++
++		/*
++		 * here *offset is PAGE_SIZE aligned from caller.
++		 * need align start/end for io port resource that is
++		 * usually not PAGE_SIZE aligned.
++		 * that means we let it go if they falls in same page.
++		 */
++		pci_resource_to_user(dev, i, res, &start, &end);
++		if ((start & PAGE_MASK) <= *offset &&
++		     *offset <= (end & PAGE_MASK)) {
++			*offset = res->start + (*offset - start);
++			return i;
++		}
++	}
++
++	return -ENODEV;
++}
++
+ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+ 	struct pci_dev *dev = PDE_DATA(file_inode(file));
+ 	struct pci_filp_private *fpriv = file->private_data;
+-	int i, ret, write_combine;
++	resource_size_t offset;
++	int i, ret, flags, write_combine;
+ 
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+ 
+-	/* Make sure the caller is mapping a real resource for this device */
+-	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
+-		if (pci_mmap_fits(dev, i, vma,  PCI_MMAP_PROCFS))
+-			break;
+-	}
+-
+-	if (i >= PCI_ROM_RESOURCE)
++	offset = vma->vm_pgoff << PAGE_SHIFT;
++	if (fpriv->mmap_state == pci_mmap_mem)
++		flags = IORESOURCE_MEM;
++	else
++		flags = IORESOURCE_IO;
++	i = pci_user_to_resource(dev, &offset, flags);
++	if (i < 0)
+ 		return -ENODEV;
+ 
++	vma->vm_pgoff = offset >> PAGE_SHIFT;
++	if (!pci_mmap_fits(dev, i, vma, fpriv->mmap_state, PCI_MMAP_PROCFS)) {
++		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
++			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
++			pci_name(dev), i,
++			(u64)pci_resource_start(dev, i),
++			(u64)pci_resource_len(dev, i));
++		return -EINVAL;
++	}
++
+ 	if (fpriv->mmap_state == pci_mmap_mem)
+ 		write_combine = fpriv->write_combine;
+ 	else
+-- 
+2.8.3
 
-> > > [...]
-> > > 
-> > > > > For FW that is immutable I really do not see what we can do apart
-> > > > > from hardcoding the non-config resources (consumed by a bridge),
-> > > > > somehow.
-> > > >
-> > > > Right.  Well, I assume you mean we should hard-code "non-window
-> > > > resources consumed directly by a bridge".  If firmware in the field
-> > > is
-> > > > broken, we should work around it, and that may mean hard-coding some
-> > > > resources.
-> > > >
-> > > > My point is that the hard-coding should not be buried in a driver
-> > > > where it's invisible to the rest of the kernel.  If we hard-code it
-> > > in
-> > > > a quirk that adds _CRS entries, then the kernel will work just like
-> > > it
-> > > > would if the firmware had been correct in the first place.  The
-> > > > resource will appear in /sys/devices/pnp*/*/resources and
-> > > /proc/iomem,
-> > > > and if we ever used _SRS to assign or move ACPI devices, we would
-> > > know
-> > > > to avoid the bridge resource.
-> > > 
-> > > We are in complete agreement here.
-> > > 
-> > > Thanks,
-> > > Lorenzo
-> > 
