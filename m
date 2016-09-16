@@ -1,87 +1,172 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37098 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754991AbcIFRAI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 13:00:08 -0400
-Date: Tue, 6 Sep 2016 11:59:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
-        paulus@samba.org, aik@ozlabs.ru, gwshan@linux.vnet.ibm.com,
-        benh@kernel.crashing.org, mpe@ellerman.id.au,
-        zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v4 5/5] PCI: Add a macro to set default alignment for all
- PCI devices
-Message-ID: <20160906165930.GF1214@localhost>
-References: <1470980546-2918-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1470980546-2918-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470980546-2918-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v14 07/17] sparc/PCI: Reserve legacy mmio after PCI mmio
+Date: Fri, 16 Sep 2016 13:01:57 -0700
+Message-Id: <20160916200207.21439-8-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 12, 2016 at 01:42:26PM +0800, Yongji Xie wrote:
-> When vfio passthroughs a PCI device of which MMIO BARs are
-> smaller than PAGE_SIZE, guest will not handle the mmio
-> accesses to the BARs which leads to mmio emulations in host.
-> 
-> This is because vfio will not allow to passthrough one BAR's
-> mmio page which may be shared with other BARs. Otherwise,
-> there will be a backdoor that guest can use to access BARs
-> of other guest.
-> 
-> This patch adds a macro to set default alignment for all
-> PCI devices. Then we could solve this issue on some platforms
-> which would easily hit this issue because of their 64K page
-> such as PowerNV platform by defining this macro as PAGE_SIZE.
+On one system found bunch of claim resource fail from pci device.
+pci_sun4v f02b894c: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x2000000000000-0x200007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x20007ffffffff] (bus address [0x100000000-0x7ffffffff])
+...
+PCI: Claiming 0000:00:02.0: Resource 14: 0002000000000000..00020000004fffff [200]
+pci 0000:00:02.0: can't claim BAR 14 [mem 0x2000000000000-0x20000004fffff]: address conflict with Video RAM area [??? 0x20000000a0000-0x20000000bffff flags 0x80000000]
+pci 0000:02:00.0: can't claim BAR 0 [mem 0x2000000000000-0x20000000fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.0: Resource 3: 0002000000100000..0002000000103fff [200]
+pci 0000:02:00.0: can't claim BAR 3 [mem 0x2000000100000-0x2000000103fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 0: 0002000000200000..00020000002fffff [200]
+pci 0000:02:00.1: can't claim BAR 0 [mem 0x2000000200000-0x20000002fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 3: 0002000000104000..0002000000107fff [200]
+pci 0000:02:00.1: can't claim BAR 3 [mem 0x2000000104000-0x2000000107fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 0: 0002000000300000..00020000003fffff [200]
+pci 0000:02:00.2: can't claim BAR 0 [mem 0x2000000300000-0x20000003fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 3: 0002000000108000..000200000010bfff [200]
+pci 0000:02:00.2: can't claim BAR 3 [mem 0x2000000108000-0x200000010bfff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 0: 0002000000400000..00020000004fffff [200]
+pci 0000:02:00.3: can't claim BAR 0 [mem 0x2000000400000-0x20000004fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 3: 000200000010c000..000200000010ffff [200]
+pci 0000:02:00.3: can't claim BAR 3 [mem 0x200000010c000-0x200000010ffff]: no compatible bridge window
 
-Just to clarify, I think the issue happens on any arch, whenever
-device BARs are smaller than PAGE_SIZE.  This is obviously more
-*likely* when PAGE_SIZE is large, but could still happen even with
-4K pages.
+The bridge 00:02.0 resource does not get reserved as Video RAM take the position early,
+and following children resources reservation all fail.
 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/include/asm/pci.h |    4 ++++
->  drivers/pci/pci.c              |    4 ++++
->  2 files changed, 8 insertions(+)
-> 
-> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-> index e9bd6cf..5e31bc2 100644
-> --- a/arch/powerpc/include/asm/pci.h
-> +++ b/arch/powerpc/include/asm/pci.h
-> @@ -28,6 +28,10 @@
->  #define PCIBIOS_MIN_IO		0x1000
->  #define PCIBIOS_MIN_MEM		0x10000000
->  
-> +#ifdef CONFIG_PPC_POWERNV
-> +#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
-> +#endif
-> +
->  struct pci_dev;
->  
->  /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d895be7..feae59e 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4959,6 +4959,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->  	resource_size_t align = 0;
->  	char *p;
->  
-> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
-> +	align = PCIBIOS_DEFAULT_ALIGNMENT;
-> +	*resize = false;
-> +#endif
->  	spin_lock(&resource_alignment_lock);
->  	p = resource_alignment_param;
->  	if (pci_has_flag(PCI_PROBE_ONLY)) {
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Move down Video RAM area reservation after pci mmio get reserved,
+so we leave pci driver to use those regions.
+
+-v5: merge simplify one and use pcibios_bus_to_resource()
+
+-v6: use pci_find_bus_resource()
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: sparclinux@vger.kernel.org
+---
+ arch/sparc/kernel/pci.c        |  1 +
+ arch/sparc/kernel/pci_common.c | 59 ++++++++++++++++++++++--------------------
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ 3 files changed, 33 insertions(+), 28 deletions(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index e16da35..654cf21 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -686,6 +686,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	pci_bus_register_of_sysfs(bus);
+ 
+ 	pci_claim_bus_resources(bus);
++	pci_register_legacy_regions(bus);
+ 	pci_bus_add_devices(bus);
+ 	return bus;
+ }
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 76998f8..1ebc7ff 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -328,41 +328,46 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
+ 	}
+ }
+ 
+-static void pci_register_legacy_regions(struct resource *io_res,
+-					struct resource *mem_res)
++static void pci_register_region(struct pci_bus *bus, const char *name,
++				resource_size_t rstart, resource_size_t size)
+ {
+-	struct resource *p;
++	struct resource *res, *conflict, *bus_res;
++	struct pci_bus_region region;
+ 
+-	/* VGA Video RAM. */
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
+ 		return;
+ 
+-	p->name = "Video RAM area";
+-	p->start = mem_res->start + 0xa0000UL;
+-	p->end = p->start + 0x1ffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	res->flags = IORESOURCE_MEM;
+ 
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	region.start = rstart;
++	region.end = rstart + size - 1UL;
++	pcibios_bus_to_resource(bus, res, &region);
++	bus_res = pci_find_bus_resource(bus, res);
++	if (!bus_res) {
++		kfree(res);
+ 		return;
++	}
++
++	res->name = name;
++	res->flags |= IORESOURCE_BUSY;
++	conflict = request_resource_conflict(bus_res, res);
++	if (conflict) {
++		dev_printk(KERN_DEBUG, &bus->dev,
++			" can't claim %s %pR: address conflict with %s %pR\n",
++			res->name, res, conflict->name, conflict);
++		kfree(res);
++	}
++}
+ 
+-	p->name = "System ROM";
+-	p->start = mem_res->start + 0xf0000UL;
+-	p->end = p->start + 0xffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++void pci_register_legacy_regions(struct pci_bus *bus)
++{
++	/* VGA Video RAM. */
++	pci_register_region(bus, "Video RAM area", 0xa0000UL, 0x20000UL);
+ 
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
++	pci_register_region(bus, "System ROM",     0xf0000UL, 0x10000UL);
+ 
+-	p->name = "Video ROM";
+-	p->start = mem_res->start + 0xc0000UL;
+-	p->end = p->start + 0x7fffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	pci_register_region(bus, "Video ROM",      0xc0000UL,  0x8000UL);
+ }
+ 
+ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+@@ -504,8 +509,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	if (pbm->mem64_space.flags)
+ 		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+-	pci_register_legacy_regions(&pbm->io_space,
+-				    &pbm->mem_space);
+ 	pci_register_iommu_region(pbm);
+ }
+ 
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 2853af7..ff8f5e1 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -167,6 +167,7 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm);
+ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				 struct device *parent);
+ void pci_determine_mem_io_space(struct pci_pbm_info *pbm);
++void pci_register_legacy_regions(struct pci_bus *bus);
+ 
+ /* Error reporting support. */
+ void pci_scan_for_target_abort(struct pci_pbm_info *, struct pci_bus *);
+-- 
+2.8.3
