@@ -1,67 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <soren.brinkmann@xilinx.com>,
- <christophe.jaillet@wanadoo.fr>, <grygorii.strashko@ti.com>,
- <yinghai@kernel.org>, <lorenzo.pieralisi@arm.com>, <fengguang.wu@intel.com>,
- <michal.simek@xilinx.com>, <arnd@arndb.de>
-Subject: [PATCH 6/6] Microblaze: Modify microblaze pci specific code to
- support multidomain.
-Date: Thu, 1 Sep 2016 15:44:46 +0530
-Message-ID: <1472724886-28301-6-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
-References: <1472724886-28301-1-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>, linux-pci@vger.kernel.org,
- rgummal@xilinx.com, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:23976 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965318AbcIPUCz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:02:55 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v14 14/17] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+Date: Fri, 16 Sep 2016 13:02:04 -0700
+Message-Id: <20160916200207.21439-15-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Proc entries will be created for every pci bus.
-With current implementation,in multidomain same bus number
-will repaeat but in different domain, which causes kernel crash
-as already same bus number exists.
+If any bridge up to root only have 32bit pref mmio, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-Return domain number when kernel requests while creating proc
-entries for each bus.
+We need to move pci_bridge_check_ranges calling early.
+For parent bridges pref mmio BAR may not allocated by BIOS, res flags
+is still 0, we need to have it correct set before we check them for
+child device resources.
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+-v2: check all bus resources instead of just res[15].
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- arch/microblaze/pci/pci-common.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 81556b8..7f696f9 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -632,10 +632,10 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 	}
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 986db1c..6d88a2e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -743,6 +743,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
  }
  
--/* Decide whether to display the domain number in /proc */
-+/* Display the domain number in /proc */
- int pci_proc_domain(struct pci_bus *bus)
++static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self) {
++		int i;
++		bool found = false;
++		struct resource *res;
++
++		pci_bus_for_each_resource(bus, res, i)
++			if (res->flags & IORESOURCE_MEM_64) {
++				found = true;
++				break;
++			}
++
++		if (!found)
++			return false;
++	}
++
++	return pci_up_path_over_pref_mem64(bus->parent);
++}
++
+ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 				 struct resource *res)
  {
--	return 0;
-+	return pci_domain_nr(bus);
- }
+@@ -751,7 +774,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
  
- /* This header fixup will do the resource fixup for all devices as they are
+ 	if ((res->flags & IORESOURCE_MEM) &&
+ 	    (res->flags & IORESOURCE_MEM_64) &&
+-	    dev->on_all_pcie_path)
++	    dev->on_all_pcie_path &&
++	    pci_up_path_over_pref_mem64(dev->bus))
+ 		return res->flags | IORESOURCE_PREFETCH;
+ 
+ 	return res->flags;
+@@ -1244,6 +1268,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	struct resource *b_res;
+ 	int ret;
+ 
++	if (!pci_is_root_bus(bus) &&
++	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
++		pci_bridge_check_ranges(bus);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+ 		if (!b)
+@@ -1271,7 +1299,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		break;
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+-		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mem_size = pci_hotplug_mem_size;
 -- 
-2.1.1
+2.8.3
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
