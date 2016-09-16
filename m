@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23976 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965318AbcIPUCz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:02:55 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
         David Miller <davem@davemloft.net>,
@@ -11,93 +7,80 @@ Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
         Khalid Aziz <khalid.aziz@oracle.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v14 14/17] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Fri, 16 Sep 2016 13:02:04 -0700
-Message-Id: <20160916200207.21439-15-yinghai@kernel.org>
+Subject: [PATCH v14 01/17] PCI: Fix proc mmap on sparc
+Date: Fri, 16 Sep 2016 13:01:51 -0700
+Message-Id: <20160916200207.21439-2-yinghai@kernel.org>
 In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
 References: <20160916200207.21439-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+In 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files"), try
+to check exposed value with resource start/end in proc mmap path.
 
-We need to move pci_bridge_check_ranges calling early.
-For parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
+|        start = vma->vm_pgoff;
+|        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+|        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+|                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+|        if (start >= pci_start && start < pci_start + size &&
+|                        start + nr <= pci_start + size)
 
--v2: check all bus resources instead of just res[15].
+vma->vm_pgoff is above code segment is user/BAR value >> PAGE_SHIFT.
+pci_start is resource->start >> PAGE_SHIFT.
 
+For sparc, resource start is different from BAR start aka pci bus address.
+pci bus address need to add offset to be the resource start.
+
+So that commit breaks all arch that exposed value is BAR/user value,
+and need to be offseted to resource address.
+
+test code using: ./test_mmap_proc /proc/bus/pci/0000:00/04.0 0x2000000
+test code segment:
+  fd = open(argv[1], O_RDONLY);
+  ...
+  sscanf(argv[2], "0x%lx", &offset);
+  left = offset & (PAGE_SIZE - 1);
+  offset &= PAGE_MASK;
+  ioctl(fd, PCIIOC_MMAP_IS_MEM);
+  addr = mmap(NULL, PAGE_SIZE, PROT_READ, MAP_SHARED, fd, offset);
+  for (i = 0; i < 8; i++)
+    printf("%x ", addr[i + left]);
+  munmap(addr, PAGE_SIZE);
+  close(fd);
+
+Fixes: 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files")
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
+ drivers/pci/pci-sysfs.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 986db1c..6d88a2e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -743,6 +743,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self) {
-+		int i;
-+		bool found = false;
-+		struct resource *res;
-+
-+		pci_bus_for_each_resource(bus, res, i)
-+			if (res->flags & IORESOURCE_MEM_64) {
-+				found = true;
-+				break;
-+			}
-+
-+		if (!found)
-+			return false;
-+	}
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index bcd10c7..e907154 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -974,15 +974,20 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+ 		  enum pci_mmap_api mmap_api)
  {
-@@ -751,7 +774,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+-	unsigned long nr, start, size, pci_start;
++	unsigned long nr, start, size, pci_start = 0;
  
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1244,6 +1268,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
+ 	if (pci_resource_len(pdev, resno) == 0)
+ 		return 0;
+ 	nr = vma_pages(vma);
+ 	start = vma->vm_pgoff;
+ 	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+-	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+-			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
++	if (mmap_api == PCI_MMAP_PROCFS) {
++		resource_size_t user_start, user_end;
 +
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1271,7 +1299,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
++		pci_resource_to_user(pdev, resno, &pdev->resource[resno],
++					&user_start, &user_end);
++		pci_start = user_start >> PAGE_SHIFT;
++	}
+ 	if (start >= pci_start && start < pci_start + size &&
+ 			start + nr <= pci_start + size)
+ 		return 1;
 -- 
 2.8.3
-
