@@ -1,87 +1,382 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:49783 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756020AbcIAPiR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Sep 2016 11:38:17 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Ian Campbell <ijc+devicetree@hellion.org.uk>,
-        Pawel Moll <pawel.moll@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kumar Gala <galak@codeaurora.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 2/3] pci: pci-mvebu: remove useless MSI enabling code
-Date: Thu,  1 Sep 2016 17:38:03 +0200
-Message-Id: <1472744284-18305-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+        sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.org
+Subject: [PATCH v14 03/17] PCI: Remove __pci_mmap_make_offset()
+Date: Fri, 16 Sep 2016 13:01:53 -0700
+Message-Id: <20160916200207.21439-4-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit fcc392d501bd2 ("irqchip/armada-370-xp: Use the generic MSI
-infrastructure"), the irqchip driver used on Armada 370, XP, 375, 38x,
-39x for the MPIC interrupt controller has been converted to use the
-generic MSI infrastructure.
+After
+  PCI: Let pci_mmap_page_range() take resource address
+No user for __pci_mmap_make_offset in those arch.
 
-Since this commit, it is no longer registering an msi_controller
-structure with the of_pci_msi_chip_add() function. Therefore, having the
-PCI driver used on the same platform calling
-of_pci_find_msi_chip_by_node() is pretty useless.
+Remove them.
 
-The MSI resolution is now done in the generic interrupt resolution code,
-since the MSI controller is an irq domain attached to the interrupt
-controller node, which is pointed to by the msi-parent DT property in
-the PCIe controller node.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: sparclinux@vger.kernel.org
+Cc: linux-xtensa@linux-xtensa.org
 ---
- drivers/pci/host/pci-mvebu.c | 17 -----------------
- 1 file changed, 17 deletions(-)
+ arch/microblaze/pci/pci-common.c |  63 ----------------------
+ arch/powerpc/kernel/pci-common.c |  63 ----------------------
+ arch/sparc/kernel/pci.c          | 113 ---------------------------------------
+ arch/xtensa/kernel/pci.c         |  62 ---------------------
+ 4 files changed, 301 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 307f81d..e7991f5 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -986,22 +986,6 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
- 	return -ENOENT;
- }
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 9e3bc05..e7cd0ab 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -156,69 +156,6 @@ void pcibios_set_master(struct pci_dev *dev)
+  */
  
--static void mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
+ /*
+- * Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
+- *
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
+-					       resource_size_t *offset,
+-					       enum pci_mmap_state mmap_state)
 -{
--	struct device_node *msi_node;
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	unsigned long io_offset = 0;
+-	int i, res_bit;
 -
--	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
--				    "msi-parent", 0);
--	if (!msi_node)
--		return;
+-	if (!hose)
+-		return NULL;		/* should never happen */
 -
--	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
--	of_node_put(msi_node);
+-	/* If memory, add on the PCI bridge address offset */
+-	if (mmap_state == pci_mmap_mem) {
+-#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
+-		*offset += hose->pci_mem_offset;
+-#endif
+-		res_bit = IORESOURCE_MEM;
+-	} else {
+-		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		*offset += io_offset;
+-		res_bit = IORESOURCE_IO;
+-	}
 -
--	if (pcie->msi)
--		pcie->msi->dev = &pcie->pdev->dev;
+-	/*
+-	 * Check that the offset requested corresponds to one of the
+-	 * resources of the device.
+-	 */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &dev->resource[i];
+-		int flags = rp->flags;
+-
+-		/* treat ROM as memory (should be already) */
+-		if (i == PCI_ROM_RESOURCE)
+-			flags |= IORESOURCE_MEM;
+-
+-		/* Active and same type? */
+-		if ((flags & res_bit) == 0)
+-			continue;
+-
+-		/* In the range of this resource? */
+-		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
+-			continue;
+-
+-		/* found it! construct the final physical address */
+-		if (mmap_state == pci_mmap_io)
+-			*offset += hose->io_base_phys - io_offset;
+-		return rp;
+-	}
+-
+-	return NULL;
 -}
 -
- #ifdef CONFIG_PM_SLEEP
- static int mvebu_pcie_suspend(struct device *dev)
- {
-@@ -1282,7 +1266,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 	for (i = 0; i < (IO_SPACE_LIMIT - SZ_64K); i += SZ_64K)
- 		pci_ioremap_io(i, pcie->io.start + i);
+-/*
+  * This one is used by /dev/mem and fbdev who have no clue about the
+  * PCI device, it tries to find the PCI device first and calls the
+  * above routine
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 67b2e68..07fa9d5 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -388,69 +388,6 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
+  */
  
--	mvebu_pcie_msi_enable(pcie);
- 	mvebu_pcie_enable(pcie);
+ /*
+- * Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
+- *
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
+-					       resource_size_t *offset,
+-					       enum pci_mmap_state mmap_state)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	unsigned long io_offset = 0;
+-	int i, res_bit;
+-
+-	if (hose == NULL)
+-		return NULL;		/* should never happen */
+-
+-	/* If memory, add on the PCI bridge address offset */
+-	if (mmap_state == pci_mmap_mem) {
+-#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
+-		*offset += hose->pci_mem_offset;
+-#endif
+-		res_bit = IORESOURCE_MEM;
+-	} else {
+-		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		*offset += io_offset;
+-		res_bit = IORESOURCE_IO;
+-	}
+-
+-	/*
+-	 * Check that the offset requested corresponds to one of the
+-	 * resources of the device.
+-	 */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &dev->resource[i];
+-		int flags = rp->flags;
+-
+-		/* treat ROM as memory (should be already) */
+-		if (i == PCI_ROM_RESOURCE)
+-			flags |= IORESOURCE_MEM;
+-
+-		/* Active and same type? */
+-		if ((flags & res_bit) == 0)
+-			continue;
+-
+-		/* In the range of this resource? */
+-		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
+-			continue;
+-
+-		/* found it! construct the final physical address */
+-		if (mmap_state == pci_mmap_io)
+-			*offset += hose->io_base_phys - io_offset;
+-		return rp;
+-	}
+-
+-	return NULL;
+-}
+-
+-/*
+  * This one is used by /dev/mem and fbdev who have no clue about the
+  * PCI device, it tries to find the PCI device first and calls the
+  * above routine
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 5f2d78e..c7d2ce6 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -732,119 +732,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
  
- 	platform_set_drvdata(pdev, pcie);
+ /* Platform support for /proc/bus/pci/X/Y mmap()s. */
+ 
+-/* If the user uses a host-bridge as the PCI device, he may use
+- * this to perform a raw mmap() of the I/O or MEM space behind
+- * that controller.
+- *
+- * This can be useful for execution of x86 PCI bios initialization code
+- * on a PCI card, like the xfree86 int10 stuff does.
+- */
+-static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
+-				      enum pci_mmap_state mmap_state)
+-{
+-	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+-	unsigned long space_size, user_offset, user_size;
+-
+-	if (mmap_state == pci_mmap_io) {
+-		space_size = resource_size(&pbm->io_space);
+-	} else {
+-		space_size = resource_size(&pbm->mem_space);
+-	}
+-
+-	/* Make sure the request is in range. */
+-	user_offset = vma->vm_pgoff << PAGE_SHIFT;
+-	user_size = vma->vm_end - vma->vm_start;
+-
+-	if (user_offset >= space_size ||
+-	    (user_offset + user_size) > space_size)
+-		return -EINVAL;
+-
+-	if (mmap_state == pci_mmap_io) {
+-		vma->vm_pgoff = (pbm->io_space.start +
+-				 user_offset) >> PAGE_SHIFT;
+-	} else {
+-		vma->vm_pgoff = (pbm->mem_space.start +
+-				 user_offset) >> PAGE_SHIFT;
+-	}
+-
+-	return 0;
+-}
+-
+-/* Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
+- *
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static int __pci_mmap_make_offset(struct pci_dev *pdev,
+-				  struct vm_area_struct *vma,
+-				  enum pci_mmap_state mmap_state)
+-{
+-	unsigned long user_paddr, user_size;
+-	int i, err;
+-
+-	/* First compute the physical address in vma->vm_pgoff,
+-	 * making sure the user offset is within range in the
+-	 * appropriate PCI space.
+-	 */
+-	err = __pci_mmap_make_offset_bus(pdev, vma, mmap_state);
+-	if (err)
+-		return err;
+-
+-	/* If this is a mapping on a host bridge, any address
+-	 * is OK.
+-	 */
+-	if ((pdev->class >> 8) == PCI_CLASS_BRIDGE_HOST)
+-		return err;
+-
+-	/* Otherwise make sure it's in the range for one of the
+-	 * device's resources.
+-	 */
+-	user_paddr = vma->vm_pgoff << PAGE_SHIFT;
+-	user_size = vma->vm_end - vma->vm_start;
+-
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &pdev->resource[i];
+-		resource_size_t aligned_end;
+-
+-		/* Active? */
+-		if (!rp->flags)
+-			continue;
+-
+-		/* Same type? */
+-		if (i == PCI_ROM_RESOURCE) {
+-			if (mmap_state != pci_mmap_mem)
+-				continue;
+-		} else {
+-			if ((mmap_state == pci_mmap_io &&
+-			     (rp->flags & IORESOURCE_IO) == 0) ||
+-			    (mmap_state == pci_mmap_mem &&
+-			     (rp->flags & IORESOURCE_MEM) == 0))
+-				continue;
+-		}
+-
+-		/* Align the resource end to the next page address.
+-		 * PAGE_SIZE intentionally added instead of (PAGE_SIZE - 1),
+-		 * because actually we need the address of the next byte
+-		 * after rp->end.
+-		 */
+-		aligned_end = (rp->end + PAGE_SIZE) & PAGE_MASK;
+-
+-		if ((rp->start <= user_paddr) &&
+-		    (user_paddr + user_size) <= aligned_end)
+-			break;
+-	}
+-
+-	if (i > PCI_ROM_RESOURCE)
+-		return -EINVAL;
+-
+-	return 0;
+-}
+-
+ /* Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
+  * device mapping.
+  */
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index 4c5f1fa..97ad3dd 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -272,68 +272,6 @@ pci_controller_num(struct pci_dev *dev)
+  */
+ 
+ /*
+- * Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
+- *
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static __inline__ int
+-__pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
+-		       enum pci_mmap_state mmap_state)
+-{
+-	struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
+-	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
+-	unsigned long io_offset = 0;
+-	int i, res_bit;
+-
+-	if (pci_ctrl == 0)
+-		return -EINVAL;		/* should never happen */
+-
+-	/* If memory, add on the PCI bridge address offset */
+-	if (mmap_state == pci_mmap_mem) {
+-		res_bit = IORESOURCE_MEM;
+-	} else {
+-		io_offset = (unsigned long)pci_ctrl->io_space.base;
+-		offset += io_offset;
+-		res_bit = IORESOURCE_IO;
+-	}
+-
+-	/*
+-	 * Check that the offset requested corresponds to one of the
+-	 * resources of the device.
+-	 */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &dev->resource[i];
+-		int flags = rp->flags;
+-
+-		/* treat ROM as memory (should be already) */
+-		if (i == PCI_ROM_RESOURCE)
+-			flags |= IORESOURCE_MEM;
+-
+-		/* Active and same type? */
+-		if ((flags & res_bit) == 0)
+-			continue;
+-
+-		/* In the range of this resource? */
+-		if (offset < (rp->start & PAGE_MASK) || offset > rp->end)
+-			continue;
+-
+-		/* found it! construct the final physical address */
+-		if (mmap_state == pci_mmap_io)
+-			offset += pci_ctrl->io_space.start - io_offset;
+-		vma->vm_pgoff = offset >> PAGE_SHIFT;
+-		return 0;
+-	}
+-
+-	return -EINVAL;
+-}
+-
+-/*
+  * Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
+  * device mapping.
+  */
 -- 
-2.7.4
-
+2.8.3
