@@ -1,144 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:35878
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750747AbcIMExL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 00:53:11 -0400
-From: Po Liu <po.liu@nxp.com>
-To: <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        "Marc Zyngier" <marc.zyngier@arm.com>,
-        Rob Herring <robh@kernel.org>, Roy Zang <roy.zang@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        Stuart Yoder <stuart.yoder@nxp.com>,
-        Yang-Leo Li <leoyang.li@nxp.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Minghuan Lian <minghuan.lian@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>, Po Liu <po.liu@nxp.com>
-Subject: [PATCH v5 2/3] arm64/dts: add pcie aer interrupt-name property in the dts
-Date: Tue, 13 Sep 2016 12:40:58 +0800
-Message-ID: <1473741659-17618-2-git-send-email-po.liu@nxp.com>
-In-Reply-To: <1473741659-17618-1-git-send-email-po.liu@nxp.com>
-References: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
- <1473741659-17618-1-git-send-email-po.liu@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:46789 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965171AbcIPUGw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:06:52 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, alex.williamson@redhat.com,
+        vikrams@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 4/5] PCI: add CRS support to error handling path
+Date: Fri, 16 Sep 2016 16:06:33 -0400
+Message-Id: <1474056395-21843-5-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
+References: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms(NXP Layerscape for example) aer interrupt was not
-MSI/MSI-X/INTx but using interrupt line independently. This patch
-add a "aer" interrupt-names for aer interrupt.
+The PCIE spec allows an endpoint device to extend the initialization time
+beyond 1 second by issuing Configuration Request Retry Status (CRS) for a
+vendor ID read request.
 
-With the interrupt-names "aer", code could probe aer interrupt line
-for pcie root port, replace the aer interrupt service irq.
+This basically means "I'm busy now, please call me back later".
 
-This is intend to fixup the Layerscape platforms which aer interrupt
-was not MSI/MSI-X/INTx, but using interrupt line independently.
+There are two moving parts to CRS support from the SW perspective. One part
+is to determine if CRS is supported or not. The second part is to set the
+CRS visibility register.
 
-Signed-off-by: Po Liu <po.liu@nxp.com>
+As part of the probe, the Linux kernel sets the above two conditions in
+pci_enable_crs function. The kernel is also honoring the returned CRS in
+pci_bus_read_dev_vendor_id function if supported. The function will poll up
+to specified amount of time while endpoint is returning CRS response.
+
+The PCIe spec also allows CRS to be issued during cold, warm, hot and FLR
+resets.
+
+The hot reset is initiated by starting a secondary bus reset. This patch is
+adding vendor ID read immediately after a bus reset so that the
+initialization procedure can be extended by the amount of time endpoint
+requires.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
-changes for v5:
-	- Seperate arm and arm64 dts modification into two patches
+ drivers/pci/pci.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
- arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi | 18 +++++++++---------
- arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi | 16 ++++++++--------
- 2 files changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-index e669fbd..654071d 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-@@ -527,9 +527,9 @@
- 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
- 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 118 0x4>, /* controller interrupt */
--				     <0 117 0x4>; /* PME interrupt */
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 117 0x4>, /* PME interrupt */
-+					 <0 118 0x4>; /* aer interrupt */
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -552,9 +552,9 @@
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
- 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 128 0x4>,
--				     <0 127 0x4>;
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 127 0x4>,
-+					 <0 128 0x4>;
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -577,9 +577,9 @@
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
- 			       0x50 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 162 0x4>,
--				     <0 161 0x4>;
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 161 0x4>,
-+					 <0 162 0x4>;
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-index 21023a3..58844e8 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-@@ -583,8 +583,8 @@
- 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
- 			       0x10 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 108 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 108 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -607,8 +607,8 @@
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
- 			       0x12 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 113 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 113 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -631,8 +631,8 @@
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
- 			       0x14 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 118 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 118 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -655,8 +655,8 @@
- 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
- 			       0x16 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 123 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 123 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8aecab1..e913467 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3833,6 +3833,16 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++static int pci_dev_probe_crs(struct pci_dev *dev, void *data)
++{
++	u32 l;
++
++	pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l,
++				   60 * 1000);
++
++	return 0;
++}
++
+ void pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
+@@ -3874,6 +3884,7 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+ void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+ {
+ 	pcibios_reset_secondary_bus(dev);
++	pci_walk_bus(dev->subordinate, pci_dev_probe_crs, NULL);
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
+ 
 -- 
-2.1.0.27.g96db324
+1.9.1
 
