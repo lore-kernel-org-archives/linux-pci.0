@@ -1,61 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:34340
-        "EHLO p3plsmtps2ded01.prod.phx3.secureserver.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1765900AbcIOAUS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Sep 2016 20:20:18 -0400
-From: Long Li <longli@exchange.microsoft.com>
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>
-Subject: [PATCH 2/2 v2] pci-hyperv: lock pci bus on device eject
-Date: Wed, 14 Sep 2016 19:10:02 -0700
-Message-Id: <1473905402-2375-2-git-send-email-longli@exchange.microsoft.com>
-In-Reply-To: <1473905402-2375-1-git-send-email-longli@exchange.microsoft.com>
-References: <1473905402-2375-1-git-send-email-longli@exchange.microsoft.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46675 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965244AbcIPUGp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 16:06:45 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        cov@codeaurora.org, alex.williamson@redhat.com,
+        vikrams@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 1/5] PCI/AER: replace pci_reset_bridge_secondary_bus with pci_reset_bus
+Date: Fri, 16 Sep 2016 16:06:30 -0400
+Message-Id: <1474056395-21843-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
+References: <1474056395-21843-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Long Li <longli@microsoft.com>
+The error handling path is not saving and restoring the settings on
+other devices getting impacted by a secondary bus reset. Using a better
+API to take care of this.
 
-A PCI_EJECT message can arrive at the same time we are calling pci_scan_child_bus in the workqueue for the previous PCI_BUS_RELATIONS message or in create_root_hv_pci_bus(), in this case we could potentailly modify the bus from multiple places. Properly lock the bus access.
-
-Thanks Dexuan Cui <decui@microsoft.com> for pointing out the race condition in create_root_hv_pci_bus().
-
-Signed-off-by: Long Li <longli@microsoft.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/host/pci-hyperv.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/pcie/aer/aerdrv.c      | 2 +-
+ drivers/pci/pcie/aer/aerdrv_core.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 4a37598..33c75c9 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1198,9 +1198,11 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
- 	hbus->pci_bus->msi = &hbus->msi_chip;
- 	hbus->pci_bus->msi->dev = &hbus->hdev->device;
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 48d21e0..7880cd1 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -350,7 +350,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+ 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
  
-+	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
- 	pci_bus_assign_resources(hbus->pci_bus);
- 	pci_bus_add_devices(hbus->pci_bus);
-+	pci_unlock_rescan_remove();
- 	hbus->state = hv_pcibus_installed;
- 	return 0;
+-	pci_reset_bridge_secondary_bus(dev);
++	pci_reset_bus(dev->subordinate);
+ 	dev_printk(KERN_DEBUG, &dev->dev, "Root Port link has been reset\n");
+ 
+ 	/* Clear Root Error Status */
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 521e39c..0339cc3 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -403,7 +403,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+  */
+ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ {
+-	pci_reset_bridge_secondary_bus(dev);
++	pci_reset_bus(dev->subordinate);
+ 	dev_printk(KERN_DEBUG, &dev->dev, "downstream link has been reset\n");
+ 	return PCI_ERS_RESULT_RECOVERED;
  }
-@@ -1590,8 +1592,10 @@ static void hv_eject_device_work(struct work_struct *work)
- 	pdev = pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
- 					   wslot);
- 	if (pdev) {
-+		pci_lock_rescan_remove();
- 		pci_stop_and_remove_bus_device(pdev);
- 		pci_dev_put(pdev);
-+		pci_unlock_rescan_remove();
- 	}
- 
- 	memset(&ctxt, 0, sizeof(ctxt));
 -- 
-1.8.5.6
+1.9.1
 
