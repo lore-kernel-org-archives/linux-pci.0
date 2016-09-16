@@ -1,96 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45594 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933183AbcI0Nqu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 09:46:50 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v7 3/8] thunderbolt: Kconfig for Thunderbolt Networking
-Date: Tue, 27 Sep 2016 16:43:36 +0300
-Message-Id: <1474983821-2313-4-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
-References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
+Received: from lb2-smtp-cloud6.xs4all.net ([194.109.24.28]:53600 "EHLO
+        lb2-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1758377AbcIPIBu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Sep 2016 04:01:50 -0400
+Subject: Re: [PATCH 6/6] media/cobalt: use pci_irq_allocate_vectors
+To: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com,
+        brking@us.ibm.com, haver@linux.vnet.ibm.com,
+        ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
+ <1473600688-24043-7-git-send-email-hch@lst.de>
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hans Verkuil <hverkuil@xs4all.nl>
+Message-ID: <1c24ae65-067f-52fc-edfa-af2d0e222a19@xs4all.nl>
+Date: Fri, 16 Sep 2016 10:01:42 +0200
+MIME-Version: 1.0
+In-Reply-To: <1473600688-24043-7-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Update to the Kconfig Thunderbolt description to add
-Thunderbolt networking as an option.
-The menu item "Thunderbolt support" now offers:
-"Apple Hardware Support" (existing)
-        and/or
-"Thunderbolt Networking" (new)
+Hi Christoph,
 
-You can choose the driver for your platform or build both drivers -
-each driver will detect if it can run on the specific platform.
-If the Thunderbolt Networking option is chosen, Thunderbolt Networking
-will be enabled between Linux non-Apple systems, macOS and
-Windows based systems.
-Thunderbolt Networking will not affect any other Thunderbolt feature that
-was previous available to Linux users on either Apple or
-non-Apple platforms.
+On 09/11/2016 03:31 PM, Christoph Hellwig wrote:
+> Simply the interrupt setup by using the new PCI layer helpers.
+> 
+> Despite using pci_enable_msi_range, this driver was only requesting a
+> single MSI vector anyway.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/media/pci/cobalt/cobalt-driver.c | 8 ++------
+>  drivers/media/pci/cobalt/cobalt-driver.h | 2 --
+>  2 files changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/media/pci/cobalt/cobalt-driver.c b/drivers/media/pci/cobalt/cobalt-driver.c
+> index 476f7f0..5a0a9e4 100644
+> --- a/drivers/media/pci/cobalt/cobalt-driver.c
+> +++ b/drivers/media/pci/cobalt/cobalt-driver.c
+> @@ -307,9 +307,7 @@ static void cobalt_pci_iounmap(struct cobalt *cobalt, struct pci_dev *pci_dev)
+>  static void cobalt_free_msi(struct cobalt *cobalt, struct pci_dev *pci_dev)
+>  {
+>  	free_irq(pci_dev->irq, (void *)cobalt);
+> -
+> -	if (cobalt->msi_enabled)
+> -		pci_disable_msi(pci_dev);
+> +	pci_free_irq_vectors(pci_dev);
+>  }
+>  
+>  static int cobalt_setup_pci(struct cobalt *cobalt, struct pci_dev *pci_dev,
+> @@ -386,14 +384,12 @@ static int cobalt_setup_pci(struct cobalt *cobalt, struct pci_dev *pci_dev,
+>  	   from being generated. */
+>  	cobalt_set_interrupt(cobalt, false);
+>  
+> -	if (pci_enable_msi_range(pci_dev, 1, 1) < 1) {
+> +	if (pci_alloc_irq_vectors(pci_dev, 1, 1, PCI_IRQ_MSI) < 1) {
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
----
- drivers/thunderbolt/Kconfig  | 27 +++++++++++++++++++++++----
- drivers/thunderbolt/Makefile |  2 +-
- 2 files changed, 24 insertions(+), 5 deletions(-)
+PCI_IRQ_MSI is unknown, I assume that this will appear in 4.9?
 
-diff --git a/drivers/thunderbolt/Kconfig b/drivers/thunderbolt/Kconfig
-index c121acc..376e5bb 100644
---- a/drivers/thunderbolt/Kconfig
-+++ b/drivers/thunderbolt/Kconfig
-@@ -1,13 +1,32 @@
--menuconfig THUNDERBOLT
--	tristate "Thunderbolt support for Apple devices"
-+config THUNDERBOLT
-+	tristate "Thunderbolt support"
- 	depends on PCI
- 	select CRC32
- 	help
--	  Cactus Ridge Thunderbolt Controller driver
-+	  Thunderbolt Controller driver
-+
-+if THUNDERBOLT
-+
-+config THUNDERBOLT_APPLE
-+	tristate "Apple hardware support"
-+	help
- 	  This driver is required if you want to hotplug Thunderbolt devices on
- 	  Apple hardware.
- 
- 	  Device chaining is currently not supported.
- 
--	  To compile this driver a module, choose M here. The module will be
-+	  To compile this driver as a module, choose M here. The module will be
- 	  called thunderbolt.
-+
-+config THUNDERBOLT_ICM
-+	tristate "Thunderbolt Networking"
-+	help
-+	  This driver is required if you want Thunderbolt Networking on
-+	  non-Apple hardware.
-+	  It creates a virtual Ethernet device that enables computer to
-+	  computer communication over a Thunderbolt cable.
-+
-+	  To compile this driver as a module, choose M here. The module will be
-+	  called thunderbolt_icm.
-+
-+endif
-diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
-index 5d1053c..7a85bd1 100644
---- a/drivers/thunderbolt/Makefile
-+++ b/drivers/thunderbolt/Makefile
-@@ -1,3 +1,3 @@
--obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
-+obj-${CONFIG_THUNDERBOLT_APPLE} := thunderbolt.o
- thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
- 
--- 
-2.7.4
+Looks good otherwise.
 
+Regards,
+
+	Hans
+
+>  		cobalt_err("Could not enable MSI\n");
+> -		cobalt->msi_enabled = false;
+>  		ret = -EIO;
+>  		goto err_release;
+>  	}
+>  	msi_config_show(cobalt, pci_dev);
+> -	cobalt->msi_enabled = true;
+>  
+>  	/* Register IRQ */
+>  	if (request_irq(pci_dev->irq, cobalt_irq_handler, IRQF_SHARED,
+> diff --git a/drivers/media/pci/cobalt/cobalt-driver.h b/drivers/media/pci/cobalt/cobalt-driver.h
+> index ed00dc9..00f773e 100644
+> --- a/drivers/media/pci/cobalt/cobalt-driver.h
+> +++ b/drivers/media/pci/cobalt/cobalt-driver.h
+> @@ -287,8 +287,6 @@ struct cobalt {
+>  	u32 irq_none;
+>  	u32 irq_full_fifo;
+>  
+> -	bool msi_enabled;
+> -
+>  	/* omnitek dma */
+>  	int dma_channels;
+>  	int first_fifo_channel;
+> 
