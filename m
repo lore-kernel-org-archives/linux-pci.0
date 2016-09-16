@@ -1,42 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:39120 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933166AbcIZVHb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Sep 2016 17:07:31 -0400
-Date: Mon, 26 Sep 2016 15:07:24 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: Leon Romanovsky <leon@kernel.org>, dledford@redhat.com,
-        linux-rdma@vger.kernel.org, pv-drivers@vmware.com,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-        jhansen@vmware.com, asarwade@vmware.com, georgezhang@vmware.com,
-        bryantan@vmware.com
-Subject: Re: [PATCH v5 00/16] Add Paravirtual RDMA Driver
-Message-ID: <20160926210724.GA16413@obsidianresearch.com>
-References: <cover.1474759181.git.aditr@vmware.com>
- <20160925070352.GU4088@leon.nu>
- <9f65ab5c-d8c2-e8e3-9334-5d1865a20dc9@vmware.com>
- <20160926165104.GA12011@obsidianresearch.com>
- <b4e0acd9-e1a2-f6ac-0afa-c0fd62dd62f0@vmware.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b4e0acd9-e1a2-f6ac-0afa-c0fd62dd62f0@vmware.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v14 04/17] PCI: Check resource alignment for /sys pci_mmap_resource path
+Date: Fri, 16 Sep 2016 13:01:54 -0700
+Message-Id: <20160916200207.21439-5-yinghai@kernel.org>
+In-Reply-To: <20160916200207.21439-1-yinghai@kernel.org>
+References: <20160916200207.21439-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 26, 2016 at 01:40:10PM -0700, Adit Ranadive wrote:
+When user access /sys/.../resourceX  with pci_mmap_resource(),
+pci_mmap_resource():
+  ...
+  pci_resource_to_user(pdev, i, res, &start, &end);
+  vma->vm_pgoff += start >> PAGE_SHIFT;
+  mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
+  return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
+so it will return virtual address for round_down of start.
 
-> Wouldnt they be some overlap between the user-space and kernel driver? Or is
-> it expected that the common structures (even device specific ones) be moved to
-> the ABI file?
+user code should pass offset with PAGE_SIZE offset.
+  fd = open(argv[1], O_RDONLY);
+  ...
+  sscanf(argv[2], "0x%lx", &offset);
+  left = offset & (PAGE_SIZE - 1);
+  offset &= PAGE_MASK;
+  addr = mmap(NULL, PAGE_SIZE, PROT_READ, MAP_SHARED, fd, offset);
+  for (i = 0; i < 8; i++)
+    printf("%x ", addr[i + left]);
+  munmap(addr, PAGE_SIZE);
+  close(fd);
 
-Yes, even device specific structures must be in the abi file. Anything
-that is used with copy_to_user/copy_from_user/etc.
+When the resource start is not PAGE_SIZE aligned, it should
+be io port, pci_mmap_resource could return round_down address of
+resource start.
+As the whole point for pci_mmap_resource is passing offset in
+[0, resource_size), user may assume virtual add is corresponding
+to unaligned resource_size. Later they could get wrong value
+with offset to resource start.
 
-> For the mlx4 driver I see that the structures in include/linux/mlx4/qp.h
-> and in libmlx4/src/wqe.h are similar.
+Block the path for now, and need to use pci_read_resource_io
+/pci_write_resource_io path instead.
+user code should be like:
+  fd = open(argv[1], O_RDONLY);
+  ...
+  sscanf(argv[2], "0x%lx", &offset);
+  for (i = 0; i < 8; i++) {
+    pread(fd, &buf, 1, i + offset);
+  }
+  close(fd);
 
-We are trying to clean exactly that sort of stuff up, please try not
-to add more.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-sysfs.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Jason
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d55d93d..e2eb79f 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1023,6 +1023,16 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	if (i >= PCI_ROM_RESOURCE)
+ 		return -ENODEV;
+ 
++	/*
++	 * resource start have to be PAGE_SIZE aligned, as we pass
++	 * back virt address include round down of resource_start,
++	 * that caller can not figure out directly.
++	 * when it is not aligned, that mean it is io port, should go
++	 * pci_read_resource_io()/pci_write_resource_io() path.
++	 */
++	if (res->start & ~PAGE_MASK)
++		return -EINVAL;
++
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+-- 
+2.8.3
