@@ -1,152 +1,135 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Po Liu <po.liu@nxp.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v6 2/3] arm64/dts-ls1043-ls2080: add pcie aer/pme
- interrupt-name property in the dts
-Date: Fri, 30 Sep 2016 17:11:36 +0800
-Message-ID: <1475226697-7709-2-git-send-email-po.liu@nxp.com>
-In-Reply-To: <1475226697-7709-1-git-send-email-po.liu@nxp.com>
-References: <1473741659-17618-3-git-send-email-po.liu@nxp.com>
- <1475226697-7709-1-git-send-email-po.liu@nxp.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 17 Sep 2016 15:49:43 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 2/4] PCI: Query platform firmware for device power state
+Message-ID: <20160917134943.GA1453@wunner.de>
+References: <cover.1472554278.git.lukas@wunner.de>
+ <5506823.86CoiunRKu@vostro.rjw.lan>
+ <20160914105024.GC1597@wunner.de>
+ <1707182.o83Q5WOaET@vostro.rjw.lan>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- Marc Zyngier <marc.zyngier@arm.com>, Po Liu <po.liu@nxp.com>,
- Stuart Yoder <stuart.yoder@nxp.com>, Yang-Leo Li <leoyang.li@nxp.com>,
- Minghuan Lian <minghuan.lian@nxp.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
- Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1707182.o83Q5WOaET@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms(NXP Layerscape for example) aer/pme interrupts was not
-MSI/MSI-X/INTx but using interrupt line independently. This patch
-add "aer", "pme" interrupt-names for aer/pme interrupt.
+On Wed, Sep 14, 2016 at 03:01:33PM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, September 14, 2016 12:50:24 PM Lukas Wunner wrote:
+> > On Wed, Sep 14, 2016 at 02:21:30AM +0200, Rafael J. Wysocki wrote:
+> > > On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
+> > > > +
+> > > > +	if (!adev || !acpi_device_power_manageable(adev))
+> > > > +		return PCI_UNKNOWN;
+> > > > +
+> > > > +	if (acpi_device_get_power(adev, &state) || state < ACPI_STATE_D0
+> > > > +						|| state > ACPI_STATE_D3_COLD)
+> > > 
+> > > If the device is power-manageable by ACPI (you've just checked that) and
+> > > acpi_device_get_power() returns success (0), the returned state is
+> > > guaranteed to be within the boundaries (if it isn't, there is a bug that
+> > > needs to be fixed).
+> > 
+> > No, acpi_device_get_power() can also return ACPI_STATE_UNKNOWN, which has
+> > the value 0xff.
+> 
+> That would be the case without power resources or _PSC, right?
 
-With the interrupt-names "aer", "pme" code could probe aer/pme interrupt
-line for pcie root port, replace the aer/pme interrupt service irqs.
+There's this check in acpi_device_get_power():
 
-This is intend to fixup the Layerscape platforms which aer/pmes interrupts
-was not MSI/MSI-X/INTx, but using interrupt line independently.
+                else if (result == ACPI_STATE_UNKNOWN)
+                        result = psc > ACPI_STATE_D2 ? ACPI_STATE_D3_HOT : psc;
 
-Since the interrupt-names "intr" never been used. Remove it.
+where "result" has been set further up by acpi_power_get_inferred_state().
+If acpi_power_get_inferred_state() does return this value and _PSC is
+not present (i.e. device->power.flags.explicit_get is not set),
+then acpi_device_get_power() would return ACPI_STATE_UNKNOWN.
 
-Signed-off-by: Po Liu <po.liu@nxp.com>
----
-changes for v6:
-	- add remove "intr" interrupt reason.
-	- add "pme" interrupt.
-
- arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi | 18 +++++++++---------
- arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi | 16 ++++++++--------
- 2 files changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-index e669fbd..654071d 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi
-@@ -527,9 +527,9 @@
- 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
- 			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 118 0x4>, /* controller interrupt */
--				     <0 117 0x4>; /* PME interrupt */
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 117 0x4>, /* PME interrupt */
-+					 <0 118 0x4>; /* aer interrupt */
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -552,9 +552,9 @@
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
- 			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 128 0x4>,
--				     <0 127 0x4>;
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 127 0x4>,
-+					 <0 128 0x4>;
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -577,9 +577,9 @@
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
- 			       0x50 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 162 0x4>,
--				     <0 161 0x4>;
--			interrupt-names = "intr", "pme";
-+			interrupts = <0 161 0x4>,
-+					 <0 162 0x4>;
-+			interrupt-names = "pme", "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-index 21023a3..58844e8 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
-@@ -583,8 +583,8 @@
- 			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
- 			       0x10 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 108 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 108 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -607,8 +607,8 @@
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
- 			       0x12 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 113 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 113 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -631,8 +631,8 @@
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
- 			       0x14 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 118 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 118 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -655,8 +655,8 @@
- 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
- 			       0x16 0x00000000 0x0 0x00002000>; /* configuration space */
- 			reg-names = "regs", "config";
--			interrupts = <0 123 0x4>; /* Level high type */
--			interrupt-names = "intr";
-+			interrupts = <0 123 0x4>; /* aer interrupt */
-+			interrupt-names = "aer";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
--- 
-2.1.0.27.g96db324
+Also, if the device is not power manageable, has neither power resources
+nor _PSC, and its parent has power state ACPI_STATE_UNKNOWN, then this
+will be returned.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > I could add that to state_conv[] above but then I'd have an array with
+> > 256 integers on the stack, most of them 0, which I don't want.
+> > I could check for != ACPI_STATE_UNKNOWN but checking the boundaries seemed
+> > safer.
+> 
+> Well, I'm not sure in what way it is safer and you get one check instead of
+> two. :-)
+> 
+> > So I maintain that the code is correct.
+> 
+> It simply contains an redundant check.
+
+Fair enough, I'm only checking for ACPI_STATE_UNKNOWN now.
+
+
+> > > >  void pci_update_current_state(struct pci_dev *dev, pci_power_t state)
+> > > >  {
+> > > > -	if (dev->pm_cap) {
+> > > > +	if (platform_pci_get_power_state(dev) == PCI_D3cold) {
+> > > > +		dev->current_state = PCI_D3cold;
+> > > > +	} else if (dev->pm_cap) {
+> > > 
+> > > Why exactly do you need to change this function?
+> > 
+> > It would be pointless to add the ->platform_pci_get_power_state
+> > hook without using it anywhere, wouldn't it?
+> 
+> That depends on what you want to do with it next.  Callers may be added in
+> separate patches, no problem with that.
+
+I've moved the change of pci_update_current_state() to a separate patch now,
+that will also make it easier to revert it, should anything blow up.
+
+
+> pci_update_current_state() is called in a few places with assumptions that
+> need to be re-evaluated to see if they still hold after the changes.  They
+> probably do, but then again, these call sites need to be double checked.
+> If you did that, then fine.
+
+pci_update_current_state() is called whenever a device is resumed
+(both runtime and after system sleep) and after changing its power
+state using the platform in pci_platform_power_transition().
+
+With the new patch, pci_update_current_state() will be more accurate
+than it is now:  Laptop hybrid graphics which are not platform-power-
+manageable (older Optimus/ATPX or current MacBook Pro) will power
+down the GPU but its current_state will be D3hot.  That's because
+nouveau/radeon call pci_set_power_state(pdev, PCI_D3cold) and the
+PCI core will only put it in D3hot due to the lack of platform-power-
+manageability.  When the device is resumed, pci_update_current_state()
+will now change the current_state from D3hot to D3cold.  I'm actually
+seeing this on my MacBook Pro.  When the system is subsequently put
+to sleep, direct_complete will still be afforded despite the changed
+current_state because of the first patch in this series.  Works like
+a charm, I'm curious if this causes issues for others, but I doubt it.
+
+
+> And if you want to change that logic for PCI, it would be good to change it
+> in the same way for acpi_general_pm_domain which has exactly the same
+> problem.
+
+Hm, with PCI I can read the PMCSR and detect D3cold by reading the
+vendor ID.  For generic ACPI devices, I don't have that so I have
+to rely on the accuracy of acpi_device_get_power().  However as
+you've pointed out, it might misrepresent D3cold as D3hot, and it
+might incorrectly report D0 even though the device is in a different
+state.  Is it safe to rely on acpi_device_get_power() then?
+
+Another idea would be to use acpi_device_get_power() for PCI devices
+without PM capability.  Then we could do away with the "state"
+argument to pci_update_current_state().  This too hinges on the
+reliability of acpi_device_get_power() of course.  At least D3cold
+can be detected by reading the vendor ID, so we're not reliant on
+ACPI for that.  I've even got a commit on my development branch
+to make that change, but I can't test it, my machine doesn't have
+PCI devices without PM cap.
+
+Thanks,
+
+Lukas
