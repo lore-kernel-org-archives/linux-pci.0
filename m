@@ -1,201 +1,400 @@
-Return-Path: <mayurkumar.patel@intel.com>
-Return-Path: <mayurkumar.patel@intel.com>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>, Rajat Jain
-	<rajatja@google.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "Wysocki, Rafael J"
-	<rafael.j.wysocki@intel.com>, "mika.westerberg@linux.intel.com"
-	<mika.westerberg@linux.intel.com>, "Busch, Keith" <keith.busch@intel.com>,
-	"Tarazona-Duarte, Luis Antonio" <luis.antonio.tarazona-duarte@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>, Andy Shevchenko
-	<andriy.shevchenko@linux.intel.com>
-Subject: RE: [PATCH v1] PCI: pciehp: Fix presence detect change interrupt
- handling
-Date: Thu, 1 Sep 2016 10:44:51 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B284665A445B@IRSMSX101.ger.corp.intel.com>
-References: <92EBB4272BF81E4089A7126EC1E7B284665970B5@IRSMSX101.ger.corp.intel.com>
- <20160817171225.GA27353@localhost>
- <CACK8Z6H2G1cA6W+7timaKdeK2wuPNQfdLeZQCx=C8VkBESUOfQ@mail.gmail.com>
- <20160817181459.GB27353@localhost>
- <92EBB4272BF81E4089A7126EC1E7B28466597350@IRSMSX101.ger.corp.intel.com>
- <20160818125254.GF27353@localhost>
- <92EBB4272BF81E4089A7126EC1E7B28466597AA3@IRSMSX101.ger.corp.intel.com>
- <CACK8Z6GM_zZKvBn4YanWzV_R8TGFErUJboMgvQD5FqUcopOQXg@mail.gmail.com>
- <92EBB4272BF81E4089A7126EC1E7B284665994FD@IRSMSX101.ger.corp.intel.com>
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B284665994FD@IRSMSX101.ger.corp.intel.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Return-Path: <dhdang@apm.com>
+Return-Path: <dhdang@apm.com>
+From: Duc Dang <dhdang@apm.com>
+To: helgaas@kernel.org,
+	rafael@kernel.org,
+	Lorenzo.Pieralisi@arm.com
+Cc: arnd@arndb.de,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	jcm@redhat.com,
+	tn@semihalf.com,
+	patches@apm.com,
+	Duc Dang <dhdang@apm.com>
+Subject: [RFC PATCH] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe controller
+Date: Sat, 17 Sep 2016 07:24:38 -0700
+Message-Id: <1474122278-32525-1-git-send-email-dhdang@apm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-DQogDQo+IA0KPiA+ID4NCj4gPiA+ID4gT24gV2VkLCBBdWcgMTcsIDIwMTYgYXQgMTA6Mzc6MTNQ
-TSArMDAwMCwgUGF0ZWwsIE1heXVya3VtYXIgd3JvdGU6DQo+ID4gPiA+ID4gPiBPbiBXZWQsIEF1
-ZyAxNywgMjAxNiBhdCAxMDo1NDoxMkFNIC0wNzAwLCBSYWphdCBKYWluIHdyb3RlOg0KPiA+ID4g
-Pg0KPiA+ID4gPiA+ID4gPiBXZSBuZWVkIHRvIGRvIHNvbWV0aGluZyBhYm91dCB0aGF0ICppbiBh
-ZGRpdGlvbiAqIHRvIHRoZQ0KPiA+ID4gPiA+ID4gPiBhYm92ZSBwYXRjaCB0byBjb3ZlciB0aGUN
-Cj4gPiA+ID4gPiA+ID4gd2hvbGUgc3RvcnkuIEhvd2V2ZXIgSSB0aGluayB0aGVyZSBzdGlsbCB3
-aWxsIGJlIGEgcm9vbSBmb3Igc29tZQ0KPiA+ID4gPiA+ID4gPiBpbnRlcnJ1cHQgbWlzc2VzIGJl
-Y2F1c2Ugd2UgYXJlDQo+ID4gPiA+ID4gPiA+IGNvbGxlY3RpbmcgdGhlIGludGVycnVwdHMgaW4g
-aW50cl9sb2MsIGFuZCB0aGVvcmV0aWNhbGx5IHdlIGNvdWxkIGJlDQo+ID4gPiA+ID4gPiA+IGlu
-IGEgc2l0dWF0aW9uIHdoZXJlIGluIHRoZSBwY2llX2lzciwgdGhlDQo+ID4gPiA+ID4gPiA+DQo+
-ID4gPiA+ID4gPiA+IGRvIHsNCj4gPiA+ID4gPiA+ID4gICAgIC4uLg0KPiA+ID4gPiA+ID4gPiB9
-IHdoaWxlKGRldGVjdGVkKQ0KPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiBsb29wIGdldHMg
-YSByZW1vdmFsLT5pbnNlcnRpb24tPnJlbW92YWwgYWxsIHdoaWxlIGluIHRoZSBzYW1lDQo+ID4g
-PiA+ID4gPiA+IGludm9jYXRpb24gb2YgcGNpZV9pc3IoKS4NCj4gPiA+ID4gPiA+ID4gSWYgdGhp
-cyBoYXBwZW5zLCB0aGUgaW50cl9sb2Mgd2lsbCBoYXZlIHJlY29yZGVkIGEgc2luZ2xlIGluc2Vy
-dGlvbg0KPiA+ID4gPiA+ID4gPiBhbmQgYSBzaW5nbGUgcmVtb3ZhbCwgYW5kDQo+ID4gPiA+ID4g
-PiA+IHRoZSBmaW5hbCByZXN1bHQgd2lsbCBkZXBlbmQgb24gdGhlIG9yZGVyIGluIHdoaWNoIHdl
-IGRlY2lkZSB0bw0KPiA+ID4gPiA+ID4gPiBwcm9jZXNzIHRoZSBldmVudHMgaW4gaW50cl9sb2Mu
-DQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gSSBkb24ndCBxdWl0ZSB1bmRlcnN0YW5kIGhvdyB0
-aGF0ICJkbyB7IC4uIH0gd2hpbGUgKGRldGVjdGVkKSIgbG9vcA0KPiA+ID4gPiA+ID4gd29ya3Mg
-b3Igd2h5IGl0J3MgZG9uZSB0aGF0IHdheS4gIENvbGxlY3RpbmcgaW50ZXJydXB0IHN0YXR1cyBi
-aXRzIGluDQo+ID4gPiA+ID4gPiBhbiBJU1IgaXMgb2J2aW91c2x5IGEgdmVyeSBjb21tb24gdGFz
-azsgaXQgc2VlbXMgbGlrZSB0aGVyZSBzaG91bGQgYmUNCj4gPiA+ID4gPiA+IGEgc3RhbmRhcmQs
-IGlkaW9tYXRpYyB3YXkgb2YgZG9pbmcgaXQsIGJ1dCBJIGRvbid0IGtub3cgaXQuDQo+ID4gPiA+
-ID4gPg0KPiA+ID4gPiA+ID4gPiBPciwgbWF5IGJlIHdlIGNhbiBtYWtlIHRoZSBjYWxscyB0byBw
-Y2llaHBfcXVldWVfaW50ZXJydXB0X2V2ZW50KCkNCj4gPiA+ID4gPiA+ID4gYmVmb3JlIGNsZWFy
-aW5nIHRoZQ0KPiA+ID4gPiA+ID4gPiBSVzFDIGluIHRoZSBzbG90IHN0YXR1cyByZWdpc3RlciAo
-aW4gdGhlIGxvb3ApPw0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFllYWgsIGl0IHNlZW1zIGxp
-a2Ugd2Ugc2hvdWxkIHJlYWQgUENJX0VYUF9TTFRTVEEgb25jZSwgcXVldWUgdXAgYW55DQo+ID4g
-PiA+ID4gPiBldmVudHMgcmVsYXRlZCB0byBpdCwgdGhlbiBjbGVhciB0aGUgcmVsZXZhbnQgU0xU
-U1RBIGJpdHMuDQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gRG8geW91IG1lYW4g
-dG8gcmVtb3ZlIHRoZSBkbyB7Li4ufSB3aGlsZSBsb29wIGFuZCBqdXN0DQo+ID4gPiA+ID4gcmVh
-ZCBQQ0lfRVhQX1NMVFNUQSBvbmNlIGluIElTUiAsIHF1ZXVlIHRoZSB3b3JrIGFuZCBjbGVhciBp
-bnRlcnJ1cHRzPw0KPiA+ID4gPg0KPiA+ID4gPiBJIGRvbid0IGtub3cgaWYgcmVtb3ZpbmcgdGhl
-IGxvb3AgaXMgdGhlIHJpZ2h0IHRoaW5nIG9yIG5vdC4gIFdlIG5lZWQNCj4gPiA+ID4gdG8gdW5k
-ZXJzdGFuZCB3aHkgdGhlIGxvb3AgaXMgdGhlcmUgaW4gdGhlIGZpcnN0IHBsYWNlIGFuZCBtYWtl
-IHN1cmUNCj4gPiA+ID4gcmVtb3ZpbmcgaXQgd291bGRuJ3QgYnJlYWsgdGhpbmdzLg0KPiA+ID4g
-Pg0KPiA+ID4NCj4gPiA+DQo+ID4gPiBUaGUgcGNpZSBiYXNlIHNwZWMuIDMuMCBzYXlzIGZyb20g
-Y2hhcHRlciA2LjcuMy4xLiBTbG90IEV2ZW50czoNCj4gPiA+DQo+ID4gPiAgICAgICAgIEEgRG93
-bnN0cmVhbSBQb3J0IHdpdGggaG90LXBsdWcgY2FwYWJpbGl0aWVzIG1vbml0b3JzIHRoZSBzbG90
-IGl0IGNvbnRyb2xzIGZvciB0aGUgc2xvdCBldmVudHMgbGlzdGVkDQo+ID4gPiAgICAgICAgIGFi
-b3ZlLiBXaGVuIG9uZSBvZiB0aGVzZSBzbG90IGV2ZW50cyBpcyBkZXRlY3RlZCwgdGhlIFBvcnQg
-aW5kaWNhdGVzIHRoYXQgdGhlIGV2ZW50IGhhcyBvY2N1cnJlZCBieQ0KPiA+ID4gICAgICAgICBz
-ZXR0aW5nIHRoZSBzdGF0dXMgZmllbGQgYXNzb2NpYXRlZCB3aXRoIHRoZSBldmVudC4gQXQgdGhh
-dCBwb2ludCwgdGhlIGV2ZW50IGlzIHBlbmRpbmcgdW50aWwgc29mdHdhcmUNCj4gPiA+ICAgICAg
-ICAgY2xlYXJzIHRoZSBzdGF0dXMgZmllbGQuDQo+ID4gPiAgICAgICAgIE9uY2UgYSBzbG90IGV2
-ZW50IGlzIHBlbmRpbmcgb24gYSBwYXJ0aWN1bGFyIHNsb3QsIGFsbCBzdWJzZXF1ZW50IGV2ZW50
-cyBvZiB0aGF0IHR5cGUgYXJlIGlnbm9yZWQgb24NCj4gPiA+ICAgICAgICAgdGhhdCBzbG90IHVu
-dGlsIHRoZSBldmVudCBpcyBjbGVhcmVkLiBUaGUgUG9ydCBtdXN0IGNvbnRpbnVlIHRvIG1vbml0
-b3IgdGhlIHNsb3QgZm9yIGFsbCBvdGhlciBzbG90DQo+ID4gPiAgICAgICAgIGV2ZW50IHR5cGVz
-IGFuZCByZXBvcnQgdGhlbSBhcyB0aGV5IG9jY3VyLg0KPiA+ID4NCj4gPiA+DQo+ID4gPiBTbyBk
-b2VzIGl0IG1lYW4gdGhhdCB0aGUgcG9ydCB3b3VsZCBjb250aW51ZSBwcm92aWRpbmcgTVNJIGlm
-IHRoZXJlIGhhcyBiZWVuDQo+ID4gPiBhbnkgb3RoZXIgZXZlbnRzIG9jY3VycmVkIGFwYXJ0IGZy
-b20gdGhlIGV2ZW50IHdoaWNoIGlzIG5vdCBjbGVhcmVkPyBJZiB0aGF0DQo+ID4gPiBpcyB0aGUg
-Y2FzZSB0aGVuIGl0J3Mgbm90IHN1cmUgd2h5IHRoZSBsb29wIGlzIHN0aWxsIG5lZWRlZC4NCj4g
-Pg0KPiA+IEknZCB0aGluayB0aGF0IHRoZSBsb29wIGlzIG5lZWRlZCBiZWNhdXNlIHdlIGRvbid0
-IHdhbnQgdG8gaGFuZGxlIGp1c3QNCj4gPiBvbmUgZXZlbnQgb24gb25lIGludGVycnVwdC4gV2Ug
-d2FudCB0byBoYW5kbGUgYXMgbWFueSBldmVudHMgYXMgd2UgY2FuDQo+ID4gKHRvIGtlZXAgdGhl
-IGludGVycnVwdCBsYXRlbmN5IG92ZXJoZWFkIGxvdyksIHRoYXQgaGF2ZSBoYXBwZW5lZA0KPiA+
-IGR1cmluZyB0aGUgSVNSIGludm9jYXRpb24uIEFuZCBoZW5jZSB0aGUgbG9vcC4NCj4gPg0KPiAN
-Cj4gSG1tLCBSaWdodC4gSSBjcmVhdGVkIGEgcHJvcG9zYWwgcGF0Y2gNCj4gKD0+W3YxLDIvMl0g
-UENJOiBwY2llaHA6IFJld29yayBob3RwbHVnIGludGVycnVwdCByb3V0aW5lKQ0KPiB0byByZW1v
-dmUgdGhlIGRvIHsuLi59IHdoaWxlIGxvb3Agd2hpY2gNCj4gSSBndWVzcyB0aGVuIHNob3VsZCBi
-ZSByZWplY3RlZCwgcmlnaHQ/IEFzIHdlIGRlY2lkZSB0byBrZWVwIHRoaXMgbG9vcD8NCj4gDQo+
-ID4gPg0KPiA+ID4gQWxzbyB3aXRoIGhhdmluZyBhIGxvb3AsIHBjaWVfaXNyKCkgaXMgcmVhZGlu
-ZyB0aGUgUENJX0VYUF9TTFRTVEEgYWdhaW4gYW5kIHRha2luZyBhY3Rpb24ganVzdCBiYXNlZCBv
-bg0KPiA+ID4gbGF0ZXN0IGV2ZW50IGhhcHBlbnMuIFRoYXQgbWF5IG1lYW4gcmVtb3ZhbC0+aW5z
-ZXJ0aW9uIGhhcHBlbnMgZmFzdCBlbm91Z2ggdGhlbg0KPiA+ID4gcmVtb3ZhbCBjb3VsZCBiZSBv
-dmVyd3JpdHRlbiBieSBpbnNlcnRpb24gYW5kIHBjaWVocF9nZXRfYWRhcHRlcl9zdGF0dXMgKCkN
-Cj4gPiA+IHdpbGwgcmV0dXJuIGluc2VydGlvbiBvbmx5IGFuZCB3ZSBtYXkgbWlzcyB0aGUgcmVt
-b3ZhbCBldmVudCB0byBiZSBwcm9jZXNzZWQgZm9yIHRoZSBsb29wLg0KPiA+DQo+ID4gQ3VycmVu
-dC4gVGhpcyBpcyB0aGUgcHJvYmxlbSB0aGF0IEJqb3JuIGhpZ2hsaWdodGVkIGFib3ZlLiBJIHRo
-aW5rIHRoZQ0KPiA+IGN1cnJlbnQgY29kZSB3b3JrcyB3ZWxsIHdoZW4gZXZlbnRzIG9mIGRpZmZl
-cmVudCBraW5kcyBoYXZlIGhhcHBlbmVkDQo+ID4gKGR1ZSB0byB0aGUgbG9vcCkuDQo+ID4NCj4g
-PiBJbiBjYXNlIG9mIHNpbWlsYXIga2luZCBvZiBldmVudHMgKGluc2VydGlvbiAvIHJlbW92YWwp
-LCBJIHRoaW5rIHRoZXJlDQo+ID4gYXJlIDIgcHJvYmxlbXM6ICgxKSB3ZSB1c2UgdGhlIHRyYW5z
-aWVudCB2YWx1ZXMgb2Ygc2xvdCBzdGF0dXMgd2hpY2gNCj4gPiBtYXkgbm90IGJlIHZhbGlkIGF0
-IHRoYXQgdGltZS4gKDIpIGJlY2F1c2Ugd2UgYWNrIHRoZSBldmVudCBiZWZvcmUgd2UNCj4gPiBx
-dWV1ZSBpdCB1cCwgaXQgbGVhdmVzIGNoYW5jZSBmb3IgZXJyb3IuIEkgdGhpbmsgd2UnZCBuZWVk
-IG1vcmUNCj4gPiBjYXJlZnVsIGV4YW1pbmF0aW9uIGluIG9yZGVyIHRvIGZpeCB0aGVzZSBpc3N1
-ZXMuDQo+ID4NCj4gDQo+IEkgYWxzbyBzZWUgM3JkIHByb2JsZW0gdG9vIHdpdGggdGhpcyBMb29w
-Lg0KPiBGb3IgZXhhbXBsZSwgaWYgd2UgYXJlIGluIHRoZSBsb29wLA0KPiBJZiBvbmx5IHNsb3Qg
-cmVtb3ZhbCBjb21lcyAtPiBkZXRlY3QgPSBQQ0lfRVhQX1NMVFNUQV9QREMgLT4gaW50cl9sb2Nr
-IHw9IGRldGVjdGVkDQo+IC0+IGRldGVjdGVkPT10cnVlIHNvIGNsZWFyIFBEQyBpbnRlcnJ1cHQg
-Yml0ID0+IFNvIHdlIGhhdmUgYSBjaGFuY2UgdG8gZGV0ZWN0DQo+IGFub3RoZXIgaW5zZXJ0aW9u
-IGV2ZW50Lg0KPiANCj4gV2UgYXJlIGluIHRoZSBzYW1lIGxvb3AgJiBpZiBpbnNlcnRpb24gY29t
-ZXMgYWdhaW4gLT4gc28gZGV0ZWN0ZWQgPSBQQ0lfRVhQX1NMVFNUQV9QREMNCj4gLT4gdGhlbiBk
-ZXRlY3RlZCAmPSB+aW50cl9sb2MgLT4gZGV0ZWN0ZWQgPT0gZmFsc2UgPT4gVGhpcyBtZWFucw0K
-PiBQQ0lfRVhQX1NMVFNUQSB3b3VsZCBub3QgYmUgY2xlYXJlZCBmb3IgaW5zZXJ0aW9uIGV2ZW50
-IGhhcHBlbmVkDQo+IGFuZCB0aGVyZSB3ZSBjb3VsZCBnZXQgYSBwcm9ibGVtIHRoYXQgTm8gZnVy
-dGhlciBQREMgZXZlbnRzIGNhbiBnZXQgdHJpZ2dlcmVkIGJ5IEhXLg0KPiANCj4gU28gaWYgd2Ug
-d2FudCB0byBrZWVwIHRoZSBsb29wLCBJIHRoaW5rIGNsZWFyaW5nIFBDSV9FWFBfU0xUU1RBICBz
-aG91bGQgYmUgc2hpZnRlZA0KPiBvdXRzaWRlIG9mIHRoZSBsb29wIHRvIGNsZWFyIFNsb3QgZXZl
-bnRzKGJ1dCBub3QgYmFzZWQgb24gZGV0ZWN0ZWQpIHRvIGVuc3VyZSB0aGF0IGxvb3ANCj4ganVz
-dCBsb29rcyBmb3IgdGhlIGV2ZW50cyBXaGljaCBoYXMgbm90IG9jY3VycmVkLCBhbHNvIGJlZm9y
-ZSBjbGVhcmluZyBTTFRTVEEgb3V0c2lkZQ0KPiB0aGUgbG9vcCwgd2UgY2FuIHVwZGF0ZSBsaW5r
-IGFuZCBzbG90X3N0YXR1cyB0byB0cmlnZ2VyIHRoZSByaWdodCBldmVudHMgZm9yIERMTFNDIGFu
-ZCBQREMgdHlwZXMuDQo+IA0KPiBXaGF0IGRvIHlvdSB0aGluayBhYm91dCBmb2xsb3dpbmcgcHJv
-cG9zYWw/DQo+IA0KPiBAQCAtNTQyLDcgKzU0Miw3IEBAIHN0YXRpYyBpcnFyZXR1cm5fdCBwY2ll
-X2lzcihpbnQgaXJxLCB2b2lkICpkZXZfaWQpDQo+ICAJc3RydWN0IHBjaV9idXMgKnN1Ym9yZGlu
-YXRlID0gcGRldi0+c3Vib3JkaW5hdGU7DQo+ICAJc3RydWN0IHBjaV9kZXYgKmRldjsNCj4gIAlz
-dHJ1Y3Qgc2xvdCAqc2xvdCA9IGN0cmwtPnNsb3Q7DQo+IC0JdTE2IGRldGVjdGVkLCBpbnRyX2xv
-YzsNCj4gKwl1MTYgZGV0ZWN0ZWQsIGludHJfbG9jLCBzbG90X3N0YXR1czsNCj4gIAl1OCBwcmVz
-ZW50Ow0KPiAgCWJvb2wgbGluazsNCj4gDQo+IEBAIC01NTMsMjYgKzU1MywzMCBAQCBzdGF0aWMg
-aXJxcmV0dXJuX3QgcGNpZV9pc3IoaW50IGlycSwgdm9pZCAqZGV2X2lkKQ0KPiAgCSAqLw0KPiAg
-CWludHJfbG9jID0gMDsNCj4gIAlkbyB7DQo+IC0JCXBjaWVfY2FwYWJpbGl0eV9yZWFkX3dvcmQo
-cGRldiwgUENJX0VYUF9TTFRTVEEsICZkZXRlY3RlZCk7DQo+IC0JCWlmIChkZXRlY3RlZCA9PSAo
-dTE2KSB+MCkgew0KPiArCQlwY2llX2NhcGFiaWxpdHlfcmVhZF93b3JkKHBkZXYsIFBDSV9FWFBf
-U0xUU1RBLCAmc2xvdF9zdGF0dXMpOw0KPiArCQlpZiAoc2xvdF9zdGF0dXMgPT0gKHUxNikgfjAp
-IHsNCj4gIAkJCWN0cmxfaW5mbyhjdHJsLCAiJXM6IG5vIHJlc3BvbnNlIGZyb20gZGV2aWNlXG4i
-LA0KPiAgCQkJCSAgX19mdW5jX18pOw0KPiAgCQkJcmV0dXJuIElSUV9IQU5ETEVEOw0KPiAgCQl9
-DQo+IA0KPiAtCQlkZXRlY3RlZCAmPSAoUENJX0VYUF9TTFRTVEFfQUJQIHwgUENJX0VYUF9TTFRT
-VEFfUEZEIHwNCj4gKwkJZGV0ZWN0ZWQgPSBzbG90X3N0YXR1cyAmIChQQ0lfRVhQX1NMVFNUQV9B
-QlAgfA0KPiArCQkJICAgICBQQ0lfRVhQX1NMVFNUQV9QRkQgfA0KPiAgCQkJICAgICBQQ0lfRVhQ
-X1NMVFNUQV9QREMgfA0KPiAgCQkJICAgICBQQ0lfRVhQX1NMVFNUQV9DQyB8IFBDSV9FWFBfU0xU
-U1RBX0RMTFNDKTsNCj4gIAkJZGV0ZWN0ZWQgJj0gfmludHJfbG9jOw0KPiAgCQlpbnRyX2xvYyB8
-PSBkZXRlY3RlZDsNCj4gIAkJaWYgKCFpbnRyX2xvYykNCj4gIAkJCXJldHVybiBJUlFfTk9ORTsN
-Cj4gLQkJaWYgKGRldGVjdGVkKQ0KPiAtCQkJcGNpZV9jYXBhYmlsaXR5X3dyaXRlX3dvcmQocGRl
-diwgUENJX0VYUF9TTFRTVEEsDQo+IC0JCQkJCQkgICBpbnRyX2xvYyk7DQo+ICAJfSB3aGlsZSAo
-ZGV0ZWN0ZWQpOw0KPiANCj4gIAljdHJsX2RiZyhjdHJsLCAicGVuZGluZyBpbnRlcnJ1cHRzICUj
-MDZ4IGZyb20gU2xvdCBTdGF0dXNcbiIsIGludHJfbG9jKTsNCj4gKwlpZiAoaW50cl9sb2MgJiBQ
-Q0lfRVhQX1NMVFNUQV9QREMpDQo+ICsJCXByZXNlbnQgPSAhIShzbG90X3N0YXR1cyAmIFBDSV9F
-WFBfU0xUU1RBX1BEUyk7DQo+ICsJaWYgKGludHJfbG9jICYgUENJX0VYUF9TTFRTVEFfRExMU0Mp
-DQo+ICsJCWxpbmsgPSBwY2llaHBfY2hlY2tfbGlua19hY3RpdmUoY3RybCk7DQo+ICsNCj4gKwlw
-Y2llX2NhcGFiaWxpdHlfd3JpdGVfd29yZChwZGV2LCBQQ0lfRVhQX1NMVFNUQSwgaW50cl9sb2Mp
-Ow0KPiANCj4gIAkvKiBDaGVjayBDb21tYW5kIENvbXBsZXRlIEludGVycnVwdCBQZW5kaW5nICov
-DQo+ICAJaWYgKGludHJfbG9jICYgUENJX0VYUF9TTFRTVEFfQ0MpIHsNCj4gQEAgLTYwMyw3ICs2
-MDcsNiBAQCBzdGF0aWMgaXJxcmV0dXJuX3QgcGNpZV9pc3IoaW50IGlycSwgdm9pZCAqZGV2X2lk
-KQ0KPiANCj4gIAkvKiBDaGVjayBQcmVzZW5jZSBEZXRlY3QgQ2hhbmdlZCAqLw0KPiAgCWlmIChp
-bnRyX2xvYyAmIFBDSV9FWFBfU0xUU1RBX1BEQykgew0KPiAtCQlwY2llaHBfZ2V0X2FkYXB0ZXJf
-c3RhdHVzKHNsb3QsICZwcmVzZW50KTsNCj4gIAkJY3RybF9pbmZvKGN0cmwsICJDYXJkICVzcHJl
-c2VudCBvbiBTbG90KCVzKVxuIiwNCj4gIAkJCSAgcHJlc2VudCA/ICIiIDogIm5vdCAiLCBzbG90
-X25hbWUoc2xvdCkpOw0KPiAgCQlwY2llaHBfcXVldWVfaW50ZXJydXB0X2V2ZW50KHNsb3QsIHBy
-ZXNlbnQgPyBJTlRfUFJFU0VOQ0VfT04gOg0KPiBAQCAtNjE4LDcgKzYyMSw2IEBAIHN0YXRpYyBp
-cnFyZXR1cm5fdCBwY2llX2lzcihpbnQgaXJxLCB2b2lkICpkZXZfaWQpDQo+ICAJfQ0KPiANCj4g
-IAlpZiAoaW50cl9sb2MgJiBQQ0lfRVhQX1NMVFNUQV9ETExTQykgew0KPiAtCQlsaW5rID0gcGNp
-ZWhwX2NoZWNrX2xpbmtfYWN0aXZlKGN0cmwpOw0KPiAgCQljdHJsX2luZm8oY3RybCwgInNsb3Qo
-JXMpOiBMaW5rICVzIGV2ZW50XG4iLA0KPiAgCQkJICBzbG90X25hbWUoc2xvdCksIGxpbmsgPyAi
-VXAiIDogIkRvd24iKTsNCj4gIAkJcGNpZWhwX3F1ZXVlX2ludGVycnVwdF9ldmVudChzbG90LCBs
-aW5rID8gSU5UX0xJTktfVVAgOg0KPiANCj4gDQoNCkhpIFJhamF0L0Jqb3JuDQpDb3VsZCB5b3Ug
-cGxlYXNlIGNvbW1lbnQsIGlmIHRoZSBwcm9wb3NhbCBjYW4gYmUgd29ya2VkIG91dCBvciB3ZSBz
-aG91bGQgY29uc2lkZXINCnJlbW92aW5nIGRvIHsuLn0gd2hpbGUgYXQgYWxsIGFzIEtlaXRoLCBC
-dXNjaCBjb21tZW50ZWQgYXMgdGhhdCdzIG5vdCByZWFsbHkgcGVyZm9ybWFuY2UNCnBhdGggb3Ig
-aXMgdGhlcmUgYW55IG90aGVyIHdheS9zdWdnZXN0aW9uIHlvdSB0aGluayBvZj8NCg0KDQo+ID4g
-Pg0KPiA+ID4gSWYgd2UgZG9uJ3QgY2xlYXIgdGhlIFNsb3QgZXZlbnQgcXVpY2sgZW5vdWdoIHRo
-ZW4gYWNjb3JkaW5nIHRvIHNwZWMuIHN0YXRlbWVudCBhYm92ZQ0KPiA+ID4gdGhhdCBldmVudCBj
-b3VsZCBnZXQgaWdub3JlZCBhbmQgU1cgbWF5IG5ldmVyIGdldCBub3RpZmllZC4NCj4gPiA+DQo+
-ID4gPg0KPiA+ID4NCj4gPiA+ID4gQnV0IEkgZG8gdGhpbmsgdGhhdCBpbiB0aGUgcmVzdWx0aW5n
-IGNvZGUsIHRoZSBjb25uZWN0aW9uIGJldHdlZW4NCj4gPiA+ID4NCj4gPiA+ID4gICAoMSkgdGhl
-IGV2ZW50cyB3ZSBsZWFybiBmcm9tIHRoZSBpbnRlcnJ1cHQgYW5kDQo+ID4gPiA+ICAgKDIpIHRo
-ZSBxdWV1ZWQgd29yayBpdGVtcw0KPiA+ID4gPg0KPiA+ID4gPiBuZWVkcyB0byBiZSBjcnlzdGFs
-IGNsZWFyLiAgUmlnaHQgbm93IGl0J3MgYSBiaXQgbXVkZHkgYmVjYXVzZSBvZg0KPiA+ID4gPiB0
-aGluZ3MgbGlrZSB0aGUgY2FzZSB5b3UgZml4ZWQ6IGEgd29yayBpdGVtIHRoYXQgZ29lcyBiYWNr
-IGFuZCBsb29rcw0KPiA+ID4gPiBhdCBQQ0lfRVhQX1NMVFNUQSBhZnRlciBpdCdzIGJlZW4gY2xl
-YXJlZCBhbmQgdGhlIGhhcmR3YXJlIG1heSBoYXZlDQo+ID4gPiA+IGFscmVhZHkgc2V0IGJpdHMg
-Zm9yIG5ldyBldmVudHMuDQo+ID4gPiA+DQo+ID4gPg0KPiA+ID4gSSBoYXZlIG1hZGUgYSBwcm90
-b3R5cGUgcGF0Y2ggaW4gbXkgZm9sbG93IHVwIHJlcGx5IGFuZCB0ZXN0ZWQgb2sgb24gbXkgZXhp
-c3Rpbmcgc2V0dXANCj4gPiA+IG9uIHdoaWNoIEkgY2F1Z2h0IHRoZSBwcmV2aW91cyBpc3N1ZSBh
-bHRob3VnaCBJIGNhbnQgc2F5IGl0IHdpbGwgd29yayBvbiBhbnkgSFcuDQo+ID4gPiBDbGVhcmlu
-ZyBldmVudHMgYWZ0ZXIgcXVldWluZyBldmVudHMgZ2F2ZSBzb21lIHByb2JsZW1zIGFuZCBkaWQg
-bm90IHdvcmsgcHJvcGVybHkgb24gbXkNCj4gPiA+IGV4aXN0aW5nIEhXIHdoZXJlIEkgdGVzdCB2
-ZXJ5IGZhc3QgaW5zZXJ0aW9uIGFuZCByZW1vdmFsIGV2ZW50cywgaW4gd2hpY2gNCj4gPiA+IGNh
-c2Ugb25seSAicmVtb3ZhbCIgZXZlbnQgY29tZXMgYW5kICJpbnNlcnRpb24iIGRvZXMgbm90IG9j
-Y3VyIGV2ZW4gaWYgSFcgZ2V0cyBwb3dlcmVkLg0KPiA+ID4NCj4gDQpJbnRlbCBEZXV0c2NobGFu
-ZCBHbWJIClJlZ2lzdGVyZWQgQWRkcmVzczogQW0gQ2FtcGVvbiAxMC0xMiwgODU1NzkgTmV1Ymli
-ZXJnLCBHZXJtYW55ClRlbDogKzQ5IDg5IDk5IDg4NTMtMCwgd3d3LmludGVsLmRlCk1hbmFnaW5n
-IERpcmVjdG9yczogQ2hyaXN0aW4gRWlzZW5zY2htaWQsIENocmlzdGlhbiBMYW1wcmVjaHRlcgpD
-aGFpcnBlcnNvbiBvZiB0aGUgU3VwZXJ2aXNvcnkgQm9hcmQ6IE5pY29sZSBMYXUKUmVnaXN0ZXJl
-ZCBPZmZpY2U6IE11bmljaApDb21tZXJjaWFsIFJlZ2lzdGVyOiBBbXRzZ2VyaWNodCBNdWVuY2hl
-biBIUkIgMTg2OTI4Cg==
+PCIe controller in X-Gene SoCs is not ECAM compliant: software
+needs to configure additional concontroller register to address
+device at bus:dev:function.
+
+This patch depends on "ECAM quirks handling for ARM64 platforms"
+series (http://www.spinics.net/lists/arm-kernel/msg530692.html)
+to address the limitation above for X-Gene PCIe controller.
+
+The quirk will only be applied for X-Gene PCIe MCFG table with
+OEM revison 1, 2, 3 or 4 (PCIe controller v1 and v2 on X-Gene SoCs).
+
+Signed-off-by: Duc Dang <dhdang@apm.com>
+---
+ drivers/acpi/pci_mcfg.c           |  32 +++++
+ drivers/pci/host/Makefile         |   2 +-
+ drivers/pci/host/pci-xgene-ecam.c | 280 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-ecam.h          |   5 +
+ 4 files changed, 318 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/host/pci-xgene-ecam.c
+
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index ddf338b..adce35f 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -123,6 +123,38 @@ static struct mcfg_fixup mcfg_quirks[] = {
+ 	{ "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+ 	  MCFG_RES_EMPTY},
+ #endif
++#ifdef CONFIG_PCI_XGENE
++	{"APM   ", "XGENE   ", 1, 0, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 1, 1, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 1, 2, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 1, 3, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 1, 4, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 2, 0, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 2, 1, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 2, 2, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 2, 3, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 2, 4, MCFG_BUS_ANY,
++		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 3, 0, MCFG_BUS_ANY,
++		&xgene_v2_1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 3, 1, MCFG_BUS_ANY,
++		&xgene_v2_1_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 4, 0, MCFG_BUS_ANY,
++		&xgene_v2_2_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 4, 1, MCFG_BUS_ANY,
++		&xgene_v2_2_pcie_ecam_ops, MCFG_RES_EMPTY},
++	{"APM   ", "XGENE   ", 4, 2, MCFG_BUS_ANY,
++		&xgene_v2_2_pcie_ecam_ops, MCFG_RES_EMPTY},
++#endif
+ };
+ 
+ static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 8843410..af4f505 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -15,7 +15,7 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+ obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+ obj-$(CONFIG_PCIE_XILINX_NWL) += pcie-xilinx-nwl.o
+-obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
++obj-$(CONFIG_PCI_XGENE) += pci-xgene.o pci-xgene-ecam.o
+ obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
+ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+diff --git a/drivers/pci/host/pci-xgene-ecam.c b/drivers/pci/host/pci-xgene-ecam.c
+new file mode 100644
+index 0000000..b66a04f
+--- /dev/null
++++ b/drivers/pci/host/pci-xgene-ecam.c
+@@ -0,0 +1,280 @@
++/*
++ * APM X-Gene PCIe ECAM fixup driver
++ *
++ * Copyright (c) 2016, Applied Micro Circuits Corporation
++ * Author:
++ *	Duc Dang <dhdang@apm.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/pci-acpi.h>
++#include <linux/platform_device.h>
++#include <linux/pci-ecam.h>
++
++#ifdef CONFIG_ACPI
++#define RTDID			0x160
++#define ROOT_CAP_AND_CTRL	0x5C
++
++/* PCIe IP version */
++#define XGENE_PCIE_IP_VER_UNKN	0
++#define XGENE_PCIE_IP_VER_1	1
++#define XGENE_PCIE_IP_VER_2	2
++
++#define XGENE_CSR_LENGTH	0x10000
++
++struct xgene_pcie_acpi_root {
++	void __iomem *csr_base;
++	u32 version;
++};
++
++static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
++{
++	struct xgene_pcie_acpi_root *xgene_root;
++	struct device *dev = cfg->parent;
++	u32 csr_base;
++
++	xgene_root = devm_kzalloc(dev, sizeof(*xgene_root), GFP_KERNEL);
++	if (!xgene_root)
++		return -ENOMEM;
++
++	switch (cfg->res.start) {
++	case 0xE0D0000000ULL:
++		csr_base = 0x1F2B0000;
++		break;
++	case 0xD0D0000000ULL:
++		csr_base = 0x1F2C0000;
++		break;
++	case 0x90D0000000ULL:
++		csr_base = 0x1F2D0000;
++		break;
++	case 0xA0D0000000ULL:
++		csr_base = 0x1F500000;
++		break;
++	case 0xC0D0000000ULL:
++		csr_base = 0x1F510000;
++		break;
++	default:
++		return -ENODEV;
++	}
++
++	xgene_root->csr_base = ioremap(csr_base, XGENE_CSR_LENGTH);
++	if (!xgene_root->csr_base) {
++		kfree(xgene_root);
++		return -ENODEV;
++	}
++
++	xgene_root->version = XGENE_PCIE_IP_VER_1;
++
++	cfg->priv = xgene_root;
++
++	return 0;
++}
++
++static int xgene_v2_1_pcie_ecam_init(struct pci_config_window *cfg)
++{
++	struct xgene_pcie_acpi_root *xgene_root;
++	struct device *dev = cfg->parent;
++	resource_size_t csr_base;
++
++	xgene_root = devm_kzalloc(dev, sizeof(*xgene_root), GFP_KERNEL);
++	if (!xgene_root)
++		return -ENOMEM;
++
++	switch (cfg->res.start) {
++	case 0xC0D0000000ULL:
++		csr_base = 0x1F2B0000;
++		break;
++	case 0xA0D0000000ULL:
++		csr_base = 0x1F2C0000;
++		break;
++	default:
++		return -ENODEV;
++	}
++
++	xgene_root->csr_base = ioremap(csr_base, XGENE_CSR_LENGTH);
++	if (!xgene_root->csr_base) {
++		kfree(xgene_root);
++		return -ENODEV;
++	}
++
++	xgene_root->version = XGENE_PCIE_IP_VER_2;
++
++	cfg->priv = xgene_root;
++
++	return 0;
++}
++
++static int xgene_v2_2_pcie_ecam_init(struct pci_config_window *cfg)
++{
++	struct xgene_pcie_acpi_root *xgene_root;
++	struct device *dev = cfg->parent;
++	resource_size_t csr_base;
++
++	xgene_root = devm_kzalloc(dev, sizeof(*xgene_root), GFP_KERNEL);
++	if (!xgene_root)
++		return -ENOMEM;
++
++	switch (cfg->res.start) {
++	case 0xE0D0000000ULL:
++		csr_base = 0x1F2B0000;
++		break;
++	case 0xA0D0000000ULL:
++		csr_base = 0x1F500000;
++		break;
++	case 0x90D0000000ULL:
++		csr_base = 0x1F2D0000;
++		break;
++	default:
++		return -ENODEV;
++	}
++
++	xgene_root->csr_base = ioremap(csr_base, XGENE_CSR_LENGTH);
++	if (!xgene_root->csr_base) {
++		kfree(xgene_root);
++		return -ENODEV;
++	}
++
++	xgene_root->version = XGENE_PCIE_IP_VER_2;
++
++	cfg->priv = xgene_root;
++
++	return 0;
++}
++/*
++ * For Configuration request, RTDID register is used as Bus Number,
++ * Device Number and Function number of the header fields.
++ */
++static void xgene_pcie_set_rtdid_reg(struct pci_bus *bus, uint devfn)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++	struct xgene_pcie_acpi_root *port = cfg->priv;
++	unsigned int b, d, f;
++	u32 rtdid_val = 0;
++
++	b = bus->number;
++	d = PCI_SLOT(devfn);
++	f = PCI_FUNC(devfn);
++
++	if (!pci_is_root_bus(bus))
++		rtdid_val = (b << 8) | (d << 3) | f;
++
++	writel(rtdid_val, port->csr_base + RTDID);
++	/* read the register back to ensure flush */
++	readl(port->csr_base + RTDID);
++}
++
++/*
++ * X-Gene PCIe port uses BAR0-BAR1 of RC's configuration space as
++ * the translation from PCI bus to native BUS.  Entire DDR region
++ * is mapped into PCIe space using these registers, so it can be
++ * reached by DMA from EP devices.  The BAR0/1 of bridge should be
++ * hidden during enumeration to avoid the sizing and resource allocation
++ * by PCIe core.
++ */
++static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
++{
++	if (pci_is_root_bus(bus) && ((offset == PCI_BASE_ADDRESS_0) ||
++				     (offset == PCI_BASE_ADDRESS_1)))
++		return true;
++
++	return false;
++}
++
++void __iomem *xgene_pcie_ecam_map_bus(struct pci_bus *bus,
++				      unsigned int devfn, int where)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++	unsigned int busn = bus->number;
++	void __iomem *base;
++
++	if (busn < cfg->busr.start || busn > cfg->busr.end)
++		return NULL;
++
++	if ((pci_is_root_bus(bus) && devfn != 0) ||
++	    xgene_pcie_hide_rc_bars(bus, where))
++		return NULL;
++
++	xgene_pcie_set_rtdid_reg(bus, devfn);
++
++	if (busn > cfg->busr.start)
++		base = cfg->win + (1 << cfg->ops->bus_shift);
++	else
++		base = cfg->win;
++
++	return base + where;
++}
++
++static int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++	struct xgene_pcie_acpi_root *port = cfg->priv;
++
++	if (pci_generic_config_read32(bus, devfn, where & ~0x3, 4, val) !=
++	    PCIBIOS_SUCCESSFUL)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	/*
++	* The v1 controller has a bug in its Configuration Request
++	* Retry Status (CRS) logic: when CRS is enabled and we read the
++	* Vendor and Device ID of a non-existent device, the controller
++	* fabricates return data of 0xFFFF0001 ("device exists but is not
++	* ready") instead of 0xFFFFFFFF ("device does not exist").  This
++	* causes the PCI core to retry the read until it times out.
++	* Avoid this by not claiming to support CRS.
++	*/
++	if (pci_is_root_bus(bus) && (port->version == XGENE_PCIE_IP_VER_1) &&
++	    ((where & ~0x3) == ROOT_CAP_AND_CTRL))
++		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++struct pci_ecam_ops xgene_v1_pcie_ecam_ops = {
++	.bus_shift	= 16,
++	.init		= xgene_v1_pcie_ecam_init,
++	.pci_ops	= {
++		.map_bus	= xgene_pcie_ecam_map_bus,
++		.read		= xgene_pcie_config_read32,
++		.write		= pci_generic_config_write,
++	}
++};
++
++struct pci_ecam_ops xgene_v2_1_pcie_ecam_ops = {
++	.bus_shift	= 16,
++	.init		= xgene_v2_1_pcie_ecam_init,
++	.pci_ops	= {
++		.map_bus	= xgene_pcie_ecam_map_bus,
++		.read		= xgene_pcie_config_read32,
++		.write		= pci_generic_config_write,
++	}
++};
++
++struct pci_ecam_ops xgene_v2_2_pcie_ecam_ops = {
++	.bus_shift	= 16,
++	.init		= xgene_v2_2_pcie_ecam_init,
++	.pci_ops	= {
++		.map_bus	= xgene_pcie_ecam_map_bus,
++		.read		= xgene_pcie_config_read32,
++		.write		= pci_generic_config_write,
++	}
++};
++#endif
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 35f0e81..40da3e7 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -65,6 +65,11 @@ extern struct pci_ecam_ops pci_thunder_pem_ops;
+ #ifdef CONFIG_PCI_HOST_THUNDER_ECAM
+ extern struct pci_ecam_ops pci_thunder_ecam_ops;
+ #endif
++#ifdef CONFIG_PCI_XGENE
++extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops;
++extern struct pci_ecam_ops xgene_v2_1_pcie_ecam_ops;
++extern struct pci_ecam_ops xgene_v2_2_pcie_ecam_ops;
++#endif
+ 
+ #ifdef CONFIG_PCI_HOST_GENERIC
+ /* for DT-based PCI controllers that support ECAM */
+-- 
+1.9.1
