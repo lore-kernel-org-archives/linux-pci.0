@@ -1,94 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40442 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932237AbcISSLy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Sep 2016 14:11:54 -0400
-Date: Mon, 19 Sep 2016 13:11:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Tang, CQ" <cq.tang@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Lance Ortiz <lance.ortiz@hpe.com>,
-        Betty Dall <betty.dall@hpe.com>,
-        Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-        Chen Gong <gong.chen@linux.intel.com>,
-        "KeithBuschkeith.busch@intel.com" <KeithBuschkeith.busch@intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from mail-db5eur01on0043.outbound.protection.outlook.com ([104.47.2.43]:28739
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755486AbcIRDhc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 17 Sep 2016 23:37:32 -0400
+From: Po Liu <po.liu@nxp.com>
+To: Shawn Guo <shawnguo@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Shuah Khan <shuahkh@osg.samsung.com>,
-        "Huang, Ying" <ying.huang@intel.com>,
-        Vijay Mohan Pandarathil <vijaymohan.pandarathil@hpe.com>,
-        "Derrick, Jonathan" <jonathan.derrick@intel.com>
-Subject: Re: [PATCH 0/2] PCI/AER: Remove module parameters
-Message-ID: <20160919181148.GC13775@localhost>
-References: <20160906221522.23655.66321.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160914203019.GB13189@localhost>
- <1D440B9B88E22A4ABEF89F9F1F81BC2949120D8F@FMSMSX106.amr.corp.intel.com>
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Stuart Yoder <stuart.yoder@nxp.com>,
+        Leo Li <leoyang.li@nxp.com>,
+        "M.H. Lian" <minghuan.lian@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>
+Subject: RE: [PATCH v5 3/3] pci:aer: add support aer interrupt with none
+ MSI/MSI-X/INTx mode
+Date: Sun, 18 Sep 2016 03:37:27 +0000
+Message-ID: <VI1PR0401MB1709F91B0C1EB6C80D741E4492F50@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
+ <1473741659-17618-1-git-send-email-po.liu@nxp.com>
+ <1473741659-17618-3-git-send-email-po.liu@nxp.com>
+ <20160918005212.GF15478@tiger>
+In-Reply-To: <20160918005212.GF15478@tiger>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1D440B9B88E22A4ABEF89F9F1F81BC2949120D8F@FMSMSX106.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 17, 2016 at 04:49:11AM +0000, Tang, CQ wrote:
-> Bjorn,
->      Can we extend this aerdriver to support AER from a root complex integrated endpoint? Root complex event collector has the same job as root port in this case.
-
-Seems like a reasonable idea.
-
->      It looks that both port driver and aer driver check PCI_EXP_TYPE_ROOT_PORT/PCI_EXP_TYPE_UPSTREAM/PCI_EXP_TYPE_DOWNSTREAM only.
-> portdrv_pci.c:127, aerdrv.c:86
-> 
->       Is it just a simple addition of PCI_EXP_TYPE_RC_EC to above two places?  Is there any difference to recover a root complex integrated endpoint? (compared with devices connected to root port).
-
-It may well be that the extension would be as simple as you suggest.
-If you want to test and post a patch to that effect, I'll review it
-more carefully.
-
-Bjorn
-
-> > -----Original Message-----
-> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
-> > Sent: Wednesday, September 14, 2016 1:30 PM
-> > To: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: linux-pci@vger.kernel.org; Lance Ortiz <lance.ortiz@hpe.com>; Betty Dall
-> > <betty.dall@hpe.com>; Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>;
-> > Chen Gong <gong.chen@linux.intel.com>; KeithBuschkeith.busch@intel.com;
-> > Rafael J. Wysocki <rjw@rjwysocki.net>; linux-kernel@vger.kernel.org; Shuah
-> > Khan <shuahkh@osg.samsung.com>; Huang, Ying <ying.huang@intel.com>;
-> > Vijay Mohan Pandarathil <vijaymohan.pandarathil@hpe.com>; Derrick,
-> > Jonathan <jonathan.derrick@intel.com>
-> > Subject: Re: [PATCH 0/2] PCI/AER: Remove module parameters
-> > 
-> > On Tue, Sep 06, 2016 at 05:19:22PM -0500, Bjorn Helgaas wrote:
-> > > I'd like to remove the aerdriver.nosourceid and aerdriver.forceload
-> > > kernel parameters.  They seem like basically debugging things that are
-> > > not really supportable upstream.
-> > >
-> > > "nosourceid" may have some legitimate uses, but I'd rather it were
-> > > done via quirks with the flag Jon Derrick recently added so it happens
-> > > automatically, without users having to specify the parameter.
-> > >
-> > > I don't *know* of any actual users of either of these, but obviously
-> > > that doesn't mean there are none.  Comments welcome.
-> > >
-> > > ---
-> > >
-> > > Bjorn Helgaas (2):
-> > >       PCI/AER: Remove aerdriver.nosourceid kernel parameter
-> > >       PCI/AER: Remove aerdriver.forceload kernel parameter
-> > >
-> > >
-> > >  Documentation/PCI/pcieaer-howto.txt |   26 +++++++++-----------------
-> > >  drivers/pci/pcie/aer/aerdrv.c       |    7 +------
-> > >  drivers/pci/pcie/aer/aerdrv.h       |    8 --------
-> > >  drivers/pci/pcie/aer/aerdrv_core.c  |   31 ++++---------------------------
-> > >  4 files changed, 14 insertions(+), 58 deletions(-)
-> > 
-> > I'm going to go out on a limb a little bit and apply these to pci/aer for v4.9.
-> > Please let me know if you trip over any issues.
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> > body of a message to majordomo@vger.kernel.org More majordomo info at
-> > http://vger.kernel.org/majordomo-info.html
+SGkgU2hhd24sDQoNCg0KPiAgLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gIEZyb206IFNo
+YXduIEd1byBbbWFpbHRvOnNoYXduZ3VvQGtlcm5lbC5vcmddDQo+ICBTZW50OiBTdW5kYXksIFNl
+cHRlbWJlciAxOCwgMjAxNiA4OjUyIEFNDQo+ICBUbzogUG8gTGl1DQo+ICBDYzogbGludXgtcGNp
+QHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0K
+PiAgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5v
+cmc7IFJveSBaYW5nOyBBcm5kDQo+ICBCZXJnbWFubjsgTWFyYyBaeW5naWVyOyBTdHVhcnQgWW9k
+ZXI7IExlbyBMaTsgTS5ILiBMaWFuOyBNdXJhbGkNCj4gIEthcmljaGVyaTsgQmpvcm4gSGVsZ2Fh
+czsgTWluZ2thaSBIdQ0KPiAgU3ViamVjdDogUmU6IFtQQVRDSCB2NSAzLzNdIHBjaTphZXI6IGFk
+ZCBzdXBwb3J0IGFlciBpbnRlcnJ1cHQgd2l0aCBub25lDQo+ICBNU0kvTVNJLVgvSU5UeCBtb2Rl
+DQo+ICANCj4gIE9uIFR1ZSwgU2VwIDEzLCAyMDE2IGF0IDEyOjQwOjU5UE0gKzA4MDAsIFBvIExp
+dSB3cm90ZToNCj4gID4gT24gc29tZSBwbGF0Zm9ybXMsIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBv
+cnQgTVNJL01TSS1YL0lOVHggaW4gUkMgbW9kZS4NCj4gID4gV2hlbiBjaGlwIHN1cHBvcnQgdGhl
+IGFlciBpbnRlcnJ1cHQgd2l0aCBub25lIE1TSS9NU0ktWC9JTlR4IG1vZGUsDQo+ICA+IG1heWJl
+IHRoZXJlIGlzIGludGVycnVwdCBsaW5lIGZvciBhZXIgcG1lIGV0Yy4gU2VhcmNoIHRoZSBpbnRl
+cnJ1cHQNCj4gID4gbnVtYmVyIGluIHRoZSBmZHQgZmlsZS4gVGhlbiBmaXh1cCB0aGUgZGV2LT5p
+cnEgd2l0aCBpdC4NCj4gID4NCj4gID4gU2lnbmVkLW9mZi1ieTogUG8gTGl1IDxwby5saXVAbnhw
+LmNvbT4NCj4gIA0KPiAgV2lsbCB0aGUgbmV3IGtlcm5lbCB3b3JrIHdpdGggZXhpc3Rpbmcvb2xk
+IERUQj8gIEknbSB0cnlpbmcgdG8NCj4gIHVuZGVyc3RhbmQgdGhlIGRlcGVuZGVuY3kgYmV0d2Vl
+biBkcml2ZXIgYW5kIERUUyBjaGFuZ2VzLg0KDQpZZXMsIFdlJ3ZlIG5ldmVyIHVzZSBuYW1lICdp
+bnRyJyBiZWZvcmUuIFNvIHdlIHJlbW92ZSBpdCBpcyBvay4gDQonYWVyJyBpcyBhIGR0cyBuYW1l
+IGZvciByZXNlYXJjaGluZyBpdCdzIHRydWUgaW50ZXJydXB0IG51bWJlciBieSBrZXJuZWwuIFRo
+aXMgcGF0Y2ggaXMgZmlyc3QgdGltZSB0byB1c2UgbmFtZSAnYWVyJy4gU28gaXQgbXVzdCBiZSBj
+b21wYXRpYmxlIHdpdGggZXhpc3Rpbmcvb2xkIERUQi4NCg0KPiAgDQo+ICBTaGF3bg0KPiAgDQo+
+ICA+IC0tLQ0KPiAgPiBjaGFuZ2VzIGZvciB2NToNCj4gID4gCS0gQWRkIGNsZWFyICdhZXInIGlu
+dGVycnVwLW5hbWVzIGRlc2NyaXB0aW9uDQo+ICA+DQo+ICA+ICAuLi4vZGV2aWNldHJlZS9iaW5k
+aW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0ICAgICB8IDExICsrKysrLS0tDQo+ICA+ICBkcml2
+ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29yZS5jICAgICAgICAgICAgICAgICAgICB8IDMxDQo+ICAr
+KysrKysrKysrKysrKysrKysrLS0tDQo+ICA+ICAyIGZpbGVzIGNoYW5nZWQsIDM1IGluc2VydGlv
+bnMoKyksIDcgZGVsZXRpb25zKC0pDQo+ICA+DQo+ICA+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0
+aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dA0KPiAgPiBiL0Rv
+Y3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+
+ICA+IGluZGV4IDQxZTlmNTUuLjEwMWQwYTcgMTAwNjQ0DQo+ICA+IC0tLSBhL0RvY3VtZW50YXRp
+b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ICA+ICsrKyBi
+L0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0
+DQo+ICA+IEBAIC0xOCw4ICsxOCwxMCBAQCBSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiAgPiAgLSBy
+ZWc6IGJhc2UgYWRkcmVzc2VzIGFuZCBsZW5ndGhzIG9mIHRoZSBQQ0llIGNvbnRyb2xsZXINCj4g
+ID4gIC0gaW50ZXJydXB0czogQSBsaXN0IG9mIGludGVycnVwdCBvdXRwdXRzIG9mIHRoZSBjb250
+cm9sbGVyLiBNdXN0DQo+ICBjb250YWluIGFuDQo+ICA+ICAgIGVudHJ5IGZvciBlYWNoIGVudHJ5
+IGluIHRoZSBpbnRlcnJ1cHQtbmFtZXMgcHJvcGVydHkuDQo+ICA+IC0tIGludGVycnVwdC1uYW1l
+czogTXVzdCBpbmNsdWRlIHRoZSBmb2xsb3dpbmcgZW50cmllczoNCj4gID4gLSAgImludHIiOiBU
+aGUgaW50ZXJydXB0IHRoYXQgaXMgYXNzZXJ0ZWQgZm9yIGNvbnRyb2xsZXIgaW50ZXJydXB0cw0K
+PiAgPiArLSBpbnRlcnJ1cHQtbmFtZXM6IEl0IG1heSBiZSBpbmNsdWRlIHRoZSBmb2xsb3dpbmcg
+ZW50cmllczoNCj4gID4gKyAgImFlciI6IFRoZSBpbnRlcnJ1cHQgdGhhdCBpcyBhc3NlcnRlZCBm
+b3IgYWVyIGludGVycnVwdA0KPiAgPiArICAicG1lIjogVGhlIGludGVycnVwdCB0aGF0IGlzIGFz
+c2VydGVkIGZvciBwbWUgaW50ZXJydXB0DQo+ICA+ICsgIC4uLi4uLg0KPiAgPiAgLSBmc2wscGNp
+ZS1zY2ZnOiBNdXN0IGluY2x1ZGUgdHdvIGVudHJpZXMuDQo+ICA+ICAgIFRoZSBmaXJzdCBlbnRy
+eSBtdXN0IGJlIGEgbGluayB0byB0aGUgU0NGRyBkZXZpY2Ugbm9kZQ0KPiAgPiAgICBUaGUgc2Vj
+b25kIGVudHJ5IG11c3QgYmUgJzAnIG9yICcxJyBiYXNlZCBvbiBwaHlzaWNhbCBQQ0llDQo+ICBj
+b250cm9sbGVyIGluZGV4Lg0KPiAgPiBAQCAtMzUsOCArMzcsOSBAQCBFeGFtcGxlOg0KPiAgPiAg
+CQlyZWcgPSA8MHgwMCAweDAzNDAwMDAwIDB4MCAweDAwMDEwMDAwICAgLyogY29udHJvbGxlcg0K
+PiAgcmVnaXN0ZXJzICovDQo+ICA+ICAJCSAgICAgICAweDQwIDB4MDAwMDAwMDAgMHgwIDB4MDAw
+MDIwMDA+OyAvKiBjb25maWd1cmF0aW9uDQo+ICBzcGFjZSAqLw0KPiAgPiAgCQlyZWctbmFtZXMg
+PSAicmVncyIsICJjb25maWciOw0KPiAgPiAtCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMTc3IElS
+UV9UWVBFX0xFVkVMX0hJR0g+OyAvKg0KPiAgY29udHJvbGxlciBpbnRlcnJ1cHQgKi8NCj4gID4g
+LQkJaW50ZXJydXB0LW5hbWVzID0gImludHIiOw0KPiAgPiArCQlpbnRlcnJ1cHRzID0gPEdJQ19T
+UEkgMTc2IElSUV9UWVBFX0xFVkVMX0hJR0g+LCAvKiBhZXINCj4gIGludGVycnVwdCAqLw0KPiAg
+PiArCQkJPEdJQ19TUEkgMTc3IElSUV9UWVBFX0xFVkVMX0hJR0g+OyAvKiBwbWUgaW50ZXJydXB0
+ICovDQo+ICA+ICsJCWludGVycnVwdC1uYW1lcyA9ICJhZXIiLCAicG1lIjsNCj4gID4gIAkJZnNs
+LHBjaWUtc2NmZyA9IDwmc2NmZyAwPjsNCj4gID4gIAkJI2FkZHJlc3MtY2VsbHMgPSA8Mz47DQo+
+ICA+ICAJCSNzaXplLWNlbGxzID0gPDI+Ow0KPiAgPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kv
+cGNpZS9wb3J0ZHJ2X2NvcmUuYw0KPiAgPiBiL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydl9jb3Jl
+LmMgaW5kZXggZTkyNzBiNC4uN2M0OTQzZCAxMDA2NDQNCj4gID4gLS0tIGEvZHJpdmVycy9wY2kv
+cGNpZS9wb3J0ZHJ2X2NvcmUuYw0KPiAgPiArKysgYi9kcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZf
+Y29yZS5jDQo+ICA+IEBAIC0xNiw2ICsxNiw3IEBADQo+ICA+ICAjaW5jbHVkZSA8bGludXgvc2xh
+Yi5oPg0KPiAgPiAgI2luY2x1ZGUgPGxpbnV4L3BjaWVwb3J0X2lmLmg+DQo+ICA+ICAjaW5jbHVk
+ZSA8bGludXgvYWVyLmg+DQo+ICA+ICsjaW5jbHVkZSA8bGludXgvb2ZfaXJxLmg+DQo+ICA+DQo+
+ICA+ICAjaW5jbHVkZSAiLi4vcGNpLmgiDQo+ICA+ICAjaW5jbHVkZSAicG9ydGRydi5oIg0KPiAg
+PiBAQCAtMjAwLDYgKzIwMSwyOCBAQCBzdGF0aWMgaW50IHBjaWVfcG9ydF9lbmFibGVfbXNpeChz
+dHJ1Y3QgcGNpX2Rldg0KPiAgPiAqZGV2LCBpbnQgKnZlY3RvcnMsIGludCBtYXNrKSAgc3RhdGlj
+IGludCBpbml0X3NlcnZpY2VfaXJxcyhzdHJ1Y3QNCj4gID4gcGNpX2RldiAqZGV2LCBpbnQgKmly
+cXMsIGludCBtYXNrKSAgew0KPiAgPiAgCWludCBpLCBpcnEgPSAtMTsNCj4gID4gKwlpbnQgcmV0
+Ow0KPiAgPiArCXN0cnVjdCBkZXZpY2Vfbm9kZSAqbnAgPSBOVUxMOw0KPiAgPiArDQo+ICA+ICsJ
+Zm9yIChpID0gMDsgaSA8IFBDSUVfUE9SVF9ERVZJQ0VfTUFYU0VSVklDRVM7IGkrKykNCj4gID4g
+KwkJaXJxc1tpXSA9IDA7DQo+ICA+ICsNCj4gID4gKwlpZiAoZGV2LT5idXMtPmRldi5vZl9ub2Rl
+KQ0KPiAgPiArCQlucCA9IGRldi0+YnVzLT5kZXYub2Zfbm9kZTsNCj4gID4gKw0KPiAgPiArCS8q
+IElmIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBvcnQgTVNJL01TSS1YL0lOVHggaW4gUkMgbW9kZSwN
+Cj4gID4gKwkgKiByZXF1ZXN0IGlycSBmb3IgYWVyDQo+ICA+ICsJICovDQo+ICA+ICsJaWYgKElT
+X0VOQUJMRUQoQ09ORklHX09GX0lSUSkgJiYgbnAgJiYNCj4gID4gKwkJCShtYXNrICYgUENJRV9Q
+T1JUX1NFUlZJQ0VfUE1FKSkgew0KPiAgPiArCQlyZXQgPSBvZl9pcnFfZ2V0X2J5bmFtZShucCwg
+ImFlciIpOw0KPiAgPiArCQlpZiAocmV0ID4gMCkgew0KPiAgPiArCQkJaXJxc1tQQ0lFX1BPUlRf
+U0VSVklDRV9BRVJfU0hJRlRdID0gcmV0Ow0KPiAgPiArCQkJaWYgKGRldi0+aXJxKQ0KPiAgPiAr
+CQkJCWlycSA9IGRldi0+aXJxOw0KPiAgPiArCQkJZ290byBub19tc2k7DQo+ICA+ICsJCX0NCj4g
+ID4gKwl9DQo+ICA+DQo+ICA+ICAJLyoNCj4gID4gIAkgKiBJZiBNU0kgY2Fubm90IGJlIHVzZWQg
+Zm9yIFBDSWUgUE1FIG9yIGhvdHBsdWcsIHdlIGhhdmUgdG8gdXNlDQo+ICBAQA0KPiAgPiAtMjI1
+LDExICsyNDgsMTMgQEAgc3RhdGljIGludCBpbml0X3NlcnZpY2VfaXJxcyhzdHJ1Y3QgcGNpX2Rl
+diAqZGV2LA0KPiAgaW50ICppcnFzLCBpbnQgbWFzaykNCj4gID4gIAkJaXJxID0gZGV2LT5pcnE7
+DQo+ICA+DQo+ICA+ICAgbm9fbXNpOg0KPiAgPiAtCWZvciAoaSA9IDA7IGkgPCBQQ0lFX1BPUlRf
+REVWSUNFX01BWFNFUlZJQ0VTOyBpKyspDQo+ICA+IC0JCWlycXNbaV0gPSBpcnE7DQo+ICA+ICsJ
+Zm9yIChpID0gMDsgaSA8IFBDSUVfUE9SVF9ERVZJQ0VfTUFYU0VSVklDRVM7IGkrKykgew0KPiAg
+PiArCQlpZiAoIWlycXNbaV0pDQo+ICA+ICsJCQlpcnFzW2ldID0gaXJxOw0KPiAgPiArCX0NCj4g
+ID4gIAlpcnFzW1BDSUVfUE9SVF9TRVJWSUNFX1ZDX1NISUZUXSA9IC0xOw0KPiAgPg0KPiAgPiAt
+CWlmIChpcnEgPCAwKQ0KPiAgPiArCWlmIChpcnEgPCAwICYmIGlycXNbUENJRV9QT1JUX1NFUlZJ
+Q0VfQUVSX1NISUZUXSA8IDApDQo+ICA+ICAJCXJldHVybiAtRU5PREVWOw0KPiAgPiAgCXJldHVy
+biAwOw0KPiAgPiAgfQ0KPiAgPiAtLQ0KPiAgPiAyLjEuMC4yNy5nOTZkYjMyNA0KPiAgPg0KPiAg
+Pg0KPiAgPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXw0K
+PiAgPiBsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdA0KPiAgPiBsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gID4gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFp
+bG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsDQo=
