@@ -1,89 +1,140 @@
-Return-Path: <cq.tang@intel.com>
-Return-Path: <cq.tang@intel.com>
-From: "Tang, CQ" <cq.tang@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Lance Ortiz
-	<lance.ortiz@hpe.com>, Betty Dall <betty.dall@hpe.com>, Hidetoshi Seto
-	<seto.hidetoshi@jp.fujitsu.com>, Chen Gong <gong.chen@linux.intel.com>,
-	"KeithBuschkeith.busch@intel.com" <KeithBuschkeith.busch@intel.com>, "Rafael
- J. Wysocki" <rjw@rjwysocki.net>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Shuah Khan <shuahkh@osg.samsung.com>,
-	"Huang, Ying" <ying.huang@intel.com>, Vijay Mohan Pandarathil
-	<vijaymohan.pandarathil@hpe.com>, "Derrick, Jonathan"
-	<jonathan.derrick@intel.com>
-Subject: RE: [PATCH 0/2] PCI/AER: Remove module parameters
-Date: Sat, 17 Sep 2016 04:49:11 +0000
-Message-ID: <1D440B9B88E22A4ABEF89F9F1F81BC2949120D8F@FMSMSX106.amr.corp.intel.com>
-References: <20160906221522.23655.66321.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160914203019.GB13189@localhost>
-In-Reply-To: <20160914203019.GB13189@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43436 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752824AbcIRRHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 18 Sep 2016 13:07:16 -0400
+Date: Sun, 18 Sep 2016 20:07:07 +0300
+From: Leon Romanovsky <leonro@leon.nu>
+To: Yuval Shaia <yuval.shaia@oracle.com>
+Cc: Adit Ranadive <aditr@vmware.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 09/16] IB/pvrdma: Add support for Completion Queues
+Message-ID: <20160918170707.GL2923@leon.nu>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-10-git-send-email-aditr@vmware.com>
+ <20160914124321.GE15800@yuval-lap.uk.oracle.com>
+ <BLUPR0501MB836640F5ECEAB3A99CD82BFC5F00@BLUPR0501MB836.namprd05.prod.outlook.com>
+ <20160915073611.GA3851@yuval-lap.uk.oracle.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="9ToWwKEyhugL+MAz"
+In-Reply-To: <20160915073611.GA3851@yuval-lap.uk.oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
-     Can we extend this aerdriver to support AER from a root complex integr=
-ated endpoint? Root complex event collector has the same job as root port i=
-n this case.
 
-     It looks that both port driver and aer driver check PCI_EXP_TYPE_ROOT_=
-PORT/PCI_EXP_TYPE_UPSTREAM/PCI_EXP_TYPE_DOWNSTREAM only.
-portdrv_pci.c:127, aerdrv.c:86
+--9ToWwKEyhugL+MAz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-      Is it just a simple addition of PCI_EXP_TYPE_RC_EC to above two place=
-s?  Is there any difference to recover a root complex integrated endpoint? =
-(compared with devices connected to root port).
+On Thu, Sep 15, 2016 at 10:36:12AM +0300, Yuval Shaia wrote:
+> Hi Adit,
+> Please see my comments inline.
+>
+> Besides that I have no more comment for this patch.
+>
+> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+>
+> Yuval
+>
+> On Thu, Sep 15, 2016 at 12:07:29AM +0000, Adit Ranadive wrote:
+> > On Wed, Sep 14, 2016 at 05:43:37 -0700, Yuval Shaia wrote:
+> > > On Sun, Sep 11, 2016 at 09:49:19PM -0700, Adit Ranadive wrote:
+> > > > +
+> > > > +static int pvrdma_poll_one(struct pvrdma_cq *cq, struct pvrdma_qp
+> > > **cur_qp,
+> > > > +			   struct ib_wc *wc)
+> > > > +{
+> > > > +	struct pvrdma_dev *dev = to_vdev(cq->ibcq.device);
+> > > > +	int has_data;
+> > > > +	unsigned int head;
+> > > > +	bool tried = false;
+> > > > +	struct pvrdma_cqe *cqe;
+> > > > +
+> > > > +retry:
+> > > > +	has_data = pvrdma_idx_ring_has_data(&cq->ring_state->rx,
+> > > > +					    cq->ibcq.cqe, &head);
+> > > > +	if (has_data == 0) {
+> > > > +		if (tried)
+> > > > +			return -EAGAIN;
+> > > > +
+> > > > +		/* Pass down POLL to give physical HCA a chance to poll. */
+> > > > +		pvrdma_write_uar_cq(dev, cq->cq_handle |
+> > > PVRDMA_UAR_CQ_POLL);
+> > > > +
+> > > > +		tried = true;
+> > > > +		goto retry;
+> > > > +	} else if (has_data == PVRDMA_INVALID_IDX) {
+> > >
+> > > I didn't went throw the entire life cycle of RX-ring's head and tail but you
+> > > need to make sure that PVRDMA_INVALID_IDX error is recoverable one, i.e
+> > > there is probability that in the next call to pvrdma_poll_one it will be fine.
+> > > Otherwise it is an endless loop.
+> >
+> > We have never run into this issue internally but I don't think we can recover here
+>
+> I briefly reviewed the life cycle of RX-ring's head and tail and didn't
+> caught any suspicious place that might corrupt it.
+> So glad to see that you never encountered this case.
+>
+> > in the driver. The only way to recover would be to destroy and recreate the CQ
+> > which we shouldn't do since it could be used by multiple QPs.
+>
+> Agree.
+> But don't they hit the same problem too?
+>
+> > We don't have a way yet to recover in the device. Once we add that this check
+> > should go away.
+>
+> To be honest i have no idea how to do that - i was expecting driver's vendors
+> to come up with an ideas :)
+> I once came up with an idea to force restart of the driver but it was
+> rejected.
+>
+> >
+> > The reason I returned an error value from poll_cq in v3 was to break the possible
+> > loop so that it might give clients a chance to recover. But since poll_cq is not expected
+> > to fail I just log the device error here. I can revert to that version if you want to break
+> > the possible loop.
+>
+> Clients (ULPs) cannot recover from this case. They even do not check the
+> reason of the error and treats any error as -EAGAIN.
 
-Thanks.
---CQ
+It is because poll_one is not expected to fall.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
-> Sent: Wednesday, September 14, 2016 1:30 PM
-> To: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org; Lance Ortiz <lance.ortiz@hpe.com>; Betty D=
-all
-> <betty.dall@hpe.com>; Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>;
-> Chen Gong <gong.chen@linux.intel.com>; KeithBuschkeith.busch@intel.com;
-> Rafael J. Wysocki <rjw@rjwysocki.net>; linux-kernel@vger.kernel.org; Shua=
-h
-> Khan <shuahkh@osg.samsung.com>; Huang, Ying <ying.huang@intel.com>;
-> Vijay Mohan Pandarathil <vijaymohan.pandarathil@hpe.com>; Derrick,
-> Jonathan <jonathan.derrick@intel.com>
-> Subject: Re: [PATCH 0/2] PCI/AER: Remove module parameters
->=20
-> On Tue, Sep 06, 2016 at 05:19:22PM -0500, Bjorn Helgaas wrote:
-> > I'd like to remove the aerdriver.nosourceid and aerdriver.forceload
-> > kernel parameters.  They seem like basically debugging things that are
-> > not really supportable upstream.
-> >
-> > "nosourceid" may have some legitimate uses, but I'd rather it were
-> > done via quirks with the flag Jon Derrick recently added so it happens
-> > automatically, without users having to specify the parameter.
-> >
-> > I don't *know* of any actual users of either of these, but obviously
-> > that doesn't mean there are none.  Comments welcome.
-> >
-> > ---
-> >
-> > Bjorn Helgaas (2):
-> >       PCI/AER: Remove aerdriver.nosourceid kernel parameter
-> >       PCI/AER: Remove aerdriver.forceload kernel parameter
-> >
-> >
-> >  Documentation/PCI/pcieaer-howto.txt |   26 +++++++++-----------------
-> >  drivers/pci/pcie/aer/aerdrv.c       |    7 +------
-> >  drivers/pci/pcie/aer/aerdrv.h       |    8 --------
-> >  drivers/pci/pcie/aer/aerdrv_core.c  |   31 ++++-----------------------=
-----
-> >  4 files changed, 14 insertions(+), 58 deletions(-)
->=20
-> I'm going to go out on a limb a little bit and apply these to pci/aer for=
- v4.9.
-> Please let me know if you trip over any issues.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in t=
-he
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+>
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--9ToWwKEyhugL+MAz
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX3sm7AAoJEORje4g2clinRrwP/1EFDeDViJt15ncCnvxRxk/M
+GxzKk8yfT7UqCv+ZX8kDIIm/o1RyLgmZov6SPm2ldXk63xfriWqe1RAVd120WTcM
+ZaD+kum8bXtwPSOCqnSfPk3uN0CVWnxHPOXcculF10sR4UcMctGAP5IjLzmGV55l
+xLZtnVbhaQEs7dpeAUYDk9h4+NOiedewb3YUaA/rsNp8+ceZB1jRTPX+JY5OBdEV
+RDmHUo72m0sING0lRLOX7TWXv6xpOk2Jqq3r3SgzPAemI9FZynCWEhiGuF010dMW
+R+uhA22NwOwobLXf7beBQ4/cgHm1PlUM7Cjkhx3sZb7N9+/01tCSI4kzIhtsOTfc
+bdPs/LH2gNMdm8mj5NJCDXPRK47IMVVmJ9qysUEElM5ierPHby7Y2R2951cS8x1G
+dM6VDVAw9YyBUNKK/yWfYRQMS/mYbmhBk4lZahp7Z96IaO3tMCo7Sncp28hQ5hm6
+L8+za80kyotyR6TQ9zRHjLfZ4xVNH8Zru9lOyYl9IO+f0KsNTOTNu5AU+80q3PLG
+pmXfyD8TItf5ldFwrfXr67ER1Nx2jGkJ3fhoD6KSry0krZguo5lilCSCz/HK4QB7
+KL4uOSVr4sOft5gZtzvQC/ek3H7Onz6+JhVzWdhto/+zzpUsCQDgVlj4QTbPaFSO
+CiVjr5sJf/59kVnuyG1V
+=ll8U
+-----END PGP SIGNATURE-----
+
+--9ToWwKEyhugL+MAz--
