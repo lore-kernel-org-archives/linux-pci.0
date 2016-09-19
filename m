@@ -1,56 +1,74 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>, Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 0/4] PCI PM refinements
-Date: Tue, 13 Sep 2016 00:15:01 +0200
-Message-ID: <2965902.zGUbeGnQJl@vostro.rjw.lan>
-In-Reply-To: <20160912220710.GH23532@localhost>
-References: <cover.1472554278.git.lukas@wunner.de> <20160912220710.GH23532@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yb0-f181.google.com ([209.85.213.181]:34656 "EHLO
+        mail-yb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750922AbcISSPk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Sep 2016 14:15:40 -0400
+Received: by mail-yb0-f181.google.com with SMTP id x93so93710147ybh.1
+        for <linux-pci@vger.kernel.org>; Mon, 19 Sep 2016 11:15:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Robert Jones <rjones@gateworks.com>
+Date: Mon, 19 Sep 2016 11:15:39 -0700
+Message-ID: <CALAE=UDqxjh1qt5OJexyonynj+uEyhiwdAtUF0_dD5ffRkUo=Q@mail.gmail.com>
+Subject: PCI Resource Allocation
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Richard Zhu <Richard.Zhu@freescale.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Tim Harvey <tharvey@gateworks.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, September 12, 2016 05:07:10 PM Bjorn Helgaas wrote:
-> On Wed, Aug 31, 2016 at 08:15:18AM +0200, Lukas Wunner wrote:
-> > The following patches are part of my Thunderbolt Runtime PM series.
-> > I'm posting them separately to split the series into digestible chunks.
-> > 
-> > They benefit everyone, not just Thunderbolt, and Thunderbolt works fine
-> > without them (just not with the same degree of perfection).
-> > 
-> > Patch [1/4] affords direct-complete to devices which are not platform-
-> > power-manageable, yet can be suspended to D3cold with a nonstandard
-> > mechanism. It does so using a heuristic: If a device's current_state
-> > is D3cold and it is not power-manageable, it is assumed that a
-> > nonstandard PM mechanism is at work and the device is left asleep.
-> > The patch is the outcome of a discussion with Rafael and Alan on
-> > linux-pci@ and I would like to thank both for tirelessly responding
-> > to my questions.
-> > 
-> > Patch [3/4] replaces the unconditional resume after direct-complete with
-> > a conditional resume by determining if the platform firmware has put the
-> > device in reset-power-on or not.
-> > 
-> > Because the D3cold state cannot be determined from the PMCSR, patch [2/4]
-> > adds a hook to query the platform firmware for its opinion on the device's
-> > power state.
-> > 
-> > Finally, patch [4/4] changes the shutdown handling of PCI devices such
-> > that they are no longer woken without reason.
-> > 
-> > The result of these patches should be a speedup and decreased power
-> > consumption for system sleep and system shutdown (both for devices that
-> > are platform-power-manageable and those that aren't).
-> > 
-> > If you prefer point & click interfaces, the patches are browsable here:
-> > https://github.com/l1k/linux/commits/thunderbolt_runpm_v3
-> 
-> Rafael, do you have any comment on these?  I don't have any objections
-> myself, but I'd like your opinion as the PM expert :)
+Greetings,
 
-Please give me some more time (a day or two should be sufficient).
+I'm looking into a PCI resource limitation issue on an IMX6 based
+board and I find that in the 3.14 kernel I am able to use 6 Ath10k
+devices with the following resources:
 
-Thanks,
-Rafael
+03:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac
+Wireless Network Adapter
+        Flags: fast devsel, IRQ 155
+        Memory at 01200000 (64-bit, non-prefetchable) [disabled] [size=2M]
+        [virtual] Expansion ROM at 01100000 [disabled] [size=64K]
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] MSI: Enable- Count=1/8 Maskable+ 64bit-
+        Capabilities: [70] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Virtual Channel
+        Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+
+In the 3.15 kernel following commit
+(5b28541552ef5eeffc41d6936105f38c2508e566), allocation has changed in
+such a way that results in none of the 6 radios nor the pci based
+ethernet interface being mapped.
+I am very new to PCI but after fiddling with some of the changes in
+the aforementioned commit I was able to come up with a 1 line patch
+that allows all 6 radios to once again become mapped and usable on the
+IMX6. The patch contents being:
+
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -807,6 +807,7 @@ static struct resource
+*find_free_bus_resource(struct pci_bus *bus,
+ {
+        int i;
+        struct resource *r;
++       type_mask = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH;
+
+        pci_bus_for_each_resource(bus, r, i) {
+                if (r == &ioport_resource || r == &iomem_resource)
+
+
+I understand that this blatantly ignores the type mask parameter and
+would greatly appreciate any insight that you can provide as far as
+the proper way to proceed.
+
+Note that the IMX6 has a limited memory window (16M) between the PCI
+core and the memory controller. This is mapped as:
+
+512KB config space
+64KB io space
+15MB mem space available for devices
+
+Best Regards,
+Robert
