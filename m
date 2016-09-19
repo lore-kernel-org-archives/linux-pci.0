@@ -1,267 +1,440 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [UPDATE PATCH V10 2/8] ACPI: Add new IORT functions to support MSI domain handling
-Date: Wed,  7 Sep 2016 13:58:13 +0200
-Message-Id: <1473249493-20271-1-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473152938-17388-3-git-send-email-tn@semihalf.com>
-References: <1473152938-17388-3-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54400 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751563AbcISUGX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Sep 2016 16:06:23 -0400
+Date: Mon, 19 Sep 2016 15:06:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Duc Dang <dhdang@apm.com>
+Cc: rafael@kernel.org, Lorenzo.Pieralisi@arm.com, arnd@arndb.de,
+        msalter@redhat.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        jcm@redhat.com, tn@semihalf.com, patches@apm.com
+Subject: Re: [RFC PATCH] PCI/ACPI: xgene: Add ECAM quirk for X-Gene PCIe
+ controller
+Message-ID: <20160919200614.GB21763@localhost>
+References: <1474122278-32525-1-git-send-email-dhdang@apm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474122278-32525-1-git-send-email-dhdang@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For ITS, MSI functionality consists on building domain stack and
-during that process we need to reference to domain stack components
-e.g. before we create new DOMAIN_BUS_PCI_MSI domain we need to specify
-its DOMAIN_BUS_NEXUS parent domain. In order to manage that process
-properly, maintain list which elements contain domain token
-(unique for MSI domain stack) and ITS ID: iort_register_domain_token()
-and iort_deregister_domain_token(). Then retrieve domain token
-any time later with ITS ID being key off: iort_find_domain_token().
-With domain token and domain type we are able to find corresponding
-IRQ domain.
+Hi Duc,
 
-Since IORT is prepared to describe MSI domain on a per-device basis,
-use existing IORT helpers and implement two calls:
-1. iort_msi_map_rid() to map MSI RID for a device
-2. iort_get_device_domain() to find domain token for a device
+On Sat, Sep 17, 2016 at 07:24:38AM -0700, Duc Dang wrote:
+> PCIe controller in X-Gene SoCs is not ECAM compliant: software
+> needs to configure additional concontroller register to address
+> device at bus:dev:function.
+> 
+> This patch depends on "ECAM quirks handling for ARM64 platforms"
+> series (http://www.spinics.net/lists/arm-kernel/msg530692.html)
+> to address the limitation above for X-Gene PCIe controller.
+> 
+> The quirk will only be applied for X-Gene PCIe MCFG table with
+> OEM revison 1, 2, 3 or 4 (PCIe controller v1 and v2 on X-Gene SoCs).
+> 
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> ---
+>  drivers/acpi/pci_mcfg.c           |  32 +++++
+>  drivers/pci/host/Makefile         |   2 +-
+>  drivers/pci/host/pci-xgene-ecam.c | 280 ++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-ecam.h          |   5 +
+>  4 files changed, 318 insertions(+), 1 deletion(-)
+>  create mode 100644 drivers/pci/host/pci-xgene-ecam.c
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+This adds a bunch of stuff, but doesn't remove anything.  So I assume
+it's adding new functionality that didn't exist before.  What is it?
 
-Conflicts:
-	drivers/acpi/arm64/iort.c
----
- drivers/acpi/arm64/iort.c | 152 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi_iort.h |  12 ++++
- 2 files changed, 164 insertions(+)
+I sort of expected this to also remove, for example, the seemingly
+identical xgene_pcie_config_read32() in drivers/pci/host/pci-xgene.c.
+Actually, a bunch of this code seems to be duplicated from there.  It
+doesn't seem like we should end up with all this duplicated code.
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index e28e256..8d672cf 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -22,6 +22,12 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- 
-+struct iort_its_msi_chip {
-+	struct list_head	list;
-+	struct fwnode_handle	*fw_node;
-+	u32			translation_id;
-+};
-+
- typedef acpi_status (*iort_find_node_callback)
- 	(struct acpi_iort_node *node, void *context);
- 
-@@ -31,6 +37,76 @@ static struct acpi_table_header *iort_table;
- static LIST_HEAD(iort_msi_chip_list);
- static DEFINE_SPINLOCK(iort_msi_chip_lock);
- 
-+/**
-+ * iort_register_domain_token() - register domain token and related ITS ID
-+ * to the list from where we can get it back later on.
-+ * @trans_id: ITS ID.
-+ * @fw_node: Domain token.
-+ *
-+ * Returns: 0 on success, -ENOMEM if no memory when allocating list element
-+ */
-+int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
-+{
-+	struct iort_its_msi_chip *its_msi_chip;
-+
-+	its_msi_chip = kzalloc(sizeof(*its_msi_chip), GFP_KERNEL);
-+	if (!its_msi_chip)
-+		return -ENOMEM;
-+
-+	its_msi_chip->fw_node = fw_node;
-+	its_msi_chip->translation_id = trans_id;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_add(&its_msi_chip->list, &iort_msi_chip_list);
-+	spin_unlock(&iort_msi_chip_lock);
-+
-+	return 0;
-+}
-+
-+/**
-+ * iort_deregister_domain_token() - Deregister domain token based on ITS ID
-+ * @trans_id: ITS ID.
-+ *
-+ * Returns: none.
-+ */
-+void iort_deregister_domain_token(int trans_id)
-+{
-+	struct iort_its_msi_chip *its_msi_chip, *t;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_for_each_entry_safe(its_msi_chip, t, &iort_msi_chip_list, list) {
-+		if (its_msi_chip->translation_id == trans_id) {
-+			list_del(&its_msi_chip->list);
-+			kfree(its_msi_chip);
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_msi_chip_lock);
-+}
-+
-+/**
-+ * iort_find_domain_token() - Find domain token based on given ITS ID
-+ * @trans_id: ITS ID.
-+ *
-+ * Returns: domain token when find on the list, NULL otherwise
-+ */
-+struct fwnode_handle *iort_find_domain_token(int trans_id)
-+{
-+	struct fwnode_handle *fw_node = NULL;
-+	struct iort_its_msi_chip *its_msi_chip;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
-+		if (its_msi_chip->translation_id == trans_id) {
-+			fw_node = its_msi_chip->fw_node;
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_msi_chip_lock);
-+
-+	return fw_node;
-+}
-+
- static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
- 					     iort_find_node_callback callback,
- 					     void *context)
-@@ -201,6 +277,82 @@ static struct acpi_iort_node *iort_find_dev_node(struct device *dev)
- 			      iort_match_node_callback, &pbus->dev);
- }
- 
-+/**
-+ * iort_msi_map_rid() - Map a MSI requester ID for a device
-+ * @dev: The device for which the mapping is to be done.
-+ * @req_id: The device requester ID.
-+ *
-+ * Returns: mapped MSI RID on success, input requester ID otherwise
-+ */
-+u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-+{
-+	struct acpi_iort_node *node;
-+	u32 dev_id;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node)
-+		return req_id;
-+
-+	iort_node_map_rid(node, req_id, &dev_id, ACPI_IORT_NODE_ITS_GROUP);
-+	return dev_id;
-+}
-+
-+/**
-+ * iort_dev_find_its_id() - Find the ITS identifier for a device
-+ * @dev: The device.
-+ * @idx: Index of the ITS identifier list.
-+ * @its_id: ITS identifier.
-+ *
-+ * Returns: 0 on success, appropriate error value otherwise
-+ */
-+static int iort_dev_find_its_id(struct device *dev, u32 req_id,
-+				unsigned int idx, int *its_id)
-+{
-+	struct acpi_iort_its_group *its;
-+	struct acpi_iort_node *node;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node)
-+		return -ENXIO;
-+
-+	node = iort_node_map_rid(node, req_id, NULL, ACPI_IORT_NODE_ITS_GROUP);
-+	if (!node)
-+		return -ENXIO;
-+
-+	/* Move to ITS specific data */
-+	its = (struct acpi_iort_its_group *)node->node_data;
-+	if (idx > its->its_count) {
-+		dev_err(dev, "requested ITS ID index [%d] is greater than available [%d]\n",
-+			idx, its->its_count);
-+		return -ENXIO;
-+	}
-+
-+	*its_id = its->identifiers[idx];
-+	return 0;
-+}
-+
-+/**
-+ * iort_get_device_domain() - Find MSI domain related to a device
-+ * @dev: The device.
-+ * @req_id: Requester ID for the device.
-+ *
-+ * Returns: the MSI domain for this device, NULL otherwise
-+ */
-+struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
-+{
-+	struct fwnode_handle *handle;
-+	int its_id;
-+
-+	if (iort_dev_find_its_id(dev, req_id, 0, &its_id))
-+		return NULL;
-+
-+	handle = iort_find_domain_token(its_id);
-+	if (!handle)
-+		return NULL;
-+
-+	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
-+}
-+
- void __init acpi_iort_init(void)
- {
- 	acpi_status status;
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index fcacaf7..0e32dac 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -20,11 +20,23 @@
- #define __ACPI_IORT_H__
- 
- #include <linux/acpi.h>
-+#include <linux/fwnode.h>
-+#include <linux/irqdomain.h>
- 
-+int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
-+void iort_deregister_domain_token(int trans_id);
-+struct fwnode_handle *iort_find_domain_token(int trans_id);
- #ifdef CONFIG_ACPI_IORT
- void acpi_iort_init(void);
-+u32 iort_msi_map_rid(struct device *dev, u32 req_id);
-+struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- #else
- static inline void acpi_iort_init(void) { }
-+static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-+{ return req_id; }
-+static inline struct irq_domain *iort_get_device_domain(struct device *dev,
-+							u32 req_id)
-+{ return NULL; }
- #endif
- 
- #endif /* __ACPI_IORT_H__ */
--- 
-1.9.1
+I'd really like it better if all this could get folded into
+pci-xgene.c so we don't end up with more files.
+
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index ddf338b..adce35f 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -123,6 +123,38 @@ static struct mcfg_fixup mcfg_quirks[] = {
+>  	{ "CAVIUM", "THUNDERX", 2, 13, MCFG_BUS_ANY, &pci_thunder_ecam_ops,
+>  	  MCFG_RES_EMPTY},
+>  #endif
+> +#ifdef CONFIG_PCI_XGENE
+> +	{"APM   ", "XGENE   ", 1, 0, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 1, 1, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 1, 2, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 1, 3, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 1, 4, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 2, 0, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 2, 1, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 2, 2, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 2, 3, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 2, 4, MCFG_BUS_ANY,
+> +		&xgene_v1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 3, 0, MCFG_BUS_ANY,
+> +		&xgene_v2_1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 3, 1, MCFG_BUS_ANY,
+> +		&xgene_v2_1_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 4, 0, MCFG_BUS_ANY,
+> +		&xgene_v2_2_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 4, 1, MCFG_BUS_ANY,
+> +		&xgene_v2_2_pcie_ecam_ops, MCFG_RES_EMPTY},
+> +	{"APM   ", "XGENE   ", 4, 2, MCFG_BUS_ANY,
+> +		&xgene_v2_2_pcie_ecam_ops, MCFG_RES_EMPTY},
+
+Most of these are the same.  Let's add a macro that fills in the
+boilerplate so each entry only contains the variable parts.  I'm going
+to propose the same for the ThunderX quirks.
+
+> +#endif
+>  };
+>  
+>  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 8843410..af4f505 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -15,7 +15,7 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+>  obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+>  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+>  obj-$(CONFIG_PCIE_XILINX_NWL) += pcie-xilinx-nwl.o
+> -obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
+> +obj-$(CONFIG_PCI_XGENE) += pci-xgene.o pci-xgene-ecam.o
+>  obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
+>  obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>  obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+> diff --git a/drivers/pci/host/pci-xgene-ecam.c b/drivers/pci/host/pci-xgene-ecam.c
+> new file mode 100644
+> index 0000000..b66a04f
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-xgene-ecam.c
+> @@ -0,0 +1,280 @@
+> +/*
+> + * APM X-Gene PCIe ECAM fixup driver
+> + *
+> + * Copyright (c) 2016, Applied Micro Circuits Corporation
+> + * Author:
+> + *	Duc Dang <dhdang@apm.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/pci-acpi.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/pci-ecam.h>
+> +
+> +#ifdef CONFIG_ACPI
+> +#define RTDID			0x160
+> +#define ROOT_CAP_AND_CTRL	0x5C
+> +
+> +/* PCIe IP version */
+> +#define XGENE_PCIE_IP_VER_UNKN	0
+> +#define XGENE_PCIE_IP_VER_1	1
+> +#define XGENE_PCIE_IP_VER_2	2
+
+We only use XGENE_PCIE_IP_VER_1, so I think the others should be
+removed.  I think it would be nicer to have a "crs_broken:1" bit set
+by the probe path, and get rid of the version field altogether.
+
+> +#define XGENE_CSR_LENGTH	0x10000
+> +
+> +struct xgene_pcie_acpi_root {
+> +	void __iomem *csr_base;
+> +	u32 version;
+> +};
+
+I think this should be folded into struct xgene_pcie_port so we don't
+have to allocate and manage it separately.
+
+> +static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
+> +{
+> +	struct xgene_pcie_acpi_root *xgene_root;
+> +	struct device *dev = cfg->parent;
+> +	u32 csr_base;
+> +
+> +	xgene_root = devm_kzalloc(dev, sizeof(*xgene_root), GFP_KERNEL);
+> +	if (!xgene_root)
+> +		return -ENOMEM;
+> +
+> +	switch (cfg->res.start) {
+> +	case 0xE0D0000000ULL:
+> +		csr_base = 0x1F2B0000;
+> +		break;
+> +	case 0xD0D0000000ULL:
+> +		csr_base = 0x1F2C0000;
+> +		break;
+> +	case 0x90D0000000ULL:
+> +		csr_base = 0x1F2D0000;
+> +		break;
+> +	case 0xA0D0000000ULL:
+> +		csr_base = 0x1F500000;
+> +		break;
+> +	case 0xC0D0000000ULL:
+> +		csr_base = 0x1F510000;
+> +		break;
+
+Ugh.  What in the world is going on here?  Apparently we're testing a
+host bridge resource against this hard-coded list of random values,
+and based on that, we know about this *other* list of hard-coded CSR
+ranges?  This is not the way resource discovery normally works ;)
+
+> +	default:
+> +		return -ENODEV;
+> +	}
+> +
+> +	xgene_root->csr_base = ioremap(csr_base, XGENE_CSR_LENGTH);
+
+There should be a request_region() somewhere, too.  Ideal would be to
+use devm_ioremap_resource(), but I don't know where this apparent
+resource is coming from.
+
+> +	if (!xgene_root->csr_base) {
+> +		kfree(xgene_root);
+> +		return -ENODEV;
+> +	}
+> +
+> +	xgene_root->version = XGENE_PCIE_IP_VER_1;
+> +
+> +	cfg->priv = xgene_root;
+> +
+> +	return 0;
+> +}
+> +
+> +static int xgene_v2_1_pcie_ecam_init(struct pci_config_window *cfg)
+> +{
+> +	struct xgene_pcie_acpi_root *xgene_root;
+> +	struct device *dev = cfg->parent;
+> +	resource_size_t csr_base;
+> +
+> +	xgene_root = devm_kzalloc(dev, sizeof(*xgene_root), GFP_KERNEL);
+> +	if (!xgene_root)
+> +		return -ENOMEM;
+> +
+> +	switch (cfg->res.start) {
+> +	case 0xC0D0000000ULL:
+> +		csr_base = 0x1F2B0000;
+> +		break;
+> +	case 0xA0D0000000ULL:
+> +		csr_base = 0x1F2C0000;
+> +		break;
+> +	default:
+> +		return -ENODEV;
+> +	}
+> +
+> +	xgene_root->csr_base = ioremap(csr_base, XGENE_CSR_LENGTH);
+> +	if (!xgene_root->csr_base) {
+> +		kfree(xgene_root);
+> +		return -ENODEV;
+> +	}
+> +
+> +	xgene_root->version = XGENE_PCIE_IP_VER_2;
+> +
+> +	cfg->priv = xgene_root;
+> +
+> +	return 0;
+> +}
+> +
+> +static int xgene_v2_2_pcie_ecam_init(struct pci_config_window *cfg)
+> +{
+> +	struct xgene_pcie_acpi_root *xgene_root;
+> +	struct device *dev = cfg->parent;
+> +	resource_size_t csr_base;
+> +
+> +	xgene_root = devm_kzalloc(dev, sizeof(*xgene_root), GFP_KERNEL);
+> +	if (!xgene_root)
+> +		return -ENOMEM;
+> +
+> +	switch (cfg->res.start) {
+> +	case 0xE0D0000000ULL:
+> +		csr_base = 0x1F2B0000;
+> +		break;
+> +	case 0xA0D0000000ULL:
+> +		csr_base = 0x1F500000;
+> +		break;
+> +	case 0x90D0000000ULL:
+> +		csr_base = 0x1F2D0000;
+> +		break;
+> +	default:
+> +		return -ENODEV;
+> +	}
+> +
+> +	xgene_root->csr_base = ioremap(csr_base, XGENE_CSR_LENGTH);
+> +	if (!xgene_root->csr_base) {
+> +		kfree(xgene_root);
+> +		return -ENODEV;
+> +	}
+> +
+> +	xgene_root->version = XGENE_PCIE_IP_VER_2;
+> +
+> +	cfg->priv = xgene_root;
+> +
+> +	return 0;
+> +}
+> +/*
+> + * For Configuration request, RTDID register is used as Bus Number,
+> + * Device Number and Function number of the header fields.
+> + */
+> +static void xgene_pcie_set_rtdid_reg(struct pci_bus *bus, uint devfn)
+> +{
+> +	struct pci_config_window *cfg = bus->sysdata;
+> +	struct xgene_pcie_acpi_root *port = cfg->priv;
+> +	unsigned int b, d, f;
+> +	u32 rtdid_val = 0;
+> +
+> +	b = bus->number;
+> +	d = PCI_SLOT(devfn);
+> +	f = PCI_FUNC(devfn);
+> +
+> +	if (!pci_is_root_bus(bus))
+> +		rtdid_val = (b << 8) | (d << 3) | f;
+> +
+> +	writel(rtdid_val, port->csr_base + RTDID);
+> +	/* read the register back to ensure flush */
+> +	readl(port->csr_base + RTDID);
+> +}
+> +
+> +/*
+> + * X-Gene PCIe port uses BAR0-BAR1 of RC's configuration space as
+> + * the translation from PCI bus to native BUS.  Entire DDR region
+> + * is mapped into PCIe space using these registers, so it can be
+> + * reached by DMA from EP devices.  The BAR0/1 of bridge should be
+> + * hidden during enumeration to avoid the sizing and resource allocation
+> + * by PCIe core.
+> + */
+> +static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+> +{
+> +	if (pci_is_root_bus(bus) && ((offset == PCI_BASE_ADDRESS_0) ||
+> +				     (offset == PCI_BASE_ADDRESS_1)))
+> +		return true;
+> +
+> +	return false;
+> +}
+> +
+> +void __iomem *xgene_pcie_ecam_map_bus(struct pci_bus *bus,
+> +				      unsigned int devfn, int where)
+> +{
+> +	struct pci_config_window *cfg = bus->sysdata;
+> +	unsigned int busn = bus->number;
+> +	void __iomem *base;
+> +
+> +	if (busn < cfg->busr.start || busn > cfg->busr.end)
+> +		return NULL;
+> +
+> +	if ((pci_is_root_bus(bus) && devfn != 0) ||
+> +	    xgene_pcie_hide_rc_bars(bus, where))
+> +		return NULL;
+> +
+> +	xgene_pcie_set_rtdid_reg(bus, devfn);
+> +
+> +	if (busn > cfg->busr.start)
+> +		base = cfg->win + (1 << cfg->ops->bus_shift);
+> +	else
+> +		base = cfg->win;
+> +
+> +	return base + where;
+> +}
+> +
+> +static int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+> +				    int where, int size, u32 *val)
+> +{
+> +	struct pci_config_window *cfg = bus->sysdata;
+> +	struct xgene_pcie_acpi_root *port = cfg->priv;
+> +
+> +	if (pci_generic_config_read32(bus, devfn, where & ~0x3, 4, val) !=
+> +	    PCIBIOS_SUCCESSFUL)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	/*
+> +	* The v1 controller has a bug in its Configuration Request
+> +	* Retry Status (CRS) logic: when CRS is enabled and we read the
+> +	* Vendor and Device ID of a non-existent device, the controller
+> +	* fabricates return data of 0xFFFF0001 ("device exists but is not
+> +	* ready") instead of 0xFFFFFFFF ("device does not exist").  This
+> +	* causes the PCI core to retry the read until it times out.
+> +	* Avoid this by not claiming to support CRS.
+> +	*/
+> +	if (pci_is_root_bus(bus) && (port->version == XGENE_PCIE_IP_VER_1) &&
+> +	    ((where & ~0x3) == ROOT_CAP_AND_CTRL))
+> +		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
+> +
+> +	if (size <= 2)
+> +		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
+> +
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +struct pci_ecam_ops xgene_v1_pcie_ecam_ops = {
+> +	.bus_shift	= 16,
+> +	.init		= xgene_v1_pcie_ecam_init,
+> +	.pci_ops	= {
+> +		.map_bus	= xgene_pcie_ecam_map_bus,
+> +		.read		= xgene_pcie_config_read32,
+> +		.write		= pci_generic_config_write,
+> +	}
+> +};
+> +
+> +struct pci_ecam_ops xgene_v2_1_pcie_ecam_ops = {
+> +	.bus_shift	= 16,
+> +	.init		= xgene_v2_1_pcie_ecam_init,
+> +	.pci_ops	= {
+> +		.map_bus	= xgene_pcie_ecam_map_bus,
+> +		.read		= xgene_pcie_config_read32,
+> +		.write		= pci_generic_config_write,
+> +	}
+> +};
+> +
+> +struct pci_ecam_ops xgene_v2_2_pcie_ecam_ops = {
+> +	.bus_shift	= 16,
+> +	.init		= xgene_v2_2_pcie_ecam_init,
+> +	.pci_ops	= {
+> +		.map_bus	= xgene_pcie_ecam_map_bus,
+> +		.read		= xgene_pcie_config_read32,
+> +		.write		= pci_generic_config_write,
+> +	}
+> +};
+> +#endif
+> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+> index 35f0e81..40da3e7 100644
+> --- a/include/linux/pci-ecam.h
+> +++ b/include/linux/pci-ecam.h
+> @@ -65,6 +65,11 @@ extern struct pci_ecam_ops pci_thunder_pem_ops;
+>  #ifdef CONFIG_PCI_HOST_THUNDER_ECAM
+>  extern struct pci_ecam_ops pci_thunder_ecam_ops;
+>  #endif
+> +#ifdef CONFIG_PCI_XGENE
+> +extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops;
+> +extern struct pci_ecam_ops xgene_v2_1_pcie_ecam_ops;
+> +extern struct pci_ecam_ops xgene_v2_2_pcie_ecam_ops;
+> +#endif
+>  
+>  #ifdef CONFIG_PCI_HOST_GENERIC
+>  /* for DT-based PCI controllers that support ECAM */
+> -- 
+> 1.9.1
+> 
