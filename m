@@ -1,114 +1,49 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V11 7/8] irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for ACPI
-Date: Mon, 12 Sep 2016 20:32:26 +0200
-Message-Id: <1473705147-6588-8-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
-References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:24343 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751033AbcISRgL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Sep 2016 13:36:11 -0400
+Date: Mon, 19 Sep 2016 13:47:23 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCHv2 1/4] pci: Add is_removed state
+Message-ID: <20160919174723.GA8000@keith>
+References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
+ <1473199219-3369-2-git-send-email-keith.busch@intel.com>
+ <20160917083506.GA1235@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160917083506.GA1235@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Firmware agnostic code lands in common functions which do necessary
-domain initialization based on unique domain handler. DT specific
-code goes to DT specific init call.
+On Sat, Sep 17, 2016 at 10:35:06AM +0200, Lukas Wunner wrote:
+> On Tue, Sep 06, 2016 at 04:00:16PM -0600, Keith Busch wrote:
+> > -	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
+> > +	if (pdev->is_removed)
+> > +		return false;
+> > +
+> > +	if (!pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0)) {
+> > +		pdev->is_removed = 1;
+> > +		return false;
+> > +	}
+> > +	return true;
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_device_is_present);
+> 
+> I've kept this series on my development branch and found a bug now:
+> 
+> In the above hunk, it's okay to return false if pdev->is_removed is set,
+> but it's not okay to set pdev->is_removed if pci_bus_read_dev_vendor_id()
+> returns false.  That's because pci_bus_read_dev_vendor_id() can fail for
+> other reasons, such as the device being powered down to D3cold, or
+> currently unreachable because a PCIe port above it was suspended to D3hot
+> so that the link is down.  Those are transient issues, the device isn't
+> removed in those cases.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 44 +++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index aee60ed..d2c2496 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -106,34 +106,48 @@ static struct of_device_id its_device_id[] = {
- 	{},
- };
- 
--static int __init its_pci_msi_init(void)
-+static int __init its_pci_msi_init_one(struct fwnode_handle *handle,
-+				       const char *name)
- {
--	struct device_node *np;
- 	struct irq_domain *parent;
- 
-+	parent = irq_find_matching_fwnode(handle, DOMAIN_BUS_NEXUS);
-+	if (!parent || !msi_get_domain_info(parent)) {
-+		pr_err("%s: Unable to locate ITS domain\n", name);
-+		return -ENXIO;
-+	}
-+
-+	if (!pci_msi_create_irq_domain(handle, &its_pci_msi_domain_info,
-+				       parent)) {
-+		pr_err("%s: Unable to create PCI domain\n", name);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init its_pci_of_msi_init(void)
-+{
-+	struct device_node *np;
-+
- 	for (np = of_find_matching_node(NULL, its_device_id); np;
- 	     np = of_find_matching_node(np, its_device_id)) {
- 		if (!of_property_read_bool(np, "msi-controller"))
- 			continue;
- 
--		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
--		if (!parent || !msi_get_domain_info(parent)) {
--			pr_err("%s: unable to locate ITS domain\n",
--			       np->full_name);
-+		if (its_pci_msi_init_one(of_node_to_fwnode(np), np->full_name))
- 			continue;
--		}
--
--		if (!pci_msi_create_irq_domain(of_node_to_fwnode(np),
--					       &its_pci_msi_domain_info,
--					       parent)) {
--			pr_err("%s: unable to create PCI domain\n",
--			       np->full_name);
--			continue;
--		}
- 
- 		pr_info("PCI/MSI: %s domain created\n", np->full_name);
- 	}
- 
- 	return 0;
- }
-+
-+static int __init its_pci_msi_init(void)
-+{
-+	its_pci_of_msi_init();
-+
-+	return 0;
-+}
- early_initcall(its_pci_msi_init);
--- 
-1.9.1
+Thanks for the info. I wasn't sure about making the removed return sticky
+on a failed vendor id check, so I will remove that from this path and
+resend the entire series.
