@@ -1,73 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51472 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936454AbcISDYv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 18 Sep 2016 23:24:51 -0400
+Date: Mon, 19 Sep 2016 06:24:45 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: Yuval Shaia <yuval.shaia@oracle.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        pv-drivers <pv-drivers@vmware.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "Haiyang Zhang" <haiyangz@microsoft.com>,
-        Hadden Hoppert <haddenh@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: RE: [PATCH 0/5] PCI: hv: some minor bug fixes and cleanups
-Date: Tue, 6 Sep 2016 17:06:08 +0000
-Message-ID: <DM2PR0301MB078388A0EEE624EFCC3AB668A0F90@DM2PR0301MB0783.namprd03.prod.outlook.com>
-References: <MWHPR03MB266985BDDEE4EB1A9C481B0DBFEB0@MWHPR03MB2669.namprd03.prod.outlook.com>
- <20160906154045.GB1214@localhost>
-In-Reply-To: <20160906154045.GB1214@localhost>
-Content-Type: text/plain; charset="us-ascii"
+        "Jorgen S. Hansen" <jhansen@vmware.com>,
+        Aditya Sarwade <asarwade@vmware.com>,
+        George Zhang <georgezhang@vmware.com>,
+        Bryan Tan <bryantan@vmware.com>
+Subject: Re: [PATCH v4 09/16] IB/pvrdma: Add support for Completion Queues
+Message-ID: <20160919032445.GA3273@leon.nu>
+References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+ <1473655766-31628-10-git-send-email-aditr@vmware.com>
+ <20160914124321.GE15800@yuval-lap.uk.oracle.com>
+ <BLUPR0501MB836640F5ECEAB3A99CD82BFC5F00@BLUPR0501MB836.namprd05.prod.outlook.com>
+ <20160915073611.GA3851@yuval-lap.uk.oracle.com>
+ <20160918170707.GL2923@leon.nu>
+ <BLUPR0501MB83604E10410486A3F068950C5F50@BLUPR0501MB836.namprd05.prod.outlook.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="17pEHd4RhPHOinZp"
+In-Reply-To: <BLUPR0501MB83604E10410486A3F068950C5F50@BLUPR0501MB836.namprd05.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
+--17pEHd4RhPHOinZp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, September 6, 2016 9:11 PM
-> To: Dexuan Cui <decui@microsoft.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
-> apw@canonical.com; jasowang@redhat.com; vkuznets@redhat.com; Haiyang
-> Zhang <haiyangz@microsoft.com>; Hadden Hoppert
-> <haddenh@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>
-> Subject: Re: [PATCH 0/5] PCI: hv: some minor bug fixes and cleanups
->=20
-> On Tue, Aug 23, 2016 at 04:42:41AM +0000, Dexuan Cui wrote:
+On Sun, Sep 18, 2016 at 08:36:55PM +0000, Adit Ranadive wrote:
+> On Sun, Sep 18, 2016 at 10:07:18 -0700, Leon Romanovsky wrote:
+> > On Thu, Sep 15, 2016 at 10:36:12AM +0300, Yuval Shaia wrote:
+> > > Hi Adit,
+> > > Please see my comments inline.
+> > >
+> > > Besides that I have no more comment for this patch.
+> > >
+> > > Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+> > >
+> > > Yuval
+> > >
+> > > On Thu, Sep 15, 2016 at 12:07:29AM +0000, Adit Ranadive wrote:
+> > > > On Wed, Sep 14, 2016 at 05:43:37 -0700, Yuval Shaia wrote:
+> > > > > On Sun, Sep 11, 2016 at 09:49:19PM -0700, Adit Ranadive wrote:
+> > > > > > +
+> > > > > > +static int pvrdma_poll_one(struct pvrdma_cq *cq, struct pvrdma_qp
+> > > > > **cur_qp,
+> > > > > > +			   struct ib_wc *wc)
+> > > > > > +{
+> > > > > > +	struct pvrdma_dev *dev = to_vdev(cq->ibcq.device);
+> > > > > > +	int has_data;
+> > > > > > +	unsigned int head;
+> > > > > > +	bool tried = false;
+> > > > > > +	struct pvrdma_cqe *cqe;
+> > > > > > +
+> > > > > > +retry:
+> > > > > > +	has_data = pvrdma_idx_ring_has_data(&cq->ring_state->rx,
+> > > > > > +					    cq->ibcq.cqe, &head);
+> > > > > > +	if (has_data == 0) {
+> > > > > > +		if (tried)
+> > > > > > +			return -EAGAIN;
+> > > > > > +
+> > > > > > +		/* Pass down POLL to give physical HCA a chance to poll. */
+> > > > > > +		pvrdma_write_uar_cq(dev, cq->cq_handle |
+> > > > > PVRDMA_UAR_CQ_POLL);
+> > > > > > +
+> > > > > > +		tried = true;
+> > > > > > +		goto retry;
+> > > > > > +	} else if (has_data == PVRDMA_INVALID_IDX) {
+> > > > >
+> > > > > I didn't went throw the entire life cycle of RX-ring's head and tail but you
+> > > > > need to make sure that PVRDMA_INVALID_IDX error is recoverable one, i.e
+> > > > > there is probability that in the next call to pvrdma_poll_one it will be fine.
+> > > > > Otherwise it is an endless loop.
+> > > >
+> > > > We have never run into this issue internally but I don't think we can recover here
+> > >
+> > > I briefly reviewed the life cycle of RX-ring's head and tail and didn't
+> > > caught any suspicious place that might corrupt it.
+> > > So glad to see that you never encountered this case.
+> > >
+> > > > in the driver. The only way to recover would be to destroy and recreate the CQ
+> > > > which we shouldn't do since it could be used by multiple QPs.
+> > >
+> > > Agree.
+> > > But don't they hit the same problem too?
+> > >
+> > > > We don't have a way yet to recover in the device. Once we add that this check
+> > > > should go away.
+> > >
+> > > To be honest i have no idea how to do that - i was expecting driver's vendors
+> > > to come up with an ideas :)
+> > > I once came up with an idea to force restart of the driver but it was
+> > > rejected.
+> > >
+> > > >
+> > > > The reason I returned an error value from poll_cq in v3 was to break the possible
+> > > > loop so that it might give clients a chance to recover. But since poll_cq is not expected
+> > > > to fail I just log the device error here. I can revert to that version if you want to break
+> > > > the possible loop.
+> > >
+> > > Clients (ULPs) cannot recover from this case. They even do not check the
+> > > reason of the error and treats any error as -EAGAIN.
 > >
-> > 1. use zero-length array to make the code more readable.
-> > 2. remove an unused struct member.
-> > 3. small error handling improvement to some error cases.
-> >
-> > Dexuan Cui (5):
-> >   PCI: hv: use zero-length message in struct pci_packet
-> >   PCI: hv: use pci_function_description[0] in struct definitions
-> >   PCI: hv: remove the unused 'wrk' in struct hv_pcibus_device
-> >   PCI: hv: hv_compose_msi_msg: handle the 'ret' value
-> >   PCI: hv: hv_pci_generic_compl(): handle the error case
-> >
-> >  drivers/pci/host/pci-hyperv.c | 56 ++++++++++++++++++++++-------------=
--------
-> -
-> >  1 file changed, 29 insertions(+), 27 deletions(-)
->=20
-> I'm waiting for an ack from the Hyper-V maintainers:
+> > It is because poll_one is not expected to fall.
+>
+> Poll_one is an internal function in our driver. ULPs should still be okay I think as long as poll_cq
+> does not fail, no?
 
-I have Acked these patches.
+Yes, I think so.
 
-K. Y
->=20
->   Hyper-V CORE AND DRIVERS
->   M:      "K. Y. Srinivasan" <kys@microsoft.com>
->   M:      Haiyang Zhang <haiyangz@microsoft.com>
->   L:      devel@linuxdriverproject.org
->   S:      Maintained
->   ...
->   F:      drivers/pci/host/pci-hyperv.c
->   ...
+Thanks
+
+--17pEHd4RhPHOinZp
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX31p9AAoJEORje4g2clineF0P/RYFr3Zksnc8Tmwqj+pFULl6
+/dq0l5OPVnLSfxd2h7W7vsQyRwqyqfYg7EVRnYO2D3L1Tz6/rjP7IYKshBQgHvz5
+eSmHgUc3TkdOVfhW9Wm7QQr1ZdCpT8lauRC9j/JTrnV1zwlaj+lEuT2Izy6xM2la
+Bf3Rc9nWCGrz9lO7eYI8NAcf/iiiXRqbJQ+/gv3ijEw8rT4UtaPbgyHo7+DT05NU
+p+81G2suPDEfFiFKrfMGSJPv6/xYDtV8TzFDEjWClpk4O4fmmeQGapHpv8gg25K9
+I4U9pE0mXEWRuA2pcQPJsm6hZdKGrZPTlBPHBCcbktpBKmTpSsjBDXWPGdWAXU6y
+umMo49r1Z5sh2tzjbnFwhTcU92ooXaxwDJbWCmdTr+nFnbYUk+FnQjnt3cHF80vi
+gHgPyXvdG9tPBPObO8u/KhML4u/QjoDV5udHsU/UGuLb90mybDyNrxNr7jNmoTbe
+8PMi+ztjIQv8YgKF0begECrtzNWGnm+591LK7zHOT+vv136pkxD5R+VtblfQrF4Y
+e4CwCcFJuJa/HYazIstx1y2ztfguq0e/6NoFP/i9PwRvBo8rVcANAM0vgZSSKVm9
+qTkvrxvtAB87hjBlsXT6kWd+HuwJnQ3OOna+2cHmv6HPX5amPI3qo7sDxLKtBqAw
+EflknUpfzpSJU4i337UD
+=NQH7
+-----END PGP SIGNATURE-----
+
+--17pEHd4RhPHOinZp--
