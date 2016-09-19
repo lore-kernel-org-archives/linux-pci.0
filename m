@@ -1,239 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56636 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:40442 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934707AbcIAQob (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Sep 2016 12:44:31 -0400
-Subject: [PATCH 4/9] Rename struct rockchip_pcie_port to struct
- rockchip_pcie.
-To: Shawn Lin <shawn.lin@rock-chips.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-kernel@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        linux-rockchip@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>
-Date: Thu, 01 Sep 2016 11:44:26 -0500
-Message-ID: <20160901164426.14195.70566.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160901163758.14195.15725.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S932237AbcISSLy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Sep 2016 14:11:54 -0400
+Date: Mon, 19 Sep 2016 13:11:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Tang, CQ" <cq.tang@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Lance Ortiz <lance.ortiz@hpe.com>,
+        Betty Dall <betty.dall@hpe.com>,
+        Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
+        Chen Gong <gong.chen@linux.intel.com>,
+        "KeithBuschkeith.busch@intel.com" <KeithBuschkeith.busch@intel.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Shuah Khan <shuahkh@osg.samsung.com>,
+        "Huang, Ying" <ying.huang@intel.com>,
+        Vijay Mohan Pandarathil <vijaymohan.pandarathil@hpe.com>,
+        "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Subject: Re: [PATCH 0/2] PCI/AER: Remove module parameters
+Message-ID: <20160919181148.GC13775@localhost>
+References: <20160906221522.23655.66321.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160914203019.GB13189@localhost>
+ <1D440B9B88E22A4ABEF89F9F1F81BC2949120D8F@FMSMSX106.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1D440B9B88E22A4ABEF89F9F1F81BC2949120D8F@FMSMSX106.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Sep 17, 2016 at 04:49:11AM +0000, Tang, CQ wrote:
+> Bjorn,
+>      Can we extend this aerdriver to support AER from a root complex integrated endpoint? Root complex event collector has the same job as root port in this case.
 
----
- drivers/pci/host/pcie-rockchip.c |   46 +++++++++++++++++++-------------------
- 1 file changed, 23 insertions(+), 23 deletions(-)
+Seems like a reasonable idea.
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 3cfb47a..63fb0ebc 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -178,7 +178,7 @@
- 	PCIE_CLIENT_INT_LEGACY_DONE | PCIE_CLIENT_INT_LEGACY | \
- 	PCIE_CLIENT_INT_PHY)
- 
--struct rockchip_pcie_port {
-+struct rockchip_pcie {
- 	void	__iomem *reg_base;		/* DT axi-base */
- 	void	__iomem *apb_base;		/* DT apb-base */
- 	struct	phy *phy;
-@@ -200,17 +200,17 @@ struct rockchip_pcie_port {
- 	struct	irq_domain *irq_domain;
- };
- 
--static u32 rockchip_pcie_read(struct rockchip_pcie_port *rockchip, u32 reg)
-+static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
- {
- 	return readl(rockchip->apb_base + reg);
- }
- 
--static void rockchip_pcie_write(struct rockchip_pcie_port *rockchip, u32 val, u32 reg)
-+static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val, u32 reg)
- {
- 	writel(val, rockchip->apb_base + reg);
- }
- 
--static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *rockchip)
-+static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
- {
- 	u32 status;
- 
-@@ -219,7 +219,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *rockchip)
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
- }
- 
--static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *rockchip)
-+static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
- {
- 	u32 status;
- 
-@@ -228,7 +228,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *rockchip)
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
- }
- 
--static int rockchip_pcie_valid_device(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 				      struct pci_bus *bus, int dev)
- {
- 	/* access only one slot on each root port */
-@@ -245,7 +245,7 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie_port *rockchip,
- 	return 1;
- }
- 
--static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 *val)
- {
- 	void __iomem *addr = rockchip->apb_base + PCIE_RC_CONFIG_BASE + where;
-@@ -268,7 +268,7 @@ static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *rockchip,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 val)
- {
- 	u32 mask, tmp, offset;
-@@ -289,7 +289,7 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *rockchip,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_rd_other_conf(struct rockchip_pcie *rockchip,
- 				       struct pci_bus *bus, u32 devfn,
- 				       int where, int size, u32 *val)
- {
-@@ -316,7 +316,7 @@ static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *rockchip,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_wr_other_conf(struct rockchip_pcie *rockchip,
- 				       struct pci_bus *bus, u32 devfn,
- 				       int where, int size, u32 val)
- {
-@@ -342,7 +342,7 @@ static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *rockchip,
- static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 				 int size, u32 *val)
- {
--	struct rockchip_pcie_port *rockchip = bus->sysdata;
-+	struct rockchip_pcie *rockchip = bus->sysdata;
- 
- 	if (!rockchip_pcie_valid_device(rockchip, bus, PCI_SLOT(devfn))) {
- 		*val = 0xffffffff;
-@@ -358,7 +358,7 @@ static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- static int rockchip_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 				 int where, int size, u32 val)
- {
--	struct rockchip_pcie_port *rockchip = bus->sysdata;
-+	struct rockchip_pcie *rockchip = bus->sysdata;
- 
- 	if (!rockchip_pcie_valid_device(rockchip, bus, PCI_SLOT(devfn)))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -378,7 +378,7 @@ static struct pci_ops rockchip_pcie_ops = {
-  * rockchip_pcie_init_port - Initialize hardware
-  * @rockchip: PCIe port information
-  */
--static int rockchip_pcie_init_port(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- {
- 	int err;
- 	u32 status;
-@@ -579,7 +579,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *rockchip)
- 
- static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- {
--	struct rockchip_pcie_port *rockchip = arg;
-+	struct rockchip_pcie *rockchip = arg;
- 	u32 reg;
- 	u32 sub_reg;
- 
-@@ -642,7 +642,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- 
- static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
- {
--	struct rockchip_pcie_port *rockchip = arg;
-+	struct rockchip_pcie *rockchip = arg;
- 	u32 reg;
- 
- 	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
-@@ -684,7 +684,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
- static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
--	struct rockchip_pcie_port *rockchip;
-+	struct rockchip_pcie *rockchip;
- 	u32 reg;
- 	u32 hwirq;
- 	u32 virq;
-@@ -717,7 +717,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
-  *
-  * Return: '0' on success and error value on failure
-  */
--static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
-@@ -874,7 +874,7 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *rockchip)
- 	return 0;
- }
- 
--static int rockchip_pcie_set_vpcie(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
- {
- 	int err;
- 
-@@ -914,7 +914,7 @@ err_out:
- 	return err;
- }
- 
--static void rockchip_pcie_enable_interrupts(struct rockchip_pcie_port *rockchip)
-+static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
- {
- 	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) &
- 		   (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
-@@ -936,7 +936,7 @@ static const struct irq_domain_ops intx_domain_ops = {
- 	.map = rockchip_pcie_intx_map,
- };
- 
--static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
- 	struct device_node *intc = of_get_next_child(dev->of_node, NULL);
-@@ -956,7 +956,7 @@ static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *rockchip)
- 	return 0;
- }
- 
--static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
- 				     int region_no, int type, u8 num_pass_bits,
- 				     u32 lower_addr, u32 upper_addr)
- {
-@@ -996,7 +996,7 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *rockchip,
- 	return 0;
- }
- 
--static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
- 				     int region_no, u8 num_pass_bits,
- 				     u32 lower_addr, u32 upper_addr)
- {
-@@ -1026,7 +1026,7 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *rockchip,
- 
- static int rockchip_pcie_probe(struct platform_device *pdev)
- {
--	struct rockchip_pcie_port *rockchip;
-+	struct rockchip_pcie *rockchip;
- 	struct device *dev = &pdev->dev;
- 	struct pci_bus *bus, *child;
- 	struct resource_entry *win;
+>      It looks that both port driver and aer driver check PCI_EXP_TYPE_ROOT_PORT/PCI_EXP_TYPE_UPSTREAM/PCI_EXP_TYPE_DOWNSTREAM only.
+> portdrv_pci.c:127, aerdrv.c:86
+> 
+>       Is it just a simple addition of PCI_EXP_TYPE_RC_EC to above two places?  Is there any difference to recover a root complex integrated endpoint? (compared with devices connected to root port).
 
+It may well be that the extension would be as simple as you suggest.
+If you want to test and post a patch to that effect, I'll review it
+more carefully.
+
+Bjorn
+
+> > -----Original Message-----
+> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> > owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+> > Sent: Wednesday, September 14, 2016 1:30 PM
+> > To: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: linux-pci@vger.kernel.org; Lance Ortiz <lance.ortiz@hpe.com>; Betty Dall
+> > <betty.dall@hpe.com>; Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>;
+> > Chen Gong <gong.chen@linux.intel.com>; KeithBuschkeith.busch@intel.com;
+> > Rafael J. Wysocki <rjw@rjwysocki.net>; linux-kernel@vger.kernel.org; Shuah
+> > Khan <shuahkh@osg.samsung.com>; Huang, Ying <ying.huang@intel.com>;
+> > Vijay Mohan Pandarathil <vijaymohan.pandarathil@hpe.com>; Derrick,
+> > Jonathan <jonathan.derrick@intel.com>
+> > Subject: Re: [PATCH 0/2] PCI/AER: Remove module parameters
+> > 
+> > On Tue, Sep 06, 2016 at 05:19:22PM -0500, Bjorn Helgaas wrote:
+> > > I'd like to remove the aerdriver.nosourceid and aerdriver.forceload
+> > > kernel parameters.  They seem like basically debugging things that are
+> > > not really supportable upstream.
+> > >
+> > > "nosourceid" may have some legitimate uses, but I'd rather it were
+> > > done via quirks with the flag Jon Derrick recently added so it happens
+> > > automatically, without users having to specify the parameter.
+> > >
+> > > I don't *know* of any actual users of either of these, but obviously
+> > > that doesn't mean there are none.  Comments welcome.
+> > >
+> > > ---
+> > >
+> > > Bjorn Helgaas (2):
+> > >       PCI/AER: Remove aerdriver.nosourceid kernel parameter
+> > >       PCI/AER: Remove aerdriver.forceload kernel parameter
+> > >
+> > >
+> > >  Documentation/PCI/pcieaer-howto.txt |   26 +++++++++-----------------
+> > >  drivers/pci/pcie/aer/aerdrv.c       |    7 +------
+> > >  drivers/pci/pcie/aer/aerdrv.h       |    8 --------
+> > >  drivers/pci/pcie/aer/aerdrv_core.c  |   31 ++++---------------------------
+> > >  4 files changed, 14 insertions(+), 58 deletions(-)
+> > 
+> > I'm going to go out on a limb a little bit and apply these to pci/aer for v4.9.
+> > Please let me know if you trip over any issues.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> > body of a message to majordomo@vger.kernel.org More majordomo info at
+> > http://vger.kernel.org/majordomo-info.html
