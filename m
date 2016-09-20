@@ -1,54 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:54994 "HELO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with SMTP id S932484AbcINAhW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2016 20:37:22 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 3/4] PCI: Avoid unnecessary resume after direct-complete
-Date: Wed, 14 Sep 2016 02:43:29 +0200
-Message-ID: <4782205.TBQ6nj0GoB@vostro.rjw.lan>
-In-Reply-To: <1727866.mELYGZAK8C@vostro.rjw.lan>
-References: <cover.1472554278.git.lukas@wunner.de> <4935437e0bfbab9079db2c8b1fbac66cef7dc569.1472554278.git.lukas@wunner.de> <1727866.mELYGZAK8C@vostro.rjw.lan>
+Received: from mail.kernel.org ([198.145.29.136]:42342 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752737AbcITTlJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Sep 2016 15:41:09 -0400
+Date: Tue, 20 Sep 2016 14:41:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tyler Baicar <tbaicar@codeaurora.org>
+Cc: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
+        paul.gortmaker@windriver.com, sudipm.mukherjee@gmail.com,
+        axboe@fb.com, izumi.taku@jp.fujitsu.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, bp@suse.de
+Subject: Re: [PATCH V2 0/2] Correct AER severity for printing AER information
+Message-ID: <20160920194103.GD4941@localhost>
+References: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 02:29:12 AM Rafael J. Wysocki wrote:
-> On Wednesday, August 31, 2016 08:15:18 AM Lukas Wunner wrote:
-> > Commit 58a1fbbb2ee8 ("PM / PCI / ACPI: Kick devices that might have been
-> > reset by firmware") added a runtime resume for devices that were runtime
-> > suspended when the system entered sleep.
-> > 
-> > The motivation was that devices might be in a reset-power-on state after
-> > waking from system sleep, so their power state as perceived by Linux
-> > (stored in pci_dev->current_state) would no longer reflect reality.
-> > By resuming such devices, we allow them to return to a low-power state
-> > via autosuspend and also bring their current_state in sync with reality.
+On Wed, Sep 14, 2016 at 03:14:44PM -0600, Tyler Baicar wrote:
+> AER severity handling has two issues that cause the AER information to
+> be printed incorrectly. The first issue is that the function to calculate
+> the AER severity is called twice in the code path to print the AER
+> information. The second issue is that the original call to calculate the
+> AER severity expects the CPER severity but is recieving the GHES
+> severity.
 > 
-> Not only that.
+> V2: Fix minor typo in commit text.
 > 
-> It allows those devices to respond more timely to user space requests
-> occuring right after resume.
+> V1: https://lkml.org/lkml/2016/9/12/1075
 > 
-> Those user space requests often occur sequentially (read from device A,
-> write to device B, read from device C, write to device D, for example)
-> and without that pre-emptive resume each of them needs to wait for another
-> device to (runtime-)resume which results in quite annoying latencies
-> observable by users.
+> Tyler Baicar (2):
+>   PCI/AER: Remove duplicate AER severity translation
+>   acpi: apei: send correct severity to calculate AER severity
 > 
-> > However for devices that are *not* in a reset-power-on state, doing an
-> > unconditional resume wastes energy.
-> 
-> It may or may not waste it and this really is a tradeoff.
+>  drivers/acpi/apei/ghes.c               | 2 +-
+>  drivers/pci/pcie/aer/aerdrv_errprint.c | 6 ++----
+>  include/linux/aer.h                    | 2 +-
+>  3 files changed, 4 insertions(+), 6 deletions(-)
 
-That said it is a bit inconsistent with the suspend-to-idle case in which
-we don't resume those devices, so never mind. :-)
+I applied both to pci/aer for v4.9, thanks!
 
-Thanks,
-Rafael
+Rafael, the second one is strictly ACPI, and I'd be happy to let you
+deal with it if you prefer.
 
+Bjorn
