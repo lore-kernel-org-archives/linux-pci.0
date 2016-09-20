@@ -1,111 +1,127 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>, "liudongdong (C)" <liudongdong3@huawei.com>
-CC: "helgaas@kernel.org" <helgaas@kernel.org>,
-        "rafael@kernel.org"
-	<rafael@kernel.org>,
-        "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "Wangzhou (B)"
-	<wangzhou1@hisilicon.com>,
-        "pratyush.anand@gmail.com"
-	<pratyush.anand@gmail.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "Chenxin
- (Charles)" <charles.chenxin@huawei.com>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: RE: [RFC PATCH V2 1/3] PCI: hisi: re-architect Hip05/Hip06
- controllers driver to preapare for ACPI
-Date: Tue, 20 Sep 2016 09:45:13 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F87AAFD@lhreml507-mbx>
-References: <1472644094-82731-1-git-send-email-liudongdong3@huawei.com>
- <5913196.I3zIbc2qla@wuerfel> <57C822C1.9000203@huawei.com>
- <6532722.cVEMfv9Kqj@wuerfel>
-In-Reply-To: <6532722.cVEMfv9Kqj@wuerfel>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <sergei.shtylyov@cogentembedded.com>
+Return-Path: <sergei.shtylyov@cogentembedded.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH] pcie-rcar: try setting PCIe speed to 5 GT/s at boot
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <6896977.DKiraAXap6@wasted.cogentembedded.com>
+ <20160914205431.GC13189@localhost>
+Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org
+Message-ID: <9924b888-5876-fb64-e2a6-08d8c0c767f1@cogentembedded.com>
+Date: Tue, 20 Sep 2016 21:13:56 +0300
 MIME-Version: 1.0
+In-Reply-To: <20160914205431.GC13189@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQXJuZCwgdGhhbmtzIGZvciB5b3VyIGNvbW1lbnRzDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNz
-YWdlLS0tLS0NCj4gRnJvbTogQXJuZCBCZXJnbWFubiBbbWFpbHRvOmFybmRAYXJuZGIuZGVdDQo+
-IFNlbnQ6IDAxIFNlcHRlbWJlciAyMDE2IDE1OjAyDQo+IFRvOiBsaXVkb25nZG9uZyAoQykNCj4g
-Q2M6IGhlbGdhYXNAa2VybmVsLm9yZzsgcmFmYWVsQGtlcm5lbC5vcmc7IExvcmVuem8uUGllcmFs
-aXNpQGFybS5jb207DQo+IHRuQHNlbWloYWxmLmNvbTsgV2FuZ3pob3UgKEIpOyBwcmF0eXVzaC5h
-bmFuZEBnbWFpbC5jb207IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hY3Bp
-QHZnZXIua2VybmVsLm9yZzsgbGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGpjbUBy
-ZWRoYXQuY29tOyBHYWJyaWVsZSBQYW9sb25pOyBDaGVueGluDQo+IChDaGFybGVzKTsgaGFuanVu
-Lmd1b0BsaW5hcm8ub3JnOyBMaW51eGFybQ0KPiBTdWJqZWN0OiBSZTogW1JGQyBQQVRDSCBWMiAx
-LzNdIFBDSTogaGlzaTogcmUtYXJjaGl0ZWN0IEhpcDA1L0hpcDA2DQo+IGNvbnRyb2xsZXJzIGRy
-aXZlciB0byBwcmVhcGFyZSBmb3IgQUNQSQ0KPiANCj4gT24gVGh1cnNkYXksIFNlcHRlbWJlciAx
-LCAyMDE2IDg6NDQ6NDkgUE0gQ0VTVCBEb25nZG9uZyBMaXUgd3JvdGU6DQo+ID4g5ZyoIDIwMTYv
-OS8xIDE1OjQxLCBBcm5kIEJlcmdtYW5uIOWGmemBkzoNCj4gPiA+IE9uIFRodXJzZGF5LCBTZXB0
-ZW1iZXIgMSwgMjAxNiAxMDowNToyOSBBTSBDRVNUIERvbmdkb25nIExpdSB3cm90ZToNCj4gPiA+
-PiDlnKggMjAxNi84LzMxIDE5OjQ1LCBBcm5kIEJlcmdtYW5uIOWGmemBkzoNCj4gPiA+Pj4gT24g
-V2VkbmVzZGF5LCBBdWd1c3QgMzEsIDIwMTYgNzo0ODoxMiBQTSBDRVNUIERvbmdkb25nIExpdSB3
-cm90ZToNCj4gPiBJIGtub3cgeW91ciBwb2ludC4NCj4gPg0KPiA+IDEuIEZvciBvdXIgaG9zdCBi
-cmlkZ2UgLCAiLm1hcF9idXMgPSBwY2lfZWNhbV9tYXBfYnVzIiBpcyBvbmx5DQo+IHN1aXRhYmxl
-IGZvcg0KPiA+IGFjY2Vzc2luZyB0aGUgRVAgY29uZmlnIHNwYWNlLg0KPiA+IHBjaV9nZW5lcmlj
-X2NvbmZpZ19yZWFkMzIoKSBuZWVkIHRvIGNhbGwgImFkZHIgPSBidXMtPm9wcy0NCj4gPm1hcF9i
-dXMoYnVzLCBkZXZmbiwgd2hlcmUgJiB+MHgzKTsiLA0KPiA+DQo+ID4gZHJpdmVycy9wY2kvaG9z
-dC9wY2llLWhpc2ktYWNwaS5jDQo+ID4gc3RhdGljIHN0cnVjdCBwY2lfb3BzIGhpc2lfcGNpZV9v
-cHMgPSB7DQo+ID4gCS5tYXBfYnVzID0gcGNpX2VjYW1fbWFwX2J1cywNCj4gPiAJLnJlYWQgPSBo
-aXNpX3BjaWVfYWNwaV9yZF9jb25mLA0KPiA+IAkud3JpdGUgPSBoaXNpX3BjaWVfYWNwaV93cl9j
-b25mLA0KPiA+IH07DQo+ID4NCj4gPiBZZXMsIHdlIGNhbiBjaGFuZ2UgIi5tYXBfYnVzID0gcGNp
-X2VjYW1fbWFwX2J1cyIgdG8gIi5tYXBfYnVzID0NCj4gaGlzaV9wY2lfbWFwX2J1cyIsIGFuZCBp
-bXBsZW50bWVudCBoaXNpX3BjaV9tYXBfYnVzIGFzIGJlbG93LA0KPiA+IHRoZW4gd2Ugd2lsbCBu
-b3QgbmVlZCB0byBjYWxsIGhpc2lfcGNpZV9jb21tb25fY2ZnX3JlYWQoKS4NCj4gPg0KPiA+IHZv
-aWQgX19pb21lbSAqaGlzaV9wY2lfbWFwX2J1cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzLCB1bnNpZ25l
-ZCBpbnQNCj4gZGV2Zm4sIGludCB3aGVyZSkNCj4gPiB7DQo+ID4gCXN0cnVjdCBwY2lfY29uZmln
-X3dpbmRvdyAqY2ZnID0gYnVzLT5zeXNkYXRhOw0KPiA+IAl2b2lkIF9faW9tZW0gKnJlZ19iYXNl
-ID0gY2ZnLT5wcml2Ow0KPiA+DQo+ID4gCS8qIGZvciBSQyBjb25maWcgYWNjZXNzKi8NCj4gPiAJ
-aWYgKGJ1cy0+bnVtYmVyID09IGNmZy0+YnVzci5zdGFydCkNCj4gPiAJCXJldHVybiByZWdfYmFz
-ZSArICh3aGVyZSAmIH4weDMpOw0KPiA+IAllbHNlDQo+ID4gCQkvKiBmb3IgRVAgY29uZmlnIGFj
-Y2VzcyAqLw0KPiA+IAkJcmV0dXJuIHBjaV9lY2FtX21hcF9idXMoYnVzLCBkZXZmbiwgd2hlcmUp
-Ow0KPiA+IH0NCj4gPg0KPiA+IGFuZCBoaXNpX3BjaWVfYWNwaV9yZF9jb25mKCkgbmVlZCB0byBj
-aGFuZ2UgYXMgYmVsb3cuDQo+ID4gc3RhdGljIGludCBoaXNpX3BjaWVfYWNwaV9yZF9jb25mKHN0
-cnVjdCBwY2lfYnVzICpidXMsIHUzMiBkZXZmbiwgaW50DQo+IHdoZXJlLA0KPiA+IAkJCQkgIGlu
-dCBzaXplLCB1MzIgKnZhbCkNCj4gPiB7DQo+ID4gCXN0cnVjdCBwY2lfY29uZmlnX3dpbmRvdyAq
-Y2ZnID0gYnVzLT5zeXNkYXRhOw0KPiA+DQo+ID4gCWlmIChoaXNpX3BjaWVfYWNwaV92YWxpZF9j
-b25maWcoY2ZnLCBidXMsIFBDSV9TTE9UKGRldmZuKSkgPT0gMCkNCj4gPiAJCXJldHVybiBQQ0lC
-SU9TX0RFVklDRV9OT1RfRk9VTkQ7DQo+ID4NCj4gPiAJLyogYWNjZXNzIFJDIGNvbmZpZyBzcGFj
-ZSAqLw0KPiA+IAlpZiAoYnVzLT5udW1iZXIgPT0gY2ZnLT5idXNyLnN0YXJ0KQ0KPiA+IAkJcmV0
-dXJuIHBjaV9nZW5lcmljX2NvbmZpZ19yZWFkMzIoYnVzLCBkZXZmbiwgd2hlcmUsIHNpemUsDQo+
-IHZhbCk7DQo+ID4NCj4gPiAJLyogYWNjZXNzIEVQIGNvbmZpZyBzcGFjZSAqLw0KPiA+IAlyZXR1
-cm4gcGNpX2dlbmVyaWNfY29uZmlnX3JlYWQoYnVzLCBkZXZmbiwgd2hlcmUsIHNpemUsIHZhbCk7
-DQo+ID4gfQ0KPiANCj4gUmlnaHQsIHRoaXMgaXMgd2hhdCBJIGhhZCBpbiBtaW5kLg0KPiANCj4g
-DQo+ID4gMi4gV2UgbmVlZCB0byBiYWNrd2FyZCBjb21wYXRpYmxlIHdpdGggdGhlIG9sZCBkdCB3
-YXkgY29uZmlnIGFjY2Vzcw0KPiBhcyBiZWxvdyBjb2RlLA0KPiA+IHNvIHdlIGhhdmUgdG8gY2Fs
-bCBoaXNpX3BjaWVfY29tbW9uX2NmZ19yZWFkKCkgd2hlbiBhY2Nlc3NpbmcgdGhlIFJDDQo+IGNv
-bmZpZyBzcGFjZS4NCj4gPiBGb3IgdGhpcywgd2UgaGF2ZSB0byBjYWxsIGhpc2lfcGNpZV9jb21t
-b25fY2ZnX3JlYWQoKS4NCj4gPg0KPiA+IGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1oaXNpLmMNCj4g
-PiBzdGF0aWMgaW5saW5lIGludCBoaXNpX3BjaWVfY2ZnX3JlYWQoc3RydWN0IHBjaWVfcG9ydCAq
-cHAsIGludCB3aGVyZSwNCj4gPiAJCWludCBzaXplLCB1MzIgKnZhbCkNCj4gPiB7DQo+ID4gCXN0
-cnVjdCBoaXNpX3BjaWUgKnBjaWUgPSB0b19oaXNpX3BjaWUocHApOw0KPiA+DQo+ID4gCXJldHVy
-biBoaXNpX3BjaWVfY29tbW9uX2NmZ19yZWFkKHBjaWUtPnJlZ19iYXNlLCB3aGVyZSwgc2l6ZSwN
-Cj4gdmFsKTsNCj4gPiB9DQo+ID4NCj4gPiBzdGF0aWMgc3RydWN0IHBjaWVfaG9zdF9vcHMgaGlz
-aV9wY2llX2hvc3Rfb3BzID0gew0KPiA+IAkucmRfb3duX2NvbmYgPSBoaXNpX3BjaWVfY2ZnX3Jl
-YWQsDQo+ID4gCS53cl9vd25fY29uZiA9IGhpc2lfcGNpZV9jZmdfd3JpdGUsDQo+ID4gCS5saW5r
-X3VwID0gaGlzaV9wY2llX2xpbmtfdXAsDQo+ID4gfTsNCj4gDQo+IEkgdGhpbmsgdGhpcyB3b3Vs
-ZCBiZSBlYXNpZXIgaWYgeW91IHNlcGFyYXRlIHRoZSBBQ1BJIGNvZGUgZnJvbSB0aGUNCj4gRFQg
-Y29kZSBhbmQgbm90IHRyeSB0byBoYXZlIGEgY29tbW9uIGZpbGUgdXNlZCBmb3IgYm90aC4NCj4g
-DQo+IFNoYXJpbmcgdGhlIGNvbmZpZyBzcGFjZSBhY2Nlc3NvcnMgcmVhbGx5IGlzbid0IHdvcnRo
-IGl0IHdoZW4gYm90aA0KPiB2YXJpYW50cyBhcmUgZmFpcmx5IHNpbXBsZSB0byBkbywgYnV0IHRo
-ZXkgZG9uJ3QgZml0IGluIGEgY29tbW9uDQo+IG1vZGVsIGJlY2F1c2Ugb25lIGlzIGNhbGxlZCBm
-cm9tIHRoZSBBQ1BJIHF1aXJrcyBhbmQgdGhlIG90aGVyDQo+IGlzIGNhbGxlZCBmcm9tIHRoZSBk
-dy1wY2llIGRyaXZlciB3aXRoIGNvbXBsZXRlbHkgZGlmZmVyZW50IGNhbGxpbmcNCj4gY29udmVu
-dGlvbnMuDQoNCk5vdCBzdXJlIGFib3V0IHRoaXMuLi4NCkZyb20gbXkgcGVyc3BlY3RpdmUgaGF2
-aW5nIHRoZSBzaGFyZWQgY29kZSB3b3VsZCBtYWtlIGNsZWFyIHRoYXQNCnRoZSB0d28gZHJpdmVy
-cyAoQUNQSSBhbmQgRFQpIGFyZSBraW5kIG9mIHJlbGF0ZWQuLi4NCg0KRm9yIGV4YW1wbGUgc2Vl
-IHRoZSByZXBseSBmcm9tIEJqb3JuIHRvIHRoZSB4Z2VuZSBkcml2ZXI6DQpodHRwczovL2xrbWwu
-b3JnL2xrbWwvMjAxNi85LzE5Lzc0OQ0KDQpJIGtub3cgaW4gb3VyIGNhc2UgdGhlIGR1cGxpY2F0
-aW9uIGlzbid0IG11Y2ggYnV0IGFzIEkgc2FpZA0KSSBhbSBhIGJpdCByZWx1Y3RhbnQgdG8gcmV3
-b3JrIHRoaXMuLi4gDQoNClRoeA0KDQpHYWINCg0KPiANCj4gCUFSbmQNCg==
+Hello.
+
+On 09/14/2016 11:54 PM, Bjorn Helgaas wrote:
+
+>> From: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+>>
+>> Initially, the PCIe link speed is set up only at 2.5 GT/s.
+>> For better performance,  we're trying to increase link speed to 5 GT/s.
+>>
+>> [Sergei Shtylyov: indented the macro definitions with tabs, renamed the
+>> SPCHG register bits for consistency, renamed the link speed field/values,
+>> fixed too long lines, fixed redundancy in clearing the MACSR register bits,
+>> fixed grammar/typos in  the comments/messages, removed unrelated/useless
+>> changes, fixed bugs in rcar_rwm32() calls done to set the bits, removed
+>> unneeded braces, removed non-informative comment, reworded the patch
+>> summary/description.]
+>>
+>> Signed-off-by: Grigory Kletsko <grigory.kletsko@cogentembedded.com>
+>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>>
+>> ---
+>> The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
+>>
+>>  drivers/pci/host/pcie-rcar.c |  103 +++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 103 insertions(+)
+>>
+>> Index: pci/drivers/pci/host/pcie-rcar.c
+>> ===================================================================
+>> --- pci.orig/drivers/pci/host/pcie-rcar.c
+>> +++ pci/drivers/pci/host/pcie-rcar.c
+[...]
+>> @@ -385,6 +402,51 @@ static int rcar_pcie_setup(struct list_h
+>>  	return 1;
+>>  }
+>>
+>> +void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
+>> +{
+>> +	u32 macsr;
+>> +
+>> +	dev_info(pcie->dev, "Trying speed up to 5 GT/s\n");
+>> +
+>> +	if ((rcar_pci_read_reg(pcie, MACSR) & SPCHGFIN) ||
+>> +	    (rcar_pci_read_reg(pcie, MACCTLR) & SPEED_CHANGE)) {
+>> +		dev_err(pcie->dev, "Speed changing is in progress\n");
+>
+> Are these messages all really errors?
+
+     I guess not. :-)
+
+>> +		return;
+>> +	}
+>> +
+>> +	if ((rcar_pci_read_reg(pcie, MACSR) & LINK_SPEED) ==
+>> +	    LINK_SPEED_5_0GTS) {
+>> +		dev_err(pcie->dev, "Current link speed is already 5 GT/s\n");
+>> +		return;
+>> +	}
+>> +
+>> +	if ((rcar_pci_read_reg(pcie, MACS2R) & LINK_SPEED) !=
+>> +	    LINK_SPEED_5_0GTS) {
+>> +		dev_err(pcie->dev,
+>> +			"Current max support link speed not 5 GT/s\n");
+>> +		return;
+>> +	}
+[...]
+>> @@ -416,6 +478,9 @@ static int rcar_pcie_enable(struct rcar_
+>>
+>>  	pci_bus_add_devices(bus);
+>>
+>> +	/* Try setting 5 GT/s link speed */
+>> +	rcar_pcie_force_speedup(pcie);
+>
+> I assume it's safe to change the link speed even while the downstream
+> devices are in use?  As soon as we call pci_bus_add_devices(), drivers
+> can claim the devices and start using them.
+
+    Not sure. OK, I'm going to move this call before pci_bus_add_devices() and 
+try to make it synchronous, without using interrupt.
+
+>>  	return 0;
+>>  }
+>>
+>> @@ -621,6 +686,44 @@ static irqreturn_t rcar_pcie_msi_irq(int
+>>  	struct rcar_msi *msi = &pcie->msi;
+>>  	unsigned long reg;
+>>
+>> +	if (rcar_pci_read_reg(pcie, PCIEINTR) & PCIEINTMAC) {
+>> +		dev_dbg(pcie->dev, "MAC interrupt received\n");
+>
+> I guess you don't need to write PCIEINTR or any other register to
+> acknowledge the interrupt?
+
+    You need to write MACSR -- which the code below does. However, it only 
+clears the SPCHGFIN interrupt (which is only ever enabled).
+
+>> +
+>> +		rcar_rmw32(pcie, MACSR, SPCHGFIN, SPCHGFIN);
+>> +
+>> +		/* Disable this interrupt */
+>> +		rcar_rmw32(pcie, MACINTENR, SPCHGFINE, 0);
+>> +		rcar_rmw32(pcie, PCIEINTER, PCIEINTMACE, 0);
+
+>>  	reg = rcar_pci_read_reg(pcie, PCIEMSIFR);
+>>
+>>  	/* MSI & INTx share an interrupt - we only handle MSI here */
+>
+> Is this patch adding handling for INTx events?
+
+     No.
+
+MBR, Sergei
