@@ -1,102 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:49494 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760939AbcINMeM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 08:34:12 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Zhichang Yuan <yuanzhichang@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
-        benh@kernel.crashing.org, minyard@acm.org,
-        linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
-        john.garry@huawei.com, will.deacon@arm.com, xuwei5@hisilicon.com,
-        linux-serial@vger.kernel.org, gregkh@linuxfoundation.org,
-        zourongrong@gmail.com, liviu.dudau@arm.com, kantyzc@163.com,
-        zhichang.yuan02@gmail.com
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-Date: Wed, 14 Sep 2016 14:33:21 +0200
-Message-ID: <5140357.dcW9ibtZJ6@wuerfel>
-In-Reply-To: <1473855354-150093-3-git-send-email-yuanzhichang@hisilicon.com>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <1473855354-150093-3-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 20 Sep 2016 08:33:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
+ register range for ACPI case
+Message-ID: <20160920133327.GB13855@localhost>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-4-git-send-email-tn@semihalf.com>
+ <20160919180900.GB13775@localhost>
+ <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
 MIME-Version: 1.0
+In-Reply-To: <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: gabriele.paoloni@huawei.com, rafael@kernel.org, catalin.marinas@arm.com,
+ will.deacon@arm.com, okaya@codeaurora.org, wangyijing@huawei.com,
+ andrea.gallo@linaro.org, Lorenzo.Pieralisi@arm.com, jhugo@codeaurora.org,
+ linaro-acpi@lists.linaro.org, ddaney@caviumnetworks.com,
+ linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+ liudongdong3@huawei.com, linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+ arnd@arndb.de, jcm@redhat.com, msalter@redhat.com, cov@codeaurora.org,
+ mw@semihalf.com, linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com,
+ ard.biesheuvel@linaro.org, dhdang@apm.com,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
+ jeremy.linton@arm.com, hanjun.guo@linaro.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 8:15:52 PM CEST Zhichang Yuan wrote:
+[+cc Rafael (maybe already cc'd; I didn't recognize rafael@kernel.org, Duc]
 
-> +Required properties:
-> +- compatible: should be "hisilicon,low-pin-count"
-> +- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
-> +- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
-> +- reg: base address and length of the register set for the device.
-> +- ranges: define a 1:1 mapping between the I/O space of the child device and
-> +	  the parent.
+On Tue, Sep 20, 2016 at 09:23:21AM +0200, Tomasz Nowicki wrote:
+> On 19.09.2016 20:09, Bjorn Helgaas wrote:
+> >On Fri, Sep 09, 2016 at 09:24:05PM +0200, Tomasz Nowicki wrote:
+> >>thunder-pem driver stands for being ACPI based PCI host controller.
+> >>However, there is no standard way to describe its PEM-specific register
+> >>ranges in ACPI tables. Thus we add thunder_pem_init() ACPI extension
+> >>to obtain hardcoded addresses from static resource array.
+> >>Although it is not pretty, it prevents from creating standard mechanism to
+> >>handle similar cases in future.
+> >>
+> >>Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> >>---
+> >> drivers/pci/host/pci-thunder-pem.c | 61 ++++++++++++++++++++++++++++++--------
+> >> 1 file changed, 48 insertions(+), 13 deletions(-)
+> >>
+> >>diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> >>index 6abaf80..b048761 100644
+> >>--- a/drivers/pci/host/pci-thunder-pem.c
+> >>+++ b/drivers/pci/host/pci-thunder-pem.c
+> >>@@ -18,6 +18,7 @@
+> >> #include <linux/init.h>
+> >> #include <linux/of_address.h>
+> >> #include <linux/of_pci.h>
+> >>+#include <linux/pci-acpi.h>
+> >> #include <linux/pci-ecam.h>
+> >> #include <linux/platform_device.h>
+> >>
+> >>@@ -284,6 +285,40 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+> >> 	return pci_generic_config_write(bus, devfn, where, size, val);
+> >> }
+> >>
+> >>+#ifdef CONFIG_ACPI
+> >>+static struct resource thunder_pem_reg_res[] = {
+> >>+	[4] = DEFINE_RES_MEM(0x87e0c0000000UL, SZ_16M),
+> >>+	[5] = DEFINE_RES_MEM(0x87e0c1000000UL, SZ_16M),
+> >>+	[6] = DEFINE_RES_MEM(0x87e0c2000000UL, SZ_16M),
+> >>+	[7] = DEFINE_RES_MEM(0x87e0c3000000UL, SZ_16M),
+> >>+	[8] = DEFINE_RES_MEM(0x87e0c4000000UL, SZ_16M),
+> >>+	[9] = DEFINE_RES_MEM(0x87e0c5000000UL, SZ_16M),
+> >>+	[14] = DEFINE_RES_MEM(0x97e0c0000000UL, SZ_16M),
+> >>+	[15] = DEFINE_RES_MEM(0x97e0c1000000UL, SZ_16M),
+> >>+	[16] = DEFINE_RES_MEM(0x97e0c2000000UL, SZ_16M),
+> >>+	[17] = DEFINE_RES_MEM(0x97e0c3000000UL, SZ_16M),
+> >>+	[18] = DEFINE_RES_MEM(0x97e0c4000000UL, SZ_16M),
+> >>+	[19] = DEFINE_RES_MEM(0x97e0c5000000UL, SZ_16M),
+> >
+> >1) The "correct" way to discover the resources consumed by an ACPI
+> >   device is to use the _CRS method.  I know there are some issues
+> >   there for bridges (not the fault of ThunderX!) because there's not
+> >   a good way to distinguish windows from resources consumed directly
+> >   by the bridge.
+> >
+> >   But we should either do this correctly, or include a comment about
+> >   why we're doing it wrong, so we don't give the impression that this
+> >   is the right way to do it.
+> >
+> >   I seem to recall some discussion about why we're doing it this way,
+> >   but I don't remember the details.  It'd be nice to include a
+> >   summary here.
+> 
+> OK I will. The reason why we cannot use _CRS for this case is that
+> CONSUMER flag was not use consistently for the bridge so far.
 
-Do we still need the "ranges" here? The property in your example seems
-wrong.
+Yes, I'm aware of that problem, but hard-coding resources into drivers
+is just a disaster.  The PCI and ACPI cores need generic ways to learn
+what resources are consumed by devices.  For PCI devices, that's done
+with BARs.  For ACPI devices, it's done with _CRS.  Without generic
+resource discovery, we can't manage resources reliably at the system
+level [1].
 
-> +	ranges = <0x01 0xe4 0x0 0xe4 0x1000>;
+You have a PNP0A03/PNP0A08 device for the PCI host bridge.  Because of
+the BIOS bugs in CONSUMER flag usage, we assume everything in its _CRS
+is a window and not consumed by the bridge itself.  What if you added
+a companion ACPI device with a _CRS that contained the bridge
+resources?  Then you'd have some driver ugliness to find that device,
+but at least the ACPI core could tell what resources were in use.
 
-You translate I/O port 0x00e4 through 0x10e4 to CPU address 0x0e4?
+Maybe Rafael has a better idea?
 
-> +/**
-> + * hisilpc_children_map_sysio - setup the mapping between system Io and
-> + *			physical IO
-> + *
-> + * @child: the device whose IO is handling
-> + * @data: some device specific data. For ACPI device, should be NULL.
-> + *
-> + * Returns >=0 means the mapping is successfully created;
-> + * others mean some failures.
-> + */
-> +static int hisilpc_children_map_sysio(struct device * child, void * data)
-> +{
-> +	struct resource *iores;
-> +	unsigned long cpuio;
-> +	struct extio_ops *opsnode;
-> +	int ret;
-> +	struct hisilpc_dev *lpcdev;
-> +
-> +	if (!child || !child->parent)
-> +		return -EINVAL;
-> +
-> +	iores = platform_get_resource_byname(to_platform_device(child),
-> +					IORESOURCE_IO, "dev_io");
-> +	if (!iores)
-> +		return -ENODEV;
-> +
-> +	/*
-> +	 * can not use devm_kzalloc to allocate slab for child before its driver
-> +	 * start probing. Here allocate the slab with the name of parent.
-> +	 */
-> +	opsnode = devm_kzalloc(child->parent, sizeof(*opsnode), GFP_KERNEL);
-> +	if (!opsnode)
-> +		return -ENOMEM;
-> +
-> +	cpuio = data ? *((unsigned long *)data) : 0;
-> +
-> +	opsnode->start = iores->start;
-> +	opsnode->end = iores->end;
-> +	opsnode->ptoffset = cpuio ? (cpuio - iores->start) : 0;
-> +
-> +	dev_info(child, "map sys port[%lx - %lx] offset=0x%lx",
-> +				(unsigned long)iores->start,
-> +				(unsigned long)iores->end,
-> +				opsnode->ptoffset);
-> +
-> +	opsnode->pfin = hisilpc_comm_inb;
-> +	opsnode->pfout = hisilpc_comm_outb;
-> +
-> +	lpcdev = platform_get_drvdata(to_platform_device(child->parent));
-> +	opsnode->devpara = lpcdev;
-> +
-> +	/* only apply indirect-IO to ipmi child device */
+Bjorn
 
-I don't get this part. The bus driver should not care what its
-children are, just register and PIO ranges that the bus can handle
-in theory, i.e. from 0x000 to 0xfff.
+[1] I know the ACPI core currently doesn't actually *do* anything with
+_CRS.  But I think it *should*, and someday it might, so I want to
+preserve the principle of using _CRS to document all the resources.
 
-	Arnd
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
