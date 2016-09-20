@@ -1,76 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42847 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765721AbcINVO5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 17:14:57 -0400
-From: Tyler Baicar <tbaicar@codeaurora.org>
-To: rjw@rjwysocki.net, lenb@kernel.org, bhelgaas@google.com,
-        paul.gortmaker@windriver.com, sudipm.mukherjee@gmail.com,
-        axboe@fb.com, izumi.taku@jp.fujitsu.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc: bp@suse.de, Tyler Baicar <tbaicar@codeaurora.org>
-Subject: [PATCH V2 1/2] PCI/AER: Remove duplicate AER severity translation
-Date: Wed, 14 Sep 2016 15:14:45 -0600
-Message-Id: <1473887686-24420-2-git-send-email-tbaicar@codeaurora.org>
-In-Reply-To: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
-References: <1473887686-24420-1-git-send-email-tbaicar@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] PCI/Hotplug: Schedule device add retries
+Date: Tue, 20 Sep 2016 11:50:03 -0600
+Message-Id: <1474393803-10921-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the AER severity is being translated twice in
-the code flow for PCIe errors. It is first translated in
-ghes_do_proc() before calling into the AER driver. Then it
-is translated again when the AER driver calls cper_print_aer().
-This causes the severity that is used in cper_print_aer() to
-be incorrect. Remove the second translation that is in
-cper_print_aer() since this function is already receiving the
-correct AER severity.
+If a device fails to be added after being hot inserted, it could be due
+to a power fault seen during the insertion or a failure to configure the
+new device. The devices are then removed from the tree and the slot
+disabled. Many times the devices are working as expected, but the slot
+could not tolerate the add without a power fault. A user then has to
+issue a sysfs rescan to re-add the slot and pick up the new devices.
 
-Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
-Reviewed-by: Borislav Petkov <bp@suse.de>
+This patch detects the failure during slot enabling and attempts to
+re-enable the slot a few more times before failing the slot. This fixes
+an issue where a power fault is seen during hot insertion, but the slot
+itself just needed some time for the power faults to quiesce before the
+device was ready to be used.
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/pci/pcie/aer/aerdrv_errprint.c | 6 ++----
- include/linux/aer.h                    | 2 +-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+Applies against helgaas/pci/hotplug
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 167fe41..54c4b69 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -219,15 +219,13 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ drivers/pci/hotplug/pciehp.h      |  1 +
+ drivers/pci/hotplug/pciehp_ctrl.c | 45 ++++++++++++++++++++++++++++++---------
+ 2 files changed, 36 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index e764918..b7927c5 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -93,6 +93,7 @@ struct controller {
+ 	wait_queue_head_t queue;	/* sleep & wake process */
+ 	u32 slot_cap;
+ 	u16 slot_ctrl;
++	u8 slot_retries;
+ 	struct timer_list poll_timer;
+ 	unsigned long cmd_started;	/* jiffies */
+ 	unsigned int cmd_busy:1;
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index efe69e8..b413c3c 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -35,7 +35,19 @@
+ #include "../pci.h"
+ #include "pciehp.h"
  
--void cper_print_aer(struct pci_dev *dev, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int aer_severity,
- 		    struct aer_capability_regs *aer)
++#define DEVICE_ADD_RETRIES 5
++
+ static void interrupt_event_handler(struct work_struct *work);
++static void pciehp_queue_power_work(struct slot *p_slot, int req);
++
++struct power_work_info {
++       struct slot *p_slot;
++       struct work_struct work;
++       unsigned int req;
++#define DISABLE_REQ 0
++#define ENABLE_REQ 1
++#define ENABLE_RETRY_REQ 2
++};
+ 
+ void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
  {
--	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
-+	int layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
+@@ -121,9 +133,24 @@ static int board_added(struct slot *p_slot)
  
--	aer_severity = cper_severity_to_aer(cper_severity);
--
- 	if (aer_severity == AER_CORRECTABLE) {
- 		status = aer->cor_status;
- 		mask = aer->cor_mask;
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 1640493..04602cb 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -63,7 +63,7 @@ static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	pciehp_green_led_on(p_slot);
+ 	pciehp_set_attention_status(p_slot, 0);
++	if (ctrl->slot_retries)
++		ctrl_dbg(ctrl, "Device added at %04x:%02x:00 after retry %d/%d\n",
++			 pci_domain_nr(parent), parent->number,
++			 ctrl->slot_retries, DEVICE_ADD_RETRIES);
++
+ 	return 0;
+ 
+ err_exit:
++	if (ctrl->slot_retries++ < DEVICE_ADD_RETRIES) {
++		ctrl_dbg(ctrl, "Retrying (%d/%d) device add at %04x:%02x:00\n",
++			ctrl->slot_retries, DEVICE_ADD_RETRIES,
++			pci_domain_nr(parent), parent->number);
++		pciehp_queue_power_work(p_slot, ENABLE_RETRY_REQ);
++		return retval;
++	}
++
++	ctrl_err(ctrl, "Failed to add device at %04x:%02x:00\n",
++		 pci_domain_nr(parent), parent->number);
+ 	set_slot_off(ctrl, p_slot);
+ 	return retval;
  }
- #endif
+@@ -157,14 +184,6 @@ static int remove_board(struct slot *p_slot)
+ 	return 0;
+ }
  
--void cper_print_aer(struct pci_dev *dev, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int aer_severity,
- 		    struct aer_capability_regs *aer);
- int cper_severity_to_aer(int cper_severity);
- void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+-struct power_work_info {
+-	struct slot *p_slot;
+-	struct work_struct work;
+-	unsigned int req;
+-#define DISABLE_REQ 0
+-#define ENABLE_REQ  1
+-};
+-
+ /**
+  * pciehp_power_thread - handle pushbutton events
+  * @work: &struct work_struct describing work to be done
+@@ -183,13 +202,18 @@ static void pciehp_power_thread(struct work_struct *work)
+ 	case DISABLE_REQ:
+ 		mutex_lock(&p_slot->hotplug_lock);
+ 		pciehp_disable_slot(p_slot);
++		p_slot->ctrl->slot_retries = 0;
+ 		mutex_unlock(&p_slot->hotplug_lock);
+ 		mutex_lock(&p_slot->lock);
+ 		p_slot->state = STATIC_STATE;
+ 		mutex_unlock(&p_slot->lock);
+ 		break;
+ 	case ENABLE_REQ:
++		/* fall through */
++	case ENABLE_RETRY_REQ:
+ 		mutex_lock(&p_slot->hotplug_lock);
++		if (info->req == ENABLE_REQ)
++			p_slot->ctrl->slot_retries = 0;
+ 		ret = pciehp_enable_slot(p_slot);
+ 		mutex_unlock(&p_slot->hotplug_lock);
+ 		if (ret)
+@@ -208,13 +232,14 @@ static void pciehp_power_thread(struct work_struct *work)
+ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+ {
+ 	struct power_work_info *info;
++	bool enabling = (req == ENABLE_REQ || req == ENABLE_RETRY_REQ);
+ 
+-	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
++	p_slot->state = enabling ? POWERON_STATE : POWEROFF_STATE;
+ 
+ 	info = kmalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
+ 		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
+-			 (req == ENABLE_REQ) ? "poweron" : "poweroff");
++			 enabling ? "poweron" : "poweroff");
+ 		return;
+ 	}
+ 	info->p_slot = p_slot;
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
-
+1.8.3.1
