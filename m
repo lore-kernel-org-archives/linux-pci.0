@@ -1,161 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:34218 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756576AbcILEuf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Sep 2016 00:50:35 -0400
-From: Adit Ranadive <aditr@vmware.com>
-To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>
-CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Subject: [PATCH v4 08/16] IB/pvrdma: Add device command support
-Date: Sun, 11 Sep 2016 21:49:18 -0700
-Message-ID: <1473655766-31628-9-git-send-email-aditr@vmware.com>
-In-Reply-To: <1473655766-31628-1-git-send-email-aditr@vmware.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
+Received: from mail-io0-f194.google.com ([209.85.223.194]:36733 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752931AbcITVgT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Sep 2016 17:36:19 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1474386588-16337-1-git-send-email-Yuval.Mintz@qlogic.com>
+References: <1474386588-16337-1-git-send-email-Yuval.Mintz@qlogic.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Tue, 20 Sep 2016 14:36:17 -0700
+Message-ID: <CAKgT0UepRC7=EZAj_jpcjWZXp1qMRPVDguhbpBrCjkNHuDec+w@mail.gmail.com>
+Subject: Re: [RFC] PCI: Allow sysfs control over totalvfs
+To: Yuval Mintz <Yuval.Mintz@qlogic.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        derek.chickles@caviumnetworks.com,
+        Yuval Mintz <Yuval.Mintz@caviumnetworks.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enables posting Verb requests and receiving responses to/from
-the backend PVRDMA emulation layer.
+On Tue, Sep 20, 2016 at 8:49 AM, Yuval Mintz <Yuval.Mintz@qlogic.com> wrote:
+> [Sorry in advance if this was already discussed in the past]
+>
+> Some of the HW capable of SRIOV has resource limitations, where the
+> PF and VFs resources are drawn from a common pool.
+> In some cases, these limitations have to be considered early during
+> chip initialization and can only be changed by tearing down the
+> configuration and re-initializing.
+> As a result, drivers for such HWs sometimes have to make unfavorable
+> compromises where they reserve sufficient resources to accomadate
+> the maximal number of VFs that can be created - at the expanse of
+> resources that could have been used by the PF.
+>
+> If users were able to provide 'hints' regarding the required number
+> of VFs *prior* to driver attachment, then such compromises could be
+> avoided. As we already have sysfs nodes that can be queried for the
+> number of totalvfs, it makes sense to let the user reduce the number
+> of said totalvfs using same infrastrucure.
+> Then, we can have drivers supporting SRIOV take that value into account
+> when deciding how much resources to reserve, allowing the PF to benefit
+> from the difference between the configuration space value and the actual
+> number needed by user.
+>
+> Signed-off-by: Yuval Mintz <Yuval.Mintz@caviumnetworks.com>
+> ---
+>  drivers/pci/pci-sysfs.c | 28 +++++++++++++++++++++++++++-
+>  1 file changed, 27 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index bcd10c7..c1546f8 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -449,6 +449,30 @@ static ssize_t sriov_totalvfs_show(struct device *dev,
+>         return sprintf(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
+>  }
+>
+> +static ssize_t sriov_totalvfs_store(struct device *dev,
+> +                                   struct device_attribute *attr,
+> +                                   const char *buf, size_t count)
+> +{
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +       u16 max_vfs;
+> +       int ret;
+> +
+> +       ret = kstrtou16(buf, 0, &max_vfs);
+> +       if (ret < 0)
+> +               return ret;
+> +
+> +       if (pdev->driver) {
+> +               dev_info(&pdev->dev,
+> +                        "Can't change totalvfs while driver is attached\n");
+> +               return -EUSERS;
+> +       }
+> +
+> +       ret = pci_sriov_set_totalvfs(pdev, max_vfs);
+> +       if (ret)
+> +               return ret;
+> +
+> +       return count;
+> +}
+>
+>  static ssize_t sriov_numvfs_show(struct device *dev,
+>                                  struct device_attribute *attr,
+> @@ -516,7 +540,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>         return count;
+>  }
+>
+> -static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+> +static struct device_attribute sriov_totalvfs_attr =
+> +               __ATTR(sriov_totalvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+> +                      sriov_totalvfs_show, sriov_totalvfs_store);
+>  static struct device_attribute sriov_numvfs_attr =
+>                 __ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>                        sriov_numvfs_show, sriov_numvfs_store);
 
-Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-Reviewed-by: George Zhang <georgezhang@vmware.com>
-Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-Reviewed-by: Bryan Tan <bryantan@vmware.com>
-Signed-off-by: Adit Ranadive <aditr@vmware.com>
----
-Changes v3->v4:
- - Removed the min check and added a BUILD_BUG_ON check for size.
+It would be useful to have an interface where you could increase the
+number after you have decreased it.  With the interface as you have it
+written that isn't an option since pci_sriov_set_totalvfs is really
+only meant to strip VFs if they cannot be support by something such as
+a bus limitation due to ARI not being supported.
 
-Changes v2->v3:
- - Converted pvrdma_cmd_recv to inline.
- - Added a min check in the memcpy to cmd_slot.
- - Removed the boolean from pvrdma_cmd_post.
----
- drivers/infiniband/hw/pvrdma/pvrdma_cmd.c | 108 ++++++++++++++++++++++++++++++
- 1 file changed, 108 insertions(+)
- create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
+I really think that if you need something like this you might be
+better off using something like dev-link or just to figure out a way
+to make your driver flexible enough to allow you to move resources
+into and/or out of your PF interface if VFs are added or removed.  I
+know in the case of the Intel parts we have to bounce the link when
+SR-IOV is enabled because we actually go through and tear out the
+queues and interrupts from the PF and then reassign all of them
+between the PF and VFs before we bring the PF back up.
 
-diff --git a/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
-new file mode 100644
-index 0000000..827e3ff
---- /dev/null
-+++ b/drivers/infiniband/hw/pvrdma/pvrdma_cmd.c
-@@ -0,0 +1,108 @@
-+/*
-+ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of EITHER the GNU General Public License
-+ * version 2 as published by the Free Software Foundation or the BSD
-+ * 2-Clause License. This program is distributed in the hope that it
-+ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ * See the GNU General Public License version 2 for more details at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program available in the file COPYING in the main
-+ * directory of this source tree.
-+ *
-+ * The BSD 2-Clause License
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+ * OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <linux/list.h>
-+
-+#include "pvrdma.h"
-+
-+#define PVRDMA_CMD_TIMEOUT	10000 /* ms */
-+
-+static inline int pvrdma_cmd_recv(struct pvrdma_dev *dev,
-+				  union pvrdma_cmd_resp *resp)
-+{
-+	dev_dbg(&dev->pdev->dev, "receive response from device\n");
-+
-+	spin_lock(&dev->cmd_lock);
-+	memcpy(resp, dev->resp_slot, sizeof(*resp));
-+	spin_unlock(&dev->cmd_lock);
-+
-+	return 0;
-+}
-+
-+int
-+pvrdma_cmd_post(struct pvrdma_dev *dev, union pvrdma_cmd_req *req,
-+		union pvrdma_cmd_resp *resp)
-+{
-+	int err;
-+
-+	dev_dbg(&dev->pdev->dev, "post request to device\n");
-+
-+	/* Serializiation */
-+	down(&dev->cmd_sema);
-+
-+	BUILD_BUG_ON(sizeof(union pvrdma_cmd_req) !=
-+		     sizeof(struct pvrdma_cmd_modify_qp));
-+
-+	spin_lock(&dev->cmd_lock);
-+	memcpy(dev->cmd_slot, req, sizeof(*req));
-+	spin_unlock(&dev->cmd_lock);
-+
-+	init_completion(&dev->cmd_done);
-+	pvrdma_write_reg(dev, PVRDMA_REG_REQUEST, 0);
-+
-+	/* Make sure the request is written before reading status. */
-+	mb();
-+	err = pvrdma_read_reg(dev, PVRDMA_REG_ERR);
-+	if (err == 0) {
-+		if (resp != NULL) {
-+			err = wait_for_completion_interruptible_timeout(
-+				&dev->cmd_done,
-+				msecs_to_jiffies(PVRDMA_CMD_TIMEOUT));
-+			if (err == 0 || err == -ERESTARTSYS) {
-+				dev_err(&dev->pdev->dev,
-+					"completion timeout or interrupted\n");
-+				err = -ETIMEDOUT;
-+			} else {
-+				err = pvrdma_cmd_recv(dev, resp);
-+			}
-+		}
-+	} else {
-+		dev_warn(&dev->pdev->dev, "failed to write request %d\n", err);
-+	}
-+
-+	up(&dev->cmd_sema);
-+
-+	return err;
-+}
--- 
-2.7.4
-
+- Alex
