@@ -1,39 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:56160 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753983AbcIGPrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Sep 2016 11:47:24 -0400
-Date: Wed, 7 Sep 2016 18:47:19 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH] PCI: Fix bridge_d3 update on device removal
-Message-ID: <20160907154719.GR1716@lahna.fi.intel.com>
-References: <9bc855a01d0f29cc8425cf50dce9812062309cfb.1473135221.git.lukas@wunner.de>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
+ register range for ACPI case
+To: Bjorn Helgaas <helgaas@kernel.org>, ddaney@caviumnetworks.com
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-4-git-send-email-tn@semihalf.com>
+ <20160919180900.GB13775@localhost>
+Cc: will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+ Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, jchandra@broadcom.com, cov@codeaurora.org,
+ dhdang@apm.com, ard.biesheuvel@linaro.org,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ wangyijing@huawei.com, msalter@redhat.com, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
+ jcm@redhat.com, andrea.gallo@linaro.org, jeremy.linton@arm.com,
+ liudongdong3@huawei.com, gabriele.paoloni@huawei.com, jhugo@codeaurora.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
+Date: Tue, 20 Sep 2016 09:23:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9bc855a01d0f29cc8425cf50dce9812062309cfb.1473135221.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160919180900.GB13775@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 06, 2016 at 06:20:46AM +0200, Lukas Wunner wrote:
-> Starting with v4.8, we allow a PCIe port to runtime suspend to D3hot if
-> the port itself and its children satisfy a number of conditions.  Once a
-> child is removed, we recheck those conditions in case the removed device
-> was blocking the port from suspending.
-> 
-> The rechecking needs to happen *after* the device has been removed from
-> the bus it resides on.  Otherwise when walking the port's subordinate
-> bus in pci_bridge_d3_update(), the device being removed would
-> erroneously still be taken into account.
-> 
-> However the device is removed from the bus_list in pci_destroy_dev() and
-> we currently recheck *before* that.  Fix it.
+On 19.09.2016 20:09, Bjorn Helgaas wrote:
+> On Fri, Sep 09, 2016 at 09:24:05PM +0200, Tomasz Nowicki wrote:
+>> thunder-pem driver stands for being ACPI based PCI host controller.
+>> However, there is no standard way to describe its PEM-specific register
+>> ranges in ACPI tables. Thus we add thunder_pem_init() ACPI extension
+>> to obtain hardcoded addresses from static resource array.
+>> Although it is not pretty, it prevents from creating standard mechanism to
+>> handle similar cases in future.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> ---
+>>  drivers/pci/host/pci-thunder-pem.c | 61 ++++++++++++++++++++++++++++++--------
+>>  1 file changed, 48 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+>> index 6abaf80..b048761 100644
+>> --- a/drivers/pci/host/pci-thunder-pem.c
+>> +++ b/drivers/pci/host/pci-thunder-pem.c
+>> @@ -18,6 +18,7 @@
+>>  #include <linux/init.h>
+>>  #include <linux/of_address.h>
+>>  #include <linux/of_pci.h>
+>> +#include <linux/pci-acpi.h>
+>>  #include <linux/pci-ecam.h>
+>>  #include <linux/platform_device.h>
+>>
+>> @@ -284,6 +285,40 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+>>  	return pci_generic_config_write(bus, devfn, where, size, val);
+>>  }
+>>
+>> +#ifdef CONFIG_ACPI
+>> +static struct resource thunder_pem_reg_res[] = {
+>> +	[4] = DEFINE_RES_MEM(0x87e0c0000000UL, SZ_16M),
+>> +	[5] = DEFINE_RES_MEM(0x87e0c1000000UL, SZ_16M),
+>> +	[6] = DEFINE_RES_MEM(0x87e0c2000000UL, SZ_16M),
+>> +	[7] = DEFINE_RES_MEM(0x87e0c3000000UL, SZ_16M),
+>> +	[8] = DEFINE_RES_MEM(0x87e0c4000000UL, SZ_16M),
+>> +	[9] = DEFINE_RES_MEM(0x87e0c5000000UL, SZ_16M),
+>> +	[14] = DEFINE_RES_MEM(0x97e0c0000000UL, SZ_16M),
+>> +	[15] = DEFINE_RES_MEM(0x97e0c1000000UL, SZ_16M),
+>> +	[16] = DEFINE_RES_MEM(0x97e0c2000000UL, SZ_16M),
+>> +	[17] = DEFINE_RES_MEM(0x97e0c3000000UL, SZ_16M),
+>> +	[18] = DEFINE_RES_MEM(0x97e0c4000000UL, SZ_16M),
+>> +	[19] = DEFINE_RES_MEM(0x97e0c5000000UL, SZ_16M),
+>
+> 1) The "correct" way to discover the resources consumed by an ACPI
+>    device is to use the _CRS method.  I know there are some issues
+>    there for bridges (not the fault of ThunderX!) because there's not
+>    a good way to distinguish windows from resources consumed directly
+>    by the bridge.
+>
+>    But we should either do this correctly, or include a comment about
+>    why we're doing it wrong, so we don't give the impression that this
+>    is the right way to do it.
+>
+>    I seem to recall some discussion about why we're doing it this way,
+>    but I don't remember the details.  It'd be nice to include a
+>    summary here.
 
-Yes, makes sense.
+OK I will. The reason why we cannot use _CRS for this case is that 
+CONSUMER flag was not use consistently for the bridge so far.
 
-> Fixes: 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+>
+> 2) This is a little weird because here we define the resource size as
+>    16MB, in the OF case we get the resource size from OF, in either
+>    case we ioremap 64K of it, and then as far as I can tell, we only
+>    ever access PEM_CFG_WR and PEM_CFG_RD, at offsets 0x28 and 0x30
+>    into the space.
+>
+>    If the hardware actually decodes the entire 16MB, we should ioremap
+>    the whole 16MB.  (Strictly speaking, drivers only need to ioremap
+>    the parts they're using, but in this case nobody claims the entire
+>    resource because of deficiencies in the ACPI and OF cores, so the
+>    driver should ioremap the entire thing to help prevent conflicts
+>    with other devices.)
+>
+>    It'd be nice if we didn't have the 64KB magic number.  I think
+>    using devm_ioremap_resource() would be nice.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+I agree.
+
+David, is there anything which prevents us from using 
+devm_ioremap_resource() here with SZ_16M size?
+
+Tomasz
