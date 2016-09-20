@@ -1,108 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:56518 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934620AbcIWAmh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 20:42:37 -0400
-Subject: Re: [PATCH v2] PCI: rockchip: Increase the Max Credit update
- interval.
-To: Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>
-References: <1474578027-64292-1-git-send-email-rajatja@google.com>
- <1474583892-8936-1-git-send-email-rajatja@google.com>
-Cc: shawn.lin@rock-chips.com, rajatxjain@gmail.com
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <c7a733c8-df1c-3917-9874-15496fe95758@rock-chips.com>
-Date: Fri, 23 Sep 2016 08:42:28 +0800
+Received: from mail.kernel.org ([198.145.29.136]:42640 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751124AbcITTqT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Sep 2016 15:46:19 -0400
+Date: Tue, 20 Sep 2016 14:46:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: agordeev@redhat.com, linux-pci@vger.kernel.org,
+        davem@davemloft.net, shane.huang@amd.com
+Subject: Re: [PATCH, RFC] PCI: use pci_intx_for_msi in pci_alloc_irq_vectors
+Message-ID: <20160920194614.GE4941@localhost>
+References: <1473577767-9888-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <1474583892-8936-1-git-send-email-rajatja@google.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473577767-9888-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rajat,
+Hi Christoph,
 
-ÔÚ 2016/9/23 6:38, Rajat Jain Ð´µÀ:
-> This increases the likelihood of link state to automatically go to L1
-> and save some power.
->
-> The default credit update interval of 7.5 us results in the rootport
-> sending UpdateFC packets too often, thus reulting in the link never
+On Sun, Sep 11, 2016 at 09:09:27AM +0200, Christoph Hellwig wrote:
+> Alex pointed out that we might want to use pci_intx_for_msi in
+> pci_alloc_irq_vectors for the case where allocating MSI or MSI-X vectors
+> fails completely.  I tried to read up the history behind pci_intx_for_msi,
+> but the changelogs seem a bit confusing, e.g. the comment in the tg3
+> around that code that was replaced by this quirk only talk about
+> _disabling_ INT-X.  Maybe someone can help me to shed some light about
+> this workaround, and help answering the question wether we need it
+> in this case.
 
-Actually it's UpdateFC-P. Could you amend the log since you don't touch
-other DLLPs of flow control.
+If we want to do this, I'd like to have a changelog that explains
+*why*, so I'm ignoring it for now.  I'm not nacking it; I just don't
+understand why we should do it yet, and I'm too lazy to do all the
+research myself.
 
-> going to L1, and always staying in L0/L0s. The value 24 us was chosen
-> after some experiments and peeking over the PCIe bus to see that we do
-> enter L1 substate when there is not enough traffic on the PCIe bus.
->
-
-The defualt value is wrong including the unit of this value on TRM.
-I talked with Brain face-2-face about this issue, so your patch is
-what we want. Thanks for pushing this.
-
-I guess Bjorn could help amend the changelog?
-With that fixed,
-
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-
-> Signed-off-by: Rajat Jain <rajatja@google.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Cc: David Miller <davem@davemloft.net>
+> Cc: Shane Huang <shane.huang@amd.com>
 > ---
-> v2: Update the register on Phy link bandwidth changes,
->     since the value gets lost on such events.
->
->  drivers/pci/host/pcie-rockchip.c | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
->
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index c3593e6..99e700f 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -95,6 +95,11 @@
->  #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
->  #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
->  #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
-> +#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
-> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
-> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
-> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
-> +		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
->  #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
->  #define   PCIE_CORE_INT_PRFPE			BIT(0)
->  #define   PCIE_CORE_INT_CRFPE			BIT(1)
-> @@ -224,6 +229,17 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
->  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->  }
->
-> +static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
-> +{
-> +	u32 val;
-> +
-> +	/* Update Tx credit maximum update interval */
-> +	val = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
-> +	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
-> +	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
-> +	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
-> +}
-> +
->  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
->  				      struct pci_bus *bus, int dev)
->  {
-> @@ -597,6 +613,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
->  		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
->  	} else if (reg & PCIE_CLIENT_INT_PHY) {
->  		dev_dbg(dev, "phy link changes\n");
-> +		rockchip_pcie_update_txcredit_mui(rockchip);
->  		rockchip_pcie_clr_bw_int(rockchip);
+>  drivers/pci/msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 9da5ecb..a4b443f 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1215,7 +1215,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
+>  
+>  	/* use legacy irq if allowed */
+>  	if ((flags & PCI_IRQ_LEGACY) && min_vecs == 1) {
+> -		pci_intx(dev, 1);
+> +		pci_intx_for_msi(dev, 1);
+>  		return 1;
 >  	}
->
->
-
-
--- 
-Best Regards
-Shawn Lin
-
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
