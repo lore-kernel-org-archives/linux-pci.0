@@ -1,102 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:44258 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752301AbcIZFK6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 01:10:58 -0400
-Subject: Re: [PATCH v5 13/16] IB/pvrdma: Add the main driver module for PVRDMA
-To: Leon Romanovsky <leon@kernel.org>
-References: <cover.1474759181.git.aditr@vmware.com>
- <8db982c37a0a96b37df02826564474a216922f25.1474759181.git.aditr@vmware.com>
- <20160925075703.GX4088@leon.nu>
-CC: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-From: Adit Ranadive <aditr@vmware.com>
-Message-ID: <da4a09fc-bef1-60ea-f9af-7c505a9af6d6@vmware.com>
-Date: Sun, 25 Sep 2016 22:10:43 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: zhichang <zhichang.yuan02@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Wed, 21 Sep 2016 16:20:55 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F87D223@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <8360154.kzsE8V8pTW@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F871F72@lhreml507-mbx>
+ <26171742.fWcrANu6EP@wuerfel>
+ <e246c886-e0eb-b635-01ae-f00bbfcfb56b@gmail.com>
+In-Reply-To: <e246c886-e0eb-b635-01ae-f00bbfcfb56b@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160925075703.GX4088@leon.nu>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ John Garry <john.garry@huawei.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ "kantyzc@163.com" <kantyzc@163.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On sun, Sep 25 2016 at 10:57:03AM +0300, Leon Romanovsky wrote:
-> On Sat, Sep 24, 2016 at 04:21:37PM -0700, Adit Ranadive wrote:
-> > This patch adds the support to register a RDMA device with the kernel RDMA
-> > stack as well as a kernel module. This also initializes the underlying
-> > virtual PCI device.
-> >
-> > Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
-> > Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
-> > Reviewed-by: George Zhang <georgezhang@vmware.com>
-> > Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
-> > Reviewed-by: Bryan Tan <bryantan@vmware.com>
-> > Signed-off-by: Adit Ranadive <aditr@vmware.com>
-
-<...>
-
-> > +
-> > +#include <linux/errno.h>
-> > +#include <linux/inetdevice.h>
-> > +#include <linux/init.h>
-> > +#include <linux/module.h>
-> > +#include <linux/slab.h>
-> > +#include <rdma/ib_addr.h>
-> > +#include <rdma/ib_smi.h>
-> > +#include <rdma/ib_user_verbs.h>
-> > +#include <net/addrconf.h>
-> > +#include <rdma/pvrdma-abi.h>
-> > +
-> > +#include "pvrdma.h"
-> > +
-> > +#define DRV_NAME	"pvrdma"
-> > +#define DRV_VERSION	"1.0"
-> > +#define DRV_RELDATE	"January 1, 2013"
-> > +
-> > +static const char pvrdma_version[] =
-> > +	DRV_NAME ": PVRDMA InfiniBand driver v"
-> > +	DRV_VERSION " (" DRV_RELDATE ")\n";
-> 
-> This is a good example why driver version and reldate are useless in
-> kernel. We are in 2016 and not in 2013. All these data are forgotten to
-> update right after the developer copied it from other pre-historic driver
-> (very common practice in netdev). It is worth to stop to use this totally
-> useless defines.
-> 
-
-Sorry, in our case it was the Mellanox mlx4 driver :). Yeah, I can remove
-DRV_VERSION and DRV_RELDATE. I'll keep the MODULE_VERSION since we keep
-track of our virtual driver versions that way. So when there are any changes
-to our driver we typically bump up the version. Not sure if that's a netdev
-or misc device practice and if thats followed here.
-
-<...>
-
-> > +static void pvrdma_get_fw_ver_str(struct ib_device *device, char *str,
-> > +				  size_t str_len)
-> > +{
-> > +	struct pvrdma_dev *dev =
-> > +		container_of(device, struct pvrdma_dev, ib_dev);
-> > +	snprintf(str, str_len, "%d.%d.%d\n",
-> > +		 (int) (dev->dsr->caps.fw_ver >> 32),
-> > +		 (int) (dev->dsr->caps.fw_ver >> 16) & 0xffff,
-> > +		 (int) dev->dsr->caps.fw_ver & 0xffff);
-> > +}
-> 
-> Yuval already pointed it to you.
-> Thanks to Ira, we have general function in core to print FW version.
-> Please use them.
-> 
-
-If you are referring to commit 5fa76c20458518ed6181adddef2e31c5afc0745c
-then isnt this is exactly what Ira did for the other providers?
-Here, the pvrdma_get_fw_ver_str function is registered as a callback for
-the get_dev_fw_str API. Please our pvrdma_register_device function where
-we register our callbacks with ib_core:
-https://patchwork.kernel.org/patch/9349357/
-
-> > +	dev->ib_dev.get_dev_fw_str = pvrdma_get_fw_ver_str;
-
-
+SGkgWmhpY2hhbmcNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiB6aGlj
+aGFuZyBbbWFpbHRvOnpoaWNoYW5nLnl1YW4wMkBnbWFpbC5jb21dDQo+IFNlbnQ6IDIxIFNlcHRl
+bWJlciAyMDE2IDExOjA5DQo+IFRvOiBBcm5kIEJlcmdtYW5uOyBsaW51eC1hcm0ta2VybmVsQGxp
+c3RzLmluZnJhZGVhZC5vcmcNCj4gQ2M6IEdhYnJpZWxlIFBhb2xvbmk7IGRldmljZXRyZWVAdmdl
+ci5rZXJuZWwub3JnOw0KPiBsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tOyBtaW55YXJkQGFjbS5v
+cmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGdyZWdraEBsaW51eGZvdW5kYXRpb24u
+b3JnOyBKb2huIEdhcnJ5OyB3aWxsLmRlYWNvbkBhcm0uY29tOyBsaW51eC0NCj4ga2VybmVsQHZn
+ZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBMaW51eGFybTsgeHV3ZWkgKE8pOyBsaW51eC0N
+Cj4gc2VyaWFsQHZnZXIua2VybmVsLm9yZzsgYmVuaEBrZXJuZWwuY3Jhc2hpbmcub3JnOw0KPiB6
+b3Vyb25ncm9uZ0BnbWFpbC5jb207IGxpdml1LmR1ZGF1QGFybS5jb207IGthbnR5emNAMTYzLmNv
+bQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFYzIDIvNF0gQVJNNjQgTFBDOiBMUEMgZHJpdmVyIGlt
+cGxlbWVudGF0aW9uIG9uDQo+IEhpcDA2DQo+IA0KPiBIaSwgQXJuZCwNCj4gDQo+IA0KPiANCj4g
+T24gMjAxNuW5tDA55pyIMTXml6UgMjA6MjQsIEFybmQgQmVyZ21hbm4gd3JvdGU6DQo+ID4gT24g
+VGh1cnNkYXksIFNlcHRlbWJlciAxNSwgMjAxNiAxMjowNTo1MSBQTSBDRVNUIEdhYnJpZWxlIFBh
+b2xvbmkNCj4gd3JvdGU6DQo+ID4+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+Pj4g
+T24gVGh1cnNkYXksIFNlcHRlbWJlciAxNSwgMjAxNiA4OjAyOjI3IEFNIENFU1QgR2FicmllbGUg
+UGFvbG9uaQ0KPiB3cm90ZToNCj4gPj4+Pg0KPiA+Pj4+IEZyb20gPDwzLjEuMS4gT3BlbiBGaXJt
+d2FyZSBQcm9wZXJ0aWVzIGZvciBCdXMgTm9kZXM+PiBpbg0KPiA+Pj4+IGh0dHA6Ly93d3cuZmly
+bXdhcmUub3JnLzEyNzUvYmluZGluZ3MvaXNhL2lzYTBfNGQucHMNCj4gPj4+Pg0KPiA+Pj4+IEkg
+cXVvdGU6DQo+ID4+Pj4gIlRoZXJlIHNoYWxsIGJlIGFuIGVudHJ5IGluIHRoZSAicmFuZ2VzIiBw
+cm9wZXJ0eSBmb3IgZWFjaA0KPiA+Pj4+IG9mIHRoZSBNZW1vcnkgYW5kL29yIEkvTyBzcGFjZXMg
+aWYgdGhhdCBhZGRyZXNzIHNwYWNlIGlzDQo+ID4+Pj4gbWFwcGVkIHRocm91Z2ggdGhlIGJyaWRn
+ZS4iDQo+ID4+Pj4NCj4gPj4+PiBJdCBzZWVtcyB0byBtZSB0aGF0IGl0IGlzIG9rIHRvIGhhdmUg
+MToxIGFkZHJlc3MgbWFwcGluZyBhbmQgdGhhdA0KPiA+Pj4+IHRoZXJlZm9yZSBvZl90cmFuc2xh
+dGVfYWRkcmVzcygpIHNob3VsZCBmYWlsIGlmICJyYW5nZXMiIGlzIG5vdA0KPiA+Pj4+IHByZXNl
+bnQuDQo+ID4+Pg0KPiA+Pj4gVGhlIGtleSBoZXJlIGlzIHRoZSBkZWZpbml0aW9uIG9mICJtYXBw
+ZWQgdGhyb3VnaCB0aGUgYnJpZGdlIi4NCj4gPj4+IEkgY2FuIG9ubHkgdW5kZXJzdGFuZCB0aGlz
+IGFzICJkaXJlY3RseSBtYXBwZWQiLCBpLmUuIGFuIEkvTw0KPiA+Pj4gcG9ydCBvZiB0aGUgY2hp
+bGQgYnVzIGNvcnJlc3BvbmRzIGRpcmVjdGx5IHRvIGEgbWVtb3J5IGFkZHJlc3MNCj4gPj4+IG9u
+IHRoZSBwYXJlbnQgYnVzLCBidXQgdGhpcyBpcyBub3QgdGhlIGNhc2UgaGVyZS4NCj4gPj4+DQo+
+ID4+PiBUaGUgcHJvYmxlbSB3aXRoIGFkZGluZyB0aGUgbWFwcGluZyBoZXJlIGlzIHRoYXQgaXQg
+bG9va3MNCj4gPj4+IGxpa2UgaXQgc2hvdWxkIGJlIHZhbGlkIHRvIGNyZWF0ZSBhIHBhZ2UgdGFi
+bGUgZW50cnkgZm9yDQo+ID4+PiB0aGUgYWRkcmVzcyByZXR1cm5lZCBmcm9tIHRoZSB0cmFuc2xh
+dGlvbiBhbmQgYWNjZXNzIGl0IHRocm91Z2gNCj4gPj4+IGEgcG9pbnRlciBkZXJlZmVyZW5jZSwg
+YnV0IHRoYXQgaXMgY2xlYXJseSBub3QgcG9zc2libGUuDQo+ID4+DQo+ID4+IEkgdW5kZXJzdGFu
+ZCB0aGF0IHNvbWVob3cgd2UgYXJlIGFidXNpbmcgb2YgdGhlIHJhbmdlcyBwcm9wZXJ0eQ0KPiA+
+PiBoZXJlIGhvd2V2ZXIgdGhlIHBvaW50IGlzIHRoYXQgd2l0aCB0aGUgY3VycmVudCBpbXBsZW1l
+bnRhdGlvbg0KPiByYW5nZXMNCj4gPj4gaXMgbmVlZGVkIGJlY2F1c2Ugb3RoZXJ3aXNlIHRoZSBp
+cG1pIGRyaXZlciBwcm9iZSB3aWxsIGZhaWwgaGVyZToNCj4gPj4NCj4gPj4gb2ZfaXBtaV9wcm9i
+ZSAtPiBvZl9hZGRyZXNzX3RvX3Jlc291cmNlIC0+IF9fb2ZfYWRkcmVzc190b19yZXNvdXJjZQ0K
+PiA+PiAtPiBvZl90cmFuc2xhdGVfYWRkcmVzcyAtPiBfX29mX3RyYW5zbGF0ZV9hZGRyZXNzDQo+
+ID4+DQo+ID4+IE5vdyB3ZSBoYWQgYSBiaXQgb2YgZGlzY3Vzc2lvbiBpbnRlcm5hbGx5IGFuZCB0
+byBhdm9pZA0KPiA+PiBoYXZpbmcgcmFuZ2VzIHdlIGNhbWUgdXAgd2l0aCB0d28gcG9zc2libGUg
+c29sdXRpb25zOg0KPiA+Pg0KPiA+PiAxKSBVc2luZyBiaXQgMyBvZiBwaHlzLmhpIGNlbGwgaW4g
+Mi4yLjEgb2YNCj4gPj4gaHR0cDovL3d3dy5maXJtd2FyZS5vcmcvMTI3NS9iaW5kaW5ncy9pc2Ev
+aXNhMF80ZC5wcw0KPiA+PiBUaGlzIHdvdWxkIG1lYW4gcmV3b3JraW5nIG9mX2J1c19pc2FfZ2V0
+X2ZsYWdzIGluDQo+ID4+IGh0dHA6Ly9seHIuZnJlZS1lbGVjdHJvbnMuY29tL3NvdXJjZS9kcml2
+ZXJzL29mL2FkZHJlc3MuYyNMMzk4DQo+ID4+IGFuZCBzZXR0aW5nIGEgbmV3IGZsYWcgdG8gYmUg
+Y2hlY2tlZCBpbiBfX29mX2FkZHJlc3NfdG9fcmVzb3VyY2UNCj4gPj4NCj4gPj4gMikgQWRkaW5n
+IGEgcHJvcGVydHkgaW4gdGhlIGJpbmRpbmdzIG9mIGVhY2ggZGV2aWNlIHRoYXQgaXMNCj4gPj4g
+YSBjaGlsZCBvZiBvdXIgTFBDIGJ1cyBhbmQgbW9kaWZ5IF9fb2ZfYWRkcmVzc190b19yZXNvdXJj
+ZQ0KPiA+PiB0byBjaGVjayBpZiB0aGUgcHJvcGVydHkgaXMgaW4gdGhlIERUIGFuZCBldmVudHVh
+bGx5IGJ5cGFzcw0KPiA+PiBvZl90cmFuc2xhdGVfYWRkcmVzcw0KPiA+Pg0KPiA+PiBIb3dldmVy
+IGluIGJvdGggMSkgYW5kIDIpIHRoZXJlIGFyZSBzb21lIGlzc3VlczoNCj4gPj4gaW4gMSkgd2Ug
+YXJlIG5vdCBjb21wbHlpbmcgd2l0aCB0aGUgaXNhIGJpbmRpbmcgZG9jICh3ZSB1c2UNCj4gPj4g
+YSBiaXQgdGhhdCBzaG91bGQgYmUgemVybyk7IGluIDIpIHdlIG5lZWQgdG8gbW9kaWZ5IHRoZQ0K
+PiA+PiBiaW5kaW5ncyBkb2N1bWVudGF0aW9uIG9mIHRoZSBkZXZpY2VzIHRoYXQgYXJlIGNvbm5l
+Y3RlZA0KPiA+PiB0byBvdXIgTFBDIGNvbnRyb2xsZXIgKHRoZXJlZm9yZSBtb2RpZnlpbmcgb3Ro
+ZXIgZGV2aWNlcw0KPiA+PiBiaW5kaW5ncyB0byBmaXQgb3VyIHNwZWNpYWwgY2FzZSkuDQo+ID4+
+DQo+ID4+IEkgdGhpbmsgdGhhdCBtYXliZSBoYXZpbmcgdGhlIDE6MSByYW5nZSBtYXBwaW5nIGRv
+ZXNuJ3QNCj4gPj4gcmVmbGVjdCB3ZWxsIHRoZSByZWFsaXR5IGJ1dCBpdCBpcyB0aGUgbGVzcyBw
+YWluZnVsDQo+ID4+IHNvbHV0aW9uLi4uDQo+ID4+DQo+ID4+IFdoYXQncyB5b3VyIHZpZXc/DQo+
+ID4NCj4gPiBXZSBjYW4gY2hlY2sgdGhlICdpJyBiaXQgZm9yIEkvTyBzcGFjZSBpbiBvZl9idXNf
+aXNhX2dldF9mbGFncywNCj4gPiBhbmQgdGhhdCBzaG91bGQgYmUgZW5vdWdoIHRvIHRyYW5zbGF0
+ZSB0aGUgSS9PIHBvcnQgbnVtYmVyLg0KPiA+DQo+ID4gVGhlIG9ubHkgcGFydCB3ZSBuZWVkIHRv
+IGNoYW5nZSBoZXJlIGlzIHRvIG5vdCBnbyB0aHJvdWdoDQo+ID4gdGhlIGNyYXp5IGNvbnZlcnNp
+b24gYWxsIHRoZSB3YXkgZnJvbSBQQ0kgSS9PIHNwYWNlIHRvIGENCj4gPiBwaHlzaWNhbCBhZGRy
+ZXNzIGFuZCBiYWNrIHRvIGEgKGxvZ2ljYWwpIHBvcnQgbnVtYmVyDQo+ID4gdGhhdCB3ZSBkbyB0
+b2RheSB3aXRoIG9mX3RyYW5zbGF0ZV9hZGRyZXNzL3BjaV9hZGRyZXNzX3RvX3Bpby4NCj4gPg0K
+PiBTb3JyeSBmb3IgdGhlIGxhdGUgcmVzcG9uc2UhIFNldmVyYWwgZGF5cycgbGVhdmUuLi4uDQo+
+IERvIHlvdSB3YW50IHRvIGJ5cGFzcyBvZl90cmFuc2xhdGVfYWRkcmVzcyBhbmQgcGNpX2FkZHJl
+c3NfdG9fcGlvIGZvcg0KPiB0aGUgcmVnaXN0ZXJlZCBzcGVjaWZpYyBQSU8/DQo+IEkgdGhpbmsg
+dGhlIGJ5cGFzcyBmb3Igb2ZfdHJhbnNsYXRlX2FkZHJlc3MgaXMgb2ssIGJ1dCB3b3JyeSBzb21l
+IG5ldw0KPiBpc3N1ZXMgd2lsbCBlbWVyZ2Ugd2l0aG91dCB0aGUNCj4gY29udmVyc2lvbiBiZXR3
+ZWVuIHBoeXNpY2FsIGFkZHJlc3MgYW5kIGxvZ2ljYWwvbGludXggcG9ydCBudW1iZXIuDQo+IA0K
+PiBXaGVuIFBDSSBob3N0IGJyaWRnZSB3aGljaCBzdXBwb3J0IElPIG9wZXJhdGlvbnMgaXMgY29u
+ZmlndXJlZCBhbmQNCj4gZW5hYmxlZCwgdGhlIHBjaV9hZGRyZXNzX3RvX3BpbyB3aWxsDQo+IHBv
+cHVsYXRlIHRoZSBsb2dpY2FsIElPIHJhbmdlIGZyb20gWkVSTyBmb3IgdGhlIGZpcnN0IGhvc3Qg
+YnJpZGdlLiBPdXINCj4gTFBDIHdpbGwgYWxzbyB1c2UgcGFydCBvZiB0aGUgSU8gcmFuZ2UNCj4g
+c3RhcnRlZCBmcm9tIFpFUk8uIEl0IHdpbGwgbWFrZSBpbi9vdXQgZW50ZXIgdGhlIHdyb25nIGJy
+YW5jaCBwb3NzaWJseS4NCj4gDQo+IEluIFYyLCB0aGUgMCAtIDB4MTAwMCBsb2dpY2FsIElPIHJh
+bmdlIGlzIHJlc2VydmVkIGZvciBMUEMgdXNlIG9ubHkuDQo+IEJ1dCBpdCBzZWVtcyBub3Qgc28g
+Z29vZC4gSW4gdGhpcyB3YXksDQo+IFBDSSBoYXMgbm8gY2hhbmNlIHRvIHVzZSBsb3cgNEsgSU8g
+cmFuZ2UobG9naWNhbCkuDQo+IA0KPiBTbywgaW4gVjMsIGFwcGx5aW5nIHRoZSBjb252ZXJzaW9u
+IGZyb20gcGh5c2ljYWwvY3B1IGFkZHJlc3MgdG8NCj4gbG9naWNhbC9saW51eCBJTyBwb3J0IGZv
+ciBhbnkgSU8gcmFuZ2VzLA0KPiBpbmNsdWRpbmcgdGhlIExQQywgYnV0IHJlY29yZGVkIHRoZSBs
+b2dpY2FsIElPIHJhbmdlIGZvciBMUEMuIFdoZW4NCj4gY2FsbGluZyBpbi9vdXQgd2l0aCBhIGxv
+Z2ljYWwgcG9ydCBhZGRyZXNzLA0KPiB3ZSBjYW4gY2hlY2sgdGhpcyBwb3J0IGZhbGwgaW50byBM
+UEMgbG9naWNhbCBJTyByYW5nZSBhbmQgZ2V0IGJhY2sgdGhlDQo+IHJlYWwgSU8uDQo+IA0KPiBE
+byB5b3UgaGF2ZSBmdXJ0aGVyIGNvbW1lbnRzIGFib3V0IHRoaXM/Pw0KDQpJIHRoaW5rIHRoZXJl
+IGFyZSB0d28gc2VwYXJhdGUgaXNzdWVzIHRvIGJlIGRpc2N1c3NlZDoNCg0KVGhlIGZpcnN0IGlz
+c3VlIGlzIGFib3V0IGhhdmluZyBvZl90cmFuc2xhdGVfYWRkcmVzcyBmYWlsaW5nIGR1ZSB0bw0K
+InJhbmdlIiBtaXNzaW5nLiBBYm91dCB0aGlzIEFybmQgc3VnZ2VzdGVkIHRoYXQgaXQgaXMgbm90
+IGFwcHJvcHJpYXRlDQp0byBoYXZlIGEgcmFuZ2UgZGVzY3JpYmluZyBhIGJyaWRnZSAxOjEgbWFw
+cGluZyBhbmQgdGhpcyB3YXMgZGlzY3Vzc2VkDQpiZWZvcmUgaW4gdGhpcyB0aHJlYWQuIEFybmQg
+aGFkIGEgc3VnZ2VzdGlvbiBhYm91dCB0aGlzIChzZWUgYmVsb3cpIA0KaG93ZXZlciAobG9va2lu
+ZyB0d2ljZSBhdCB0aGUgY29kZSkgaXQgc2VlbXMgdG8gbWUgdGhhdCBzdWNoIHNvbHV0aW9uIA0K
+d291bGQgbGVhZCB0byBxdWl0ZSBzb21lIGR1cGxpY2F0aW9uIGZyb20gX19vZl90cmFuc2xhdGVf
+YWRkcmVzcygpDQppbiBvcmRlciB0byByZXRyaWV2ZSB0aGUgYWN0dWFsIGFkZHIgZnJvbSBkdC4u
+Lg0KDQpJIHRoaW5rIGV4dGVuZGluZyBvZl9lbXB0eV9yYW5nZXNfcXVpcmsoKSBtYXkgYmUgYSBy
+ZWFzb25hYmxlIHNvbHV0aW9uLg0KV2hhdCBkbyB5b3UgdGhpbmsgQXJuZD8NCiAgDQpUaGUgc2Vj
+b25kIGlzc3VlIGlzIGEgY29uZmxpY3QgYmV0d2VlbiBjcHUgYWRkcmVzc2VzIHVzZWQgYnkgdGhl
+IExQQw0KY29udHJvbGxlciBhbmQgaS9vIHRva2VucyBmcm9tIHBjaSBlbmRwb2ludHMuDQoNCkFi
+b3V0IHRoaXMgd2hhdCBpZiB3ZSBtb2RpZnkgYXJtbjY0X2V4dGlvX29wcyB0byBoYXZlIGEgbGlz
+dCBvZiByYW5nZXMNCnJhdGhlciB0aGFuIG9ubHkgb25lIHJhbmdlIChub3cgd2UgaGF2ZSBqdXN0
+IHN0YXJ0L2VuZCk7IHRoZW4gaW4gdGhlDQpMUEMgZHJpdmVyIHdlIGNhbiBzY2FuIHRoZSBMUEMg
+Y2hpbGQgZGV2aWNlcyBhbmQgDQoxKSBwb3B1bGF0ZSBzdWNoIGxpc3Qgb2YgcmFuZ2VzDQoyKSBj
+YWxsIHBjaV9yZWdpc3Rlcl9pb19yYW5nZSBmb3Igc3VjaCByYW5nZXMNCg0KVGhlbiB3aGVuIGNh
+bGxpbmcgX19vZl9hZGRyZXNzX3RvX3Jlc291cmNlIHdlIHJldHJpZXZlIEkvTyB0b2tlbnMgDQpm
+b3IgdGhlIGRldmljZXMgb24gdG9wIG9mIHRoZSBMUEMgZHJpdmVyIGFuZCBpbiB0aGUgSS9PIGFj
+Y2Vzc29ycw0Kd2UgY2FsbCBwY2lfcGlvX3RvX2FkZHJlc3MgdG8gZmlndXJlIG91dCB0aGUgY3B1
+IGFkZHJlc3MgYW5kIGNvbXBhcmUNCml0IHRvIHRoZSBsaXN0IG9mIHJhbmdlcyBpbiBhcm1uNjRf
+ZXh0aW9fb3BzLg0KICANCldoYXQgYWJvdXQgdGhpcz8NCg0KVGhhbmtzDQoNCkdhYg0KDQo+IA0K
+PiANCj4gPiBJIGNhbiB0aGluayBvZiBhIHNldmVyYWwgb2Ygd2F5cyB0byBmaXggX19vZl9hZGRy
+ZXNzX3RvX3Jlc291cmNlDQo+ID4gdG8ganVzdCBkbyB0aGUgcmlnaHQgdGhpbmcgYWNjb3JkaW5n
+IHRvIHRoZSBJU0EgYmluZGluZyB0bw0KPiA+IG1ha2UgdGhlIG5vcm1hbCBkcml2ZXJzIHdvcmsu
+DQo+ID4NCj4gPiBUaGUgZWFzaWVzdCBzb2x1dGlvbiBpcyBwcm9iYWJseSB0byBob29rIGludG8g
+dGhlDQo+ID4gInRhZGRyID09IE9GX0JBRF9BRERSIiBjYXNlIGluIF9fb2ZfYWRkcmVzc190b19y
+ZXNvdXJjZQ0KPiA+IGFuZCBhZGQgYSBsb29rdXAgZm9yIElTQSBidXNlcyB0aGVyZSwgYW5kIGlu
+c3RlYWQgY2hlY2sNCj4gPiBpZiBzb21lIHNwZWNpYWwgSS9PIHBvcnQgb3BlcmF0aW9ucyB3ZXJl
+IHJlZ2lzdGVyZWQNCj4gPiBmb3IgdGhlIHBvcnQgbnVtYmVyLCB1c2luZyBhbiBhcmNoaXRlY3R1
+cmUgc3BlY2lmaWMNCj4gPiBmdW5jdGlvbiB0aGF0IGFybTY0IGltcGxlbWVudHMuIE90aGVyIGFy
+Y2hpdGVjdHVyZXMNCj4gPiBsaWtlIHg4NiB0aGF0IGRvbid0IGhhdmUgYSBkaXJlY3QgbWFwcGlu
+ZyBiZXR3ZWVuIEkvTw0KPiA+IHBvcnRzIGFuZCBNTUlPIGFkZHJlc3NlcyB3b3VsZCBpbXBsZW1l
+bnQgdGhhdCBzYW1lDQo+ID4gZnVuY3Rpb24gZGlmZmVyZW50bHkuDQo+IA0KPiBXaGF0IGFib3V0
+IGFkZCB0aGUgc3BlY2lmaWMgcXVpcmsgZm9yIEhpcDA2IExQQyBpbg0KPiBvZl9lbXB0eV9yYW5n
+ZXNfcXVpcmsoKT8/DQo+IA0KPiB5b3Uga25vdywgdGhlcmUgYXJlIHNldmVyYWwgY2FzZXMgaW4g
+d2hpY2ggb2ZfdHJhbnNsYXRlX2FkZHJlc3MgcmV0dXJuDQo+IE9GX0JBRF9BRERSLg0KPiBBbmQg
+aWYgd2Ugb25seSBjaGVjayB0aGUgc3BlY2lhbCBwb3J0IHJhbmdlLCBpdCBzZWVtcyBhIGJpdCBy
+aXNreS4gSWYNCj4gc29tZSBkZXZpY2Ugd2FudCB0byB1c2UgdGhpcyBwb3J0IHJhbmdlDQo+IHdo
+ZW4gbm8gaGlwMDYgTFBDIGlzIGNvbmZpZ3VyZWQsIHRoZSBjaGVja2luZyBkb2VzIG5vdCB3b3Jr
+LiBJIHRoaW5rIHdlDQo+IHNob3VsZCBhbHNvIGNoZWNrIHRoZSByZWxldmFudCBkZXZpY2UuDQo+
+IA0KPiANCj4gQmVzdCwNCj4gWmhpY2hhbmcNCj4gDQo+IA0KPiA+DQo+ID4gCUFybmQNCj4gPg0K
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJt
+LWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
+Cmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtl
+cm5lbAo=
