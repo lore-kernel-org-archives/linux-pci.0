@@ -1,98 +1,85 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [RFCv2 2/3] vmd: eliminate index member from irq list
-Date: Fri,  2 Sep 2016 11:53:05 -0600
-Message-Id: <1472838786-3441-3-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
-References: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35696 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750868AbcIUFza (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Sep 2016 01:55:30 -0400
+Received: by mail-wm0-f68.google.com with SMTP id 133so6667455wmq.2
+        for <linux-pci@vger.kernel.org>; Tue, 20 Sep 2016 22:55:30 -0700 (PDT)
+Date: Wed, 21 Sep 2016 07:55:27 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: "Mintz, Yuval" <Yuval.Mintz@cavium.com>
+Cc: Yuval Mintz <Yuval.Mintz@qlogic.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "Chickles, Derek" <Derek.Chickles@cavium.com>
+Subject: Re: [RFC] PCI: Allow sysfs control over totalvfs
+Message-ID: <20160921055527.GB2078@nanopsycho.orion>
+References: <1474386588-16337-1-git-send-email-Yuval.Mintz@qlogic.com>
+ <20160920193645.GA12677@nanopsycho.orion>
+ <BL2PR07MB23061E60A3ABC771F05764C98DF70@BL2PR07MB2306.namprd07.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BL2PR07MB23061E60A3ABC771F05764C98DF70@BL2PR07MB2306.namprd07.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use math to discover the irq list index number relative to the irq list
-head.
+Tue, Sep 20, 2016 at 10:27:24PM CEST, Yuval.Mintz@cavium.com wrote:
+>> >Some of the HW capable of SRIOV has resource limitations, where the
+>> >PF and VFs resources are drawn from a common pool.
+>> >In some cases, these limitations have to be considered early during
+>> >chip initialization and can only be changed by tearing down the
+>> >configuration and re-initializing.
+>> >As a result, drivers for such HWs sometimes have to make unfavorable
+>> >compromises where they reserve sufficient resources to accomadate
+>> >the maximal number of VFs that can be created - at the expanse of
+>> >resources that could have been used by the PF.
+>> >
+>> >If users were able to provide 'hints' regarding the required number
+>> >of VFs *prior* to driver attachment, then such compromises could be
+>> >avoided. As we already have sysfs nodes that can be queried for the
+>> >number of totalvfs, it makes sense to let the user reduce the number
+>> >of said totalvfs using same infrastrucure.
+>> >Then, we can have drivers supporting SRIOV take that value into account
+>> >when deciding how much resources to reserve, allowing the PF to benefit
+>> >from the difference between the configuration space value and the actual
+>> >number needed by user.
+>
+>> One of the motivations for introducing devlink interface was to allow
+>> user to pass some kind of well defined option parameters or as you call
+>> it hints to driver module. That would allow to replace module options
+>> and introduce similar possibility to pre-configure hardware on probe time.
+>> We plan to use devlink to allow user to change resource allocation for
+>> mlxsw devices.
+>
+>Is IOV configuration something you're going to explore in the near
+>future for mlxsw devices? Or are you merely pointing out that
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- arch/x86/pci/vmd.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+No, not sriov related directly.
 
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index 9320216..aa8d74e 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -58,13 +58,11 @@ struct vmd_irq {
- /**
-  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
-  * @irq_list:	the list of irq's the VMD one demuxes to.
-- * @index:	index into the VMD MSI-X table; used for message routing.
-  * @count:	number of child IRQs assigned to this vector; used to track
-  *		sharing.
-  */
- struct vmd_irq_list {
- 	struct list_head	irq_list;
--	unsigned int		index;
- 	unsigned int		count;
- };
- 
-@@ -93,6 +91,12 @@ static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
- 	return container_of(bus->sysdata, struct vmd_dev, sysdata);
- }
- 
-+static inline unsigned int index_from_irqs(struct vmd_dev *vmd,
-+					   struct vmd_irq_list *irqs)
-+{
-+	return irqs - vmd->irqs;
-+}
-+
- /*
-  * Drivers managing a device in a VMD domain allocate their own IRQs as before,
-  * but the MSI entry for the hardware it's driving will be programmed with a
-@@ -105,9 +109,11 @@ static void vmd_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct vmd_irq *vmdirq = data->chip_data;
- 	struct vmd_irq_list *irq = vmdirq->irq;
-+	struct vmd_dev *vmd = irq_data_get_irq_handler_data(data);
- 
- 	msg->address_hi = MSI_ADDR_BASE_HI;
--	msg->address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(irq->index);
-+	msg->address_lo = MSI_ADDR_BASE_LO |
-+			  MSI_ADDR_DEST_ID(index_from_irqs(vmd, irq));
- 	msg->data = 0;
- }
- 
-@@ -196,6 +202,7 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
- 	struct msi_desc *desc = arg->desc;
- 	struct vmd_dev *vmd = vmd_from_bus(msi_desc_to_pci_dev(desc)->bus);
- 	struct vmd_irq *vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
-+	unsigned int index, vector;
- 
- 	if (!vmdirq)
- 		return -ENOMEM;
-@@ -203,10 +210,10 @@ static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
- 	INIT_LIST_HEAD(&vmdirq->node);
- 	vmdirq->irq = vmd_next_irq(vmd, desc);
- 	vmdirq->virq = virq;
-+	index = index_from_irqs(vmd, vmdirq->irq);
-+	vector = pci_irq_vector(vmd->dev, index);
- 
--	irq_domain_set_info(domain, virq,
--			    pci_irq_vector(vmd->dev, vmdirq->irq->index),
--			    info->chip, vmdirq,
-+	irq_domain_set_info(domain, virq, vector, info->chip, vmdirq,
- 			    handle_untracked_irq, vmd, NULL);
- 	return 0;
- }
-@@ -689,7 +696,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	for (i = 0; i < vmd->msix_count; i++) {
- 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
--		vmd->irqs[i].index = i;
- 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
- 				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
- 		if (err)
--- 
-1.8.3.1
+
+>devlink could provide a superior configuration infrastrucutre and
+>should be investigated as a better alternative?
+
+Exactly. It is a general problem of how to pre-configure driver modules.
+
+
+>
+>> The plan is to allow to pre-create devlink instance before driver module
+>> is loaded. Then the user will use this placeholder to do the options
+>> setting. Once the driver module is loaded, it will fetch the options
+>> from devlink core and process it accordingly.
+>
+>> I believe this is exactly what you need.
+>
+>While this sounds far-superior to anything we can do via pci sysfs,
+>question is whether adding a devlink support for a device is 
+>a reasonable cost for adding this specific configuration [given
+>the existing sysfs nodes we already have].
+
+Adding devlink support is trivial in most cases, I bet you can do it in
+couple of minutes for your driver.
+
+
+>I'm not sufficiently familiar with the infrastrucutre there, and I
+>wonder whether it will set the bar too high for this sort of
+>configuration to be used.
