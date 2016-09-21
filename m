@@ -1,42 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55464 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932393AbcIMU5u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 16:57:50 -0400
-Date: Tue, 13 Sep 2016 15:57:45 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 21 Sep 2016 13:59:20 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [RFCv2 0/3] vmd irq list shortening, map allocation
-Message-ID: <20160913205745.GF4138@localhost>
-References: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
+ register range for ACPI case
+Message-ID: <20160921185920.GC20006@localhost>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-4-git-send-email-tn@semihalf.com>
+ <20160919180900.GB13775@localhost>
+ <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
+ <20160920133327.GB13855@localhost>
+ <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
+ <20160920140518.GD13855@localhost>
+ <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
+ <20160920191744.GA4941@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F87CF8F@lhreml507-mbx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472838786-3441-1-git-send-email-jonathan.derrick@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F87CF8F@lhreml507-mbx>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Rafael Wysocki <rafael@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
+ Wangyijing <wangyijing@huawei.com>, Andrea Gallo <andrea.gallo@linaro.org>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ Jeff Hugo <jhugo@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
+ Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
+ David Daney <ddaney@caviumnetworks.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ Robert Richter <robert.richter@caviumnetworks.com>,
+ "liudongdong \(C\)" <liudongdong3@huawei.com>,
+ Mark Salter <msalter@redhat.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>, Jon Masters <jcm@redhat.com>,
+ Christopher Covington <cov@codeaurora.org>, Marcin Wojtas <mw@semihalf.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Jayachandran C <jchandra@broadcom.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, Duc Dang <dhdang@apm.com>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jeremy Linton <jeremy.linton@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 02, 2016 at 11:53:03AM -0600, Jon Derrick wrote:
-> V2:
-> Added a map for vmd irqs to attempt to allocate all vmd irqs within an
-> irq list into a single page. Once we start getting many devices
-> sharing the irq in an irq list, this may help the list traversal latency.
+On Wed, Sep 21, 2016 at 02:10:55PM +0000, Gabriele Paoloni wrote:
+> Hi Bjorn
 > 
-> V1:
-> Couple of RFC patches here. I don't really notice a positive benefit but
-> it does reduce the struct size of vmd_irq_list and hopefully we gain some
-> cache benefits from that.
+> [...]
 > 
-> Both are based on:
-> https://patchwork.kernel.org/patch/9304179/
-> https://patchwork.kernel.org/patch/9304181/
 > 
-> Jon Derrick (3):
->   vmd: eliminate vmd_vector member from list type
->   vmd: eliminate index member from irq list
->   pci/vmd: Create irq map for irq nodes
+> > 
+> > If future hardware is completely ECAM-compliant and we don't need any
+> > more MCFG quirks, that would be great.
+> > 
+> > But we'll still need to describe that memory-mapped config space
+> > somewhere.  If that's done with PNP0C02 or similar devices (as is done
+> > on my x86 laptop), we'd be all set.
+> > 
+> > If we need to work around firmware in the field that doesn't do that,
+> > one possibility is a PNP quirk along the lines of
+> > quirk_amd_mmconfig_area().
 > 
->  arch/x86/pci/vmd.c | 94 ++++++++++++++++++++++++++++++++++++++++++------------
->  1 file changed, 73 insertions(+), 21 deletions(-)
+> So, if my understanding is correct, for platforms that have not been
+> shipped yet you propose to use PNP0C02 in the ACPI table in order to
+> declare a motherboard reserved resource whereas for shipped platforms
+> you propose to have a quirk along pnp_fixups in order to track the
+> resource usage even if values are hardcoded...correct?
 
-These look OK to me, so if Keith acks them I'll merge them.
+Yes.  I'm open to alternate proposals, but x86 uses PNP0C02, and
+following existing practice seems reasonable.
+
+> Before Tomasz came up with this patchset we had a call between the vendors
+> involved in this PCI quirks saga and other guys from Linaro and ARM.
+> 
+> Lorenzo summarized the outcome as in the following link
+> http://lkml.iu.edu/hypermail/linux/kernel/1606.2/03344.html
+> 
+> Since this quirks mechanism has been discussed for quite a long time now
+> IMHO it would be good to have a last call including also you (Bjorn) so
+> that we can all agree on what to do and we avoid changing our drivers again
+> and again...
+
+I think we're converging pretty fast.  As far as I'm concerned, the
+v6 ECAM quirks implementation is perfect.  The only remaining issue is
+reporting the ECAM resources, and I haven't seen objections to using
+PNP0C02 + PNP quirks for broken firmware.
+
+There is the question of how or whether to associate a PNP0A03 PCI
+bridge with resources from a different PNP0C02 device, but that's not
+super important.  If the hard-coded resources appear both in a quirk
+and in the PCI bridge driver, it's ugly but not the end of the world.
+We've still achieved the objective of avoiding landmines in the
+address space.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
