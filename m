@@ -1,64 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <94aee80e-f7c3-5732-ef1e-08e3ecb19e5e@codeaurora.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609300844.24325.linux@rainbow-software.org> <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
- <201609301756.25894.linux@rainbow-software.org> <94aee80e-f7c3-5732-ef1e-08e3ecb19e5e@codeaurora.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 30 Sep 2016 21:39:07 +0200
-Message-ID: <CAJZ5v0jr=KEfjo3HH6M2WhPCPCB9w1DYGB_VHhXDJXwjh76Pmg@mail.gmail.com>
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Ondrej Zary <linux@rainbow-software.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
-        ravikanth.nalla@hpe.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51268 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933869AbcIUMPi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Sep 2016 08:15:38 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8LCDOEZ026257
+        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 08:15:38 -0400
+Received: from e23smtp01.au.ibm.com (e23smtp01.au.ibm.com [202.81.31.143])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 25khh8wmph-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 08:15:37 -0400
+Received: from localhost
+        by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Wed, 21 Sep 2016 22:15:34 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+        by d23dlp01.au.ibm.com (Postfix) with ESMTP id CB2312CE8046
+        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 22:15:31 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8LCFVIM6816058
+        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 22:15:31 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+        by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8LCFVBY010335
+        for <linux-pci@vger.kernel.org>; Wed, 21 Sep 2016 22:15:31 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org
+Cc: bhelgaas@google.com, mpe@ellerman.id.au,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 3/4] powerpc/powernv: Unfreeze PE on allocation
+Date: Wed, 21 Sep 2016 22:15:29 +1000
+In-Reply-To: <1474460130-8316-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1474460130-8316-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Message-Id: <1474460130-8316-4-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 30, 2016 at 9:30 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> Rafael, Bjorn;
->
-> On 9/30/2016 11:56 AM, Ondrej Zary wrote:
->>>> It seems to work, at least on one machine.
->>> >
->>> > Ok, that comfirms my suspicion. We are  having trouble detecting sci
->>> > interrupt  type and we end up penalizing the wrong value.
->>> >
->>> > Can you try your other machines too?
->> Works on the 2nd one too.
->>
->>> > I need to do some research now.
->
-> Thanks for the confirmation. I need to gather some opinion from Rafael and Bjorn.
->
-> The patch provided only handles SCI in the ISA IRQ range (<16)
->
-> I looked at the ACPI spec. SCI interrupt is a two byte field:
->
-> "SCI_INT byte 2 offset 46
->
-> System vector the SCI interrupt is wired to in 8259 mode. On
-> systems that do not contain the 8259, this field contains the
-> Global System interrupt number of the SCI interrupt. OSPM is
-> required to treat the ACPI SCI interrupt as a sharable, level,
-> active low interrupt."
->
-> Since we have a race condition between the time the IRQ is registered
-> via the ISA API and the time it gets to the interrupt driver
-> since irq_get_type function is not matching what SCI API indicated.
->
-> how do we feel about increasing the ISA IRQ range to 256 so that
-> we are safe for all SCI interrupts?
+This unfreezes PE when it's initialized because the PE might be put
+into frozen state in the last hot remove path. It's not harmful to
+do so if the PE is already in unfrozen state.
 
-I'm not sure how this is related to the problem at hand.  Care to elaborate?
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-And why exactly was that race condition not present before your changes?
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index c38a6a1..5122257 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -126,9 +126,21 @@ static inline bool pnv_pci_is_m64(struct pnv_phb *phb, struct resource *r)
+ 
+ static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
+ {
++	s64 rc;
++
+ 	phb->ioda.pe_array[pe_no].phb = phb;
+ 	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+ 
++	/* Clear the PE frozen state as it might be put into frozen state
++	 * in the last PCI remove path. It's not harmful to do so when the
++	 * PE is already in unfrozen state.
++	 */
++	rc = opal_pci_eeh_freeze_clear(phb->opal_id, pe_no,
++				       OPAL_EEH_ACTION_CLEAR_FREEZE_ALL);
++	if (rc != OPAL_SUCCESS)
++		pr_warn("%s: Error %lld unfreezing PHB#%d-PE#%d\n",
++			__func__, rc, phb->hose->global_number, pe_no);
++
+ 	return &phb->ioda.pe_array[pe_no];
+ }
+ 
+-- 
+2.1.0
 
-Thanks,
-Rafael
