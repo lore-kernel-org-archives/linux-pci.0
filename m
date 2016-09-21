@@ -1,180 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60326 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965335AbcIWOai (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Sep 2016 10:30:38 -0400
-Date: Fri, 23 Sep 2016 09:30:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCHv4] pciehp: Let user control LED status
-Message-ID: <20160923143031.GD1514@localhost>
-References: <1473784319-6137-1-git-send-email-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473784319-6137-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jonathan.derrick@intel.com>
+Return-Path: <jonathan.derrick@intel.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+	keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCHv2] PCI/Hotplug: Schedule device add retries
+Date: Wed, 21 Sep 2016 13:12:35 -0600
+Message-Id: <1474485155-10822-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 13, 2016 at 10:31:59AM -0600, Keith Busch wrote:
-> This patch adds a new flag to the pci_dev structure instructing pciehp
-> to not interpret PCIe slot LED indicators. The pciehp driver will instead
-> allow all LED control from the user by setting the slot control indicators
-> as the user requested through sysfs. This is preparing for domain devices
-> that repurpose these control bits for non-standard use.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+If a device fails to be added after being hot inserted, it could be due
+to a power fault seen during the insertion or a failure to configure the
+new device. The devices are then removed from the tree and the slot
+disabled. Many times the devices are working as expected, but the slot
+could not tolerate the add without a power fault. A user then has to
+issue a sysfs rescan to re-add the slot and pick up the new devices.
 
-I applied this with a few minor tweaks to pci/hotplug for v4.9, thanks!
-The tweaks are:
+This patch detects the failure during slot enabling and attempts to
+re-enable the slot a few more times before failing the slot. This fixes
+an issue where a power fault is seen during hot insertion, but the slot
+itself just needed some time for the power faults to quiesce before the
+device was ready to be used.
 
-  - s/pciehp_set_raw_attention_status/pciehp_set_raw_indicator_status/ and
-    s/pciehp_get_raw_attention_status/pciehp_get_raw_indicator_status/
-    because we're now talking to *both* Attention and Power Indicators,
-    not just the Attention Indicator.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+Applies against helgaas/pci/hotplug
 
-  - s/user_leds/hotplug_user_indicators/ to use spec terminology
-    ("indicator") and to put it in a "hotplug" group in pci_dev.
+v1->v2: Consolidated the clearing of the retry count into the slot's
+disable and enable functions.
 
-  - Expand changelog to the following to highlight the fact that we're
-    adding user control of the Power Indicator, which didn't exist before:
+ drivers/pci/hotplug/pciehp.h      |  2 ++
+ drivers/pci/hotplug/pciehp_ctrl.c | 61 +++++++++++++++++++++++++++++++--------
+ 2 files changed, 51 insertions(+), 12 deletions(-)
 
-    PCI: pciehp: Allow exclusive userspace control of indicators
-    
-    PCIe hotplug supports optional Attention and Power Indicators, which are
-    used internally by pciehp.  Users can't control the Power Indicator, but
-    they can control the Attention Indicator by writing to a sysfs "attention"
-    file.
-    
-    The Slot Control register has two bits for each indicator, and the PCIe
-    spec defines the encodings for each as (Reserved/On/Blinking/Off).  For
-    sysfs "attention" writes, pciehp_set_attention_status() maps into these
-    encodings, so the only useful write values are 0 (Off), 1 (On), and 2
-    (Blinking).
-    
-    However, some platforms use all four bits for platform-specific indicators,
-    and they need to allow direct user control of them while preventing pciehp
-    from using them at all.
-    
-    Add a "hotplug_user_indicators" flag to the pci_dev structure.  When set,
-    pciehp does not use either the Attention Indicator or the Power Indicator,
-    and the low four bits (values 0x0 - 0xf) of sysfs "attention" write values
-    are written directly to the Attention Indicator Control and Power Indicator
-    Control fields.
-
-Let me know if any of these are problematic.  Obviously I don't have a way
-to test and make sure I didn't break something.
-
-> ---
-> v3 -> v4:
-> 
->   Fixing symbol usage by generating patch from the tree that compiles
->   correctly.
-> 
->  drivers/pci/hotplug/pciehp.h      |  5 +++++
->  drivers/pci/hotplug/pciehp_core.c |  3 +++
->  drivers/pci/hotplug/pciehp_hpc.c  | 27 +++++++++++++++++++++++++++
->  include/linux/pci.h               |  1 +
->  4 files changed, 36 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index e764918..725078d 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -152,6 +152,11 @@ bool pciehp_check_link_active(struct controller *ctrl);
->  void pciehp_release_ctrl(struct controller *ctrl);
->  int pciehp_reset_slot(struct slot *slot, int probe);
->  
-> +int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
-> +								u8 status);
-> +int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
-> +								u8 *status);
-> +
->  static inline const char *slot_name(struct slot *slot)
->  {
->  	return hotplug_slot_name(slot->hotplug_slot);
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index fb0f863..68b7aeb 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -113,6 +113,9 @@ static int init_slot(struct controller *ctrl)
->  	if (ATTN_LED(ctrl)) {
->  		ops->get_attention_status = get_attention_status;
->  		ops->set_attention_status = set_attention_status;
-> +	} else if (ctrl->pcie->port->user_leds) {
-> +		ops->get_attention_status = pciehp_get_raw_attention_status;
-> +		ops->set_attention_status = pciehp_set_raw_attention_status;
->  	}
->  
->  	/* register this slot with the hotplug pci core */
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 08e84d6..5ab8604 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -355,6 +355,18 @@ static int pciehp_link_enable(struct controller *ctrl)
->  	return __pciehp_link_set(ctrl, true);
->  }
->  
-> +int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
-> +								u8 *status)
-> +{
-> +	struct slot *slot = hotplug_slot->private;
-> +	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
-> +	u16 slot_ctrl;
-> +
-> +	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-> +	*status = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
-> +	return 0;
-> +}
-> +
->  void pciehp_get_attention_status(struct slot *slot, u8 *status)
->  {
->  	struct controller *ctrl = slot->ctrl;
-> @@ -431,6 +443,17 @@ int pciehp_query_power_fault(struct slot *slot)
->  	return !!(slot_status & PCI_EXP_SLTSTA_PFD);
->  }
->  
-> +int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
-> +								u8 status)
-> +{
-> +	struct slot *slot = hotplug_slot->private;
-> +	struct controller *ctrl = slot->ctrl;
-> +
-> +	pcie_write_cmd_nowait(ctrl, status << 6,
-> +			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
-> +	return 0;
-> +}
-> +
->  void pciehp_set_attention_status(struct slot *slot, u8 value)
->  {
->  	struct controller *ctrl = slot->ctrl;
-> @@ -804,6 +827,10 @@ struct controller *pcie_init(struct pcie_device *dev)
->  	}
->  	ctrl->pcie = dev;
->  	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-> +
-> +	if (pdev->user_leds)
-> +		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
-> +
->  	ctrl->slot_cap = slot_cap;
->  	mutex_init(&ctrl->ctrl_lock);
->  	init_waitqueue_head(&ctrl->queue);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 7256f33..f41bbca 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -308,6 +308,7 @@ struct pci_dev {
->  						   powered on/off by the
->  						   corresponding bridge */
->  	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-> +	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
->  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
->  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
->  
-> -- 
-> 2.7.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index e764918..55abbc5 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -93,6 +93,7 @@ struct controller {
+ 	wait_queue_head_t queue;	/* sleep & wake process */
+ 	u32 slot_cap;
+ 	u16 slot_ctrl;
++	u8 slot_retries;
+ 	struct timer_list poll_timer;
+ 	unsigned long cmd_started;	/* jiffies */
+ 	unsigned int cmd_busy:1;
+@@ -133,6 +134,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work);
+ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
+ int pciehp_enable_slot(struct slot *p_slot);
++int pciehp_enable_slot_retry(struct slot *p_slot);
+ int pciehp_disable_slot(struct slot *p_slot);
+ void pcie_enable_notification(struct controller *ctrl);
+ int pciehp_power_on_slot(struct slot *slot);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index efe69e8..6470627 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -35,7 +35,19 @@
+ #include "../pci.h"
+ #include "pciehp.h"
+ 
++#define DEVICE_ADD_RETRIES 5
++
+ static void interrupt_event_handler(struct work_struct *work);
++static void pciehp_queue_power_work(struct slot *p_slot, int req);
++
++struct power_work_info {
++       struct slot *p_slot;
++       struct work_struct work;
++       unsigned int req;
++#define DISABLE_REQ 0
++#define ENABLE_REQ 1
++#define ENABLE_RETRY_REQ 2
++};
+ 
+ void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ {
+@@ -121,9 +133,24 @@ static int board_added(struct slot *p_slot)
+ 
+ 	pciehp_green_led_on(p_slot);
+ 	pciehp_set_attention_status(p_slot, 0);
++	if (ctrl->slot_retries)
++		ctrl_dbg(ctrl, "Device added at %04x:%02x:00 after retry %d/%d\n",
++			 pci_domain_nr(parent), parent->number,
++			 ctrl->slot_retries, DEVICE_ADD_RETRIES);
++
+ 	return 0;
+ 
+ err_exit:
++	if (ctrl->slot_retries++ < DEVICE_ADD_RETRIES) {
++		ctrl_dbg(ctrl, "Retrying (%d/%d) device add at %04x:%02x:00\n",
++			ctrl->slot_retries, DEVICE_ADD_RETRIES,
++			pci_domain_nr(parent), parent->number);
++		pciehp_queue_power_work(p_slot, ENABLE_RETRY_REQ);
++		return retval;
++	}
++
++	ctrl_err(ctrl, "Failed to add device at %04x:%02x:00\n",
++		 pci_domain_nr(parent), parent->number);
+ 	set_slot_off(ctrl, p_slot);
+ 	return retval;
+ }
+@@ -157,14 +184,6 @@ static int remove_board(struct slot *p_slot)
+ 	return 0;
+ }
+ 
+-struct power_work_info {
+-	struct slot *p_slot;
+-	struct work_struct work;
+-	unsigned int req;
+-#define DISABLE_REQ 0
+-#define ENABLE_REQ  1
+-};
+-
+ /**
+  * pciehp_power_thread - handle pushbutton events
+  * @work: &struct work_struct describing work to be done
+@@ -189,8 +208,13 @@ static void pciehp_power_thread(struct work_struct *work)
+ 		mutex_unlock(&p_slot->lock);
+ 		break;
+ 	case ENABLE_REQ:
++		/* fall through */
++	case ENABLE_RETRY_REQ:
+ 		mutex_lock(&p_slot->hotplug_lock);
+-		ret = pciehp_enable_slot(p_slot);
++		if (info->req == ENABLE_RETRY_REQ)
++			ret = pciehp_enable_slot_retry(p_slot);
++		else
++			ret = pciehp_enable_slot(p_slot);
+ 		mutex_unlock(&p_slot->hotplug_lock);
+ 		if (ret)
+ 			pciehp_green_led_off(p_slot);
+@@ -208,13 +232,14 @@ static void pciehp_power_thread(struct work_struct *work)
+ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+ {
+ 	struct power_work_info *info;
++	bool enabling = (req == ENABLE_REQ || req == ENABLE_RETRY_REQ);
+ 
+-	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
++	p_slot->state = enabling ? POWERON_STATE : POWEROFF_STATE;
+ 
+ 	info = kmalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
+ 		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
+-			 (req == ENABLE_REQ) ? "poweron" : "poweroff");
++			 enabling ? "poweron" : "poweroff");
+ 		return;
+ 	}
+ 	info->p_slot = p_slot;
+@@ -386,7 +411,7 @@ static void interrupt_event_handler(struct work_struct *work)
+ /*
+  * Note: This function must be called with slot->hotplug_lock held
+  */
+-int pciehp_enable_slot(struct slot *p_slot)
++static int __pciehp_enable_slot(struct slot *p_slot)
+ {
+ 	u8 getstatus = 0;
+ 	struct controller *ctrl = p_slot->ctrl;
+@@ -417,6 +442,17 @@ int pciehp_enable_slot(struct slot *p_slot)
+ 	return board_added(p_slot);
+ }
+ 
++int pciehp_enable_slot(struct slot *p_slot)
++{
++	p_slot->ctrl->slot_retries = 0;
++	return __pciehp_enable_slot(p_slot);
++}
++
++int pciehp_enable_slot_retry(struct slot *p_slot)
++{
++	return __pciehp_enable_slot(p_slot);
++}
++
+ /*
+  * Note: This function must be called with slot->hotplug_lock held
+  */
+@@ -428,6 +464,7 @@ int pciehp_disable_slot(struct slot *p_slot)
+ 	if (!p_slot->ctrl)
+ 		return 1;
+ 
++	ctrl->slot_retries = 0;
+ 	if (POWER_CTRL(p_slot->ctrl)) {
+ 		pciehp_get_power_status(p_slot, &getstatus);
+ 		if (!getstatus) {
+-- 
+1.8.3.1
