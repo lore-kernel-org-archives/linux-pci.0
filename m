@@ -1,66 +1,150 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 2 Sep 2016 14:40:34 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, devicetree@vger.kernel.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-kernel@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        linux-rockchip@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH v2 10/15] Group related CSR definitions together.
-Message-ID: <20160902214034.GB31011@roeck-us.net>
-References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160902155518.8650.89467.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Wed, 21 Sep 2016 15:05:49 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	David Daney <ddaney@caviumnetworks.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rafael Wysocki <rafael@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Christopher Covington <cov@codeaurora.org>,
+	Duc Dang <dhdang@apm.com>,
+	Robert Richter <robert.richter@caviumnetworks.com>,
+	Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Andrea Gallo <andrea.gallo@linaro.org>,
+	Jeremy Linton <jeremy.linton@arm.com>,
+	Dongdong Liu <liudongdong3@huawei.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jeff Hugo <jhugo@codeaurora.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
+ register range for ACPI case
+Message-ID: <20160921140549.GA11968@red-moon>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-4-git-send-email-tn@semihalf.com>
+ <20160919180900.GB13775@localhost>
+ <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
+ <20160920133327.GB13855@localhost>
+ <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
+ <20160920140518.GD13855@localhost>
+ <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
+ <20160920191744.GA4941@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160902155518.8650.89467.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160920191744.GA4941@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 02, 2016 at 10:55:19AM -0500, Bjorn Helgaas wrote:
+On Tue, Sep 20, 2016 at 02:17:44PM -0500, Bjorn Helgaas wrote:
+> On Tue, Sep 20, 2016 at 04:09:25PM +0100, Ard Biesheuvel wrote:
+
+[...]
+
+> > None of these platforms can be fixed entirely in software, and given
+> > that we will not be adding quirks for new broken hardware, we should
+> > ask ourselves whether having two versions of a quirk, i.e., one for
+> > broken hardware + currently shipping firmware, and one for the same
+> > broken hardware with fixed firmware is really an improvement over what
+> > has been proposed here.
 > 
-> ---
->  drivers/pci/host/pcie-rockchip.c |  148 +++++++++++++++++++-------------------
->  1 file changed, 74 insertions(+), 74 deletions(-)
+> We're talking about two completely different types of quirks:
 > 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 6edfce5..fe1b52f 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -37,21 +37,27 @@
->  #include <linux/reset.h>
->  #include <linux/regmap.h>
->  
-> -#define PCIE_CLIENT_BASE			0x0
-> -#define PCIE_RC_CONFIG_BASE			0xa00000
-> -#define PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2	(PCIE_RC_CONFIG_BASE + 0x90c)
-> -#define PCIE_RC_CONFIG_LCS			(PCIE_RC_CONFIG_BASE + 0x0d0)
-> -#define  PCIE_RC_CONFIG_LCS_RETRAIN_LINK	BIT(5)
-> -#define  PCIE_RC_CONFIG_LCS_LBMIE		BIT(10)
-> -#define  PCIE_RC_CONFIG_LCS_LABIE		BIT(11)
-> -#define  PCIE_RC_CONFIG_LCS_LBMS		BIT(30)
-> -#define  PCIE_RC_CONFIG_LCS_LAMS		BIT(31)
-> -#define PCIE_CORE_CTRL_MGMT_BASE		0x900000
-> -#define PCIE_CORE_AXI_CONF_BASE			0xc00000
-> -#define PCIE_CORE_AXI_INBOUND_BASE		0xc00800
-> -#define PCIE_CLIENT_BASIC_STATUS1		(PCIE_CLIENT_BASE + 0x48)
-> -#define PCIE_CLIENT_INT_MASK			(PCIE_CLIENT_BASE + 0x4c)
-> -#define PCIE_CLIENT_INT_STATUS			(PCIE_CLIENT_BASE + 0x50)
-> +/*
-> + * The upper 16 bits of PCIE_CLIENT_BASE are a write mask for the lower 16
-> + * bits.  This allows atomic updates of the register without locking.
-> + */
-> +#define HIWORD_UPDATE(mask, val)	((mask << 16) | val)
-> +
-(mask), (val)
+>   1) MCFG quirks to use memory-mapped config space that doesn't quite
+>      conform to the ECAM model in the PCIe spec, and
+> 
+>   2) Some yet-to-be-determined method to describe address space
+>      consumed by a bridge.
+> 
+> The first two patches of this series are a nice implementation for 1).
+> The third patch (ThunderX-specific) is one possibility for 2), but I
+> don't like it because there's no way for generic software like the
+> ACPI core to discover these resources.
 
-> +#define ENCODE_LANES(x)			(((x >> 1) & 3) << 4)
+Ok, so basically this means that to implement (2) we need to assign
+some sort of _HID to these quirky PCI bridges (so that we know what
+device they represent and we can retrieve their _CRS). I take from
+this discussion that the goal is to make sure that all non-config
+resources have to be declared through _CRS device objects, which is
+fine but that requires a FW update (unless we can fabricate ACPI
+devices and corresponding _CRS in the kernel whenever we match a
+given MCFG table signature).
 
-(x)
+We discussed this already and I think we should make a decision:
 
-Guenter
+http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/414722.html
+
+> > > I'd like to step back and come up with some understanding of how
+> > > non-broken firmware *should* deal with this issue.  Then, if we *do*
+> > > work around this particular broken firmware in the kernel, it would be
+> > > nice to do it in a way that fits in with that understanding.
+> > >
+> > > For example, if a companion ACPI device is the preferred solution, an
+> > > ACPI quirk could fabricate a device with the required resources.  That
+> > > would address the problem closer to the source and make it more likely
+> > > that the rest of the system will work correctly: /proc/iomem could
+> > > make sense, things that look at _CRS generically would work (e.g,
+> > > /sys/, an admittedly hypothetical "lsacpi", etc.)
+> > >
+> > > Hard-coding stuff in drivers is a point solution that doesn't provide
+> > > any guidance for future platforms and makes it likely that the hack
+> > > will get copied into even more drivers.
+> > >
+> > 
+> > OK, I see. But the guidance for future platforms should be 'do not
+> > rely on quirks', and what I am arguing here is that the more we polish
+> > up this code and make it clean and reusable, the more likely it is
+> > that will end up getting abused by new broken hardware that we set out
+> > to reject entirely in the first place.
+> > 
+> > So of course, if the quirk involves claiming resources, let's make
+> > sure that this occurs in the cleanest and most compliant way possible.
+> > But any factoring/reuse concerns other than for the current crop of
+> > broken hardware should be avoided imo.
+> 
+> If future hardware is completely ECAM-compliant and we don't need any
+> more MCFG quirks, that would be great.
+
+Yes.
+
+> But we'll still need to describe that memory-mapped config space
+> somewhere.  If that's done with PNP0C02 or similar devices (as is done
+> on my x86 laptop), we'd be all set.
+
+I am not sure I understand what you mean here. Are you referring
+to MCFG regions reported as PNP0c02 resources through its _CRS ?
+
+IIUC PNP0C02 is a reservation mechanism, but it does not help us
+associate its _CRS to a specific PCI host bridge instance, right ?
+
+> If we need to work around firmware in the field that doesn't do that,
+> one possibility is a PNP quirk along the lines of
+> quirk_amd_mmconfig_area().
+
+You mean matching PNP0C01/PNP0c02 and create a resource (that has to
+hardcoded in a static array in the kernel anyway, there is no way to
+retrieve it otherwise) in the corresponding PNP quirk handler ?
+
+And it is not a given we can match against PNP0c01/PNP0c02.
+
+So it looks like the only solution is allocating an _HID for each
+host bridge that is not ECAM compliant to add resources to its _CRS
+(unless the MCFG quirk does not need any additional data/resource,
+eg "use different set of PCI accessorsi 32-bit vs byte-access").
+
+For FW that is immutable I really do not see what we can do apart
+from hardcoding the non-config resources (consumed by a bridge),
+somehow.
+
+Thanks,
+Lorenzo
