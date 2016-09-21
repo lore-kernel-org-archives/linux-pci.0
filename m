@@ -1,95 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: iommu@lists.linux-foundation.org, Joerg Roedel <joro@8bytes.org>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 01/14] drivers: iommu: add FWNODE_IOMMU fwnode type
-Date: Thu, 29 Sep 2016 22:59:40 +0200
-Message-ID: <3178073.UTpgCTN6if@vostro.rjw.lan>
-In-Reply-To: <20160929141520.GA29244@red-moon>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com> <20160909142343.13314-2-lorenzo.pieralisi@arm.com> <20160929141520.GA29244@red-moon>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Po Liu <po.liu@nxp.com>
+To: Shawn Guo <shawnguo@kernel.org>
+Subject: RE: [PATCH v5 3/3] pci:aer: add support aer interrupt with none
+ MSI/MSI-X/INTx mode
+Date: Wed, 21 Sep 2016 06:54:59 +0000
+Message-ID: <VI1PR0401MB17090ED60A826FDCBFB8B33D92F60@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+References: <1472625442-23309-2-git-send-email-po.liu@nxp.com>
+ <1473741659-17618-1-git-send-email-po.liu@nxp.com>
+ <1473741659-17618-3-git-send-email-po.liu@nxp.com>
+ <20160918005212.GF15478@tiger>
+ <VI1PR0401MB1709F91B0C1EB6C80D741E4492F50@VI1PR0401MB1709.eurprd04.prod.outlook.com>
+ <20160920123926.GA3744@tiger>
+In-Reply-To: <20160920123926.GA3744@tiger>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <roy.zang@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stuart Yoder <stuart.yoder@nxp.com>, "M.H. Lian" <minghuan.lian@nxp.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Mingkai Hu <mingkai.hu@nxp.com>, Bjorn
+ Helgaas <bhelgaas@google.com>, Leo Li <leoyang.li@nxp.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, September 29, 2016 03:15:20 PM Lorenzo Pieralisi wrote:
-> Hi Rafael,
-> 
-> On Fri, Sep 09, 2016 at 03:23:30PM +0100, Lorenzo Pieralisi wrote:
-> > On systems booting with a device tree, every struct device is
-> > associated with a struct device_node, that represents its DT
-> > representation. The device node can be used in generic kernel
-> > contexts (eg IRQ translation, IOMMU streamid mapping), to
-> > retrieve the properties associated with the device and carry
-> > out kernel operation accordingly. Owing to the 1:1 relationship
-> > between the device and its device_node, the device_node can also
-> > be used as a look-up token for the device (eg looking up a device
-> > through its device_node), to retrieve the device in kernel paths
-> > where the device_node is available.
-> > 
-> > On systems booting with ACPI, the same abstraction provided by
-> > the device_node is required to provide look-up functionality.
-> > 
-> > Therefore, mirroring the approach implemented in the IRQ domain
-> > kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
-> > 
-> > This patch also implements a glue kernel layer that allows to
-> > allocate/free FWNODE_IOMMU fwnode_handle structures and associate
-> > them with IOMMU devices.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> > Cc: Joerg Roedel <joro@8bytes.org>
-> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > ---
-> >  include/linux/fwnode.h |  1 +
-> >  include/linux/iommu.h  | 25 +++++++++++++++++++++++++
-> >  2 files changed, 26 insertions(+)
-> > 
-> > diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
-> > index 8516717..6e10050 100644
-> > --- a/include/linux/fwnode.h
-> > +++ b/include/linux/fwnode.h
-> > @@ -19,6 +19,7 @@ enum fwnode_type {
-> >  	FWNODE_ACPI_DATA,
-> >  	FWNODE_PDATA,
-> >  	FWNODE_IRQCHIP,
-> > +	FWNODE_IOMMU,
-> 
-> This patch provides groundwork for this series and it is key for
-> the rest of it, basically the point here is that we need a fwnode
-> to differentiate platform devices created out of static ACPI tables
-> entries (ie IORT), that represent IOMMU components.
-> 
-> The corresponding device is not an ACPI device (I could fabricate one as
-> it is done for other static tables entries eg FADT power button, but I
-> do not necessarily see the reason for doing that given that all we need
-> the fwnode for is a token identifier), so FWNODE_ACPI does not apply
-> here.
-> 
-> Please let me know if it is reasonable how I sorted this out (it
-> is basically identical to IRQCHIP, just another enum entry), the
-> remainder of the code depends on this.
+Hi Shawn,
 
-I'm not familiar with the use case, so I don't see anything unreasonable
-in it.
 
-If you're asking about whether or not I mind adding more fwnode types in
-principle, then no, I don't. :-) 
+>  -----Original Message-----
+>  From: Shawn Guo [mailto:shawnguo@kernel.org]
+>  Sent: Tuesday, September 20, 2016 8:39 PM
+>  To: Po Liu
+>  Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+>  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Roy Zang; Arnd
+>  Bergmann; Marc Zyngier; Stuart Yoder; Leo Li; M.H. Lian; Murali
+>  Karicheri; Bjorn Helgaas; Mingkai Hu
+>  Subject: Re: [PATCH v5 3/3] pci:aer: add support aer interrupt with none
+>  MSI/MSI-X/INTx mode
+>  
+>  On Sun, Sep 18, 2016 at 03:37:27AM +0000, Po Liu wrote:
+>  > Hi Shawn,
+>  >
+>  >
+>  > >  -----Original Message-----
+>  > >  From: Shawn Guo [mailto:shawnguo@kernel.org]
+>  > >  Sent: Sunday, September 18, 2016 8:52 AM
+>  > >  To: Po Liu
+>  > >  Cc: linux-pci@vger.kernel.org;
+>  > > linux-arm-kernel@lists.infradead.org;
+>  > >  linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; Roy Zang;
+>  > > Arnd  Bergmann; Marc Zyngier; Stuart Yoder; Leo Li; M.H. Lian;
+>  > > Murali  Karicheri; Bjorn Helgaas; Mingkai Hu
+>  > >  Subject: Re: [PATCH v5 3/3] pci:aer: add support aer interrupt with
+>  > > none  MSI/MSI-X/INTx mode
+>  > >
+>  > >  On Tue, Sep 13, 2016 at 12:40:59PM +0800, Po Liu wrote:
+>  > >  > On some platforms, root port doesn't support MSI/MSI-X/INTx in RC
+>  mode.
+>  > >  > When chip support the aer interrupt with none MSI/MSI-X/INTx
+>  > > mode,  > maybe there is interrupt line for aer pme etc. Search the
+>  > > interrupt  > number in the fdt file. Then fixup the dev->irq with it.
+>  > >  >
+>  > >  > Signed-off-by: Po Liu <po.liu@nxp.com>
+>  > >
+>  > >  Will the new kernel work with existing/old DTB?  I'm trying to
+>  > > understand the dependency between driver and DTS changes.
+>  >
+>  > Yes, We've never use name 'intr' before. So we remove it is ok.
+>  > 'aer' is a dts name for researching it's true interrupt number by
+>  kernel. This patch is first time to use name 'aer'. So it must be
+>  compatible with existing/old DTB.
+>  
+>  Does that mean driver and DTS changes can go through separate trees, i.e.
+>  PCI and arm-soc, without introducing regressions on either tree?
+>  Or does the patch series needs to go in as a whole?
 
-Thanks,
-Rafael
+Should be as a whole. The driver base on the dts. Or else, the driver would not found the 'aer' point.
+Thanks!
 
+Po
+
+>  
+>  Shawn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
