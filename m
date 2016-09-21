@@ -1,138 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:64636 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760242AbcINN1D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Sep 2016 09:27:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>, hch@infradead.org,
-        Joao.Pinto@synopsys.com, mingkai.hu@nxp.com, m-karicheri2@ti.com,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Joao Pinto <jpinto@synopsys.com>,
-        Rob Herring <robh+dt@kernel.org>, nsekhar@ti.com,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>, linux-ntb@googlegroups.com
-Subject: Re: [RFC PATCH 00/11] pci: support for configurable PCI endpoint
-Date: Wed, 14 Sep 2016 15:25:41 +0200
-Message-ID: <2837059.ka7z3gzjF2@wuerfel>
-In-Reply-To: <1473829927-20466-1-git-send-email-kishon@ti.com>
-References: <1473829927-20466-1-git-send-email-kishon@ti.com>
+Return-Path: <cov@codeaurora.org>
+Return-Path: <cov@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 20 Sep 2016 21:15:14 -0400
+From: cov@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+ catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+ arnd@arndb.de, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+ jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V6 0/5] ECAM quirks handling for ARM64 platforms
+In-Reply-To: <20160920192636.GB4941@localhost>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <20160920192636.GB4941@localhost>
+Message-ID: <0429663d51ed8e93fb0c96261dd2ecc7@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 14, 2016 10:41:56 AM CEST Kishon Vijay Abraham I wrote:
-> This patch series
-> 	*) adds PCI endpoint core layer
-> 	*) modifies designware/dra7xx driver to be configured in EP mode
-> 	*) adds a PCI endpoint *test* function driver
+Hi Bjorn, Thomasz,
 
-Hi Kishon,
-
-I think this is a great start, thanks for posting early with a clear
-list of limitations and TODO items.
-
-I've added the drivers/ntb maintainers to Cc, given that there is
-a certain degree of overlap between your work and the existing
-code, I think they should be part of the discussion.
- 
-> Known Limitation:
-> 	*) Does not support multi-function devices
-
-If I understand it right, this was a problem for USB and adding
-it later made it somewhat inconsistent. Maybe we can at least
-try to come up with an idea of how multi-function devices
-could be handled even if we don't implement it until someone
-actually needs it.
-
-Is your hardware able to make the PCIe endpoint look like
-a device with multiple PCI functions, or would one have to
-do this in software inside of a single PCI function if we
-ever need it?
-
-> TODO:
-> 	*) access buffers in RC
-> 	*) raise MSI interrupts
-> 	*) Enable user space control for the RC side PCI driver
-
-The user space control would end up just being one of several
-gadget drivers, right? E.g. gadget drivers for standard hardware
-(8250 uart, ATA, NVMe, some ethernet) could be done as kernel
-drivers while a user space driver can be used for things that
-are more unusual and that don't need to interface to another
-part of the kernel?
-
-> 	*) Adapt all other users of designware to use the new design (only
-> 	   dra7xx has been adapted)
-
-I don't fully understand this part. Does every designware based
-driver need modifications, or are the changes to the
-generic parts of the designware driver enough to make it
-work for the simpler platforms?
-
-> HOW TO:
+On 2016-09-20 15:26, Bjorn Helgaas wrote:
+> On Fri, Sep 09, 2016 at 09:24:02PM +0200, Tomasz Nowicki wrote:
+>> Quirk handling relies on an idea of simple static array which contains
+>> quirk enties. Each entry consists of identification information (IDs 
+>> from
+>> standard header of MCFG table) along with custom pci_ecam_ops 
+>> structure and
+>> configuration space resource structure. This way it is possible find
+>> corresponding quirk entries and override pci_ecam_ops and PCI 
+>> configuration
+>> space regions.
+>> 
+>> As an example, the last 3 patches present quirk handling mechanism 
+>> usage for
+>> ThunderX.
+>> 
+>> v5 -> v6
+>> - rebase against v4.8-rc5
+>> - drop patch 1 form previous series
+>> - keep pci_acpi_setup_ecam_mapping() in ARM64 arch directory
+>> - move quirk code to pci_mcfg.c
+>> - restrict quirk to override pci_ecam_ops and CFG resource structure
+>>   only, no init call any more
+>> - split ThunderX quirks into the smaller chunks
+>> - add ThunderX pass1.x silicon revision support
+>> 
+>> v4 -> v5
+>> - rebase against v4.8-rc1
+>> - rework to exact MCFG OEM ID, TABLE ID, rev match
+>>   - use memcmp instead of strncmp
+>>   - no substring match
+>> - fix typos and dmesg message
+>> 
+>> Tomasz Nowicki (5):
+>>   PCI/ACPI: Extend pci_mcfg_lookup() responsibilities
+>>   PCI/ACPI: Check platform specific ECAM quirks
+>>   PCI: thunder-pem: Allow to probe PEM-specific register range for 
+>> ACPI
+>>     case
+>>   PCI: thunder: Enable ACPI PCI controller for ThunderX pass2.x 
+>> silicon
+>>     version
+>>   PCI: thunder: Enable ACPI PCI controller for ThunderX pass1.x 
+>> silicon
+>>     version
+>> 
+>>  arch/arm64/kernel/pci.c             |  17 ++--
+>>  drivers/acpi/pci_mcfg.c             | 168 
+>> +++++++++++++++++++++++++++++++++++-
+>>  drivers/pci/host/pci-thunder-ecam.c |   2 +-
+>>  drivers/pci/host/pci-thunder-pem.c  |  63 +++++++++++---
+>>  include/linux/pci-acpi.h            |   4 +-
+>>  include/linux/pci-ecam.h            |   7 ++
+>>  6 files changed, 230 insertions(+), 31 deletions(-)
 > 
-> ON THE EP SIDE:
-> ***************
+> I'm not quite ready to merge these because we haven't resolved the
+> question of how to expose the resources used by the memory-mapped
+> config space.  I'm fine with the first two patches (I did make a
+> couple trivial changes, see below), but there's no point in merging
+> them until we merge a user for them.
 > 
-> /* EP function is configured using configfs */
-> # mount -t configfs none /sys/kernel/config
+> I pushed the series to pci/ecam-v6 for build testing and discussion.
+> The diff (the changes I made locally) from v6 as posted by Tomasz is
+> below.
+
+Rebasing the following simple quirks framework user onto this branch,
+I have some questions.
+
+https://source.codeaurora.org/quic/server/kernel/commit/?h=cov/4.8-rc2-testing&id=83b766cafef11c107b10177d0626db311f382299
+
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index eb14f74..bb3b8ad 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -42,86 +42,59 @@ struct mcfg_fixup {
+>  	struct resource cfgres;
+>  };
 > 
-> /* PCI EP core layer creates "pci_ep" entry in configfs */
-> # cd /sys/kernel/config/pci_ep/
+> -#define MCFG_DOM_ANY			(-1)
+
+Did you delete this because there were no current users, because you'd
+prefer users just use "-1", or for some other reason?
+
+>  #define MCFG_BUS_RANGE(start, end)	DEFINE_RES_NAMED((start),	\
+>  						((end) - (start) + 1),	\
+>  						NULL, IORESOURCE_BUS)
+> -#define MCFG_BUS_ANY		MCFG_BUS_RANGE(0x0, 0xff)
+> -#define MCFG_RES_EMPTY		DEFINE_RES_NAMED(0, 0, NULL, 0)
+> +#define MCFG_BUS_ANY			MCFG_BUS_RANGE(0x0, 0xff)
 > 
-> /*
->  * This is the 1st step in creating an endpoint function. This
->  * creates the endpoint function device *instance*. The string
->  * before the .<num> suffix will identify the driver this
->  * EP function will bind to.
->  * Just pci_epf_test is also valid. The .<num> suffix is used
->  * if there are multiple PCI controllers and all of them wants
->  * to use the same function.
->  */
-> # mkdir pci_epf_test.0
+>  static struct mcfg_fixup mcfg_quirks[] = {
+> -/*	{ OEM_ID, OEM_TABLE_ID, REV, DOMAIN, BUS_RANGE, cfgres, ops }, */
+> +/*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, cfgres, ops }, */
 
-I haven't used USB gadgets, but I assume this is modeled around
-the same interface. If there are notable differences, please mention
-what they are. Otherwise the general concept seems rather nice to me.
+This comment appears to have the order of cfgres and ops reversed.
 
->  drivers/pci/{host => controller}/Kconfig           |  109 +++++-
->  drivers/pci/{host => controller}/Makefile          |    2 +
->  drivers/pci/{host => controller}/pci-aardvark.c    |    0
->  drivers/pci/{host => controller}/pci-dra7xx.c      |  340 +++++++++++++----
->  drivers/pci/{host => controller}/pci-exynos.c      |    0
->  drivers/pci/{host => controller}/pci-host-common.c |    0
->  .../pci/{host => controller}/pci-host-generic.c    |    0
->  drivers/pci/{host => controller}/pci-hyperv.c      |    0
->  drivers/pci/{host => controller}/pci-imx6.c        |    0
->  drivers/pci/{host => controller}/pci-keystone-dw.c |    0
->  drivers/pci/{host => controller}/pci-keystone.c    |    0
->  drivers/pci/{host => controller}/pci-keystone.h    |    0
+Am I correct in reading that if a user of the framework does not wish to
+override cfgres they must place a struct resource with .start = 0 at the
+end of their mcfg_quirks entry? If so, I guess I have the same questions
+about removing MCFG_RES_EMPTY as I do about removing MCFG_DOM_ANY.
 
-Maybe it's better to wait before moving it around, this will make
-it harder for you to rebase the patch series while you are working on
-it and other people are working on the existing code.
-
-I'd suggest dropping the rename patches for the moment and just work
-in drivers/pci/host.
-
-Let's talk (high-level) about the DT binding. I see that the way
-you have done it here, one will need to have a different .dtb file
-for a machine depending on whether the PCIe is used in host or
-endpoint mode. The advantage of this way is that it's a much
-cleaner binding (PCIe host bindings are a mess, and adding more
-options to it will only make it worse), the downside is that
-you can't decide at runtime what you want to use it for. E.g.
-connecting two identical machines over PCIe requires deciding
-in the bootloader which one is the endpoint, or using DT
-overlays, which may be awkward for some users. Is this a realistic
-use case, or do you expect that all machines will only ever be
-used in one of the two ways?
-
-	Arnd
+Thanks,
+Cov
