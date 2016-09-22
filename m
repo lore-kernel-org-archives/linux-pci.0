@@ -1,122 +1,139 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 30 Sep 2016 10:07:02 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: iommu@lists.linux-foundation.org, Joerg Roedel <joro@8bytes.org>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 01/14] drivers: iommu: add FWNODE_IOMMU fwnode type
-Message-ID: <20160930090702.GA7725@red-moon>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
- <20160909142343.13314-2-lorenzo.pieralisi@arm.com>
- <20160929141520.GA29244@red-moon>
- <3178073.UTpgCTN6if@vostro.rjw.lan>
+Date: Thu, 22 Sep 2016 18:08:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christopher Covington <cov@codeaurora.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+        catalin.marinas@arm.com, rafael@kernel.org,
+        Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, jchandra@broadcom.com, dhdang@apm.com,
+        ard.biesheuvel@linaro.org, robert.richter@caviumnetworks.com,
+        mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+        wangyijing@huawei.com, msalter@redhat.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linaro-acpi@lists.linaro.org, jcm@redhat.com,
+        andrea.gallo@linaro.org, jeremy.linton@arm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V6 0/5] ECAM quirks handling for ARM64 platforms
+Message-ID: <20160922230806.GB1514@localhost>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <20160920192636.GB4941@localhost>
+ <0429663d51ed8e93fb0c96261dd2ecc7@codeaurora.org>
+ <20160921131107.GB10804@localhost>
+ <304377c6-554d-60ea-30df-006e557c7279@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3178073.UTpgCTN6if@vostro.rjw.lan>
+In-Reply-To: <304377c6-554d-60ea-30df-006e557c7279@codeaurora.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 29, 2016 at 10:59:40PM +0200, Rafael J. Wysocki wrote:
-> On Thursday, September 29, 2016 03:15:20 PM Lorenzo Pieralisi wrote:
-> > Hi Rafael,
-> > 
-> > On Fri, Sep 09, 2016 at 03:23:30PM +0100, Lorenzo Pieralisi wrote:
-> > > On systems booting with a device tree, every struct device is
-> > > associated with a struct device_node, that represents its DT
-> > > representation. The device node can be used in generic kernel
-> > > contexts (eg IRQ translation, IOMMU streamid mapping), to
-> > > retrieve the properties associated with the device and carry
-> > > out kernel operation accordingly. Owing to the 1:1 relationship
-> > > between the device and its device_node, the device_node can also
-> > > be used as a look-up token for the device (eg looking up a device
-> > > through its device_node), to retrieve the device in kernel paths
-> > > where the device_node is available.
-> > > 
-> > > On systems booting with ACPI, the same abstraction provided by
-> > > the device_node is required to provide look-up functionality.
-> > > 
-> > > Therefore, mirroring the approach implemented in the IRQ domain
-> > > kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
-> > > 
-> > > This patch also implements a glue kernel layer that allows to
-> > > allocate/free FWNODE_IOMMU fwnode_handle structures and associate
-> > > them with IOMMU devices.
-> > > 
-> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> > > Cc: Joerg Roedel <joro@8bytes.org>
-> > > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > > ---
-> > >  include/linux/fwnode.h |  1 +
-> > >  include/linux/iommu.h  | 25 +++++++++++++++++++++++++
-> > >  2 files changed, 26 insertions(+)
-> > > 
-> > > diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
-> > > index 8516717..6e10050 100644
-> > > --- a/include/linux/fwnode.h
-> > > +++ b/include/linux/fwnode.h
-> > > @@ -19,6 +19,7 @@ enum fwnode_type {
-> > >  	FWNODE_ACPI_DATA,
-> > >  	FWNODE_PDATA,
-> > >  	FWNODE_IRQCHIP,
-> > > +	FWNODE_IOMMU,
-> > 
-> > This patch provides groundwork for this series and it is key for
-> > the rest of it, basically the point here is that we need a fwnode
-> > to differentiate platform devices created out of static ACPI tables
-> > entries (ie IORT), that represent IOMMU components.
-> > 
-> > The corresponding device is not an ACPI device (I could fabricate one as
-> > it is done for other static tables entries eg FADT power button, but I
-> > do not necessarily see the reason for doing that given that all we need
-> > the fwnode for is a token identifier), so FWNODE_ACPI does not apply
-> > here.
-> > 
-> > Please let me know if it is reasonable how I sorted this out (it
-> > is basically identical to IRQCHIP, just another enum entry), the
-> > remainder of the code depends on this.
+On Wed, Sep 21, 2016 at 06:40:47PM -0400, Christopher Covington wrote:
+> Hi Bjorn,
 > 
-> I'm not familiar with the use case, so I don't see anything unreasonable
-> in it.
+> On 09/21/2016 09:11 AM, Bjorn Helgaas wrote:
+> > On Tue, Sep 20, 2016 at 09:15:14PM -0400, cov@codeaurora.org wrote:
+> 
+> >>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> >>> index eb14f74..bb3b8ad 100644
+> >>> --- a/drivers/acpi/pci_mcfg.c
+> >>> +++ b/drivers/acpi/pci_mcfg.c
+> >>> @@ -42,86 +42,59 @@ struct mcfg_fixup {
+> >>> 	struct resource cfgres;
+> >>> };
+> >>>
+> >>> -#define MCFG_DOM_ANY			(-1)
+> >>
+> >> Did you delete this because there were no current users, because you'd
+> >> prefer users just use "-1", or for some other reason?
+> > 
+> > I removed it because there were no users of it and, more importantly,
+> > the code doesn't implement support for it.
+> 
+> It looks like a stale "First match against PCI topology <domain:bus>..."
+> comment remains.
 
-The use case is pretty simple: on ARM SMMU devices are platform devices.
-When booting with DT they are identified through an of_node and related
-FWNODE_OF type. When booting with ACPI, the ARM SMMU platform devices,
-to be equivalent to DT booting path, should be created out of static
-IORT table entries (that's how we describe SMMUs); we need to create
-a fwnode "token" to associate with those platform devices and that's
-not a FWNODE_ACPI (that is for an ACPI device firmware object, here we
-really do not need one), so this patch.
+Yep.  I removed the comment since it's sort of obvious from the code.
+I also renamed a few things and pulled the match out into a helper
+function.
 
-> If you're asking about whether or not I mind adding more fwnode types in
-> principle, then no, I don't. :-) 
+I also changed the dmesg note: I think the actual resource and the
+name of the pci_ecam_ops is more interesting than the table IDs (which
+I think are already elsewhere in the dmesg log).
 
-Yes, that's what I was asking, the only point that bugs me is that for
-both FWNODE_IRQCHIP and FWNODE_IOMMU the fwnode is just a "token" (ie a
-valid pointer) used for look-up and the type in the fwnode_handle is
-mostly there for error checking, I was wondering if we could create a
-specific fwnode_type for this specific usage (eg FWNODE_TAG and then add
-a type to it as part of its container struct) instead of adding an enum
-value per subsystem - it seems there are other fwnode types in the
-pipeline :), so I am asking:
+Here's the incremental diff, which I can't really test:
 
-lkml.kernel.org/r/3D1468514043-21081-3-git-send-email-minyard@acm.org
 
-If it is ok for you and Joerg I will go ahead with current patch
-keeping in mind that the above should not be that complicated to
-implement if we deem it reasonable.
-
-Thanks,
-Lorenzo
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index 245b79f..0b36bc5 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -36,7 +36,7 @@ struct mcfg_fixup {
+ 	char oem_id[ACPI_OEM_ID_SIZE + 1];
+ 	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+ 	u32 oem_revision;
+-	u16 seg;
++	u16 segment;
+ 	struct resource bus_range;
+ 	struct pci_ecam_ops *ops;
+ 	struct resource cfgres;
+@@ -102,30 +102,37 @@ static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+ static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
+ static u32 mcfg_oem_revision;
+ 
+-static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
++static int pci_mcfg_quirk_matches(struct mcfg_fixup *f, u16 segment,
++				  struct resource *bus_range)
++{
++	if (!memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
++	    !memcmp(f->oem_table_id, mcfg_oem_table_id,
++	            ACPI_OEM_TABLE_ID_SIZE) &&
++	    f->oem_revision == mcfg_oem_revision &&
++	    f->segment == segment &&
++	    resource_contains(&f->bus_range, bus_range))
++		return 1;
++
++	return 0;
++}
++
++static void pci_mcfg_apply_quirks(struct acpi_pci_root *root,
+ 				  struct resource *cfgres,
+ 				  struct pci_ecam_ops **ecam_ops)
+ {
++	u16 segment = root->segment;
++	struct resource *bus_range = &root->secondary;
+ 	struct mcfg_fixup *f;
+ 	int i;
+ 
+-	/*
+-	 * First match against PCI topology <domain:bus> then use OEM ID, OEM
+-	 * table ID, and OEM revision from MCFG table standard header.
+-	 */
+ 	for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
+-		if (!memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
+-		    !memcmp(f->oem_table_id, mcfg_oem_table_id,
+-		            ACPI_OEM_TABLE_ID_SIZE) &&
+-		    f->oem_revision == mcfg_oem_revision &&
+-		    f->seg == root->segment &&
+-		    resource_contains(&f->bus_range, &root->secondary)) {
++		if (pci_mcfg_quirk_matches(f, segment, bus_range)) {
+ 			if (f->cfgres.start)
+ 				*cfgres = f->cfgres;
+ 			if (f->ops)
+ 				*ecam_ops =  f->ops;
+-			dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
+-				 f->oem_id, f->oem_table_id, f->oem_revision);
++			dev_info(&root->device->dev, "MCFG quirk: ECAM space for %pR at %pR with %ps\n",
++				 bus_range, cfgres, *ecam_ops);
+ 			return;
+ 		}
+ 	}
+@@ -173,7 +180,7 @@ skip_lookup:
+ 	 * MCFG does not have it.  Invalid CFG start address means MCFG
+ 	 * firmware bug or we need another quirk in array.
+ 	 */
+-	pci_mcfg_match_quirks(root, &res, &ops);
++	pci_mcfg_apply_quirks(root, &res, &ops);
+ 	if (!res.start)
+ 		return -ENXIO;
+ 
