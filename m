@@ -1,166 +1,181 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V9 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
-Date: Mon,  5 Sep 2016 22:05:38 +0200
-Message-Id: <1473105940-9761-7-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473105940-9761-1-git-send-email-tn@semihalf.com>
-References: <1473105940-9761-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:3520 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754311AbcIVOsB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 10:48:01 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: zhichang <zhichang.yuan02@gmail.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>
+Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 22 Sep 2016 14:47:14 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F882AD3@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <3538381.vOsx75UXVU@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
+ <9178320.n4yHmfyPA3@wuerfel>
+In-Reply-To: <9178320.n4yHmfyPA3@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ITS is prepared for being initialized different than DT,
-therefore we can initialize it in ACPI way. We collect register base
-address from MADT table and pass mandatory info to firmware-agnostic
-ITS init call.
+Hi Arnd
 
-Use here IORT lib to register ITS domain which then can be found and
-used on to build another PCI MSI domain in hierarchical stack domain.
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 22 September 2016 13:15
+> To: Gabriele Paoloni
+> Cc: zhichang; linux-arm-kernel@lists.infradead.org;
+> devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
+> linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; John Garry;
+> will.deacon@arm.com; linux-kernel@vger.kernel.org; Yuanzhichang;
+> Linuxarm; xuwei (O); linux-serial@vger.kernel.org;
+> benh@kernel.crashing.org; zourongrong@gmail.com; liviu.dudau@arm.com;
+> kantyzc@163.com
+> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
+> Hip06
+> 
+> On Thursday, September 22, 2016 11:55:45 AM CEST Gabriele Paoloni
+> wrote:
+> > > > I think extending of_empty_ranges_quirk() may be a reasonable
+> > > solution.
+> > > > What do you think Arnd?
+> > >
+> > > I don't really like that idea, that quirk is meant to work around
+> > > broken DTs, but we can just make the DT valid and implement the
+> > > code properly.
+> >
+> > Ok  I understand your point where it is not right to use
+> of_empty_ranges_quirk()
+> > As a quirk is used to work around broken HW or broken FW (as in this
+> case)
+> > rather than to fix code
+> >
+> > What about the following? I think adding the check you suggested next
+> to
+> > of_empty_ranges_quirk() is adding the case we need in the right point
+> (thus
+> > avoiding any duplication)
+> >
+> > --- a/drivers/of/address.c
+> > +++ b/drivers/of/address.c
+> > @@ -457,6 +457,15 @@ static struct of_bus *of_match_bus(struct
+> device_node *np)
+> >         return NULL;
+> >  }
+> >
+> > +static inline int of_isa_indirect_io(struct device_node *np)
+> > +{
+> > +       /*
+> > +        * check if the current node is an isa bus and if indirectio
+> operation
+> > +        * are registered
+> > +        */
+> > +       return (of_bus_isa_match(np) && arm64_extio_ops);
+> > +}
+> > +
+> >  static int of_empty_ranges_quirk(struct device_node *np)
+> >  {
+> >         if (IS_ENABLED(CONFIG_PPC)) {
+> > @@ -503,7 +512,7 @@ static int of_translate_one(struct device_node
+> *parent, struct of_bus *bus,
+> >          * This code is only enabled on powerpc. --gcl
+> >          */
+> >         ranges = of_get_property(parent, rprop, &rlen);
+> > -       if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
+> > +       if (ranges == NULL && !of_empty_ranges_quirk(parent) &&
+> !of_isa_indirect_io(parent)) {
+> >                 pr_debug("OF: no ranges; cannot translate\n");
+> >                 return 1;
+> >         }
+> 
+> I don't see what effect that would have. What do you want to
+> achieve with this?
 
-NOTE: Waiting for proper ITS and NUMA node relation description in IORT
-table, we pass around NUMA_NO_NODE to the its_probe_one init call.
-This means that Cavium ThunderX erratum 23144 (pass1.1 only)
-is not supported for ACPI boot method yet.
+If I read the code correctly adding the function above would end
+up in a 1:1 mapping:
+http://lxr.free-electrons.com/source/drivers/of/address.c#L513
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/irqchip/Kconfig          |  1 +
- drivers/irqchip/irq-gic-v3-its.c | 61 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 61 insertions(+), 1 deletion(-)
+so taddr will be assigned with the cpu address space specified
+in the children nodes of LPC and we are not using a quirk function
+(we are just checking that we have the indirect io assigned and
+that we are on a ISA bus). Now probably there is a nit in my 
+code sketch where of_isa_indirect_io should be probably an architecture
+specific function...
 
-diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-index 7f87289..9aeea1d 100644
---- a/drivers/irqchip/Kconfig
-+++ b/drivers/irqchip/Kconfig
-@@ -39,6 +39,7 @@ config ARM_GIC_V3_ITS
- 	bool
- 	depends on PCI
- 	depends on PCI_MSI
-+	select ACPI_IORT if ACPI
- 
- config ARM_NVIC
- 	bool
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index c7518c7..7c0089f 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -15,10 +15,13 @@
-  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  */
- 
-+#include <linux/acpi.h>
- #include <linux/bitmap.h>
- #include <linux/cpu.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/irqdomain.h>
-+#include <linux/iort.h>
- #include <linux/log2.h>
- #include <linux/mm.h>
- #include <linux/msi.h>
-@@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
- 		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
- 		fwspec.param[1] = hwirq;
- 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
-+	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
-+		fwspec.fwnode = domain->parent->fwnode;
-+		fwspec.param_count = 2;
-+		fwspec.param[0] = hwirq;
-+		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
- 	} else {
- 		return -EINVAL;
- 	}
-@@ -1797,6 +1805,57 @@ static int __init its_of_probe(struct device_node *node)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ACPI
-+
-+#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
-+
-+static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
-+					  const unsigned long end)
-+{
-+	struct acpi_madt_generic_translator *its_entry;
-+	struct fwnode_handle *dom_handle;
-+	struct resource res;
-+	int err;
-+
-+	its_entry = (struct acpi_madt_generic_translator *)header;
-+	memset(&res, 0, sizeof(res));
-+	res.start = its_entry->base_address;
-+	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
-+	res.flags = IORESOURCE_MEM;
-+
-+	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
-+	if (!dom_handle) {
-+		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
-+		       &res.start);
-+		return -ENOMEM;
-+	}
-+
-+	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
-+	if (err) {
-+		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
-+		       &res.start, its_entry->translation_id);
-+		goto dom_err;
-+	}
-+
-+	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
-+	if (!err)
-+		return 0;
-+
-+	iort_deregister_domain_token(its_entry->translation_id);
-+dom_err:
-+	irq_domain_free_fwnode(dom_handle);
-+	return err;
-+}
-+
-+static void __init its_acpi_probe(void)
-+{
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
-+			      gic_acpi_parse_madt_its, 0);
-+}
-+#else
-+static void __init its_acpi_probe(void) { }
-+#endif
-+
- int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 		    struct irq_domain *parent_domain)
- {
-@@ -1807,7 +1866,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 	if (of_node)
- 		its_of_probe(of_node);
- 	else
--		return -ENODEV;
-+		its_acpi_probe();
- 
- 	if (list_empty(&its_nodes)) {
- 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
--- 
-1.9.1
+> 
+> I think all we need from this function is to return '1' if
+> we hit an ISA I/O window, and that should happen for the two
+> interesting cases, either no 'ranges' at all, or no translation
+> for the range in question, so that __of_translate_address can
+> return OF_BAD_ADDR, and we can enter the special case
+> handling in the caller, that handles it like
+> 
+
+I don't think this is very right as you may fail for different
+reasons other than a missing range property, e.g:
+http://lxr.free-electrons.com/source/drivers/of/address.c#L575
+
+And even if the only failure case was a missing range if in the
+future __of_translate_address had to be reworked we would again
+make a wrong assumption...you get my point?
+
+Thanks
+
+Gab
+
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 02b2903fe9d2..a18d96843fae 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -685,17 +685,24 @@ static int __of_address_to_resource(struct
+> device_node *dev,
+>  	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
+>  		return -EINVAL;
+>  	taddr = of_translate_address(dev, addrp);
+> -	if (taddr == OF_BAD_ADDR)
+> -		return -EINVAL;
+>  	memset(r, 0, sizeof(struct resource));
+> +
+>  	if (flags & IORESOURCE_IO) {
+>  		unsigned long port;
+> -		port = pci_address_to_pio(taddr);
+> +
+> +		if (taddr == OF_BAD_ADDR)
+> +			port = arch_of_address_to_pio(dev, addrp)
+> +		else
+> +			port = pci_address_to_pio(taddr);
+> +
+>  		if (port == (unsigned long)-1)
+>  			return -EINVAL;
+>  		r->start = port;
+>  		r->end = port + size - 1;
+>  	} else {
+> +		if (taddr == OF_BAD_ADDR)
+> +			return -EINVAL;
+> +
+>  		r->start = taddr;
+>  		r->end = taddr + size - 1;
+>  	}
+> 
+> 
+> 
+> 	Arnd
