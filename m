@@ -1,147 +1,66 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/Hotplug: Schedule device add retries
-Date: Tue, 20 Sep 2016 11:50:03 -0600
-Message-Id: <1474393803-10921-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 22 Sep 2016 10:15:11 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] PCI: rockchip: fix uninitialized variable use
+Message-ID: <20160922171510.GA113955@google.com>
+References: <20160922094018.2138640-1-arnd@arndb.de>
+MIME-Version: 1.0
+In-Reply-To: <20160922094018.2138640-1-arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If a device fails to be added after being hot inserted, it could be due
-to a power fault seen during the insertion or a failure to configure the
-new device. The devices are then removed from the tree and the slot
-disabled. Many times the devices are working as expected, but the slot
-could not tolerate the add without a power fault. A user then has to
-issue a sysfs rescan to re-add the slot and pick up the new devices.
+On Thu, Sep 22, 2016 at 11:39:59AM +0200, Arnd Bergmann wrote:
+> The newly added pcie-rockchip driver fails to initialize the
+> io_size variable if the DT doesn't provide ranges for the PCI
+> I/O space, as found by building it with -Wmaybe-uninitialized:
+> 
+> drivers/pci/host/pcie-rockchip.c: In function 'rockchip_pcie_probe':
+> drivers/pci/host/pcie-rockchip.c:1007:6: warning: 'io_size' may be used uninitialized in this function [-Wmaybe-uninitialized]
+> 
+> This adds an appropriate initialization immediately in front of
+> the loop, so the io_size is zero as expected afterwards for that
+> case.
+> 
+> Fixes: abe17181b16f ("PCI: rockchip: Add Rockchip PCIe controller support")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index c3593e633ccd..8bedc1e1ef80 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1078,6 +1078,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  		goto err_vpcie;
+>  
+>  	/* Get the I/O and memory ranges from DT */
+> +	io_size = 0;
+>  	resource_list_for_each_entry(win, &res) {
+>  		switch (resource_type(win->res)) {
+>  		case IORESOURCE_IO:
 
-This patch detects the failure during slot enabling and attempts to
-re-enable the slot a few more times before failing the slot. This fixes
-an issue where a power fault is seen during hot insertion, but the slot
-itself just needed some time for the power faults to quiesce before the
-device was ready to be used.
+I feel like we've fixed this one before, but then it's been refactored
+many times along the way...
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
-Applies against helgaas/pci/hotplug
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 
- drivers/pci/hotplug/pciehp.h      |  1 +
- drivers/pci/hotplug/pciehp_ctrl.c | 45 ++++++++++++++++++++++++++++++---------
- 2 files changed, 36 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index e764918..b7927c5 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -93,6 +93,7 @@ struct controller {
- 	wait_queue_head_t queue;	/* sleep & wake process */
- 	u32 slot_cap;
- 	u16 slot_ctrl;
-+	u8 slot_retries;
- 	struct timer_list poll_timer;
- 	unsigned long cmd_started;	/* jiffies */
- 	unsigned int cmd_busy:1;
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index efe69e8..b413c3c 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -35,7 +35,19 @@
- #include "../pci.h"
- #include "pciehp.h"
- 
-+#define DEVICE_ADD_RETRIES 5
-+
- static void interrupt_event_handler(struct work_struct *work);
-+static void pciehp_queue_power_work(struct slot *p_slot, int req);
-+
-+struct power_work_info {
-+       struct slot *p_slot;
-+       struct work_struct work;
-+       unsigned int req;
-+#define DISABLE_REQ 0
-+#define ENABLE_REQ 1
-+#define ENABLE_RETRY_REQ 2
-+};
- 
- void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
- {
-@@ -121,9 +133,24 @@ static int board_added(struct slot *p_slot)
- 
- 	pciehp_green_led_on(p_slot);
- 	pciehp_set_attention_status(p_slot, 0);
-+	if (ctrl->slot_retries)
-+		ctrl_dbg(ctrl, "Device added at %04x:%02x:00 after retry %d/%d\n",
-+			 pci_domain_nr(parent), parent->number,
-+			 ctrl->slot_retries, DEVICE_ADD_RETRIES);
-+
- 	return 0;
- 
- err_exit:
-+	if (ctrl->slot_retries++ < DEVICE_ADD_RETRIES) {
-+		ctrl_dbg(ctrl, "Retrying (%d/%d) device add at %04x:%02x:00\n",
-+			ctrl->slot_retries, DEVICE_ADD_RETRIES,
-+			pci_domain_nr(parent), parent->number);
-+		pciehp_queue_power_work(p_slot, ENABLE_RETRY_REQ);
-+		return retval;
-+	}
-+
-+	ctrl_err(ctrl, "Failed to add device at %04x:%02x:00\n",
-+		 pci_domain_nr(parent), parent->number);
- 	set_slot_off(ctrl, p_slot);
- 	return retval;
- }
-@@ -157,14 +184,6 @@ static int remove_board(struct slot *p_slot)
- 	return 0;
- }
- 
--struct power_work_info {
--	struct slot *p_slot;
--	struct work_struct work;
--	unsigned int req;
--#define DISABLE_REQ 0
--#define ENABLE_REQ  1
--};
--
- /**
-  * pciehp_power_thread - handle pushbutton events
-  * @work: &struct work_struct describing work to be done
-@@ -183,13 +202,18 @@ static void pciehp_power_thread(struct work_struct *work)
- 	case DISABLE_REQ:
- 		mutex_lock(&p_slot->hotplug_lock);
- 		pciehp_disable_slot(p_slot);
-+		p_slot->ctrl->slot_retries = 0;
- 		mutex_unlock(&p_slot->hotplug_lock);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
- 		mutex_unlock(&p_slot->lock);
- 		break;
- 	case ENABLE_REQ:
-+		/* fall through */
-+	case ENABLE_RETRY_REQ:
- 		mutex_lock(&p_slot->hotplug_lock);
-+		if (info->req == ENABLE_REQ)
-+			p_slot->ctrl->slot_retries = 0;
- 		ret = pciehp_enable_slot(p_slot);
- 		mutex_unlock(&p_slot->hotplug_lock);
- 		if (ret)
-@@ -208,13 +232,14 @@ static void pciehp_power_thread(struct work_struct *work)
- static void pciehp_queue_power_work(struct slot *p_slot, int req)
- {
- 	struct power_work_info *info;
-+	bool enabling = (req == ENABLE_REQ || req == ENABLE_RETRY_REQ);
- 
--	p_slot->state = (req == ENABLE_REQ) ? POWERON_STATE : POWEROFF_STATE;
-+	p_slot->state = enabling ? POWERON_STATE : POWEROFF_STATE;
- 
- 	info = kmalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
- 		ctrl_err(p_slot->ctrl, "no memory to queue %s request\n",
--			 (req == ENABLE_REQ) ? "poweron" : "poweroff");
-+			 enabling ? "poweron" : "poweroff");
- 		return;
- 	}
- 	info->p_slot = p_slot;
--- 
-1.8.3.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
