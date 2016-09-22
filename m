@@ -1,81 +1,57 @@
-Return-Path: <jonathan.derrick@intel.com>
-Return-Path: <jonathan.derrick@intel.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/AER: Move the error info struct into the root port container
-Date: Wed, 14 Sep 2016 10:38:55 -0600
-Message-Id: <1473871135-29088-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yb0-f170.google.com ([209.85.213.170]:35163 "EHLO
+        mail-yb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754269AbcIVWiF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 18:38:05 -0400
+Received: by mail-yb0-f170.google.com with SMTP id d69so59688846ybf.2
+        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 15:38:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACK8Z6HWnh46X02EBR9MX8_fFvhZUgc96PkwArxwnOFCYyueGw@mail.gmail.com>
+References: <1474578027-64292-1-git-send-email-rajatja@google.com>
+ <20160922211436.GA69457@google.com> <CACK8Z6HWnh46X02EBR9MX8_fFvhZUgc96PkwArxwnOFCYyueGw@mail.gmail.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Thu, 22 Sep 2016 15:37:23 -0700
+Message-ID: <CACK8Z6E9=Ga_VTC9JunwRRxRZAJx+sKv6g5WtFXd592VdoUyOw@mail.gmail.com>
+Subject: Re: [PATCH] rockchip: Increase the Max Credit update interval.
+To: Brian Norris <briannorris@chromium.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AER injecting tests with many devices and nosourceid are resulting in
-soft lockups, mostly due to the config reads (which have been helped
-by recent aer capability position caching patches), but also due to a
-superfluous kmalloc/kfree pair executed for each p_device.
+Thanks for the tip Brian, I was able to test it too (for some reason
+my system didn't fall apart on retraining the link to 5GT/s).
 
-When a device emits an error notification, it's not unreasonable to
-assume that it may emit another error notification soon. Instead of
-kmallocing and kfreeing the aer_err_info struct for each p_device during
-an aer_isr pass, move the struct into the aer root port container and
-kill the allocation.
+Sending out new one shortly.
 
-The current code suggests the aer_err_info struct could be huge, but is
-actually only about 70 bytes. Whereas the aer_rpc root port container is
-over 900 bytes. Because of the already large size of the root port
-container, moving the struct into it should not adversely impact access
-to the root port container.
-
-Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/pcie/aer/aerdrv.h      |  1 +
- drivers/pci/pcie/aer/aerdrv_core.c | 13 ++-----------
- 2 files changed, 3 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index f15ca8d..d51e4a5 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -60,6 +60,7 @@ struct aer_rpc {
- 	struct pcie_device *rpd;	/* Root Port device */
- 	struct work_struct dpc_handler;
- 	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
-+	struct aer_err_info e_info;
- 	unsigned short prod_idx;	/* Error Producer Index */
- 	unsigned short cons_idx;	/* Error Consumer Index */
- 	int isr;
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 8262527..9fd18a0 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -711,15 +711,8 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
- static void aer_isr_one_error(struct pcie_device *p_device,
- 		struct aer_err_source *e_src)
- {
--	struct aer_err_info *e_info;
--
--	/* struct aer_err_info might be big, so we allocate it with slab */
--	e_info = kmalloc(sizeof(struct aer_err_info), GFP_KERNEL);
--	if (!e_info) {
--		dev_printk(KERN_DEBUG, &p_device->port->dev,
--			"Can't allocate mem when processing AER errors\n");
--		return;
--	}
-+	struct aer_rpc *rpc = get_service_data(p_device);
-+	struct aer_err_info *e_info = &rpc->e_info;
- 
- 	/*
- 	 * There is a possibility that both correctable error and
-@@ -758,8 +751,6 @@ static void aer_isr_one_error(struct pcie_device *p_device,
- 		if (find_source_device(p_device->port, e_info))
- 			aer_process_err_devices(p_device, e_info);
- 	}
--
--	kfree(e_info);
- }
- 
- /**
--- 
-1.8.3.1
+On Thu, Sep 22, 2016 at 2:56 PM, Rajat Jain <rajatja@google.com> wrote:
+> On Thu, Sep 22, 2016 at 2:14 PM, Brian Norris <briannorris@chromium.org> wrote:
+>> (Nit: I think the $subject is typically 'PCI: rockchip: ...'.)
+>>
+>> Hi Rajat,
+>>
+>> On Thu, Sep 22, 2016 at 02:00:27PM -0700, Rajat Jain wrote:
+>>> The register value gets lost on a Link speed/width change, and the
+>>> ideal fix should reprogram this on that event (refer "Link Bandwidth
+>>> Management Interrupt Enable" & "Link Autonomous Bandwidth Interrupt Enable"
+>>> in link control reg?).
+>>
+>> Oh, that that reminds me (sorry for not noticing this earlier): Rockchip
+>> did add handling of those two interrupt bits. See:
+>>
+>>         } else if (reg & PCIE_CLIENT_INT_PHY) {
+>>                 dev_dbg(dev, "phy link changes\n");
+>>                 rockchip_pcie_clr_bw_int(rockchip);
+>>         }
+>
+> Oh I did not notice this. I'll try it out..
+>
+>>
+>> Do you ever see such interrupts? In any case, it's possible we could do
+>> the re-programming there, just to be sure, though I'm not sure we can
+>> test it well.
+>>
+>> Brian
