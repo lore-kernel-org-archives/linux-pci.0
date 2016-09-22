@@ -1,157 +1,153 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <57E40665.8080005@gmail.com>
-Date: Fri, 23 Sep 2016 00:27:17 +0800
-From: "zhichang.yuan" <zhichang.yuan02@gmail.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <3538381.vOsx75UXVU@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
- <9178320.n4yHmfyPA3@wuerfel>
-In-Reply-To: <9178320.n4yHmfyPA3@wuerfel>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "minyard@acm.org" <minyard@acm.org>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- John Garry <john.garry@huawei.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- "kantyzc@163.com" <kantyzc@163.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34060 "EHLO
+        mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933209AbcIVRbZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 13:31:25 -0400
+Received: by mail-pa0-f54.google.com with SMTP id wk8so31256092pab.1
+        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 10:31:25 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        devicetree@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] PCI: rockchip: Support quirk to disable 5 GT/s (PCIe 2.x) link rate
+Date: Thu, 22 Sep 2016 10:31:18 -0700
+Message-Id: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+ms waiting for training that will never happen, let's support a device
+tree quirk flag to disable generation 2 speeds entirely.
 
-On 09/22/2016 08:14 PM, Arnd Bergmann wrote:
-> On Thursday, September 22, 2016 11:55:45 AM CEST Gabriele Paoloni wrote:
->>>> I think extending of_empty_ranges_quirk() may be a reasonable
->>> solution.
->>>> What do you think Arnd?
->>> I don't really like that idea, that quirk is meant to work around
->>> broken DTs, but we can just make the DT valid and implement the
->>> code properly.
->> Ok  I understand your point where it is not right to use of_empty_ranges_quirk()
->> As a quirk is used to work around broken HW or broken FW (as in this case)
->> rather than to fix code
->>
->> What about the following? I think adding the check you suggested next to
->> of_empty_ranges_quirk() is adding the case we need in the right point (thus
->> avoiding any duplication)
->>   
->> --- a/drivers/of/address.c
->> +++ b/drivers/of/address.c
->> @@ -457,6 +457,15 @@ static struct of_bus *of_match_bus(struct device_node *np)
->>          return NULL;
->>   }
->>   
->> +static inline int of_isa_indirect_io(struct device_node *np)
->> +{
->> +       /*
->> +        * check if the current node is an isa bus and if indirectio operation
->> +        * are registered
->> +        */
->> +       return (of_bus_isa_match(np) && arm64_extio_ops);
->> +}
->> +
->>   static int of_empty_ranges_quirk(struct device_node *np)
->>   {
->>          if (IS_ENABLED(CONFIG_PPC)) {
->> @@ -503,7 +512,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
->>           * This code is only enabled on powerpc. --gcl
->>           */
->>          ranges = of_get_property(parent, rprop, &rlen);
->> -       if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
->> +       if (ranges == NULL && !of_empty_ranges_quirk(parent) && !of_isa_indirect_io(parent)) {
->>                  pr_debug("OF: no ranges; cannot translate\n");
->>                  return 1;
->>          }
-> I don't see what effect that would have. What do you want to
-> achieve with this?
->
-> I think all we need from this function is to return '1' if
-> we hit an ISA I/O window, and that should happen for the two
-> interesting cases, either no 'ranges' at all, or no translation
-> for the range in question, so that __of_translate_address can
-> return OF_BAD_ADDR, and we can enter the special case
-> handling in the caller, that handles it like
->
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 02b2903fe9d2..a18d96843fae 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -685,17 +685,24 @@ static int __of_address_to_resource(struct device_node *dev,
->   	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
->   		return -EINVAL;
->   	taddr = of_translate_address(dev, addrp);
-> -	if (taddr == OF_BAD_ADDR)
-> -		return -EINVAL;
->   	memset(r, 0, sizeof(struct resource));
-> +
->   	if (flags & IORESOURCE_IO) {
->   		unsigned long port;
-> -		port = pci_address_to_pio(taddr);
-> +
-> +		if (taddr == OF_BAD_ADDR)
-> +			port = arch_of_address_to_pio(dev, addrp)
-> +		else
-> +			port = pci_address_to_pio(taddr);
-> +
->   		if (port == (unsigned long)-1)
->   			return -EINVAL;
->   		r->start = port;
->   		r->end = port + size - 1;
->   	} else {
-> +		if (taddr == OF_BAD_ADDR)
-> +			return -EINVAL;
-> +
->   		r->start = taddr;
->   		r->end = taddr + size - 1;
->   	}
->
-For this patch sketch, I have a question.
-Do we call pci_address_to_pio in arch_of_address_to_pio to get the 
-corresponding logical IO port
-for LPC??
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
+ drivers/pci/host/pcie-rockchip.c                   | 57 +++++++++++++---------
+ 2 files changed, 37 insertions(+), 22 deletions(-)
 
-If we don't, it seems the LPC specific IO address will conflict with PCI 
-host bridges' logical IO.
-Supposed our LPC populated the IO range from 0x100 to 0x3FF( this is 
-normal for ISA similar
-devices), after arch_of_address_to_pio(), the r->start will be set as 
-0x100, r->end will be set as
-0x3FF.  And if there is one PCI host bridge who request a IO window size 
-over 0x400 at the same
-time, the  corresponding r->start and r->end will be set as 0x0, 0x3FF 
-after of_address_to_resource
-for this host bridge.  Then the IO conflict happens.
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+index ba67b39939c1..e769726fd093 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -42,6 +42,8 @@ Required properties:
+ Optional Property:
+ - ep-gpios: contain the entry for pre-reset gpio
+ - num-lanes: number of lanes to use
++- rockchip,disable-gen2: present if PCIe generation 2.x (i.e., 5 GT/s link
++	speeds) is not supported.
+ - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+ - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+ - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index c3593e633ccd..f047c4a73f69 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -53,6 +53,7 @@
+ #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
+ #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+ #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
++#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+ #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+ #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+ #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+@@ -191,6 +192,7 @@ struct rockchip_pcie {
+ 	struct	gpio_desc *ep_gpio;
+ 	u32	lanes;
+ 	u8	root_bus_nr;
++	bool	enable_gen2;
+ 	struct	device *dev;
+ 	struct	irq_domain *irq_domain;
+ };
+@@ -418,13 +420,19 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		return err;
+ 	}
+ 
++	if (rockchip->enable_gen2)
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
++				    PCIE_CLIENT_CONFIG);
++	else
++		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
++				    PCIE_CLIENT_CONFIG);
++
+ 	rockchip_pcie_write(rockchip,
+ 			    PCIE_CLIENT_CONF_ENABLE |
+ 			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+ 			    PCIE_CLIENT_ARI_ENABLE |
+ 			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+-			    PCIE_CLIENT_MODE_RC |
+-			    PCIE_CLIENT_GEN_SEL_2,
++			    PCIE_CLIENT_MODE_RC,
+ 				PCIE_CLIENT_CONFIG);
+ 
+ 	err = phy_power_on(rockchip->phy);
+@@ -492,29 +500,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		msleep(20);
+ 	}
+ 
+-	/*
+-	 * Enable retrain for gen2. This should be configured only after
+-	 * gen1 finished.
+-	 */
+-	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+-	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+-	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
++	if (rockchip->enable_gen2) {
++		/*
++		 * Enable retrain for gen2. This should be configured only after
++		 * gen1 finished.
++		 */
++		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
++		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
++		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
++
++		timeout = jiffies + msecs_to_jiffies(500);
++		for (;;) {
++			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
++			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
++					PCIE_CORE_PL_CONF_SPEED_5G) {
++				dev_dbg(dev, "PCIe link training gen2 pass!\n");
++				break;
++			}
+ 
+-	timeout = jiffies + msecs_to_jiffies(500);
+-	for (;;) {
+-		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+-		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+-		    PCIE_CORE_PL_CONF_SPEED_5G) {
+-			dev_dbg(dev, "PCIe link training gen2 pass!\n");
+-			break;
+-		}
++			if (time_after(jiffies, timeout)) {
++				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
++				break;
++			}
+ 
+-		if (time_after(jiffies, timeout)) {
+-			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+-			break;
++			msleep(20);
+ 		}
+-
+-		msleep(20);
+ 	}
+ 
+ 	/* Check the final link width from negotiated lane counter from MGMT */
+@@ -722,6 +732,9 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 		rockchip->lanes = 1;
+ 	}
+ 
++	rockchip->enable_gen2 = !of_property_read_bool(node,
++						       "rockchip,disable-gen2");
++
+ 	rockchip->core_rst = devm_reset_control_get(dev, "core");
+ 	if (IS_ERR(rockchip->core_rst)) {
+ 		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+-- 
+2.8.0.rc3.226.g39d4020
 
-cheers,
-Zhichang
-
->
-> 	Arnd
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
