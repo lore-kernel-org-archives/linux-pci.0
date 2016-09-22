@@ -1,132 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46338 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758061AbcIMQHL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Sep 2016 12:07:11 -0400
-Date: Tue, 13 Sep 2016 11:07:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Ian Campbell <ijc+devicetree@hellion.org.uk>,
-        Pawel Moll <pawel.moll@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kumar Gala <galak@codeaurora.org>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Shadi Ammouri <shadi@marvell.com>,
-        Marcin Wojtas <mw@semihalf.com>, Victor Gu <xigu@marvell.com>
-Subject: Re: [PATCH 1/3] pci: pci-aardvark: move to MSI handling using
- generic MSI support
-Message-ID: <20160913160706.GC4138@localhost>
-References: <1472744284-18305-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1472744284-18305-2-git-send-email-thomas.petazzoni@free-electrons.com>
- <57C93B7F.8050909@arm.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:3492 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933550AbcIVL45 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 07:56:57 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: zhichang <zhichang.yuan02@gmail.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>
+Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 22 Sep 2016 11:55:45 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <e246c886-e0eb-b635-01ae-f00bbfcfb56b@gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F87D223@lhreml507-mbx>
+ <3538381.vOsx75UXVU@wuerfel>
+In-Reply-To: <3538381.vOsx75UXVU@wuerfel>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57C93B7F.8050909@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 02, 2016 at 09:42:39AM +0100, Marc Zyngier wrote:
-> Hi Thomas,
-> 
-> I haven't checked things is details (mostly because the resulting diff
-> is impossible to read), but one thing caught my eye:
-
-I agree, it's too bad the diff is so hard to read.
-
-> On 01/09/16 16:38, Thomas Petazzoni wrote:
-> > The MSI support introduced with the initial Aardvark driver was based
-> > on the msi_controller structure and the of_pci_msi_chip_add() /
-> > of_pci_find_msi_chip_by_node() API, which are being deprecated in
-> > favor of the generic MSI support.
-> > 
-> > Therefore, this commit updates the Aardvark driver to use the generic
-> > MSI support.
-> > 
-> > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > ---
-> >  drivers/pci/host/pci-aardvark.c | 172 ++++++++++++++++------------------------
-> >  1 file changed, 67 insertions(+), 105 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-> > index ef9893f..0675cfa 100644
-> > --- a/drivers/pci/host/pci-aardvark.c
-> > +++ b/drivers/pci/host/pci-aardvark.c
-> 
-> [...]
-> 
-> > -static int advk_pcie_setup_msi_irq(struct msi_controller *chip,
-> > -				   struct pci_dev *pdev,
-> > -				   struct msi_desc *desc)
-> > +static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
-> > +				     unsigned int virq,
-> > +				     unsigned int nr_irqs, void *args)
-> >  {
-> > -	struct advk_pcie *pcie = pdev->bus->sysdata;
-> > -	struct msi_msg msg;
-> > -	int virq, hwirq;
-> > -	phys_addr_t msi_msg_phys;
-> > -
-> > -	/* We support MSI, but not MSI-X */
-> > -	if (desc->msi_attrib.is_msix)
-> > -		return -EINVAL;
-> 
-> You used not to support MSIX...
-> 
-> [...]
-> 
-> > @@ -677,30 +650,25 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
-> >  {
-> >  	struct device *dev = &pcie->pdev->dev;
-> >  	struct device_node *node = dev->of_node;
-> > -	struct irq_chip *msi_irq_chip;
-> > -	struct msi_controller *msi;
-> > +	struct irq_chip *bottom_ic, *msi_ic;
-> > +	struct msi_domain_info *msi_di;
-> >  	phys_addr_t msi_msg_phys;
-> > -	int ret;
-> > -
-> > -	msi_irq_chip = &pcie->msi_irq_chip;
-> >  
-> > -	msi_irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-msi",
-> > -					    dev_name(dev));
-> > -	if (!msi_irq_chip->name)
-> > -		return -ENOMEM;
-> > +	mutex_init(&pcie->msi_used_lock);
-> >  
-> > -	msi_irq_chip->irq_enable = pci_msi_unmask_irq;
-> > -	msi_irq_chip->irq_disable = pci_msi_mask_irq;
-> > -	msi_irq_chip->irq_mask = pci_msi_mask_irq;
-> > -	msi_irq_chip->irq_unmask = pci_msi_unmask_irq;
-> > +	bottom_ic = &pcie->msi_bottom_irq_chip;
-> >  
-> > -	msi = &pcie->msi;
-> > +	bottom_ic->name = "MSI";
-> > +	bottom_ic->irq_compose_msi_msg = advk_msi_irq_compose_msi_msg;
-> > +	bottom_ic->irq_set_affinity = advk_msi_set_affinity;
-> >  
-> > -	msi->setup_irq = advk_pcie_setup_msi_irq;
-> > -	msi->teardown_irq = advk_pcie_teardown_msi_irq;
-> > -	msi->of_node = node;
-> > +	msi_ic = &pcie->msi_irq_chip;
-> > +	msi_ic->name = "advk-MSI";
-> >  
-> > -	mutex_init(&pcie->msi_used_lock);
-> > +	msi_di = &pcie->msi_domain_info;
-> > +	msi_di->flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-> > +		MSI_FLAG_PCI_MSIX;
-> 
-> And yet you now advertize MSIX support. Was this an oversight in the
-> original code?
-
-If this is a fix, it'd be nice to have two patches:
-
-  1) make the fix
-  2) convert to new API
+SGkgQXJuZA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEFybmQgQmVy
+Z21hbm4gW21haWx0bzphcm5kQGFybmRiLmRlXQ0KPiBTZW50OiAyMSBTZXB0ZW1iZXIgMjAxNiAy
+MToxOA0KPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiBDYzogemhpY2hhbmc7IGxpbnV4LWFybS1r
+ZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7
+IGxvcmVuem8ucGllcmFsaXNpQGFybS5jb207IG1pbnlhcmRAYWNtLm9yZzsNCj4gbGludXgtcGNp
+QHZnZXIua2VybmVsLm9yZzsgZ3JlZ2toQGxpbnV4Zm91bmRhdGlvbi5vcmc7IEpvaG4gR2Fycnk7
+DQo+IHdpbGwuZGVhY29uQGFybS5jb207IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IFl1
+YW56aGljaGFuZzsNCj4gTGludXhhcm07IHh1d2VpIChPKTsgbGludXgtc2VyaWFsQHZnZXIua2Vy
+bmVsLm9yZzsNCj4gYmVuaEBrZXJuZWwuY3Jhc2hpbmcub3JnOyB6b3Vyb25ncm9uZ0BnbWFpbC5j
+b207IGxpdml1LmR1ZGF1QGFybS5jb207DQo+IGthbnR5emNAMTYzLmNvbQ0KPiBTdWJqZWN0OiBS
+ZTogW1BBVENIIFYzIDIvNF0gQVJNNjQgTFBDOiBMUEMgZHJpdmVyIGltcGxlbWVudGF0aW9uIG9u
+DQo+IEhpcDA2DQo+IA0KPiBPbiBXZWRuZXNkYXksIFNlcHRlbWJlciAyMSwgMjAxNiA0OjIwOjU1
+IFBNIENFU1QgR2FicmllbGUgUGFvbG9uaQ0KPiB3cm90ZToNCj4gPiA+IC0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiB6aGljaGFuZyBbbWFpbHRvOnpoaWNoYW5nLnl1YW4w
+MkBnbWFpbC5jb21dDQo+ID4gPiBPbiAyMDE25bm0MDnmnIgxNeaXpSAyMDoyNCwgQXJuZCBCZXJn
+bWFubiB3cm90ZToNCj4gPiA+ID4gT24gVGh1cnNkYXksIFNlcHRlbWJlciAxNSwgMjAxNiAxMjow
+NTo1MSBQTSBDRVNUIEdhYnJpZWxlIFBhb2xvbmkNCj4gPiA+IHdyb3RlOg0KPiA+ID4gPj4+IC0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiA+Pj4gT24gVGh1cnNkYXksIFNlcHRlbWJl
+ciAxNSwgMjAxNiA4OjAyOjI3IEFNIENFU1QgR2FicmllbGUNCj4gUGFvbG9uaQ0KPiA+ID4gd3Jv
+dGU6DQo+ID4gPiA+PiBJIHRoaW5rIHRoYXQgbWF5YmUgaGF2aW5nIHRoZSAxOjEgcmFuZ2UgbWFw
+cGluZyBkb2Vzbid0DQo+ID4gPiA+PiByZWZsZWN0IHdlbGwgdGhlIHJlYWxpdHkgYnV0IGl0IGlz
+IHRoZSBsZXNzIHBhaW5mdWwNCj4gPiA+ID4+IHNvbHV0aW9uLi4uDQo+ID4gPiA+Pg0KPiA+ID4g
+Pj4gV2hhdCdzIHlvdXIgdmlldz8NCj4gPiA+ID4NCj4gPiA+ID4gV2UgY2FuIGNoZWNrIHRoZSAn
+aScgYml0IGZvciBJL08gc3BhY2UgaW4gb2ZfYnVzX2lzYV9nZXRfZmxhZ3MsDQo+ID4gPiA+IGFu
+ZCB0aGF0IHNob3VsZCBiZSBlbm91Z2ggdG8gdHJhbnNsYXRlIHRoZSBJL08gcG9ydCBudW1iZXIu
+DQo+ID4gPiA+DQo+ID4gPiA+IFRoZSBvbmx5IHBhcnQgd2UgbmVlZCB0byBjaGFuZ2UgaGVyZSBp
+cyB0byBub3QgZ28gdGhyb3VnaA0KPiA+ID4gPiB0aGUgY3JhenkgY29udmVyc2lvbiBhbGwgdGhl
+IHdheSBmcm9tIFBDSSBJL08gc3BhY2UgdG8gYQ0KPiA+ID4gPiBwaHlzaWNhbCBhZGRyZXNzIGFu
+ZCBiYWNrIHRvIGEgKGxvZ2ljYWwpIHBvcnQgbnVtYmVyDQo+ID4gPiA+IHRoYXQgd2UgZG8gdG9k
+YXkgd2l0aCBvZl90cmFuc2xhdGVfYWRkcmVzcy9wY2lfYWRkcmVzc190b19waW8uDQo+ID4gPiA+
+DQo+ID4gPiBTb3JyeSBmb3IgdGhlIGxhdGUgcmVzcG9uc2UhIFNldmVyYWwgZGF5cycgbGVhdmUu
+Li4uDQo+ID4gPiBEbyB5b3Ugd2FudCB0byBieXBhc3Mgb2ZfdHJhbnNsYXRlX2FkZHJlc3MgYW5k
+IHBjaV9hZGRyZXNzX3RvX3Bpbw0KPiBmb3INCj4gPiA+IHRoZSByZWdpc3RlcmVkIHNwZWNpZmlj
+IFBJTz8NCj4gPiA+IEkgdGhpbmsgdGhlIGJ5cGFzcyBmb3Igb2ZfdHJhbnNsYXRlX2FkZHJlc3Mg
+aXMgb2ssIGJ1dCB3b3JyeSBzb21lDQo+IG5ldw0KPiA+ID4gaXNzdWVzIHdpbGwgZW1lcmdlIHdp
+dGhvdXQgdGhlDQo+ID4gPiBjb252ZXJzaW9uIGJldHdlZW4gcGh5c2ljYWwgYWRkcmVzcyBhbmQg
+bG9naWNhbC9saW51eCBwb3J0IG51bWJlci4NCj4gDQo+IFRoZSBzYW1lIGZ1bmN0aW9uIHRoYXQg
+aGFuZGxlcyB0aGUgbm9uLXRyYW5zbGF0ZWQgcmVnaW9uIHdvdWxkDQo+IGRvIHRoYXQgY29udmVy
+c2lvbi4NCj4gDQo+ID4gPiBXaGVuIFBDSSBob3N0IGJyaWRnZSB3aGljaCBzdXBwb3J0IElPIG9w
+ZXJhdGlvbnMgaXMgY29uZmlndXJlZCBhbmQNCj4gPiA+IGVuYWJsZWQsIHRoZSBwY2lfYWRkcmVz
+c190b19waW8gd2lsbA0KPiA+ID4gcG9wdWxhdGUgdGhlIGxvZ2ljYWwgSU8gcmFuZ2UgZnJvbSBa
+RVJPIGZvciB0aGUgZmlyc3QgaG9zdCBicmlkZ2UuDQo+IE91cg0KPiA+ID4gTFBDIHdpbGwgYWxz
+byB1c2UgcGFydCBvZiB0aGUgSU8gcmFuZ2UNCj4gPiA+IHN0YXJ0ZWQgZnJvbSBaRVJPLiBJdCB3
+aWxsIG1ha2UgaW4vb3V0IGVudGVyIHRoZSB3cm9uZyBicmFuY2gNCj4gcG9zc2libHkuDQo+ID4g
+Pg0KPiA+ID4gSW4gVjIsIHRoZSAwIC0gMHgxMDAwIGxvZ2ljYWwgSU8gcmFuZ2UgaXMgcmVzZXJ2
+ZWQgZm9yIExQQyB1c2UNCj4gb25seS4NCj4gPiA+IEJ1dCBpdCBzZWVtcyBub3Qgc28gZ29vZC4g
+SW4gdGhpcyB3YXksDQo+ID4gPiBQQ0kgaGFzIG5vIGNoYW5jZSB0byB1c2UgbG93IDRLIElPIHJh
+bmdlKGxvZ2ljYWwpLg0KPiA+ID4NCj4gPiA+IFNvLCBpbiBWMywgYXBwbHlpbmcgdGhlIGNvbnZl
+cnNpb24gZnJvbSBwaHlzaWNhbC9jcHUgYWRkcmVzcyB0bw0KPiA+ID4gbG9naWNhbC9saW51eCBJ
+TyBwb3J0IGZvciBhbnkgSU8gcmFuZ2VzLA0KPiA+ID4gaW5jbHVkaW5nIHRoZSBMUEMsIGJ1dCBy
+ZWNvcmRlZCB0aGUgbG9naWNhbCBJTyByYW5nZSBmb3IgTFBDLiBXaGVuDQo+ID4gPiBjYWxsaW5n
+IGluL291dCB3aXRoIGEgbG9naWNhbCBwb3J0IGFkZHJlc3MsDQo+ID4gPiB3ZSBjYW4gY2hlY2sg
+dGhpcyBwb3J0IGZhbGwgaW50byBMUEMgbG9naWNhbCBJTyByYW5nZSBhbmQgZ2V0IGJhY2sNCj4g
+dGhlDQo+ID4gPiByZWFsIElPLg0KPiANCj4gUmlnaHQsIGFuZCB0aGUgc2FtZSB0cmFuc2xhdGlv
+biBjYW4gYmUgdXNlZCBpbg0KPiBfX29mX2FkZHJlc3NfdG9fcmVzb3VyY2UoKQ0KPiBnb2luZyB0
+aGUgb3Bwb3NpdGUgd2F5Lg0KPiANCj4gPiA+IERvIHlvdSBoYXZlIGZ1cnRoZXIgY29tbWVudHMg
+YWJvdXQgdGhpcz8/DQo+ID4NCj4gPiBJIHRoaW5rIHRoZXJlIGFyZSB0d28gc2VwYXJhdGUgaXNz
+dWVzIHRvIGJlIGRpc2N1c3NlZDoNCj4gPg0KPiA+IFRoZSBmaXJzdCBpc3N1ZSBpcyBhYm91dCBo
+YXZpbmcgb2ZfdHJhbnNsYXRlX2FkZHJlc3MgZmFpbGluZyBkdWUgdG8NCj4gPiAicmFuZ2UiIG1p
+c3NpbmcuIEFib3V0IHRoaXMgQXJuZCBzdWdnZXN0ZWQgdGhhdCBpdCBpcyBub3QgYXBwcm9wcmlh
+dGUNCj4gPiB0byBoYXZlIGEgcmFuZ2UgZGVzY3JpYmluZyBhIGJyaWRnZSAxOjEgbWFwcGluZyBh
+bmQgdGhpcyB3YXMNCj4gZGlzY3Vzc2VkDQo+ID4gYmVmb3JlIGluIHRoaXMgdGhyZWFkLiBBcm5k
+IGhhZCBhIHN1Z2dlc3Rpb24gYWJvdXQgdGhpcyAoc2VlIGJlbG93KQ0KPiA+IGhvd2V2ZXIgKGxv
+b2tpbmcgdHdpY2UgYXQgdGhlIGNvZGUpIGl0IHNlZW1zIHRvIG1lIHRoYXQgc3VjaCBzb2x1dGlv
+bg0KPiA+IHdvdWxkIGxlYWQgdG8gcXVpdGUgc29tZSBkdXBsaWNhdGlvbiBmcm9tIF9fb2ZfdHJh
+bnNsYXRlX2FkZHJlc3MoKQ0KPiA+IGluIG9yZGVyIHRvIHJldHJpZXZlIHRoZSBhY3R1YWwgYWRk
+ciBmcm9tIGR0Li4uDQo+IA0KPiBJIGRvbid0IHRoaW5rIHdlIG5lZWQgdG8gZHVwbGljYXRlIG11
+Y2gsIHdlIGNhbiBwcm9iYWJseSBzYWZlbHkNCj4gYXNzdW1lIHRoYXQgdGhlcmUgYXJlIG5vIG5v
+bnRyaXZpYWwgcmFuZ2VzIGluIGRldmljZXMgYmVsb3cgdGhlIExQQw0KPiBub2RlLCBzbyB3ZSBq
+dXN0IHdhbGsgdXAgdGhlIGJ1cyB0byBzZWUgaWYgdGhlIG5vZGUgaXMgYSBjaGlsZA0KPiAob3Ig
+cG9zc2libHkgZ3JhbmRjaGlsZCBldGMpIG9mIHRoZSBMUEMgYnVzLCBhbmQgdHJlYXQgYW55IElP
+IHBvcnQNCj4gbnVtYmVyIHVuZGVyIHRoZXJlIGFzIGEgcGh5c2ljYWwgcG9ydCBudW1iZXIsIHdo
+aWNoIGhhcyBhIGtub3duDQo+IG9mZnNldCBmcm9tIHRoZSBMaW51eCBJL08gcG9ydCBudW1iZXIu
+DQo+IA0KPiA+IEkgdGhpbmsgZXh0ZW5kaW5nIG9mX2VtcHR5X3Jhbmdlc19xdWlyaygpIG1heSBi
+ZSBhIHJlYXNvbmFibGUNCj4gc29sdXRpb24uDQo+ID4gV2hhdCBkbyB5b3UgdGhpbmsgQXJuZD8N
+Cj4gDQo+IEkgZG9uJ3QgcmVhbGx5IGxpa2UgdGhhdCBpZGVhLCB0aGF0IHF1aXJrIGlzIG1lYW50
+IHRvIHdvcmsgYXJvdW5kDQo+IGJyb2tlbiBEVHMsIGJ1dCB3ZSBjYW4ganVzdCBtYWtlIHRoZSBE
+VCB2YWxpZCBhbmQgaW1wbGVtZW50IHRoZQ0KPiBjb2RlIHByb3Blcmx5Lg0KDQpPayAgSSB1bmRl
+cnN0YW5kIHlvdXIgcG9pbnQgd2hlcmUgaXQgaXMgbm90IHJpZ2h0IHRvIHVzZSBvZl9lbXB0eV9y
+YW5nZXNfcXVpcmsoKQ0KQXMgYSBxdWlyayBpcyB1c2VkIHRvIHdvcmsgYXJvdW5kIGJyb2tlbiBI
+VyBvciBicm9rZW4gRlcgKGFzIGluIHRoaXMgY2FzZSkNCnJhdGhlciB0aGFuIHRvIGZpeCBjb2Rl
+DQoNCldoYXQgYWJvdXQgdGhlIGZvbGxvd2luZz8gSSB0aGluayBhZGRpbmcgdGhlIGNoZWNrIHlv
+dSBzdWdnZXN0ZWQgbmV4dCB0bw0Kb2ZfZW1wdHlfcmFuZ2VzX3F1aXJrKCkgaXMgYWRkaW5nIHRo
+ZSBjYXNlIHdlIG5lZWQgaW4gdGhlIHJpZ2h0IHBvaW50ICh0aHVzDQphdm9pZGluZyBhbnkgZHVw
+bGljYXRpb24pDQogDQotLS0gYS9kcml2ZXJzL29mL2FkZHJlc3MuYw0KKysrIGIvZHJpdmVycy9v
+Zi9hZGRyZXNzLmMNCkBAIC00NTcsNiArNDU3LDE1IEBAIHN0YXRpYyBzdHJ1Y3Qgb2ZfYnVzICpv
+Zl9tYXRjaF9idXMoc3RydWN0IGRldmljZV9ub2RlICpucCkNCiAgICAgICAgcmV0dXJuIE5VTEw7
+DQogfQ0KIA0KK3N0YXRpYyBpbmxpbmUgaW50IG9mX2lzYV9pbmRpcmVjdF9pbyhzdHJ1Y3QgZGV2
+aWNlX25vZGUgKm5wKQ0KK3sNCisgICAgICAgLyoNCisgICAgICAgICogY2hlY2sgaWYgdGhlIGN1
+cnJlbnQgbm9kZSBpcyBhbiBpc2EgYnVzIGFuZCBpZiBpbmRpcmVjdGlvIG9wZXJhdGlvbg0KKyAg
+ICAgICAgKiBhcmUgcmVnaXN0ZXJlZA0KKyAgICAgICAgKi8NCisgICAgICAgcmV0dXJuIChvZl9i
+dXNfaXNhX21hdGNoKG5wKSAmJiBhcm02NF9leHRpb19vcHMpOw0KK30NCisNCiBzdGF0aWMgaW50
+IG9mX2VtcHR5X3Jhbmdlc19xdWlyayhzdHJ1Y3QgZGV2aWNlX25vZGUgKm5wKQ0KIHsNCiAgICAg
+ICAgaWYgKElTX0VOQUJMRUQoQ09ORklHX1BQQykpIHsNCkBAIC01MDMsNyArNTEyLDcgQEAgc3Rh
+dGljIGludCBvZl90cmFuc2xhdGVfb25lKHN0cnVjdCBkZXZpY2Vfbm9kZSAqcGFyZW50LCBzdHJ1
+Y3Qgb2ZfYnVzICpidXMsDQogICAgICAgICAqIFRoaXMgY29kZSBpcyBvbmx5IGVuYWJsZWQgb24g
+cG93ZXJwYy4gLS1nY2wNCiAgICAgICAgICovDQogICAgICAgIHJhbmdlcyA9IG9mX2dldF9wcm9w
+ZXJ0eShwYXJlbnQsIHJwcm9wLCAmcmxlbik7DQotICAgICAgIGlmIChyYW5nZXMgPT0gTlVMTCAm
+JiAhb2ZfZW1wdHlfcmFuZ2VzX3F1aXJrKHBhcmVudCkpIHsNCisgICAgICAgaWYgKHJhbmdlcyA9
+PSBOVUxMICYmICFvZl9lbXB0eV9yYW5nZXNfcXVpcmsocGFyZW50KSAmJiAhb2ZfaXNhX2luZGly
+ZWN0X2lvKHBhcmVudCkpIHsNCiAgICAgICAgICAgICAgICBwcl9kZWJ1ZygiT0Y6IG5vIHJhbmdl
+czsgY2Fubm90IHRyYW5zbGF0ZVxuIik7DQogICAgICAgICAgICAgICAgcmV0dXJuIDE7DQogICAg
+ICAgIH0NCg0KDQo+IA0KPiA+IFRoZSBzZWNvbmQgaXNzdWUgaXMgYSBjb25mbGljdCBiZXR3ZWVu
+IGNwdSBhZGRyZXNzZXMgdXNlZCBieSB0aGUgTFBDDQo+ID4gY29udHJvbGxlciBhbmQgaS9vIHRv
+a2VucyBmcm9tIHBjaSBlbmRwb2ludHMuDQo+ID4NCj4gPiBBYm91dCB0aGlzIHdoYXQgaWYgd2Ug
+bW9kaWZ5IGFybW42NF9leHRpb19vcHMgdG8gaGF2ZSBhIGxpc3Qgb2YNCj4gcmFuZ2VzDQo+ID4g
+cmF0aGVyIHRoYW4gb25seSBvbmUgcmFuZ2UgKG5vdyB3ZSBoYXZlIGp1c3Qgc3RhcnQvZW5kKTsg
+dGhlbiBpbiB0aGUNCj4gPiBMUEMgZHJpdmVyIHdlIGNhbiBzY2FuIHRoZSBMUEMgY2hpbGQgZGV2
+aWNlcyBhbmQNCj4gPiAxKSBwb3B1bGF0ZSBzdWNoIGxpc3Qgb2YgcmFuZ2VzDQo+ID4gMikgY2Fs
+bCBwY2lfcmVnaXN0ZXJfaW9fcmFuZ2UgZm9yIHN1Y2ggcmFuZ2VzDQo+IA0KPiBTY2FubmluZyB0
+aGUgY2hpbGQgZGV2aWNlcyBzb3VuZHMgcmVhbGx5IHdyb25nLCBwbGVhc2UgcmVnaXN0ZXIganVz
+dA0KPiBvbmUgcmFuZ2UgdGhhdCBjb3ZlcnMgdGhlIGJ1cyB0byBrZWVwIHRoZSB3b3JrYXJvdW5k
+IGFzIHNpbXBsZQ0KPiBhcyBwb3NzaWJsZS4NCj4gDQo+ID4gVGhlbiB3aGVuIGNhbGxpbmcgX19v
+Zl9hZGRyZXNzX3RvX3Jlc291cmNlIHdlIHJldHJpZXZlIEkvTyB0b2tlbnMNCj4gPiBmb3IgdGhl
+IGRldmljZXMgb24gdG9wIG9mIHRoZSBMUEMgZHJpdmVyIGFuZCBpbiB0aGUgSS9PIGFjY2Vzc29y
+cw0KPiA+IHdlIGNhbGwgcGNpX3Bpb190b19hZGRyZXNzIHRvIGZpZ3VyZSBvdXQgdGhlIGNwdSBh
+ZGRyZXNzIGFuZCBjb21wYXJlDQo+ID4gaXQgdG8gdGhlIGxpc3Qgb2YgcmFuZ2VzIGluIGFybW42
+NF9leHRpb19vcHMuDQo+ID4NCj4gPiBXaGF0IGFib3V0IHRoaXM/DQo+IA0KPiBUaGF0IHNlZW1z
+IHJlYWxseSBjb21wbGV4IGZvciBzb21ldGhpbmcgdGhhdCBjYW4gYmUgcXVpdGUgc2ltcGxlLg0K
+PiBUaGUgb25seSB0aGluZyB3ZSBuZWVkIHRvIHdvcnJ5IGFib3V0IGlzIHRoYXQgdGhlIGlvX3Jh
+bmdlX2xpc3QNCj4gY29udGFpbnMgYW4gZW50cnkgZm9yIHRoZSBMUEMgYnVzIHNvIHdlIGRvbid0
+IGNvbmZsaWN0IHdpdGggdGhlDQo+IFBDSSBidXNlcy4NCg0KVGhhbmtzDQoNCkkgZGlzY3Vzc2Vk
+IHdpdGggWmhpY2hhbmcgYW5kIHdlIGFncmVlZCB0byB1c2Ugb25seSBvbmUgTFBDIHJhbmdlDQp0
+byBiZSByZWdpc3RlcmVkIHdpdGggcGNpX3JlZ2lzdGVyX2lvX3JhbmdlLg0KDQpXZSdsbCByZXdv
+cmsgdGhlIGFjY2Vzc29ycyB0byBjaGVjayBpZiB0aGUgcmV0cmlldmVkIEkvTyB0b2tlbnMNCmJl
+bG9uZyB0byBMUEMgb3IgUENJIElPIHJhbmdlLi4uDQoNCkNoZWVycw0KDQpHYWINCg0KDQo+IA0K
+PiAJQXJuZA0KPiANCj4gCUFybmQNCg==
