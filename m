@@ -1,87 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 26 Sep 2016 11:50:18 -0400
-To: Steve Kenton <skenton@ou.edu>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        yinghai Lu <yinghai@kernel.org>,
-        Blackmagic Developer Support <developer@blackmagicdesign.com>
-Subject: Re: lspci not showing motherboard ethernet controller after PCIe
- card firmware update change from 32-bit to 64-bit BAR
-Message-ID: <20160926155018.GL14311@csclub.uwaterloo.ca>
-References: <2cc60cd1-bab1-a086-2326-7ce161b8f083@ou.edu>
- <efdbf332-841c-7617-efd1-facf785472fd@ou.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efdbf332-841c-7617-efd1-facf785472fd@ou.edu>
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35821 "EHLO
+        mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758132AbcIVWiz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 18:38:55 -0400
+Received: by mail-pa0-f47.google.com with SMTP id oz2so33366673pac.2
+        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 15:38:55 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+Cc: Rajat Jain <rajatja@google.com>, rajatxjain@gmail.com
+Subject: [PATCH v2] PCI: rockchip: Increase the Max Credit update interval.
+Date: Thu, 22 Sep 2016 15:38:12 -0700
+Message-Id: <1474583892-8936-1-git-send-email-rajatja@google.com>
+In-Reply-To: <1474578027-64292-1-git-send-email-rajatja@google.com>
+References: <1474578027-64292-1-git-send-email-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 24, 2016 at 07:24:14PM -0500, Steve Kenton wrote:
-> I have two different systems with Blackmagic Design Intensity Pro-4K
-> cards. One uses an ECS H81H3-I motherboard and the other uses a Gigabyte
-> GA-H110N motherboard. Previously both were working properly. When I
-> upgraded the Blackmagic Design desktopvideo package from version 10.7 to
-> version 10.8 it included an update of the firmware on the cards from
-> version 0x85 to 0xbd. After the  upgrade the Gigabyte-motherboard system
-> continues to work properly, but the ECS-motherboard system no longer
-> shows the motherboard ethernet controller with lspci. Downgrading the
-> firmware makes the ethernet controller reappear with lspci. Upgrading
-> again makes it disappear again. Attached are the output of lscpi -vv
-> for each version of the firmware on the ECS-motherboard system.
-> Upgrading to the most recent ECS-motherboard bios did not have any effect.
-> 
-> There are a number of differences in the two lspci outputs but
-> based on conversations I've seen on LKM, which I peruse but am not
-> subscribed to, I suspect that this is the important one:
-> 
-> lspci-Intensity-Pro-4K-10.7-firmware.txt:    Region 0: Memory at
-> f7d00000 (32-bit, non-prefetchable) [size=1M]
-> lspci-Intensity-Pro-4K-10.8-firmware.txt:    Region 0: Memory at
-> f7c00000 (64-bit, non-prefetchable) [size=1M]
-> 
-> The Engineers at Blackmagic Design have confirmed that the change to a
-> 64-bit BAR with firmware version 0xbd was intentional and correct. And
-> to be clear, the Blackmagic cards continue to work properly. The issue
-> is the motherboard ethernet controller disappearing after upgrading the
-> Blackmagic cards to new firmware with a 64-bit BAR. Note, however, that
-> 64-bit BAR is below 4GB with the high four bytes being all zeros. After
-> the firmware update it's like there is "no room at the inn" for the
-> motherboard ethernet controller so it never gets enabled. I think we can
-> all agree that it's a likely a problem with the PC motherboard bios. I'm
-> hoping to find a workaround to allow me to configure a number of
-> existing ECS-motherboard systems in the field for use with the new firmware.
-> 
-> I normally run Ubuntu 14.04 LTS and tried the most recent 4.4.0-38
-> kernel but then I noticed that the Ubuntu 16.10 daily build ISO switched
-> to kernel 4.8-RC-something on Sept 21st. So I booted that
-> livedvd and tried it to see if 4.8-RC included some recent PCIe
-> 32-bit/64-bit resource fix but sadly the results were the same. With
-> firmware 0xbd, the ethernet controller was still missing from the lspci
-> output. I poked around with various of the kernel pci= parameters such
-> as bios and nobios to no avail, but I really am out of my depth here.
-> 
-> I'm available to run tests if anyone has any suggestions.
+This increases the likelihood of link state to automatically go to L1
+and save some power.
 
-Well pci=bios is 32 bit only, so that doesn't work, pci=bfs was probably
-supposed to be pci=bfsort.  It sure looks like the bios fails to allocate
-the network device when the other device is 64 bit.  Sure looks like
-a bios bug.  I see nothing indicating that the address space ran out.
-It looks fine.
+The default credit update interval of 7.5 us results in the rootport
+sending UpdateFC packets too often, thus reulting in the link never
+going to L1, and always staying in L0/L0s. The value 24 us was chosen
+after some experiments and peeking over the PCIe bus to see that we do
+enter L1 substate when there is not enough traffic on the PCIe bus.
 
-You could try:
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v2: Update the register on Phy link bandwidth changes,
+    since the value gets lost on such events.
 
-pci=realloc
-pci=assign-busses
-pci=bfsort (the one I think you were trying to do).
+ drivers/pci/host/pcie-rockchip.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-I certainly wouldn't be surprised if the only thing ever tested in that
-board was a graphics card.
-
-Of course your network card is also 64 bit bar (when seen), so the system
-can work with such.  Makes one wonder if the bios has a bus, or the H81
-has a limit that only one of the ethernet and the add in card can use
-64 bit bar at a time.  That would seem weird of course.
-
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index c3593e6..99e700f 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -95,6 +95,11 @@
+ #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
+ #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
+ #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
++#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
++		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
+ #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+ #define   PCIE_CORE_INT_PRFPE			BIT(0)
+ #define   PCIE_CORE_INT_CRFPE			BIT(1)
+@@ -224,6 +229,17 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+ }
+ 
++static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
++{
++	u32 val;
++
++	/* Update Tx credit maximum update interval */
++	val = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
++	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
++	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
++	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
++}
++
+ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 				      struct pci_bus *bus, int dev)
+ {
+@@ -597,6 +613,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ 		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
+ 	} else if (reg & PCIE_CLIENT_INT_PHY) {
+ 		dev_dbg(dev, "phy link changes\n");
++		rockchip_pcie_update_txcredit_mui(rockchip);
+ 		rockchip_pcie_clr_bw_int(rockchip);
+ 	}
+ 
 -- 
-Len Sorensen
+2.8.0.rc3.226.g39d4020
+
