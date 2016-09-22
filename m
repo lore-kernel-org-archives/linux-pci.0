@@ -1,165 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42714 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753678AbcIGUFQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Sep 2016 16:05:16 -0400
-Date: Wed, 7 Sep 2016 15:04:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>, x86@kernel.org
-Subject: Re: [PATCHv2 1/2] pciehp: Let user control LED status
-Message-ID: <20160907200413.GA9440@localhost>
-References: <1472232182-1448-1-git-send-email-keith.busch@intel.com>
- <1472232182-1448-2-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <57E3FCC4.1000804@gmail.com>
+Date: Thu, 22 Sep 2016 23:46:12 +0800
+From: "zhichang.yuan" <zhichang.yuan02@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472232182-1448-2-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <9178320.n4yHmfyPA3@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F882AD3@lhreml507-mbx> <1669038.JevuM4F83e@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F882BB3@lhreml507-mbx>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F882BB3@lhreml507-mbx>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
 
-I like this.  I think this fits into pciehp pretty well.  Minor
-comments below.
+On 09/22/2016 11:20 PM, Gabriele Paoloni wrote:
+>
+>> -----Original Message-----
+>> From: Arnd Bergmann [mailto:arnd@arndb.de]
+>> Sent: 22 September 2016 15:59
+>> To: Gabriele Paoloni
+>> Cc: zhichang; linux-arm-kernel@lists.infradead.org;
+>> devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
+>> linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; John Garry;
+>> will.deacon@arm.com; linux-kernel@vger.kernel.org; Yuanzhichang;
+>> Linuxarm; xuwei (O); linux-serial@vger.kernel.org;
+>> benh@kernel.crashing.org; zourongrong@gmail.com; liviu.dudau@arm.com;
+>> kantyzc@163.com
+>> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
+>> Hip06
+>>
+>> On Thursday, September 22, 2016 2:47:14 PM CEST Gabriele Paoloni wrote:
+>>>>>   static int of_empty_ranges_quirk(struct device_node *np)
+>>>>>   {
+>>>>>          if (IS_ENABLED(CONFIG_PPC)) {
+>>>>> @@ -503,7 +512,7 @@ static int of_translate_one(struct
+>> device_node
+>>>> *parent, struct of_bus *bus,
+>>>>>           * This code is only enabled on powerpc. --gcl
+>>>>>           */
+>>>>>          ranges = of_get_property(parent, rprop, &rlen);
+>>>>> -       if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
+>>>>> +       if (ranges == NULL && !of_empty_ranges_quirk(parent) &&
+>>>> !of_isa_indirect_io(parent)) {
+>>>>>                  pr_debug("OF: no ranges; cannot translate\n");
+>>>>>                  return 1;
+>>>>>          }
+>>>> I don't see what effect that would have. What do you want to
+>>>> achieve with this?
+>>> If I read the code correctly adding the function above would end
+>>> up in a 1:1 mapping:
+>>> http://lxr.free-electrons.com/source/drivers/of/address.c#L513
+>>>
+>>> so taddr will be assigned with the cpu address space specified
+>>> in the children nodes of LPC and we are not using a quirk function
+>>> (we are just checking that we have the indirect io assigned and
+>>> that we are on a ISA bus). Now probably there is a nit in my
+>>> code sketch where of_isa_indirect_io should be probably an
+>> architecture
+>>> specific function...
+>> But the point is that it would then return an incorrect address,
+>> which in the worst case could be the same as another I/O space
+>> if that happens to be at CPU address zero.
+> If we do not touch __of_address_to_resource after taddr is returned
+> by of_translate_address we will check for (flags & IORESOURCE_IO),
+> then we call pci_address_to_pio to retrieve the unique token (remember
+> that LPC driver will register the LPC io range to pci io_range_list).
+>
+> I do not think that we can have any conflict with any other I/O space
+> as pci_register_io_range will guarantee that the LPC range does not
+> overlap with any other I/O range...
+If we don't bypass the calling of pci_address_to_pio after 
+of_translate_address,
+there should no conflict between LPC logical IO range and other logical 
+IO ranges
+of other devices.
+I guess Arnd want to skip all the translation for our LPC IO address. 
+But if we do it
+like that, it seems we can't avoid the possible conflict with the 
+logical IO ranges of
+PCI host bridges without any changes on the pci_register_io_range and 
+pci_address_to_pio.
+Because two completely separate I/O spaces are created without 
+synchronization.
 
-On Fri, Aug 26, 2016 at 11:23:01AM -0600, Keith Busch wrote:
-> This patch adds a new flag to the pci_dev structure instructing pciehp to
-> ignore PCIe slot LED indicators. The pciehp driver will instead provide
-> exclusive attention control to the user by setting the slot control
-> exactly as the user requested with out interpreting the input. This is
-> preparing for domain devices that repurpose these for non-standard use.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/hotplug/pciehp.h      |  1 +
->  drivers/pci/hotplug/pciehp_core.c | 26 ++++++++++++++++++++++++++
->  drivers/pci/hotplug/pciehp_hpc.c  |  6 +++++-
->  include/linux/pci.h               |  1 +
->  4 files changed, 33 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index e764918..ed62645 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -151,6 +151,7 @@ int pciehp_check_link_status(struct controller *ctrl);
->  bool pciehp_check_link_active(struct controller *ctrl);
->  void pciehp_release_ctrl(struct controller *ctrl);
->  int pciehp_reset_slot(struct slot *slot, int probe);
-> +void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask);
->  
->  static inline const char *slot_name(struct slot *slot)
->  {
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index ac531e6..ad19b33 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -70,6 +70,8 @@ static int get_attention_status(struct hotplug_slot *slot, u8 *value);
->  static int get_latch_status(struct hotplug_slot *slot, u8 *value);
->  static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
->  static int reset_slot(struct hotplug_slot *slot, int probe);
-> +static int set_user_led_status(struct hotplug_slot *slot, u8 value);
-> +static int get_user_led_status(struct hotplug_slot *slot, u8 *value);
->  
->  /**
->   * release_slot - free up the memory used by a slot
-> @@ -114,6 +116,9 @@ static int init_slot(struct controller *ctrl)
->  	if (ATTN_LED(ctrl)) {
->  		ops->get_attention_status = get_attention_status;
->  		ops->set_attention_status = set_attention_status;
-> +	} else if (ctrl->pcie->port->user_leds) {
-> +		ops->get_attention_status = get_user_led_status;
-> +		ops->set_attention_status = set_user_led_status;
->  	}
->  
->  	/* register this slot with the hotplug pci core */
-> @@ -142,6 +147,27 @@ static void cleanup_slot(struct controller *ctrl)
->  	pci_hp_deregister(ctrl->slot->hotplug_slot);
->  }
->  
-> +static int get_user_led_status(struct hotplug_slot *hotplug_slot, u8 *value)
-> +{
-> +	u16 slot_ctrl;
-> +	struct slot *slot = hotplug_slot->private;
-> +	struct pci_dev *pdev = slot->ctrl->pcie->port;
-> +
-> +	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-> +	*value = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
-> +
-> +	return 0;
-> +}
-> +
-> +static int set_user_led_status(struct hotplug_slot *hotplug_slot, u8 status)
-> +{
-> +	struct slot *slot = hotplug_slot->private;
-> +
-> +	pcie_write_cmd_nowait(slot->ctrl, status << 6,
-> +			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
-> +	return 0;
-> +}
-
-I want these to correspond as much as possible with the regular
-interfaces in name and structure.  Can you rename these to
-
-  pciehp_get_raw_attention_status()
-  pciehp_set_raw_attention_status()
-  
-and move them to drivers/pci/hotplug/pciehp_hpc.c alongside
-pciehp_get_attention_status() and pciehp_set_attention_status()?
-
-I know the interface doesn't exactly match:
-
-  void pciehp_get_attention_status(struct slot *slot, u8 *status)
-  int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot, u8 *value)
-
-But I think the get_attention_status() and set_attention_status()
-wrapper functions are pointless and should be removed.  If you lead
-the way by omitting them, we can simplify the existing ones later.
-
-This also will remove the need to make pcie_write_cmd_nowait()
-non-static.
-
-> +
->  /*
->   * set_attention_status - Turns the Amber LED for a slot on, off or blink
->   */
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 08e84d6..51cfc96 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -228,7 +228,7 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
->  }
->  
->  /* Same as above without waiting for the hardware to latch */
-> -static void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
-> +void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
->  {
->  	pcie_do_write_cmd(ctrl, cmd, mask, false);
->  }
-> @@ -804,6 +804,10 @@ struct controller *pcie_init(struct pcie_device *dev)
->  	}
->  	ctrl->pcie = dev;
->  	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-> +
-> +	if (pdev->user_leds)
-> +		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
-> +
->  	ctrl->slot_cap = slot_cap;
->  	mutex_init(&ctrl->ctrl_lock);
->  	init_waitqueue_head(&ctrl->queue);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index bbca681..a8ba7d7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -309,6 +309,7 @@ struct pci_dev {
->  						   powered on/off by the
->  						   corresponding bridge */
->  	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-> +	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
->  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
->  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
->  
-> -- 
-> 2.7.2
-> 
+Best,
+Zhichang
+>>>> I think all we need from this function is to return '1' if
+>>>> we hit an ISA I/O window, and that should happen for the two
+>>>> interesting cases, either no 'ranges' at all, or no translation
+>>>> for the range in question, so that __of_translate_address can
+>>>> return OF_BAD_ADDR, and we can enter the special case
+>>>> handling in the caller, that handles it like
+>>>>
+>>> I don't think this is very right as you may fail for different
+>>> reasons other than a missing range property, e.g:
+>>> http://lxr.free-electrons.com/source/drivers/of/address.c#L575
+>>>
+>>> And even if the only failure case was a missing range if in the
+>>> future __of_translate_address had to be reworked we would again
+>>> make a wrong assumption...you get my point?
+>> The newly introduced function would clearly have to make
+>> some sanity checks. The idea is that treat the case of
+>> not being able to translate a bus specific I/O address
+>> into a CPU address literally and fall back to another method
+>> of translating that address.
+>>
+>> This matches my mental model of how we find the resource:
+>>
+>> - start with the bus address
+>> - try to translate that into a CPU address
+>> - if we arrive at a CPU physical address for IORESOURCE_MEM, use that
+>> - if we arrive at a CPU physical address for IORESOURCE_IO, translate
+>>    that into a Linux IORESOURCE_IO token
+>> - if there is no valid CPU physical address, try to translate
+>>    the address into an IORESOURCE_IO using the ISA accessor
+>> - if that fails too, give up.
+>>
+>> If you try to fake a CPU physical address inbetween, it just
+>> gets more confusing.
+>>
+>> 	Arnd
