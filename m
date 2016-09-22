@@ -1,121 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 5 Sep 2016 15:57:51 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Subject: Re: [PATCH v4 05/15] drivers: platform: add fwnode base platform
- devices retrieval
-Message-ID: <20160905145751.GA7480@red-moon>
-References: <1471274620-20754-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1471274620-20754-6-git-send-email-lorenzo.pieralisi@arm.com>
- <7659b956-c49d-bd0d-7a1d-8dfc3da6f409@linaro.org>
-MIME-Version: 1.0
-In-Reply-To: <7659b956-c49d-bd0d-7a1d-8dfc3da6f409@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, Marc Zyngier <marc.zyngier@arm.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Joerg Roedel <joro@8bytes.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- linux-pci@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- Nate Watterson <nwatters@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
- Dennis Chen <dennis.chen@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- Jon Masters <jcm@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:3521 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934730AbcIVPVP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 11:21:15 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: zhichang <zhichang.yuan02@gmail.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>
+Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 22 Sep 2016 15:20:31 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F882BB3@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <9178320.n4yHmfyPA3@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F882AD3@lhreml507-mbx>
+ <1669038.JevuM4F83e@wuerfel>
+In-Reply-To: <1669038.JevuM4F83e@wuerfel>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 05, 2016 at 09:19:43PM +0800, Hanjun Guo wrote:
-> On 2016/8/15 23:23, Lorenzo Pieralisi wrote:
-> >The platform device kernel API does not provide functions to
-> >retrieve a platform device through the corresponding struct
-> >device fwnode pointer.
-> >
-> >Implement the fwnode platform_device look-up in drivers core
-> >code by using the bus_find_device() API and a corresponding
-> >matching function. The OF equivalent (eg of_find_device_by_node())
-> >will reuse the newly introduced function when OF code will
-> >take care of setting up the device->fwnode value that is
-> >currently left dangling for platform devices instantiated out
-> >of device tree nodes.
-> >
-> >Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> >---
-> > drivers/base/platform.c         | 23 +++++++++++++++++++++++
-> > include/linux/platform_device.h |  3 +++
-> > 2 files changed, 26 insertions(+)
-> >
-> >diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-> >index 6482d47..3ef150d 100644
-> >--- a/drivers/base/platform.c
-> >+++ b/drivers/base/platform.c
-> >@@ -760,6 +760,29 @@ err_out:
-> > }
-> > EXPORT_SYMBOL_GPL(__platform_create_bundle);
-> >
-> >+static int fwnode_dev_match(struct device *dev, void *data)
-> >+{
-> >+	return dev->fwnode == data;
-> >+}
-> >+
-> >+/**
-> >+ * platform_find_device_by_fwnode() - Find the platform_device associated
-> >+ *				      with a fwnode
-> >+ * @fwnode: Pointer to firmware node
-> >+ *
-> >+ * Returns platform_device pointer, or NULL if not found
-> >+ */
-> >+struct platform_device *
-> >+platform_find_device_by_fwnode(struct fwnode_handle *fwnode)
-> >+{
-> >+	struct device *dev;
-> >+
-> >+	dev = bus_find_device(&platform_bus_type, NULL, fwnode,
-> >+			      fwnode_dev_match);
-> >+	return dev ? to_platform_device(dev) : NULL;
-> >+}
-> >+EXPORT_SYMBOL(platform_find_device_by_fwnode);
+
+
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 22 September 2016 15:59
+> To: Gabriele Paoloni
+> Cc: zhichang; linux-arm-kernel@lists.infradead.org;
+> devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
+> linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; John Garry;
+> will.deacon@arm.com; linux-kernel@vger.kernel.org; Yuanzhichang;
+> Linuxarm; xuwei (O); linux-serial@vger.kernel.org;
+> benh@kernel.crashing.org; zourongrong@gmail.com; liviu.dudau@arm.com;
+> kantyzc@163.com
+> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
+> Hip06
 > 
-> As SMMU is registered as platform devices, I think we need such
-> API to retrieve the platform device with fwnode handle, actually
-> Kefeng introduced a similar patch [1], but your patch is more
-> generic, so this patch make sense to me,
+> On Thursday, September 22, 2016 2:47:14 PM CEST Gabriele Paoloni wrote:
+> > > >  static int of_empty_ranges_quirk(struct device_node *np)
+> > > >  {
+> > > >         if (IS_ENABLED(CONFIG_PPC)) {
+> > > > @@ -503,7 +512,7 @@ static int of_translate_one(struct
+> device_node
+> > > *parent, struct of_bus *bus,
+> > > >          * This code is only enabled on powerpc. --gcl
+> > > >          */
+> > > >         ranges = of_get_property(parent, rprop, &rlen);
+> > > > -       if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
+> > > > +       if (ranges == NULL && !of_empty_ranges_quirk(parent) &&
+> > > !of_isa_indirect_io(parent)) {
+> > > >                 pr_debug("OF: no ranges; cannot translate\n");
+> > > >                 return 1;
+> > > >         }
+> > >
+> > > I don't see what effect that would have. What do you want to
+> > > achieve with this?
+> >
+> > If I read the code correctly adding the function above would end
+> > up in a 1:1 mapping:
+> > http://lxr.free-electrons.com/source/drivers/of/address.c#L513
+> >
+> > so taddr will be assigned with the cpu address space specified
+> > in the children nodes of LPC and we are not using a quirk function
+> > (we are just checking that we have the indirect io assigned and
+> > that we are on a ISA bus). Now probably there is a nit in my
+> > code sketch where of_isa_indirect_io should be probably an
+> architecture
+> > specific function...
 > 
-> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> But the point is that it would then return an incorrect address,
+> which in the worst case could be the same as another I/O space
+> if that happens to be at CPU address zero.
 
-Thanks ! Strictly speaking, with Robin's new series:
+If we do not touch __of_address_to_resource after taddr is returned
+by of_translate_address we will check for (flags & IORESOURCE_IO),
+then we call pci_address_to_pio to retrieve the unique token (remember
+that LPC driver will register the LPC io range to pci io_range_list).
 
-https://lists.linuxfoundation.org/pipermail/iommu/2016-August/018230.html
+I do not think that we can have any conflict with any other I/O space
+as pci_register_io_range will guarantee that the LPC range does not
+overlap with any other I/O range... 
 
-
-(and corresponding v5 of this one that I have rebased on top of it) we
-do not need this patch any longer and it is not really that generic
-keeping in mind that it can't be used for DT matching (because in DT
-dev->fwnode is dangling); I will see if I keep this patch according
-to dependencies.
-
-Side note: I have a problem with [1], since that code is there to
-implement DT phandles in ACPI IIUC and we must really prevent that :)
-
-Thanks !
-Lorenzo
-
-> Thanks
-> Hanjun
 > 
-> [1]: https://patchwork.kernel.org/patch/7743661/
+> > > I think all we need from this function is to return '1' if
+> > > we hit an ISA I/O window, and that should happen for the two
+> > > interesting cases, either no 'ranges' at all, or no translation
+> > > for the range in question, so that __of_translate_address can
+> > > return OF_BAD_ADDR, and we can enter the special case
+> > > handling in the caller, that handles it like
+> > >
+> >
+> > I don't think this is very right as you may fail for different
+> > reasons other than a missing range property, e.g:
+> > http://lxr.free-electrons.com/source/drivers/of/address.c#L575
+> >
+> > And even if the only failure case was a missing range if in the
+> > future __of_translate_address had to be reworked we would again
+> > make a wrong assumption...you get my point?
 > 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> The newly introduced function would clearly have to make
+> some sanity checks. The idea is that treat the case of
+> not being able to translate a bus specific I/O address
+> into a CPU address literally and fall back to another method
+> of translating that address.
+> 
+> This matches my mental model of how we find the resource:
+> 
+> - start with the bus address
+> - try to translate that into a CPU address
+> - if we arrive at a CPU physical address for IORESOURCE_MEM, use that
+> - if we arrive at a CPU physical address for IORESOURCE_IO, translate
+>   that into a Linux IORESOURCE_IO token
+> - if there is no valid CPU physical address, try to translate
+>   the address into an IORESOURCE_IO using the ISA accessor
+> - if that fails too, give up.
+> 
+> If you try to fake a CPU physical address inbetween, it just
+> gets more confusing.
+> 
+> 	Arnd
