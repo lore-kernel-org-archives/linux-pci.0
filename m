@@ -1,114 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55806 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932236AbcIBPoP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:44:15 -0400
-Date: Fri, 2 Sep 2016 10:44:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>,
-        Doug Anderson <dianders@chromium.org>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: Re: [v10,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
-Message-ID: <20160902154409.GA8370@localhost>
-References: <1471570498-3284-1-git-send-email-shawn.lin@rock-chips.com>
- <20160831181754.GA7460@roeck-us.net>
- <9075a2c1-c787-986f-31b4-4d5b7c92b771@rock-chips.com>
- <20160901163455.GA9471@localhost>
- <20160901171400.GA4093@localhost>
- <20160901174852.GC9471@localhost>
+Received: from mail-yw0-f180.google.com ([209.85.161.180]:36678 "EHLO
+        mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965794AbcIVVlP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 17:41:15 -0400
+Received: by mail-yw0-f180.google.com with SMTP id t67so101606502ywg.3
+        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 14:41:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160901174852.GC9471@localhost>
+In-Reply-To: <1473379530-70905-1-git-send-email-rajatja@google.com>
+References: <1472747248-60993-1-git-send-email-rajatja@google.com> <1473379530-70905-1-git-send-email-rajatja@google.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Thu, 22 Sep 2016 14:40:34 -0700
+Message-ID: <CACK8Z6HKhduwFj7LBoN52WBJaZB01LojNaA6J4u0cUx5RZzdpg@mail.gmail.com>
+Subject: Re: [PATCH v2] lspci: Parse all the L1 PM substate capability regs
+To: Martin Mares <mj@ucw.cz>, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, David Box <david.e.box@linux.intel.com>
+Cc: Rajat Jain <rajatja@google.com>, Rajat Jain <rajatxjain@gmail.com>,
+        Brian Norris <briannorris@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 01, 2016 at 12:48:52PM -0500, Bjorn Helgaas wrote:
-> On Thu, Sep 01, 2016 at 10:14:01AM -0700, Brian Norris wrote:
+Hello Matrin,
 
-> > The use of HIWORD_UPDATE can indeed be a bit confusing, IMO, but this is
-> > really a common Rockchip-ism that, once you read several of their
-> > drivers, can make a little more sense. If you grep around, it's in at
-> > least their clock, ethernet, SDHCI, PHY, and DP/DRM drivers. I might
-> > defer to Heiko (upstream maintainer of Rockchip code) for a decision.
-> > Maybe there's some intermediate ground where we keep the HIWORK_UPDATE()
-> > logic (it does make sure we get the 16-bit shift right, I think) while
-> > still refactoring a few other bits (like PCIE_CLIENT_CONF_LANE_NUM() and
-> > PCIE_CLIENT_GEN_SEL() for wrapping HIWORK_UPDATE()?).
+Just checking if you got a chance to look at this.
 
-Here's a second proposal.  It retains HIWORD_UPDATE (though the structure
-is different) so grep finds it along with the other Rockchip ones.
+Thanks,
 
-I'll post updated actual patches; this is just to give the idea:
+Rajat
 
--/*
--  * The higher 16-bit of this register is used for write protection
--  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
--  */
--#define HIWORD_UPDATE(val, mask, shift) \
--	((val) << (shift) | (mask) << ((shift) + 16))
-
--#define PCIE_CLIENT_CONF_ENABLE			BIT(0)
--#define PCIE_CLIENT_CONF_ENABLE_SHIFT		0
--#define PCIE_CLIENT_CONF_ENABLE_MASK		0x1
--#define PCIE_CLIENT_LINK_TRAIN_ENABLE		1
--#define PCIE_CLIENT_LINK_TRAIN_SHIFT		1
--#define PCIE_CLIENT_LINK_TRAIN_MASK		0x1
--#define PCIE_CLIENT_ARI_ENABLE			BIT(0)
--#define PCIE_CLIENT_ARI_ENABLE_SHIFT		3
--#define PCIE_CLIENT_ARI_ENABLE_MASK		0x1
--#define PCIE_CLIENT_CONF_LANE_NUM(x)		(x / 2)
--#define PCIE_CLIENT_CONF_LANE_NUM_SHIFT		4
--#define PCIE_CLIENT_CONF_LANE_NUM_MASK		0x3
--#define PCIE_CLIENT_MODE_RC			BIT(0)
--#define PCIE_CLIENT_MODE_SHIFT			6
--#define PCIE_CLIENT_MODE_MASK			0x1
--#define PCIE_CLIENT_GEN_SEL_2			1
--#define PCIE_CLIENT_GEN_SEL_SHIFT		7
--#define PCIE_CLIENT_GEN_SEL_MASK		0x1
-
-+/*
-+ * The upper 16 bits of the PCIE_CLIENT registers are a write mask for the
-+ * lower 16 bits.  This allows atomic updates of the register without
-+ * locking.
-+ */
-+#define HIWORD_UPDATE(mask, val)	((mask << 16) | val)
-+
-+#define ENCODE_LANES(x)			(((x >> 1) & 3) << 4)
-+
-+#define PCIE_CLIENT_CONF_ENABLE		HIWORD_UPDATE(0x0001, 0x0001)
-+#define PCIE_CLIENT_LINK_TRAIN_ENABLE	HIWORD_UPDATE(0x0002, 0x0002)
-+#define PCIE_CLIENT_CONF_LANE_NUM(x)	HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
-+#define PCIE_CLIENT_GEN_SEL_2		HIWORD_UPDATE(0x0040, 0x0040)
-
- 	rockchip_pcie_write(rockchip,
--		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
--				 PCIE_CLIENT_CONF_ENABLE_MASK,
--				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
--		   HIWORD_UPDATE(PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes),
--				 PCIE_CLIENT_CONF_LANE_NUM_MASK,
--				 PCIE_CLIENT_CONF_LANE_NUM_SHIFT) |
--		   HIWORD_UPDATE(PCIE_CLIENT_MODE_RC,
--				 PCIE_CLIENT_MODE_MASK,
--				 PCIE_CLIENT_MODE_SHIFT) |
--		   HIWORD_UPDATE(PCIE_CLIENT_ARI_ENABLE,
--				 PCIE_CLIENT_ARI_ENABLE_MASK,
--				 PCIE_CLIENT_ARI_ENABLE_SHIFT) |
--		   HIWORD_UPDATE(PCIE_CLIENT_GEN_SEL_2,
--				 PCIE_CLIENT_GEN_SEL_MASK,
--				 PCIE_CLIENT_GEN_SEL_SHIFT),
--		   PCIE_CLIENT_BASE);
-+			    PCIE_CLIENT_CONF_ENABLE |
-+			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
-+			    PCIE_CLIENT_ARI_ENABLE |
-+			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
-+			    PCIE_CLIENT_MODE_RC |
-+			    PCIE_CLIENT_GEN_SEL_2,
-+				PCIE_CLIENT_BASE);
+On Thu, Sep 8, 2016 at 5:05 PM, Rajat Jain <rajatja@google.com> wrote:
+> Parse the control registers to display all the L1 PM
+> substate configuration information.
+>
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> ---
+> V2: Fix the LTR1.2 threshold scaling
+>
+>  lib/header.h | 14 +++++++++
+>  ls-ecaps.c   | 94 ++++++++++++++++++++++++++++++++++++++++++------------------
+>  2 files changed, 80 insertions(+), 28 deletions(-)
+>
+> diff --git a/lib/header.h b/lib/header.h
+> index 1c5968b..0341ec6 100644
+> --- a/lib/header.h
+> +++ b/lib/header.h
+> @@ -1117,6 +1117,20 @@
+>  #define  PCI_DPC_STS_PIO_FEP(x) (((x) >> 8) & 0x1f) /* DPC PIO First Error Pointer */
+>  #define PCI_DPC_SOURCE         10      /* DPC Source ID */
+>
+> +/* L1 PM Substates Extended Capability */
+> +#define PCI_L1PM_SUBSTAT_CAP   0x4     /* L1 PM Substate Capability */
+> +#define  PCI_L1PM_SUBSTAT_CAP_PM_L12   0x1     /* PCI-PM L1.2 Supported */
+> +#define  PCI_L1PM_SUBSTAT_CAP_PM_L11   0x2     /* PCI-PM L1.1 Supported */
+> +#define  PCI_L1PM_SUBSTAT_CAP_ASPM_L12 0x4     /* ASPM L1.2 Supported */
+> +#define  PCI_L1PM_SUBSTAT_CAP_ASPM_L11 0x8     /* ASPM L1.1 Supported */
+> +#define  PCI_L1PM_SUBSTAT_CAP_L1PM_SUPP        0x16    /* L1 Pm Substates supported */
+> +#define PCI_L1PM_SUBSTAT_CTL1  0x8     /* L1 PM Substate Control 1 */
+> +#define  PCI_L1PM_SUBSTAT_CTL1_PM_L12  0x1     /* PCI-PM L1.2 Enable */
+> +#define  PCI_L1PM_SUBSTAT_CTL1_PM_L11  0x2     /* PCI-PM L1.1 Enable */
+> +#define  PCI_L1PM_SUBSTAT_CTL1_ASPM_L12        0x4     /* ASPM L1.2 Enable */
+> +#define  PCI_L1PM_SUBSTAT_CTL1_ASPM_L11        0x8     /* ASPM L1.1 Enable */
+> +#define PCI_L1PM_SUBSTAT_CTL2  0xC     /* L1 PM Substate Control 2 */
+> +
+>  /*
+>   * The PCI interface treats multi-function devices as independent
+>   * devices.  The slot/function address of each device is encoded
+> diff --git a/ls-ecaps.c b/ls-ecaps.c
+> index 5e18e06..40f8cb9 100644
+> --- a/ls-ecaps.c
+> +++ b/ls-ecaps.c
+> @@ -527,55 +527,93 @@ cap_evendor(struct device *d, int where)
+>      BITS(hdr, 20, 12));
+>  }
+>
+> +static inline int l1pm_calc_pwron(int scale, int value)
+> +{
+> +  switch (scale)
+> +    {
+> +      case 0:
+> +       return 2 * value;
+> +      case 1:
+> +       return 10 * value;
+> +      case 2:
+> +       return 100 * value;
+> +    }
+> +  return -1;
+> +}
+> +
+>  static void
+>  cap_l1pm(struct device *d, int where)
+>  {
+> -  u32 l1_cap;
+> -  int power_on_scale;
+> +  u32 l1_cap, val, scale;
+> +  int time;
+>
+>    printf("L1 PM Substates\n");
+>
+>    if (verbose < 2)
+>      return;
+>
+> -  if (!config_fetch(d, where + 4, 4))
+> +  if (!config_fetch(d, where + PCI_L1PM_SUBSTAT_CAP, 12))
+>      {
+>        printf("\t\t<unreadable>\n");
+>        return;
+>      }
+>
+> -  l1_cap = get_conf_long(d, where + 4);
+> +  l1_cap = get_conf_long(d, where + PCI_L1PM_SUBSTAT_CAP);
+>    printf("\t\tL1SubCap: ");
+>    printf("PCI-PM_L1.2%c PCI-PM_L1.1%c ASPM_L1.2%c ASPM_L1.1%c L1_PM_Substates%c\n",
+> -    FLAG(l1_cap, 1),
+> -    FLAG(l1_cap, 2),
+> -    FLAG(l1_cap, 4),
+> -    FLAG(l1_cap, 8),
+> -    FLAG(l1_cap, 16));
+> -
+> -  if (BITS(l1_cap, 0, 1) || BITS(l1_cap, 2, 1))
+> +    FLAG(l1_cap, PCI_L1PM_SUBSTAT_CAP_PM_L12),
+> +    FLAG(l1_cap, PCI_L1PM_SUBSTAT_CAP_PM_L11),
+> +    FLAG(l1_cap, PCI_L1PM_SUBSTAT_CAP_ASPM_L12),
+> +    FLAG(l1_cap, PCI_L1PM_SUBSTAT_CAP_ASPM_L11),
+> +    FLAG(l1_cap, PCI_L1PM_SUBSTAT_CAP_L1PM_SUPP));
+> +
+> +  if (l1_cap & PCI_L1PM_SUBSTAT_CAP_PM_L12 ||
+> +      l1_cap & PCI_L1PM_SUBSTAT_CAP_ASPM_L12)
+>      {
+>        printf("\t\t\t  PortCommonModeRestoreTime=%dus ",
+>         BITS(l1_cap, 8,8));
+>
+> -      power_on_scale = BITS(l1_cap, 16, 2);
+> +      time = l1pm_calc_pwron(BITS(l1_cap, 16, 2), BITS(l1_cap, 19, 5));
+> +      if (time != -1)
+> +       printf("PortTPowerOnTime=%dus\n", time);
+> +      else
+> +       printf("PortTPowerOnTime=<error>\n");
+> +    }
+>
+> -      printf("PortTPowerOnTime=");
+> -      switch (power_on_scale)
+> -       {
+> -         case 0:
+> -           printf("%dus\n", BITS(l1_cap, 19, 5) * 2);
+> -           break;
+> -         case 1:
+> -           printf("%dus\n", BITS(l1_cap, 19, 5) * 10);
+> -           break;
+> -         case 2:
+> -           printf("%dus\n", BITS(l1_cap, 19, 5) * 100);
+> -           break;
+> -         default:
+> -           printf("<error>\n");
+> -           break;
+> -       }
+> +  val = get_conf_long(d, where + PCI_L1PM_SUBSTAT_CTL1);
+> +  printf("\t\tL1SubCtl1: ");
+> +  printf("PCI-PM_L1.2%c PCI-PM_L1.1%c ASPM_L1.2%c ASPM_L1.1%c\n",
+> +    FLAG(val, PCI_L1PM_SUBSTAT_CTL1_PM_L12),
+> +    FLAG(val, PCI_L1PM_SUBSTAT_CTL1_PM_L11),
+> +    FLAG(val, PCI_L1PM_SUBSTAT_CTL1_ASPM_L12),
+> +    FLAG(val, PCI_L1PM_SUBSTAT_CTL1_ASPM_L11));
+> +
+> +  if (l1_cap & PCI_L1PM_SUBSTAT_CAP_PM_L12 ||
+> +      l1_cap & PCI_L1PM_SUBSTAT_CAP_ASPM_L12)
+> +      printf("\t\t\t   T_CommonMode=%dus ",
+> +       BITS(val, 8,8));
+> +
+> +  if (l1_cap & PCI_L1PM_SUBSTAT_CAP_ASPM_L12)
+> +    {
+> +      scale = BITS(val, 29, 3);
+> +      if (scale > 5)
+> +       printf("LTR1.2_Threshhold=<error>\n");
+> +      else
+> +       printf("LTR1.2_Threshhold=%lldns\n",
+> +              BITS(val, 16, 10) *
+> +              (unsigned long long)cap_ltr_scale(scale));
+> +    }
+> +
+> +  val = get_conf_long(d, where + PCI_L1PM_SUBSTAT_CTL2);
+> +  printf("\t\tL1SubCtl2: ");
+> +  if (l1_cap & PCI_L1PM_SUBSTAT_CAP_PM_L12 ||
+> +      l1_cap & PCI_L1PM_SUBSTAT_CAP_ASPM_L12)
+> +    {
+> +      time = l1pm_calc_pwron(BITS(val, 0, 2), BITS(val, 3, 5));
+> +      if (time != -1)
+> +       printf("T_PwrOn=%dus\n", time);
+> +      else
+> +       printf("T_PwrOn=<error>\n");
+>      }
+>  }
+>
+> --
+> 2.8.0.rc3.226.g39d4020
+>
