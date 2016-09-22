@@ -1,132 +1,225 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Thu, 22 Sep 2016 10:49:55 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	David Daney <ddaney@caviumnetworks.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rafael Wysocki <rafael@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Christopher Covington <cov@codeaurora.org>,
+	Duc Dang <dhdang@apm.com>,
+	Robert Richter <robert.richter@caviumnetworks.com>,
+	Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Andrea Gallo <andrea.gallo@linaro.org>,
+	Jeremy Linton <jeremy.linton@arm.com>,
+	Dongdong Liu <liudongdong3@huawei.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jeff Hugo <jhugo@codeaurora.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
+ register range for ACPI case
+Message-ID: <20160922094955.GB18637@red-moon>
+References: <1473449047-10499-4-git-send-email-tn@semihalf.com>
+ <20160919180900.GB13775@localhost>
+ <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
+ <20160920133327.GB13855@localhost>
+ <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
+ <20160920140518.GD13855@localhost>
+ <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
+ <20160920191744.GA4941@localhost>
+ <20160921140549.GA11968@red-moon>
+ <20160921180457.GB20006@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20160930090702.GA7725@red-moon>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
- <20160909142343.13314-2-lorenzo.pieralisi@arm.com> <20160929141520.GA29244@red-moon>
- <3178073.UTpgCTN6if@vostro.rjw.lan> <20160930090702.GA7725@red-moon>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 30 Sep 2016 17:48:01 +0200
-Message-ID: <CAJZ5v0hK2Ryo32u4S9K=78-Oot13vvVNB+p6N2YC1UMqYW9g7A@mail.gmail.com>
-Subject: Re: [PATCH v5 01/14] drivers: iommu: add FWNODE_IOMMU fwnode type
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160921180457.GB20006@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 30, 2016 at 11:07 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Thu, Sep 29, 2016 at 10:59:40PM +0200, Rafael J. Wysocki wrote:
->> On Thursday, September 29, 2016 03:15:20 PM Lorenzo Pieralisi wrote:
->> > Hi Rafael,
->> >
->> > On Fri, Sep 09, 2016 at 03:23:30PM +0100, Lorenzo Pieralisi wrote:
->> > > On systems booting with a device tree, every struct device is
->> > > associated with a struct device_node, that represents its DT
->> > > representation. The device node can be used in generic kernel
->> > > contexts (eg IRQ translation, IOMMU streamid mapping), to
->> > > retrieve the properties associated with the device and carry
->> > > out kernel operation accordingly. Owing to the 1:1 relationship
->> > > between the device and its device_node, the device_node can also
->> > > be used as a look-up token for the device (eg looking up a device
->> > > through its device_node), to retrieve the device in kernel paths
->> > > where the device_node is available.
->> > >
->> > > On systems booting with ACPI, the same abstraction provided by
->> > > the device_node is required to provide look-up functionality.
->> > >
->> > > Therefore, mirroring the approach implemented in the IRQ domain
->> > > kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
->> > >
->> > > This patch also implements a glue kernel layer that allows to
->> > > allocate/free FWNODE_IOMMU fwnode_handle structures and associate
->> > > them with IOMMU devices.
->> > >
->> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> > > Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->> > > Cc: Joerg Roedel <joro@8bytes.org>
->> > > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
->> > > ---
->> > >  include/linux/fwnode.h |  1 +
->> > >  include/linux/iommu.h  | 25 +++++++++++++++++++++++++
->> > >  2 files changed, 26 insertions(+)
->> > >
->> > > diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
->> > > index 8516717..6e10050 100644
->> > > --- a/include/linux/fwnode.h
->> > > +++ b/include/linux/fwnode.h
->> > > @@ -19,6 +19,7 @@ enum fwnode_type {
->> > >   FWNODE_ACPI_DATA,
->> > >   FWNODE_PDATA,
->> > >   FWNODE_IRQCHIP,
->> > > + FWNODE_IOMMU,
->> >
->> > This patch provides groundwork for this series and it is key for
->> > the rest of it, basically the point here is that we need a fwnode
->> > to differentiate platform devices created out of static ACPI tables
->> > entries (ie IORT), that represent IOMMU components.
->> >
->> > The corresponding device is not an ACPI device (I could fabricate one as
->> > it is done for other static tables entries eg FADT power button, but I
->> > do not necessarily see the reason for doing that given that all we need
->> > the fwnode for is a token identifier), so FWNODE_ACPI does not apply
->> > here.
->> >
->> > Please let me know if it is reasonable how I sorted this out (it
->> > is basically identical to IRQCHIP, just another enum entry), the
->> > remainder of the code depends on this.
->>
->> I'm not familiar with the use case, so I don't see anything unreasonable
->> in it.
->
-> The use case is pretty simple: on ARM SMMU devices are platform devices.
-> When booting with DT they are identified through an of_node and related
-> FWNODE_OF type. When booting with ACPI, the ARM SMMU platform devices,
-> to be equivalent to DT booting path, should be created out of static
-> IORT table entries (that's how we describe SMMUs); we need to create
-> a fwnode "token" to associate with those platform devices and that's
-> not a FWNODE_ACPI (that is for an ACPI device firmware object, here we
-> really do not need one), so this patch.
->
->> If you're asking about whether or not I mind adding more fwnode types in
->> principle, then no, I don't. :-)
->
-> Yes, that's what I was asking, the only point that bugs me is that for
-> both FWNODE_IRQCHIP and FWNODE_IOMMU the fwnode is just a "token" (ie a
-> valid pointer) used for look-up and the type in the fwnode_handle is
-> mostly there for error checking, I was wondering if we could create a
-> specific fwnode_type for this specific usage (eg FWNODE_TAG and then add
-> a type to it as part of its container struct) instead of adding an enum
-> value per subsystem - it seems there are other fwnode types in the
-> pipeline :), so I am asking:
->
-> lkml.kernel.org/r/3D1468514043-21081-3-git-send-email-minyard@acm.org
+On Wed, Sep 21, 2016 at 01:04:57PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 21, 2016 at 03:05:49PM +0100, Lorenzo Pieralisi wrote:
+> > On Tue, Sep 20, 2016 at 02:17:44PM -0500, Bjorn Helgaas wrote:
+> > > On Tue, Sep 20, 2016 at 04:09:25PM +0100, Ard Biesheuvel wrote:
+> > 
+> > [...]
+> > 
+> > > > None of these platforms can be fixed entirely in software, and given
+> > > > that we will not be adding quirks for new broken hardware, we should
+> > > > ask ourselves whether having two versions of a quirk, i.e., one for
+> > > > broken hardware + currently shipping firmware, and one for the same
+> > > > broken hardware with fixed firmware is really an improvement over what
+> > > > has been proposed here.
+> > > 
+> > > We're talking about two completely different types of quirks:
+> > > 
+> > >   1) MCFG quirks to use memory-mapped config space that doesn't quite
+> > >      conform to the ECAM model in the PCIe spec, and
+> > > 
+> > >   2) Some yet-to-be-determined method to describe address space
+> > >      consumed by a bridge.
+> > > 
+> > > The first two patches of this series are a nice implementation for 1).
+> > > The third patch (ThunderX-specific) is one possibility for 2), but I
+> > > don't like it because there's no way for generic software like the
+> > > ACPI core to discover these resources.
+> > 
+> > Ok, so basically this means that to implement (2) we need to assign
+> > some sort of _HID to these quirky PCI bridges (so that we know what
+> > device they represent and we can retrieve their _CRS). I take from
+> > this discussion that the goal is to make sure that all non-config
+> > resources have to be declared through _CRS device objects, which is
+> > fine but that requires a FW update (unless we can fabricate ACPI
+> > devices and corresponding _CRS in the kernel whenever we match a
+> > given MCFG table signature).
+> 
+> All resources consumed by ACPI devices should be declared through
+> _CRS.  If you want to fabricate ACPI devices or _CRS via kernel
+> quirks, that's fine with me.  This could be triggered via MCFG
+> signature, DMI info, host bridge _HID, etc.
 
-OK, I see your concern now, so thanks for presenting it so clearly.
+I think the PNP quirk approach + PNP0c02 resource put forward by Gab
+is enough.
 
-While I don't see anything wrong with having per-subsystem fwnode
-types in principle, I agree that if the only purpose of them is to
-mean "this comes from ACPI, but from a static table, not from the
-namespace", it would be better to have a single fwnode type for that,
-like FWNODE_ACPI_STATIC or similar.
+> > We discussed this already and I think we should make a decision:
+> > 
+> > http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/414722.html
+> > 
+> > > > > I'd like to step back and come up with some understanding of how
+> > > > > non-broken firmware *should* deal with this issue.  Then, if we *do*
+> > > > > work around this particular broken firmware in the kernel, it would be
+> > > > > nice to do it in a way that fits in with that understanding.
+> > > > >
+> > > > > For example, if a companion ACPI device is the preferred solution, an
+> > > > > ACPI quirk could fabricate a device with the required resources.  That
+> > > > > would address the problem closer to the source and make it more likely
+> > > > > that the rest of the system will work correctly: /proc/iomem could
+> > > > > make sense, things that look at _CRS generically would work (e.g,
+> > > > > /sys/, an admittedly hypothetical "lsacpi", etc.)
+> > > > >
+> > > > > Hard-coding stuff in drivers is a point solution that doesn't provide
+> > > > > any guidance for future platforms and makes it likely that the hack
+> > > > > will get copied into even more drivers.
+> > > > >
+> > > > 
+> > > > OK, I see. But the guidance for future platforms should be 'do not
+> > > > rely on quirks', and what I am arguing here is that the more we polish
+> > > > up this code and make it clean and reusable, the more likely it is
+> > > > that will end up getting abused by new broken hardware that we set out
+> > > > to reject entirely in the first place.
+> > > > 
+> > > > So of course, if the quirk involves claiming resources, let's make
+> > > > sure that this occurs in the cleanest and most compliant way possible.
+> > > > But any factoring/reuse concerns other than for the current crop of
+> > > > broken hardware should be avoided imo.
+> > > 
+> > > If future hardware is completely ECAM-compliant and we don't need any
+> > > more MCFG quirks, that would be great.
+> > 
+> > Yes.
+> > 
+> > > But we'll still need to describe that memory-mapped config space
+> > > somewhere.  If that's done with PNP0C02 or similar devices (as is done
+> > > on my x86 laptop), we'd be all set.
+> > 
+> > I am not sure I understand what you mean here. Are you referring
+> > to MCFG regions reported as PNP0c02 resources through its _CRS ?
+> 
+> Yes.  PCI Firmware Spec r3.0, Table 4-2, note 2 says address ranges
+> reported via MCFG or _CBA should be reserved by _CRS of a PNP0C02
+> device.
+
+Ok, that's agreed. It goes without saying that since you are quoting
+the PCI spec, if FW fails to report MCFG regions in a PNP0c02 device
+_CRS I will consider that a FW bug.
+
+> > IIUC PNP0C02 is a reservation mechanism, but it does not help us
+> > associate its _CRS to a specific PCI host bridge instance, right ?
+> 
+> Gab proposed a hierarchy that *would* associate a PNP0C02 device with
+> a PCI bridge:
+> 
+>   Device (PCI1) {
+>     Name (_HID, "HISI0080") // PCI Express Root Bridge
+>     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+>     Method (_CRS, 0, Serialized) { // Root complex resources (windows) }
+>     Device (RES0) {
+>       Name (_HID, "HISI0081") // HiSi PCIe RC config base address
+>       Name (_CID, "PNP0C02")  // Motherboard reserved resource
+>       Name (_CRS, ResourceTemplate () { ... }
+>     }
+>   }
+> 
+> That's a possibility.  The PCI Firmware Spec suggests putting RES0 at
+> the root (under \_SB), but I don't know why.
+> 
+> Putting it at the root means we couldn't generically associate it with
+> a bridge, although I could imagine something like this:
+> 
+>   Device (RES1) {
+>     Name (_HID, "HISI0081") // HiSi PCIe RC config base address
+>     Name (_CID, "PNP0C02")  // Motherboard reserved resource
+>     Name (_CRS, ResourceTemplate () { ... }
+>     Method (BRDG) { "PCI1" }  // hand-wavy ASL
+>   }
+>   Device (PCI1) {
+>     Name (_HID, "HISI0080") // PCI Express Root Bridge
+>     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+>     Method (_CRS, 0, Serialized) { // Root complex resources (windows) }
+>   }
+> 
+> Where you could search PNP0C02 devices for a cookie that matched the
+> host bridge.o
+
+Ok, I am fine with both and I think we are converging, but the way
+to solve this problem has to be uniform for all ARM partners (and
+not only ARM). Two points here:
+
+1) Adding a device/subdevice allows people to add a _CRS reporting the
+   non-window bridge resources. Fine. It also allows people to chuck in
+   there all sorts of _DSD properties to describe their PCI host bridge
+   as it is done with DT properties (those _DSD can contain eg clocks
+   etc.), this may be tempting (so that they can reuse the same DT
+   driver and do not have to update their firmware) but I want to be
+   clear here: that must not happen. So, a subdevice with a _CRS to
+   report resources, yes, but it will stop there.
+2) It is unclear to me how to formalize the above. People should not
+   write FW by reading the PCI mailing list, so these guidelines have to
+   be written, somehow. I do not want to standardize quirks, I want
+   to prevent random ACPI table content, which is different.
+   Should I report this to the ACPI spec working group ? If we do
+   not do that everyone will go solve this problem as they deem fit.
+
+[...]
+
+> > For FW that is immutable I really do not see what we can do apart
+> > from hardcoding the non-config resources (consumed by a bridge),
+> > somehow.
+> 
+> Right.  Well, I assume you mean we should hard-code "non-window
+> resources consumed directly by a bridge".  If firmware in the field is
+> broken, we should work around it, and that may mean hard-coding some
+> resources.
+> 
+> My point is that the hard-coding should not be buried in a driver
+> where it's invisible to the rest of the kernel.  If we hard-code it in
+> a quirk that adds _CRS entries, then the kernel will work just like it
+> would if the firmware had been correct in the first place.  The
+> resource will appear in /sys/devices/pnp*/*/resources and /proc/iomem,
+> and if we ever used _SRS to assign or move ACPI devices, we would know
+> to avoid the bridge resource.
+
+We are in complete agreement here.
 
 Thanks,
-Rafael
+Lorenzo
