@@ -1,150 +1,157 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Wed, 21 Sep 2016 15:05:49 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	David Daney <ddaney@caviumnetworks.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rafael Wysocki <rafael@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Christopher Covington <cov@codeaurora.org>,
-	Duc Dang <dhdang@apm.com>,
-	Robert Richter <robert.richter@caviumnetworks.com>,
-	Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Mark Salter <msalter@redhat.com>, linux-pci@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Andrea Gallo <andrea.gallo@linaro.org>,
-	Jeremy Linton <jeremy.linton@arm.com>,
-	Dongdong Liu <liudongdong3@huawei.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jeff Hugo <jhugo@codeaurora.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Message-ID: <20160921140549.GA11968@red-moon>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-4-git-send-email-tn@semihalf.com>
- <20160919180900.GB13775@localhost>
- <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
- <20160920133327.GB13855@localhost>
- <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
- <20160920140518.GD13855@localhost>
- <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
- <20160920191744.GA4941@localhost>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <57E40665.8080005@gmail.com>
+Date: Fri, 23 Sep 2016 00:27:17 +0800
+From: "zhichang.yuan" <zhichang.yuan02@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160920191744.GA4941@localhost>
+To: Arnd Bergmann <arnd@arndb.de>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <3538381.vOsx75UXVU@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
+ <9178320.n4yHmfyPA3@wuerfel>
+In-Reply-To: <9178320.n4yHmfyPA3@wuerfel>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ John Garry <john.garry@huawei.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ "kantyzc@163.com" <kantyzc@163.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 20, 2016 at 02:17:44PM -0500, Bjorn Helgaas wrote:
-> On Tue, Sep 20, 2016 at 04:09:25PM +0100, Ard Biesheuvel wrote:
 
-[...]
+On 09/22/2016 08:14 PM, Arnd Bergmann wrote:
+> On Thursday, September 22, 2016 11:55:45 AM CEST Gabriele Paoloni wrote:
+>>>> I think extending of_empty_ranges_quirk() may be a reasonable
+>>> solution.
+>>>> What do you think Arnd?
+>>> I don't really like that idea, that quirk is meant to work around
+>>> broken DTs, but we can just make the DT valid and implement the
+>>> code properly.
+>> Ok  I understand your point where it is not right to use of_empty_ranges_quirk()
+>> As a quirk is used to work around broken HW or broken FW (as in this case)
+>> rather than to fix code
+>>
+>> What about the following? I think adding the check you suggested next to
+>> of_empty_ranges_quirk() is adding the case we need in the right point (thus
+>> avoiding any duplication)
+>>   
+>> --- a/drivers/of/address.c
+>> +++ b/drivers/of/address.c
+>> @@ -457,6 +457,15 @@ static struct of_bus *of_match_bus(struct device_node *np)
+>>          return NULL;
+>>   }
+>>   
+>> +static inline int of_isa_indirect_io(struct device_node *np)
+>> +{
+>> +       /*
+>> +        * check if the current node is an isa bus and if indirectio operation
+>> +        * are registered
+>> +        */
+>> +       return (of_bus_isa_match(np) && arm64_extio_ops);
+>> +}
+>> +
+>>   static int of_empty_ranges_quirk(struct device_node *np)
+>>   {
+>>          if (IS_ENABLED(CONFIG_PPC)) {
+>> @@ -503,7 +512,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+>>           * This code is only enabled on powerpc. --gcl
+>>           */
+>>          ranges = of_get_property(parent, rprop, &rlen);
+>> -       if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
+>> +       if (ranges == NULL && !of_empty_ranges_quirk(parent) && !of_isa_indirect_io(parent)) {
+>>                  pr_debug("OF: no ranges; cannot translate\n");
+>>                  return 1;
+>>          }
+> I don't see what effect that would have. What do you want to
+> achieve with this?
+>
+> I think all we need from this function is to return '1' if
+> we hit an ISA I/O window, and that should happen for the two
+> interesting cases, either no 'ranges' at all, or no translation
+> for the range in question, so that __of_translate_address can
+> return OF_BAD_ADDR, and we can enter the special case
+> handling in the caller, that handles it like
+>
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 02b2903fe9d2..a18d96843fae 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -685,17 +685,24 @@ static int __of_address_to_resource(struct device_node *dev,
+>   	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
+>   		return -EINVAL;
+>   	taddr = of_translate_address(dev, addrp);
+> -	if (taddr == OF_BAD_ADDR)
+> -		return -EINVAL;
+>   	memset(r, 0, sizeof(struct resource));
+> +
+>   	if (flags & IORESOURCE_IO) {
+>   		unsigned long port;
+> -		port = pci_address_to_pio(taddr);
+> +
+> +		if (taddr == OF_BAD_ADDR)
+> +			port = arch_of_address_to_pio(dev, addrp)
+> +		else
+> +			port = pci_address_to_pio(taddr);
+> +
+>   		if (port == (unsigned long)-1)
+>   			return -EINVAL;
+>   		r->start = port;
+>   		r->end = port + size - 1;
+>   	} else {
+> +		if (taddr == OF_BAD_ADDR)
+> +			return -EINVAL;
+> +
+>   		r->start = taddr;
+>   		r->end = taddr + size - 1;
+>   	}
+>
+For this patch sketch, I have a question.
+Do we call pci_address_to_pio in arch_of_address_to_pio to get the 
+corresponding logical IO port
+for LPC??
 
-> > None of these platforms can be fixed entirely in software, and given
-> > that we will not be adding quirks for new broken hardware, we should
-> > ask ourselves whether having two versions of a quirk, i.e., one for
-> > broken hardware + currently shipping firmware, and one for the same
-> > broken hardware with fixed firmware is really an improvement over what
-> > has been proposed here.
-> 
-> We're talking about two completely different types of quirks:
-> 
->   1) MCFG quirks to use memory-mapped config space that doesn't quite
->      conform to the ECAM model in the PCIe spec, and
-> 
->   2) Some yet-to-be-determined method to describe address space
->      consumed by a bridge.
-> 
-> The first two patches of this series are a nice implementation for 1).
-> The third patch (ThunderX-specific) is one possibility for 2), but I
-> don't like it because there's no way for generic software like the
-> ACPI core to discover these resources.
+If we don't, it seems the LPC specific IO address will conflict with PCI 
+host bridges' logical IO.
+Supposed our LPC populated the IO range from 0x100 to 0x3FF( this is 
+normal for ISA similar
+devices), after arch_of_address_to_pio(), the r->start will be set as 
+0x100, r->end will be set as
+0x3FF.  And if there is one PCI host bridge who request a IO window size 
+over 0x400 at the same
+time, the  corresponding r->start and r->end will be set as 0x0, 0x3FF 
+after of_address_to_resource
+for this host bridge.  Then the IO conflict happens.
 
-Ok, so basically this means that to implement (2) we need to assign
-some sort of _HID to these quirky PCI bridges (so that we know what
-device they represent and we can retrieve their _CRS). I take from
-this discussion that the goal is to make sure that all non-config
-resources have to be declared through _CRS device objects, which is
-fine but that requires a FW update (unless we can fabricate ACPI
-devices and corresponding _CRS in the kernel whenever we match a
-given MCFG table signature).
+cheers,
+Zhichang
 
-We discussed this already and I think we should make a decision:
+>
+> 	Arnd
 
-http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/414722.html
 
-> > > I'd like to step back and come up with some understanding of how
-> > > non-broken firmware *should* deal with this issue.  Then, if we *do*
-> > > work around this particular broken firmware in the kernel, it would be
-> > > nice to do it in a way that fits in with that understanding.
-> > >
-> > > For example, if a companion ACPI device is the preferred solution, an
-> > > ACPI quirk could fabricate a device with the required resources.  That
-> > > would address the problem closer to the source and make it more likely
-> > > that the rest of the system will work correctly: /proc/iomem could
-> > > make sense, things that look at _CRS generically would work (e.g,
-> > > /sys/, an admittedly hypothetical "lsacpi", etc.)
-> > >
-> > > Hard-coding stuff in drivers is a point solution that doesn't provide
-> > > any guidance for future platforms and makes it likely that the hack
-> > > will get copied into even more drivers.
-> > >
-> > 
-> > OK, I see. But the guidance for future platforms should be 'do not
-> > rely on quirks', and what I am arguing here is that the more we polish
-> > up this code and make it clean and reusable, the more likely it is
-> > that will end up getting abused by new broken hardware that we set out
-> > to reject entirely in the first place.
-> > 
-> > So of course, if the quirk involves claiming resources, let's make
-> > sure that this occurs in the cleanest and most compliant way possible.
-> > But any factoring/reuse concerns other than for the current crop of
-> > broken hardware should be avoided imo.
-> 
-> If future hardware is completely ECAM-compliant and we don't need any
-> more MCFG quirks, that would be great.
-
-Yes.
-
-> But we'll still need to describe that memory-mapped config space
-> somewhere.  If that's done with PNP0C02 or similar devices (as is done
-> on my x86 laptop), we'd be all set.
-
-I am not sure I understand what you mean here. Are you referring
-to MCFG regions reported as PNP0c02 resources through its _CRS ?
-
-IIUC PNP0C02 is a reservation mechanism, but it does not help us
-associate its _CRS to a specific PCI host bridge instance, right ?
-
-> If we need to work around firmware in the field that doesn't do that,
-> one possibility is a PNP quirk along the lines of
-> quirk_amd_mmconfig_area().
-
-You mean matching PNP0C01/PNP0c02 and create a resource (that has to
-hardcoded in a static array in the kernel anyway, there is no way to
-retrieve it otherwise) in the corresponding PNP quirk handler ?
-
-And it is not a given we can match against PNP0c01/PNP0c02.
-
-So it looks like the only solution is allocating an _HID for each
-host bridge that is not ECAM compliant to add resources to its _CRS
-(unless the MCFG quirk does not need any additional data/resource,
-eg "use different set of PCI accessorsi 32-bit vs byte-access").
-
-For FW that is immutable I really do not see what we can do apart
-from hardcoding the non-config resources (consumed by a bridge),
-somehow.
-
-Thanks,
-Lorenzo
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
