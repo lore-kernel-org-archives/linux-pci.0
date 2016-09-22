@@ -1,155 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36260 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932632AbcIBQZl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Sep 2016 12:25:41 -0400
-Date: Fri, 2 Sep 2016 11:25:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Chen Yu <yu.c.chen@intel.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH][RFC v3] PCI: Workaround to enable poweroff on Mac Pro 11
-Message-ID: <20160902162527.GA10403@localhost>
-References: <1471595425-1752-1-git-send-email-yu.c.chen@intel.com>
- <20160824141731.GA23108@wunner.de>
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Tomasz Nowicki
+	<tn@semihalf.com>,
+        David Daney <ddaney@caviumnetworks.com>,
+        Will Deacon
+	<will.deacon@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        "Rafael
+ Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>, Hanjun Guo <hanjun.guo@linaro.org>,
+        Sinan Kaya
+	<okaya@codeaurora.org>,
+        Jayachandran C <jchandra@broadcom.com>,
+        "Christopher
+ Covington" <cov@codeaurora.org>,
+        Duc Dang <dhdang@apm.com>,
+        Robert Richter
+	<robert.richter@caviumnetworks.com>,
+        Marcin Wojtas <mw@semihalf.com>, "Liviu
+ Dudau" <Liviu.Dudau@arm.com>,
+        Wangyijing <wangyijing@huawei.com>, Mark Salter
+	<msalter@redhat.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        Linaro ACPI Mailman List
+	<linaro-acpi@lists.linaro.org>,
+        Jon Masters <jcm@redhat.com>, Andrea Gallo
+	<andrea.gallo@linaro.org>,
+        Jeremy Linton <jeremy.linton@arm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        Jeff Hugo
+	<jhugo@codeaurora.org>,
+        "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: RE: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
+ register range for ACPI case
+Date: Thu, 22 Sep 2016 11:12:09 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8815C8@lhreml507-mbx>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <1473449047-10499-4-git-send-email-tn@semihalf.com>
+ <20160919180900.GB13775@localhost>
+ <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
+ <20160920133327.GB13855@localhost>
+ <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
+ <20160920140518.GD13855@localhost>
+ <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
+ <20160920191744.GA4941@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F87CF8F@lhreml507-mbx>
+ <20160921185920.GC20006@localhost>
+In-Reply-To: <20160921185920.GC20006@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160824141731.GA23108@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 24, 2016 at 04:17:31PM +0200, Lukas Wunner wrote:
-> On Fri, Aug 19, 2016 at 04:30:25PM +0800, Chen Yu wrote:
-> > People reported that they can not do a poweroff nor a
-> > suspend to ram on their Mac Pro 11. After some investigations
-> > it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
-> > mm windows to ([mem 0x7fa00000-0x7fbfffff] and
-> > [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-> > io resource 0x1804 becomes unaccessible immediately, where the
-> > ACPI Sleep register is located, as a result neither poweroff(S5)
-> > nor suspend to ram(S3) works.
-> 
-> To provide a bit more context:
-> 
-> The root port in question (0000:00:1c.0) is not listed in the DSDT.
-> On macOS, only devices present in the ACPI namespace are incorporated
-> into the I/O Kit registry. Consequently macOS pretends that this root
-> port doesn't exist. It's not listed in the "ioreg -l" output and thus
-> no driver is attached to this device.
-> 
-> So what we're dealing with is sloppiness on the part of Apple:
-> Some engineer probably forgot to disable this unused root port
-> and they didn't notice it during testing because their OS ignores
-> such devices.
-> 
-> We could in principle achieve the same behaviour by adding a PCI
-> device only if it has an ACPI companion, perhaps quirk this only
-> to Macs. I'm not sure if that's the right thing to do though.
-> What if they hide devices from macOS but we want to access them
-> on Linux?
-> 
-> What's really odd is that changing *memory* windows affects
-> accessibility of *I/O ports*.
-> 
-> One theory would be that I/O ports are somehow mapped into memory.
-> The GPIO pins of Intel chipsets are usually accessible through
-> I/O ports, but I've recently looked at the DSDT of the newest
-> MacBook9,1 (2016) and it looks like they're now accessed through
-> SystemMemory instead of SystemIO. Perhaps someone at Intel knows
-> about these intricacies of their chipsets.
+Hi Bjorn
 
-Hey, look, Chen Yu works at Intel :)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 21 September 2016 19:59
+> To: Gabriele Paoloni
+> Cc: Ard Biesheuvel; Tomasz Nowicki; David Daney; Will Deacon; Catalin
+> Marinas; Rafael Wysocki; Lorenzo Pieralisi; Arnd Bergmann; Hanjun Guo;
+> Sinan Kaya; Jayachandran C; Christopher Covington; Duc Dang; Robert
+> Richter; Marcin Wojtas; Liviu Dudau; Wangyijing; Mark Salter; linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Linaro ACPI
+> Mailman List; Jon Masters; Andrea Gallo; Jeremy Linton; liudongdong
+> (C); Jeff Hugo; linux-acpi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Rafael J. Wysocki
+> Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-
+> specific register range for ACPI case
+>=20
+> On Wed, Sep 21, 2016 at 02:10:55PM +0000, Gabriele Paoloni wrote:
+> > Hi Bjorn
+> >
+> > [...]
+> >
+> >
+> > >
+> > > If future hardware is completely ECAM-compliant and we don't need
+> any
+> > > more MCFG quirks, that would be great.
+> > >
+> > > But we'll still need to describe that memory-mapped config space
+> > > somewhere.  If that's done with PNP0C02 or similar devices (as is
+> done
+> > > on my x86 laptop), we'd be all set.
+> > >
+> > > If we need to work around firmware in the field that doesn't do
+> that,
+> > > one possibility is a PNP quirk along the lines of
+> > > quirk_amd_mmconfig_area().
+> >
+> > So, if my understanding is correct, for platforms that have not been
+> > shipped yet you propose to use PNP0C02 in the ACPI table in order to
+> > declare a motherboard reserved resource whereas for shipped platforms
+> > you propose to have a quirk along pnp_fixups in order to track the
+> > resource usage even if values are hardcoded...correct?
+>=20
+> Yes.  I'm open to alternate proposals, but x86 uses PNP0C02, and
+> following existing practice seems reasonable.
+>=20
+> > Before Tomasz came up with this patchset we had a call between the
+> vendors
+> > involved in this PCI quirks saga and other guys from Linaro and ARM.
+> >
+> > Lorenzo summarized the outcome as in the following link
+> > http://lkml.iu.edu/hypermail/linux/kernel/1606.2/03344.html
+> >
+> > Since this quirks mechanism has been discussed for quite a long time
+> now
+> > IMHO it would be good to have a last call including also you (Bjorn)
+> so
+> > that we can all agree on what to do and we avoid changing our drivers
+> again
+> > and again...
+>=20
+> I think we're converging pretty fast.  As far as I'm concerned, the
+> v6 ECAM quirks implementation is perfect.  The only remaining issue is
+> reporting the ECAM resources, and I haven't seen objections to using
+> PNP0C02 + PNP quirks for broken firmware.
+>=20
+> There is the question of how or whether to associate a PNP0A03 PCI
+> bridge with resources from a different PNP0C02 device, but that's not
+> super important.  If the hard-coded resources appear both in a quirk
+> and in the PCI bridge driver, it's ugly but not the end of the world.
+> We've still achieved the objective of avoiding landmines in the
+> address space.
 
-This apparent connection between memory windows and I/O port
-accessibility is indeed very concerning.
+Ok got it many thanks
 
-I know there are PCI host bridges with windows that translate CPU
-memory accesses into PCI I/O port accesses.  If this is one of them,
-and it has such a window enabled at the address we happened to choose
-for the mem window, that would be a problem.
+Gab
 
-I assume this would be documented somewhere in the chipset datasheet.
-
-> If I/O ports are indeed mapped into memory, we need to find a way
-> to identify and reserve that region. So while this patch seems
-> like a workable and sufficiently small fix, it might mask a larger
-> underlying issue. It's certainly a problem though that these
-> machines currently cannot power off or suspend.
-> 
-> FWIW, we have a somewhat similar issue with the Apple gmux
-> (a microcontroller built into dual GPU MacBook Pros). That chip
-> is attached to the LPC bus and accessed through I/O ports.
-> It turns out that once VGA IO is locked to the discrete GPU
-> using vgaarb, gmux' I/O ports suddenly become inaccessible.
-> Apparently its I/O ports are routed to the secondary PCI bus
-> to which the discrete GPU is connected, and no longer to the
-> root bus on which the LPC bridge resides. However gmux' I/O ports
-> are in the 0x700-0x7ff range, whereas the VGA registers are in
-> the 0x3b0-0x3bb and 0x3c0-0x3df range. So that's another oddity
-> of Intel chipsets with regards to I/O accessibility.
-> 
-> Best regards,
-> 
-> Lukas
-> 
-> > 
-> > As suggested by Bjorn, further testing shows that, there is an
-> > unreported device may be (using) conflict with above aperture,
-> > which brings unpredictable result such as the failure of accessing
-> > the io port, which blocks the poweroff(S5). Besides if we reassign
-> > the memory aperture to the other place, the poweroff works again.
-> > 
-> > As we do not find any resource declared in _CRS which contain above
-> > memory aperture, and Mac OS does not use this pci bridge neither, we
-> > choose a simple workaround to clear the hotplug flag(suggested by
-> > Yinghai Lu), thus do not allocate any resource for this pci bridge,
-> > and thereby no conflict anymore.
-> > 
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rafael J. Wysocki <rafael@kernel.org>
-> > Cc: Lukas Wunner <lukas@wunner.de>
-> > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> > ---
-> >  drivers/pci/quirks.c | 20 ++++++++++++++++++++
-> >  1 file changed, 20 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 37ff015..04bbdba 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -2776,6 +2776,26 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
-> >  
-> >  /*
-> > + * Apple: Avoid programming the memory/io aperture of 00:1c.0
-> > + *
-> > + * BIOS does not declare any resource for 00:1c.0, but with
-> > + * hotplug flag set, thus the OS allocates:
-> > + * [mem 0x7fa00000 - 0x7fbfffff]
-> > + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
-> > + * which is conflict with an unreported device, which
-> > + * causes unpredictable result such as accessing io port.
-> > + * So clear the hotplug flag to work around it.
-> > + */
-> > +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
-> > +{
-> > +	if (dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
-> > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
-> > +		dev->is_hotplug_bridge = 0;
-> > +}
-> > +
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-> > +
-> > +/*
-> >   * This is a quirk for the Ricoh MMC controller found as a part of
-> >   * some mulifunction chips.
-> >  
-> > -- 
-> > 2.7.4
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+> Bjorn
