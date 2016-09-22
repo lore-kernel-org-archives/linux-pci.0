@@ -1,189 +1,322 @@
-Return-Path: <mayurkumar.patel@intel.com>
-Return-Path: <mayurkumar.patel@intel.com>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Wysocki, Rafael J"
-	<rafael.j.wysocki@intel.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "Busch, Keith" <keith.busch@intel.com>,
-	"Tarazona-Duarte, Luis Antonio" <luis.antonio.tarazona-duarte@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	"mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
-Subject: RE: [PATCH v2 1/8] PCI: pciehp: Rename pcie_isr() locals for clarity
-Date: Tue, 13 Sep 2016 16:09:07 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B284665AD0A7@IRSMSX101.ger.corp.intel.com>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160912210855.22258.32643.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <92EBB4272BF81E4089A7126EC1E7B284665ABBDA@IRSMSX101.ger.corp.intel.com>
- <20160913135749.GA27748@localhost>
-In-Reply-To: <20160913135749.GA27748@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Thu, 22 Sep 2016 13:44:46 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	David Daney <ddaney@caviumnetworks.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rafael Wysocki <rafael@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Christopher Covington <cov@codeaurora.org>,
+	Duc Dang <dhdang@apm.com>,
+	Robert Richter <robert.richter@caviumnetworks.com>,
+	Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	Wangyijing <wangyijing@huawei.com>,
+	Mark Salter <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Andrea Gallo <andrea.gallo@linaro.org>,
+	Jeremy Linton <jeremy.linton@arm.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Jeff Hugo <jhugo@codeaurora.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
+ register range for ACPI case
+Message-ID: <20160922124446.GA21681@red-moon>
+References: <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
+ <20160920133327.GB13855@localhost>
+ <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
+ <20160920140518.GD13855@localhost>
+ <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
+ <20160920191744.GA4941@localhost>
+ <20160921140549.GA11968@red-moon>
+ <20160921180457.GB20006@localhost>
+ <20160922094955.GB18637@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F8815A9@lhreml507-mbx>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F8815A9@lhreml507-mbx>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Sep 22, 2016 at 11:10:13AM +0000, Gabriele Paoloni wrote:
+> Hi Lorenzo, Bjorn
+> 
+> > -----Original Message-----
+> > From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> > Sent: 22 September 2016 10:50
+> > To: Bjorn Helgaas
+> > Cc: Ard Biesheuvel; Tomasz Nowicki; David Daney; Will Deacon; Catalin
+> > Marinas; Rafael Wysocki; Arnd Bergmann; Hanjun Guo; Sinan Kaya;
+> > Jayachandran C; Christopher Covington; Duc Dang; Robert Richter; Marcin
+> > Wojtas; Liviu Dudau; Wangyijing; Mark Salter; linux-
+> > pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Linaro ACPI
+> > Mailman List; Jon Masters; Andrea Gallo; Jeremy Linton; liudongdong
+> > (C); Gabriele Paoloni; Jeff Hugo; linux-acpi@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; Rafael J. Wysocki
+> > Subject: Re: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-
+> > specific register range for ACPI case
+> > 
+> > On Wed, Sep 21, 2016 at 01:04:57PM -0500, Bjorn Helgaas wrote:
+> > > On Wed, Sep 21, 2016 at 03:05:49PM +0100, Lorenzo Pieralisi wrote:
+> > > > On Tue, Sep 20, 2016 at 02:17:44PM -0500, Bjorn Helgaas wrote:
+> > > > > On Tue, Sep 20, 2016 at 04:09:25PM +0100, Ard Biesheuvel wrote:
+> > > >
+> > > > [...]
+> > > >
+> > > > > > None of these platforms can be fixed entirely in software, and
+> > given
+> > > > > > that we will not be adding quirks for new broken hardware, we
+> > should
+> > > > > > ask ourselves whether having two versions of a quirk, i.e., one
+> > for
+> > > > > > broken hardware + currently shipping firmware, and one for the
+> > same
+> > > > > > broken hardware with fixed firmware is really an improvement
+> > over what
+> > > > > > has been proposed here.
+> > > > >
+> > > > > We're talking about two completely different types of quirks:
+> > > > >
+> > > > >   1) MCFG quirks to use memory-mapped config space that doesn't
+> > quite
+> > > > >      conform to the ECAM model in the PCIe spec, and
+> > > > >
+> > > > >   2) Some yet-to-be-determined method to describe address space
+> > > > >      consumed by a bridge.
+> > > > >
+> > > > > The first two patches of this series are a nice implementation
+> > for 1).
+> > > > > The third patch (ThunderX-specific) is one possibility for 2),
+> > but I
+> > > > > don't like it because there's no way for generic software like
+> > the
+> > > > > ACPI core to discover these resources.
+> > > >
+> > > > Ok, so basically this means that to implement (2) we need to assign
+> > > > some sort of _HID to these quirky PCI bridges (so that we know what
+> > > > device they represent and we can retrieve their _CRS). I take from
+> > > > this discussion that the goal is to make sure that all non-config
+> > > > resources have to be declared through _CRS device objects, which is
+> > > > fine but that requires a FW update (unless we can fabricate ACPI
+> > > > devices and corresponding _CRS in the kernel whenever we match a
+> > > > given MCFG table signature).
+> > >
+> > > All resources consumed by ACPI devices should be declared through
+> > > _CRS.  If you want to fabricate ACPI devices or _CRS via kernel
+> > > quirks, that's fine with me.  This could be triggered via MCFG
+> > > signature, DMI info, host bridge _HID, etc.
+> > 
+> > I think the PNP quirk approach + PNP0c02 resource put forward by Gab
+> > is enough.
+> 
+> Great thanks as we take a final decision I will ask Dogndgong to submit
+> another RFC based on this approach
+> 
+> > 
+> > > > We discussed this already and I think we should make a decision:
+> > > >
+> > > > http://lists.infradead.org/pipermail/linux-arm-kernel/2016-
+> > March/414722.html
+> > > >
+> > > > > > > I'd like to step back and come up with some understanding of
+> > how
+> > > > > > > non-broken firmware *should* deal with this issue.  Then, if
+> > we *do*
+> > > > > > > work around this particular broken firmware in the kernel, it
+> > would be
+> > > > > > > nice to do it in a way that fits in with that understanding.
+> > > > > > >
+> > > > > > > For example, if a companion ACPI device is the preferred
+> > solution, an
+> > > > > > > ACPI quirk could fabricate a device with the required
+> > resources.  That
+> > > > > > > would address the problem closer to the source and make it
+> > more likely
+> > > > > > > that the rest of the system will work correctly: /proc/iomem
+> > could
+> > > > > > > make sense, things that look at _CRS generically would work
+> > (e.g,
+> > > > > > > /sys/, an admittedly hypothetical "lsacpi", etc.)
+> > > > > > >
+> > > > > > > Hard-coding stuff in drivers is a point solution that doesn't
+> > provide
+> > > > > > > any guidance for future platforms and makes it likely that
+> > the hack
+> > > > > > > will get copied into even more drivers.
+> > > > > > >
+> > > > > >
+> > > > > > OK, I see. But the guidance for future platforms should be 'do
+> > not
+> > > > > > rely on quirks', and what I am arguing here is that the more we
+> > polish
+> > > > > > up this code and make it clean and reusable, the more likely it
+> > is
+> > > > > > that will end up getting abused by new broken hardware that we
+> > set out
+> > > > > > to reject entirely in the first place.
+> > > > > >
+> > > > > > So of course, if the quirk involves claiming resources, let's
+> > make
+> > > > > > sure that this occurs in the cleanest and most compliant way
+> > possible.
+> > > > > > But any factoring/reuse concerns other than for the current
+> > crop of
+> > > > > > broken hardware should be avoided imo.
+> > > > >
+> > > > > If future hardware is completely ECAM-compliant and we don't need
+> > any
+> > > > > more MCFG quirks, that would be great.
+> > > >
+> > > > Yes.
+> > > >
+> > > > > But we'll still need to describe that memory-mapped config space
+> > > > > somewhere.  If that's done with PNP0C02 or similar devices (as is
+> > done
+> > > > > on my x86 laptop), we'd be all set.
+> > > >
+> > > > I am not sure I understand what you mean here. Are you referring
+> > > > to MCFG regions reported as PNP0c02 resources through its _CRS ?
+> > >
+> > > Yes.  PCI Firmware Spec r3.0, Table 4-2, note 2 says address ranges
+> > > reported via MCFG or _CBA should be reserved by _CRS of a PNP0C02
+> > > device.
+> > 
+> > Ok, that's agreed. It goes without saying that since you are quoting
+> > the PCI spec, if FW fails to report MCFG regions in a PNP0c02 device
+> > _CRS I will consider that a FW bug.
+> > 
+> > > > IIUC PNP0C02 is a reservation mechanism, but it does not help us
+> > > > associate its _CRS to a specific PCI host bridge instance, right ?
+> > >
+> > > Gab proposed a hierarchy that *would* associate a PNP0C02 device with
+> > > a PCI bridge:
+> > >
+> > >   Device (PCI1) {
+> > >     Name (_HID, "HISI0080") // PCI Express Root Bridge
+> > >     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+> > >     Method (_CRS, 0, Serialized) { // Root complex resources
+> > (windows) }
+> > >     Device (RES0) {
+> > >       Name (_HID, "HISI0081") // HiSi PCIe RC config base address
+> > >       Name (_CID, "PNP0C02")  // Motherboard reserved resource
+> > >       Name (_CRS, ResourceTemplate () { ... }
+> > >     }
+> > >   }
+> > >
+> > > That's a possibility.  The PCI Firmware Spec suggests putting RES0 at
+> > > the root (under \_SB), but I don't know why.
+> > >
+> > > Putting it at the root means we couldn't generically associate it
+> > with
+> > > a bridge, although I could imagine something like this:
+> > >
+> > >   Device (RES1) {
+> > >     Name (_HID, "HISI0081") // HiSi PCIe RC config base address
+> > >     Name (_CID, "PNP0C02")  // Motherboard reserved resource
+> > >     Name (_CRS, ResourceTemplate () { ... }
+> > >     Method (BRDG) { "PCI1" }  // hand-wavy ASL
+> > >   }
+> > >   Device (PCI1) {
+> > >     Name (_HID, "HISI0080") // PCI Express Root Bridge
+> > >     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+> > >     Method (_CRS, 0, Serialized) { // Root complex resources
+> > (windows) }
+> > >   }
+> > >
+> > > Where you could search PNP0C02 devices for a cookie that matched the
+> > > host bridge.o
+> > 
+> > Ok, I am fine with both and I think we are converging, but the way
+> > to solve this problem has to be uniform for all ARM partners (and
+> > not only ARM). Two points here:
+> > 
+> > 1) Adding a device/subdevice allows people to add a _CRS reporting the
+> >    non-window bridge resources. Fine. It also allows people to chuck in
+> >    there all sorts of _DSD properties to describe their PCI host bridge
+> >    as it is done with DT properties (those _DSD can contain eg clocks
+> >    etc.), this may be tempting (so that they can reuse the same DT
+> >    driver and do not have to update their firmware) but I want to be
+> >    clear here: that must not happen. So, a subdevice with a _CRS to
+> >    report resources, yes, but it will stop there.
+> > 2) It is unclear to me how to formalize the above. People should not
+> >    write FW by reading the PCI mailing list, so these guidelines have
+> > to
+> >    be written, somehow. I do not want to standardize quirks, I want
+> >    to prevent random ACPI table content, which is different.
+> >    Should I report this to the ACPI spec working group ? If we do
+> >    not do that everyone will go solve this problem as they deem fit.
+> > 
+> 
+> Do we really need to formalize this?
+> 
+> As we discussed in the Linaro call at the moment we have few vendors
+> that need quirks and we want to avoid promoting/accepting quirks for
+> the future.
+> 
+> At the time of the call I think we decided to informally accept a set
+> of quirks for the current platforms and reject any other quirk coming
+> after a certain date/kernel version (this to be decided).
+> 
+> I am not sure if there is a way to document/formalize a temporary
+> exception from the rule...
 
+- (1) will be enforced.
+- We do not know whether PNP0c02 can be used in non-root devices _CRS
+- Are we sure (given that we are implementing this to make sure we are
+  able to validate resources) that it is valid to have a subdevice with
+  a _CRS whose resources are not contained in its parent _CRS address
+  space (because that's exactly the case for these quirks) ?
 
-> =
+That's what I mean by formalizing, I want to know how PNP0c02 should
+be used. We all want platforms with quirks to be enabled asap but only
+if we stick to the ACPI specifications. On top of that, with the
+bindings above, the kernel would end up creating a platform device for
+the "fake" device with a _CRS approach, which is questionable.
 
-> On Tue, Sep 13, 2016 at 10:05:31AM +0000, Patel, Mayurkumar wrote:
-> >
-> > > Rename "detected" and "intr_loc" to "status" and "events" for clarity.
-> > > "status" is the value we read from the Slot Status register; "events"=
- is
-> > > the set of hot-plug events we need to process.  No functional change
-> > > intended.
-> > >
-> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > ---
-> > >  drivers/pci/hotplug/pciehp_hpc.c |   46 +++++++++++++++++++++-------=
-----------
-> > >  1 file changed, 25 insertions(+), 21 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/p=
-ciehp_hpc.c
-> > > index 08e84d6..264df36 100644
-> > > --- a/drivers/pci/hotplug/pciehp_hpc.c
-> > > +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> > > @@ -542,7 +542,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
-> > >  	struct pci_bus *subordinate =3D pdev->subordinate;
-> > >  	struct pci_dev *dev;
-> > >  	struct slot *slot =3D ctrl->slot;
-> > > -	u16 detected, intr_loc;
-> > > +	u16 status, events;
-> > >  	u8 present;
-> > >  	bool link;
-> > >
-> > > @@ -555,31 +555,35 @@ static irqreturn_t pcie_isr(int irq, void *dev_=
-id)
-> > >  	 * serviced, we need to re-inspect Slot Status register after
-> > >  	 * clearing what is presumed to be the last pending interrupt.
-> > >  	 */
-> > > -	intr_loc =3D 0;
-> > > +	events =3D 0;
-> > >  	do {
-> > > -		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &detected);
-> > > -		if (detected =3D=3D (u16) ~0) {
-> > > +		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
-> > > +		if (status =3D=3D (u16) ~0) {
-> > >  			ctrl_info(ctrl, "%s: no response from device\n",
-> > >  				  __func__);
-> > >  			return IRQ_HANDLED;
-> > >  		}
-> > >
-> > > -		detected &=3D (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
-> > > -			     PCI_EXP_SLTSTA_PDC |
-> > > -			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
-> > > -		detected &=3D ~intr_loc;
-> > > -		intr_loc |=3D detected;
-> > > -		if (!intr_loc)
-> > > +		/*
-> > > +		 * Slot Status contains plain status bits as well as event
-> > > +		 * notification bits; right now we only want the event bits.
-> > > +		 */
-> > > +		status &=3D (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
-> > > +			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
-> > > +			   PCI_EXP_SLTSTA_DLLSC);
-> > > +		status &=3D ~events;
-> > > +		events |=3D status;
-> > > +		if (!events)
-> > >  			return IRQ_NONE;
-> > > -		if (detected)
-> > > +		if (status)
-> > >  			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> > > -						   intr_loc);
-> > > -	} while (detected);
-> > > +						   events);
-> > > +	} while (status);
-> > >
-> > > -	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", intr_=
-loc);
-> > > +	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", event=
-s);
-> > >
-> > >  	/* Check Command Complete Interrupt Pending */
-> > > -	if (intr_loc & PCI_EXP_SLTSTA_CC) {
-> > > +	if (events & PCI_EXP_SLTSTA_CC) {
-> > >  		ctrl->cmd_busy =3D 0;
-> > >  		smp_mb();
-> > >  		wake_up(&ctrl->queue);
-> > > @@ -589,24 +593,24 @@ static irqreturn_t pcie_isr(int irq, void *dev_=
-id)
-> > >  		list_for_each_entry(dev, &subordinate->devices, bus_list) {
-> > >  			if (dev->ignore_hotplug) {
-> > >  				ctrl_dbg(ctrl, "ignoring hotplug event %#06x (%s requested no ho=
-tplug)\n",
-> > > -					 intr_loc, pci_name(dev));
-> > > +					 events, pci_name(dev));
-> > >  				return IRQ_HANDLED;
-> >
-> > Does it make sense here also to return IRQ_NONE?
-> =
+Lorenzo
 
-> I don't think so.  Here's my reasoning; see if it makes sense:
-> IRQ_NONE means "I don't see any indication that my device needs
-> service."  If every handler for the IRQ returns IRQ_NONE, the
-> interrupt was spurious, and if we see enough spurious interrupts,
-> we'll disable that IRQ completely.  In this case, our device
-> definitely *did* request service; it's just that a driver wants us to
-> ignore hotplug events.  From the point of view of the kernel, we did
-> handle the IRQ (by ignoring it and clearing the interrupt request).
-> =
-
-
-Yes it does. Thanks a lot for the clarifications.
-
-> > >  			}
-> > >  		}
-> > >  	}
+> 
+> Thanks
+> 
+> Gab 
+> 
+> 
+> > [...]
+> > 
+> > > > For FW that is immutable I really do not see what we can do apart
+> > > > from hardcoding the non-config resources (consumed by a bridge),
+> > > > somehow.
 > > >
-> > > -	if (!(intr_loc & ~PCI_EXP_SLTSTA_CC))
-> > > +	if (!(events & ~PCI_EXP_SLTSTA_CC))
-> > >  		return IRQ_HANDLED;
+> > > Right.  Well, I assume you mean we should hard-code "non-window
+> > > resources consumed directly by a bridge".  If firmware in the field
+> > is
+> > > broken, we should work around it, and that may mean hard-coding some
+> > > resources.
 > > >
-> > >  	/* Check Attention Button Pressed */
-> > > -	if (intr_loc & PCI_EXP_SLTSTA_ABP) {
-> > > +	if (events & PCI_EXP_SLTSTA_ABP) {
-> > >  		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
-> > >  			  slot_name(slot));
-> > >  		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
-> > >  	}
-> > >
-> > >  	/* Check Presence Detect Changed */
-> > > -	if (intr_loc & PCI_EXP_SLTSTA_PDC) {
-> > > +	if (events & PCI_EXP_SLTSTA_PDC) {
-> > >  		pciehp_get_adapter_status(slot, &present);
-> > >  		ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
-> > >  			  present ? "" : "not ", slot_name(slot));
-> > > @@ -615,13 +619,13 @@ static irqreturn_t pcie_isr(int irq, void *dev_=
-id)
-> > >  	}
-> > >
-> > >  	/* Check Power Fault Detected */
-> > > -	if ((intr_loc & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected)=
- {
-> > > +	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-> > >  		ctrl->power_fault_detected =3D 1;
-> > >  		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(slot));
-> > >  		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
-> > >  	}
-> > >
-> > > -	if (intr_loc & PCI_EXP_SLTSTA_DLLSC) {
-> > > +	if (events & PCI_EXP_SLTSTA_DLLSC) {
-> > >  		link =3D pciehp_check_link_active(ctrl);
-> > >  		ctrl_info(ctrl, "slot(%s): Link %s event\n",
-> > >  			  slot_name(slot), link ? "Up" : "Down");
-> >
-> > Intel Deutschland GmbH
-> > Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-> > Tel: +49 89 99 8853-0, www.intel.de
-> > Managing Directors: Christin Eisenschmid, Christian Lamprechter
-> > Chairperson of the Supervisory Board: Nicole Lau
-> > Registered Office: Munich
-> > Commercial Register: Amtsgericht Muenchen HRB 186928
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
+> > > My point is that the hard-coding should not be buried in a driver
+> > > where it's invisible to the rest of the kernel.  If we hard-code it
+> > in
+> > > a quirk that adds _CRS entries, then the kernel will work just like
+> > it
+> > > would if the firmware had been correct in the first place.  The
+> > > resource will appear in /sys/devices/pnp*/*/resources and
+> > /proc/iomem,
+> > > and if we ever used _SRS to assign or move ACPI devices, we would
+> > know
+> > > to avoid the bridge resource.
+> > 
+> > We are in complete agreement here.
+> > 
+> > Thanks,
+> > Lorenzo
+> 
