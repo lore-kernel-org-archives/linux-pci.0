@@ -1,168 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
-Date: Mon, 26 Sep 2016 13:21:13 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8889E1@lhreml507-mbx>
-References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
- <1760643.vMTR5o5E9g@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F8842B6@lhreml507-mbx>
- <10705430.q2aqv5uYO3@wuerfel>
-In-Reply-To: <10705430.q2aqv5uYO3@wuerfel>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "minyard@acm.org" <minyard@acm.org>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- John Garry <john.garry@huawei.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- "zhichang.yuan" <zhichang.yuan02@gmail.com>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- "kantyzc@163.com" <kantyzc@163.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35300 "EHLO
+        mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964901AbcIVVAc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 17:00:32 -0400
+Received: by mail-pa0-f51.google.com with SMTP id oz2so32700711pac.2
+        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 14:00:32 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+Cc: Rajat Jain <rajatja@google.com>
+Subject: [PATCH] rockchip: Increase the Max Credit update interval.
+Date: Thu, 22 Sep 2016 14:00:27 -0700
+Message-Id: <1474578027-64292-1-git-send-email-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
+This increases the likelihood of link state to automatically go to L1
+and save some power.
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 23 September 2016 14:43
-> To: Gabriele Paoloni
-> Cc: zhichang.yuan; linux-arm-kernel@lists.infradead.org;
-> devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
-> linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; John Garry;
-> will.deacon@arm.com; linux-kernel@vger.kernel.org; Yuanzhichang;
-> Linuxarm; xuwei (O); linux-serial@vger.kernel.org;
-> benh@kernel.crashing.org; zourongrong@gmail.com; liviu.dudau@arm.com;
-> kantyzc@163.com
-> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
-> Hip06
-> 
-> On Friday, September 23, 2016 10:23:30 AM CEST Gabriele Paoloni wrote:
-> > Hi Arnd
-> >
-> > > -----Original Message-----
-> > > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > > Sent: 23 September 2016 10:52
-> > > To: zhichang.yuan
-> > > Cc: Gabriele Paoloni; linux-arm-kernel@lists.infradead.org;
-> > > devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com;
-> minyard@acm.org;
-> > > linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; John Garry;
-> > > will.deacon@arm.com; linux-kernel@vger.kernel.org; Yuanzhichang;
-> > > Linuxarm; xuwei (O); linux-serial@vger.kernel.org;
-> > > benh@kernel.crashing.org; zourongrong@gmail.com;
-> liviu.dudau@arm.com;
-> > > kantyzc@163.com
-> > > Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
-> > > Hip06
-> > >
-> > > On Friday, September 23, 2016 12:27:17 AM CEST zhichang.yuan wrote:
-> > > > For this patch sketch, I have a question.
-> > > > Do we call pci_address_to_pio in arch_of_address_to_pio to get
-> the
-> > > > corresponding logical IO port
-> > > > for LPC??
-> > >
-> > >
-> > > No, of course not, that would be silly:
-> > >
-> > > The argument to pci_address_to_pio() is a phys_addr_t, and we we
-> don't
-> > > have one because there is no address associated with your PIO, that
-> > > is the entire point of your driver!
-> > >
-> > > Also, we already know the mapping because this is what the inb/outb
-> > > workaround is looking at, so there is absolutely no reason to call
-> it
-> > > either.
-> >
-> > Ok assume that we do not call pci_address_to_pio() for the ISA bus...
-> > The LPC driver will register its phys address range in io_range_list,
-> > then the IPMI driver probe will retrieve its physical address calling
-> > of_address_to_resource and will use the indirect io to access this
-> > address.
-> >
-> > From the perspective of the indirect IO function the input parameter
-> > is an unsigned long addr that (now) can be either:
-> > 1) an IO token coming from a legacy pci device
-> > 2) a phys address that lives on the LPC bus
-> >
-> > These are conceptually two separate address spaces (and actually they
-> > both start from 0).
-> 
-> Why? Any IORESOURCE_IO address always refers to the logical I/O port
-> range in Linux, not the physical address that is used on a bus.
-> 
-> > If the input parameter can live on different address spaces that are
-> > overlapped, even if I save the used LPC range in arm64_extio_ops-
-> >start/end
-> > there is no way for the indirect IO to tell if the input parameter is
-> > an I/O token or a phys address that belongs to LPC...
->
+The default credit update interval of 7.5 us results in the rootport
+sending UpdateFC packets too often, thus reulting in the link never
+going to L1, and always staying in L0/L0s. The value 24 us was chosen
+after some experiments and peeking over the PCIe bus to see that we do
+enter L1 substate when there is not enough traffic on the PCIe bus.
 
-Assume that in the probe function the LPC drivers calls pci_register_io_range
-for the LPC cpu address range (0 to PCIBIOS_MIN_I0) and does not scan
-the children DT nodes.
+The register value gets lost on a Link speed/width change, and the
+ideal fix should reprogram this on that event (refer "Link Bandwidth
+Management Interrupt Enable" & "Link Autonomous Bandwidth Interrupt Enable"
+in link control reg?). But the rockchip platforms doesn't support hotplug
+and I've verified that the retraining doesn't work as well, so this
+should be OK.
 
-Consider for example the ipmi driver:
-When the reg property is read to retrieve the ipmi <<i/o port>> in
-http://lxr.free-electrons.com/source/drivers/char/ipmi/ipmi_si_intf.c#L2622
-if we do not call pci_address_to_pio in __of_address_to_resource the input
-parameter of inb/outb will be the cpu address of the ipmi (not translated
-to a unique token id).
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+ drivers/pci/host/pcie-rockchip.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-So inb/outb at this stage can be called passing either a cpu address or a
-token io port.
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index c3593e6..e537413 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -95,6 +95,11 @@
+ #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
+ #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
+ #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
++#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
++		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
+ #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+ #define   PCIE_CORE_INT_PRFPE			BIT(0)
+ #define   PCIE_CORE_INT_CRFPE			BIT(1)
+@@ -523,6 +528,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			  PCIE_CORE_PL_CONF_LANE_MASK);
+ 	dev_dbg(dev, "current link width is x%d\n", status);
+ 
++	/* Update credit update interval */
++	status = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
++	status &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
++	status |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
++	rockchip_pcie_write(rockchip, status, PCIE_CORE_TXCREDIT_CFG1);
++
+ 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
+ 			    PCIE_RC_CONFIG_VENDOR);
+ 	rockchip_pcie_write(rockchip,
+-- 
+2.8.0.rc3.226.g39d4020
 
-If we set arm64_extio_ops->start/end to 0 and PCIBIOS_MIN_I0 respectively
-we still cannot tell inside inb/outb if the passed address is a token or
-an LPC cpu address as the ipmi cpu address can overlap with another device
-I/O token...
-
-My suggestion is to call pci_address_to_pio even for devices living on
-the LPC bus; then in the LPC probe we set arm64_extio_ops->start/end to
-the I/O tokens that correspond to the LPC cpu address range (in the LPC probe
-function we call pci_address_to_pio after we have called pci_register_io_range);
-finally in inb/outb we know that we can get only an I/O token as input
-parameter and we check it against arm64_extio_ops->start/end to decide
-whether to call the LPC accessors or readb/writeb...
-
-> The start address is the offset: if you get an address between 'start'
-> and 'end', you subtract the 'start' from it, and use that to call
-> the registered driver function. That works because we can safely
-> assume that the bus address range that the LPC driver registers starts
-> zero.
-
-Sorry I cannot follow what you said here above: <<if you get an address 
-between 'start' and 'end'>>...in which function?
-
-Thanks
-
-Gab
-
-> 
-> 	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
