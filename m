@@ -1,84 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35821 "EHLO
-        mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758132AbcIVWiz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 18:38:55 -0400
-Received: by mail-pa0-f47.google.com with SMTP id oz2so33366673pac.2
-        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 15:38:55 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>
-Cc: Rajat Jain <rajatja@google.com>, rajatxjain@gmail.com
-Subject: [PATCH v2] PCI: rockchip: Increase the Max Credit update interval.
-Date: Thu, 22 Sep 2016 15:38:12 -0700
-Message-Id: <1474583892-8936-1-git-send-email-rajatja@google.com>
-In-Reply-To: <1474578027-64292-1-git-send-email-rajatja@google.com>
-References: <1474578027-64292-1-git-send-email-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Thu, 22 Sep 2016 14:14:31 +0200
+Message-ID: <9178320.n4yHmfyPA3@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <3538381.vOsx75UXVU@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1F881744@lhreml507-mbx>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ John Garry <john.garry@huawei.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ zhichang <zhichang.yuan02@gmail.com>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ "kantyzc@163.com" <kantyzc@163.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This increases the likelihood of link state to automatically go to L1
-and save some power.
+On Thursday, September 22, 2016 11:55:45 AM CEST Gabriele Paoloni wrote:
+> > > I think extending of_empty_ranges_quirk() may be a reasonable
+> > solution.
+> > > What do you think Arnd?
+> > 
+> > I don't really like that idea, that quirk is meant to work around
+> > broken DTs, but we can just make the DT valid and implement the
+> > code properly.
+> 
+> Ok  I understand your point where it is not right to use of_empty_ranges_quirk()
+> As a quirk is used to work around broken HW or broken FW (as in this case)
+> rather than to fix code
+> 
+> What about the following? I think adding the check you suggested next to
+> of_empty_ranges_quirk() is adding the case we need in the right point (thus
+> avoiding any duplication)
+>  
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -457,6 +457,15 @@ static struct of_bus *of_match_bus(struct device_node *np)
+>         return NULL;
+>  }
+>  
+> +static inline int of_isa_indirect_io(struct device_node *np)
+> +{
+> +       /*
+> +        * check if the current node is an isa bus and if indirectio operation
+> +        * are registered
+> +        */
+> +       return (of_bus_isa_match(np) && arm64_extio_ops);
+> +}
+> +
+>  static int of_empty_ranges_quirk(struct device_node *np)
+>  {
+>         if (IS_ENABLED(CONFIG_PPC)) {
+> @@ -503,7 +512,7 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+>          * This code is only enabled on powerpc. --gcl
+>          */
+>         ranges = of_get_property(parent, rprop, &rlen);
+> -       if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
+> +       if (ranges == NULL && !of_empty_ranges_quirk(parent) && !of_isa_indirect_io(parent)) {
+>                 pr_debug("OF: no ranges; cannot translate\n");
+>                 return 1;
+>         }
 
-The default credit update interval of 7.5 us results in the rootport
-sending UpdateFC packets too often, thus reulting in the link never
-going to L1, and always staying in L0/L0s. The value 24 us was chosen
-after some experiments and peeking over the PCIe bus to see that we do
-enter L1 substate when there is not enough traffic on the PCIe bus.
+I don't see what effect that would have. What do you want to
+achieve with this?
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v2: Update the register on Phy link bandwidth changes,
-    since the value gets lost on such events.
+I think all we need from this function is to return '1' if
+we hit an ISA I/O window, and that should happen for the two
+interesting cases, either no 'ranges' at all, or no translation
+for the range in question, so that __of_translate_address can
+return OF_BAD_ADDR, and we can enter the special case
+handling in the caller, that handles it like
 
- drivers/pci/host/pcie-rockchip.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index c3593e6..99e700f 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -95,6 +95,11 @@
- #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
- #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
- #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
-+#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
-+#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
-+#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
-+#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
-+		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
- #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
- #define   PCIE_CORE_INT_PRFPE			BIT(0)
- #define   PCIE_CORE_INT_CRFPE			BIT(1)
-@@ -224,6 +229,17 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- }
- 
-+static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
-+{
-+	u32 val;
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903fe9d2..a18d96843fae 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -685,17 +685,24 @@ static int __of_address_to_resource(struct device_node *dev,
+ 	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
+ 		return -EINVAL;
+ 	taddr = of_translate_address(dev, addrp);
+-	if (taddr == OF_BAD_ADDR)
+-		return -EINVAL;
+ 	memset(r, 0, sizeof(struct resource));
 +
-+	/* Update Tx credit maximum update interval */
-+	val = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
-+	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
-+	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
-+	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
-+}
+ 	if (flags & IORESOURCE_IO) {
+ 		unsigned long port;
+-		port = pci_address_to_pio(taddr);
 +
- static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 				      struct pci_bus *bus, int dev)
- {
-@@ -597,6 +613,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- 		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
- 	} else if (reg & PCIE_CLIENT_INT_PHY) {
- 		dev_dbg(dev, "phy link changes\n");
-+		rockchip_pcie_update_txcredit_mui(rockchip);
- 		rockchip_pcie_clr_bw_int(rockchip);
++		if (taddr == OF_BAD_ADDR)
++			port = arch_of_address_to_pio(dev, addrp)
++		else
++			port = pci_address_to_pio(taddr);
++
+ 		if (port == (unsigned long)-1)
+ 			return -EINVAL;
+ 		r->start = port;
+ 		r->end = port + size - 1;
+ 	} else {
++		if (taddr == OF_BAD_ADDR)
++			return -EINVAL;
++
+ 		r->start = taddr;
+ 		r->end = taddr + size - 1;
  	}
- 
--- 
-2.8.0.rc3.226.g39d4020
 
+
+
+	Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
