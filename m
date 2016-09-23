@@ -1,239 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58400 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932644AbcIBPyc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:54:32 -0400
-Subject: [PATCH v2 04/15] Rename struct rockchip_pcie_port to struct
- rockchip_pcie.
-To: Shawn Lin <shawn.lin@rock-chips.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-kernel@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        linux-rockchip@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>
-Date: Fri, 02 Sep 2016 10:54:27 -0500
-Message-ID: <20160902155426.8650.40395.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:33144 "EHLO
+        mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752993AbcIWLww (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Sep 2016 07:52:52 -0400
+Received: by mail-lf0-f44.google.com with SMTP id b71so64122143lfg.0
+        for <linux-pci@vger.kernel.org>; Fri, 23 Sep 2016 04:52:51 -0700 (PDT)
+Subject: Re: [net-next 5/5] PCI: disable FLR for 82579 device
+To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>, davem@davemloft.net,
+        bhelgaas@google.com
+References: <1474612741-75681-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <1474612741-75681-6-git-send-email-jeffrey.t.kirsher@intel.com>
+Cc: Sasha Neftin <sasha.neftin@intel.com>, netdev@vger.kernel.org,
+        nhorman@redhat.com, sassmann@redhat.com, jogreene@redhat.com,
+        guru.anbalagane@oracle.com, linux-pci@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <50623a1c-085d-73c3-1afe-3d48edd2cc43@cogentembedded.com>
+Date: Fri, 23 Sep 2016 14:52:48 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1474612741-75681-6-git-send-email-jeffrey.t.kirsher@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello.
 
----
- drivers/pci/host/pcie-rockchip.c |   46 +++++++++++++++++++-------------------
- 1 file changed, 23 insertions(+), 23 deletions(-)
+On 9/23/2016 9:39 AM, Jeff Kirsher wrote:
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 3cfb47a..63fb0ebc 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -178,7 +178,7 @@
- 	PCIE_CLIENT_INT_LEGACY_DONE | PCIE_CLIENT_INT_LEGACY | \
- 	PCIE_CLIENT_INT_PHY)
- 
--struct rockchip_pcie_port {
-+struct rockchip_pcie {
- 	void	__iomem *reg_base;		/* DT axi-base */
- 	void	__iomem *apb_base;		/* DT apb-base */
- 	struct	phy *phy;
-@@ -200,17 +200,17 @@ struct rockchip_pcie_port {
- 	struct	irq_domain *irq_domain;
- };
- 
--static u32 rockchip_pcie_read(struct rockchip_pcie_port *rockchip, u32 reg)
-+static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
- {
- 	return readl(rockchip->apb_base + reg);
- }
- 
--static void rockchip_pcie_write(struct rockchip_pcie_port *rockchip, u32 val, u32 reg)
-+static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val, u32 reg)
- {
- 	writel(val, rockchip->apb_base + reg);
- }
- 
--static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *rockchip)
-+static void rockchip_pcie_enable_bw_int(struct rockchip_pcie *rockchip)
- {
- 	u32 status;
- 
-@@ -219,7 +219,7 @@ static void rockchip_pcie_enable_bw_int(struct rockchip_pcie_port *rockchip)
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
- }
- 
--static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *rockchip)
-+static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
- {
- 	u32 status;
- 
-@@ -228,7 +228,7 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie_port *rockchip)
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_BASE + PCIE_RC_CONFIG_LCSR);
- }
- 
--static int rockchip_pcie_valid_device(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 				      struct pci_bus *bus, int dev)
- {
- 	/* access only one slot on each root port */
-@@ -245,7 +245,7 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie_port *rockchip,
- 	return 1;
- }
- 
--static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 *val)
- {
- 	void __iomem *addr = rockchip->apb_base + PCIE_RC_CONFIG_BASE + where;
-@@ -268,7 +268,7 @@ static int rockchip_pcie_rd_own_conf(struct rockchip_pcie_port *rockchip,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 val)
- {
- 	u32 mask, tmp, offset;
-@@ -289,7 +289,7 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *rockchip,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_rd_other_conf(struct rockchip_pcie *rockchip,
- 				       struct pci_bus *bus, u32 devfn,
- 				       int where, int size, u32 *val)
- {
-@@ -316,7 +316,7 @@ static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *rockchip,
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_wr_other_conf(struct rockchip_pcie *rockchip,
- 				       struct pci_bus *bus, u32 devfn,
- 				       int where, int size, u32 val)
- {
-@@ -342,7 +342,7 @@ static int rockchip_pcie_wr_other_conf(struct rockchip_pcie_port *rockchip,
- static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 				 int size, u32 *val)
- {
--	struct rockchip_pcie_port *rockchip = bus->sysdata;
-+	struct rockchip_pcie *rockchip = bus->sysdata;
- 
- 	if (!rockchip_pcie_valid_device(rockchip, bus, PCI_SLOT(devfn))) {
- 		*val = 0xffffffff;
-@@ -358,7 +358,7 @@ static int rockchip_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- static int rockchip_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 				 int where, int size, u32 val)
- {
--	struct rockchip_pcie_port *rockchip = bus->sysdata;
-+	struct rockchip_pcie *rockchip = bus->sysdata;
- 
- 	if (!rockchip_pcie_valid_device(rockchip, bus, PCI_SLOT(devfn)))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -378,7 +378,7 @@ static struct pci_ops rockchip_pcie_ops = {
-  * rockchip_pcie_init_port - Initialize hardware
-  * @rockchip: PCIe port information
-  */
--static int rockchip_pcie_init_port(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- {
- 	int err;
- 	u32 status;
-@@ -579,7 +579,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie_port *rockchip)
- 
- static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- {
--	struct rockchip_pcie_port *rockchip = arg;
-+	struct rockchip_pcie *rockchip = arg;
- 	u32 reg;
- 	u32 sub_reg;
- 
-@@ -642,7 +642,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- 
- static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
- {
--	struct rockchip_pcie_port *rockchip = arg;
-+	struct rockchip_pcie *rockchip = arg;
- 	u32 reg;
- 
- 	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
-@@ -684,7 +684,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
- static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
--	struct rockchip_pcie_port *rockchip;
-+	struct rockchip_pcie *rockchip;
- 	u32 reg;
- 	u32 hwirq;
- 	u32 virq;
-@@ -717,7 +717,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
-  *
-  * Return: '0' on success and error value on failure
-  */
--static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
-@@ -874,7 +874,7 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie_port *rockchip)
- 	return 0;
- }
- 
--static int rockchip_pcie_set_vpcie(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
- {
- 	int err;
- 
-@@ -914,7 +914,7 @@ err_out:
- 	return err;
- }
- 
--static void rockchip_pcie_enable_interrupts(struct rockchip_pcie_port *rockchip)
-+static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
- {
- 	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) &
- 		   (~PCIE_CLIENT_INT_CLI), PCIE_CLIENT_INT_MASK);
-@@ -936,7 +936,7 @@ static const struct irq_domain_ops intx_domain_ops = {
- 	.map = rockchip_pcie_intx_map,
- };
- 
--static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *rockchip)
-+static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
- 	struct device_node *intc = of_get_next_child(dev->of_node, NULL);
-@@ -956,7 +956,7 @@ static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *rockchip)
- 	return 0;
- }
- 
--static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
- 				     int region_no, int type, u8 num_pass_bits,
- 				     u32 lower_addr, u32 upper_addr)
- {
-@@ -996,7 +996,7 @@ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie_port *rockchip,
- 	return 0;
- }
- 
--static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *rockchip,
-+static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
- 				     int region_no, u8 num_pass_bits,
- 				     u32 lower_addr, u32 upper_addr)
- {
-@@ -1026,7 +1026,7 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie_port *rockchip,
- 
- static int rockchip_pcie_probe(struct platform_device *pdev)
- {
--	struct rockchip_pcie_port *rockchip;
-+	struct rockchip_pcie *rockchip;
- 	struct device *dev = &pdev->dev;
- 	struct pci_bus *bus, *child;
- 	struct resource_entry *win;
+> From: Sasha Neftin <sasha.neftin@intel.com>
+>
+> 82579 has a problem reattaching itself after the device is detached.
+> The bug was reported by Redhat. The suggested fix is to disable
+> FLR capability in PCIe configuration space.
+>
+> Reproduction:
+> Attach the device to a VM, then detach and try to attach again.
+>
+> Fix:
+> Disable FLR capability to prevent the 82579 from hanging.
+>
+> Signed-off-by: Sasha Neftin <sasha.neftin@intel.com>
+> Tested-by: Aaron Brown <aaron.f.brown@intel.com>
+> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> ---
+>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 44e0ff3..59fba6e 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4431,3 +4431,24 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
+>  	}
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+> +/*
+> + * Workaround FLR issues for 82579
+> + * This code disables the FLR (Function Level Reset) via PCIe, in order
+> + * to workaround a bug found while using device passthrough, where the
+> + * interface would become non-responsive.
+> + * NOTE: the FLR bit is Read/Write Once (RWO) in config space, so if
+> + * the BIOS or kernel writes this register * then this workaround will
+                                               ^
+    That asterisk shouldn't be there.
+
+> + * not work.
+> + */
+> +static void quirk_intel_flr_cap_dis(struct pci_dev *dev)
+> +{
+> +	int pos = pci_find_capability(dev, PCI_CAP_ID_AF);
+
+    Should be an empty line here...
+
+> +	if (pos) {
+> +		u8 cap;
+
+    And here...
+
+> +		pci_read_config_byte(dev, pos + PCI_AF_CAP, &cap);
+> +		cap = cap & (~PCI_AF_CAP_FLR);
+
+    () not needed.
+
+> +		pci_write_config_byte(dev, pos + PCI_AF_CAP, cap);
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_flr_cap_dis);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_flr_cap_dis);
+
+MBR, Sergei
 
