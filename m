@@ -1,68 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: 4.7 regression: ACPI: No IRQ available for PCI Interrupt Link
- [LNKD]. Try pci=noacpi or acpi=off
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-References: <201609251512.05657.linux@rainbow-software.org>
- <201609300844.24325.linux@rainbow-software.org>
- <677698369b23f5a6bcf3a66fed78802f@codeaurora.org>
- <201609301756.25894.linux@rainbow-software.org>
- <94aee80e-f7c3-5732-ef1e-08e3ecb19e5e@codeaurora.org>
- <CAJZ5v0jr=KEfjo3HH6M2WhPCPCB9w1DYGB_VHhXDJXwjh76Pmg@mail.gmail.com>
- <5ee9b263-ed42-ee16-057e-2f4c1d2c1dc6@codeaurora.org>
- <CAJZ5v0isjggpiSnFYy_1omEorTD6HSWe2jCsRmvugyH6qiYq2g@mail.gmail.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>, wim@djo.tudelft.nl,
-        ravikanth.nalla@hpe.com
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <a1d4d971-2737-c831-1f34-93f2be449478@codeaurora.org>
-Date: Fri, 30 Sep 2016 17:14:40 -0400
+Return-Path: <eric.auger@redhat.com>
+Return-Path: <eric.auger@redhat.com>
+Subject: Re: [PATCH V11 0/8] Introduce ACPI world to ITS irqchip
+To: Tomasz Nowicki <tn@semihalf.com>, marc.zyngier@arm.com, tglx@linutronix.de,
+        jason@lakedaemon.net, rjw@rjwysocki.net, helgaas@kernel.org,
+        rafael@kernel.org, Lorenzo.Pieralisi@arm.com
+References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+Cc: graeme.gregory@linaro.org, al.stone@linaro.org,
+        linaro-acpi@lists.linaro.org, catalin.marinas@arm.com,
+        will.deacon@arm.com, linux-kernel@vger.kernel.org,
+        okaya@codeaurora.org, linux-acpi@vger.kernel.org,
+        robert.richter@caviumnetworks.com, hanjun.guo@linaro.org,
+        ddaney.cavm@gmail.com, linux-pci@vger.kernel.org, shijie.huang@arm.com,
+        mw@semihalf.com, andrea.gallo@linaro.org,
+        linux-arm-kernel@lists.infradead.org
+From: Auger Eric <eric.auger@redhat.com>
+Message-ID: <d49bfc6c-c776-73b9-8444-bb5052a9af35@redhat.com>
+Date: Fri, 23 Sep 2016 14:30:59 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0isjggpiSnFYy_1omEorTD6HSWe2jCsRmvugyH6qiYq2g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/30/2016 5:04 PM, Rafael J. Wysocki wrote:
->> >
->> > I hope it makes sense now. I tend to skip details sometimes. Feel free to
->> > send more questions.
-> Thanks for the information!
+Hi,
+
+On 12/09/2016 20:32, Tomasz Nowicki wrote:
+> The series builds the PCI/MSI domain stack based on initial IORT driver
+> which is added in first place. As a reference please see IORT spec:
+> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
 > 
-> IIUC, basically, what you are proposing would be to restore the old
-> penalizing method for IRQs in the 0-255 range and use the new approach
-> for the rest, right?
+> Tested on Cavium ThunderX server and Qualcomm Technologies server platform QDF2XXX.
+> The patches can be found here:
+> https://github.com/semihalf-nowicki-tomasz/linux.git (its-acpi-v11)
 
-Correct. 
+Tested-by: Eric Auger <eric.auger@redhat.com>
+on a Cavium QEMU guest with mach-virt.
 
-> 
-> What's the drawback, if any?
+Thanks
 
-I don't see any drawback to be honest. The reason why I got rid of these ISA
-API functions was to remove some of the x86ism from ACPI code. This was Bjorn's
-request to clean it up and we failed in two places so far. 
-
-1. acpi_irq_penalty_init
-2. acpi_penalize_sci_irq
-
-and we ended up reverting both of these changes. The reverts are all because of the
-fact that these APIs are called asynchronously without any coordination with the
-PCI Link object or the interrupt controller driver about when it is a good time to be
-called.
-
-During this debug, I learnt that acpi_penalize_isa_irq gets called before even ACPI
-gets to initialize and relies on static IRQ array for keeping the penalties.
+Eric
 
 > 
-> Thanks,
-> Rafael
+> v10 -> v11
+> - rebased against v4.8-rc6
+> - bug fix for iort_match_node_callback() error handling
+> - patch 1-2 changelog updates
 > 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> v9 -> v10
+> - error handling improvements for iort_match_node_callback() but no functional changes
+> - iort.h -> acpi_iort.h header name change
+> - style improvements
+> 
+> v8 -> v9
+> - rebased against v4.8-rc4
+> - move root IORT pointer validation to one place iort_scan_node()
+> - function names & Kconfig option name improvements
+> - remove annoying dev_err() appearances for non-IORT users
+> - for debug purpose print full ITS resource range
+> 
+> v7 -> v8
+> - rebased against v4.8-rc1
+> - move IORT support under new drivers/acpi/arm64 directory
+> - memory leak fix for iort_match_node_callback()
+> - iort_node_map_rid() algorithm improvements
+> - fix RID match check in iort_id_map()
+> - fix typos and white spaces
+> 
+> v6 -> v7
+> - rebased against irq/irqchip-4.8
+> - improvements for IORT ID mapping
+> - call IORT init call from acpi_init() instead of arch_initcall()
+> - split IORT driver in to two parts: core and ITS/MSI
+> 
+> v5 -> v6
+> - added locking mechanism for IORT list with domain token
+> - IORT function name improvements
+> - extended IORT RID mapping helper
+> - reworked IORT to be more SMMU friendly
+> - IORT functions which map RID and find corresponding domain are not
+>   PCI specific any more (struct pci_dev -> struct device)
+> - bug fixes
+> 
+> v4 -> v5
+> - rebased against v4.7-rc1
+> - drop generic layer and call IORT functions directly
+> - improve resource abstraction and string formatting
+> 
+> v3 -> v4
+> - rebased against v4.5
+> - add ACPI support for IRQ domain handling on a per-device basis
+> - reorder domain setup step
+> - improve error handling
+> - code style improvements
+> 
+> v2 -> v3
+> - rebased on top of 4.4
+> - fixes and improvements for redistributor init via GICC structures
+> - fixes as per kbuild reports
+> 
+> v1 -> v2
+> - rebased on top of 4.4-rc4
+> - use pci_msi_domain_get_msi_rid for requester ID to device ID translation
+> 
+> Tomasz Nowicki (8):
+>   ACPI: I/O Remapping Table (IORT) initial support
+>   ACPI: Add new IORT functions to support MSI domain handling
+>   PCI/MSI: Setup MSI domain on a per-device basis using IORT ACPI table
+>   irqchip/gicv3-its: Cleanup for ITS domain initialization
+>   irqchip/gicv3-its: Refactor ITS DT init code to prepare for ACPI
+>   irqchip/gicv3-its: Probe ITS in the ACPI way
+>   irqchip/gicv3-its: Factor out PCI-MSI part that might be reused for
+>     ACPI
+>   irqchip/gicv3-its: Use MADT ITS subtable to do PCI/MSI domain
+>     initialization
+> 
+>  drivers/acpi/Kconfig                     |   4 +
+>  drivers/acpi/Makefile                    |   2 +
+>  drivers/acpi/arm64/Kconfig               |   6 +
+>  drivers/acpi/arm64/Makefile              |   1 +
+>  drivers/acpi/arm64/iort.c                | 366 +++++++++++++++++++++++++++++++
+>  drivers/acpi/bus.c                       |   2 +
+>  drivers/irqchip/Kconfig                  |   1 +
+>  drivers/irqchip/irq-gic-v3-its-pci-msi.c |  88 ++++++--
+>  drivers/irqchip/irq-gic-v3-its.c         | 171 +++++++++++----
+>  drivers/irqchip/irq-gic-v3.c             |   7 +-
+>  drivers/pci/msi.c                        |  11 +-
+>  include/linux/acpi_iort.h                |  42 ++++
+>  include/linux/irqchip/arm-gic-v3.h       |   4 +-
+>  13 files changed, 635 insertions(+), 70 deletions(-)
+>  create mode 100644 drivers/acpi/arm64/Kconfig
+>  create mode 100644 drivers/acpi/arm64/Makefile
+>  create mode 100644 drivers/acpi/arm64/iort.c
+>  create mode 100644 include/linux/acpi_iort.h
+> 
