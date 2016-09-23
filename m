@@ -1,61 +1,85 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH V6 0/5] ECAM quirks handling for ARM64 platforms
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <20160920192636.GB4941@localhost>
- <0429663d51ed8e93fb0c96261dd2ecc7@codeaurora.org>
- <20160921131107.GB10804@localhost>
- <25529f96-3e80-0524-82d8-6eeb517df5b5@codeaurora.org>
- <20160921173129.GA20006@localhost>
-Cc: cov@codeaurora.org, Tomasz Nowicki <tn@semihalf.com>,
- will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
- Lorenzo.Pieralisi@arm.com, arnd@arndb.de, hanjun.guo@linaro.org,
- jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
- robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
- jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <3137f181-1c23-ca56-fbca-b2cdbabd784b@codeaurora.org>
-Date: Wed, 21 Sep 2016 13:34:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160921173129.GA20006@localhost>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:34316 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754131AbcIWAvj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 20:51:39 -0400
+Received: by mail-pf0-f171.google.com with SMTP id p64so35908531pfb.1
+        for <linux-pci@vger.kernel.org>; Thu, 22 Sep 2016 17:51:38 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+Cc: rajatxjain@gmail.com, Rajat Jain <rajatja@google.com>
+Subject: [PATCH v3] PCI: rockchip: Increase the Max Credit update interval.
+Date: Thu, 22 Sep 2016 17:50:42 -0700
+Message-Id: <1474591842-27836-1-git-send-email-rajatja@google.com>
+In-Reply-To: <c7a733c8-df1c-3917-9874-15496fe95758@rock-chips.com>
+References: <c7a733c8-df1c-3917-9874-15496fe95758@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/21/2016 1:31 PM, Bjorn Helgaas wrote:
-> On Wed, Sep 21, 2016 at 10:07:36AM -0400, Sinan Kaya wrote:
->> On 9/21/2016 9:11 AM, Bjorn Helgaas wrote:
->>> On Tue, Sep 20, 2016 at 09:15:14PM -0400, cov@codeaurora.org wrote:
->>>> Hi Bjorn, Thomasz,
->>>>
->>
->>>>
->>>> Did you delete this because there were no current users, because you'd
->>>> prefer users just use "-1", or for some other reason?
->>>
->>> I removed it because there were no users of it and, more importantly,
->>> the code doesn't implement support for it.
->>
->> Is it possible to queue up Cov's patch as part of this effort once he 
->> rebases and sends an updated version? Cov will have to implement something
->> else now.
-> 
-> I haven't see Cov's patch (patchwork doesn't follow URLs to git trees,
-> and I normally don't either).  If they show up on the mailing list,
-> I'll take a look, of course.
-> 
-> Bjorn
-> 
+This increases the likelihood of link state to automatically go to L1
+and save some power.
 
-Thanks, I talked to Cov today. He's getting ready to post the rebased patch
-once he completes testing.
+The default credit update interval of 7.5 us results in the rootport
+sending UpdateFC-P and UpdateFC-NP packets too often, thus resulting
+in the link never going to L1, and always staying in L0/L0s. The
+value 24 us was chosen after some experiments and peeking over the
+PCIe bus to see that we do enter L1 substate when there is not enough
+traffic on the PCIe bus.
 
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v3: Fix the commit message.
+v2: Use the link bandwidth change irq to program the register.
+
+ drivers/pci/host/pcie-rockchip.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index c3593e6..99e700f 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -95,6 +95,11 @@
+ #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
+ #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
+ #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
++#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
++#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
++		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
+ #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+ #define   PCIE_CORE_INT_PRFPE			BIT(0)
+ #define   PCIE_CORE_INT_CRFPE			BIT(1)
+@@ -224,6 +229,17 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+ }
+ 
++static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
++{
++	u32 val;
++
++	/* Update Tx credit maximum update interval */
++	val = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
++	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
++	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
++	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
++}
++
+ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 				      struct pci_bus *bus, int dev)
+ {
+@@ -597,6 +613,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ 		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
+ 	} else if (reg & PCIE_CLIENT_INT_PHY) {
+ 		dev_dbg(dev, "phy link changes\n");
++		rockchip_pcie_update_txcredit_mui(rockchip);
+ 		rockchip_pcie_clr_bw_int(rockchip);
+ 	}
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.8.0.rc3.226.g39d4020
+
