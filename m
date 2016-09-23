@@ -1,94 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:43045 "EHLO
-        mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755212AbcITPwA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Sep 2016 11:52:00 -0400
-From: Yuval Mintz <Yuval.Mintz@qlogic.com>
-To: <linux-pci@vger.kernel.org>
-CC: <netdev@vger.kernel.org>, <derek.chickles@caviumnetworks.com>,
-        Yuval Mintz <Yuval.Mintz@qlogic.com>,
-        Yuval Mintz <Yuval.Mintz@caviumnetworks.com>
-Subject: [RFC] PCI: Allow sysfs control over totalvfs
-Date: Tue, 20 Sep 2016 18:49:48 +0300
-Message-ID: <1474386588-16337-1-git-send-email-Yuval.Mintz@qlogic.com>
+Received: from lucky1.263xmail.com ([211.157.147.134]:40812 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964977AbcIWBe3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 21:34:29 -0400
+Subject: Re: [PATCH] PCI: rockchip: Support quirk to disable 5 GT/s (PCIe 2.x)
+ link rate
+To: Brian Norris <briannorris@chromium.org>
+References: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+ <b9527acf-e3cf-19d2-b8fc-0a59637e9598@rock-chips.com>
+ <20160923011518.GA97876@google.com>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <2f111fdf-f4a5-2f8a-0121-1a566e6527c8@rock-chips.com>
+Date: Fri, 23 Sep 2016 09:34:15 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20160923011518.GA97876@google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Sorry in advance if this was already discussed in the past]
+Hi Brain,
 
-Some of the HW capable of SRIOV has resource limitations, where the
-PF and VFs resources are drawn from a common pool.
-In some cases, these limitations have to be considered early during
-chip initialization and can only be changed by tearing down the
-configuration and re-initializing.
-As a result, drivers for such HWs sometimes have to make unfavorable
-compromises where they reserve sufficient resources to accomadate
-the maximal number of VFs that can be created - at the expanse of
-resources that could have been used by the PF.
+在 2016/9/23 9:15, Brian Norris 写道:
+> Hi Shawn,
+>
+> On Fri, Sep 23, 2016 at 08:27:35AM +0800, Shawn Lin wrote:
+>> 在 2016/9/23 1:31, Brian Norris 写道:
+>>> rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+>>> boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+>>> ms waiting for training that will never happen, let's support a device
+>>> tree quirk flag to disable generation 2 speeds entirely.
+>>
+>> I was thinking about could we get target link speed [TLS] from the
+>> end-point when finishing Gen1 training, but it seems that the location
+>> of ep's TLS is not fixed.
+>
+> Indeed it's not, but we could probably handle that if absolutely needed
+> (get a reference to the root port pci_dev somehow, then use the existing
+> helpers to walk children and get the computed ->pcie_cap offset). But
 
-If users were able to provide 'hints' regarding the required number
-of VFs *prior* to driver attachment, then such compromises could be
-avoided. As we already have sysfs nodes that can be queried for the
-number of totalvfs, it makes sense to let the user reduce the number
-of said totalvfs using same infrastrucure.
-Then, we can have drivers supporting SRIOV take that value into account
-when deciding how much resources to reserve, allowing the PF to benefit
-from the difference between the configuration space value and the actual
-number needed by user.
+Right, we could probably walk through the ep's cap and get this, but
+sure, it's not the problem here, and that is maybe what I want to dig
+more later.
 
-Signed-off-by: Yuval Mintz <Yuval.Mintz@caviumnetworks.com>
----
- drivers/pci/pci-sysfs.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+Thanks for sharing this.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index bcd10c7..c1546f8 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -449,6 +449,30 @@ static ssize_t sriov_totalvfs_show(struct device *dev,
- 	return sprintf(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
- }
- 
-+static ssize_t sriov_totalvfs_store(struct device *dev,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	u16 max_vfs;
-+	int ret;
-+
-+	ret = kstrtou16(buf, 0, &max_vfs);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (pdev->driver) {
-+		dev_info(&pdev->dev,
-+			 "Can't change totalvfs while driver is attached\n");
-+		return -EUSERS;
-+	}
-+
-+	ret = pci_sriov_set_totalvfs(pdev, max_vfs);
-+	if (ret)
-+		return ret;
-+
-+	return count;
-+}
- 
- static ssize_t sriov_numvfs_show(struct device *dev,
- 				 struct device_attribute *attr,
-@@ -516,7 +540,9 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 	return count;
- }
- 
--static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
-+static struct device_attribute sriov_totalvfs_attr =
-+		__ATTR(sriov_totalvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
-+		       sriov_totalvfs_show, sriov_totalvfs_store);
- static struct device_attribute sriov_numvfs_attr =
- 		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
- 		       sriov_numvfs_show, sriov_numvfs_store);
+> that's not the problem here; we have 5 GT/s devices, but they are not
+> running at 5 GT/s because link training can't pass. We have been told
+> there are still SI issues, and so you wouldn't really be able to turn
+> this out at runtime anyway.
+>
+> But sure, I suppose that'd be a way to (for chips/boards that don't have
+> SI issues) determine whether or not to attempt gen2 training at all.
+> That does sound better than just timing out after 500ms...
+>
+>> Anyway, your patch looks sane to me as we leave gen2 as default and
+>> people could drop that feature by adding rockchip,disable-gen2 to
+>> their dts if they are sure the board would never supoort Gen2 devices.
+>>
+>> Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+>
+> Thanks.
+>
+> Brian
+>
+>
+>
+
+
 -- 
-1.9.3
+Best Regards
+Shawn Lin
 
