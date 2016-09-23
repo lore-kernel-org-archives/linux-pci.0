@@ -1,65 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40232 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759300AbcIWTM3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Sep 2016 15:12:29 -0400
-Date: Fri, 23 Sep 2016 14:12:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv3 2/2] x86/vmd: Add PCI domain specific LED option
-Message-ID: <20160923191223.GA16019@localhost>
-References: <1473779140-4016-1-git-send-email-keith.busch@intel.com>
- <1473779140-4016-2-git-send-email-keith.busch@intel.com>
- <20160923143441.GF1514@localhost>
- <20160923165702.GA20686@keith>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 23 Sep 2016 16:46:16 -0500
+From: Rob Herring <robh@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        devicetree@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH] PCI: rockchip: Support quirk to disable 5 GT/s (PCIe
+ 2.x) link rate
+Message-ID: <20160923214616.GA30743@rob-hp-laptop>
+References: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160923165702.GA20686@keith>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 23, 2016 at 12:57:02PM -0400, Keith Busch wrote:
-> On Fri, Sep 23, 2016 at 09:34:41AM -0500, Bjorn Helgaas wrote:
-> > I made the necessary changes to match the renaming I did in the first
-> > patch, and I also used plain old "#ifdef" instead of "#if IS_ENABLED"
-> > since the rest of the file uses the former style.  If there's a reason
-> > to switch, we should change the whole file in a separate patch so we
-> > can explain the rationale.
+On Thu, Sep 22, 2016 at 10:31:18AM -0700, Brian Norris wrote:
+> rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+> boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+> ms waiting for training that will never happen, let's support a device
+> tree quirk flag to disable generation 2 speeds entirely.
 > 
-> The check was "IS_ENABLED" because VMD can be a loadable module, which
-> fails the ifdef check. I see Fengguang 0'dayed it using the module
-> configuration option. I can send you a fix based on your pci/hotplug
-> branch, or revert and apply the original patch if you prefer.
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
+>  drivers/pci/host/pcie-rockchip.c                   | 57 +++++++++++++---------
+>  2 files changed, 37 insertions(+), 22 deletions(-)
 
-I didn't realize VMD could be a loadable module, and I didn't realize
-that would make a difference for the config symbol.
-
-BTW, the "Volume Management Device Driver" config item appears by
-itself in the top-level menuconfig menu.  That seems a little ...
-presumptuous; is it what you intended?
-
-It took me a while, but I did eventually figure out why #ifdef doesn't
-work -- we generate a different include/generated/autoconf.h symbol
-for modules:
-
-                 built-in                 loadable module
-                 ---------------------    ---------------------------
-  .config        CONFIG_VMD=y             CONFIG_VMD=m
-  autoconf.h     #define CONFIG_VMD 1     #define CONFIG_VMD_MODULE 1
-
-Anyway, I fixed it by using IS_ENABLED() again.
-
-I might propose a comment update to help anybody else who stumbles
-over this.  It was kind of annoying to puzzle this out.
-
-> BTW, you had asked me not to split a series when incremental fixes
-> touched a single patch. I didn't resend the whole series here, and while
-> you got the right patches, I apologize for making it more difficult to find.
-
-No problem, I was just paying more attention this time :)
-Except for IS_ENABLED(), anyway.
-
-Bjorn
+Acked-by: Rob Herring <robh@kernel.org>
