@@ -1,229 +1,159 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:22801 "EHLO
-        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1161745AbcIZRgO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 13:36:14 -0400
-Subject: Re: [PATCH v5 02/16] IB/pvrdma: Add user-level shared functions
-To: Leon Romanovsky <leon@kernel.org>
-References: <cover.1474759181.git.aditr@vmware.com>
- <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
- <20160925072624.GV4088@leon.nu>
- <9c9f3668-ff2b-f421-2270-3193c0f62cc9@vmware.com>
- <20160926061338.GH4088@leon.nu>
-CC: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-From: Adit Ranadive <aditr@vmware.com>
-Message-ID: <90c86f40-7a7d-4075-0c55-336d4f2ed443@vmware.com>
-Date: Mon, 26 Sep 2016 10:33:08 -0700
+Return-Path: <cov@codeaurora.org>
+Return-Path: <cov@codeaurora.org>
+Subject: Re: [PATCH V6 0/5] ECAM quirks handling for ARM64 platforms
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <20160920192636.GB4941@localhost>
+ <0429663d51ed8e93fb0c96261dd2ecc7@codeaurora.org>
+ <20160921131107.GB10804@localhost>
+ <304377c6-554d-60ea-30df-006e557c7279@codeaurora.org>
+ <20160922230806.GB1514@localhost>
+Cc: Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+ catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+ arnd@arndb.de, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+ jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+From: Christopher Covington <cov@codeaurora.org>
+Message-ID: <e1b1c38f-0779-82a5-5d3c-b164215a4ed3@codeaurora.org>
+Date: Fri, 23 Sep 2016 14:41:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160926061338.GH4088@leon.nu>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160922230806.GB1514@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 25, 2016 at 23:13:38PM -0700, Leon Romanovsky wrote:
-> On Sun, Sep 25, 2016 at 09:22:11PM -0700, Adit Ranadive wrote:
->> On Sun, Sep 25 2016 at 10:26:24AM +0300, Leon Romanovsky wrote:
-> > > > On Sat, Sep 24, 2016 at 04:21:26PM -0700, Adit Ranadive wrote:
-> > > > We share some common structures with the user-level driver. This patch adds
-> > > > those structures and shared functions to traverse the QP/CQ rings.
-> >
-> > <...>
-> >
-> > > > +
-> > > > +#include <linux/types.h>
-> > > > +
-> > > > +#define PVRDMA_UVERBS_ABI_VERSION	3
-> > > > +#define PVRDMA_BOARD_ID			1
-> > > > +#define PVRDMA_REV_ID			1
-> > > >
-> > > > Please don't add defines which you are not using in the library and the
-> > > > two above are not in use.
-> > > >
-> >
-> > I'll move these to the pvrdma.h file.
-> >
-> > <...>
-> >
-> > > > diff --git a/include/uapi/rdma/pvrdma-uapi.h b/include/uapi/rdma/pvrdma-uapi.h
-> > > > new file mode 100644
-> > > > index 0000000..430d8a5
-> >
-> > <...>
-> >
-> > > > +
-> > > > +#ifndef __PVRDMA_UAPI_H__
-> > > > +#define __PVRDMA_UAPI_H__
-> > > > +
-> > > > +#include <linux/types.h>
-> > > > +
-> > > > +#define PVRDMA_VERSION 17
-> > > >
-> > > > What do you plan to do with this VERSION?
-> > > > How is it related to ABI?
-> > > >
-> >
-> > Not related. This is only for the driver to know which APIs to support.
-> > For example, an older driver would still be able to work with a newer
-> > device. I can move this to pvrdma.h as well.
-> >
-> > To be honest, I thought I can move this file into the uapi folder since
-> > the structures here are shared with the user-level library. Based on
-> > your comments in this thread and the other ones, I think it makes sense
-> > to move this file back to the pvrdma driver folder and rename it
-> > (pvrdma_wqe.h?) to avoid confusion. There might still be some duplicate
-> > code (especially the UAR offsets and WQE structs) here and in our
-> > user-level library.
-> >
-> > Let me know if that makes sense.
-> >
-> > > > +
-> > > > +#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
-> > > > +#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
-> > > > +#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
-> > > > +#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
-> > > > +#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
-> > > > +#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
-> > > > +#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
-> > > > +#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
-> > > > +#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
-> > > >
-> > > > +
-> > > > +/* PVRDMA atomic compare and swap */
-> > > > +struct pvrdma_exp_cmp_swap {
-> > > >
-> > > > _EXP_ looks very similar to MLNX_OFED naming convention.
-> > > >
-> >
-> > Yes, the operation was based on that. Any concerns?
-> > I can rename this and the one below.
+On 09/22/2016 07:08 PM, Bjorn Helgaas wrote:
+> On Wed, Sep 21, 2016 at 06:40:47PM -0400, Christopher Covington wrote:
+>> Hi Bjorn,
+>>
+>> On 09/21/2016 09:11 AM, Bjorn Helgaas wrote:
+>>> On Tue, Sep 20, 2016 at 09:15:14PM -0400, cov@codeaurora.org wrote:
+>>
+>>>>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>>>>> index eb14f74..bb3b8ad 100644
+>>>>> --- a/drivers/acpi/pci_mcfg.c
+>>>>> +++ b/drivers/acpi/pci_mcfg.c
+>>>>> @@ -42,86 +42,59 @@ struct mcfg_fixup {
+>>>>> 	struct resource cfgres;
+>>>>> };
+>>>>>
+>>>>> -#define MCFG_DOM_ANY			(-1)
+>>>>
+>>>> Did you delete this because there were no current users, because you'd
+>>>> prefer users just use "-1", or for some other reason?
+>>>
+>>> I removed it because there were no users of it and, more importantly,
+>>> the code doesn't implement support for it.
+>>
+>> It looks like a stale "First match against PCI topology <domain:bus>..."
+>> comment remains.
 > 
-> Yes, please.
-> The common practice in IB subsystem is to use _ex_ notation for such
-> extended structures.
+> Yep.  I removed the comment since it's sort of obvious from the code.
+> I also renamed a few things and pulled the match out into a helper
+> function.
+> 
+> I also changed the dmesg note: I think the actual resource and the
+> name of the pci_ecam_ops is more interesting than the table IDs (which
+> I think are already elsewhere in the dmesg log).
+
+It looks like the resource is already being printed from
+drivers/pci/ecam.c:102.
+
+> Here's the incremental diff, which I can't really test:
+
+Here's what it looks like for me:
+
+ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
+acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+acpi PNP0A08:02: _OSC: platform does not support [PCIeHotplug]
+acpi PNP0A08:02: _OSC: OS now controls [PME AER PCIeCapability]
+acpi PNP0A08:02: MCFG quirk: ECAM space for [bus 00-1f] at [mem 0xa0000000000-0xa0001ffffff] with pci_3
+acpi PNP0A08:02: ECAM at [mem 0xa0000000000-0xa0001ffffff] for [bus 00-1f]
+Remapped I/O 0x00000affffff0000 to [io  0x10000-0x1ffff window]
+PCI host bridge to bus 0002:00
+
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index 245b79f..0b36bc5 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -36,7 +36,7 @@ struct mcfg_fixup {
+>  	char oem_id[ACPI_OEM_ID_SIZE + 1];
+>  	char oem_table_id[ACPI_OEM_TABLE_ID_SIZE + 1];
+>  	u32 oem_revision;
+> -	u16 seg;
+> +	u16 segment;
+>  	struct resource bus_range;
+>  	struct pci_ecam_ops *ops;
+>  	struct resource cfgres;
+> @@ -102,30 +102,37 @@ static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
+>  static char mcfg_oem_table_id[ACPI_OEM_TABLE_ID_SIZE];
+>  static u32 mcfg_oem_revision;
+>  
+> -static void pci_mcfg_match_quirks(struct acpi_pci_root *root,
+> +static int pci_mcfg_quirk_matches(struct mcfg_fixup *f, u16 segment,
+> +				  struct resource *bus_range)
+> +{
+> +	if (!memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
+> +	    !memcmp(f->oem_table_id, mcfg_oem_table_id,
+> +	            ACPI_OEM_TABLE_ID_SIZE) &&
+> +	    f->oem_revision == mcfg_oem_revision &&
+> +	    f->segment == segment &&
+> +	    resource_contains(&f->bus_range, bus_range))
+> +		return 1;
+> +
+> +	return 0;
+> +}
+> +
+> +static void pci_mcfg_apply_quirks(struct acpi_pci_root *root,
+>  				  struct resource *cfgres,
+>  				  struct pci_ecam_ops **ecam_ops)
+>  {
+> +	u16 segment = root->segment;
+> +	struct resource *bus_range = &root->secondary;
+>  	struct mcfg_fixup *f;
+>  	int i;
+>  
+> -	/*
+> -	 * First match against PCI topology <domain:bus> then use OEM ID, OEM
+> -	 * table ID, and OEM revision from MCFG table standard header.
+> -	 */
+>  	for (i = 0, f = mcfg_quirks; i < ARRAY_SIZE(mcfg_quirks); i++, f++) {
+> -		if (!memcmp(f->oem_id, mcfg_oem_id, ACPI_OEM_ID_SIZE) &&
+> -		    !memcmp(f->oem_table_id, mcfg_oem_table_id,
+> -		            ACPI_OEM_TABLE_ID_SIZE) &&
+> -		    f->oem_revision == mcfg_oem_revision &&
+> -		    f->seg == root->segment &&
+> -		    resource_contains(&f->bus_range, &root->secondary)) {
+> +		if (pci_mcfg_quirk_matches(f, segment, bus_range)) {
+>  			if (f->cfgres.start)
+>  				*cfgres = f->cfgres;
+>  			if (f->ops)
+>  				*ecam_ops =  f->ops;
+> -			dev_info(&root->device->dev, "Applying PCI MCFG quirks for %s %s rev: %d\n",
+> -				 f->oem_id, f->oem_table_id, f->oem_revision);
+> +			dev_info(&root->device->dev, "MCFG quirk: ECAM space for %pR at %pR with %ps\n",
+> +				 bus_range, cfgres, *ecam_ops);
+>  			return;
+>  		}
+>  	}
+> @@ -173,7 +180,7 @@ skip_lookup:
+>  	 * MCFG does not have it.  Invalid CFG start address means MCFG
+>  	 * firmware bug or we need another quirk in array.
+>  	 */
+> -	pci_mcfg_match_quirks(root, &res, &ops);
+> +	pci_mcfg_apply_quirks(root, &res, &ops);
+>  	if (!res.start)
+>  		return -ENXIO;
+>  
 > 
 
-Ok.
 
-> >
-> > > > +	__u64 swap_val;
-> > > > +	__u64 compare_val;
-> > > > +	__u64 swap_mask;
-> > > > +	__u64 compare_mask;
-> > > > +};
-> > > > +
-> > > > +/* PVRDMA atomic fetch and add */
-> > > > +struct pvrdma_exp_fetch_add {
-> > > >
-> > > > The same as above.
-> > > >
-> > > > +	__u64 add_val;
-> > > > +	__u64 field_boundary;
-> > > > +};
-> > > > +
-> > > > +/* PVRDMA address vector. */
-> > > > +struct pvrdma_av {
-> > > > +	__u32 port_pd;
-> > > > +	__u32 sl_tclass_flowlabel;
-> > > > +	__u8 dgid[16];
-> > > > +	__u8 src_path_bits;
-> > > > +	__u8 gid_index;
-> > > > +	__u8 stat_rate;
-> > > > +	__u8 hop_limit;
-> > > > +	__u8 dmac[6];
-> > > > +	__u8 reserved[6];
-> > > > +};
-> > > > +
-> > > > +/* PVRDMA scatter/gather entry */
-> > > > +struct pvrdma_sge {
-> > > > +	__u64   addr;
-> > > > +	__u32   length;
-> > > > +	__u32   lkey;
-> > > > +};
-> > > > +
-> > > > +/* PVRDMA receive queue work request */
-> > > > +struct pvrdma_rq_wqe_hdr {
-> > > > +	__u64 wr_id;		/* wr id */
-> > > > +	__u32 num_sge;		/* size of s/g array */
-> > > > +	__u32 total_len;	/* reserved */
-> > > > +};
-> > > > +/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
-> > > > +
-> > > > +/* PVRDMA send queue work request */
-> > > > +struct pvrdma_sq_wqe_hdr {
-> > > > +	__u64 wr_id;		/* wr id */
-> > > > +	__u32 num_sge;		/* size of s/g array */
-> > > > +	__u32 total_len;	/* reserved */
-> > > > +	__u32 opcode;		/* operation type */
-> > > > +	__u32 send_flags;	/* wr flags */
-> > > > +	union {
-> > > > +		__u32 imm_data;
-> > > > +		__u32 invalidate_rkey;
-> > > > +	} ex;
-> > > > +	__u32 reserved;
-> > > > +	union {
-> > > > +		struct {
-> > > > +			__u64 remote_addr;
-> > > > +			__u32 rkey;
-> > > > +			__u8 reserved[4];
-> > > > +		} rdma;
-> > > > +		struct {
-> > > > +			__u64 remote_addr;
-> > > > +			__u64 compare_add;
-> > > > +			__u64 swap;
-> > > > +			__u32 rkey;
-> > > > +			__u32 reserved;
-> > > > +		} atomic;
-> > > > +		struct {
-> > > > +			__u64 remote_addr;
-> > > > +			__u32 log_arg_sz;
-> > > > +			__u32 rkey;
-> > > > +			union {
-> > > > +				struct pvrdma_exp_cmp_swap  cmp_swap;
-> > > > +				struct pvrdma_exp_fetch_add fetch_add;
-> > > > +			} wr_data;
-> > > > +		} masked_atomics;
-> > > > +		struct {
-> > > > +			__u64 iova_start;
-> > > > +			__u64 pl_pdir_dma;
-> > > > +			__u32 page_shift;
-> > > > +			__u32 page_list_len;
-> > > > +			__u32 length;
-> > > > +			__u32 access_flags;
-> > > > +			__u32 rkey;
-> > > > +		} fast_reg;
-> > > > +		struct {
-> > > > +			__u32 remote_qpn;
-> > > > +			__u32 remote_qkey;
-> > > > +			struct pvrdma_av av;
-> > > > +		} ud;
-> > > > +	} wr;
-> > > > +};
-> > > >
-> > > > No, I have half-baked patch series which refactors this structure in kernel.
-> > > > There is no need to put this structure in UAPI.
-> > > >
-> >
-> > This is specific to our device.. We do need to enqueue the WQE in this format
-> > for the device to recognize it. This is the same format that the user-level
-> > library will put the WQE in. As I said above, we can move this to the main
-> > pvrdma driver directory if you prefer.
-> 
-> This is different implementations between kernel and user space.
-> We don't want to bring user space limitations to kernel.
-> Take a look here:
-> http://lxr.free-electrons.com/source/include/rdma/ib_verbs.h#L1192
->
-
-We anyway convert the WR structs defined there to our own device-specific
-format. Similarly, in the user-level library we would convert from the
-user-space WR structure to a device-specific structure. The struct above
-defines the device-specific format.
-
-There might be some overlap in these structures with userspace and kernel,
-since some of the same opcodes would be supported between the two.
-As long as OFED hides those limitations shouldnt it be okay to have similar
-structures between the two?
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
+Technologies, Inc. Qualcomm Technologies, Inc. is a member of the Code
+Aurora Forum, a Linux Foundation Collaborative Project.
