@@ -1,55 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65205 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933811AbcIFWA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 18:00:26 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 4/4] pci/msix: Skip disabling removed devices
-Date: Tue,  6 Sep 2016 16:00:19 -0600
-Message-Id: <1473199219-3369-5-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
-References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 23 Sep 2016 18:55:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        devicetree@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH] PCI: rockchip: Support quirk to disable 5 GT/s (PCIe
+ 2.x) link rate
+Message-ID: <20160923235500.GA3569@localhost>
+References: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to disable MSIx interrupts or write message data on a
-device that isn't present. This patch checks the device removed state
-prior to executing device shutdown operations so that teardown on removed
-devices is quicker.
+On Thu, Sep 22, 2016 at 10:31:18AM -0700, Brian Norris wrote:
+> rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+> boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+> ms waiting for training that will never happen, let's support a device
+> tree quirk flag to disable generation 2 speeds entirely.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
+>  drivers/pci/host/pcie-rockchip.c                   | 57 +++++++++++++---------
+>  2 files changed, 37 insertions(+), 22 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> index ba67b39939c1..e769726fd093 100644
+> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -42,6 +42,8 @@ Required properties:
+>  Optional Property:
+>  - ep-gpios: contain the entry for pre-reset gpio
+>  - num-lanes: number of lanes to use
+> +- rockchip,disable-gen2: present if PCIe generation 2.x (i.e., 5 GT/s link
+> +	speeds) is not supported.
+>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+>  - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+>  - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/msi.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+We already have st,pcie-is-gen1 and fsl,max-link-speed for similar
+issues.  Can you copy the naming of one of those?  The
+"max-link-speed" one seems a little more general.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a02981e..474d808 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -316,7 +316,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
- 
--	if (dev->current_state != PCI_D0) {
-+	if (dev->current_state != PCI_D0 || dev->is_removed) {
- 		/* Don't touch the hardware now */
- 	} else if (entry->msi_attrib.is_msix) {
- 		void __iomem *base = pci_msix_desc_addr(entry);
-@@ -999,6 +999,11 @@ void pci_msix_shutdown(struct pci_dev *dev)
- 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
- 		return;
- 
-+	if (dev->is_removed) {
-+		dev->msix_enabled = 0;
-+		return;
-+	}
-+
- 	/* Return the device with MSI-X masked as initial states */
- 	for_each_pci_msi_entry(entry, dev) {
- 		/* Keep cached states to be restored */
--- 
-2.7.2
-
+Bjorn
