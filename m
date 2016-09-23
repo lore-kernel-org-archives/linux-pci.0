@@ -1,73 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:54040 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751490AbcILXQT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 19:16:19 -0400
-Date: Mon, 12 Sep 2016 17:16:15 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: "dledford@redhat.com" <dledford@redhat.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        pv-drivers <pv-drivers@vmware.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+Received: from mout.kundenserver.de ([212.227.17.10]:56285 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030211AbcIWNnm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Sep 2016 09:43:42 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "zhichang.yuan" <zhichang.yuan02@gmail.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Jorgen S. Hansen" <jhansen@vmware.com>,
-        Aditya Sarwade <asarwade@vmware.com>,
-        George Zhang <georgezhang@vmware.com>,
-        Bryan Tan <bryantan@vmware.com>
-Subject: Re: [PATCH v4 00/16] Add Paravirtual RDMA Driver
-Message-ID: <20160912231615.GA31855@obsidianresearch.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
- <20160912180251.GH5843@obsidianresearch.com>
- <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Fri, 23 Sep 2016 15:42:39 +0200
+Message-ID: <10705430.q2aqv5uYO3@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F8842B6@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com> <1760643.vMTR5o5E9g@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1F8842B6@lhreml507-mbx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BLUPR0501MB836ED564F2AE7AB9221AC25C5FF0@BLUPR0501MB836.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 12, 2016 at 10:43:00PM +0000, Adit Ranadive wrote:
-> On Mon, Sep 12, 2016 at 11:03:39 -0700, Jason Gunthorpe wrote:
-> > On Sun, Sep 11, 2016 at 09:49:10PM -0700, Adit Ranadive wrote:
-> > > [2] Libpvrdma User-level library - 
-> > > http://git.openfabrics.org/?p=~aditr/libpvrdma.git;a=summary
+On Friday, September 23, 2016 10:23:30 AM CEST Gabriele Paoloni wrote:
+> Hi Arnd
+> 
+> > -----Original Message-----
+> > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > Sent: 23 September 2016 10:52
+> > To: zhichang.yuan
+> > Cc: Gabriele Paoloni; linux-arm-kernel@lists.infradead.org;
+> > devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
+> > linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; John Garry;
+> > will.deacon@arm.com; linux-kernel@vger.kernel.org; Yuanzhichang;
+> > Linuxarm; xuwei (O); linux-serial@vger.kernel.org;
+> > benh@kernel.crashing.org; zourongrong@gmail.com; liviu.dudau@arm.com;
+> > kantyzc@163.com
+> > Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
+> > Hip06
 > > 
-> > You will probably find that rdma-plumbing will be the best way to get
-> > your userspace component into the distributors.
+> > On Friday, September 23, 2016 12:27:17 AM CEST zhichang.yuan wrote:
+> > > For this patch sketch, I have a question.
+> > > Do we call pci_address_to_pio in arch_of_address_to_pio to get the
+> > > corresponding logical IO port
+> > > for LPC??
+> > 
+> > 
+> > No, of course not, that would be silly:
+> > 
+> > The argument to pci_address_to_pio() is a phys_addr_t, and we we don't
+> > have one because there is no address associated with your PIO, that
+> > is the entire point of your driver!
+> > 
+> > Also, we already know the mapping because this is what the inb/outb
+> > workaround is looking at, so there is absolutely no reason to call it
+> > either.
+> 
+> Ok assume that we do not call pci_address_to_pio() for the ISA bus...
+> The LPC driver will register its phys address range in io_range_list,
+> then the IPMI driver probe will retrieve its physical address calling
+> of_address_to_resource and will use the indirect io to access this
+> address.
+> 
+> From the perspective of the indirect IO function the input parameter
+> is an unsigned long addr that (now) can be either:
+> 1) an IO token coming from a legacy pci device
+> 2) a phys address that lives on the LPC bus
+> 
+> These are conceptually two separate address spaces (and actually they 
+> both start from 0).
 
-> Sorry I haven't paying attention to that discussion. Do you know how soon 
-> distros will pick up the rdma-plumbing stuff?
+Why? Any IORESOURCE_IO address always refers to the logical I/O port
+range in Linux, not the physical address that is used on a bus.
 
-Hopefully things will be clearer after the call on Tuesday.
+> If the input parameter can live on different address spaces that are
+> overlapped, even if I save the used LPC range in arm64_extio_ops->start/end
+> there is no way for the indirect IO to tell if the input parameter is
+> an I/O token or a phys address that belongs to LPC...  
 
-I'm hoping we can begin the process sooner than later.
+The start address is the offset: if you get an address between 'start'
+and 'end', you subtract the 'start' from it, and use that to call
+the registered driver function. That works because we can safely
+assume that the bus address range that the LPC driver registers starts
+zero.
 
-There are 4 new drivers being submitted and at least 2-3 more kernel
-drivers that are not yet in Debian/SuSE/etc.
-
-By far the simplest way to push those 6 new user space drivers into
-the distros will be via rdma-plumbing, I'm optimistic that the vendors
-will work together on this.
-
-> It seems like it should be fairly straightforward to include the libpvrdma git
-> within the rdma-plumbing git as well. Let me know what the process is since
-> I may have to discuss it internally.
-
-For now, you can prepare your own clone and create a providers/pvrdma
-directory similar to the others. It should be very
-straightforward. Let me know if you have any problems.
-
-You should ensure clean compilation on FC24 (for instance using the
-provided docker tooling), and review the commit stream in
-rdma-plumbing to make sure you pick up all the systemic fixes that
-have already been done to the other providers.
-
-If Doug accepts your provider upstream before we finalize
-rdma-plumbing then I will add your git to the giant merge, however
-please make my life easier and ensure the code does not have any of
-the systemic problems I alreadly fixed in other providers :(
-
-After finalization you'll have to post your user space provider to the
-mailing list and Doug will pick it up.
-
-Jason
+	Arnd
