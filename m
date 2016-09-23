@@ -1,51 +1,68 @@
-Return-Path: <cov@codeaurora.org>
-Return-Path: <cov@codeaurora.org>
-In-Reply-To: <20160923191710.GB16019@localhost>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com> <20160920192636.GB4941@localhost> <0429663d51ed8e93fb0c96261dd2ecc7@codeaurora.org> <20160921131107.GB10804@localhost> <304377c6-554d-60ea-30df-006e557c7279@codeaurora.org> <20160922230806.GB1514@localhost> <e1b1c38f-0779-82a5-5d3c-b164215a4ed3@codeaurora.org> <20160923191710.GB16019@localhost>
-MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="----OVCMZ31DPYLAG5QZGB6U6T8R441YR4"
-Subject: Re: [PATCH V6 0/5] ECAM quirks handling for ARM64 platforms
-From: Christopher Covington <cov@codeaurora.org>
-Date: Wed, 28 Sep 2016 11:44:19 -0500
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Tomasz Nowicki <tn@semihalf.com>,will.deacon@arm.com,catalin.marinas@arm.com,rafael@kernel.org,Lorenzo.Pieralisi@arm.com,arnd@arndb.de,hanjun.guo@linaro.org,okaya@codeaurora.org,jchandra@broadcom.com,dhdang@apm.com,ard.biesheuvel@linaro.org,robert.richter@caviumnetworks.com,mw@semihalf.com,Liviu.Dudau@arm.com,ddaney@caviumnetworks.com,wangyijing@huawei.com,msalter@redhat.com,linux-pci@vger.kernel.org,linux-arm-kernel@lists.infradead.org,linaro-acpi@lists.linaro.org,jcm@redhat.com,andrea.gallo@linaro.org,jeremy.linton@arm.com,liudongdong3@huawei.com,gabriele.paoloni@huawei.com,jhugo@codeaurora.org,linux-acpi@vger.kernel.org,linux-kernel@vger.kernel.org
-Message-ID: <8F5BAA7A-F818-4AB8-82FB-3BA77C046F93@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.136]:36262 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034081AbcIWCFA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 22:05:00 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rajat Jain <rajatja@google.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 2/2] PCI: rockchip: fix wrong transmitted FTS count
+Date: Fri, 23 Sep 2016 10:06:00 +0800
+Message-Id: <1474596360-23483-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1474596360-23483-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1474596360-23483-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-------OVCMZ31DPYLAG5QZGB6U6T8R441YR4
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain;
- charset=UTF-8
+If the expected numbers of FTS aren't recevied by RC when
+exiting from L0s, the LTSSM will fall into recover state.
+So it will need to send TS for retraining which makes the
+latency of exiting from L0s a little longer than expected.
+This issue is caused by the wrong reset value of FTS count
+on PLC1 register(offset 0x4). The expected value for Gen1/2
+should be more than 240 and we may leave a little margin here.
+Let's fix this before starting Gen1 traning which will makes
+TS1 contains the correct FTS count.
 
-Hi Bjorn,
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Thanks for your attention to this series. If I'm remembering the earlier comments correctly, the core quirks framework is in pretty good shape. If some of the more complicated patches using the framework still need discussion or revision, what would you think of including the framework and its simplest user [1] in 4.9?
+ drivers/pci/host/pcie-rockchip.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-1. https://patchwork.ozlabs.org/patch/673072/
-
-Thanks,
-Christopher Covington
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 5e51121..6a7a9df 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -95,6 +95,10 @@
+ #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
+ #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
+ #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
++#define PCIE_CORE_CTRL_PLC1		(PCIE_CORE_CTRL_MGMT_BASE + 0x004)
++#define   PCIE_CORE_CTRL_PLC1_FTS_MASK		GENMASK(23, 8)
++#define   PCIE_CORE_CTRL_PLC1_FTS_SHIFT	8
++#define   PCIE_CORE_CTRL_PLC1_FTS_CNT		0xffff
+ #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+ #define   PCIE_CORE_INT_PRFPE			BIT(0)
+ #define   PCIE_CORE_INT_CRFPE			BIT(1)
+@@ -470,6 +474,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_L1_SUBSTATE_CTRL2);
+ 
++	/* Fix the transmitted FTS count desired to exit from L0s. */
++	status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL_PLC1);
++	status = (status & PCIE_CORE_CTRL_PLC1_FTS_MASK) |
++		 (PCIE_CORE_CTRL_PLC1_FTS_CNT << PCIE_CORE_CTRL_PLC1_FTS_SHIFT);
++	rockchip_pcie_write(rockchip, status, PCIE_CORE_CTRL_PLC1);
++
+ 	/* Enable Gen1 training */
+ 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+ 			    PCIE_CLIENT_CONFIG);
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.3.7
 
-Sent from my Snapdragon powered Android device with K-9 Mail. Please excuse my brevity.
-------OVCMZ31DPYLAG5QZGB6U6T8R441YR4
-Content-Type: text/html;
- charset=utf-8
-Content-Transfer-Encoding: 8bit
 
-Hi Bjorn,<br>
-<br>
-Thanks for your attention to this series. If I&#39;m remembering the earlier comments correctly, the core quirks framework is in pretty good shape. If some of the more complicated patches using the framework still need discussion or revision, what would you think of including the framework and its simplest user [1] in 4.9?<br>
-<br>
-1. <a href="https://patchwork.ozlabs.org/patch/673072">https://patchwork.ozlabs.org/patch/673072</a>/<br>
-<br>
-Thanks,<br>
-Christopher Covington<br>
--- <br>
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.<br>
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.<br>
-<br>
-Sent from my Snapdragon powered Android device with K-9 Mail. Please excuse my brevity.
-------OVCMZ31DPYLAG5QZGB6U6T8R441YR4--
