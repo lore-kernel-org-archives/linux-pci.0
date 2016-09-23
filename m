@@ -1,144 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54150 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755285AbcILVJI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 17:09:08 -0400
-Subject: [PATCH v2 1/8] PCI: pciehp: Rename pcie_isr() locals for clarity
-To: Mayurkumar Patel <mayurkumar.patel@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatja@google.com>, MikaWesterberg@linux.intel.com,
-        linux-pci@vger.kernel.org,
-        Rafael J Wysocki <rafael.j.wysocki@intel.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Luis Antonio Tarazona-Duarte
-        <luis.antonio.tarazona-duarte@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        mika.westerberg@linux.intel.com
-Date: Mon, 12 Sep 2016 16:08:56 -0500
-Message-ID: <20160912210855.22258.32643.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160912210507.22258.63097.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <cov@codeaurora.org>
+Return-Path: <cov@codeaurora.org>
+Subject: Re: [PATCH V6 0/5] ECAM quirks handling for ARM64 platforms
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
+ <20160920192636.GB4941@localhost>
+ <0429663d51ed8e93fb0c96261dd2ecc7@codeaurora.org>
+ <20160921131107.GB10804@localhost>
+ <304377c6-554d-60ea-30df-006e557c7279@codeaurora.org>
+ <20160922230806.GB1514@localhost>
+ <e1b1c38f-0779-82a5-5d3c-b164215a4ed3@codeaurora.org>
+ <20160923191710.GB16019@localhost>
+Cc: Tomasz Nowicki <tn@semihalf.com>, will.deacon@arm.com,
+ catalin.marinas@arm.com, rafael@kernel.org, Lorenzo.Pieralisi@arm.com,
+ arnd@arndb.de, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ jchandra@broadcom.com, dhdang@apm.com, ard.biesheuvel@linaro.org,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
+ jeremy.linton@arm.com, liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+ jhugo@codeaurora.org, linux-acpi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+From: Christopher Covington <cov@codeaurora.org>
+Message-ID: <462d5ee7-5e21-b375-09ed-3c5cfd798ae5@codeaurora.org>
+Date: Fri, 23 Sep 2016 15:22:19 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160923191710.GB16019@localhost>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename "detected" and "intr_loc" to "status" and "events" for clarity.
-"status" is the value we read from the Slot Status register; "events" is
-the set of hot-plug events we need to process.  No functional change
-intended.
+On 09/23/2016 03:17 PM, Bjorn Helgaas wrote:
+> On Fri, Sep 23, 2016 at 02:41:39PM -0400, Christopher Covington wrote:
+>> On 09/22/2016 07:08 PM, Bjorn Helgaas wrote:
+>>> On Wed, Sep 21, 2016 at 06:40:47PM -0400, Christopher Covington wrote:
+>>>> Hi Bjorn,
+>>>>
+>>>> On 09/21/2016 09:11 AM, Bjorn Helgaas wrote:
+>>>>> On Tue, Sep 20, 2016 at 09:15:14PM -0400, cov@codeaurora.org wrote:
+>>>>
+>>>>>>> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>>>>>>> index eb14f74..bb3b8ad 100644
+>>>>>>> --- a/drivers/acpi/pci_mcfg.c
+>>>>>>> +++ b/drivers/acpi/pci_mcfg.c
+>>>>>>> @@ -42,86 +42,59 @@ struct mcfg_fixup {
+>>>>>>> 	struct resource cfgres;
+>>>>>>> };
+>>>>>>>
+>>>>>>> -#define MCFG_DOM_ANY			(-1)
+>>>>>>
+>>>>>> Did you delete this because there were no current users, because you'd
+>>>>>> prefer users just use "-1", or for some other reason?
+>>>>>
+>>>>> I removed it because there were no users of it and, more importantly,
+>>>>> the code doesn't implement support for it.
+>>>>
+>>>> It looks like a stale "First match against PCI topology <domain:bus>..."
+>>>> comment remains.
+>>>
+>>> Yep.  I removed the comment since it's sort of obvious from the code.
+>>> I also renamed a few things and pulled the match out into a helper
+>>> function.
+>>>
+>>> I also changed the dmesg note: I think the actual resource and the
+>>> name of the pci_ecam_ops is more interesting than the table IDs (which
+>>> I think are already elsewhere in the dmesg log).
+>>
+>> It looks like the resource is already being printed from
+>> drivers/pci/ecam.c:102.
+> 
+> Yes, but I want a hint that a quirk has overridden it because that's a
+> clue that there's something wonky about the platform or the firmware.
+> 
+> But I guess it'd be nice to mirror the format of the existing info
+> (mem first, then bus range).
+> 
+>>> Here's the incremental diff, which I can't really test:
+>>
+>> Here's what it looks like for me:
+>>
+>> ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 00-1f])
+>> acpi PNP0A08:02: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+>> acpi PNP0A08:02: _OSC: platform does not support [PCIeHotplug]
+>> acpi PNP0A08:02: _OSC: OS now controls [PME AER PCIeCapability]
+>> acpi PNP0A08:02: MCFG quirk: ECAM space for [bus 00-1f] at [mem 0xa0000000000-0xa0001ffffff] with pci_3
+> 
+> Is "pci_3" really the entire name?  If not, what happened to the rest?
+> I was hoping for a symbol we could grep for.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |   46 +++++++++++++++++++++-----------------
- 1 file changed, 25 insertions(+), 21 deletions(-)
+The full name is pci_32b_ops. The print overflowed my tmux pane.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 08e84d6..264df36 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -542,7 +542,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	struct pci_bus *subordinate = pdev->subordinate;
- 	struct pci_dev *dev;
- 	struct slot *slot = ctrl->slot;
--	u16 detected, intr_loc;
-+	u16 status, events;
- 	u8 present;
- 	bool link;
- 
-@@ -555,31 +555,35 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	 * serviced, we need to re-inspect Slot Status register after
- 	 * clearing what is presumed to be the last pending interrupt.
- 	 */
--	intr_loc = 0;
-+	events = 0;
- 	do {
--		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &detected);
--		if (detected == (u16) ~0) {
-+		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
-+		if (status == (u16) ~0) {
- 			ctrl_info(ctrl, "%s: no response from device\n",
- 				  __func__);
- 			return IRQ_HANDLED;
- 		}
- 
--		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
--			     PCI_EXP_SLTSTA_PDC |
--			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
--		detected &= ~intr_loc;
--		intr_loc |= detected;
--		if (!intr_loc)
-+		/*
-+		 * Slot Status contains plain status bits as well as event
-+		 * notification bits; right now we only want the event bits.
-+		 */
-+		status &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
-+			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
-+			   PCI_EXP_SLTSTA_DLLSC);
-+		status &= ~events;
-+		events |= status;
-+		if (!events)
- 			return IRQ_NONE;
--		if (detected)
-+		if (status)
- 			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
--						   intr_loc);
--	} while (detected);
-+						   events);
-+	} while (status);
- 
--	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", intr_loc);
-+	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", events);
- 
- 	/* Check Command Complete Interrupt Pending */
--	if (intr_loc & PCI_EXP_SLTSTA_CC) {
-+	if (events & PCI_EXP_SLTSTA_CC) {
- 		ctrl->cmd_busy = 0;
- 		smp_mb();
- 		wake_up(&ctrl->queue);
-@@ -589,24 +593,24 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 		list_for_each_entry(dev, &subordinate->devices, bus_list) {
- 			if (dev->ignore_hotplug) {
- 				ctrl_dbg(ctrl, "ignoring hotplug event %#06x (%s requested no hotplug)\n",
--					 intr_loc, pci_name(dev));
-+					 events, pci_name(dev));
- 				return IRQ_HANDLED;
- 			}
- 		}
- 	}
- 
--	if (!(intr_loc & ~PCI_EXP_SLTSTA_CC))
-+	if (!(events & ~PCI_EXP_SLTSTA_CC))
- 		return IRQ_HANDLED;
- 
- 	/* Check Attention Button Pressed */
--	if (intr_loc & PCI_EXP_SLTSTA_ABP) {
-+	if (events & PCI_EXP_SLTSTA_ABP) {
- 		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
- 			  slot_name(slot));
- 		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
- 	}
- 
- 	/* Check Presence Detect Changed */
--	if (intr_loc & PCI_EXP_SLTSTA_PDC) {
-+	if (events & PCI_EXP_SLTSTA_PDC) {
- 		pciehp_get_adapter_status(slot, &present);
- 		ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
- 			  present ? "" : "not ", slot_name(slot));
-@@ -615,13 +619,13 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	}
- 
- 	/* Check Power Fault Detected */
--	if ((intr_loc & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
-+	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
- 		ctrl->power_fault_detected = 1;
- 		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(slot));
- 		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
- 	}
- 
--	if (intr_loc & PCI_EXP_SLTSTA_DLLSC) {
-+	if (events & PCI_EXP_SLTSTA_DLLSC) {
- 		link = pciehp_check_link_active(ctrl);
- 		ctrl_info(ctrl, "slot(%s): Link %s event\n",
- 			  slot_name(slot), link ? "Up" : "Down");
+>> acpi PNP0A08:02: ECAM at [mem 0xa0000000000-0xa0001ffffff] for [bus 00-1f]
+>> Remapped I/O 0x00000affffff0000 to [io  0x10000-0x1ffff window]
+>> PCI host bridge to bus 0002:00
 
+Thanks,
+Cov
+
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
+Technologies, Inc. Qualcomm Technologies, Inc. is a member of the Code
+Aurora Forum, a Linux Foundation Collaborative Project.
