@@ -1,317 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:42803 "EHLO
-        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750761AbcIZEWU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 00:22:20 -0400
-Subject: Re: [PATCH v5 02/16] IB/pvrdma: Add user-level shared functions
-To: Leon Romanovsky <leon@kernel.org>
-References: <cover.1474759181.git.aditr@vmware.com>
- <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
- <20160925072624.GV4088@leon.nu>
-From: Adit Ranadive <aditr@vmware.com>
-CC: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
-        <pv-drivers@vmware.com>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
-        <asarwade@vmware.com>, <georgezhang@vmware.com>,
-        <bryantan@vmware.com>
-Message-ID: <9c9f3668-ff2b-f421-2270-3193c0f62cc9@vmware.com>
-Date: Sun, 25 Sep 2016 21:22:11 -0700
+Received: from mail.kernel.org ([198.145.29.136]:60574 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965954AbcIWOc2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Sep 2016 10:32:28 -0400
+Date: Fri, 23 Sep 2016 09:32:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCHv4] pciehp: Let user control LED status
+Message-ID: <20160923143222.GE1514@localhost>
+References: <1473784319-6137-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160925072624.GV4088@leon.nu>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473784319-6137-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 25 2016 at 10:26:24AM +0300, Leon Romanovsky wrote:
-> > On Sat, Sep 24, 2016 at 04:21:26PM -0700, Adit Ranadive wrote:
-> > We share some common structures with the user-level driver. This patch adds
-> > those structures and shared functions to traverse the QP/CQ rings.
+On Tue, Sep 13, 2016 at 10:31:59AM -0600, Keith Busch wrote:
+> This patch adds a new flag to the pci_dev structure instructing pciehp
+> to not interpret PCIe slot LED indicators. The pciehp driver will instead
+> allow all LED control from the user by setting the slot control indicators
+> as the user requested through sysfs. This is preparing for domain devices
+> that repurpose these control bits for non-standard use.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 
-<...>
+BTW, I think this turned out really well.  It's small and clean and I
+think it's safe in terms of races and so on.  Thanks a lot for pushing
+on this!
 
-> > +
-> > +#include <linux/types.h>
-> > +
-> > +#define PVRDMA_UVERBS_ABI_VERSION	3
-> > +#define PVRDMA_BOARD_ID			1
-> > +#define PVRDMA_REV_ID			1
-> > 
-> > Please don't add defines which you are not using in the library and the
-> > two above are not in use.
-> >
-
-I'll move these to the pvrdma.h file.
-
-<...>
-
-> > diff --git a/include/uapi/rdma/pvrdma-uapi.h b/include/uapi/rdma/pvrdma-uapi.h
-> > new file mode 100644
-> > index 0000000..430d8a5
-
-<...>
-
-> > +
-> > +#ifndef __PVRDMA_UAPI_H__
-> > +#define __PVRDMA_UAPI_H__
-> > +
-> > +#include <linux/types.h>
-> > +
-> > +#define PVRDMA_VERSION 17
-> > 
-> > What do you plan to do with this VERSION?
-> > How is it related to ABI?
-> >
-
-Not related. This is only for the driver to know which APIs to support.
-For example, an older driver would still be able to work with a newer
-device. I can move this to pvrdma.h as well.
-
-To be honest, I thought I can move this file into the uapi folder since
-the structures here are shared with the user-level library. Based on
-your comments in this thread and the other ones, I think it makes sense
-to move this file back to the pvrdma driver folder and rename it 
-(pvrdma_wqe.h?) to avoid confusion. There might still be some duplicate
-code (especially the UAR offsets and WQE structs) here and in our
-user-level library.
-
-Let me know if that makes sense.
-
-> > +
-> > +#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
-> > +#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
-> > +#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
-> > +#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
-> > +#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
-> > +#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
-> > +#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
-> > +#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
-> > +#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
-> > 
-> > +
-> > +/* PVRDMA atomic compare and swap */
-> > +struct pvrdma_exp_cmp_swap {
-> > 
-> > _EXP_ looks very similar to MLNX_OFED naming convention.
-> > 
-
-Yes, the operation was based on that. Any concerns? 
-I can rename this and the one below.
-
-> > +	__u64 swap_val;
-> > +	__u64 compare_val;
-> > +	__u64 swap_mask;
-> > +	__u64 compare_mask;
-> > +};
-> > +
-> > +/* PVRDMA atomic fetch and add */
-> > +struct pvrdma_exp_fetch_add {
-> > 
-> > The same as above.
-> > 
-> > +	__u64 add_val;
-> > +	__u64 field_boundary;
-> > +};
-> > +
-> > +/* PVRDMA address vector. */
-> > +struct pvrdma_av {
-> > +	__u32 port_pd;
-> > +	__u32 sl_tclass_flowlabel;
-> > +	__u8 dgid[16];
-> > +	__u8 src_path_bits;
-> > +	__u8 gid_index;
-> > +	__u8 stat_rate;
-> > +	__u8 hop_limit;
-> > +	__u8 dmac[6];
-> > +	__u8 reserved[6];
-> > +};
-> > +
-> > +/* PVRDMA scatter/gather entry */
-> > +struct pvrdma_sge {
-> > +	__u64   addr;
-> > +	__u32   length;
-> > +	__u32   lkey;
-> > +};
-> > +
-> > +/* PVRDMA receive queue work request */
-> > +struct pvrdma_rq_wqe_hdr {
-> > +	__u64 wr_id;		/* wr id */
-> > +	__u32 num_sge;		/* size of s/g array */
-> > +	__u32 total_len;	/* reserved */
-> > +};
-> > +/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
-> > +
-> > +/* PVRDMA send queue work request */
-> > +struct pvrdma_sq_wqe_hdr {
-> > +	__u64 wr_id;		/* wr id */
-> > +	__u32 num_sge;		/* size of s/g array */
-> > +	__u32 total_len;	/* reserved */
-> > +	__u32 opcode;		/* operation type */
-> > +	__u32 send_flags;	/* wr flags */
-> > +	union {
-> > +		__u32 imm_data;
-> > +		__u32 invalidate_rkey;
-> > +	} ex;
-> > +	__u32 reserved;
-> > +	union {
-> > +		struct {
-> > +			__u64 remote_addr;
-> > +			__u32 rkey;
-> > +			__u8 reserved[4];
-> > +		} rdma;
-> > +		struct {
-> > +			__u64 remote_addr;
-> > +			__u64 compare_add;
-> > +			__u64 swap;
-> > +			__u32 rkey;
-> > +			__u32 reserved;
-> > +		} atomic;
-> > +		struct {
-> > +			__u64 remote_addr;
-> > +			__u32 log_arg_sz;
-> > +			__u32 rkey;
-> > +			union {
-> > +				struct pvrdma_exp_cmp_swap  cmp_swap;
-> > +				struct pvrdma_exp_fetch_add fetch_add;
-> > +			} wr_data;
-> > +		} masked_atomics;
-> > +		struct {
-> > +			__u64 iova_start;
-> > +			__u64 pl_pdir_dma;
-> > +			__u32 page_shift;
-> > +			__u32 page_list_len;
-> > +			__u32 length;
-> > +			__u32 access_flags;
-> > +			__u32 rkey;
-> > +		} fast_reg;
-> > +		struct {
-> > +			__u32 remote_qpn;
-> > +			__u32 remote_qkey;
-> > +			struct pvrdma_av av;
-> > +		} ud;
-> > +	} wr;
-> > +};
-> > 
-> > No, I have half-baked patch series which refactors this structure in kernel.
-> > There is no need to put this structure in UAPI.
-> >
-
-This is specific to our device.. We do need to enqueue the WQE in this format
-for the device to recognize it. This is the same format that the user-level
-library will put the WQE in. As I said above, we can move this to the main
-pvrdma driver directory if you prefer.
-
-> > +/* Use pvrdma_sge (ib_sge) for send queue s/g array elements. */
-> > +
-> > +/* Completion queue element. */
-> > +struct pvrdma_cqe {
-> > +	__u64 wr_id;
-> > +	__u64 qp;
-> > +	__u32 opcode;
-> > +	__u32 status;
-> > +	__u32 byte_len;
-> > +	__u32 imm_data;
-> > +	__u32 src_qp;
-> > +	__u32 wc_flags;
-> > +	__u32 vendor_err;
-> > +	__u16 pkey_index;
-> > +	__u16 slid;
-> > +	__u8 sl;
-> > +	__u8 dlid_path_bits;
-> > +	__u8 port_num;
-> > +	__u8 smac[6];
-> > +	__u8 reserved2[7]; /* Pad to next power of 2 (64). */
-> > +};
-> > +
-> > +struct pvrdma_ring {
-> > +	atomic_t prod_tail;	/* Producer tail. */
-> > +	atomic_t cons_head;	/* Consumer head. */
-> > +};
-> > +
-> > +struct pvrdma_ring_state {
-> > +	struct pvrdma_ring tx;	/* Tx ring. */
-> > +	struct pvrdma_ring rx;	/* Rx ring. */
-> > +};
-> > +
-> > +static inline int pvrdma_idx_valid(__u32 idx, __u32 max_elems)
-> > +{
-> > +	/* Generates fewer instructions than a less-than. */
-> > +	return (idx & ~((max_elems << 1) - 1)) == 0;
-> > +}
-> > +
-> > +static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
-> > +{
-> > +	const unsigned int idx = atomic_read(var);
-> > +
-> > +	if (pvrdma_idx_valid(idx, max_elems))
-> > +		return idx & (max_elems - 1);
-> > +	return PVRDMA_INVALID_IDX;
-> > +}
-> > +
-> > +static inline void pvrdma_idx_ring_inc(atomic_t *var, __u32 max_elems)
-> > +{
-> > +	__u32 idx = atomic_read(var) + 1;	/* Increment. */
-> > 
-> > It is definitely different atomic_read than you expect. From my grep
-> > searches on my machine, linux kernel doesn't export in standard headers
-> > the atomic_* functions and C has their implementation of that functions.
-> > 
-
-This would probably change for the user-level library, so no need have this file
-in UAPI.
-
-> > +
-> > +	idx &= (max_elems << 1) - 1;		/* Modulo size, flip gen. */
-> > +	atomic_set(var, idx);
-> > +}
-> > +
-> > +static inline __s32 pvrdma_idx_ring_has_space(const struct pvrdma_ring *r,
-> > +					      __u32 max_elems, __u32 *out_tail)
-> > +{
-> > +	const __u32 tail = atomic_read(&r->prod_tail);
-> > +	const __u32 head = atomic_read(&r->cons_head);
-> > +
-> > +	if (pvrdma_idx_valid(tail, max_elems) &&
-> > +	    pvrdma_idx_valid(head, max_elems)) {
-> > +		*out_tail = tail & (max_elems - 1);
-> > +		return tail != (head ^ max_elems);
-> > +	}
-> > +	return PVRDMA_INVALID_IDX;
-> > +}
-> > +
-> > +static inline __s32 pvrdma_idx_ring_has_data(const struct pvrdma_ring *r,
-> > +					     __u32 max_elems, __u32 *out_head)
-> > +{
-> > +	const __u32 tail = atomic_read(&r->prod_tail);
-> > +	const __u32 head = atomic_read(&r->cons_head);
-> > +
-> > +	if (pvrdma_idx_valid(tail, max_elems) &&
-> > +	    pvrdma_idx_valid(head, max_elems)) {
-> > +		*out_head = head & (max_elems - 1);
-> > +		return tail != head;
-> > +	}
-> > +	return PVRDMA_INVALID_IDX;
-> > +}
-> > +
-> > +static inline bool pvrdma_idx_ring_is_valid_idx(const struct pvrdma_ring *r,
-> > +						__u32 max_elems, __u32 *idx)
-> > +{
-> > +	const __u32 tail = atomic_read(&r->prod_tail);
-> > +	const __u32 head = atomic_read(&r->cons_head);
-> > +
-> > +	if (pvrdma_idx_valid(tail, max_elems) &&
-> > +	    pvrdma_idx_valid(head, max_elems) &&
-> > +	    pvrdma_idx_valid(*idx, max_elems)) {
-> > +		if (tail > head && (*idx < tail && *idx >= head))
-> > +			return true;
-> > +		else if (head > tail && (*idx >= head || *idx < tail))
-> > +			return true;
-> > +	}
-> > +	return false;
-> > +}
-> > +
-> > +#endif /* __PVRDMA_UAPI_H__ */
-> > 
-> > I suggest completely remove this file from UAPI headers folder.
-> > 
-
-I can move this back to the pvrdma driver folder.
+> ---
+> v3 -> v4:
+> 
+>   Fixing symbol usage by generating patch from the tree that compiles
+>   correctly.
+> 
+>  drivers/pci/hotplug/pciehp.h      |  5 +++++
+>  drivers/pci/hotplug/pciehp_core.c |  3 +++
+>  drivers/pci/hotplug/pciehp_hpc.c  | 27 +++++++++++++++++++++++++++
+>  include/linux/pci.h               |  1 +
+>  4 files changed, 36 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index e764918..725078d 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -152,6 +152,11 @@ bool pciehp_check_link_active(struct controller *ctrl);
+>  void pciehp_release_ctrl(struct controller *ctrl);
+>  int pciehp_reset_slot(struct slot *slot, int probe);
+>  
+> +int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 status);
+> +int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 *status);
+> +
+>  static inline const char *slot_name(struct slot *slot)
+>  {
+>  	return hotplug_slot_name(slot->hotplug_slot);
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index fb0f863..68b7aeb 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -113,6 +113,9 @@ static int init_slot(struct controller *ctrl)
+>  	if (ATTN_LED(ctrl)) {
+>  		ops->get_attention_status = get_attention_status;
+>  		ops->set_attention_status = set_attention_status;
+> +	} else if (ctrl->pcie->port->user_leds) {
+> +		ops->get_attention_status = pciehp_get_raw_attention_status;
+> +		ops->set_attention_status = pciehp_set_raw_attention_status;
+>  	}
+>  
+>  	/* register this slot with the hotplug pci core */
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 08e84d6..5ab8604 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -355,6 +355,18 @@ static int pciehp_link_enable(struct controller *ctrl)
+>  	return __pciehp_link_set(ctrl, true);
+>  }
+>  
+> +int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 *status)
+> +{
+> +	struct slot *slot = hotplug_slot->private;
+> +	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
+> +	u16 slot_ctrl;
+> +
+> +	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+> +	*status = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
+> +	return 0;
+> +}
+> +
+>  void pciehp_get_attention_status(struct slot *slot, u8 *status)
+>  {
+>  	struct controller *ctrl = slot->ctrl;
+> @@ -431,6 +443,17 @@ int pciehp_query_power_fault(struct slot *slot)
+>  	return !!(slot_status & PCI_EXP_SLTSTA_PFD);
+>  }
+>  
+> +int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 status)
+> +{
+> +	struct slot *slot = hotplug_slot->private;
+> +	struct controller *ctrl = slot->ctrl;
+> +
+> +	pcie_write_cmd_nowait(ctrl, status << 6,
+> +			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
+> +	return 0;
+> +}
+> +
+>  void pciehp_set_attention_status(struct slot *slot, u8 value)
+>  {
+>  	struct controller *ctrl = slot->ctrl;
+> @@ -804,6 +827,10 @@ struct controller *pcie_init(struct pcie_device *dev)
+>  	}
+>  	ctrl->pcie = dev;
+>  	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
+> +
+> +	if (pdev->user_leds)
+> +		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
+> +
+>  	ctrl->slot_cap = slot_cap;
+>  	mutex_init(&ctrl->ctrl_lock);
+>  	init_waitqueue_head(&ctrl->queue);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 7256f33..f41bbca 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -308,6 +308,7 @@ struct pci_dev {
+>  						   powered on/off by the
+>  						   corresponding bridge */
+>  	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
+> +	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
+>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+>  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+>  
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
