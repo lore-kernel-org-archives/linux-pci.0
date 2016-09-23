@@ -1,166 +1,76 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: marc.zyngier@arm.com,
-	tglx@linutronix.de,
-	jason@lakedaemon.net,
-	rjw@rjwysocki.net,
-	helgaas@kernel.org,
-	rafael@kernel.org,
-	Lorenzo.Pieralisi@arm.com
-Cc: will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	hanjun.guo@linaro.org,
-	shijie.huang@arm.com,
-	robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	al.stone@linaro.org,
-	graeme.gregory@linaro.org,
-	ddaney.cavm@gmail.com,
-	okaya@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V11 6/8] irqchip/gicv3-its: Probe ITS in the ACPI way
-Date: Mon, 12 Sep 2016 20:32:25 +0200
-Message-Id: <1473705147-6588-7-git-send-email-tn@semihalf.com>
-In-Reply-To: <1473705147-6588-1-git-send-email-tn@semihalf.com>
-References: <1473705147-6588-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33625 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034684AbcIWOln (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Sep 2016 10:41:43 -0400
+Date: Fri, 23 Sep 2016 09:41:41 -0500
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, hch@infradead.org,
+        Joao.Pinto@synopsys.com, mingkai.hu@nxp.com, m-karicheri2@ti.com,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Joao Pinto <jpinto@synopsys.com>, nsekhar@ti.com
+Subject: Re: [RFC PATCH 07/11] pci: controller: designware: Add EP mode
+ support
+Message-ID: <20160923144141.GA24842@rob-hp-laptop>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
+ <1473829927-20466-8-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473829927-20466-8-git-send-email-kishon@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ITS is prepared for being initialized different than DT,
-therefore we can initialize it in ACPI way. We collect register base
-address from MADT table and pass mandatory info to firmware-agnostic
-ITS init call.
+On Wed, Sep 14, 2016 at 10:42:03AM +0530, Kishon Vijay Abraham I wrote:
+> Add endpoint mode support to designware driver. This uses the
+> EP Core layer introduced recently to add endpoint mode support.
+> *Any* function driver can now use this designware device
+> to achieve the EP functionality.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  .../devicetree/bindings/pci/designware-pcie.txt    |   26 ++-
+>  drivers/pci/controller/Kconfig                     |    5 +
+>  drivers/pci/controller/Makefile                    |    1 +
+>  drivers/pci/controller/pcie-designware-ep.c        |  228 ++++++++++++++++++++
+>  drivers/pci/controller/pcie-designware.c           |   30 +++
+>  drivers/pci/controller/pcie-designware.h           |   45 ++++
+>  6 files changed, 324 insertions(+), 11 deletions(-)
+>  create mode 100644 drivers/pci/controller/pcie-designware-ep.c
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index 6c5322c..bb0b789 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -6,23 +6,27 @@ Required properties:
+>  - reg-names: Must be "config" for the PCIe configuration space.
+>      (The old way of getting the configuration address space from "ranges"
+>      is deprecated and should be avoided.)
+> -- #address-cells: set to <3>
+> -- #size-cells: set to <2>
+> -- device_type: set to "pci"
+> -- ranges: ranges for the PCI memory and I/O regions
+> -- #interrupt-cells: set to <1>
+> -- interrupt-map-mask and interrupt-map: standard PCI properties
+> -	to define the mapping of the PCIe interface to interrupt
+> +- #address-cells (only for host mode): set to <3>
+> +- #size-cells (only for host mode): set to <2>
+> +- device_type (only for host mode): set to "pci"
+> +- ranges (only for host mode): ranges for the PCI memory and I/O regions
+> +- num-ib-windows (only for EP mode): number of inbound address translation
+> +	windows
+> +- num-ob-windows (only for EP mode): number of outbound address translation
+> +	windows
+> +- #interrupt-cells (only for host mode): set to <1>
+> +- interrupt-map-mask and interrupt-map (only for host mode): standard PCI
+> +	properties to define the mapping of the PCIe interface to interrupt
 
-Use here IORT lib to register ITS domain which then can be found and
-used on to build another PCI MSI domain in hierarchical stack domain.
+It may be clearer to just document EP mode in a separate section even if 
+there's some duplication of properties. Other standard PCI binding 
+properties probably also don't apply.
 
-NOTE: Waiting for proper ITS and NUMA node relation description in IORT
-table, we pass around NUMA_NO_NODE to the its_probe_one init call.
-This means that Cavium ThunderX erratum 23144 (pass1.1 only)
-is not supported for ACPI boot method yet.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/irqchip/Kconfig          |  1 +
- drivers/irqchip/irq-gic-v3-its.c | 61 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 61 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-index 7f87289..9aeea1d 100644
---- a/drivers/irqchip/Kconfig
-+++ b/drivers/irqchip/Kconfig
-@@ -39,6 +39,7 @@ config ARM_GIC_V3_ITS
- 	bool
- 	depends on PCI
- 	depends on PCI_MSI
-+	select ACPI_IORT if ACPI
- 
- config ARM_NVIC
- 	bool
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index c7518c7..35c851c 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -15,10 +15,13 @@
-  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  */
- 
-+#include <linux/acpi.h>
- #include <linux/bitmap.h>
- #include <linux/cpu.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/irqdomain.h>
-+#include <linux/acpi_iort.h>
- #include <linux/log2.h>
- #include <linux/mm.h>
- #include <linux/msi.h>
-@@ -1438,6 +1441,11 @@ static int its_irq_gic_domain_alloc(struct irq_domain *domain,
- 		fwspec.param[0] = GIC_IRQ_TYPE_LPI;
- 		fwspec.param[1] = hwirq;
- 		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
-+	} else if (is_fwnode_irqchip(domain->parent->fwnode)) {
-+		fwspec.fwnode = domain->parent->fwnode;
-+		fwspec.param_count = 2;
-+		fwspec.param[0] = hwirq;
-+		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
- 	} else {
- 		return -EINVAL;
- 	}
-@@ -1797,6 +1805,57 @@ static int __init its_of_probe(struct device_node *node)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ACPI
-+
-+#define ACPI_GICV3_ITS_MEM_SIZE (SZ_128K)
-+
-+static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
-+					  const unsigned long end)
-+{
-+	struct acpi_madt_generic_translator *its_entry;
-+	struct fwnode_handle *dom_handle;
-+	struct resource res;
-+	int err;
-+
-+	its_entry = (struct acpi_madt_generic_translator *)header;
-+	memset(&res, 0, sizeof(res));
-+	res.start = its_entry->base_address;
-+	res.end = its_entry->base_address + ACPI_GICV3_ITS_MEM_SIZE - 1;
-+	res.flags = IORESOURCE_MEM;
-+
-+	dom_handle = irq_domain_alloc_fwnode((void *)its_entry->base_address);
-+	if (!dom_handle) {
-+		pr_err("ITS@%pa: Unable to allocate GICv3 ITS domain token\n",
-+		       &res.start);
-+		return -ENOMEM;
-+	}
-+
-+	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
-+	if (err) {
-+		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
-+		       &res.start, its_entry->translation_id);
-+		goto dom_err;
-+	}
-+
-+	err = its_probe_one(&res, dom_handle, NUMA_NO_NODE);
-+	if (!err)
-+		return 0;
-+
-+	iort_deregister_domain_token(its_entry->translation_id);
-+dom_err:
-+	irq_domain_free_fwnode(dom_handle);
-+	return err;
-+}
-+
-+static void __init its_acpi_probe(void)
-+{
-+	acpi_table_parse_madt(ACPI_MADT_TYPE_GENERIC_TRANSLATOR,
-+			      gic_acpi_parse_madt_its, 0);
-+}
-+#else
-+static void __init its_acpi_probe(void) { }
-+#endif
-+
- int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 		    struct irq_domain *parent_domain)
- {
-@@ -1807,7 +1866,7 @@ int __init its_init(struct fwnode_handle *handle, struct rdists *rdists,
- 	if (of_node)
- 		its_of_probe(of_node);
- 	else
--		return -ENODEV;
-+		its_acpi_probe();
- 
- 	if (list_empty(&its_nodes)) {
- 		pr_warn("ITS: No ITS available, not enabling LPIs\n");
--- 
-1.9.1
+Rob
