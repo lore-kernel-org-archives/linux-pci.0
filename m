@@ -1,398 +1,174 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Thu, 8 Sep 2016 14:59:46 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: marc.zyngier@arm.com, tglx@linutronix.de, jason@lakedaemon.net,
-	rjw@rjwysocki.net, helgaas@kernel.org, rafael@kernel.org,
-	will.deacon@arm.com, catalin.marinas@arm.com, hanjun.guo@linaro.org,
-	shijie.huang@arm.com, robert.richter@caviumnetworks.com,
-	mw@semihalf.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linaro-acpi@lists.linaro.org,
-	andrea.gallo@linaro.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, al.stone@linaro.org,
-	graeme.gregory@linaro.org, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org
-Subject: Re: [UPDATE PATCH V10 1/8] ACPI: I/O Remapping Table (IORT) initial
- support
-Message-ID: <20160908135946.GA26858@red-moon>
-References: <1473152938-17388-2-git-send-email-tn@semihalf.com>
- <1473249412-20226-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:34414 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751125AbcIWA1o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 20:27:44 -0400
+Subject: Re: [PATCH] PCI: rockchip: Support quirk to disable 5 GT/s (PCIe 2.x)
+ link rate
+To: Brian Norris <briannorris@chromium.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+Cc: shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <b9527acf-e3cf-19d2-b8fc-0a59637e9598@rock-chips.com>
+Date: Fri, 23 Sep 2016 08:27:35 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473249412-20226-1-git-send-email-tn@semihalf.com>
+In-Reply-To: <1474565478-27242-1-git-send-email-briannorris@chromium.org>
+Content-Type: text/plain; charset=gbk; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 07, 2016 at 01:56:52PM +0200, Tomasz Nowicki wrote:
-> IORT shows representation of IO topology for ARM based systems.
-> It describes how various components are connected together on
-> parent-child basis e.g. PCI RC -> SMMU -> ITS. Also see IORT spec.
-> http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-> 
-> Initial support allows to detect IORT table presence and save its
-> root pointer obtained through acpi_get_table(). The pointer validity
-> depends on acpi_gbl_permanent_mmap because if acpi_gbl_permanent_mmap
-> is not set while using IORT nodes we would dereference unmapped pointers.
-> 
-> For the aforementioned reason call iort_table_detect() from acpi_init()
-                                     ^^^^
-Stale function name that got lost in the function renaming.
+Hi Brain,
 
-Anyway, where are we with these two patches ? Is there anything left
-we should change ? The rest of this series (and not only that)
-depends on these two patches (that need an ACK) so if there is
-anything left to change we change it otherwise can we queue them please ?
+ÔÚ 2016/9/23 1:31, Brian Norris Ð´µÀ:
+> rk3399 supports PCIe 2.x link speeds marginally at best, and on some
+> boards, the link won't train at 5 GT/s at all. Rather than sacrifice 500
+> ms waiting for training that will never happen, let's support a device
+> tree quirk flag to disable generation 2 speeds entirely.
 
-Thanks,
-Lorenzo
+I was thinking about could we get target link speed [TLS] from the
+end-point when finishing Gen1 training, but it seems that the location
+of ep's TLS is not fixed.
 
-> which guarantees acpi_gbl_permanent_mmap to be set at that point.
-> 
-> Add generic helpers which are helpful for scanning and retrieving
-> information from IORT table content. List of the most important helpers:
-> - iort_find_dev_node() finds IORT node for a given device
-> - iort_node_map_rid() maps device RID and returns IORT node which provides
->   final translation
-> 
-> IORT support is placed under drivers/acpi/arm64/ new directory due to its
-> ARM64 specific nature. The code there is considered only for ARM64.
-> The long term plan is to keep all ARM64 specific tables support
-> in this place e.g. GTDT table.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Anyway, your patch looks sane to me as we leave gen2 as default and
+people could drop that feature by adding rockchip,disable-gen2 to
+their dts if they are sure the board would never supoort Gen2 devices.
+
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+
+>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 > ---
->  drivers/acpi/Kconfig        |   4 +
->  drivers/acpi/Makefile       |   2 +
->  drivers/acpi/arm64/Kconfig  |   6 ++
->  drivers/acpi/arm64/Makefile |   1 +
->  drivers/acpi/arm64/iort.c   | 213 ++++++++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/bus.c          |   2 +
->  include/linux/acpi_iort.h   |  30 +++++++
->  7 files changed, 258 insertions(+)
->  create mode 100644 drivers/acpi/arm64/Kconfig
->  create mode 100644 drivers/acpi/arm64/Makefile
->  create mode 100644 drivers/acpi/arm64/iort.c
->  create mode 100644 include/linux/acpi_iort.h
-> 
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index 445ce28..d5c0614 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -521,4 +521,8 @@ config ACPI_CONFIGFS
->  	  userspace. The configurable ACPI groups will be visible under
->  	  /config/acpi, assuming configfs is mounted under /config.
->  
-> +if ARM64
-> +source "drivers/acpi/arm64/Kconfig"
-> +endif
-> +
->  endif	# ACPI
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index 5ae9d85..e5ada78 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -105,3 +105,5 @@ obj-$(CONFIG_ACPI_CONFIGFS)	+= acpi_configfs.o
->  
->  video-objs			+= acpi_video.o video_detect.o
->  obj-y				+= dptf/
-> +
-> +obj-$(CONFIG_ARM64)		+= arm64/
-> diff --git a/drivers/acpi/arm64/Kconfig b/drivers/acpi/arm64/Kconfig
-> new file mode 100644
-> index 0000000..4616da4
-> --- /dev/null
-> +++ b/drivers/acpi/arm64/Kconfig
-> @@ -0,0 +1,6 @@
-> +#
-> +# ACPI Configuration for ARM64
-> +#
-> +
-> +config ACPI_IORT
-> +	bool
-> diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
-> new file mode 100644
-> index 0000000..72331f2
-> --- /dev/null
-> +++ b/drivers/acpi/arm64/Makefile
-> @@ -0,0 +1 @@
-> +obj-$(CONFIG_ACPI_IORT) 	+= iort.o
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> new file mode 100644
-> index 0000000..e28e256
-> --- /dev/null
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -0,0 +1,213 @@
-> +/*
-> + * Copyright (C) 2016, Semihalf
-> + *	Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + * This file implements early detection/parsing of I/O mapping
-> + * reported to OS through firmware via I/O Remapping Table (IORT)
-> + * IORT document number: ARM DEN 0049A
-> + */
-> +
-> +#define pr_fmt(fmt)	"ACPI: IORT: " fmt
-> +
-> +#include <linux/acpi_iort.h>
-> +#include <linux/kernel.h>
-> +#include <linux/pci.h>
-> +
-> +typedef acpi_status (*iort_find_node_callback)
-> +	(struct acpi_iort_node *node, void *context);
-> +
-> +/* Root pointer to the mapped IORT table */
-> +static struct acpi_table_header *iort_table;
-> +
-> +static LIST_HEAD(iort_msi_chip_list);
-> +static DEFINE_SPINLOCK(iort_msi_chip_lock);
-> +
-> +static struct acpi_iort_node *iort_scan_node(enum acpi_iort_node_type type,
-> +					     iort_find_node_callback callback,
-> +					     void *context)
-> +{
-> +	struct acpi_iort_node *iort_node, *iort_end;
-> +	struct acpi_table_iort *iort;
-> +	int i;
-> +
-> +	if (!iort_table)
-> +		return NULL;
-> +
-> +	/* Get the first IORT node */
-> +	iort = (struct acpi_table_iort *)iort_table;
-> +	iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort,
-> +				 iort->node_offset);
-> +	iort_end = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-> +				iort_table->length);
-> +
-> +	for (i = 0; i < iort->node_count; i++) {
-> +		if (WARN_TAINT(iort_node >= iort_end, TAINT_FIRMWARE_WORKAROUND,
-> +			       "IORT node pointer overflows, bad table!\n"))
-> +			return NULL;
-> +
-> +		if (iort_node->type == type &&
-> +		    ACPI_SUCCESS(callback(iort_node, context)))
-> +				return iort_node;
-> +
-> +		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
-> +					 iort_node->length);
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
-> +static acpi_status iort_match_node_callback(struct acpi_iort_node *node,
-> +					    void *context)
-> +{
-> +	struct device *dev = context;
-> +	acpi_status status = AE_NOT_FOUND;
-> +
-> +	if (node->type == ACPI_IORT_NODE_NAMED_COMPONENT) {
-> +		struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER, NULL };
-> +		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
-> +		struct acpi_iort_named_component *ncomp;
-> +
-> +		if (!adev)
-> +			goto out;
-> +
-> +		status = acpi_get_name(adev->handle, ACPI_FULL_PATHNAME, &buf);
-> +		if (ACPI_FAILURE(status)) {
-> +			dev_warn(dev, "Can't get device full path name\n");
-> +			goto out;
-> +		}
-> +
-> +		ncomp = (struct acpi_iort_named_component *)node->node_data;
-> +		if (!strcmp(ncomp->device_name, buf.pointer))
-> +			status = AE_OK;
-> +
-> +		acpi_os_free(buf.pointer);
-> +	} else if (node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
-> +		struct acpi_iort_root_complex *pci_rc;
-> +		struct pci_bus *bus;
-> +
-> +		bus = to_pci_bus(dev);
-> +		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
-> +
-> +		/*
-> +		 * It is assumed that PCI segment numbers maps one-to-one
-> +		 * with root complexes. Each segment number can represent only
-> +		 * one root complex.
-> +		 */
-> +		if (pci_rc->pci_segment_number == pci_domain_nr(bus))
-> +			status = AE_OK;
-> +	}
-> +out:
-> +	return status;
-> +}
-> +
-> +static int iort_id_map(struct acpi_iort_id_mapping *map, u8 type, u32 rid_in,
-> +		       u32 *rid_out)
-> +{
-> +	/* Single mapping does not care for input id */
-> +	if (map->flags & ACPI_IORT_ID_SINGLE_MAPPING) {
-> +		if (type == ACPI_IORT_NODE_NAMED_COMPONENT ||
-> +		    type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
-> +			*rid_out = map->output_base;
-> +			return 0;
-> +		}
-> +
-> +		pr_warn(FW_BUG "[map %p] SINGLE MAPPING flag not allowed for node type %d, skipping ID map\n",
-> +			map, type);
-> +		return -ENXIO;
-> +	}
-> +
-> +	if (rid_in < map->input_base ||
-> +	    (rid_in >= map->input_base + map->id_count))
-> +		return -ENXIO;
-> +
-> +	*rid_out = map->output_base + (rid_in - map->input_base);
-> +	return 0;
-> +}
-> +
-> +static struct acpi_iort_node *iort_node_map_rid(struct acpi_iort_node *node,
-> +						u32 rid_in, u32 *rid_out,
-> +						u8 type)
-> +{
-> +	u32 rid = rid_in;
-> +
-> +	/* Parse the ID mapping tree to find specified node type */
-> +	while (node) {
-> +		struct acpi_iort_id_mapping *map;
-> +		int i;
-> +
-> +		if (node->type == type) {
-> +			if (rid_out)
-> +				*rid_out = rid;
-> +			return node;
-> +		}
-> +
-> +		if (!node->mapping_offset || !node->mapping_count)
-> +			goto fail_map;
-> +
-> +		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
-> +				   node->mapping_offset);
-> +
-> +		/* Firmware bug! */
-> +		if (!map->output_reference) {
-> +			pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
-> +			       node, node->type);
-> +			goto fail_map;
-> +		}
-> +
-> +		/* Do the RID translation */
-> +		for (i = 0; i < node->mapping_count; i++, map++) {
-> +			if (!iort_id_map(map, node->type, rid, &rid))
-> +				break;
-> +		}
-> +
-> +		if (i == node->mapping_count)
-> +			goto fail_map;
-> +
-> +		node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-> +				    map->output_reference);
-> +	}
-> +
-> +fail_map:
-> +	/* Map input RID to output RID unchanged on mapping failure*/
-> +	if (rid_out)
-> +		*rid_out = rid_in;
-> +
-> +	return NULL;
-> +}
-> +
-> +static struct acpi_iort_node *iort_find_dev_node(struct device *dev)
-> +{
-> +	struct pci_bus *pbus;
-> +
-> +	if (!dev_is_pci(dev))
-> +		return iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-> +				      iort_match_node_callback, dev);
-> +
-> +	/* Find a PCI root bus */
-> +	pbus = to_pci_dev(dev)->bus;
-> +	while (!pci_is_root_bus(pbus))
-> +		pbus = pbus->parent;
-> +
-> +	return iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-> +			      iort_match_node_callback, &pbus->dev);
-> +}
-> +
-> +void __init acpi_iort_init(void)
-> +{
-> +	acpi_status status;
-> +
-> +	status = acpi_get_table(ACPI_SIG_IORT, 0, &iort_table);
-> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> +		const char *msg = acpi_format_exception(status);
-> +		pr_err("Failed to get table, %s\n", msg);
-> +	}
-> +}
-> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-> index 85b7d07..e56e643 100644
-> --- a/drivers/acpi/bus.c
-> +++ b/drivers/acpi/bus.c
-> @@ -36,6 +36,7 @@
->  #ifdef CONFIG_X86
->  #include <asm/mpspec.h>
->  #endif
-> +#include <linux/acpi_iort.h>
->  #include <linux/pci.h>
->  #include <acpi/apei.h>
->  #include <linux/dmi.h>
-> @@ -1186,6 +1187,7 @@ static int __init acpi_init(void)
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      |  2 +
+>  drivers/pci/host/pcie-rockchip.c                   | 57 +++++++++++++---------
+>  2 files changed, 37 insertions(+), 22 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> index ba67b39939c1..e769726fd093 100644
+> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -42,6 +42,8 @@ Required properties:
+>  Optional Property:
+>  - ep-gpios: contain the entry for pre-reset gpio
+>  - num-lanes: number of lanes to use
+> +- rockchip,disable-gen2: present if PCIe generation 2.x (i.e., 5 GT/s link
+> +	speeds) is not supported.
+>  - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
+>  - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
+>  - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index c3593e633ccd..f047c4a73f69 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -53,6 +53,7 @@
+>  #define   PCIE_CLIENT_ARI_ENABLE	  HIWORD_UPDATE_BIT(0x0008)
+>  #define   PCIE_CLIENT_CONF_LANE_NUM(x)	  HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
+>  #define   PCIE_CLIENT_MODE_RC		  HIWORD_UPDATE_BIT(0x0040)
+> +#define   PCIE_CLIENT_GEN_SEL_1		  HIWORD_UPDATE(0x0080, 0)
+>  #define   PCIE_CLIENT_GEN_SEL_2		  HIWORD_UPDATE_BIT(0x0080)
+>  #define PCIE_CLIENT_BASIC_STATUS1	(PCIE_CLIENT_BASE + 0x48)
+>  #define   PCIE_CLIENT_LINK_STATUS_UP		0x00300000
+> @@ -191,6 +192,7 @@ struct rockchip_pcie {
+>  	struct	gpio_desc *ep_gpio;
+>  	u32	lanes;
+>  	u8	root_bus_nr;
+> +	bool	enable_gen2;
+>  	struct	device *dev;
+>  	struct	irq_domain *irq_domain;
+>  };
+> @@ -418,13 +420,19 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		return err;
 >  	}
->  
->  	pci_mmcfg_late_init();
-> +	acpi_iort_init();
->  	acpi_scan_init();
->  	acpi_ec_init();
->  	acpi_debugfs_init();
-> diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-> new file mode 100644
-> index 0000000..fcacaf7
-> --- /dev/null
-> +++ b/include/linux/acpi_iort.h
-> @@ -0,0 +1,30 @@
-> +/*
-> + * Copyright (C) 2016, Semihalf
-> + *	Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License along with
-> + * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-> + * Place - Suite 330, Boston, MA 02111-1307 USA.
-> + */
+>
+> +	if (rockchip->enable_gen2)
+> +		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_2,
+> +				    PCIE_CLIENT_CONFIG);
+> +	else
+> +		rockchip_pcie_write(rockchip, PCIE_CLIENT_GEN_SEL_1,
+> +				    PCIE_CLIENT_CONFIG);
 > +
-> +#ifndef __ACPI_IORT_H__
-> +#define __ACPI_IORT_H__
+>  	rockchip_pcie_write(rockchip,
+>  			    PCIE_CLIENT_CONF_ENABLE |
+>  			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
+>  			    PCIE_CLIENT_ARI_ENABLE |
+>  			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
+> -			    PCIE_CLIENT_MODE_RC |
+> -			    PCIE_CLIENT_GEN_SEL_2,
+> +			    PCIE_CLIENT_MODE_RC,
+>  				PCIE_CLIENT_CONFIG);
+>
+>  	err = phy_power_on(rockchip->phy);
+> @@ -492,29 +500,31 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		msleep(20);
+>  	}
+>
+> -	/*
+> -	 * Enable retrain for gen2. This should be configured only after
+> -	 * gen1 finished.
+> -	 */
+> -	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+> -	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +	if (rockchip->enable_gen2) {
+> +		/*
+> +		 * Enable retrain for gen2. This should be configured only after
+> +		 * gen1 finished.
+> +		 */
+> +		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> +		status |= PCIE_RC_CONFIG_LCS_RETRAIN_LINK;
+> +		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
 > +
-> +#include <linux/acpi.h>
+> +		timeout = jiffies + msecs_to_jiffies(500);
+> +		for (;;) {
+> +			status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+> +			if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+> +					PCIE_CORE_PL_CONF_SPEED_5G) {
+> +				dev_dbg(dev, "PCIe link training gen2 pass!\n");
+> +				break;
+> +			}
+>
+> -	timeout = jiffies + msecs_to_jiffies(500);
+> -	for (;;) {
+> -		status = rockchip_pcie_read(rockchip, PCIE_CORE_CTRL);
+> -		if ((status & PCIE_CORE_PL_CONF_SPEED_MASK) ==
+> -		    PCIE_CORE_PL_CONF_SPEED_5G) {
+> -			dev_dbg(dev, "PCIe link training gen2 pass!\n");
+> -			break;
+> -		}
+> +			if (time_after(jiffies, timeout)) {
+> +				dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+> +				break;
+> +			}
+>
+> -		if (time_after(jiffies, timeout)) {
+> -			dev_dbg(dev, "PCIe link training gen2 timeout, fall back to gen1!\n");
+> -			break;
+> +			msleep(20);
+>  		}
+> -
+> -		msleep(20);
+>  	}
+>
+>  	/* Check the final link width from negotiated lane counter from MGMT */
+> @@ -722,6 +732,9 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>  		rockchip->lanes = 1;
+>  	}
+>
+> +	rockchip->enable_gen2 = !of_property_read_bool(node,
+> +						       "rockchip,disable-gen2");
 > +
-> +#ifdef CONFIG_ACPI_IORT
-> +void acpi_iort_init(void);
-> +#else
-> +static inline void acpi_iort_init(void) { }
-> +#endif
-> +
-> +#endif /* __ACPI_IORT_H__ */
-> -- 
-> 1.9.1
-> 
+>  	rockchip->core_rst = devm_reset_control_get(dev, "core");
+>  	if (IS_ERR(rockchip->core_rst)) {
+>  		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+>
+
+
+-- 
+Best Regards
+Shawn Lin
+
