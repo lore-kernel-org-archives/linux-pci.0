@@ -1,135 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-Id: <492d4d62ae1b3a95570babe9608d8ea971b62585.1474130360.git.lukas@wunner.de>
-In-Reply-To: <cover.1474130360.git.lukas@wunner.de>
-References: <cover.1474130360.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 18 Sep 2016 05:39:20 +0200
-Subject: [PATCH v2 2/5] PCI: Query platform firmware for device power state
-To: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 23 Sep 2016 09:52:59 -0500
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>, hch@infradead.org,
+        Joao.Pinto@synopsys.com, mingkai.hu@nxp.com, m-karicheri2@ti.com,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Joao Pinto <jpinto@synopsys.com>, nsekhar@ti.com
+Subject: Re: [RFC PATCH 08/11] pci: controller: dra7xx: Add EP mode support
+Message-ID: <20160923145259.GA28285@rob-hp-laptop>
+References: <1473829927-20466-1-git-send-email-kishon@ti.com>
+ <1473829927-20466-9-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473829927-20466-9-git-send-email-kishon@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Usually the most accurate way to determine a PCI device's power state is
-to read its PM Control & Status Register.  There are two cases however
-when this is not an option:  If the device doesn't have the PM
-capability at all, or if it is in D3cold (in which case its config space
-is inaccessible).
+On Wed, Sep 14, 2016 at 10:42:04AM +0530, Kishon Vijay Abraham I wrote:
+> The PCIe controller integrated in dra7xx SoCs is capable of operating
+> in endpoint mode. Add support for dra7xx SoCs to operate in endpoint
+> mode.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  Documentation/devicetree/bindings/pci/ti-pci.txt |   30 ++-
+>  drivers/pci/controller/Kconfig                   |   21 +++
+>  drivers/pci/controller/pci-dra7xx.c              |  211 +++++++++++++++++++---
+>  3 files changed, 225 insertions(+), 37 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> index 60e2516..b0e76f6 100644
+> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> @@ -1,17 +1,22 @@
+>  TI PCI Controllers
+>  
+>  PCIe Designware Controller
+> - - compatible: Should be "ti,dra7-pcie""
+> - - reg : Two register ranges as listed in the reg-names property
+> - - reg-names : The first entry must be "ti-conf" for the TI specific registers
+> -	       The second entry must be "rc-dbics" for the designware pcie
+> -	       registers
+> -	       The third entry must be "config" for the PCIe configuration space
+> + - compatible: Should be "ti,dra7-pcie" for RC
+> +	       Should be "ti,dra7-pcie-ep" for EP
+>   - phys : list of PHY specifiers (used by generic PHY framework)
+>   - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+>  	       number of PHYs as specified in *phys* property.
+>   - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+>  	       where <X> is the instance number of the pcie from the HW spec.
+> + - num-lanes as specified in ../designware-pcie.txt
+> +
+> +HOST MODE
+> +=========
+> + - reg : Two register ranges as listed in the reg-names property
+> + - reg-names : The first entry must be "ti-conf" for the TI specific registers
+> +	       The second entry must be "rc-dbics" for the designware pcie
+> +	       registers
+> +	       The third entry must be "config" for the PCIe configuration space
+>   - interrupts : Two interrupt entries must be specified. The first one is for
+>  		main interrupt line and the second for MSI interrupt line.
+>   - #address-cells,
+> @@ -19,13 +24,24 @@ PCIe Designware Controller
+>     #interrupt-cells,
+>     device_type,
+>     ranges,
+> -   num-lanes,
+>     interrupt-map-mask,
+>     interrupt-map : as specified in ../designware-pcie.txt
+>  
+>  Optional Property:
+>   - gpios : Should be added if a gpio line is required to drive PERST# line
 
-In both cases, we can alternatively query the platform firmware for its
-opinion on the device's power state.  To facilitate this, augment struct
-pci_platform_pm_ops with a ->get_power callback and implement it for
-acpi_pci_platform_pm (the only pci_platform_pm_ops existing so far).
+Don't you need gpios as the input side of GPIO outputs in RC mode? Or 
+for EP mode they are all handled by h/w?
 
-It is used by a forthcoming commit to let pci_update_current_state()
-recognize D3cold.
+>  
+> +DEVICE MODE
+> +===========
+> + - reg : Two register ranges as listed in the reg-names property
+> + - reg-names : "ti-conf" for the TI specific registers
+> +	       "ep_dbics" for the standard configuration registers as
+> +		they are locally accessed within the DIF CS space
+> +	       "ep_dbics2" for the standard configuration registers as
+> +		they are locally accessed within the DIF CS2 space
+> + - interrupts : one interrupt entries must be specified for main interrupt.
+> + - num-ib-windows : number of inbound address translation windows
+> + - num-ob-windows : number of outbound address translation windows
+> +
+>  Example:
+>  axi {
+>  	compatible = "simple-bus";
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index 8574828..4d70981 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -23,6 +23,27 @@ config PCI_DRA7XX_HOST
+>  	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+>  	 host mode.
+>  
+> +config PCI_DRA7XX_EP
+> +	bool "Endpoint Only Mode"
+> +	depends on PCI_ENDPOINT
+> +	select PCIE_DW_EP
+> +	help
+> +	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+> +	 endpoint mode.
+> +
+> +config PCI_DRA7XX_HOST_EP
 
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
+I'd make these 2 options just RC and EP depending on PCI_DRA7XX_HOST 
+with RC option being default yes.
 
-Changes since v1:
-* In acpi_pci_get_power_state(), only check for ACPI_STATE_UNKNOWN
-  instead of ACPI_STATE_D0 and ACPI_STATE_D3_COLD.
-* Move the change to pci_update_current_state() to new patch [3/5].
 
- drivers/pci/pci-acpi.c | 22 ++++++++++++++++++++++
- drivers/pci/pci.c      | 10 ++++++++--
- drivers/pci/pci.h      |  3 +++
- 3 files changed, 33 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 9a033e8..d966d47 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -452,6 +452,27 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
- 	return error;
- }
- 
-+static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
-+{
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-+	static const pci_power_t state_conv[] = {
-+		[ACPI_STATE_D0]      = PCI_D0,
-+		[ACPI_STATE_D1]      = PCI_D1,
-+		[ACPI_STATE_D2]      = PCI_D2,
-+		[ACPI_STATE_D3_HOT]  = PCI_D3hot,
-+		[ACPI_STATE_D3_COLD] = PCI_D3cold,
-+	};
-+	int state;
-+
-+	if (!adev || !acpi_device_power_manageable(adev))
-+		return PCI_UNKNOWN;
-+
-+	if (acpi_device_get_power(adev, &state) || state == ACPI_STATE_UNKNOWN)
-+		return PCI_UNKNOWN;
-+
-+	return state_conv[state];
-+}
-+
- static bool acpi_pci_can_wakeup(struct pci_dev *dev)
- {
- 	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-@@ -534,6 +555,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
- static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
- 	.is_manageable = acpi_pci_power_manageable,
- 	.set_state = acpi_pci_set_power_state,
-+	.get_state = acpi_pci_get_power_state,
- 	.choose_state = acpi_pci_choose_state,
- 	.sleep_wake = acpi_pci_sleep_wake,
- 	.run_wake = acpi_pci_run_wake,
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 72a9d3a..6ea0d2d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -552,8 +552,9 @@ static const struct pci_platform_pm_ops *pci_platform_pm;
- 
- int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
- {
--	if (!ops->is_manageable || !ops->set_state || !ops->choose_state ||
--	    !ops->sleep_wake || !ops->run_wake || !ops->need_resume)
-+	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
-+	    !ops->choose_state  || !ops->sleep_wake || !ops->run_wake  ||
-+	    !ops->need_resume)
- 		return -EINVAL;
- 	pci_platform_pm = ops;
- 	return 0;
-@@ -570,6 +571,11 @@ static inline int platform_pci_set_power_state(struct pci_dev *dev,
- 	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
- }
- 
-+static inline pci_power_t platform_pci_get_power_state(struct pci_dev *dev)
-+{
-+	return pci_platform_pm ? pci_platform_pm->get_state(dev) : PCI_UNKNOWN;
-+}
-+
- static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
- {
- 	return pci_platform_pm ?
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 194521b..4518562 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -42,6 +42,8 @@ int pci_probe_reset_function(struct pci_dev *dev);
-  *
-  * @set_state: invokes the platform firmware to set the device's power state
-  *
-+ * @get_state: queries the platform firmware for a device's current power state
-+ *
-  * @choose_state: returns PCI power state of given device preferred by the
-  *                platform; to be used during system-wide transitions from a
-  *                sleeping state to the working state and vice versa
-@@ -62,6 +64,7 @@ int pci_probe_reset_function(struct pci_dev *dev);
- struct pci_platform_pm_ops {
- 	bool (*is_manageable)(struct pci_dev *dev);
- 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
-+	pci_power_t (*get_state)(struct pci_dev *dev);
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
- 	int (*sleep_wake)(struct pci_dev *dev, bool enable);
- 	int (*run_wake)(struct pci_dev *dev, bool enable);
--- 
-2.9.3
-
+> +	bool "Both Host and Endpoint Mode"
+> +	depends on PCI_MSI_IRQ_DOMAIN
+> +	depends on PCI
+> +	depends on PCI_ENDPOINT
+> +	select PCIE_DW_HOST
+> +	select PCIE_DW_EP
+> +	help
+> +	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+> +	 both endpoint mode and host mode. If the board has 2 PCIe ports and
+> +	 one of them has to work in host mode and the other has to work in
+> +	 EP mode then this option has to be enabled.
+> +
+>  endchoice
+>  
+>  endif
