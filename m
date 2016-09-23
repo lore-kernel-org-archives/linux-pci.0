@@ -1,82 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51993 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755000AbcI2Gqg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 02:46:36 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8T6hMfe071268
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 02:46:35 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25rrpuvas2-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 02:46:35 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Thu, 29 Sep 2016 00:46:34 -0600
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
-        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
-Subject: [PATCH v6 4/4] PCI: Add a macro to set default alignment for all PCI devices
-Date: Thu, 29 Sep 2016 14:46:21 +0800
-In-Reply-To: <1475131581-4373-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1475131581-4373-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1475131581-4373-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:3531 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932127AbcIWKYP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Sep 2016 06:24:15 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+        "zhichang.yuan" <zhichang.yuan02@gmail.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        John Garry <john.garry@huawei.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "kantyzc@163.com" <kantyzc@163.com>
+Subject: RE: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+Date: Fri, 23 Sep 2016 10:23:30 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F8842B6@lhreml507-mbx>
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <9178320.n4yHmfyPA3@wuerfel> <57E40665.8080005@gmail.com>
+ <1760643.vMTR5o5E9g@wuerfel>
+In-Reply-To: <1760643.vMTR5o5E9g@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When vfio passthroughs a PCI device of which MMIO BARs are
-smaller than PAGE_SIZE, guest will not handle the mmio
-accesses to the BARs which leads to mmio emulations in host.
+Hi Arnd
 
-This is because vfio will not allow to passthrough one BAR's
-mmio page which may be shared with other BARs. Otherwise,
-there will be a backdoor that guest can use to access BARs
-of other guest.
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 23 September 2016 10:52
+> To: zhichang.yuan
+> Cc: Gabriele Paoloni; linux-arm-kernel@lists.infradead.org;
+> devicetree@vger.kernel.org; lorenzo.pieralisi@arm.com; minyard@acm.org;
+> linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; John Garry;
+> will.deacon@arm.com; linux-kernel@vger.kernel.org; Yuanzhichang;
+> Linuxarm; xuwei (O); linux-serial@vger.kernel.org;
+> benh@kernel.crashing.org; zourongrong@gmail.com; liviu.dudau@arm.com;
+> kantyzc@163.com
+> Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on
+> Hip06
+> 
+> On Friday, September 23, 2016 12:27:17 AM CEST zhichang.yuan wrote:
+> > For this patch sketch, I have a question.
+> > Do we call pci_address_to_pio in arch_of_address_to_pio to get the
+> > corresponding logical IO port
+> > for LPC??
+> 
+> 
+> No, of course not, that would be silly:
+> 
+> The argument to pci_address_to_pio() is a phys_addr_t, and we we don't
+> have one because there is no address associated with your PIO, that
+> is the entire point of your driver!
+> 
+> Also, we already know the mapping because this is what the inb/outb
+> workaround is looking at, so there is absolutely no reason to call it
+> either.
 
-This patch adds a macro to set default alignment for all
-PCI devices. Then we could solve this issue on some platforms
-which would easily hit this issue because of their 64K page
-such as PowerNV platform by defining this macro as PAGE_SIZE.
+Ok assume that we do not call pci_address_to_pio() for the ISA bus...
+The LPC driver will register its phys address range in io_range_list,
+then the IPMI driver probe will retrieve its physical address calling
+of_address_to_resource and will use the indirect io to access this
+address.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci.h |    4 ++++
- drivers/pci/pci.c              |    3 +++
- 2 files changed, 7 insertions(+)
+>From the perspective of the indirect IO function the input parameter
+is an unsigned long addr that (now) can be either:
+1) an IO token coming from a legacy pci device
+2) a phys address that lives on the LPC bus
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index e9bd6cf..5e31bc2 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -28,6 +28,10 @@
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
- 
-+#ifdef CONFIG_PPC_POWERNV
-+#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
-+#endif
-+
- struct pci_dev;
- 
- /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d867c90..b6e26c1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4957,6 +4957,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 	resource_size_t align = 0;
- 	char *p;
- 
-+#ifdef PCIBIOS_DEFAULT_ALIGNMENT
-+	align = PCIBIOS_DEFAULT_ALIGNMENT;
-+#endif
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
- 	if (pci_has_flag(PCI_PROBE_ONLY)) {
--- 
-1.7.9.5
+These are conceptually two separate address spaces (and actually they 
+both start from 0).
 
+If the input parameter can live on different address spaces that are
+overlapped, even if I save the used LPC range in arm64_extio_ops->start/end
+there is no way for the indirect IO to tell if the input parameter is
+an I/O token or a phys address that belongs to LPC...  
+
+Am I missing something?
+
+Thanks
+
+Gab
+
+> 
+> > If we don't, it seems the LPC specific IO address will conflict with
+> PCI
+> > host bridges' logical IO.
+> >
+> > Supposed our LPC populated the IO range from 0x100 to 0x3FF( this is
+> > normal for ISA similar
+> > devices), after arch_of_address_to_pio(), the r->start will be set as
+> > 0x100, r->end will be set as
+> > 0x3FF.  And if there is one PCI host bridge who request a IO window
+> size
+> > over 0x400 at the same
+> > time, the  corresponding r->start and r->end will be set as 0x0,
+> 0x3FF
+> > after of_address_to_resource
+> > for this host bridge.  Then the IO conflict happens.
+> 
+> You would still need to reserve some space in the io_range_list
+> to avoid possible conflicts, which is a bit ugly with the current
+> definition of pci_register_io_range, but I'm sure can be done.
+> 
+> One way I can think of would be to change pci_register_io_range()
+> to just return the logical port number directly (it already
+> knows it!), and pass an invalid physical address (e.g.
+> #define ISA_WORKAROUND_IO_PORT_WINDOW -0x10000) into it for
+> invalid translations.
+> 
+> Another alternative that just occurred to me would be to move
+> the pci_address_to_pio() call from __of_address_to_resource()
+> into of_bus_pci_translate() and then do the special handling
+> for the ISA/LPC bus in of_bus_isa_translate().
+> 
+> 	Arnd
