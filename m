@@ -1,69 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-Id: <cover.1474130360.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 18 Sep 2016 05:39:20 +0200
-Subject: [PATCH v2 0/5] PCI PM refinements
-To: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Peter Wu <peter@lekensteyn.nl>,
-        Andreas Noever <andreas.noever@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:56518 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934620AbcIWAmh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2016 20:42:37 -0400
+Subject: Re: [PATCH v2] PCI: rockchip: Increase the Max Credit update
+ interval.
+To: Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+References: <1474578027-64292-1-git-send-email-rajatja@google.com>
+ <1474583892-8936-1-git-send-email-rajatja@google.com>
+Cc: shawn.lin@rock-chips.com, rajatxjain@gmail.com
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <c7a733c8-df1c-3917-9874-15496fe95758@rock-chips.com>
+Date: Fri, 23 Sep 2016 08:42:28 +0800
+MIME-Version: 1.0
+In-Reply-To: <1474583892-8936-1-git-send-email-rajatja@google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here's the second installment of this series, based on feedback from
-Rafael. (Thanks!)
+Hi Rajat,
 
-To reiterate, these refinements are meant to speed up and reduce power
-consumption when entering and leaving system sleep and when shutting
-down the system.  For details, please refer to the cover letter of v1:
-http://www.spinics.net/lists/linux-pci/msg53702.html
+ÔÚ 2016/9/23 6:38, Rajat Jain Ð´µÀ:
+> This increases the likelihood of link state to automatically go to L1
+> and save some power.
+>
+> The default credit update interval of 7.5 us results in the rootport
+> sending UpdateFC packets too often, thus reulting in the link never
 
-As usual I've pushed the patches to GitHub in case anyone prefers
-reviewing in a GUI:
-https://github.com/l1k/linux/commits/pci_pm_refinements_v2
+Actually it's UpdateFC-P. Could you amend the log since you don't touch
+other DLLPs of flow control.
 
+> going to L1, and always staying in L0/L0s. The value 24 us was chosen
+> after some experiments and peeking over the PCIe bus to see that we do
+> enter L1 substate when there is not enough traffic on the PCIe bus.
+>
 
-Changes since v1:
+The defualt value is wrong including the unit of this value on TRM.
+I talked with Brain face-2-face about this issue, so your patch is
+what we want. Thanks for pushing this.
 
-* Patch [1/5] now sports an ack by Rafael.
+I guess Bjorn could help amend the changelog?
+With that fixed,
 
-* Patch [2/5]:
-  * In acpi_pci_get_power_state(), only check for ACPI_STATE_UNKNOWN
-    instead of ACPI_STATE_D0 and ACPI_STATE_D3_COLD.
-  * Move the change to pci_update_current_state() to new patch [3/5].
-
-* Patch [3/5]:
-  * Instead of solely relying on the platform firmware to report D3cold,
-    also probe the vendor ID and assume D3cold if it can't be read.
-    This should ensure proper detection of D3cold on pre-ACPI 4.0
-    platforms (which will never report anything deeper than D3hot)
-    as well as for devices with nonstandard PM mechanisms.
-  * The two existing workarounds for D3cold are removed from
-    pci_update_current_state(), as explained in the commit message.
-
-* Patch [5/5]:
-  * Disable runtime PM on the device to prevent it from being runtime
-    resumed during the remainder of the shutdown process.
-
-Thanks,
-
-Lukas
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 
 
-Lukas Wunner (5):
-  PCI: Afford direct-complete to devices with nonstandard PM
-  PCI: Query platform firmware for device power state
-  PCI: Recognize D3cold in pci_update_current_state()
-  PCI: Avoid unnecessary resume after direct-complete
-  PCI: Avoid unnecessary resume on shutdown
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> ---
+> v2: Update the register on Phy link bandwidth changes,
+>     since the value gets lost on such events.
+>
+>  drivers/pci/host/pcie-rockchip.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+>
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index c3593e6..99e700f 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -95,6 +95,11 @@
+>  #define   PCIE_CORE_PL_CONF_SPEED_MASK		0x00000018
+>  #define   PCIE_CORE_PL_CONF_LANE_MASK		0x00000006
+>  #define   PCIE_CORE_PL_CONF_LANE_SHIFT		1
+> +#define PCIE_CORE_TXCREDIT_CFG1		(PCIE_CORE_CTRL_MGMT_BASE + 0x020)
+> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_MASK	0xFFFF0000
+> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
+> +#define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
+> +		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
+>  #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+>  #define   PCIE_CORE_INT_PRFPE			BIT(0)
+>  #define   PCIE_CORE_INT_CRFPE			BIT(1)
+> @@ -224,6 +229,17 @@ static void rockchip_pcie_clr_bw_int(struct rockchip_pcie *rockchip)
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  }
+>
+> +static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
+> +{
+> +	u32 val;
+> +
+> +	/* Update Tx credit maximum update interval */
+> +	val = rockchip_pcie_read(rockchip, PCIE_CORE_TXCREDIT_CFG1);
+> +	val &= ~PCIE_CORE_TXCREDIT_CFG1_MUI_MASK;
+> +	val |= PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(24000);	/* ns */
+> +	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
+> +}
+> +
+>  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+>  				      struct pci_bus *bus, int dev)
+>  {
+> @@ -597,6 +613,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+>  		rockchip_pcie_write(rockchip, sub_reg, PCIE_CORE_INT_STATUS);
+>  	} else if (reg & PCIE_CLIENT_INT_PHY) {
+>  		dev_dbg(dev, "phy link changes\n");
+> +		rockchip_pcie_update_txcredit_mui(rockchip);
+>  		rockchip_pcie_clr_bw_int(rockchip);
+>  	}
+>
+>
 
- drivers/pci/pci-acpi.c   | 22 ++++++++++++++++++++
- drivers/pci/pci-driver.c | 24 ++++++++++++++++++++--
- drivers/pci/pci.c        | 52 ++++++++++++++++++++++++++++++++----------------
- drivers/pci/pci.h        |  3 +++
- 4 files changed, 82 insertions(+), 19 deletions(-)
 
 -- 
-2.9.3
+Best Regards
+Shawn Lin
 
