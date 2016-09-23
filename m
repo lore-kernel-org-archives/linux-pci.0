@@ -1,44 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.190]:63689 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752345AbcI0JaF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2016 05:30:05 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Adit Ranadive' <aditr@vmware.com>,
-        Yuval Shaia <yuval.shaia@oracle.com>
-CC: "dledford@redhat.com" <dledford@redhat.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "pv-drivers@vmware.com" <pv-drivers@vmware.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "jhansen@vmware.com" <jhansen@vmware.com>,
-        "asarwade@vmware.com" <asarwade@vmware.com>,
-        "georgezhang@vmware.com" <georgezhang@vmware.com>,
-        "bryantan@vmware.com" <bryantan@vmware.com>
-Subject: RE: [PATCH v5 13/16] IB/pvrdma: Add the main driver module for
- PVRDMA
-Date: Tue, 27 Sep 2016 09:21:27 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB010A6EA@AcuExch.aculab.com>
-References: <cover.1474759181.git.aditr@vmware.com>
- <8db982c37a0a96b37df02826564474a216922f25.1474759181.git.aditr@vmware.com>
- <20160926072739.GB6352@yuval-lap.Home>
- <651b18ee-55ca-0c72-af9c-c55c42b57fd1@vmware.com>
-In-Reply-To: <651b18ee-55ca-0c72-af9c-c55c42b57fd1@vmware.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.136]:60326 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965335AbcIWOai (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Sep 2016 10:30:38 -0400
+Date: Fri, 23 Sep 2016 09:30:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCHv4] pciehp: Let user control LED status
+Message-ID: <20160923143031.GD1514@localhost>
+References: <1473784319-6137-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473784319-6137-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogQWRpdCBSYW5hZGl2ZQ0KPiBTZW50OiAyNiBTZXB0ZW1iZXIgMjAxNiAxOToxNQ0KPiBP
-biBNb24sIFNlcCAyNiwgMjAxNiBhdCAwMDoyNzo0MEFNIC0wNzAwLCBZdXZhbCBTaGFpYSB3cm90
-ZToNCj4gPiBPbiBTYXQsIFNlcCAyNCwgMjAxNiBhdCAwNDoyMTozN1BNIC0wNzAwLCBBZGl0IFJh
-bmFkaXZlIHdyb3RlOg0KPiA+ID4gKw0KPiA+ID4gKwkvKiBDdXJyZW50bHksIHRoZSBkcml2ZXIg
-b25seSBzdXBwb3J0cyBSb0NFIG1vZGUuICovDQo+ID4gPiArCWlmIChkZXYtPmRzci0+Y2Fwcy5t
-b2RlICE9IFBWUkRNQV9ERVZJQ0VfTU9ERV9ST0NFKSB7DQo+ID4gPiArCQlkZXZfZXJyKCZwZGV2
-LT5kZXYsICJ1bnN1cHBvcnRlZCB0cmFuc3BvcnQgJWRcbiIsDQo+ID4gPiArCQkJZGV2LT5kc3It
-PmNhcHMubW9kZSk7DQo+ID4gPiArCQlyZXQgPSAtRUlOVkFMOw0KPiA+DQo+ID4gVGhpcyBpcyBz
-b21lIGZhdGFsIGVycm9yIHdpdGggdGhlIGRldmljZSwgbm90IHRoYXQgc29tZXRoaW5nIHdyb25n
-IHdpdGggdGhlDQo+ID4gZnVuY3Rpb24ncyBhcmd1bWVudC4NCj4gPiBTdWdnZXN0aW5nIHRvIHJl
-cGxhY2Ugd2l0aCAtRUZBVUxULg0KPiA+DQo+IA0KPiBUaGFua3MsIHdpbGwgZml4IHRoaXMgb25l
-IGFuZCB0aGUgb3RoZXJzIGhlcmUuDQoNCldvbid0IEVGQVVMVCBnZW5lcmF0ZSBTSUdTRUdWID8N
-Cg0KCURhdmlkDQoNCg==
+On Tue, Sep 13, 2016 at 10:31:59AM -0600, Keith Busch wrote:
+> This patch adds a new flag to the pci_dev structure instructing pciehp
+> to not interpret PCIe slot LED indicators. The pciehp driver will instead
+> allow all LED control from the user by setting the slot control indicators
+> as the user requested through sysfs. This is preparing for domain devices
+> that repurpose these control bits for non-standard use.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+
+I applied this with a few minor tweaks to pci/hotplug for v4.9, thanks!
+The tweaks are:
+
+  - s/pciehp_set_raw_attention_status/pciehp_set_raw_indicator_status/ and
+    s/pciehp_get_raw_attention_status/pciehp_get_raw_indicator_status/
+    because we're now talking to *both* Attention and Power Indicators,
+    not just the Attention Indicator.
+
+  - s/user_leds/hotplug_user_indicators/ to use spec terminology
+    ("indicator") and to put it in a "hotplug" group in pci_dev.
+
+  - Expand changelog to the following to highlight the fact that we're
+    adding user control of the Power Indicator, which didn't exist before:
+
+    PCI: pciehp: Allow exclusive userspace control of indicators
+    
+    PCIe hotplug supports optional Attention and Power Indicators, which are
+    used internally by pciehp.  Users can't control the Power Indicator, but
+    they can control the Attention Indicator by writing to a sysfs "attention"
+    file.
+    
+    The Slot Control register has two bits for each indicator, and the PCIe
+    spec defines the encodings for each as (Reserved/On/Blinking/Off).  For
+    sysfs "attention" writes, pciehp_set_attention_status() maps into these
+    encodings, so the only useful write values are 0 (Off), 1 (On), and 2
+    (Blinking).
+    
+    However, some platforms use all four bits for platform-specific indicators,
+    and they need to allow direct user control of them while preventing pciehp
+    from using them at all.
+    
+    Add a "hotplug_user_indicators" flag to the pci_dev structure.  When set,
+    pciehp does not use either the Attention Indicator or the Power Indicator,
+    and the low four bits (values 0x0 - 0xf) of sysfs "attention" write values
+    are written directly to the Attention Indicator Control and Power Indicator
+    Control fields.
+
+Let me know if any of these are problematic.  Obviously I don't have a way
+to test and make sure I didn't break something.
+
+> ---
+> v3 -> v4:
+> 
+>   Fixing symbol usage by generating patch from the tree that compiles
+>   correctly.
+> 
+>  drivers/pci/hotplug/pciehp.h      |  5 +++++
+>  drivers/pci/hotplug/pciehp_core.c |  3 +++
+>  drivers/pci/hotplug/pciehp_hpc.c  | 27 +++++++++++++++++++++++++++
+>  include/linux/pci.h               |  1 +
+>  4 files changed, 36 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index e764918..725078d 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -152,6 +152,11 @@ bool pciehp_check_link_active(struct controller *ctrl);
+>  void pciehp_release_ctrl(struct controller *ctrl);
+>  int pciehp_reset_slot(struct slot *slot, int probe);
+>  
+> +int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 status);
+> +int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 *status);
+> +
+>  static inline const char *slot_name(struct slot *slot)
+>  {
+>  	return hotplug_slot_name(slot->hotplug_slot);
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index fb0f863..68b7aeb 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -113,6 +113,9 @@ static int init_slot(struct controller *ctrl)
+>  	if (ATTN_LED(ctrl)) {
+>  		ops->get_attention_status = get_attention_status;
+>  		ops->set_attention_status = set_attention_status;
+> +	} else if (ctrl->pcie->port->user_leds) {
+> +		ops->get_attention_status = pciehp_get_raw_attention_status;
+> +		ops->set_attention_status = pciehp_set_raw_attention_status;
+>  	}
+>  
+>  	/* register this slot with the hotplug pci core */
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 08e84d6..5ab8604 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -355,6 +355,18 @@ static int pciehp_link_enable(struct controller *ctrl)
+>  	return __pciehp_link_set(ctrl, true);
+>  }
+>  
+> +int pciehp_get_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 *status)
+> +{
+> +	struct slot *slot = hotplug_slot->private;
+> +	struct pci_dev *pdev = ctrl_dev(slot->ctrl);
+> +	u16 slot_ctrl;
+> +
+> +	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+> +	*status = (slot_ctrl & (PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC)) >> 6;
+> +	return 0;
+> +}
+> +
+>  void pciehp_get_attention_status(struct slot *slot, u8 *status)
+>  {
+>  	struct controller *ctrl = slot->ctrl;
+> @@ -431,6 +443,17 @@ int pciehp_query_power_fault(struct slot *slot)
+>  	return !!(slot_status & PCI_EXP_SLTSTA_PFD);
+>  }
+>  
+> +int pciehp_set_raw_attention_status(struct hotplug_slot *hotplug_slot,
+> +								u8 status)
+> +{
+> +	struct slot *slot = hotplug_slot->private;
+> +	struct controller *ctrl = slot->ctrl;
+> +
+> +	pcie_write_cmd_nowait(ctrl, status << 6,
+> +			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
+> +	return 0;
+> +}
+> +
+>  void pciehp_set_attention_status(struct slot *slot, u8 value)
+>  {
+>  	struct controller *ctrl = slot->ctrl;
+> @@ -804,6 +827,10 @@ struct controller *pcie_init(struct pcie_device *dev)
+>  	}
+>  	ctrl->pcie = dev;
+>  	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
+> +
+> +	if (pdev->user_leds)
+> +		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
+> +
+>  	ctrl->slot_cap = slot_cap;
+>  	mutex_init(&ctrl->ctrl_lock);
+>  	init_waitqueue_head(&ctrl->queue);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 7256f33..f41bbca 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -308,6 +308,7 @@ struct pci_dev {
+>  						   powered on/off by the
+>  						   corresponding bridge */
+>  	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
+> +	unsigned int	user_leds:1;		/* User excluse LED SlotCtl */
+>  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+>  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+>  
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
