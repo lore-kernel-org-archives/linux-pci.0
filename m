@@ -1,79 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 13 Sep 2016 09:24:41 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: nwatters@codeaurora.org, iommu@lists.linux-foundation.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 07/14] drivers: acpi: iort: add support for ARM SMMU
- platform devices creation
-Message-ID: <20160913082441.GA28804@red-moon>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
- <20160909142343.13314-8-lorenzo.pieralisi@arm.com>
- <7a63cf312b6e9714cdce1d0aca88cf4d@codeaurora.org>
- <fb4acfd5-b7fd-636f-53f3-13dc6fb8b713@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40232 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759300AbcIWTM3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Sep 2016 15:12:29 -0400
+Date: Fri, 23 Sep 2016 14:12:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv3 2/2] x86/vmd: Add PCI domain specific LED option
+Message-ID: <20160923191223.GA16019@localhost>
+References: <1473779140-4016-1-git-send-email-keith.busch@intel.com>
+ <1473779140-4016-2-git-send-email-keith.busch@intel.com>
+ <20160923143441.GF1514@localhost>
+ <20160923165702.GA20686@keith>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fb4acfd5-b7fd-636f-53f3-13dc6fb8b713@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160923165702.GA20686@keith>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 13, 2016 at 04:15:31PM +0800, Hanjun Guo wrote:
-
-[...]
-
-> >>+static acpi_status __init iort_match_iommu_callback(struct
-> >>acpi_iort_node *node,
-> >>+                            void *context)
-> >>+{
-> >>+    int ret;
-> >>+    struct fwnode_handle *fwnode;
-> >>+
-> >>+    fwnode = iort_get_fwnode(node);
-> >>+
-> >>+    if (!fwnode)
-> >>+        return AE_NOT_FOUND;
-> >>+
-> >>+    ret = iort_add_smmu_platform_device(fwnode, node);
-> >>+    if (ret) {
-> >>+        pr_err("Error in platform device creation\n");
-> >>+        return AE_ERROR;
-> >>+    }
-> >>+
-> >>+    return AE_OK;
-> >>+}
-> >>+
-> >>+static void __init iort_smmu_init(void)
-> >>+{
-> >>+    iort_scan_node(ACPI_IORT_NODE_SMMU, iort_match_iommu_callback,
-> >>NULL);
-> >>+    iort_scan_node(ACPI_IORT_NODE_SMMU_V3, iort_match_iommu_callback,
-> >>NULL);
-> >
-> >Since iort_scan_node() returns after the first successful match it finds,
-> >only the first SMMU_V3 in my IORT is being enumerated. I think you need
-> >to go back to the "iterator" like approach you had been using or make
-> >iort_match_iommu_callback() always return a non-AE_OK value so the scan
-> >continues and has a chance to visit all of the SMMU_V3 nodes.
+On Fri, Sep 23, 2016 at 12:57:02PM -0400, Keith Busch wrote:
+> On Fri, Sep 23, 2016 at 09:34:41AM -0500, Bjorn Helgaas wrote:
+> > I made the necessary changes to match the renaming I did in the first
+> > patch, and I also used plain old "#ifdef" instead of "#if IS_ENABLED"
+> > since the rest of the file uses the former style.  If there's a reason
+> > to switch, we should change the whole file in a separate patch so we
+> > can explain the rationale.
 > 
-> Please use the updated version of IORT patch (aka Tomasz's v11)
-> then things will work fine.
+> The check was "IS_ENABLED" because VMD can be a loadable module, which
+> fails the ifdef check. I see Fengguang 0'dayed it using the module
+> configuration option. I can send you a fix based on your pci/hotplug
+> branch, or revert and apply the original patch if you prefer.
 
-Nate is right, I was too keen on using iort_scan_node(), it does
-not really work here (unless as he said I return a value !AE_OK in
-the callback, which is horrible), I reverted back to the iterator
-approach and I can push out a fixed up branch if useful before next
-posting.
+I didn't realize VMD could be a loadable module, and I didn't realize
+that would make a difference for the config symbol.
 
-Thanks,
-Lorenzo
+BTW, the "Volume Management Device Driver" config item appears by
+itself in the top-level menuconfig menu.  That seems a little ...
+presumptuous; is it what you intended?
+
+It took me a while, but I did eventually figure out why #ifdef doesn't
+work -- we generate a different include/generated/autoconf.h symbol
+for modules:
+
+                 built-in                 loadable module
+                 ---------------------    ---------------------------
+  .config        CONFIG_VMD=y             CONFIG_VMD=m
+  autoconf.h     #define CONFIG_VMD 1     #define CONFIG_VMD_MODULE 1
+
+Anyway, I fixed it by using IS_ENABLED() again.
+
+I might propose a comment update to help anybody else who stumbles
+over this.  It was kind of annoying to puzzle this out.
+
+> BTW, you had asked me not to split a series when incremental fixes
+> touched a single patch. I didn't resend the whole series here, and while
+> you got the right patches, I apologize for making it more difficult to find.
+
+No problem, I was just paying more attention this time :)
+Except for IS_ENABLED(), anyway.
+
+Bjorn
