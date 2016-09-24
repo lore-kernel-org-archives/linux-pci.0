@@ -1,53 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45594 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932941AbcI0Nqo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Sep 2016 09:46:44 -0400
-From: Amir Levy <amir.jer.levy@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: andreas.noever@gmail.com, bhelgaas@google.com, corbet@lwn.net,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-doc@vger.kernel.org,
-        mario_limonciello@dell.com, thunderbolt-linux@intel.com,
-        mika.westerberg@intel.com, tomas.winkler@intel.com,
-        xiong.y.zhang@intel.com, Amir Levy <amir.jer.levy@intel.com>
-Subject: [PATCH v7 1/8] thunderbolt: Macro rename
-Date: Tue, 27 Sep 2016 16:43:34 +0300
-Message-Id: <1474983821-2313-2-git-send-email-amir.jer.levy@intel.com>
-In-Reply-To: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
-References: <1474983821-2313-1-git-send-email-amir.jer.levy@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 3/5] PCI: Recognize D3cold in pci_update_current_state()
+Date: Sat, 24 Sep 2016 02:46:48 +0200
+Message-ID: <2978984.WVCEXupSPA@vostro.rjw.lan>
+In-Reply-To: <32b08ff2dab38555db7759d627d7bcbdf4b119b9.1474130360.git.lukas@wunner.de>
+References: <cover.1474130360.git.lukas@wunner.de> <32b08ff2dab38555db7759d627d7bcbdf4b119b9.1474130360.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This first patch updates the NHI Thunderbolt controller registers file to
-reflect that it is not only for Cactus Ridge.
-No functional change intended.
+On Sunday, September 18, 2016 05:39:20 AM Lukas Wunner wrote:
+> Whenever a device is resumed or its power state is changed using the
+> platform, its new power state is read from the PM Control & Status
+> Register and cached in pci_dev->current_state by calling
+> pci_update_current_state().
+> 
+> If the device is in D3cold, reading from config space typically results
+> in a fabricated "all ones" response.  But if it's in D3hot, the two bits
+> representing the power state in the PMCSR are *also* set to 1.  Thus
+> D3hot and D3cold are not discernible by just reading the PMCSR.
+> 
+> To account for this, pci_update_current_state() uses two workarounds:
+> 
+> - When transitioning to D3cold using pci_platform_power_transition(),
+>   the new power state is set blindly by pci_update_current_state(),
+>   i.e. without verifying that the device actually *is* in D3cold.
+>   This is achieved by setting the "state" argument to PCI_D3cold.
+>   The "state" argument was originally intended to convey the new state
+>   in case the device doesn't have the PM capability.  It is *also* used
+>   to convey the device state if the PM capability is present and the
+>   new state is D3cold, but this was never explained in the kerneldoc.
+> 
+> - Once the current_state is set to D3cold, further invocations of
+>   pci_update_current_state() will blindly assume that the device is
+>   still in D3cold and leave the current_state unmodified.  To get out of
+>   this impasse, the current_state has to be set directly, typically by
+>   calling pci_raw_set_power_state() or pci_enable_device().
+> 
+> It would be desirable if pci_update_current_state() could reliably
+> detect D3cold by itself.  That would allow us to do away with these
+> workarounds, and it would allow for a smarter, more energy conserving
+> runtime resume strategy after system sleep:  Currently devices which
+> utilize direct_complete are mandatorily runtime resumed in their
+> ->complete stage.  This can be avoided if their power state after system
+> sleep is the same as before, but it requires a mechanism to detect the
+> power state reliably.
+> 
+> We've just gained the ability to query the platform firmware for its
+> opinion on the device's power state.  On platforms conforming to
+> ACPI 4.0 or newer, this allows recognition of D3cold.  Pre-4.0 platforms
+> lack _PR3 and therefore the deepest power state that will ever be
+> reported is D3hot, even though the device may actually be in D3cold.
+> To detect D3cold in those cases, accessibility of the vendor ID in
+> config space is probed using pci_device_is_present().  This also works
+> for devices which are not platform-power-manageable at all, but can be
+> suspended to D3cold using a nonstandard mechanism (e.g. some hybrid
+> graphics laptops or Thunderbolt on the Mac).
+> 
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-Signed-off-by: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/thunderbolt/nhi_regs.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/drivers/thunderbolt/nhi_regs.h b/drivers/thunderbolt/nhi_regs.h
-index 86b996c..75cf069 100644
---- a/drivers/thunderbolt/nhi_regs.h
-+++ b/drivers/thunderbolt/nhi_regs.h
-@@ -1,11 +1,11 @@
- /*
-- * Thunderbolt Cactus Ridge driver - NHI registers
-+ * Thunderbolt driver - NHI registers
-  *
-  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
-  */
- 
--#ifndef DSL3510_REGS_H_
--#define DSL3510_REGS_H_
-+#ifndef NHI_REGS_H_
-+#define NHI_REGS_H_
- 
- #include <linux/types.h>
- 
+> ---
+> 
+> Changes since v1:
+> * Instead of solely relying on the platform firmware to report D3cold,
+>   also probe the vendor ID and assume D3cold if it can't be read.
+>   This should ensure proper detection of D3cold on pre-ACPI 4.0
+>   platforms (which will never report anything deeper than D3hot)
+>   as well as for devices with nonstandard PM mechanisms.
+> * The two existing workarounds for D3cold are removed from
+>   pci_update_current_state(), as explained in the commit message.
+> 
+>  drivers/pci/pci.c | 25 ++++++++++++-------------
+>  1 file changed, 12 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6ea0d2d..7d3188b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -707,26 +707,25 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  }
+>  
+>  /**
+> - * pci_update_current_state - Read PCI power state of given device from its
+> - *                            PCI PM registers and cache it
+> + * pci_update_current_state - Read power state of given device and cache it
+>   * @dev: PCI device to handle.
+>   * @state: State to cache in case the device doesn't have the PM capability
+> + *
+> + * The power state is read from the PMCSR register, which however is
+> + * inaccessible in D3cold.  The platform firmware is therefore queried first
+> + * to detect accessibility of the register.  In case the platform firmware
+> + * reports an incorrect state or the device isn't power manageable by the
+> + * platform at all, we try to detect D3cold by testing accessibility of the
+> + * vendor ID in config space.
+>   */
+>  void pci_update_current_state(struct pci_dev *dev, pci_power_t state)
+>  {
+> -	if (dev->pm_cap) {
+> +	if (platform_pci_get_power_state(dev) == PCI_D3cold ||
+> +	    !pci_device_is_present(dev)) {
+> +		dev->current_state = PCI_D3cold;
+> +	} else if (dev->pm_cap) {
+>  		u16 pmcsr;
+>  
+> -		/*
+> -		 * Configuration space is not accessible for device in
+> -		 * D3cold, so just keep or set D3cold for safety
+> -		 */
+> -		if (dev->current_state == PCI_D3cold)
+> -			return;
+> -		if (state == PCI_D3cold) {
+> -			dev->current_state = PCI_D3cold;
+> -			return;
+> -		}
+>  		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+>  		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+>  	} else {
+> 
+
 -- 
-2.7.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
