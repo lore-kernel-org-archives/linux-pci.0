@@ -1,57 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:38989 "EHLO quartz.orcorp.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755570AbcILRth (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Sep 2016 13:49:37 -0400
-Date: Mon, 12 Sep 2016 11:49:34 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Adit Ranadive <aditr@vmware.com>
-Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
-        pv-drivers@vmware.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
-        georgezhang@vmware.com, bryantan@vmware.com
-Subject: Re: [PATCH v4 02/16] IB/pvrdma: Add user-level shared functions
-Message-ID: <20160912174934.GE5843@obsidianresearch.com>
-References: <1473655766-31628-1-git-send-email-aditr@vmware.com>
- <1473655766-31628-3-git-send-email-aditr@vmware.com>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:24761 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965526AbcIXXWP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2016 19:22:15 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v5 01/16] vmxnet3: Move PCI Id to pci_ids.h
+Date: Sat, 24 Sep 2016 16:21:25 -0700
+Message-ID: <0ed494851c6a1de2152f68be6a1735af6579d3ae.1474759181.git.aditr@vmware.com>
+In-Reply-To: <cover.1474759181.git.aditr@vmware.com>
+References: <cover.1474759181.git.aditr@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473655766-31628-3-git-send-email-aditr@vmware.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 11, 2016 at 09:49:12PM -0700, Adit Ranadive wrote:
-> We share some common structures with the user-level driver. This patch
-> adds those structures and shared functions to traverse the QP/CQ rings.
+The VMXNet3 PCI Id will be shared with our paravirtual RDMA driver.
+Moved it to the shared location in pci_ids.h.
 
->  create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_uapi.h
->  create mode 100644 drivers/infiniband/hw/pvrdma/pvrdma_user.h
+Suggested-by: Leon Romanovsky <leon@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
+---
+ drivers/net/vmxnet3/vmxnet3_int.h | 3 +--
+ include/linux/pci_ids.h           | 1 +
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-The files that are intended to be shared with userspace must be under
-include/uapi/, please coordinate with Leon on the path.
+diff --git a/drivers/net/vmxnet3/vmxnet3_int.h b/drivers/net/vmxnet3/vmxnet3_int.h
+index 74fc030..2bd6bf8 100644
+--- a/drivers/net/vmxnet3/vmxnet3_int.h
++++ b/drivers/net/vmxnet3/vmxnet3_int.h
+@@ -119,9 +119,8 @@ enum {
+ };
+ 
+ /*
+- * PCI vendor and device IDs.
++ * Maximum devices supported.
+  */
+-#define PCI_DEVICE_ID_VMWARE_VMXNET3    0x07B0
+ #define MAX_ETHERNET_CARDS		10
+ #define MAX_PCI_PASSTHRU_DEVICE		6
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index c58752f..98bb455 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2251,6 +2251,7 @@
+ #define PCI_DEVICE_ID_RASTEL_2PORT	0x2000
+ 
+ #define PCI_VENDOR_ID_VMWARE		0x15ad
++#define PCI_DEVICE_ID_VMWARE_VMXNET3	0x07b0
+ 
+ #define PCI_VENDOR_ID_ZOLTRIX		0x15b0
+ #define PCI_DEVICE_ID_ZOLTRIX_2BD0	0x2bd0
+-- 
+2.7.4
 
-Same for all the new drivers.
-
-> +static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
-> +{
-> +	const unsigned int idx = atomic_read(var);
-
-Eh? Does this even compile in userspace?
-
-If this is not a userspace header then why does it use __u32 and
-related ??
-
-> +#define PVRDMA_UVERBS_ABI_VERSION	3
-> +#define PVRDMA_BOARD_ID			1
-> +#define PVRDMA_REV_ID			1
-> +
-> +struct pvrdma_alloc_ucontext_resp {
-> +	u32 qp_tab_size;
-> +	u32 reserved;
-> +};
-
-This certainly looks like a userspace header, shouldn't it use __u32?
-
-NAK
-
-Jason
