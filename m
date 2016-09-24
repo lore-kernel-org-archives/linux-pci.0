@@ -1,98 +1,59 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Ard Biesheuvel
-	<ard.biesheuvel@linaro.org>
-CC: Tomasz Nowicki <tn@semihalf.com>, David Daney <ddaney@caviumnetworks.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Rafael Wysocki <rafael@kernel.org>,
-        Lorenzo Pieralisi
-	<Lorenzo.Pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Hanjun Guo
-	<hanjun.guo@linaro.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Jayachandran C
-	<jchandra@broadcom.com>,
-        Christopher Covington <cov@codeaurora.org>, Duc Dang
-	<dhdang@apm.com>,
-        Robert Richter <robert.richter@caviumnetworks.com>,
-        "Marcin Wojtas" <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
-        Wangyijing <wangyijing@huawei.com>, Mark Salter <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        Linaro ACPI Mailman List
-	<linaro-acpi@lists.linaro.org>,
-        Jon Masters <jcm@redhat.com>, Andrea Gallo
-	<andrea.gallo@linaro.org>,
-        Jeremy Linton <jeremy.linton@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        Jeff Hugo
-	<jhugo@codeaurora.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: RE: [PATCH V6 3/5] PCI: thunder-pem: Allow to probe PEM-specific
- register range for ACPI case
-Date: Wed, 21 Sep 2016 14:10:55 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1F87CF8F@lhreml507-mbx>
-References: <1473449047-10499-1-git-send-email-tn@semihalf.com>
- <1473449047-10499-4-git-send-email-tn@semihalf.com>
- <20160919180900.GB13775@localhost>
- <49f53bfc-4421-a8b0-694c-bce7e61e1c9e@semihalf.com>
- <20160920133327.GB13855@localhost>
- <CAKv+Gu-AE7fft_j2cqBCN=xrsf5Yh=mePf5x3dZJuKAmdxF-Gg@mail.gmail.com>
- <20160920140518.GD13855@localhost>
- <CAKv+Gu-j-gKiNMx-TvSxezJth1619FN8W1rAy7DKpkmfX9ii6A@mail.gmail.com>
- <20160920191744.GA4941@localhost>
-In-Reply-To: <20160920191744.GA4941@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:24765 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935933AbcIXXXS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2016 19:23:18 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v5 16/16] MAINTAINERS: Update for PVRDMA driver
+Date: Sat, 24 Sep 2016 16:21:40 -0700
+Message-ID: <fe5e7704757254073963cd40bff5240421b1fce0.1474759181.git.aditr@vmware.com>
+In-Reply-To: <cover.1474759181.git.aditr@vmware.com>
+References: <cover.1474759181.git.aditr@vmware.com>
 MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+Add maintainer info for the PVRDMA driver.
 
-[...]
+Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+Reviewed-by: George Zhang <georgezhang@vmware.com>
+Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+Reviewed-by: Bryan Tan <bryantan@vmware.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
+---
+Changes v4->v5:
+ - Added pvrdma files to common UAPI folder.
+---
+ MAINTAINERS | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 87e23cd..5023dc0 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -12615,6 +12615,15 @@ S:	Maintained
+ F:	drivers/scsi/vmw_pvscsi.c
+ F:	drivers/scsi/vmw_pvscsi.h
+ 
++VMWARE PVRDMA DRIVER
++M:	Adit Ranadive <aditr@vmware.com>
++M:	VMware PV-Drivers <pv-drivers@vmware.com>
++L:	linux-rdma@vger.kernel.org
++S:	Maintained
++F:	drivers/infiniband/hw/pvrdma/
++F:	include/uapi/rdma/pvrdma-abi.h
++F:	include/uapi/rdma/pvrdma-uapi.h
++
+ VOLTAGE AND CURRENT REGULATOR FRAMEWORK
+ M:	Liam Girdwood <lgirdwood@gmail.com>
+ M:	Mark Brown <broonie@kernel.org>
+-- 
+2.7.4
 
->=20
-> If future hardware is completely ECAM-compliant and we don't need any
-> more MCFG quirks, that would be great.
->=20
-> But we'll still need to describe that memory-mapped config space
-> somewhere.  If that's done with PNP0C02 or similar devices (as is done
-> on my x86 laptop), we'd be all set.
->=20
-> If we need to work around firmware in the field that doesn't do that,
-> one possibility is a PNP quirk along the lines of
-> quirk_amd_mmconfig_area().
-
-So, if my understanding is correct, for platforms that have not been
-shipped yet you propose to use PNP0C02 in the ACPI table in order to
-declare a motherboard reserved resource whereas for shipped platforms
-you propose to have a quirk along pnp_fixups in order to track the
-resource usage even if values are hardcoded...correct?
-
-Before Tomasz came up with this patchset we had a call between the vendors
-involved in this PCI quirks saga and other guys from Linaro and ARM.
-
-Lorenzo summarized the outcome as in the following link
-http://lkml.iu.edu/hypermail/linux/kernel/1606.2/03344.html
-
-Since this quirks mechanism has been discussed for quite a long time now
-IMHO it would be good to have a last call including also you (Bjorn) so
-that we can all agree on what to do and we avoid changing our drivers again
-and again...
-
-What do you think?
-
-Thanks
-
-Gab
-
->=20
-> Bjorn
