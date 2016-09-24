@@ -1,225 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Will Deacon <will.deacon@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Prem Mallappa <prem.mallappa@broadcom.com>,
-        Dennis Chen <dennis.chen@arm.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v5 14/14] drivers: acpi: iort: introduce iort_iommu_configure
-Date: Fri,  9 Sep 2016 15:23:43 +0100
-Message-Id: <20160909142343.13314-15-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
-References: <20160909142343.13314-1-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Peter Wu <peter@lekensteyn.nl>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 2/5] PCI: Query platform firmware for device power state
+Date: Sat, 24 Sep 2016 02:46:23 +0200
+Message-ID: <2060566.Y1NLRuZWTn@vostro.rjw.lan>
+In-Reply-To: <492d4d62ae1b3a95570babe9608d8ea971b62585.1474130360.git.lukas@wunner.de>
+References: <cover.1474130360.git.lukas@wunner.de> <492d4d62ae1b3a95570babe9608d8ea971b62585.1474130360.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DT based systems have a generic kernel API to configure IOMMUs
-for devices (ie of_iommu_configure()).
+On Sunday, September 18, 2016 05:39:20 AM Lukas Wunner wrote:
+> Usually the most accurate way to determine a PCI device's power state is
+> to read its PM Control & Status Register.  There are two cases however
+> when this is not an option:  If the device doesn't have the PM
+> capability at all, or if it is in D3cold (in which case its config space
+> is inaccessible).
+> 
+> In both cases, we can alternatively query the platform firmware for its
+> opinion on the device's power state.  To facilitate this, augment struct
+> pci_platform_pm_ops with a ->get_power callback and implement it for
+> acpi_pci_platform_pm (the only pci_platform_pm_ops existing so far).
+> 
+> It is used by a forthcoming commit to let pci_update_current_state()
+> recognize D3cold.
+> 
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-On ARM based ACPI systems, the of_iommu_configure() equivalent can
-be implemented atop ACPI IORT kernel API, with the corresponding
-functions to map device identifiers to IOMMUs and retrieve the
-corresponding IOMMU operations necessary for DMA operations set-up.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-By relying on the iommu_fwspec generic kernel infrastructure,
-implement the IORT based IOMMU configuration for ARM ACPI systems
-and hook it up in the ACPI kernel layer that implements DMA
-configuration for a device.
+> ---
+> 
+> Changes since v1:
+> * In acpi_pci_get_power_state(), only check for ACPI_STATE_UNKNOWN
+>   instead of ACPI_STATE_D0 and ACPI_STATE_D3_COLD.
+> * Move the change to pci_update_current_state() to new patch [3/5].
+> 
+>  drivers/pci/pci-acpi.c | 22 ++++++++++++++++++++++
+>  drivers/pci/pci.c      | 10 ++++++++--
+>  drivers/pci/pci.h      |  3 +++
+>  3 files changed, 33 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 9a033e8..d966d47 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -452,6 +452,27 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  	return error;
+>  }
+>  
+> +static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
+> +{
+> +	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+> +	static const pci_power_t state_conv[] = {
+> +		[ACPI_STATE_D0]      = PCI_D0,
+> +		[ACPI_STATE_D1]      = PCI_D1,
+> +		[ACPI_STATE_D2]      = PCI_D2,
+> +		[ACPI_STATE_D3_HOT]  = PCI_D3hot,
+> +		[ACPI_STATE_D3_COLD] = PCI_D3cold,
+> +	};
+> +	int state;
+> +
+> +	if (!adev || !acpi_device_power_manageable(adev))
+> +		return PCI_UNKNOWN;
+> +
+> +	if (acpi_device_get_power(adev, &state) || state == ACPI_STATE_UNKNOWN)
+> +		return PCI_UNKNOWN;
+> +
+> +	return state_conv[state];
+> +}
+> +
+>  static bool acpi_pci_can_wakeup(struct pci_dev *dev)
+>  {
+>  	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+> @@ -534,6 +555,7 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
+>  static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
+>  	.is_manageable = acpi_pci_power_manageable,
+>  	.set_state = acpi_pci_set_power_state,
+> +	.get_state = acpi_pci_get_power_state,
+>  	.choose_state = acpi_pci_choose_state,
+>  	.sleep_wake = acpi_pci_sleep_wake,
+>  	.run_wake = acpi_pci_run_wake,
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 72a9d3a..6ea0d2d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -552,8 +552,9 @@ static const struct pci_platform_pm_ops *pci_platform_pm;
+>  
+>  int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+>  {
+> -	if (!ops->is_manageable || !ops->set_state || !ops->choose_state ||
+> -	    !ops->sleep_wake || !ops->run_wake || !ops->need_resume)
+> +	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
+> +	    !ops->choose_state  || !ops->sleep_wake || !ops->run_wake  ||
+> +	    !ops->need_resume)
+>  		return -EINVAL;
+>  	pci_platform_pm = ops;
+>  	return 0;
+> @@ -570,6 +571,11 @@ static inline int platform_pci_set_power_state(struct pci_dev *dev,
+>  	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
+>  }
+>  
+> +static inline pci_power_t platform_pci_get_power_state(struct pci_dev *dev)
+> +{
+> +	return pci_platform_pm ? pci_platform_pm->get_state(dev) : PCI_UNKNOWN;
+> +}
+> +
+>  static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
+>  {
+>  	return pci_platform_pm ?
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 194521b..4518562 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -42,6 +42,8 @@ int pci_probe_reset_function(struct pci_dev *dev);
+>   *
+>   * @set_state: invokes the platform firmware to set the device's power state
+>   *
+> + * @get_state: queries the platform firmware for a device's current power state
+> + *
+>   * @choose_state: returns PCI power state of given device preferred by the
+>   *                platform; to be used during system-wide transitions from a
+>   *                sleeping state to the working state and vice versa
+> @@ -62,6 +64,7 @@ int pci_probe_reset_function(struct pci_dev *dev);
+>  struct pci_platform_pm_ops {
+>  	bool (*is_manageable)(struct pci_dev *dev);
+>  	int (*set_state)(struct pci_dev *dev, pci_power_t state);
+> +	pci_power_t (*get_state)(struct pci_dev *dev);
+>  	pci_power_t (*choose_state)(struct pci_dev *dev);
+>  	int (*sleep_wake)(struct pci_dev *dev, bool enable);
+>  	int (*run_wake)(struct pci_dev *dev, bool enable);
+> 
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/arm64/iort.c | 96 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/scan.c       |  7 +++-
- include/linux/acpi_iort.h |  6 +++
- 3 files changed, 108 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 7c68eb4..55a4ae9 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -19,6 +19,7 @@
- #define pr_fmt(fmt)	"ACPI: IORT: " fmt
- 
- #include <linux/acpi_iort.h>
-+#include <linux/iommu-fwspec.h>
- #include <linux/kernel.h>
- #include <linux/list.h>
- #include <linux/pci.h>
-@@ -27,6 +28,8 @@
- 
- #define IORT_TYPE_MASK(type)	(1 << (type))
- #define IORT_MSI_TYPE		(1 << ACPI_IORT_NODE_ITS_GROUP)
-+#define IORT_IOMMU_TYPE		((1 << ACPI_IORT_NODE_SMMU) |	\
-+				(1 << ACPI_IORT_NODE_SMMU_V3))
- 
- struct iort_its_msi_chip {
- 	struct list_head	list;
-@@ -467,6 +470,99 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id)
- 	return irq_find_matching_fwnode(handle, DOMAIN_BUS_PCI_MSI);
- }
- 
-+static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	u32 *rid = data;
-+
-+	*rid = alias;
-+	return 0;
-+}
-+
-+static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
-+			       struct fwnode_handle *fwnode)
-+{
-+	int ret = iommu_fwspec_init(dev, fwnode);
-+
-+	if (!ret)
-+		ret = iommu_fwspec_add_ids(dev, &streamid, 1);
-+
-+	return ret;
-+}
-+
-+static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
-+					struct acpi_iort_node *node,
-+					u32 streamid)
-+{
-+	struct fwnode_handle *iort_fwnode = NULL;
-+	int ret;
-+
-+	if (node) {
-+		iort_fwnode = iort_get_fwnode(node);
-+		if (!iort_fwnode)
-+			return NULL;
-+
-+		ret = arm_smmu_iort_xlate(dev, streamid,
-+					  iort_fwnode);
-+		if (!ret)
-+			return fwspec_iommu_get_ops(iort_fwnode);
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * iort_iommu_configure - Set-up IOMMU configuration for a device.
-+ *
-+ * @dev: device to configure
-+ *
-+ * Returns: iommu_ops pointer on configuration success
-+ *          NULL on configuration failure
-+ */
-+const struct iommu_ops *iort_iommu_configure(struct device *dev)
-+{
-+	struct acpi_iort_node *node, *parent;
-+	const struct iommu_ops *ops = NULL;
-+	u32 streamid = 0;
-+
-+	if (dev_is_pci(dev)) {
-+		struct pci_bus *bus = to_pci_dev(dev)->bus;
-+		u32 rid;
-+
-+		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
-+				       &rid);
-+
-+		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-+				      iort_match_node_callback, &bus->dev);
-+		if (!node)
-+			return NULL;
-+
-+		parent = iort_node_map_rid(node, rid, &streamid,
-+					   IORT_IOMMU_TYPE);
-+
-+		ops = iort_iommu_xlate(dev, parent, streamid);
-+
-+	} else {
-+		int i = 0;
-+
-+		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-+				      iort_match_node_callback, dev);
-+		if (!node)
-+			return NULL;
-+
-+		parent = iort_node_get_id(node, &streamid,
-+					  IORT_IOMMU_TYPE, i++);
-+
-+		while (parent) {
-+			ops = iort_iommu_xlate(dev, parent, streamid);
-+
-+			parent = iort_node_get_id(node, &streamid,
-+						  IORT_IOMMU_TYPE, i++);
-+		}
-+	}
-+
-+	return ops;
-+}
-+
- static void __init acpi_iort_register_irq(int hwirq, const char *name,
- 					  int trigger,
- 					  struct resource *res)
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 9614232..7e56a85 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -7,6 +7,7 @@
- #include <linux/slab.h>
- #include <linux/kernel.h>
- #include <linux/acpi.h>
-+#include <linux/acpi_iort.h>
- #include <linux/signal.h>
- #include <linux/kthread.h>
- #include <linux/dmi.h>
-@@ -1377,11 +1378,15 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
-  */
- void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
- {
-+	const struct iommu_ops *iommu;
-+
-+	iommu = iort_iommu_configure(dev);
-+
- 	/*
- 	 * Assume dma valid range starts at 0 and covers the whole
- 	 * coherent_dma_mask.
- 	 */
--	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, NULL,
-+	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
- 			   attr == DEV_DMA_COHERENT);
- }
- 
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index 1ed4f8f..167649a 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -36,6 +36,8 @@ struct irq_domain *iort_get_device_domain(struct device *dev, u32 req_id);
- int iort_set_fwnode(struct acpi_iort_node *iort_node,
- 		    struct fwnode_handle *fwnode);
- struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node);
-+/* IOMMU interface */
-+const struct iommu_ops *iort_iommu_configure(struct device *dev);
- #else
- static inline void acpi_iort_init(void) { }
- static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-@@ -49,6 +51,10 @@ static inline int iort_set_fwnode(struct acpi_iort_node *iort_node,
- static inline
- struct fwnode_handle *iort_get_fwnode(struct acpi_iort_node *node)
- { return NULL; }
-+/* IOMMU interface */
-+static inline
-+const struct iommu_ops *iort_iommu_configure(struct device *dev)
-+{ return NULL; }
- #endif
- 
- #define IORT_ACPI_DECLARE(name, table_id, fn)		\
 -- 
-2.10.0
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
