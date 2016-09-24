@@ -1,164 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46334 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751998AbcIHT7R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Sep 2016 15:59:17 -0400
-Date: Thu, 8 Sep 2016 14:59:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-Cc: 'Rajat Jain' <rajatja@google.com>,
-        "'bhelgaas@google.com'" <bhelgaas@google.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-        "'mika.westerberg@linux.intel.com'" <mika.westerberg@linux.intel.com>,
-        "Busch, Keith" <keith.busch@intel.com>,
-        "Tarazona-Duarte, Luis Antonio"
-        <luis.antonio.tarazona-duarte@intel.com>,
-        'Rajat Jain' <rajatxjain@gmail.com>,
-        'Andy Shevchenko' <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH v1 1/2] PCI: pciehp: Fix presence detect change interrupt
- handling
-Message-ID: <20160908195912.GB9440@localhost>
-References: <92EBB4272BF81E4089A7126EC1E7B28466598F18@IRSMSX101.ger.corp.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V3 2/4] ARM64 LPC: LPC driver implementation on Hip06
+To: Arnd Bergmann <arnd@arndb.de>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+ bhelgaas@google.com
+References: <1473855354-150093-1-git-send-email-yuanzhichang@hisilicon.com>
+ <9178320.n4yHmfyPA3@wuerfel> <57E40665.8080005@gmail.com>
+ <1760643.vMTR5o5E9g@wuerfel>
+From: zhichang <zhichang.yuan02@gmail.com>
+Message-ID: <378cda2d-e8fb-af10-01ff-c555def3d639@gmail.com>
+Date: Sat, 24 Sep 2016 16:00:37 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B28466598F18@IRSMSX101.ger.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1760643.vMTR5o5E9g@wuerfel>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ John Garry <john.garry@huawei.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Yuanzhichang <yuanzhichang@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "kantyzc@163.com" <kantyzc@163.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 23, 2016 at 08:58:51AM +0000, Patel, Mayurkumar wrote:
-> Currently, if very fast hotplug removal and insertion event comes
-> as following
-> 
-> [  608.823412] pciehp 0000:00:1c.1:pcie04: Card not present on Slot(1)
-> [  608.835249] pciehp 0000:00:1c.1:pcie04: Card present on Slot(1)
-> 
-> In this case following scenario happens,
-> 
-> While removal:
-> pcie_isr() -> pciehp_queue_interrupt_event() -> triggers queue_work().
-> work invokes interrupt_event_handler() -> case INT_PRESENCE_OFF
-> and calls handle_surprise_event().
-> 
-> handle_surprise_event() again calls pciehp_get_adapter_status()
-> and reads slot status which might have been changed
-> already due to PCI_EXP_SLTSTA_PDC event for hotplug insertion
-> has happened. So it queues, ENABLE_REQ for both removal
-> and insertion interrupt based on latest slot status.
-> 
-> In this case, PCIe device can not be hot-add again because
-> it was never removed due to which device can not get enabled.
-> 
-> handle_surprise_event() can be removed and pciehp_queue_power_work()
-> can be directly triggered based on INT_PRESENCE_ON and INT_PRESENCE_OFF
-> from the switch case exist in interrupt_event_hanlder().
-> 
-> The patch ensures the pciehp_queue_power_work() processes
-> presence detect change for removal and insertion correctly.
-> 
-> Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
-> Acked-by: Rajat Jain <rajatxjain@gmail.com>
-
-I applied this to pci/hotplug for v4.9, with the following changelog.
-
-
-  PCI: pciehp: Fix presence detect change interrupt handling
-
-  When a hotplug insertion happens immediately after a hotplug removal, we
-  may not handle the removal correctly, which may cause the insertion to
-  fail.
-
-  If Presence Detect State (PCI_EXP_SLTSTA_PDS) has changed from "card
-  present" to "empty", we must remove the kernel pci_dev, even if a device
-  is inserted again.  With the previous code, that might not happen if the
-  insertion happens soon after the removal.  Consider this path:
-
-    # hotplug removal causes interrupt and clears PCI_EXP_SLTSTA_PDS
-
-    pcie_isr
-      pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status)
-      present = status & PCI_EXP_SLTSTA_PDS       # FALSE
-      pciehp_queue_interrupt_event(INT_PRESENCE_OFF)
-        queue_work(...)                           # interrupt_event_handler
-
-    # hotplug insertion sets PCI_EXP_SLTSTA_PDS
-
-    interrupt_event_handler
-      handle_surprise_event
-        pciehp_get_adapter_status
-          pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status)
-          present = status & PCI_EXP_SLTSTA_PDS   # TRUE <----
-        pciehp_queue_power_work(ENABLE_REQ)
-
-  The first PCI_EXP_SLTSTA read sees that the slot was empty, so we queue up
-  handle_surprise_event().  But handle_surprise_event() reads PCI_EXP_SLTSTA
-  again, and by that time, the slot has a card in it again, so it tries to
-  turn on the power and scan the slot.  The scan fails because we still have
-  the old pci_dev for the device that was removed.
-
-  In interrupt_event_handler(), we already know the event type
-  (INT_PRESENCE_ON or INT_PRESENCE_OFF), so there's no need to read
-  PCI_EXP_SLTSTA again in handle_surprise_event().  Remove
-  handle_surprise_event() and queue the power work directly.
-
-
-> ---
-> Resending the patch with another patch which has pcie_isr() correct
-> event handling proposal
-> 
->  drivers/pci/hotplug/pciehp_ctrl.c |   18 ++----------------
->  1 file changed, 2 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 880978b..87c5bea 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -301,20 +301,6 @@ static void handle_button_press_event(struct slot *p_slot)
->  /*
->   * Note: This function must be called with slot->lock held
->   */
-> -static void handle_surprise_event(struct slot *p_slot)
-> -{
-> -	u8 getstatus;
-> -
-> -	pciehp_get_adapter_status(p_slot, &getstatus);
-> -	if (!getstatus)
-> -		pciehp_queue_power_work(p_slot, DISABLE_REQ);
-> -	else
-> -		pciehp_queue_power_work(p_slot, ENABLE_REQ);
-> -}
-> -
-> -/*
-> - * Note: This function must be called with slot->lock held
-> - */
->  static void handle_link_event(struct slot *p_slot, u32 event)
->  {
->  	struct controller *ctrl = p_slot->ctrl;
-> @@ -377,14 +363,14 @@ static void interrupt_event_handler(struct work_struct *work)
->  		pciehp_green_led_off(p_slot);
->  		break;
->  	case INT_PRESENCE_ON:
-> -		handle_surprise_event(p_slot);
-> +		pciehp_queue_power_work(p_slot, ENABLE_REQ);
->  		break;
->  	case INT_PRESENCE_OFF:
->  		/*
->  		 * Regardless of surprise capability, we need to
->  		 * definitely remove a card that has been pulled out!
->  		 */
-> -		handle_surprise_event(p_slot);
-> +		pciehp_queue_power_work(p_slot, DISABLE_REQ);
->  		break;
->  	case INT_LINK_UP:
->  	case INT_LINK_DOWN:
-> --
-> 1.7.9.5
-> 
-> Intel Deutschland GmbH
-> Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-> Tel: +49 89 99 8853-0, www.intel.de
-> Managing Directors: Christin Eisenschmid, Christian Lamprechter
-> Chairperson of the Supervisory Board: Nicole Lau
-> Registered Office: Munich
-> Commercial Register: Amtsgericht Muenchen HRB 186928
-> 
+SGksIEFybmQsCgoKT24gMjAxNuW5tDA55pyIMjPml6UgMTc6NTEsIEFybmQgQmVyZ21hbm4gd3Jv
+dGU6Cj4gT24gRnJpZGF5LCBTZXB0ZW1iZXIgMjMsIDIwMTYgMTI6Mjc6MTcgQU0gQ0VTVCB6aGlj
+aGFuZy55dWFuIHdyb3RlOgo+PiBGb3IgdGhpcyBwYXRjaCBza2V0Y2gsIEkgaGF2ZSBhIHF1ZXN0
+aW9uLgo+PiBEbyB3ZSBjYWxsIHBjaV9hZGRyZXNzX3RvX3BpbyBpbiBhcmNoX29mX2FkZHJlc3Nf
+dG9fcGlvIHRvIGdldCB0aGUgCj4+IGNvcnJlc3BvbmRpbmcgbG9naWNhbCBJTyBwb3J0Cj4+IGZv
+ciBMUEM/Pwo+IAo+IAo+IE5vLCBvZiBjb3Vyc2Ugbm90LCB0aGF0IHdvdWxkIGJlIHNpbGx5Ogo+
+IAo+IFRoZSBhcmd1bWVudCB0byBwY2lfYWRkcmVzc190b19waW8oKSBpcyBhIHBoeXNfYWRkcl90
+LCBhbmQgd2Ugd2UgZG9uJ3QKPiBoYXZlIG9uZSBiZWNhdXNlIHRoZXJlIGlzIG5vIGFkZHJlc3Mg
+YXNzb2NpYXRlZCB3aXRoIHlvdXIgUElPLCB0aGF0Cj4gaXMgdGhlIGVudGlyZSBwb2ludCBvZiB5
+b3VyIGRyaXZlciEKPiAKb2suIEkgdGhpbmsgSSBrbm93IHlvdSBwb2ludHMuIFRoZSBwaHlzaWNh
+bCBhZGRyZXNzZXMgb2YgTFBDIGFyZSBvbmx5IHRoZSBMUEMKZG9tYWluIGFkZHJlc3Nlcywgbm90
+IHRoZSByZWFsbHkgQ1BVIHBoeXNpY2FsIGFkZHJlc3Nlcy4gVGhhdCBpcyBqdXN0IHdoeSB5b3UK
+ZG9uJ3Qgc3VwcG9ydCB0aGUgcmFuZ2VzIHByb3BlcnR5IHVzYWdlIGluIHBhdGNoIFYzLiBDb25z
+ZXF1ZW50bHksIEl0IGlzIG5vdCBzbwpyZWFzb25hYmxlIHRvIGNhbGwgcGNpX2FkZHJlc3NfdG9f
+cGlvKCkgd2l0aCBMUEMgYWRkcmVzcyBiZWNhdXNlIHRoYXQgZnVuY3Rpb24KaXMgb25seSBzdWl0
+YWJsZSBmb3IgY3B1IHBoeXNpY2FsIGFkZHJlc3MuCgpCdXQganVzdCBhcyB5b3Ugc2FpZCBpbiB0
+aGUgbmV4dCBlbWFpbCByZXBseSB0byBHYWJyaWVsZSwgIkFueSBJT1JFU09VUkNFX0lPCmFkZHJl
+c3MgYWx3YXlzIHJlZmVycyB0byB0aGUgbG9naWNhbCBJL08gcG9ydCByYW5nZSBpbiBMaW51eCwg
+bm90IHRoZSBwaHlzaWNhbAphZGRyZXNzIHRoYXQgaXMgdXNlZCBvbiBhIGJ1cy4iLCBBbnkgZGV2
+aWNlcyB3aGljaCBzdXBwb3J0IElPIGFjY2Vzc2VzIHNob3VsZApoYXZlIHRoZWlyIG93biB1bmlx
+dWUgbG9naWNhbCBJTyByYW5nZSB0byBkcml2ZSB0aGUgY29ycmVzcG9uZGluZyBoYXJkd2FyZS4g
+SXQKbWVhbnMgdGhhdCB0aGUgZHJpdmVycyBzaG91bGQga25vdyB0aGUgbWFwcGluZyBiZXR3ZWVu
+IHBoeXNpY2FsIHBvcnQvbWVtb3J5CmFkZHJlc3MgYW5kIGxvZ2ljYWwgSU8gZGVwZW5kIG9uIHRo
+ZSBkZXZpY2Ugc3BlY2lmaWMgSS9PIG1vZGUuIEF0IHRoaXMgbW9tZW50LApvbmx5IFBDSSBob3N0
+IGJyaWRnZSBzZXR1cCBhIGxvZ2ljYWwgSU8gcmFuZ2UgYWxsb2NhdGlvbiBtZWNoYW5pc20gdG8g
+bWFuaXB1bGF0ZQp0aGlzIGxvZ2ljYWwgSU8gcmFuZ2UsIGFuZCB0aGlzIHdheSBhcHBsaWVzIGNw
+dSBwaHlzaWNhbCBhZGRyZXNzKG1lbW9yeSkgYXMgdGhlCmlucHV0LiBOb3csIG91ciBMUEMgYWxz
+byBuZWVkIHN1YnJhbmdlIGZyb20gdGhpcyBjb21tb24gbG9naWNhbCBJTyByYW5nZSwgYnV0Cndp
+dGggbGVnYWN5IEkvTyBwb3J0IHJhdGhlciB0aGFuIENQVSBtZW1vcnkgYWRkcmVzcy4gT2ssIGl0
+IGJyZWFrIHRoZQpwcmVjb25kaXRpb24gb2YgcGNpX3JlZ2lzdGVyX2lvX3JhbmdlL3BjaV9waW9f
+dG9fYWRkcmVzcywgd2Ugc2hvdWxkIG5vdCB1c2UgdGhlbQpkaXJlY3RseSBmb3IgTFBDIGFsdGhv
+dWdoIHRoZSBjYWxsaW5nIG9mIHBjaV9waW9fdG9fYWRkcmVzcyBpcyBzaW1wbGUgYW5kIGxlc3MK
+Y2hhbmdlIG9uIHRoZSByZWxldmFudCBjb2RlLiBXZSBoYWQgZG9uZSBsaWtlIHRoYXQgaW4gVjMu
+Li4KClNvLCB0aGUga2V5IGlzc3VlIGlzIGhvdyB0byBnZXQgYSBsb2dpY2FsIElPIHN1YnJhbmdl
+IHdoaWNoIGlzIG5vdCBjb25mbGljdGVkCndpdGggb3RoZXJzLCBzdWNoIGFzIHBjaSBob3N0IGJy
+aWRnZXM/PwoKSSBsaXN0IHNldmVyYWwgaWRlYXMgZm9yIGRpc2N1c3Npb246CgoxLiByZXNlcnZl
+IGEgc3BlY2lmaWMgbG9naWNhbCBJTyBzdWJyYW5nZSBmb3IgTFBDCgpJIGRlc2NyaWJlIHRoaXMg
+aW4gIk5vdGUgMSIgYmVsb3cuIFBsZWFzZSBjaGVjayBpdC4KVGhpcyB3YXkgc2VlbXMgc2ltcGxl
+IHdpdGhvdXQgbXVjaCBjaGFuZ2VzLCBidXQgaXQgaXMgbm90IGdlbmVyaWMuCgoyLiBzZXR1cCBh
+IHNlcGFyYXRlIGxvZ2ljYWwgSU8gc3VicmFuZ2UgYWxsb2NhdGlvbiBtZWNoYW5pc20gc3BlY2lm
+aWMgZm9yIExQQy9JU0EKCkp1c3QgYXMgeW91ciBzdWdnZXN0aW9uIGJlZm9yZSwgYWRkIHRoZSBh
+cmNoX29mX2FkZHJlc3NfdG9fcGlvKCkgZm9yIHRoZSBkZXZpY2VzCndoaWNoIG9wZXJhdGUgSS9P
+IHdpdGggbGVnYWN5IEkvTyBwb3J0IGFkZHJlc3MgcmF0aGVyIHRoYW4gbWVtb3J5IGFkZHJlc3Mg
+aW4KTU1JTyBtb2RlLiBUaGF0IGFyY2hfb2ZfYWRkcmVzc190b19waW8oKSB3aWxsIHJldHVybiBu
+b24tY29uZmxpY3QgbG9naWNhbCBJTwp3aXRoIFBDSSBob3N0IGJyaWRnZSBhdCBsYXN0LiBCdXQg
+dGhlIGxvZ2ljYWwgSU8gcmFuZ2UgaXMgZ2xvYmFsLCB0aG9zZQpmdW5jdGlvbnMgZm9yIExQQy9J
+U0Egc3BlY2lmaWMgbG9naWNhbCBJTyBzdWJyYW5nZSBhbGxvY2F0aW9uIG11c3QgYmUKc3luY2hy
+b25pemVkIHdpdGggcGNpX3JlZ2lzdGVyX2lvX3JhbmdlL3BjaV9waW9fdG9fYWRkcmVzcyB0byBr
+bm93IHdoYXQgbG9naWNhbApyYW5nZXMgaGFkIGJlZW4gcG9wdWxhdGVkLiBJdCBpcyBub3QgZ29v
+ZCBmb3IgdGhlIGltcGxlbWVudCBkaXNwZXJzaW9uIG9uIHNhbWUKaXNzdWUuCgozLiBzZXR1cCBh
+IG5ldyB1bmRlcmx5aW5nIG1ldGhvZCB0byBjb250cm9sIHRoZSBsb2dpY2FsIElPIHJhbmdlIG1h
+bmFnZW1lbnQKCkJhc2VkIG9uIHRoZSBleGlzdGluZyByZXNvdXJjZSBtYW5hZ2VtZW50LCBhZGQg
+YSBzaW1wbGlmaWVkIGxvZ2ljYWwgSU8gcmFuZ2UKbWFuYWdlbWVudCBzdXBwb3J0IHdoaWNoIG9u
+bHkgcmVxdWVzdCB0aGUgbG9naWNhbCBJTyByYW5nZXMgYWNjb3JkaW5nIHRoZSBJTwpyYW5nZSBz
+aXplICggc2ltaWxhciB0byBJT1JFU09VUkNFX1NJWkVBTElHTiBtb2RlICksIG5vIG1hdHRlciB3
+aGF0IHR5cGUgdGhlCnBoeXNpY2FsIGFkZHJlc3MgaXMuIFRoZW4gcmV2aXNlIHRoZSBjdXJyZW50
+IHBjaV9yZWdpc3Rlcl9pb19yYW5nZSB0byBhZG9wdCB0aGlzCm5ldyBtZXRob2QuIE9mLWNvdXJz
+ZSwgTFBDL0lTQSByZXF1ZXN0IHRoZSBsb2dpY2FsIElPIHdpdGggdGhpcyBuZXcgbWV0aG9kIHRv
+by4KClRoaXMgaXMganVzdCBhIHByb3Bvc2l0aW9uLiBJdCBpcyBtb3JlIHdvcmtsb2FkIGNvbXBh
+cmVkIHdpdGggb3RoZXIgc29sdXRpb25zLgoKV2hhdCBkbyB5b3UgdGhpbmsgYWJvdXQgdGhlc2U/
+IEFueSBtb3JlIGlkZWFzPwoKCj4gQWxzbywgd2UgYWxyZWFkeSBrbm93IHRoZSBtYXBwaW5nIGJl
+Y2F1c2UgdGhpcyBpcyB3aGF0IHRoZSBpbmIvb3V0Ygo+IHdvcmthcm91bmQgaXMgbG9va2luZyBh
+dCwgc28gdGhlcmUgaXMgYWJzb2x1dGVseSBubyByZWFzb24gdG8gY2FsbCBpdAo+IGVpdGhlci4K
+PiAKPj4gSWYgd2UgZG9uJ3QsIGl0IHNlZW1zIHRoZSBMUEMgc3BlY2lmaWMgSU8gYWRkcmVzcyB3
+aWxsIGNvbmZsaWN0IHdpdGggUENJIAo+PiBob3N0IGJyaWRnZXMnIGxvZ2ljYWwgSU8uCj4+Cj4+
+IFN1cHBvc2VkIG91ciBMUEMgcG9wdWxhdGVkIHRoZSBJTyByYW5nZSBmcm9tIDB4MTAwIHRvIDB4
+M0ZGKCB0aGlzIGlzIAo+PiBub3JtYWwgZm9yIElTQSBzaW1pbGFyCj4+IGRldmljZXMpLCBhZnRl
+ciBhcmNoX29mX2FkZHJlc3NfdG9fcGlvKCksIHRoZSByLT5zdGFydCB3aWxsIGJlIHNldCBhcyAK
+Pj4gMHgxMDAsIHItPmVuZCB3aWxsIGJlIHNldCBhcwo+PiAweDNGRi4gIEFuZCBpZiB0aGVyZSBp
+cyBvbmUgUENJIGhvc3QgYnJpZGdlIHdobyByZXF1ZXN0IGEgSU8gd2luZG93IHNpemUgCj4+IG92
+ZXIgMHg0MDAgYXQgdGhlIHNhbWUKPj4gdGltZSwgdGhlICBjb3JyZXNwb25kaW5nIHItPnN0YXJ0
+IGFuZCByLT5lbmQgd2lsbCBiZSBzZXQgYXMgMHgwLCAweDNGRiAKPj4gYWZ0ZXIgb2ZfYWRkcmVz
+c190b19yZXNvdXJjZQo+PiBmb3IgdGhpcyBob3N0IGJyaWRnZS4gIFRoZW4gdGhlIElPIGNvbmZs
+aWN0IGhhcHBlbnMuCj4gCj4gWW91IHdvdWxkIHN0aWxsIG5lZWQgdG8gcmVzZXJ2ZSBzb21lIHNw
+YWNlIGluIHRoZSBpb19yYW5nZV9saXN0Cj4gdG8gYXZvaWQgcG9zc2libGUgY29uZmxpY3RzLCB3
+aGljaCBpcyBhIGJpdCB1Z2x5IHdpdGggdGhlIGN1cnJlbnQKPiBkZWZpbml0aW9uIG9mIHBjaV9y
+ZWdpc3Rlcl9pb19yYW5nZSwgYnV0IEknbSBzdXJlIGNhbiBiZSBkb25lLgo+IAoKTm90ZSAxKSBE
+byB5b3UgcmVtZW1iZXIgcGF0Y2ggVjI/IFRoZXJlLCBJIG1vZGlmaWVkIHRoZSBwY2kuYyBsaWtl
+IHRoYXQgdG8KcmVzZXJ2ZSAwIC0gUENJQklPU19NSU5fSU8gKGl0IGlzIDB4MTAwMCkgOgoKZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3BjaS5jIGIvZHJpdmVycy9wY2kvcGNpLmMKaW5kZXggYWFi
+OWQ1MS4uYWMyZTU2OSAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvcGNpLmMKKysrIGIvZHJpdmVy
+cy9wY2kvcGNpLmMKQEAgLTMyMjEsNyArMzIyMSw3IEBAIGludCBfX3dlYWsgcGNpX3JlZ2lzdGVy
+X2lvX3JhbmdlKHBoeXNfYWRkcl90IGFkZHIsIHJlc291cmMKCiAjaWZkZWYgUENJX0lPQkFTRQog
+ICAgICAgIHN0cnVjdCBpb19yYW5nZSAqcmFuZ2U7Ci0gICAgICAgcmVzb3VyY2Vfc2l6ZV90IGFs
+bG9jYXRlZF9zaXplID0gMDsKKyAgICAgICByZXNvdXJjZV9zaXplX3QgYWxsb2NhdGVkX3NpemUg
+PSBQQ0lCSU9TX01JTl9JTzsKCiAgICAgICAgLyogY2hlY2sgaWYgdGhlIHJhbmdlIGhhc24ndCBi
+ZWVuIHByZXZpb3VzbHkgcmVjb3JkZWQgKi8KICAgICAgICBzcGluX2xvY2soJmlvX3JhbmdlX2xv
+Y2spOwpAQCAtMzI3MCw3ICszMjcwLDcgQEAgcGh5c19hZGRyX3QgcGNpX3Bpb190b19hZGRyZXNz
+KHVuc2lnbmVkIGxvbmcgcGlvKQoKICNpZmRlZiBQQ0lfSU9CQVNFCiAgICAgICAgc3RydWN0IGlv
+X3JhbmdlICpyYW5nZTsKLSAgICAgICByZXNvdXJjZV9zaXplX3QgYWxsb2NhdGVkX3NpemUgPSAw
+OworICAgICAgIHJlc291cmNlX3NpemVfdCBhbGxvY2F0ZWRfc2l6ZSA9IFBDSUJJT1NfTUlOX0lP
+OwoKICAgICAgICBpZiAocGlvID4gSU9fU1BBQ0VfTElNSVQpCiAgICAgICAgICAgICAgICByZXR1
+cm4gYWRkcmVzczsKQEAgLTMyOTMsNyArMzI5Myw3IEBAIHVuc2lnbmVkIGxvbmcgX193ZWFrIHBj
+aV9hZGRyZXNzX3RvX3BpbyhwaHlzX2FkZHJfdCBhZGRyZXMKIHsKICNpZmRlZiBQQ0lfSU9CQVNF
+CiAgICAgICAgc3RydWN0IGlvX3JhbmdlICpyZXM7Ci0gICAgICAgcmVzb3VyY2Vfc2l6ZV90IG9m
+ZnNldCA9IDA7CisgICAgICAgcmVzb3VyY2Vfc2l6ZV90IG9mZnNldCA9IFBDSUJJT1NfTUlOX0lP
+OwogICAgICAgIHVuc2lnbmVkIGxvbmcgYWRkciA9IC0xOwoKICAgICAgICBzcGluX2xvY2soJmlv
+X3JhbmdlX2xvY2spOwoKQmFzZWQgb24gdGhpcywgYSBleGNsdXNpdmUgbG9naWNhbCBJTyBzdWJy
+YW5nZSBpcyBmb3IgTFBDIG5vdy4gVGhlbiB3ZSBjZXJ0YWlubHkKY2FuIGFkZCBzb21lIHNwZWNp
+YWwgaGFuZGxpbmcgaW4gX19vZl9hZGRyZXNzX3RvX3Jlc291cmNlIG9yCl9fb2ZfdHJhbnNsYXRl
+X2FkZHJlc3MgLS0+IG9mX3RyYW5zbGF0ZV9vbmUgdG8gcmV0dXJuIHRoZSB1bnRyYW5zbGF0ZWQg
+TFBDL0lTQQpJTyBhZGRyZXNzLiBCdXQgdG8gYmUgaG9uZXN0LCBJIHRoaW5rIHdlIGRvbid0IG5l
+ZWQgdGhpcyBzcGVjaWFsIGhhbmRsaW5nIGluCmFkZHJlc3MuYyBhbnltb3JlLiBXZSBoYWQga25v
+d24gdGhlIExQQy9JU0EgSU8gaXMgMToxIHRvIGxvZ2ljYWwgSU8sIGp1c3QgdGhpbmsKYW55IGxv
+Z2ljYWwgSU8gcG9ydCBhbW9uZyAwIC0gMHgxMDAwIHNob3VsZCBjYWxsIHRoZSBMUEMgcmVnaXN0
+ZXJlZCBJL08gaG9va3MgaW4KdGhlIG5ldyBpbi9vdXQoKS4KCkZ1cnRoZXJtb3JlLCB3ZSBjYW4g
+bWFrZSB0aGUgcmVzZXJ2YXRpb24gaXMgbm90IGZpeGVkIGFzIFBDSUJJT1NfTUlOX0lPLiBJZiB0
+aGUKTFBDL0lTQSBwcm9iaW5nIGlzIHJ1biBiZWZvcmUgUENJIGhvc3QgYnJpZGdlIHByb2Jpbmcs
+IHdlIGNhbiByZXNlcnZlIGEKbm9uLWZpeGVkIGxvZ2NpYWwgSU8gc3VicmFuZ2Ugd2hhdCBMUEMv
+SVNBIGFzayBmb3IuCgpUaGlzIHNvbHV0aW9uIGlzIGJhc2VkIG9uIGFuIGFzc3VtcHRpb24gdGhh
+dCBubyBhbnkgb3RoZXIgZGV2aWNlcyBoYXZlIHRvCnJlcXVlc3QgdGhlIHNwZWNpZmljIGxvZ2lj
+YWwgSU8gc3VicmFuZ2UgZm9yIExQQy9JU0EuIFByb2JhYmx5IHRoaXMgYXNzdW1wdGlvbgppcyBv
+ayBvbiBhcm02NCwgeW91IGtub3duLCB0aGVyZSBpcyBubyByZWFsIElPIHNwYWNlIGFzIFg4Ni4g
+QnV0IGFueXdheSwgdGhpcwpyZXNlcnZhdGlvbiBpcyBub3Qgc28gZ2VuZXJpYywgZGVwZW5kZWQg
+b24gc29tZSBzcGVjaWFsIGhhbmRsaW5nLgoKRG9lcyB0aGlzIGlkZWEgbWF0Y2ggeW91ciBjb21t
+ZW50cz8/CgoKPiBPbmUgd2F5IEkgY2FuIHRoaW5rIG9mIHdvdWxkIGJlIHRvIGNoYW5nZSBwY2lf
+cmVnaXN0ZXJfaW9fcmFuZ2UoKQo+IHRvIGp1c3QgcmV0dXJuIHRoZSBsb2dpY2FsIHBvcnQgbnVt
+YmVyIGRpcmVjdGx5IChpdCBhbHJlYWR5Cj4ga25vd3MgaXQhKSwgYW5kIHBhc3MgYW4gaW52YWxp
+ZCBwaHlzaWNhbCBhZGRyZXNzIChlLmcuIAo+ICNkZWZpbmUgSVNBX1dPUktBUk9VTkRfSU9fUE9S
+VF9XSU5ET1cgLTB4MTAwMDApIGludG8gaXQgZm9yCj4gaW52YWxpZCB0cmFuc2xhdGlvbnMuCj4g
+CgpJIGFtIG5vdCBzbyBjbGVhciBrbm93IHlvdXIgaWRlYSBoZXJlLiAgRG8geW91IHdhbnQgdG8g
+c2VsZWN0IGFuIHVucG9wdWxhdGVkIENQVQphZGRyZXNzIGFzIHRoZSBwYXJlbnQgYWRkcmVzcyBp
+biByYW5nZSBwcm9wZXJ0eT8/IG9yIGFueXRoaW5nIGVsc2U/Pz8KCgo+IEFub3RoZXIgYWx0ZXJu
+YXRpdmUgdGhhdCBqdXN0IG9jY3VycmVkIHRvIG1lIHdvdWxkIGJlIHRvIG1vdmUKPiB0aGUgcGNp
+X2FkZHJlc3NfdG9fcGlvKCkgY2FsbCBmcm9tIF9fb2ZfYWRkcmVzc190b19yZXNvdXJjZSgpCj4g
+aW50byBvZl9idXNfcGNpX3RyYW5zbGF0ZSgpIGFuZCB0aGVuIGRvIHRoZSBzcGVjaWFsIGhhbmRs
+aW5nCj4gZm9yIHRoZSBJU0EvTFBDIGJ1cyBpbiBvZl9idXNfaXNhX3RyYW5zbGF0ZSgpLgoKQXMg
+Zm9yIHRoaXMgaWRlYSwgZG8geW91IG1lYW4gdGhhdCBvZl90cmFuc2xhdGVfYWRkcmVzcyB3aWxs
+IGRpcmVjdGx5IHJldHVybiB0aGUKZmluYWwgbG9naWNhbCBJTyBzdGFydCBhZGRyZXNzPz8gSXQg
+c2VlbXMgdG8gZXh0ZW5kIHRoZSBkZWZpbml0aW9uIG9mCm9mX3RyYW5zbGF0ZV9hZGRyZXNzLgoK
+ClRoYW5rcywKWmhpY2hhbmcKCj4gCj4gCUFybmQKPiAKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0Cmxp
+bnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFk
+Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
