@@ -1,84 +1,426 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65205 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933490AbcIFWA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Sep 2016 18:00:26 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-        Wei Zhang <wzhang@fb.com>, Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 2/4] pci: No config access for removed devices
-Date: Tue,  6 Sep 2016 16:00:17 -0600
-Message-Id: <1473199219-3369-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
-References: <1473199219-3369-1-git-send-email-keith.busch@intel.com>
+Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:3077 "EHLO
+        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965621AbcIXXWQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2016 19:22:16 -0400
+From: Adit Ranadive <aditr@vmware.com>
+To: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>
+CC: Adit Ranadive <aditr@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+Subject: [PATCH v5 02/16] IB/pvrdma: Add user-level shared functions
+Date: Sat, 24 Sep 2016 16:21:26 -0700
+Message-ID: <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
+In-Reply-To: <cover.1474759181.git.aditr@vmware.com>
+References: <cover.1474759181.git.aditr@vmware.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we've  detected that the PCI device is removed, do not attempt to
-access the device's config space.
+We share some common structures with the user-level driver. This patch adds
+those structures and shared functions to traverse the QP/CQ rings.
 
-On a config read, if the device is not present, the value returned will be
-set to all 1's. This is the same as what hardware would normally return
-when accessing a removed device, but we do not need to repeatedly test
-hardware's completion capabilities if software can take a short-cut.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+Reviewed-by: George Zhang <georgezhang@vmware.com>
+Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+Reviewed-by: Bryan Tan <bryantan@vmware.com>
+Signed-off-by: Adit Ranadive <aditr@vmware.com>
 ---
- include/linux/pci.h | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+Changes v4->v5:
+ - Moved pvrdma_uapi.h and pvrdma_user.h into common UAPI folder.
+ - Renamed to pvrdma-uapi.h and pvrdma-abi.h respectively.
+ - Prefixed unsigned vars with __.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 865d3ec..1b62f7a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -932,28 +932,46 @@ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
- 
- static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
- {
-+	if (unlikely(dev->is_removed)) {
-+		*val = ~0;
-+		return -ENODEV;
+Changes v3->v4:
+ - Moved pvrdma_sge into pvrdma_uapi.h
+---
+ include/uapi/rdma/Kbuild        |   2 +
+ include/uapi/rdma/pvrdma-abi.h  |  99 ++++++++++++++++
+ include/uapi/rdma/pvrdma-uapi.h | 255 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 356 insertions(+)
+ create mode 100644 include/uapi/rdma/pvrdma-abi.h
+ create mode 100644 include/uapi/rdma/pvrdma-uapi.h
+
+diff --git a/include/uapi/rdma/Kbuild b/include/uapi/rdma/Kbuild
+index 4edb0f2..fc2b285 100644
+--- a/include/uapi/rdma/Kbuild
++++ b/include/uapi/rdma/Kbuild
+@@ -7,3 +7,5 @@ header-y += rdma_netlink.h
+ header-y += rdma_user_cm.h
+ header-y += hfi/
+ header-y += rdma_user_rxe.h
++header-y += pvrdma-abi.h
++header-y += pvrdma-uapi.h
+diff --git a/include/uapi/rdma/pvrdma-abi.h b/include/uapi/rdma/pvrdma-abi.h
+new file mode 100644
+index 0000000..6fa0ab6
+--- /dev/null
++++ b/include/uapi/rdma/pvrdma-abi.h
+@@ -0,0 +1,99 @@
++/*
++ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of EITHER the GNU General Public License
++ * version 2 as published by the Free Software Foundation or the BSD
++ * 2-Clause License. This program is distributed in the hope that it
++ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
++ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License version 2 for more details at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program available in the file COPYING in the main
++ * directory of this source tree.
++ *
++ * The BSD 2-Clause License
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef __PVRDMA_USER_H__
++#define __PVRDMA_USER_H__
++
++#include <linux/types.h>
++
++#define PVRDMA_UVERBS_ABI_VERSION	3
++#define PVRDMA_BOARD_ID			1
++#define PVRDMA_REV_ID			1
++
++struct pvrdma_alloc_ucontext_resp {
++	__u32 qp_tab_size;
++	__u32 reserved;
++};
++
++struct pvrdma_alloc_pd_resp {
++	__u32 pdn;
++	__u32 reserved;
++};
++
++struct pvrdma_create_cq {
++	__u64 buf_addr;
++	__u32 buf_size;
++	__u32 reserved;
++};
++
++struct pvrdma_create_cq_resp {
++	__u32 cqn;
++	__u32 reserved;
++};
++
++struct pvrdma_resize_cq {
++	__u64 buf_addr;
++	__u32 buf_size;
++	__u32 reserved;
++};
++
++struct pvrdma_create_srq {
++	__u64 buf_addr;
++};
++
++struct pvrdma_create_srq_resp {
++	__u32 srqn;
++	__u32 reserved;
++};
++
++struct pvrdma_create_qp {
++	__u64 rbuf_addr;
++	__u64 sbuf_addr;
++	__u32 rbuf_size;
++	__u32 sbuf_size;
++	__u64 qp_addr;
++};
++
++#endif /* __PVRDMA_USER_H__ */
+diff --git a/include/uapi/rdma/pvrdma-uapi.h b/include/uapi/rdma/pvrdma-uapi.h
+new file mode 100644
+index 0000000..430d8a5
+--- /dev/null
++++ b/include/uapi/rdma/pvrdma-uapi.h
+@@ -0,0 +1,255 @@
++/*
++ * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of EITHER the GNU General Public License
++ * version 2 as published by the Free Software Foundation or the BSD
++ * 2-Clause License. This program is distributed in the hope that it
++ * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
++ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
++ * See the GNU General Public License version 2 for more details at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program available in the file COPYING in the main
++ * directory of this source tree.
++ *
++ * The BSD 2-Clause License
++ *
++ *     Redistribution and use in source and binary forms, with or
++ *     without modification, are permitted provided that the following
++ *     conditions are met:
++ *
++ *      - Redistributions of source code must retain the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer.
++ *
++ *      - Redistributions in binary form must reproduce the above
++ *        copyright notice, this list of conditions and the following
++ *        disclaimer in the documentation and/or other materials
++ *        provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef __PVRDMA_UAPI_H__
++#define __PVRDMA_UAPI_H__
++
++#include <linux/types.h>
++
++#define PVRDMA_VERSION 17
++
++#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
++#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
++#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
++#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
++#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
++#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
++#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
++#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
++#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
++
++/* PVRDMA atomic compare and swap */
++struct pvrdma_exp_cmp_swap {
++	__u64 swap_val;
++	__u64 compare_val;
++	__u64 swap_mask;
++	__u64 compare_mask;
++};
++
++/* PVRDMA atomic fetch and add */
++struct pvrdma_exp_fetch_add {
++	__u64 add_val;
++	__u64 field_boundary;
++};
++
++/* PVRDMA address vector. */
++struct pvrdma_av {
++	__u32 port_pd;
++	__u32 sl_tclass_flowlabel;
++	__u8 dgid[16];
++	__u8 src_path_bits;
++	__u8 gid_index;
++	__u8 stat_rate;
++	__u8 hop_limit;
++	__u8 dmac[6];
++	__u8 reserved[6];
++};
++
++/* PVRDMA scatter/gather entry */
++struct pvrdma_sge {
++	__u64   addr;
++	__u32   length;
++	__u32   lkey;
++};
++
++/* PVRDMA receive queue work request */
++struct pvrdma_rq_wqe_hdr {
++	__u64 wr_id;		/* wr id */
++	__u32 num_sge;		/* size of s/g array */
++	__u32 total_len;	/* reserved */
++};
++/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
++
++/* PVRDMA send queue work request */
++struct pvrdma_sq_wqe_hdr {
++	__u64 wr_id;		/* wr id */
++	__u32 num_sge;		/* size of s/g array */
++	__u32 total_len;	/* reserved */
++	__u32 opcode;		/* operation type */
++	__u32 send_flags;	/* wr flags */
++	union {
++		__u32 imm_data;
++		__u32 invalidate_rkey;
++	} ex;
++	__u32 reserved;
++	union {
++		struct {
++			__u64 remote_addr;
++			__u32 rkey;
++			__u8 reserved[4];
++		} rdma;
++		struct {
++			__u64 remote_addr;
++			__u64 compare_add;
++			__u64 swap;
++			__u32 rkey;
++			__u32 reserved;
++		} atomic;
++		struct {
++			__u64 remote_addr;
++			__u32 log_arg_sz;
++			__u32 rkey;
++			union {
++				struct pvrdma_exp_cmp_swap  cmp_swap;
++				struct pvrdma_exp_fetch_add fetch_add;
++			} wr_data;
++		} masked_atomics;
++		struct {
++			__u64 iova_start;
++			__u64 pl_pdir_dma;
++			__u32 page_shift;
++			__u32 page_list_len;
++			__u32 length;
++			__u32 access_flags;
++			__u32 rkey;
++		} fast_reg;
++		struct {
++			__u32 remote_qpn;
++			__u32 remote_qkey;
++			struct pvrdma_av av;
++		} ud;
++	} wr;
++};
++/* Use pvrdma_sge (ib_sge) for send queue s/g array elements. */
++
++/* Completion queue element. */
++struct pvrdma_cqe {
++	__u64 wr_id;
++	__u64 qp;
++	__u32 opcode;
++	__u32 status;
++	__u32 byte_len;
++	__u32 imm_data;
++	__u32 src_qp;
++	__u32 wc_flags;
++	__u32 vendor_err;
++	__u16 pkey_index;
++	__u16 slid;
++	__u8 sl;
++	__u8 dlid_path_bits;
++	__u8 port_num;
++	__u8 smac[6];
++	__u8 reserved2[7]; /* Pad to next power of 2 (64). */
++};
++
++struct pvrdma_ring {
++	atomic_t prod_tail;	/* Producer tail. */
++	atomic_t cons_head;	/* Consumer head. */
++};
++
++struct pvrdma_ring_state {
++	struct pvrdma_ring tx;	/* Tx ring. */
++	struct pvrdma_ring rx;	/* Rx ring. */
++};
++
++static inline int pvrdma_idx_valid(__u32 idx, __u32 max_elems)
++{
++	/* Generates fewer instructions than a less-than. */
++	return (idx & ~((max_elems << 1) - 1)) == 0;
++}
++
++static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
++{
++	const unsigned int idx = atomic_read(var);
++
++	if (pvrdma_idx_valid(idx, max_elems))
++		return idx & (max_elems - 1);
++	return PVRDMA_INVALID_IDX;
++}
++
++static inline void pvrdma_idx_ring_inc(atomic_t *var, __u32 max_elems)
++{
++	__u32 idx = atomic_read(var) + 1;	/* Increment. */
++
++	idx &= (max_elems << 1) - 1;		/* Modulo size, flip gen. */
++	atomic_set(var, idx);
++}
++
++static inline __s32 pvrdma_idx_ring_has_space(const struct pvrdma_ring *r,
++					      __u32 max_elems, __u32 *out_tail)
++{
++	const __u32 tail = atomic_read(&r->prod_tail);
++	const __u32 head = atomic_read(&r->cons_head);
++
++	if (pvrdma_idx_valid(tail, max_elems) &&
++	    pvrdma_idx_valid(head, max_elems)) {
++		*out_tail = tail & (max_elems - 1);
++		return tail != (head ^ max_elems);
 +	}
- 	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
- {
-+	if (unlikely(dev->is_removed)) {
-+		*val = ~0;
-+		return -ENODEV;
++	return PVRDMA_INVALID_IDX;
++}
++
++static inline __s32 pvrdma_idx_ring_has_data(const struct pvrdma_ring *r,
++					     __u32 max_elems, __u32 *out_head)
++{
++	const __u32 tail = atomic_read(&r->prod_tail);
++	const __u32 head = atomic_read(&r->cons_head);
++
++	if (pvrdma_idx_valid(tail, max_elems) &&
++	    pvrdma_idx_valid(head, max_elems)) {
++		*out_head = head & (max_elems - 1);
++		return tail != head;
 +	}
- 	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_read_config_dword(const struct pci_dev *dev, int where,
- 					u32 *val)
- {
-+	if (unlikely(dev->is_removed)) {
-+		*val = ~0;
-+		return -ENODEV;
++	return PVRDMA_INVALID_IDX;
++}
++
++static inline bool pvrdma_idx_ring_is_valid_idx(const struct pvrdma_ring *r,
++						__u32 max_elems, __u32 *idx)
++{
++	const __u32 tail = atomic_read(&r->prod_tail);
++	const __u32 head = atomic_read(&r->cons_head);
++
++	if (pvrdma_idx_valid(tail, max_elems) &&
++	    pvrdma_idx_valid(head, max_elems) &&
++	    pvrdma_idx_valid(*idx, max_elems)) {
++		if (tail > head && (*idx < tail && *idx >= head))
++			return true;
++		else if (head > tail && (*idx >= head || *idx < tail))
++			return true;
 +	}
- 	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
- {
-+	if (unlikely(dev->is_removed))
-+		return -ENODEV;
- 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
- {
-+	if (unlikely(dev->is_removed))
-+		return -ENODEV;
- 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
- }
- static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
- 					 u32 val)
- {
-+	if (unlikely(dev->is_removed))
-+		return -ENODEV;
- 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
- }
- 
++	return false;
++}
++
++#endif /* __PVRDMA_UAPI_H__ */
 -- 
-2.7.2
+2.7.4
 
