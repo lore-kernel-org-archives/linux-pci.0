@@ -1,59 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59130 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:53468 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932268AbcIBPzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:55:40 -0400
-Subject: [PATCH v2 12/15] Rename ROCKCHIP_PCIE_RPIFR1_INTR_MASK and
- ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT
-To: Shawn Lin <shawn.lin@rock-chips.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: devicetree@vger.kernel.org, Wenrui Li <wenrui.li@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-kernel@vger.kernel.org,
-        Doug Anderson <dianders@chromium.org>,
-        linux-rockchip@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>
-Date: Fri, 02 Sep 2016 10:55:35 -0500
-Message-ID: <20160902155535.8650.68415.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160902154501.8650.99790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+        id S966128AbcIYM3m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 25 Sep 2016 08:29:42 -0400
+Date: Sun, 25 Sep 2016 15:29:36 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v5 02/16] IB/pvrdma: Add user-level shared functions
+Message-ID: <20160925122936.GC4088@leon.nu>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
+ <20160925072624.GV4088@leon.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="tzjrJU3+iJ6c5SNx"
+In-Reply-To: <20160925072624.GV4088@leon.nu>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-to match similar definitions.
----
- drivers/pci/host/pcie-rockchip.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 88c16da..2a41439 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -56,8 +56,8 @@
- #define  PCIE_CLIENT_LINK_STATUS_MASK		0x3
- #define PCIE_CLIENT_INT_MASK		(PCIE_CLIENT_BASE + 0x4c)
- #define PCIE_CLIENT_INT_STATUS		(PCIE_CLIENT_BASE + 0x50)
--#define  ROCKCHIP_PCIE_RPIFR1_INTR_MASK		GENMASK(8, 5)
--#define  ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT	5
-+#define  PCIE_CLIENT_INTR_MASK			GENMASK(8, 5)
-+#define  PCIE_CLIENT_INTR_SHIFT			5
- #define  PCIE_CLIENT_INT_LEGACY_DONE		BIT(15)
- #define  PCIE_CLIENT_INT_MSG			BIT(14)
- #define  PCIE_CLIENT_INT_HOT_RST		BIT(13)
-@@ -679,8 +679,7 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
- 	chained_irq_enter(chip, desc);
- 
- 	reg = rockchip_pcie_read(rockchip, PCIE_CLIENT_INT_STATUS);
--	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
--	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
-+	reg = (reg & PCIE_CLIENT_INTR_MASK) >> PCIE_CLIENT_INTR_SHIFT;
- 
- 	while (reg) {
- 		hwirq = ffs(reg) - 1;
+--tzjrJU3+iJ6c5SNx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+On Sun, Sep 25, 2016 at 10:26:24AM +0300, Leon Romanovsky wrote:
+
+<...>
+
+> > +
+> > +/* PVRDMA send queue work request */
+> > +struct pvrdma_sq_wqe_hdr {
+> > +	__u64 wr_id;		/* wr id */
+> > +	__u32 num_sge;		/* size of s/g array */
+> > +	__u32 total_len;	/* reserved */
+> > +	__u32 opcode;		/* operation type */
+> > +	__u32 send_flags;	/* wr flags */
+> > +	union {
+> > +		__u32 imm_data;
+> > +		__u32 invalidate_rkey;
+> > +	} ex;
+> > +	__u32 reserved;
+> > +	union {
+> > +		struct {
+> > +			__u64 remote_addr;
+> > +			__u32 rkey;
+> > +			__u8 reserved[4];
+> > +		} rdma;
+> > +		struct {
+> > +			__u64 remote_addr;
+> > +			__u64 compare_add;
+> > +			__u64 swap;
+> > +			__u32 rkey;
+> > +			__u32 reserved;
+> > +		} atomic;
+> > +		struct {
+> > +			__u64 remote_addr;
+> > +			__u32 log_arg_sz;
+> > +			__u32 rkey;
+> > +			union {
+> > +				struct pvrdma_exp_cmp_swap  cmp_swap;
+> > +				struct pvrdma_exp_fetch_add fetch_add;
+> > +			} wr_data;
+> > +		} masked_atomics;
+> > +		struct {
+> > +			__u64 iova_start;
+> > +			__u64 pl_pdir_dma;
+> > +			__u32 page_shift;
+> > +			__u32 page_list_len;
+> > +			__u32 length;
+> > +			__u32 access_flags;
+> > +			__u32 rkey;
+> > +		} fast_reg;
+> > +		struct {
+> > +			__u32 remote_qpn;
+> > +			__u32 remote_qkey;
+> > +			struct pvrdma_av av;
+> > +		} ud;
+> > +	} wr;
+> > +};
+>
+> No, I have half-baked patch series which refactors this structure in kernel.
+
+Sorry, this patch series is not needed in kernel.
+
+> There is no need to put this structure in UAPI.
+
+This is still relevant.
+
+Thanks
+
+--tzjrJU3+iJ6c5SNx
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX58MwAAoJEORje4g2clinbaEP/RExt9Kvb4GHs6B9R/0/5qEY
+/+kXf1ciwmCYanyRmpwjM3lsBaPIo3XIDtHi+O6371MmLwiH0UYW9nCvAXJt51D3
+Oce7JvGafQQmwqsv4nAhH3kTKYE/C/lmtIHN6sdAf6lAUZnxoDyFyoFLx3k3sf1K
+wLUzLTVSP9Hy0PRQEFw1z8p3ii9nlb7lQV/zqfBM7C6PsrTGrF/Y4GIu1jlCrwEe
+s32HIrLsR5yUEPDiEJ1A2SRwwsuM9lwcXV2Nk3xQjyv9WJetnTPKUFVCtIRv8Aol
+qjZ3Le8hD0XqndFQcTIIhzlimWcRtjNAdaQC5pkf05q9OOcD/Tp8VugQoRj/r1K5
+wl2brfrqbsJN43FdF+sopWIwSlNmtSoMVIFDDPKuhEw9uYt/3R3jibzxgR6E7hXF
++ZH13K69MlXB1tpe8PW7ZSDacn3UZN+XPVzZLEnu17MqViTmDq/5v4Of8K9dQLGn
+yz/SiCe25d86sK+2p1OIJBqFGFx1F9qNYZtQNn3aw3V0Gy/o/9u2Oj5Cgm8QLLms
+bH391hgjC/MYAYS/X8fYLVMjxKK8Exr6ng8SN4yL3EGkZFq7j9IRqhAd0eklcIfk
+H8pDoXKHSd/5gCh4ILnZ0RpvX/r48YZEytMgpLIA2+OIzRr3A9tYAleCaJNafisd
+cKgMjmwmmJFjp0tP6CHP
+=KqTV
+-----END PGP SIGNATURE-----
+
+--tzjrJU3+iJ6c5SNx--
