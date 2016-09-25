@@ -1,26 +1,95 @@
-Return-Path: <keith.busch@intel.com>
-Return-Path: <keith.busch@intel.com>
-Date: Tue, 6 Sep 2016 17:18:34 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, Wei Zhang <wzhang@fb.com>,
-	Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 3/3] pcie/aer: Cache capability position
-Message-ID: <20160906211833.GA26153@localhost.localdomain>
-References: <1470683667-28418-1-git-send-email-keith.busch@intel.com>
- <1470683667-28418-4-git-send-email-keith.busch@intel.com>
- <20160809173350.GE27301@localhost>
- <20160906210521.GA14521@localhost.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42066 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1031643AbcIYHaP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 25 Sep 2016 03:30:15 -0400
+Date: Sun, 25 Sep 2016 10:30:10 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v5 16/16] MAINTAINERS: Update for PVRDMA driver
+Message-ID: <20160925073010.GW4088@leon.nu>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <fe5e7704757254073963cd40bff5240421b1fce0.1474759181.git.aditr@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160906210521.GA14521@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="Wt10+cXOThorkX0z"
+In-Reply-To: <fe5e7704757254073963cd40bff5240421b1fce0.1474759181.git.aditr@vmware.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 06, 2016 at 03:05:21PM -0600, Jon Derrick wrote:
-> Hi Keith, I like really this patch and am looking forward to v2. Should aer_root_reset and aer_error_resume be changed as well?
-> 
-> Also is there any reason the same couldn't be done for any pci_dev? I'd like to have this optimization available for is_error_source(). 
 
-Yeah, I think this can go in pci_dev like all the other cached
-capabilities. I'll send out v2 of the series today.
+--Wt10+cXOThorkX0z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Sat, Sep 24, 2016 at 04:21:40PM -0700, Adit Ranadive wrote:
+> Add maintainer info for the PVRDMA driver.
+>
+> Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+> Reviewed-by: George Zhang <georgezhang@vmware.com>
+> Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+> Reviewed-by: Bryan Tan <bryantan@vmware.com>
+> Signed-off-by: Adit Ranadive <aditr@vmware.com>
+> ---
+> Changes v4->v5:
+>  - Added pvrdma files to common UAPI folder.
+> ---
+>  MAINTAINERS | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 87e23cd..5023dc0 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -12615,6 +12615,15 @@ S:	Maintained
+>  F:	drivers/scsi/vmw_pvscsi.c
+>  F:	drivers/scsi/vmw_pvscsi.h
+>
+> +VMWARE PVRDMA DRIVER
+> +M:	Adit Ranadive <aditr@vmware.com>
+> +M:	VMware PV-Drivers <pv-drivers@vmware.com>
+> +L:	linux-rdma@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/infiniband/hw/pvrdma/
+> +F:	include/uapi/rdma/pvrdma-abi.h
+> +F:	include/uapi/rdma/pvrdma-uapi.h
+
+Please remove the last two lines, these files will be maintained by
+Doug.
+
+Thanks
+
+> +
+>  VOLTAGE AND CURRENT REGULATOR FRAMEWORK
+>  M:	Liam Girdwood <lgirdwood@gmail.com>
+>  M:	Mark Brown <broonie@kernel.org>
+> --
+> 2.7.4
+>
+
+--Wt10+cXOThorkX0z
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX530CAAoJEORje4g2clinf0oP/RF5FNKA/DfYok2dkbFKAxaw
+7+oRV5wCfy1qdPkiDAdBtpB/mUkgay1DhgPa0vZe1tgCcyIh8O8sFBZQls/pEHOq
+AtcLrGGJcYwiP4tWnR4r7+8SEBEkNXx9cOM0mktUbvkBmkgzphHXaEz5gFgfjLH6
+VPJP20L9J6CDPJ1R/f7CJvoHy0I18WqyklE/gJ0cSD15+QYbfFRi8eAKE+7gXMVv
+Pq37sgaudlwAkxvgi4VwpxmK5fLtRCzcgHVgoWvPThUYmewSRBx/1AqA57FjYOiV
+P6a8+WJS00b/RBgdyoUaapEwd3MJLijz0IAPD6waMZysPAIc9LR/HBugera8marD
+NSXAKK+nuulCtqn9Ul5jMTlcFlpoa1D73Wq961C/sdwIy+QKz84cLZxVQGHtalcs
+nLtr5qhWqOQGiffCMhJ1I7/r0hmGuwvCNOdLUwYKK4gmlNT8p42o2f7QQvyqyY2Y
+pH2la/VdGMHcuyutty1LaaO2mkacyp3iC8enHu9qy7LyPqe3W+XwxJ8tdlcEKBuT
+6N9piDRjt5ToVYqBsyh6Y093yk0DwD/PWptAylpFRPvFwGYXld9ttrlOxiBoBNSV
+c6iRczm/zig1MyavZFJRPSAeyT1t9It968fcsMshTs7Hic8/IAyDliDUOyBhGsru
+OmeTtEJB20XuL1+jSevS
+=JWJF
+-----END PGP SIGNATURE-----
+
+--Wt10+cXOThorkX0z--
