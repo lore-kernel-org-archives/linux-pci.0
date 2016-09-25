@@ -1,94 +1,490 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52749 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936644AbcIEQw1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2016 12:52:27 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Bart Van Assche <bart.vanassche@sandisk.com>,
-        Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        axboe@fb.com, agordeev@redhat.com
-Subject: [PATCH 4.4 027/113] genirq/msi: Remove unused MSI_FLAG_IDENTITY_MAP
-Date: Mon,  5 Sep 2016 18:43:50 +0200
-Message-Id: <20160905164350.396981651@linuxfoundation.org>
-In-Reply-To: <20160905164349.217621339@linuxfoundation.org>
-References: <20160905164349.217621339@linuxfoundation.org>
+Received: from mail.kernel.org ([198.145.29.136]:41844 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1422683AbcIYH0b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 25 Sep 2016 03:26:31 -0400
+Date: Sun, 25 Sep 2016 10:26:24 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Adit Ranadive <aditr@vmware.com>
+Cc: dledford@redhat.com, linux-rdma@vger.kernel.org,
+        pv-drivers@vmware.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, jhansen@vmware.com, asarwade@vmware.com,
+        georgezhang@vmware.com, bryantan@vmware.com
+Subject: Re: [PATCH v5 02/16] IB/pvrdma: Add user-level shared functions
+Message-ID: <20160925072624.GV4088@leon.nu>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="FQ9/qgh0YgB02Feu"
+In-Reply-To: <b52db7f59d69089f7b1d53311574143c4da8252a.1474759181.git.aditr@vmware.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
 
-------------------
+--FQ9/qgh0YgB02Feu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Sat, Sep 24, 2016 at 04:21:26PM -0700, Adit Ranadive wrote:
+> We share some common structures with the user-level driver. This patch adds
+> those structures and shared functions to traverse the QP/CQ rings.
+>
+> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+> Reviewed-by: Jorgen Hansen <jhansen@vmware.com>
+> Reviewed-by: George Zhang <georgezhang@vmware.com>
+> Reviewed-by: Aditya Sarwade <asarwade@vmware.com>
+> Reviewed-by: Bryan Tan <bryantan@vmware.com>
+> Signed-off-by: Adit Ranadive <aditr@vmware.com>
+> ---
+> Changes v4->v5:
+>  - Moved pvrdma_uapi.h and pvrdma_user.h into common UAPI folder.
+>  - Renamed to pvrdma-uapi.h and pvrdma-abi.h respectively.
+>  - Prefixed unsigned vars with __.
+>
+> Changes v3->v4:
+>  - Moved pvrdma_sge into pvrdma_uapi.h
+> ---
+>  include/uapi/rdma/Kbuild        |   2 +
+>  include/uapi/rdma/pvrdma-abi.h  |  99 ++++++++++++++++
+>  include/uapi/rdma/pvrdma-uapi.h | 255 ++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 356 insertions(+)
+>  create mode 100644 include/uapi/rdma/pvrdma-abi.h
+>  create mode 100644 include/uapi/rdma/pvrdma-uapi.h
+>
+> diff --git a/include/uapi/rdma/Kbuild b/include/uapi/rdma/Kbuild
+> index 4edb0f2..fc2b285 100644
+> --- a/include/uapi/rdma/Kbuild
+> +++ b/include/uapi/rdma/Kbuild
+> @@ -7,3 +7,5 @@ header-y += rdma_netlink.h
+>  header-y += rdma_user_cm.h
+>  header-y += hfi/
+>  header-y += rdma_user_rxe.h
+> +header-y += pvrdma-abi.h
+> +header-y += pvrdma-uapi.h
+> diff --git a/include/uapi/rdma/pvrdma-abi.h b/include/uapi/rdma/pvrdma-abi.h
+> new file mode 100644
+> index 0000000..6fa0ab6
+> --- /dev/null
+> +++ b/include/uapi/rdma/pvrdma-abi.h
+> @@ -0,0 +1,99 @@
+> +/*
+> + * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of EITHER the GNU General Public License
+> + * version 2 as published by the Free Software Foundation or the BSD
+> + * 2-Clause License. This program is distributed in the hope that it
+> + * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
+> + * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+> + * See the GNU General Public License version 2 for more details at
+> + * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program available in the file COPYING in the main
+> + * directory of this source tree.
+> + *
+> + * The BSD 2-Clause License
+> + *
+> + *     Redistribution and use in source and binary forms, with or
+> + *     without modification, are permitted provided that the following
+> + *     conditions are met:
+> + *
+> + *      - Redistributions of source code must retain the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer.
+> + *
+> + *      - Redistributions in binary form must reproduce the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer in the documentation and/or other materials
+> + *        provided with the distribution.
+> + *
+> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+> + * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+> + * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+> + * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+> + * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+> + * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+> + * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+> + * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+> + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+> + * OF THE POSSIBILITY OF SUCH DAMAGE.
+> + */
+> +
+> +#ifndef __PVRDMA_USER_H__
+> +#define __PVRDMA_USER_H__
+> +
+> +#include <linux/types.h>
+> +
+> +#define PVRDMA_UVERBS_ABI_VERSION	3
+> +#define PVRDMA_BOARD_ID			1
+> +#define PVRDMA_REV_ID			1
 
-commit b6140914fd079e43ea75a53429b47128584f033a upstream.
+Please don't add defines which you are not using in the library and the
+two above are not in use.
 
-No user and we definitely don't want to grow one.
+> +
+> +struct pvrdma_alloc_ucontext_resp {
+> +	__u32 qp_tab_size;
+> +	__u32 reserved;
+> +};
+> +
+> +struct pvrdma_alloc_pd_resp {
+> +	__u32 pdn;
+> +	__u32 reserved;
+> +};
+> +
+> +struct pvrdma_create_cq {
+> +	__u64 buf_addr;
+> +	__u32 buf_size;
+> +	__u32 reserved;
+> +};
+> +
+> +struct pvrdma_create_cq_resp {
+> +	__u32 cqn;
+> +	__u32 reserved;
+> +};
+> +
+> +struct pvrdma_resize_cq {
+> +	__u64 buf_addr;
+> +	__u32 buf_size;
+> +	__u32 reserved;
+> +};
+> +
+> +struct pvrdma_create_srq {
+> +	__u64 buf_addr;
+> +};
+> +
+> +struct pvrdma_create_srq_resp {
+> +	__u32 srqn;
+> +	__u32 reserved;
+> +};
+> +
+> +struct pvrdma_create_qp {
+> +	__u64 rbuf_addr;
+> +	__u64 sbuf_addr;
+> +	__u32 rbuf_size;
+> +	__u32 sbuf_size;
+> +	__u64 qp_addr;
+> +};
+> +
+> +#endif /* __PVRDMA_USER_H__ */
+> diff --git a/include/uapi/rdma/pvrdma-uapi.h b/include/uapi/rdma/pvrdma-uapi.h
+> new file mode 100644
+> index 0000000..430d8a5
+> --- /dev/null
+> +++ b/include/uapi/rdma/pvrdma-uapi.h
+> @@ -0,0 +1,255 @@
+> +/*
+> + * Copyright (c) 2012-2016 VMware, Inc.  All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of EITHER the GNU General Public License
+> + * version 2 as published by the Free Software Foundation or the BSD
+> + * 2-Clause License. This program is distributed in the hope that it
+> + * will be useful, but WITHOUT ANY WARRANTY; WITHOUT EVEN THE IMPLIED
+> + * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+> + * See the GNU General Public License version 2 for more details at
+> + * http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program available in the file COPYING in the main
+> + * directory of this source tree.
+> + *
+> + * The BSD 2-Clause License
+> + *
+> + *     Redistribution and use in source and binary forms, with or
+> + *     without modification, are permitted provided that the following
+> + *     conditions are met:
+> + *
+> + *      - Redistributions of source code must retain the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer.
+> + *
+> + *      - Redistributions in binary form must reproduce the above
+> + *        copyright notice, this list of conditions and the following
+> + *        disclaimer in the documentation and/or other materials
+> + *        provided with the distribution.
+> + *
+> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+> + * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+> + * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+> + * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+> + * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+> + * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+> + * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+> + * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+> + * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+> + * OF THE POSSIBILITY OF SUCH DAMAGE.
+> + */
+> +
+> +#ifndef __PVRDMA_UAPI_H__
+> +#define __PVRDMA_UAPI_H__
+> +
+> +#include <linux/types.h>
+> +
+> +#define PVRDMA_VERSION 17
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-nvme@lists.infradead.org
-Cc: axboe@fb.com
-Cc: agordeev@redhat.com
-Link: http://lkml.kernel.org/r/1467621574-8277-2-git-send-email-hch@lst.de
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+What do you plan to do with this VERSION?
+How is it related to ABI?
 
----
- include/linux/msi.h |    6 ++----
- kernel/irq/msi.c    |    8 ++------
- 2 files changed, 4 insertions(+), 10 deletions(-)
+> +
+> +#define PVRDMA_UAR_HANDLE_MASK	0x00FFFFFF	/* Bottom 24 bits. */
+> +#define PVRDMA_UAR_QP_OFFSET	0		/* Offset of QP doorbell. */
+> +#define PVRDMA_UAR_QP_SEND	BIT(30)		/* Send bit. */
+> +#define PVRDMA_UAR_QP_RECV	BIT(31)		/* Recv bit. */
+> +#define PVRDMA_UAR_CQ_OFFSET	4		/* Offset of CQ doorbell. */
+> +#define PVRDMA_UAR_CQ_ARM_SOL	BIT(29)		/* Arm solicited bit. */
+> +#define PVRDMA_UAR_CQ_ARM	BIT(30)		/* Arm bit. */
+> +#define PVRDMA_UAR_CQ_POLL	BIT(31)		/* Poll bit. */
+> +#define PVRDMA_INVALID_IDX	-1		/* Invalid index. */
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -254,12 +254,10 @@ enum {
- 	 * callbacks.
- 	 */
- 	MSI_FLAG_USE_DEF_CHIP_OPS	= (1 << 1),
--	/* Build identity map between hwirq and irq */
--	MSI_FLAG_IDENTITY_MAP		= (1 << 2),
- 	/* Support multiple PCI MSI interrupts */
--	MSI_FLAG_MULTI_PCI_MSI		= (1 << 3),
-+	MSI_FLAG_MULTI_PCI_MSI		= (1 << 2),
- 	/* Support PCI MSIX interrupts */
--	MSI_FLAG_PCI_MSIX		= (1 << 4),
-+	MSI_FLAG_PCI_MSIX		= (1 << 3),
- };
- 
- int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -268,7 +268,7 @@ int msi_domain_alloc_irqs(struct irq_dom
- 	struct msi_domain_ops *ops = info->ops;
- 	msi_alloc_info_t arg;
- 	struct msi_desc *desc;
--	int i, ret, virq = -1;
-+	int i, ret, virq;
- 
- 	ret = ops->msi_check(domain, info, dev);
- 	if (ret == 0)
-@@ -278,12 +278,8 @@ int msi_domain_alloc_irqs(struct irq_dom
- 
- 	for_each_msi_entry(desc, dev) {
- 		ops->set_desc(&arg, desc);
--		if (info->flags & MSI_FLAG_IDENTITY_MAP)
--			virq = (int)ops->get_hwirq(info, &arg);
--		else
--			virq = -1;
- 
--		virq = __irq_domain_alloc_irqs(domain, virq, desc->nvec_used,
-+		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
- 					       dev_to_node(dev), &arg, false);
- 		if (virq < 0) {
- 			ret = -ENOSPC;
+> +
+> +/* PVRDMA atomic compare and swap */
+> +struct pvrdma_exp_cmp_swap {
+
+_EXP_ looks very similar to MLNX_OFED naming convention.
+
+> +	__u64 swap_val;
+> +	__u64 compare_val;
+> +	__u64 swap_mask;
+> +	__u64 compare_mask;
+> +};
+> +
+> +/* PVRDMA atomic fetch and add */
+> +struct pvrdma_exp_fetch_add {
+
+The same as above.
+
+> +	__u64 add_val;
+> +	__u64 field_boundary;
+> +};
+> +
+> +/* PVRDMA address vector. */
+> +struct pvrdma_av {
+> +	__u32 port_pd;
+> +	__u32 sl_tclass_flowlabel;
+> +	__u8 dgid[16];
+> +	__u8 src_path_bits;
+> +	__u8 gid_index;
+> +	__u8 stat_rate;
+> +	__u8 hop_limit;
+> +	__u8 dmac[6];
+> +	__u8 reserved[6];
+> +};
+> +
+> +/* PVRDMA scatter/gather entry */
+> +struct pvrdma_sge {
+> +	__u64   addr;
+> +	__u32   length;
+> +	__u32   lkey;
+> +};
+> +
+> +/* PVRDMA receive queue work request */
+> +struct pvrdma_rq_wqe_hdr {
+> +	__u64 wr_id;		/* wr id */
+> +	__u32 num_sge;		/* size of s/g array */
+> +	__u32 total_len;	/* reserved */
+> +};
+> +/* Use pvrdma_sge (ib_sge) for receive queue s/g array elements. */
+> +
+> +/* PVRDMA send queue work request */
+> +struct pvrdma_sq_wqe_hdr {
+> +	__u64 wr_id;		/* wr id */
+> +	__u32 num_sge;		/* size of s/g array */
+> +	__u32 total_len;	/* reserved */
+> +	__u32 opcode;		/* operation type */
+> +	__u32 send_flags;	/* wr flags */
+> +	union {
+> +		__u32 imm_data;
+> +		__u32 invalidate_rkey;
+> +	} ex;
+> +	__u32 reserved;
+> +	union {
+> +		struct {
+> +			__u64 remote_addr;
+> +			__u32 rkey;
+> +			__u8 reserved[4];
+> +		} rdma;
+> +		struct {
+> +			__u64 remote_addr;
+> +			__u64 compare_add;
+> +			__u64 swap;
+> +			__u32 rkey;
+> +			__u32 reserved;
+> +		} atomic;
+> +		struct {
+> +			__u64 remote_addr;
+> +			__u32 log_arg_sz;
+> +			__u32 rkey;
+> +			union {
+> +				struct pvrdma_exp_cmp_swap  cmp_swap;
+> +				struct pvrdma_exp_fetch_add fetch_add;
+> +			} wr_data;
+> +		} masked_atomics;
+> +		struct {
+> +			__u64 iova_start;
+> +			__u64 pl_pdir_dma;
+> +			__u32 page_shift;
+> +			__u32 page_list_len;
+> +			__u32 length;
+> +			__u32 access_flags;
+> +			__u32 rkey;
+> +		} fast_reg;
+> +		struct {
+> +			__u32 remote_qpn;
+> +			__u32 remote_qkey;
+> +			struct pvrdma_av av;
+> +		} ud;
+> +	} wr;
+> +};
+
+No, I have half-baked patch series which refactors this structure in kernel.
+There is no need to put this structure in UAPI.
+
+> +/* Use pvrdma_sge (ib_sge) for send queue s/g array elements. */
+> +
+> +/* Completion queue element. */
+> +struct pvrdma_cqe {
+> +	__u64 wr_id;
+> +	__u64 qp;
+> +	__u32 opcode;
+> +	__u32 status;
+> +	__u32 byte_len;
+> +	__u32 imm_data;
+> +	__u32 src_qp;
+> +	__u32 wc_flags;
+> +	__u32 vendor_err;
+> +	__u16 pkey_index;
+> +	__u16 slid;
+> +	__u8 sl;
+> +	__u8 dlid_path_bits;
+> +	__u8 port_num;
+> +	__u8 smac[6];
+> +	__u8 reserved2[7]; /* Pad to next power of 2 (64). */
+> +};
+> +
+> +struct pvrdma_ring {
+> +	atomic_t prod_tail;	/* Producer tail. */
+> +	atomic_t cons_head;	/* Consumer head. */
+> +};
+> +
+> +struct pvrdma_ring_state {
+> +	struct pvrdma_ring tx;	/* Tx ring. */
+> +	struct pvrdma_ring rx;	/* Rx ring. */
+> +};
+> +
+> +static inline int pvrdma_idx_valid(__u32 idx, __u32 max_elems)
+> +{
+> +	/* Generates fewer instructions than a less-than. */
+> +	return (idx & ~((max_elems << 1) - 1)) == 0;
+> +}
+> +
+> +static inline __s32 pvrdma_idx(atomic_t *var, __u32 max_elems)
+> +{
+> +	const unsigned int idx = atomic_read(var);
+> +
+> +	if (pvrdma_idx_valid(idx, max_elems))
+> +		return idx & (max_elems - 1);
+> +	return PVRDMA_INVALID_IDX;
+> +}
+> +
+> +static inline void pvrdma_idx_ring_inc(atomic_t *var, __u32 max_elems)
+> +{
+> +	__u32 idx = atomic_read(var) + 1;	/* Increment. */
+
+It is definitely different atomic_read than you expect. From my grep
+searches on my machine, linux kernel doesn't export in standard headers
+the atomic_* functions and C has their implementation of that functions.
+
+> +
+> +	idx &= (max_elems << 1) - 1;		/* Modulo size, flip gen. */
+> +	atomic_set(var, idx);
+> +}
+> +
+> +static inline __s32 pvrdma_idx_ring_has_space(const struct pvrdma_ring *r,
+> +					      __u32 max_elems, __u32 *out_tail)
+> +{
+> +	const __u32 tail = atomic_read(&r->prod_tail);
+> +	const __u32 head = atomic_read(&r->cons_head);
+> +
+> +	if (pvrdma_idx_valid(tail, max_elems) &&
+> +	    pvrdma_idx_valid(head, max_elems)) {
+> +		*out_tail = tail & (max_elems - 1);
+> +		return tail != (head ^ max_elems);
+> +	}
+> +	return PVRDMA_INVALID_IDX;
+> +}
+> +
+> +static inline __s32 pvrdma_idx_ring_has_data(const struct pvrdma_ring *r,
+> +					     __u32 max_elems, __u32 *out_head)
+> +{
+> +	const __u32 tail = atomic_read(&r->prod_tail);
+> +	const __u32 head = atomic_read(&r->cons_head);
+> +
+> +	if (pvrdma_idx_valid(tail, max_elems) &&
+> +	    pvrdma_idx_valid(head, max_elems)) {
+> +		*out_head = head & (max_elems - 1);
+> +		return tail != head;
+> +	}
+> +	return PVRDMA_INVALID_IDX;
+> +}
+> +
+> +static inline bool pvrdma_idx_ring_is_valid_idx(const struct pvrdma_ring *r,
+> +						__u32 max_elems, __u32 *idx)
+> +{
+> +	const __u32 tail = atomic_read(&r->prod_tail);
+> +	const __u32 head = atomic_read(&r->cons_head);
+> +
+> +	if (pvrdma_idx_valid(tail, max_elems) &&
+> +	    pvrdma_idx_valid(head, max_elems) &&
+> +	    pvrdma_idx_valid(*idx, max_elems)) {
+> +		if (tail > head && (*idx < tail && *idx >= head))
+> +			return true;
+> +		else if (head > tail && (*idx >= head || *idx < tail))
+> +			return true;
+> +	}
+> +	return false;
+> +}
+> +
+> +#endif /* __PVRDMA_UAPI_H__ */
+
+I suggest completely remove this file from UAPI headers folder.
+
+Thanks.
 
 
+> --
+> 2.7.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--FQ9/qgh0YgB02Feu
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX53wgAAoJEORje4g2clin7WcQAKn+dS7T/ttYqklktV6QHmRD
+Wk1LkrME5VcMbvyyj+j3Mrc3y31ygJrSq3M7HJq0A4Q5/DGNRg9JxQ7kTAG4OAjE
+3nNy0jN2LBp+Nn5Hbzlsk07xSSPQgHvzDIYV9mRRM+UUyX7DnGjYkymwWxnfT0+D
+RNkCzz94dWj/iP0W7Kvf9j+1KDc2cJjN7Rt53Ftrjt+MVCneYfuUXGvQMlytROk1
+YuE8Bs/V9u/PqADIHl7nCbIRCn81gfP5C2Cu074sB9Yx2JDUCsYLqyd9nz7VdjLJ
+GaS0I331snTHvRjKfP3cqdrmgin2XH9Ez1VBkedJOoB1EMdvuiMWSe3iF6M31jm8
+2uLVMRgEy16WW2ptjZhHW1SDa5aPMZwoMthYSUTmJoRMPOQ2YEo7KLUGZ1My74ga
+IbRw+CpvazVqKJfvxKs8MiC8OvuVCPn9DnpxEDqN7U09MpuXbVF4hm0eNxbM6/Cz
+RQZtcFJO96ksSZCCwz8VnMcWEbRSwr5qh0bdFTV9plw4xpyqVukDE9xWYz4I+RcH
+VYQxDrlWe+EOsSgGAapsvDISF/T+SXzF3FAjEnJxUmd/CWX/c6w+2uHAvuFBlbc+
+gp+ea+rC6pbfS/epQyvBO9lVUYX4HMPCLi/4AVe7JxpoJBJpLuXrywBkaduj6t6A
+hFKs6eH8aUf2jwWnAoy9
+=8hyS
+-----END PGP SIGNATURE-----
+
+--FQ9/qgh0YgB02Feu--
