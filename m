@@ -1,65 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38819 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754975AbcI2Gqb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2016 02:46:31 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8T6gxLq046343
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 02:46:30 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 25rrts46j7-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 29 Sep 2016 02:46:30 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Thu, 29 Sep 2016 02:46:30 -0400
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, paulus@samba.org, aik@ozlabs.ru,
-        gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, zhong@linux.vnet.ibm.com
-Subject: [PATCH v6 2/4] PCI: Ignore enforced alignment to VF BARs
-Date: Thu, 29 Sep 2016 14:46:19 +0800
-In-Reply-To: <1475131581-4373-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1475131581-4373-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1475131581-4373-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:39020 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750798AbcIZFZW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2016 01:25:22 -0400
+Subject: Re: [PATCH v5 00/16] Add Paravirtual RDMA Driver
+To: Leon Romanovsky <leon@kernel.org>
+References: <cover.1474759181.git.aditr@vmware.com>
+ <20160925070352.GU4088@leon.nu>
+CC: <dledford@redhat.com>, <linux-rdma@vger.kernel.org>,
+        <pv-drivers@vmware.com>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <jhansen@vmware.com>,
+        <asarwade@vmware.com>, <georgezhang@vmware.com>,
+        <bryantan@vmware.com>
+From: Adit Ranadive <aditr@vmware.com>
+Message-ID: <9f65ab5c-d8c2-e8e3-9334-5d1865a20dc9@vmware.com>
+Date: Sun, 25 Sep 2016 22:25:12 -0700
+MIME-Version: 1.0
+In-Reply-To: <20160925070352.GU4088@leon.nu>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VF BARs are read-only zeroes according to SRIOV spec,
-the normal way(writing BARs) of allocating resources wouldn't
-be applied to VFs. The VFs' resources would be allocated
-when we enable SR-IOV capability. So we should not try to
-reassign alignment after we enable VFs. It's meaningless
-and will release the allocated resources which leads to a bug.
+On Sun, Sep 25 2016 at 10:03:52AM +0300, Leon Romanovsky wrote:
+> On Sat, Sep 24, 2016 at 04:21:24PM -0700, Adit Ranadive wrote:
+> 
+> <...>
+> 
+> >  include/uapi/rdma/pvrdma-abi.h                 |   99 ++
+> >  include/uapi/rdma/pvrdma-uapi.h                |  255 +++++
+> 
+> As Jason said, you need a very good reason to split and create number of
+> files per-driver in UAPI folder.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/pci.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2d85a96..b8357d7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5048,6 +5048,15 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	resource_size_t align, size;
- 	u16 command;
- 
-+	/*
-+	 * VF BARs are RO zero according to SR-IOV spec 3.4.1.11. Their
-+	 * resources would be allocated when we enable them and not be
-+	 * re-allocated any more. So we should never try to reassign
-+	 * VF's alignment here.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
- 	/* check if specified PCI is target device to reassign */
- 	align = pci_specified_resource_alignment(dev);
- 	if (!align)
--- 
-1.7.9.5
-
+I can move the pvrdma-uapi.h back to the pvrdma driver folder.
