@@ -1,104 +1,87 @@
-Return-Path: <heiko@sntech.de>
-Return-Path: <heiko@sntech.de>
-From: Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Brian Norris <briannorris@chromium.org>, Shawn Lin <shawn.lin@rock-chips.com>, Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org, Doug Anderson <dianders@chromium.org>, Wenrui Li <wenrui.li@rock-chips.com>, Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: Re: [v10,2/2] PCI: Rockchip: Add Rockchip PCIe controller support
-Date: Fri, 02 Sep 2016 18:28:29 +0200
-Message-ID: <2006737.sL15e15fY3@diego>
-In-Reply-To: <20160902154409.GA8370@localhost>
-References: <1471570498-3284-1-git-send-email-shawn.lin@rock-chips.com> <20160901174852.GC9471@localhost> <20160902154409.GA8370@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 26 Sep 2016 11:50:18 -0400
+To: Steve Kenton <skenton@ou.edu>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        yinghai Lu <yinghai@kernel.org>,
+        Blackmagic Developer Support <developer@blackmagicdesign.com>
+Subject: Re: lspci not showing motherboard ethernet controller after PCIe
+ card firmware update change from 32-bit to 64-bit BAR
+Message-ID: <20160926155018.GL14311@csclub.uwaterloo.ca>
+References: <2cc60cd1-bab1-a086-2326-7ce161b8f083@ou.edu>
+ <efdbf332-841c-7617-efd1-facf785472fd@ou.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <efdbf332-841c-7617-efd1-facf785472fd@ou.edu>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, 2. September 2016, 10:44:09 schrieb Bjorn Helgaas:
-> On Thu, Sep 01, 2016 at 12:48:52PM -0500, Bjorn Helgaas wrote:
-> > On Thu, Sep 01, 2016 at 10:14:01AM -0700, Brian Norris wrote:
-> > > The use of HIWORD_UPDATE can indeed be a bit confusing, IMO, but this is
-> > > really a common Rockchip-ism that, once you read several of their
-> > > drivers, can make a little more sense. If you grep around, it's in at
-> > > least their clock, ethernet, SDHCI, PHY, and DP/DRM drivers. I might
-> > > defer to Heiko (upstream maintainer of Rockchip code) for a decision.
-> > > Maybe there's some intermediate ground where we keep the HIWORK_UPDATE()
-> > > logic (it does make sure we get the 16-bit shift right, I think) while
-> > > still refactoring a few other bits (like PCIE_CLIENT_CONF_LANE_NUM() and
-> > > PCIE_CLIENT_GEN_SEL() for wrapping HIWORK_UPDATE()?).
+On Sat, Sep 24, 2016 at 07:24:14PM -0500, Steve Kenton wrote:
+> I have two different systems with Blackmagic Design Intensity Pro-4K
+> cards. One uses an ECS H81H3-I motherboard and the other uses a Gigabyte
+> GA-H110N motherboard. Previously both were working properly. When I
+> upgraded the Blackmagic Design desktopvideo package from version 10.7 to
+> version 10.8 it included an update of the firmware on the cards from
+> version 0x85 to 0xbd. After the  upgrade the Gigabyte-motherboard system
+> continues to work properly, but the ECS-motherboard system no longer
+> shows the motherboard ethernet controller with lspci. Downgrading the
+> firmware makes the ethernet controller reappear with lspci. Upgrading
+> again makes it disappear again. Attached are the output of lscpi -vv
+> for each version of the firmware on the ECS-motherboard system.
+> Upgrading to the most recent ECS-motherboard bios did not have any effect.
 > 
-> Here's a second proposal.  It retains HIWORD_UPDATE (though the structure
-> is different) so grep finds it along with the other Rockchip ones.
+> There are a number of differences in the two lspci outputs but
+> based on conversations I've seen on LKM, which I peruse but am not
+> subscribed to, I suspect that this is the important one:
 > 
-> I'll post updated actual patches; this is just to give the idea:
+> lspci-Intensity-Pro-4K-10.7-firmware.txt:    Region 0: Memory at
+> f7d00000 (32-bit, non-prefetchable) [size=1M]
+> lspci-Intensity-Pro-4K-10.8-firmware.txt:    Region 0: Memory at
+> f7c00000 (64-bit, non-prefetchable) [size=1M]
 > 
-> -/*
-> -  * The higher 16-bit of this register is used for write protection
-> -  * only if BIT(x + 16) set to 1 the BIT(x) can be written.
-> -  */
-> -#define HIWORD_UPDATE(val, mask, shift) \
-> -	((val) << (shift) | (mask) << ((shift) + 16))
+> The Engineers at Blackmagic Design have confirmed that the change to a
+> 64-bit BAR with firmware version 0xbd was intentional and correct. And
+> to be clear, the Blackmagic cards continue to work properly. The issue
+> is the motherboard ethernet controller disappearing after upgrading the
+> Blackmagic cards to new firmware with a 64-bit BAR. Note, however, that
+> 64-bit BAR is below 4GB with the high four bytes being all zeros. After
+> the firmware update it's like there is "no room at the inn" for the
+> motherboard ethernet controller so it never gets enabled. I think we can
+> all agree that it's a likely a problem with the PC motherboard bios. I'm
+> hoping to find a workaround to allow me to configure a number of
+> existing ECS-motherboard systems in the field for use with the new firmware.
 > 
-> -#define PCIE_CLIENT_CONF_ENABLE			BIT(0)
-> -#define PCIE_CLIENT_CONF_ENABLE_SHIFT		0
-> -#define PCIE_CLIENT_CONF_ENABLE_MASK		0x1
-> -#define PCIE_CLIENT_LINK_TRAIN_ENABLE		1
-> -#define PCIE_CLIENT_LINK_TRAIN_SHIFT		1
-> -#define PCIE_CLIENT_LINK_TRAIN_MASK		0x1
-> -#define PCIE_CLIENT_ARI_ENABLE			BIT(0)
-> -#define PCIE_CLIENT_ARI_ENABLE_SHIFT		3
-> -#define PCIE_CLIENT_ARI_ENABLE_MASK		0x1
-> -#define PCIE_CLIENT_CONF_LANE_NUM(x)		(x / 2)
-> -#define PCIE_CLIENT_CONF_LANE_NUM_SHIFT		4
-> -#define PCIE_CLIENT_CONF_LANE_NUM_MASK		0x3
-> -#define PCIE_CLIENT_MODE_RC			BIT(0)
-> -#define PCIE_CLIENT_MODE_SHIFT			6
-> -#define PCIE_CLIENT_MODE_MASK			0x1
-> -#define PCIE_CLIENT_GEN_SEL_2			1
-> -#define PCIE_CLIENT_GEN_SEL_SHIFT		7
-> -#define PCIE_CLIENT_GEN_SEL_MASK		0x1
+> I normally run Ubuntu 14.04 LTS and tried the most recent 4.4.0-38
+> kernel but then I noticed that the Ubuntu 16.10 daily build ISO switched
+> to kernel 4.8-RC-something on Sept 21st. So I booted that
+> livedvd and tried it to see if 4.8-RC included some recent PCIe
+> 32-bit/64-bit resource fix but sadly the results were the same. With
+> firmware 0xbd, the ethernet controller was still missing from the lspci
+> output. I poked around with various of the kernel pci= parameters such
+> as bios and nobios to no avail, but I really am out of my depth here.
 > 
-> +/*
-> + * The upper 16 bits of the PCIE_CLIENT registers are a write mask for the
-> + * lower 16 bits.  This allows atomic updates of the register without
-> + * locking.
-> + */
-> +#define HIWORD_UPDATE(mask, val)	((mask << 16) | val)
-> +
-> +#define ENCODE_LANES(x)			(((x >> 1) & 3) << 4)
-> +
-> +#define PCIE_CLIENT_CONF_ENABLE		HIWORD_UPDATE(0x0001, 0x0001)
-> +#define PCIE_CLIENT_LINK_TRAIN_ENABLE	HIWORD_UPDATE(0x0002, 0x0002)
-> +#define PCIE_CLIENT_CONF_LANE_NUM(x)	HIWORD_UPDATE(0x0030, ENCODE_LANES(x))
-> +#define PCIE_CLIENT_GEN_SEL_2		HIWORD_UPDATE(0x0040, 0x0040)
-> 
->  	rockchip_pcie_write(rockchip,
-> -		   HIWORD_UPDATE(PCIE_CLIENT_CONF_ENABLE,
-> -				 PCIE_CLIENT_CONF_ENABLE_MASK,
-> -				 PCIE_CLIENT_CONF_ENABLE_SHIFT) |
-> -		   HIWORD_UPDATE(PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes),
-> -				 PCIE_CLIENT_CONF_LANE_NUM_MASK,
-> -				 PCIE_CLIENT_CONF_LANE_NUM_SHIFT) |
-> -		   HIWORD_UPDATE(PCIE_CLIENT_MODE_RC,
-> -				 PCIE_CLIENT_MODE_MASK,
-> -				 PCIE_CLIENT_MODE_SHIFT) |
-> -		   HIWORD_UPDATE(PCIE_CLIENT_ARI_ENABLE,
-> -				 PCIE_CLIENT_ARI_ENABLE_MASK,
-> -				 PCIE_CLIENT_ARI_ENABLE_SHIFT) |
-> -		   HIWORD_UPDATE(PCIE_CLIENT_GEN_SEL_2,
-> -				 PCIE_CLIENT_GEN_SEL_MASK,
-> -				 PCIE_CLIENT_GEN_SEL_SHIFT),
-> -		   PCIE_CLIENT_BASE);
-> +			    PCIE_CLIENT_CONF_ENABLE |
-> +			    PCIE_CLIENT_LINK_TRAIN_ENABLE |
-> +			    PCIE_CLIENT_ARI_ENABLE |
-> +			    PCIE_CLIENT_CONF_LANE_NUM(rockchip->lanes) |
-> +			    PCIE_CLIENT_MODE_RC |
-> +			    PCIE_CLIENT_GEN_SEL_2,
-> +				PCIE_CLIENT_BASE);
+> I'm available to run tests if anyone has any suggestions.
 
-I like this new approach :-)
-Improves the readability in the code but also future readability of the defined 
-constants, when comparing with register descriptions
+Well pci=bios is 32 bit only, so that doesn't work, pci=bfs was probably
+supposed to be pci=bfsort.  It sure looks like the bios fails to allocate
+the network device when the other device is 64 bit.  Sure looks like
+a bios bug.  I see nothing indicating that the address space ran out.
+It looks fine.
 
+You could try:
 
-Thanks
-Heiko
+pci=realloc
+pci=assign-busses
+pci=bfsort (the one I think you were trying to do).
+
+I certainly wouldn't be surprised if the only thing ever tested in that
+board was a graphics card.
+
+Of course your network card is also 64 bit bar (when seen), so the system
+can work with such.  Makes one wonder if the bios has a bus, or the H81
+has a limit that only one of the ethernet and the add in card can use
+64 bit bar at a time.  That would seem weird of course.
+
+-- 
+Len Sorensen
